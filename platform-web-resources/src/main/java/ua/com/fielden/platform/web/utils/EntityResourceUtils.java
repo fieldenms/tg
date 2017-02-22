@@ -40,7 +40,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.EntityResourceDaoUtils;
+import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -743,7 +743,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public T save(final T entity, final Map<String, IContinuationData> continuations) {
-        return EntityResourceDaoUtils.saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
+        return EntityResourceContinuationsHelper.saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
     }
 
 

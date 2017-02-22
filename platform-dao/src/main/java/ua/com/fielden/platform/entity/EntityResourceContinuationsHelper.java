@@ -7,7 +7,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.error.Result;
 
-public class EntityResourceDaoUtils {
+public class EntityResourceContinuationsHelper {
 
     /**
      * Saves the <code>entity</code> with its <code>continuations</code>.
