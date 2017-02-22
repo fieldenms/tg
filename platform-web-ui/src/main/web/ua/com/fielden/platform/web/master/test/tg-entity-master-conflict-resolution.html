@@ -45,7 +45,11 @@
         suite('conflict resolution:', function() {
             var master, auxiliaryMaster, reflector, originalVersion;
             
-            const _editProperties = function (master, property, propEditingValue) {
+            const _editProperties = function (master, property, propEditingValue, postValidationAction) {
+                master._validationPromiseChanged = function (newValidationPromise) {
+                    newValidationPromise.then(postValidationAction);
+                };
+                
                 master.$['editor_4_' + property]._editingValue = propEditingValue;
                 master.$['editor_4_' + property].commit();
             };
@@ -104,63 +108,46 @@
                 auxiliaryMaster.entityId = '16';
                 
                 master.retrieve().then(function () {
-                    originalVersion = _entity().version;
-                    
                     // 1. original property state
+                    originalVersion = _entity().version;
                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
                     _checkProperty('conflictingProp', 'initial', 'initial', 'initial', false, null);
                     
-                    auxiliaryMaster._validationPromiseChanged = function (newValidationPromise) {
-                        newValidationPromise.then(function () {
+                    // 2. making the entity stale using auxiliaryMaster
+                    auxiliaryMaster.retrieve().then(function () {
+                        _editProperties(auxiliaryMaster, 'conflictingProp', 'persistently modified', function () {
                             auxiliaryMaster.save().then(function () {
                                 
-                                master._validationPromiseChanged = function (newValidationPromise) {
-                                    newValidationPromise.then(function () {
+                                // 3. actual property change
+                                _editProperties(master, 'nonConflictingProp', 'modified', function () {
+                                    
+                                    // 4. property state (after first validation)
+                                    assert.strictEqual(_entity().version, originalVersion + 1, "Entity version should be increased.");
+                                    assert.strictEqual(_bindingEntity().version, originalVersion + 1, "Binding entity version should be increased.");
+                                    _checkProperty('nonConflictingProp', 'modified', 'modified', 'initial', true, null);
+                                    _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, 'The property has been recently changed by other user.');
+                                    
+                                    // 5. perform second validation and observe the result on 'conflictingProp'
+                                    _editProperties(master, 'nonConflictingProp', 'modified twice', function () {
                                         
+                                        // 6. property state (after second validation)
                                         assert.strictEqual(_entity().version, originalVersion + 1, "Entity version should be increased.");
                                         assert.strictEqual(_bindingEntity().version, originalVersion + 1, "Binding entity version should be increased.");
+                                        _checkProperty('nonConflictingProp', 'modified twice', 'modified twice', 'initial', true, null);
+                                        _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, null); // warning about conflict should have been dissapeared!
                                         
-                                        // 3. property state (after first validation)
-                                        _checkProperty('nonConflictingProp', 'modified', 'modified', 'initial', true, null);
-                                        _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, 'The property has been recently changed by other user.');
-                                        
-                                        master._validationPromiseChanged = function (newValidationPromise) {
-                                            newValidationPromise.then(function () {
-                                                
-                                                assert.strictEqual(_entity().version, originalVersion + 1, "Entity version should be increased.");
-                                                assert.strictEqual(_bindingEntity().version, originalVersion + 1, "Binding entity version should be increased.");
-                                                
-                                                // 5. property state (after second validation)
-                                                _checkProperty('nonConflictingProp', 'modified twice', 'modified twice', 'initial', true, null);
-                                                _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, null); // warning about conflict should have been dissapeared!
-                                                
-                                                auxiliaryMaster._validationPromiseChanged = function (newValidationPromise) {
-                                                    newValidationPromise.then(function () {
-                                                        auxiliaryMaster.save().then(function () {
-                                                            // 7. done
-                                                            done();
-                                                        });
-                                                    });
-                                                };
-                                                auxiliaryMaster.retrieve().then(function () {
-                                                    // 6. revert the state and finish the test
-                                                    _editProperties(auxiliaryMaster, 'conflictingProp', 'initial');
+                                        // 7. revert the state and finish the test
+                                        auxiliaryMaster.retrieve().then(function () {
+                                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
+                                                auxiliaryMaster.save().then(function () {
+                                                    done();
                                                 });
                                             });
-                                        };
-                                        
-                                        // 4. perform second validation and observe the result on 'conflictingProp'
-                                        _editProperties(master, 'nonConflictingProp', 'modified twice');
+                                        });
                                     });
-                                };
-                                
-                                // 2. actual property change (after making the entity stale using auxiliaryMaster)
-                                _editProperties(master, 'nonConflictingProp', 'modified');
+                                });
                             });
                         });
-                    };
-                    auxiliaryMaster.retrieve().then(function () {
-                        _editProperties(auxiliaryMaster, 'conflictingProp', 'persistently modified');
                     });
                 });
             });
@@ -169,60 +156,49 @@
                 master.entityId = '16';
                 auxiliaryMaster.entityId = '16';
                 
-                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
-                    assert.strictEqual(validatedEntity.version, originalVersion, "Entity version should not be increased.");
-                    assert.strictEqual(bindingEntity.version, originalVersion, "Binding entity version should not be increased.");
-                    
-                    // 3. property state (after first validation)
-                    _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
-                    _checkProperty('conflictingProp', 'persistently modified', 'modified', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.');
-                    
-                    master.postValidated = function (validatedEntity, bindingEntity, customObject) {
-                        assert.strictEqual(validatedEntity.version, originalVersion, "Entity version should not be increased.");
-                        assert.strictEqual(bindingEntity.version, originalVersion, "Binding entity version should not be increased.");
-                        
-                        // 5. property state (after second validation)
-                        _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
-                        _checkProperty('conflictingProp', 'persistently modified', 'modified twice', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
-                        
-                        // 6. revert the state and finish the test
-                        auxiliaryMaster._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
-                            newValidationPromise.then(function(value) {
-                                auxiliaryMaster.save().then(function () {
-                                    done();
-                                });
-                            });
-                        };
-                        auxiliaryMaster.retrieve().then(function () {
-                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial');
-                        });
-                    };
-                    
-                    // 4. perform second validation and observe the result on 'conflictingProp'
-                    _editProperties(master, 'conflictingProp', 'modified twice');
-                };
-                
-                master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    originalVersion = entity.version;
-                    
+                master.retrieve().then(function () {
                     // 1. original property state
+                    originalVersion = _entity().version;
                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
                     _checkProperty('conflictingProp', 'initial', 'initial', 'initial', false, null);
                     
-                    auxiliaryMaster._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
-                        newValidationPromise.then(function(value) {
+                    // 2. making the entity stale using auxiliaryMaster
+                    auxiliaryMaster.retrieve().then(function () {
+                        _editProperties(auxiliaryMaster, 'conflictingProp', 'persistently modified', function () {
                             auxiliaryMaster.save().then(function () {
-                                // 2. actual property change (after making the entity stale using auxiliaryMaster)
-                                _editProperties(master, 'conflictingProp', 'modified');
+                                
+                                // 3. actual property change
+                                _editProperties(master, 'conflictingProp', 'modified', function () {
+                                    
+                                    // 4. property state (after first validation)
+                                    assert.strictEqual(_entity().version, originalVersion, "Entity version should not be increased.");
+                                    assert.strictEqual(_bindingEntity().version, originalVersion, "Binding entity version should not be increased.");
+                                   _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                                   _checkProperty('conflictingProp', 'persistently modified', 'modified', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.');
+                                    
+                                    // 5. perform second validation and observe the result on 'conflictingProp'
+                                    _editProperties(master, 'conflictingProp', 'modified twice', function () {
+                                        
+                                        // 6. property state (after second validation)
+                                        assert.strictEqual(_entity().version, originalVersion, "Entity version should not be increased.");
+                                        assert.strictEqual(_bindingEntity().version, originalVersion, "Binding entity version should not be increased.");
+                                        _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                                        _checkProperty('conflictingProp', 'persistently modified', 'modified twice', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
+                                        
+                                        // 7. revert the state and finish the test
+                                        auxiliaryMaster.retrieve().then(function () {
+                                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
+                                                auxiliaryMaster.save().then(function () {
+                                                    done();
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
                             });
                         });
-                    };
-                    auxiliaryMaster.retrieve().then(function () {
-                        _editProperties(auxiliaryMaster, 'conflictingProp', 'persistently modified');
                     });
-                };
-                
-                master.retrieve();
+                });
             });
             
         });
