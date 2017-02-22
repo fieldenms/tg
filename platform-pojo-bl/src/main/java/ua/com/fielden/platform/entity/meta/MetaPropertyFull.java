@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
@@ -928,9 +929,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getSimpleName()));
         }
 
-        if (!required && isRequiredByDefinition && !shouldAssignBeforeSave()) {
+        if (!required && isRequiredByDefinition && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
             throw new EntityDefinitionException(format("Property [%s] in entity [%s] is declared as required and cannot have this constraint relaxed.", name, getEntity().getType().getSimpleName()));
         }
+    }
+
+    /**
+     * Entities of type {@link AbstractFunctionalEntityForCollectionModification} need to be able to relax requiredness for their keys.
+     *
+     * @return
+     */
+    private boolean requirednessExceptionRule() {
+        return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType());
     }
 
     @Override
