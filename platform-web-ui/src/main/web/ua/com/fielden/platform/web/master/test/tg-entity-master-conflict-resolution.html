@@ -158,7 +158,7 @@
                 });
             });
             
-            test('conflicting property does not resolve after first validation cycle and would not be resoved during consequent validation cycles', function (done) {
+            test('conflicting property does not resolve after first validation cycle and would not be resolved during consequent validation cycles', function (done) {
                 _initData().then(function () {
                     // 1. original property state
                     originalVersion = _entity().version;
@@ -187,6 +187,86 @@
                                         assert.strictEqual(_bindingEntity().version, originalVersion, "Binding entity version should not be increased.");
                                         _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
                                         _checkProperty('conflictingProp', 'persistently modified', 'modified twice', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
+                                        
+                                        // 7. finish the test
+                                        done();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            
+            test('conflicting property does not resolve after first validation cycle and would be resolved (warning and persisted value appears immediately) if the user reverts modification', function (done) {
+                _initData().then(function () {
+                    // 1. original property state
+                    originalVersion = _entity().version;
+                    _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                    _checkProperty('conflictingProp', 'initial', 'initial', 'initial', false, null);
+                    
+                    // 2. making the entity stale using auxiliaryMaster
+                    auxiliaryMaster.retrieve().then(function () {
+                        _editProperties(auxiliaryMaster, 'conflictingProp', 'persistently modified', function () {
+                            auxiliaryMaster.save().then(function () {
+                                
+                                // 3. actual property change
+                                _editProperties(master, 'conflictingProp', 'modified', function () {
+                                    
+                                    // 4. property state (after first validation)
+                                    assert.strictEqual(_entity().version, originalVersion, "Entity version should not be increased.");
+                                    assert.strictEqual(_bindingEntity().version, originalVersion, "Binding entity version should not be increased.");
+                                   _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                                   _checkProperty('conflictingProp', 'persistently modified', 'modified', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.');
+                                    
+                                    // 5. revert the property to the original stale value and observe the result on 'conflictingProp'
+                                    _editProperties(master, 'conflictingProp', 'initial', function () {
+                                        
+                                        // 6. property state (after second validation)
+                                        assert.strictEqual(_entity().version, originalVersion + 1, "Entity version should be increased.");
+                                        assert.strictEqual(_bindingEntity().version, originalVersion + 1, "Binding entity version should be increased.");
+                                        _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                                        _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, 'The property has been recently changed by other user.'); // warning about conflict should appear indicating that the value has been updated to the newer version!
+                                        
+                                        // 7. finish the test
+                                        done();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            
+            test('conflicting property does not resolve after first validation cycle and would be resolved (no warning) if the user guesses the value to which the property has been mutated behind the scenes', function (done) {
+                _initData().then(function () {
+                    // 1. original property state
+                    originalVersion = _entity().version;
+                    _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                    _checkProperty('conflictingProp', 'initial', 'initial', 'initial', false, null);
+                    
+                    // 2. making the entity stale using auxiliaryMaster
+                    auxiliaryMaster.retrieve().then(function () {
+                        _editProperties(auxiliaryMaster, 'conflictingProp', 'persistently modified', function () {
+                            auxiliaryMaster.save().then(function () {
+                                
+                                // 3. actual property change
+                                _editProperties(master, 'conflictingProp', 'modified', function () {
+                                    
+                                    // 4. property state (after first validation)
+                                    assert.strictEqual(_entity().version, originalVersion, "Entity version should not be increased.");
+                                    assert.strictEqual(_bindingEntity().version, originalVersion, "Binding entity version should not be increased.");
+                                   _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                                   _checkProperty('conflictingProp', 'persistently modified', 'modified', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.');
+                                    
+                                    // 5. change the property to persisted (by other user) value and observe the result on 'conflictingProp'
+                                    _editProperties(master, 'conflictingProp', 'persistently modified', function () {
+                                        
+                                        // 6. property state (after second validation)
+                                        assert.strictEqual(_entity().version, originalVersion + 1, "Entity version should be increased.");
+                                        assert.strictEqual(_bindingEntity().version, originalVersion + 1, "Binding entity version should be increased.");
+                                        _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
+                                        _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, null); // the value has been guessed, no warning is needed
                                         
                                         // 7. finish the test
                                         done();
