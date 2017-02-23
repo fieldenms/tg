@@ -46,12 +46,14 @@
             var master, auxiliaryMaster, reflector, originalVersion;
             
             const _editProperties = function (master, property, propEditingValue, postValidationAction) {
-                master._validationPromiseChanged = function (newValidationPromise) {
-                    newValidationPromise.then(postValidationAction);
-                };
-                
-                master.$['editor_4_' + property]._editingValue = propEditingValue;
-                master.$['editor_4_' + property].commit();
+                return new Promise(function(resolve, reject) {
+                    master._validationPromiseChanged = function (newValidationPromise) {
+                        resolve(newValidationPromise.then(postValidationAction));
+                    };
+                    
+                    master.$['editor_4_' + property]._editingValue = propEditingValue;
+                    master.$['editor_4_' + property].commit();
+                });
             };
             
             const _originalBindingEntity = function () {
@@ -102,10 +104,10 @@
                     _editProperties(master, 'key', 'key_to_pass_validation_before_save_' + (new Date()).getTime(), function () {});
                     _editProperties(master, 'requiredValidatedProp', '30', function () {});
                     _editProperties(master, 'nonConflictingProp', 'initial', function () {});
-                    _editProperties(master, 'conflictingProp', 'initial', function () {});
-                    return master.save().then(function () {
-                        auxiliaryMaster.entityId = master.entityId;
-                        // assert.strictEqual(_entity()['@nonConflictingProp']._originalVal, 'initial');
+                    return _editProperties(master, 'conflictingProp', 'initial', function () {
+                        return master.save().then(function () {
+                            auxiliaryMaster.entityId = master.entityId;
+                        });
                     });
                 });
             };
@@ -146,14 +148,8 @@
                                         _checkProperty('nonConflictingProp', 'modified twice', 'modified twice', 'initial', true, null);
                                         _checkProperty('conflictingProp', 'persistently modified', 'persistently modified', 'persistently modified', false, null); // warning about conflict should have been dissapeared!
                                         
-                                        // 7. revert the state and finish the test
-                                        auxiliaryMaster.retrieve().then(function () {
-                                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
-                                                auxiliaryMaster.save().then(function () {
-                                                    done();
-                                                });
-                                            });
-                                        });
+                                        // 7. finish the test
+                                        done();
                                     });
                                 });
                             });
@@ -162,11 +158,8 @@
                 });
             });
             
-/*            test('conflicting property does not resolve after first validation cycle and would not be resoved during consequent validation cycles', function (done) {
-                master.entityId = '16';
-                auxiliaryMaster.entityId = '16';
-                
-                master.retrieve().then(function () {
+            test('conflicting property does not resolve after first validation cycle and would not be resoved during consequent validation cycles', function (done) {
+                _initData().then(function () {
                     // 1. original property state
                     originalVersion = _entity().version;
                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
@@ -195,14 +188,8 @@
                                         _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
                                         _checkProperty('conflictingProp', 'persistently modified', 'modified twice', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
                                         
-                                        // 7. revert the state and finish the test
-                                        auxiliaryMaster.retrieve().then(function () {
-                                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
-                                                auxiliaryMaster.save().then(function () {
-                                                    done();
-                                                });
-                                            });
-                                        });
+                                        // 7. finish the test
+                                        done();
                                     });
                                 });
                             });
@@ -212,10 +199,7 @@
             });
             
             test('conflicting property does not resolve after first validation cycle and could not be saved afterwards', function (done) {
-                master.entityId = '16';
-                auxiliaryMaster.entityId = '16';
-                
-                master.retrieve().then(function () {
+                _initData().then(function () {
                     // 1. original property state
                     originalVersion = _entity().version;
                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
@@ -244,14 +228,8 @@
                                         _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
                                         _checkProperty('conflictingProp', 'persistently modified', 'modified', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
                                         
-                                        // 7. revert the state and finish the test
-                                        auxiliaryMaster.retrieve().then(function () {
-                                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
-                                                auxiliaryMaster.save().then(function () {
-                                                    done();
-                                                });
-                                            });
-                                        });
+                                        // 7. finish the test
+                                        done();
                                     });
                                 });
                             });
@@ -261,10 +239,7 @@
             });
             
             test('immediate save of conflicting property change would not be completed successfully', function (done) {
-                master.entityId = '16';
-                auxiliaryMaster.entityId = '16';
-                
-                master.retrieve().then(function () {
+                _initData().then(function () {
                     // 1. original property state
                     originalVersion = _entity().version;
                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
@@ -287,14 +262,8 @@
                                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
                                     _checkProperty('conflictingProp', 'persistently modified', 'modified', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
                                     
-                                    // 6. revert the state and finish the test
-                                    auxiliaryMaster.retrieve().then(function () {
-                                        _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
-                                            auxiliaryMaster.save().then(function () {
-                                                done();
-                                            });
-                                        });
-                                    });
+                                    // 6. finish the test
+                                    done();
                                 });
                             });
                         });
@@ -303,10 +272,7 @@
             });
             
             test('non-conflicting property resolves fully after first validation cycle and warning dissapears during consequent validation cycles, even if other conflicting property exists', function (done) {
-                master.entityId = '16';
-                auxiliaryMaster.entityId = '16';
-                
-                master.retrieve().then(function () {
+                _initData().then(function () {
                     // 1. original property state
                     originalVersion = _entity().version;
                     _checkProperty('nonConflictingProp', 'initial', 'initial', 'initial', false, null);
@@ -336,15 +302,8 @@
                                         _checkProperty('nonConflictingProp', 'persistently modified', 'persistently modified', 'initial', false, null); // warning about conflict should have been dissapeared!
                                         _checkProperty('conflictingProp', 'persistently modified (conflict)', 'modified twice', 'initial', false, 'The property has been recently changed by other user. Please revert property value to resolve conflict.'); // error about conflict should be preserved!
                                         
-                                        // 7. revert the state and finish the test
-                                        auxiliaryMaster.retrieve().then(function () {
-                                            _editProperties(auxiliaryMaster, 'nonConflictingProp', 'initial', function () {});
-                                            _editProperties(auxiliaryMaster, 'conflictingProp', 'initial', function () {
-                                                auxiliaryMaster.save().then(function () {
-                                                    done();
-                                                });
-                                            });
-                                        });
+                                        // 7. finish the test
+                                        done();
                                     });
                                 });
                             });
@@ -352,7 +311,7 @@
                     });
                 });
             });
-            */
+            
         });
     </script>
 </body>
