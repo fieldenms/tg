@@ -809,9 +809,11 @@
             /**
              * Returns 'true' in case where the entity has at least one stale conflict, 'false' otherwise.
              *
-             * Please, note that in sense of versions the entity could be stale, but this method still returns 'true' if no stale conflicts exist.
+             * Please, note that in sense of versions the entity could be stale, but this method still returns 'false' if no stale conflicts exist,
+             * and thus the entity will be treated as NOT 'stale'.
              * That means that fully resolvable staleness will not be appearing to the user -- this is the case where behind the scenes 
-             * the entity has been saved multiple times (by other user) but saving did not actually change the entity from the current version.
+             * the entity has been saved one or more times (by other user) but saving did not actually change the entity to the level of conflicts appearance.
+             * However, warnings 'The property has been recently changed by other user.' could exist in this case.
              */
             _hasStaleConflicts: function (entity) {
                 const self = this;
@@ -828,7 +830,7 @@
             /**
              * Extracts the version of previous entity for the case where new entity is stale.
              *
-             * This method validates existence of previous entity and the fact that the version has been increased.
+             * This method validates existence of previous entity / originalBindingEntity and the fact that the version has been increased.
              * These validations are required because new entity should not be stale otherwise.
              */
             _extractPreviousEntityVersion: function (previousEntity, currentEntityVersion, _originalBindingEntity) {
