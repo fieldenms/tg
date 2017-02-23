@@ -149,6 +149,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("staleEnt1.getId() == " + staleEnt1.getId());
         System.out.println("staleEnt1.getVersion() == " + staleEnt1.getVersion());
 
+        final TgPersistentEntityWithProperties staleEnt1New = save(staleEnt1.setConflictingProp("persistently modified").setRequiredValidatedProp(30));
+        System.out.println("staleEnt1New.getVersion() == " + staleEnt1New.getVersion());
+
         final TgPersistentCompositeEntity ce = new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10);
         ce.setDesc("Default composite entity description as a long text to demonstrate proper word wrapping as part of displaying the autocompleted values.");
         final TgPersistentCompositeEntity compositeEnt1 = save(ce);
