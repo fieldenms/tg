@@ -78,6 +78,8 @@ import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
  *
  */
 public class EntityResourceUtils<T extends AbstractEntity<?>> {
+    private static final String conflictWarning = "The property has been recently changed by another user.";
+    private static final String resolveConflictInstruction = "Please edit value back to [%s] to resolve conflict.";
     private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
     private final Class<T> entityType;
@@ -338,11 +340,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction) 
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
-                    logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
-                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
+                    logger.info(String.format("The property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
+                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, conflictWarning));
                 } else {
-                    logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+                    logger.info(String.format("The property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, conflictWarning + " " + String.format(resolveConflictInstruction, staleOriginalValue == null ? "" : staleOriginalValue)));
                 }
             } else {
                 performAction.run();

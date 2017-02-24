@@ -813,14 +813,14 @@
              * and thus the entity will be treated as NOT 'stale'.
              * That means that fully resolvable staleness will not be appearing to the user -- this is the case where behind the scenes 
              * the entity has been saved one or more times (by other user) but saving did not actually change the entity to the level of conflicts appearance.
-             * However, warnings 'The property has been recently changed by other user.' could exist in this case.
+             * However, warnings 'The property has been recently changed by another user.' could exist in this case.
              */
             _hasStaleConflicts: function (entity) {
                 const self = this;
                 var hasStaleConflicts = false;
                 entity.traverseProperties(function (propertyName) {
                     const validationResult = entity.prop(propertyName).validationResult();
-                    if (self._reflector().isError(validationResult) && validationResult.message === 'The property has been recently changed by other user. Please revert property value to resolve conflict.') {
+                    if (self._reflector().isError(validationResult) && (validationResult['@resultType'] === 'ua.com.fielden.platform.web.utils.PropertyConflict')) {
                         hasStaleConflicts = true;
                     }
                 });
