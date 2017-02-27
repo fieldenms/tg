@@ -25,6 +25,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -56,7 +57,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private Optional<PrefDim> prefDim = Optional.empty();
     private boolean saveOnActivation = false;
 
-
+    private Optional<JsCode> customCode = Optional.empty();
+    private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
     @Override
     public IPropertySelector<T> forEntity(final Class<T> type) {
@@ -276,6 +278,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                       + propertyActionsStr.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
+                .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
+                .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
                 .replace("@SHORTCUTS", shortcuts)
                 .replace("@prefDim", dimensionsString)
                 .replace("@noUiValue", "false")
@@ -385,5 +389,29 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     
     public List<Object> getEntityActions() {
         return entityActions;
+    }
+    
+    /**
+     * Injects custom JavaScript code into respective master implementation. This code will be executed after 
+     * master component creation.
+     * 
+     * @param customCode
+     * @return
+     */
+    public SimpleMasterBuilder<T> injectCustomCode(final JsCode customCode) {
+        this.customCode = Optional.of(customCode);
+        return this;
+    }
+    
+    /**
+     * Injects custom JavaScript code into respective master implementation. This code will be executed every time
+     * master component is attached to client application's DOM.
+     * 
+     * @param customCode
+     * @return
+     */
+    public SimpleMasterBuilder<T> injectCustomCodeOnAttach(final JsCode customCode) {
+        this.customCodeOnAttach = Optional.of(customCode);
+        return this;
     }
 }
