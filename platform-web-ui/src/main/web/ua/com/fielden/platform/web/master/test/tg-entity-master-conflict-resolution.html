@@ -68,9 +68,9 @@
                 return master._currEntity;
             };
             
-            const conflictWarning = 'The property has been recently changed by another user.';
+            const conflictWarning = 'This property has recently been changed by another user.';
             const conflictError = function (revertToValue) {
-                return conflictWarning + ' ' + 'Please edit value back to [' + revertToValue + '] to resolve conflict.';
+                return conflictWarning + ' ' + 'Please either edit the value back to [' + revertToValue + '] to resolve the conflict or cancel all of your changes.';
             };
             
             const _checkProperty = function (propertyName, expectedValue, expectedBindingValue, expectedOriginalBindingValue, expectedChangedFromOriginal, expectedValidationMessage) {
