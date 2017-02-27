@@ -78,6 +78,8 @@ import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
  *
  */
 public class EntityResourceUtils<T extends AbstractEntity<?>> {
+    private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
+    private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
     private final Class<T> entityType;
@@ -230,16 +232,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                     appliedProps.add(name);
                 } else { // this is unmodified property
-                    if (!isEntityStale) {
-                        // do nothing
-                    } else {
-                        final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-                        final Object actualValue = entity.get(name);
-                        if (EntityUtils.isStale(originalValue, actualValue)) {
-                            logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), actualValue, originalValue));
-                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
-                        }
-                    }
+                    // IMPORTANT:
+                    // Untouched properties should not be applied, but validation for conflicts should be performed.
+                    logger.debug(String.format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 }
             }
         }
@@ -276,8 +272,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Applies the property value against the entity.
+     * Validates / applies the property value against the entity.
      *
+     * @param apply - indicates whether property application should be performed; if <code>false</code> then only validation will be performed
      * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied (with 'enforced mutation') or 'val' (with simple mutation)
      * @param type
      * @param name
@@ -286,24 +283,71 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param companionFinder
      * @param isEntityStale
      */
-    private static <M extends AbstractEntity<?>> void applyPropertyValue(final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        final String reflectedValueName = shouldApplyOriginalValue ? "origVal" : "val";
-        final Object val = valAndOrigVal.get(reflectedValueName);
-        final Object newValue = convert(type, name, val, reflectedValueId(valAndOrigVal, reflectedValueName), companionFinder);
-        if (notFoundEntity(type, name, val, newValue)) {
-            final String msg = String.format("No entity with key [%s] has been found.", val);
-            logger.info(msg);
-            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-        } else if (!isEntityStale) {
-            enforceSet(shouldApplyOriginalValue, name, entity, newValue);
-        } else {
-            final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-            final Object actualValue = entity.get(name);
-            if (EntityUtils.isConflicting(newValue, staleOriginalValue, actualValue)) {
-                logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue, newValue));
-                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        if (apply) {
+            // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
+            final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
+            final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
+            final Object valueToBeApplied = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
+            if (notFoundEntity(type, name, valToBeApplied, valueToBeApplied)) {
+                final String msg = String.format("No entity with key [%s] has been found.", valToBeApplied);
+                logger.info(msg);
+                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
-                enforceSet(shouldApplyOriginalValue, name, entity, newValue);
+                validateAnd(() -> {
+                    enforceSet(shouldApplyOriginalValue, name, entity, valueToBeApplied);
+                }, () -> {
+                    return valueToBeApplied;
+                }, () -> {
+                    return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+                }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+            }
+        } else {
+            // in case where no application is needed (unmodified untouched) the value should be validated only
+            validateAnd(() -> {
+                // do nothing
+            }, () -> {
+                return shouldApplyOriginalValue 
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder) 
+                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
+            }, () -> {
+                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        }
+    }
+    
+    /**
+     * Validates the property on subject of conflicts and <code>perform[s]Action</code>. 
+     * 
+     * @param performAction -- the action to be performed in case of successful validation
+     * @param calculateStaleNewValue -- function to lazily calculate 'staleNewValue' (heavy operation)
+     * @param calculateStaleOriginalValue -- function to lazily calculate 'staleOriginalValue' (heavy operation)
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void validateAnd(final Runnable performAction, final Supplier<Object> calculateStaleNewValue, final Supplier<Object> calculateStaleOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        if (!isEntityStale) {
+            performAction.run();
+        } else {
+            final Object staleOriginalValue = calculateStaleOriginalValue.get();
+            final Object freshValue = entity.get(name);
+            final Object staleNewValue = calculateStaleNewValue.get();
+            if (EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
+                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction) 
+                // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
+                if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
+                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
+                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, CONFLICT_WARNING));
+                } else {
+                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + String.format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                }
+            } else {
+                performAction.run();
             }
         }
     }
@@ -325,7 +369,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Applies the modified property value ('val') against the entity.
+     * Applies the modified (touched / untouched) property value ('val') against the entity.
      *
      * @param type
      * @param name
@@ -335,11 +379,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        applyPropertyValue(false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
 
     /**
-     * Applies the unmodified property value ('origVal') against the entity (using 'enforced mutation').
+     * Applies the unmodified (touched) property value ('origVal') against the entity (using 'enforced mutation').
      *
      * @param type
      * @param name
@@ -349,7 +393,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        applyPropertyValue(true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
+    
+    /**
+     * Validates the unmodified (untouched) property value for 'changed by other user' warning.
+     * 
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
 
     /**

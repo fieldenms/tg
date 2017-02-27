@@ -6,7 +6,7 @@
      * Determines whether the result represents the error.
      */
     var _isError0 = function (result) {
-        return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+        return result !== null && (result["@resultType"] === "ua.com.fielden.platform.error.Result" || result["@resultType"] === "ua.com.fielden.platform.web.utils.PropertyConflict") && (typeof result.ex !== 'undefined');
     };
 
     /**
