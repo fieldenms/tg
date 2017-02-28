@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -39,12 +38,10 @@ public class CentreContextHolder extends AbstractEntity<String> {
     private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<AbstractEntity<?>>();
 
     @IsProperty
-    @MapTo
     @Title(value = "Master entity", desc = "Master entity")
     private AbstractEntity<?> masterEntity;
 
     @IsProperty
-    @MapTo
     @Title(value = "Chosen Property", desc = "The property that was clicked during activation result-set functional action")
     private String chosenProperty;
 

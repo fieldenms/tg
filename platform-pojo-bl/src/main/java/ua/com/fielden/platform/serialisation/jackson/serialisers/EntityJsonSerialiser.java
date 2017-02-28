@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -138,11 +139,16 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         throw e;
                     }
                     
-                    if (!disregardValueSerialisation(value, prop.isEntityTyped(), excludeNulls)) {
+                    if (!disregardValueSerialisation(value, excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
-                        generator.writeObject(value);
-
+                        if (value != null && isIdOnlyProxiedEntity(value, prop.isEntityTyped())) {
+                            final AbstractEntity<?> idOnlyProxyEntity = (AbstractEntity<?>) value;
+                            generator.writeObject(ID_ONLY_PROXY_PREFIX + idOnlyProxyEntity.getId());
+                        } else {
+                            generator.writeObject(value);
+                        }
+                        
                         if (!uninstrumented) {
                             final MetaProperty<Object> metaProperty = entity.getProperty(name);
                             if (metaProperty == null) {
@@ -198,13 +204,11 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
      * Returns <code>true</code> in case when value serialisation should be skipped, <code>false</code> otherwise.
      * 
      * @param value
-     * @param isEntityTyped
      * @param excludeNulls
      * @return
      */
-    private static boolean disregardValueSerialisation(final Object value, final boolean isEntityTyped, final boolean excludeNulls) {
-        return value == null && excludeNulls || 
-               value != null && isIdOnlyProxiedEntity(value, isEntityTyped);
+    private static boolean disregardValueSerialisation(final Object value, final boolean excludeNulls) {
+        return value == null && excludeNulls;
     }
     
     /**

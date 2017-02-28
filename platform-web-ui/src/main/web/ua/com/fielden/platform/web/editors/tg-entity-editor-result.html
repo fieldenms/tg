@@ -12,86 +12,85 @@
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
 
 <dom-module id="tg-entity-editor-result">
-
-    <style>
-        :host {
-            display: block;
-            background: white;
-            color: black;
-            padding: 0px;
-            overflow: auto; /* this is to make host scorable when needed */
-            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
-        }
-        
-        .tg-item {
-        	@apply(--layout-vertical);
-        	@apply(--layout-start);
-            font-size: small;
-            padding: 6px;
-            margin: 0px;
-            overflow: auto;
-            text-overflow: ellipsis;
-            border-top: 1px solid #e3e3e3;
-            min-height: 24px;
-        }
-        
-        .tg-item:hover {
-            cursor: pointer;
-            background: var(--paper-blue-50);
-            color: var(--paper-blue-500);
-        }
-        
-        .tg-item.iron-selected {
-            background: var(--paper-blue-500);
-            color: var(--paper-blue-50);
-        }
-        
-        .key-value {
-            font-size: small;
-            min-width: 100px;
-        }
-        
-        paper-item:not(.iron-selected) span.key-value-highlighted {
-            background-color: #ffff46;
-        }
-        
-        .additional-prop {
-        	@apply(--layout-horizontal);
-            font-size: x-small;
-            min-width: 150px;
-            white-space: normal;
-            padding-left: 1em;
-            padding-top: 0.5em;
-            line-height: 15px;
-        }
-        
-        .prop-name {
-            font-weight: bold;
-            padding-right: 0.5em;
-        }
-        
-        .tg-snatchback-button {
-            color: #03A9F4;
-        }
-        
-        .tg-snatchback {
-            background-color: #FFFFFF;
-            color: #000;
-            min-width: 250px;
-            padding: 0px;
-            overflow: auto;
-            text-overflow: ellipsis;
-        }
-        
-        .no-result {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 50px;
-        }
-    </style>
-
     <template>
+	    <style>
+	        :host {
+	            display: block;
+	            background: white;
+	            color: black;
+	            padding: 0px;
+	            overflow: auto; /* this is to make host scorable when needed */
+	            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+	        }
+	        
+	        .tg-item {
+	        	@apply(--layout-vertical);
+	        	@apply(--layout-start);
+	            font-size: small;
+	            padding: 6px;
+	            margin: 0px;
+	            overflow: auto;
+	            text-overflow: ellipsis;
+	            border-top: 1px solid #e3e3e3;
+	            min-height: 24px;
+	        }
+	        
+	        .tg-item:hover {
+	            cursor: pointer;
+	            background: var(--paper-blue-50);
+	            color: var(--paper-blue-500);
+	        }
+	        
+	        .tg-item.iron-selected {
+	            background: var(--paper-blue-500);
+	            color: var(--paper-blue-50);
+	        }
+	        
+	        .key-value {
+	            font-size: small;
+	            min-width: 100px;
+	        }
+	        
+	        paper-item:not(.iron-selected) span.key-value-highlighted {
+	            background-color: #ffff46;
+	        }
+	        
+	        .additional-prop {
+	        	@apply(--layout-horizontal);
+	            font-size: x-small;
+	            min-width: 150px;
+	            white-space: normal;
+	            padding-left: 1em;
+	            padding-top: 0.5em;
+	            line-height: 15px;
+	        }
+	        
+	        .prop-name {
+	            font-weight: bold;
+	            padding-right: 0.5em;
+	        }
+	        
+	        .tg-snatchback-button {
+	            color: #03A9F4;
+	        }
+	        
+	        .tg-snatchback {
+	            background-color: #FFFFFF;
+	            color: #000;
+	            min-width: 250px;
+	            padding: 0px;
+	            overflow: auto;
+	            text-overflow: ellipsis;
+	        }
+	        
+	        .no-result {
+	            display: flex;
+	            flex-direction: column;
+	            align-items: center;
+	            line-height: 50px;
+	        }
+	    </style>
+    
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
@@ -228,16 +227,18 @@
 				this.async(function() {
 				    this._foundSome = this._values.length > 0;
 					for (var index = 0; index < this._values.length; index++) {
-						var html = '';                	
+						let html = '';                	
 						var v = this._values[index];
 						
 						// add key value with highlighting of matching parts
-						html = html + this._addHighlightedKeyProp(v)
+						const descProp = 'desc';
+						const withDesc = this.additionalProperties.hasOwnProperty(descProp);
+						html = html + this._addHighlightedKeyProp(v, withDesc)
 		
 						// add values for additional properties with highlighting of matching parts if required
 						for (var propName in this.additionalProperties) {
 							// interested only in the object's direct properties
-							if (this.additionalProperties.hasOwnProperty(propName)) {
+							if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
 								// should highlight?
 								var highlight = this.additionalProperties[propName];
 								html = html + this._addHighlightedPropByName(v, propName, highlight);
@@ -255,11 +256,12 @@
 				}.bind(this));
 			},
 			
-			_addHighlightedKeyProp : function(v) {
-				var html = '<div style="white-space: nowrap;">';
-				var matchedParts = this._matchedParts(v.key, this.searchQuery);
-				for (var index = 0; index < matchedParts.length; index++) {
-					var part = matchedParts[index];
+			_addHighlightedKeyProp : function(v, withDesc) {
+				let html = '<div style="white-space: nowrap">';
+				
+				let matchedParts = this._matchedParts(v.key, this.searchQuery);
+				for (let index = 0; index < matchedParts.length; index++) {
+					let part = matchedParts[index];
 					if (part.matched) {
 						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
 						html = html
@@ -268,6 +270,26 @@
 					} else {
 						html = html + part.part;
 					}
+				}
+				
+				if (withDesc === true) {
+				    let propValueAsString = this._propValueByName(v, 'desc');
+				    if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
+					    html = html	+ '<span style="color:#737373"> &ndash; <i>';				
+						matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
+						for (let index = 0; index < matchedParts.length; index++) {
+							let part = matchedParts[index];
+							if (part.matched) {
+								// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+								html = html	+ '<span class="key-value-highlighted">' + part.part + '</span>';
+							} else {
+								html = html + part.part;
+							}
+	
+						}
+						
+						html = html + '</i></span>';
+				    }
 				}
 				return html + '</div>';
 			},
@@ -279,15 +301,15 @@
 
 				
 				// add prop value
-				var propValueAsString = this._propValueByName(v, propName);
+				let propValueAsString = this._propValueByName(v, propName);
 				if (highlight === false) {
 					html = html + propValueAsString;
 				} else {
 					// matched parts should be in a separate div
 					html = html + '<div style="white-space: nowrap;">';
-					var matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
-					for (var index = 0; index < matchedParts.length; index++) {
-						var part = matchedParts[index];
+					let matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
+					for (let index = 0; index < matchedParts.length; index++) {
+						let part = matchedParts[index];
 						if (part.matched) {
 							// addition style-scope and this.is (element name) styles is required to enformse custom style processing
 							html = html
@@ -411,8 +433,7 @@
                 // let's try also to determine the best height depending on the window height and 
                 // the current vertical location of the element
                 var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-                this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
-                this.style['min-height'] = '50px'; 
+                this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment 
             }
 		});
 	})();

@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -57,13 +58,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
+    public static final String ID_ONLY_PROXY_PREFIX = "_______id_only_proxy_______";
     private final Class<T> type;
     private final List<CachedProperty> properties;
     private final EntityFactory factory;
     private final EntityType entityTypeInfo;
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
-        this(type, module, mapper, factory, entityTypeInfoGetter, false, serialisationTypeEncoder, false);
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        this(type, module, mapper, factory, entityTypeInfoGetter, false, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, false);
     }
 
     /**
@@ -80,7 +82,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * @param propertyDescriptorType
      *            -- <code>true</code> to create {@link EntitySerialiser} for {@link PropertyDescriptor} entity type, <code>false</code> otherwise
      */
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
         this.type = type;
         this.factory = factory;
 
@@ -89,7 +91,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
 
         final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder, propertyDescriptorType);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
@@ -32,6 +34,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
@@ -99,14 +102,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
 
             final M criteriaEntity;
             final Class<M> criteriaType;
-            if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
+            final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>();
+            if (CentreResourceUtils.isEmpty(modifHolder)) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
                 final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME), critGenerator, 0L, gdtm);
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
             } else {
-                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, gdtm);
+                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, gdtm);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 

@@ -355,7 +355,8 @@
              * This 'master' reference is strictly for testing purposes.
              */
             _masterReferenceForTesting: {
-                type: Object
+                type: Object,
+                observer: '_masterReferenceForTestingChanged'
             },
             
             ////////////////////////////////////////////////////////////
@@ -562,7 +563,7 @@
             }
             // enhances it with information of what 'property' was chosen (property result-set actions)
             if (self.chosenProperty !== null) {
-            	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+                self._enhanceContextWithChosenProperty(context, self.chosenProperty);
             }
 			return context;
         },

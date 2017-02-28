@@ -552,7 +552,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("hyperlinkProp").asHyperlink()
                 .also()
-
+                .addProp("integerProp").asSpinner()
+                .also()
+                .addProp("producerInitProp").asAutocompleter()
+                .also()
+                .addProp("moneyProp").asMoney()
+                .also()
+                .addProp("nonConflictingProp").asSinglelineText()
+                .also()
+                .addProp("conflictingProp").asSinglelineText()
+                .also()
+                .addProp("domainInitProp").asSinglelineText()
+                .also()
+                
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
                     .shortDesc("CANCEL")
@@ -591,7 +603,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + format("['subheader-open:Other components', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("['subheader-open:Other components', 'flex'],")
-                        + format("[[%s], [%s], ['flex']]", fmr, fmr)+ "]"))
+                        + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
+                        + format("[[%s], [%s], [%s], [%s], ['flex']]", fmr, fmr, fmr, fmr)
+                        + "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
@@ -662,6 +676,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .also()
             .addProp("roles").asSinglelineText()
             .also()
+            .addProp("key").asSinglelineText()
+            .also()
             .addAction(MasterActions.REFRESH)
             //      */.icon("trending-up") SHORT-CUT
             /*      */.shortDesc("CANCEL")
@@ -675,7 +691,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                     "['padding:20px', "
-                    + format("[[%s], [%s], ['flex']]", fmr, fmr)
+                    + format("[[%s], [%s], [%s], ['flex']]", fmr, fmr, fmr)
                     + "]"))
             .done();
 

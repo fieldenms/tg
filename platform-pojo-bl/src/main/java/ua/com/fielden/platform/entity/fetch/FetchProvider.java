@@ -457,11 +457,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     @Override
     public String toString() {
-        return entityType.getSimpleName() + " {/n"
-                + "instrumented = " + instrumented + "/n"
-                + "withKeyAndDesc = " + withKeyAndDesc + "/n"
-                + propertyProviders.toString() + "/n"
-                + "}/n";
+        return " " + entityType.getSimpleName() + " {\n"
+                + "    instrumented = " + instrumented + "\n"
+                + "    withKeyAndDesc = " + withKeyAndDesc + "\n"
+                + "    props = " + propertyProviders.toString() + "\n"
+                + "}\n\n";
     }
 
     @Override

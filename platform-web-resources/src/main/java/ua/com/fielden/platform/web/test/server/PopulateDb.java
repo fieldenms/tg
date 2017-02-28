@@ -224,7 +224,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final UserRole testRole9 = save(new_(UserRole.class, "TEST_ROLE9", "A role, which has access to the the station managing functionality."));
         System.out.println("testRole9.getId() == " + testRole9.getId());
 
-        final TgCollectionalSerialisationParent csp1 = (TgCollectionalSerialisationParent) save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
+        final TgCollectionalSerialisationParent csp1 = save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
 
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
@@ -235,7 +235,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
-        
+
         final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
         System.out.println("timeZone1.getId() == " + timeZone1.getId());
         final TgEntityWithTimeZoneDates timeZone2 = save(new_(TgEntityWithTimeZoneDates.class, "KEY2").setDatePropUtc(new Date(1473057180015L)));
@@ -369,9 +369,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             e1.printStackTrace();
             throw new RuntimeException(e1);
         }
-        
+
         final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
         System.out.println("genEntity1.getId() == " + genEntity1.getId());
+
+        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co(TgPersistentStatus.class).findByKey("DR")));
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

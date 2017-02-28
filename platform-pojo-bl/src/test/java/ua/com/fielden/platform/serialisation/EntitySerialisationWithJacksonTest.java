@@ -29,15 +29,19 @@ import com.google.inject.Module;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
@@ -62,6 +66,8 @@ import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 
 /**
  * Unit tests to ensure correct {@link AbstractEntity} descendants serialisation / deserialisation using JACKSON engine.
@@ -74,9 +80,13 @@ public class EntitySerialisationWithJacksonTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final Date testingDate = new Date();
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);
-    private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder()).getEngine(SerialiserEngines.JACKSON);
-    private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
     private boolean observed = false;
+    
+    private IIdOnlyProxiedEntityTypeCache createIdOnlyProxiedEntityTypeCache() {
+        return new IdOnlyProxiedEntityTypeCacheForTests();
+    }
     
     private ISerialisationTypeEncoder createSerialisationTypeEncoder() {
         return new SerialisationTypeEncoder();
@@ -398,7 +408,214 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
         assertFalse("Incorrect prop visibility.", restoredEntity.getProperty("prop").isVisible());
     }
+    
+    private AbstractEntity createIdOnlyProxy() {
+        final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = ((TgJackson) jacksonSerialiser).idOnlyProxiedEntityTypeCache;
+        return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), 189L);
+    }
+    
+    @Test
+    public void uninstrumented_entity_with_proxy_type_should_be_restored_into_uninstrumented_entity_with_the_same_proxy_type() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final AbstractEntity entity = factory.createUninstrumentedEntity(true, entityType);
+        
+        final Class expectedProxyType = EntityProxyContainer.proxy(entityType, "prop");
+        
+        assertEquals(1, entity.proxiedPropertyNames().size());
+        assertTrue(entity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, entity.getClass());
+        
+        final AbstractEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), entityType);
 
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertEquals(1, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(restoredEntity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, restoredEntity.getClass());
+    }
+    
+    @Test
+    public void uninstrumented_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_entity_with_the_same_id_only_proxy_property() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final AbstractEntity entity = factory.createUninstrumentedEntity(false, entityType).set("prop", createIdOnlyProxy());
+        
+        final Class expectedType = entityType;
+        
+        assertEquals(0, entity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) entity.get("prop")).isIdOnlyProxy());
+        assertEquals(expectedType, entity.getClass());
+        
+        final AbstractEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), entityType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertEquals(0, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
+        assertEquals(expectedType, restoredEntity.getClass());
+    }
+    
+    @Test
+    public void instrumented_entity_with_proxy_type_should_be_restored_into_instrumented_entity_with_the_same_proxy_type() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final AbstractEntity entity = factory.createInstrumentedEntity(true, entityType);
+        
+        final Class expectedProxyType = EntityProxyContainer.proxy(entityType, "prop");
+        
+        assertTrue(entity.getProperty("prop").isProxy());
+        assertEquals(1, entity.proxiedPropertyNames().size());
+        assertTrue(entity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, entity.getClass().getSuperclass());
+        
+        final AbstractEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), entityType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertTrue(restoredEntity.getProperty("prop").isProxy());
+        assertEquals(1, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(restoredEntity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, restoredEntity.getClass().getSuperclass());
+    }
+    
+    @Test
+    public void instrumented_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_entity_with_the_same_id_only_proxy_property() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final AbstractEntity entity = factory.createInstrumentedEntity(false, entityType).set("prop", createIdOnlyProxy());
+        
+        final Class expectedType = entityType;
+        
+        assertEquals(0, entity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) entity.get("prop")).isIdOnlyProxy());
+        assertEquals(expectedType, entity.getClass().getSuperclass());
+        
+        final AbstractEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), entityType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertEquals(0, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
+        assertEquals(expectedType, restoredEntity.getClass().getSuperclass());
+    }
+    
+    @Test
+    public void uninstrumented_generated_entity_with_proxy_type_should_be_restored_into_uninstrumented_generated_entity_with_the_same_proxy_type() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(true, entityType, miType);
+        final AbstractEntity<?> entity = entityAndGeneratedType._1;
+        final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
+        // generated type needs to be registered inside Jackson engine to be able to properly serialise / deserialise such instances
+        ((TgJackson) jacksonSerialiser).registerNewEntityType(generatedType);
+        ((TgJackson) jacksonDeserialiser).registerNewEntityType(generatedType);
+        
+        final Class<? extends AbstractEntity<?>> expectedProxyType = EntityProxyContainer.proxy(generatedType, "prop");
+        
+        assertEquals(1, entity.proxiedPropertyNames().size());
+        assertTrue(entity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, entity.getClass());
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), generatedType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertEquals(1, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(restoredEntity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, restoredEntity.getClass());
+    }
+    
+    @Test
+    public void uninstrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_generated_entity_with_the_same_id_only_proxy_property() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(false, entityType, miType);
+        final AbstractEntity<?> entity = entityAndGeneratedType._1;
+        entity.set("prop", createIdOnlyProxy());
+        final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
+        // generated type needs to be registered inside Jackson engine to be able to properly serialise / deserialise such instances
+        ((TgJackson) jacksonSerialiser).registerNewEntityType(generatedType);
+        ((TgJackson) jacksonDeserialiser).registerNewEntityType(generatedType);
+        
+        final Class expectedType = generatedType;
+        
+        assertEquals(0, entity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) entity.get("prop")).isIdOnlyProxy());
+        assertEquals(expectedType, entity.getClass());
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), generatedType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertEquals(0, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
+        assertEquals(expectedType, restoredEntity.getClass());
+    }
+    
+    @Test
+    public void instrumented_generated_entity_with_proxy_type_should_be_restored_into_instrumented_generated_entity_with_the_same_proxy_type() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(true, entityType, miType);
+        final AbstractEntity<?> entity = entityAndGeneratedType._1;
+        final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
+        // generated type needs to be registered inside Jackson engine to be able to properly serialise / deserialise such instances
+        ((TgJackson) jacksonSerialiser).registerNewEntityType(generatedType);
+        ((TgJackson) jacksonDeserialiser).registerNewEntityType(generatedType);
+        
+        final Class<? extends AbstractEntity<?>> expectedProxyType = EntityProxyContainer.proxy(generatedType, "prop");
+        
+        assertTrue(entity.getProperty("prop").isProxy());
+        assertEquals(1, entity.proxiedPropertyNames().size());
+        assertTrue(entity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, entity.getClass().getSuperclass());
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), generatedType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertTrue(restoredEntity.getProperty("prop").isProxy());
+        assertEquals(1, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(restoredEntity.proxiedPropertyNames().contains("prop"));
+        assertEquals(expectedProxyType, restoredEntity.getClass().getSuperclass());
+    }
+    
+    @Test
+    public void instrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_generated_entity_with_the_same_id_only_proxy_property() throws Exception {
+        final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
+        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(false, entityType, miType);
+        final AbstractEntity<?> entity = entityAndGeneratedType._1;
+        entity.set("prop", createIdOnlyProxy());
+        final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
+        // generated type needs to be registered inside Jackson engine to be able to properly serialise / deserialise such instances
+        ((TgJackson) jacksonSerialiser).registerNewEntityType(generatedType);
+        ((TgJackson) jacksonDeserialiser).registerNewEntityType(generatedType);
+        
+        final Class expectedType = generatedType;
+        
+        assertEquals(0, entity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) entity.get("prop")).isIdOnlyProxy());
+        assertEquals(expectedType, entity.getClass().getSuperclass());
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), generatedType);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertEquals(0, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
+        assertEquals(expectedType, restoredEntity.getClass().getSuperclass());
+    }
+    
     @Test
     public void entity_with_required_prop_should_be_restored() throws Exception {
         final EntityWithString entity = factory.createEntityWithStringRequired();

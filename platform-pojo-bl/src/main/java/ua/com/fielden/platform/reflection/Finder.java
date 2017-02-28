@@ -108,7 +108,7 @@ public class Finder {
         final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
         for (final Field field : findProperties(entityType)) {
             try {
-                final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), factory);
+                final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
                 result.add(pd);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);

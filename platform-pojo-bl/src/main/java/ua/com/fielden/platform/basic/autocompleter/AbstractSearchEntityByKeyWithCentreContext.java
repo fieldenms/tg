@@ -55,6 +55,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     public List<T> findMatches(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
+        queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
         return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).lightweight().model(), getPageSize());
     }
@@ -63,6 +64,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     public List<T> findMatchesWithModel(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
+        queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
         return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).lightweight().model(), getPageSize());
     }

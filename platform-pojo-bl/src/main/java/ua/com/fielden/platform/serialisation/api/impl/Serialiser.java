@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.api.impl;
 import java.io.InputStream;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -30,9 +31,9 @@ public class Serialiser implements ISerialiser {
         createTgKryo(factory, provider); // the serialiser engine will be set automatically
     }
     
-    public static Serialiser createSerialiserWithKryoAndJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    public static Serialiser createSerialiserWithKryoAndJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         final Serialiser serialiser = new Serialiser(factory, provider);
-        serialiser.initJacksonEngine(serialisationTypeEncoder);
+        serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
         return serialiser;
     }
 
@@ -90,7 +91,7 @@ public class Serialiser implements ISerialiser {
     }
     
     @Override
-    public void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder) {
-        tgJackson = new TgJackson(factory, provider, serialisationTypeEncoder);
+    public void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        tgJackson = new TgJackson(factory, provider, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
     }
 }

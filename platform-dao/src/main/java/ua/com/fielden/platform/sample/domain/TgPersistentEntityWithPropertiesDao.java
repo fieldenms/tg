@@ -131,6 +131,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("compositeProp", "compositeProp.desc")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
                 .with("producerInitProp", "status.key", "status.desc")
-                .with("colourProp", "hyperlinkProp"); //
+                .with("colourProp", "hyperlinkProp")
+                .with("idOnlyProxyProp"); //
     }
 }

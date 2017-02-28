@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.ioc;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -64,8 +65,9 @@ public interface IBasicWebApplicationServerModule {
         webApp.setInjector(injector);
 
         final ISerialisationTypeEncoder serialisationTypeEncoder = injector.getInstance(ISerialisationTypeEncoder.class);
+        final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = injector.getInstance(IIdOnlyProxiedEntityTypeCache.class);
         final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
-        serialiser.initJacksonEngine(serialisationTypeEncoder);
+        serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
 
         // initialise IWebApp with its masters / centres
         webApp.initConfiguration();

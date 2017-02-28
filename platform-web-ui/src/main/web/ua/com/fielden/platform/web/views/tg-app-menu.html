@@ -29,9 +29,8 @@
             height: 48px;
             min-height: 48px;
             padding: 0 16px;
-            font-size: 12px;
+            font-size: 14px;
             color: white;
-            cursor: pointer;
         }
         .item-icon-bg {
             width: 100%;
@@ -70,7 +69,7 @@
         <div class="items">
             <tg-tile-layout class="fit" when-desktop="[[menuConfig.whenDesktop]]" when-tablet="[[menuConfig.whenTablet]]" when-mobile="[[menuConfig.whenMobile]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
                 <template is="dom-repeat" items="[[menuConfig.menu]]">
-                    <div class="tile layout vertical" style$="[[_calcItemFilter(item)]]">
+                    <div class="tile layout vertical" style$="[[_calcTileStyle(item)]]">
                         <div class="hero-animatable item fit" name$="[[item.key]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
                         <div class="item relative layout vertical flex-auto" name$="[[item.key]]" on-tap="_itemSelected">
                             <div class="flex-auto relative">
@@ -185,8 +184,8 @@
                     this.fire("menu-item-selected", encodeURIComponent(model.item.key));
                 }
             },
-            _calcItemFilter: function (item) {
-                return isMenuPresent(item.menu) ? "" : "filter: grayscale(1);"
+            _calcTileStyle: function (item) {
+                return isMenuPresent(item.menu) ? "cursor:pointer;" : "filter: grayscale(1);"
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";
@@ -195,7 +194,7 @@
                 return "color: " + item.bgColor + ";";
             },
             _calcCaptionStyleForItem: function (item) {
-                return "background-color: " + item.captionBgColor + ";" + (isMenuPresent(item.menu) ? "" : "cursor: default;s");
+                return "background-color: " + item.captionBgColor + ";";
             }
         });
     })();

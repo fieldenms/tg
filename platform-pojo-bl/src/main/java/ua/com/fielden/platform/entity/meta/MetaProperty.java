@@ -347,7 +347,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [isRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public void setRequired(final boolean required) {
+    public MetaProperty<T> setRequired(final boolean required) {
         throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 

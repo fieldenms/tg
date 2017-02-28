@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
@@ -30,7 +30,6 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -40,8 +39,9 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -50,7 +50,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -69,6 +68,8 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.EntityResource;
+import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 
 /**
  * This utility class contains the methods that are shared across {@link EntityResource} and {@link EntityValidationResource}.
@@ -77,6 +78,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class EntityResourceUtils<T extends AbstractEntity<?>> {
+    private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
+    private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
     private final Class<T> entityType;
@@ -135,13 +138,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             return defProducer.newEntity();
         }
     }
-    
+
     /**
      * Resets the context for the entity to <code>null</code> in case where the entity is {@link AbstractFunctionalEntityWithCentreContext} descendant.
      * <p>
      * This is necessary to be done just before sending the entity to the client application (retrieval, validation and saving actions). It should not be done in producer
      * because the validation prototype's context could be used later (during application of modified properties, or in DAO save method etc.).
-     * 
+     *
      * @param entity
      * @return
      */
@@ -216,7 +219,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         final Set<String> appliedProps = new LinkedHashSet<>();
         final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
-        
+
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
@@ -229,21 +232,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                     appliedProps.add(name);
                 } else { // this is unmodified property
-                    if (!isEntityStale) {
-                        // do nothing
-                    } else {
-                        final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-                        final Object actualValue = entity.get(name);
-                        if (EntityUtils.isStale(originalValue, actualValue)) {
-                            logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), actualValue, originalValue));
-                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
-                        }
-                    }
+                    // IMPORTANT:
+                    // Untouched properties should not be applied, but validation for conflicts should be performed.
+                    logger.debug(String.format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 }
             }
         }
         // iterate through touched properties:
-        //  (the order of application is strictly the same as was done by the user in Web UI client - the only difference is 
+        //  (the order of application is strictly the same as was done by the user in Web UI client - the only difference is
         //  such that properties, that were touched twice or more times, will be applied only once)
         for (final String touchedProp : touchedProps) {
             final String name = touchedProp;
@@ -273,10 +270,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         return entity;
     }
-    
+
     /**
-     * Applies the property value against the entity.
-     * 
+     * Validates / applies the property value against the entity.
+     *
+     * @param apply - indicates whether property application should be performed; if <code>false</code> then only validation will be performed
      * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied (with 'enforced mutation') or 'val' (with simple mutation)
      * @param type
      * @param name
@@ -285,31 +283,78 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param companionFinder
      * @param isEntityStale
      */
-    private static <M extends AbstractEntity<?>> void applyPropertyValue(final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        final String reflectedValueName = shouldApplyOriginalValue ? "origVal" : "val";
-        final Object val = valAndOrigVal.get(reflectedValueName);
-        final Object newValue = convert(type, name, val, reflectedValueId(valAndOrigVal, reflectedValueName), companionFinder);
-        if (notFoundEntity(type, name, val, newValue)) {
-            final String msg = String.format("No entity with key [%s] has been found.", val);
-            logger.info(msg);
-            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-        } else if (!isEntityStale) {
-            enforceSet(shouldApplyOriginalValue, name, entity, newValue);
-        } else {
-            final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-            final Object actualValue = entity.get(name);
-            if (EntityUtils.isConflicting(newValue, staleOriginalValue, actualValue)) {
-                logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue, newValue));
-                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        if (apply) {
+            // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
+            final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
+            final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
+            final Object valueToBeApplied = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
+            if (notFoundEntity(type, name, valToBeApplied, valueToBeApplied)) {
+                final String msg = String.format("No entity with key [%s] has been found.", valToBeApplied);
+                logger.info(msg);
+                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
-                enforceSet(shouldApplyOriginalValue, name, entity, newValue);
+                validateAnd(() -> {
+                    enforceSet(shouldApplyOriginalValue, name, entity, valueToBeApplied);
+                }, () -> {
+                    return valueToBeApplied;
+                }, () -> {
+                    return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+                }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
+        } else {
+            // in case where no application is needed (unmodified untouched) the value should be validated only
+            validateAnd(() -> {
+                // do nothing
+            }, () -> {
+                return shouldApplyOriginalValue 
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder) 
+                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
+            }, () -> {
+                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
         }
     }
     
     /**
-     * Extracts reflected value ID for 'val' or 'origVal' reflectedValueName if it exists.
+     * Validates the property on subject of conflicts and <code>perform[s]Action</code>. 
      * 
+     * @param performAction -- the action to be performed in case of successful validation
+     * @param calculateStaleNewValue -- function to lazily calculate 'staleNewValue' (heavy operation)
+     * @param calculateStaleOriginalValue -- function to lazily calculate 'staleOriginalValue' (heavy operation)
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void validateAnd(final Runnable performAction, final Supplier<Object> calculateStaleNewValue, final Supplier<Object> calculateStaleOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        if (!isEntityStale) {
+            performAction.run();
+        } else {
+            final Object staleOriginalValue = calculateStaleOriginalValue.get();
+            final Object freshValue = entity.get(name);
+            final Object staleNewValue = calculateStaleNewValue.get();
+            if (EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
+                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction) 
+                // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
+                if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
+                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
+                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, CONFLICT_WARNING));
+                } else {
+                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + String.format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                }
+            } else {
+                performAction.run();
+            }
+        }
+    }
+
+    /**
+     * Extracts reflected value ID for 'val' or 'origVal' reflectedValueName if it exists.
+     *
      * @param valAndOrigVal
      * @param reflectedValueName
      * @return
@@ -322,10 +367,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             return Optional.of(extractLongValueFrom(reflectedValueId));
         }
     }
-    
+
     /**
-     * Applies the modified property value ('val') against the entity.
-     * 
+     * Applies the modified (touched / untouched) property value ('val') against the entity.
+     *
      * @param type
      * @param name
      * @param valAndOrigVal
@@ -334,12 +379,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        applyPropertyValue(false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
-    
+
     /**
-     * Applies the unmodified property value ('origVal') against the entity (using 'enforced mutation').
-     * 
+     * Applies the unmodified (touched) property value ('origVal') against the entity (using 'enforced mutation').
+     *
      * @param type
      * @param name
      * @param valAndOrigVal
@@ -348,12 +393,26 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        applyPropertyValue(true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
+    
+    /**
+     * Validates the unmodified (untouched) property value for 'changed by other user' warning.
+     * 
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
 
     /**
      * Sets the value for the entity property.
-     * 
+     *
      * @param enforce - indicates whether to use 'enforced mutation'
      * @param name
      * @param entity
@@ -386,10 +445,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !appliedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(Result.successful(entity));
         });
-        
+
         return entity;
     }
-    
+
     /**
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
@@ -410,7 +469,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
-     * 
+     *
      * @param entity
      */
     public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
@@ -438,13 +497,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private static <M extends AbstractEntity<?>> boolean notFoundEntity(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
         return reflectedValue != null && newValue == null && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
-    
+
     /**
      * Determines property type.
      * <p>
      * The exception from standard logic is only for "collection modification func action", where the type of "chosenIds", "addedIds" and "removedIds" properties
      * determines from the second type parameter of the func action type. This is done due to generic nature of that types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
-     * 
+     *
      * @param type
      * @param propertyName
      * @return
@@ -476,7 +535,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param propertyName
      * @param reflectedValue
      * @param reflectedValueId -- in case where the property is entity-typed, this parameter represent an optional ID of the entity-typed value returned from the client application
-     * 
+     *
      * @return
      */
     private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final Optional<Long> reflectedValueId, final ICompanionObjectFinder companionFinder) {
@@ -484,7 +543,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             return null;
         }
         final Class<?> propertyType = determinePropertyType(type, propertyName);
-        
+
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
@@ -525,7 +584,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 } else {
                     key = keys[0];
                 }
-                
+
                 final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
                 return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
@@ -540,8 +599,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of collectional type [%s] with [%s] elements. Only [Set / List] of [String / Long] elements are supported.", propertyName, type.getSimpleName(), reflectedValue, collectionType.getSimpleName(), propertyType.getSimpleName()));
             }
             final List<Object> list = (ArrayList<Object>) reflectedValue;
-            final Stream<Object> stream = list.stream().map( 
-                item -> item == null ? null : 
+            final Stream<Object> stream = list.stream().map(
+                item -> item == null ? null :
                     isStringElem ? item.toString() : extractLongValueFrom(item)
             );
             return stream.collect(Collectors.toCollection(isSet ? LinkedHashSet::new : ArrayList::new));
@@ -608,7 +667,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     /**
      * Extracts from number-like <code>reflectedValue</code> its {@link Long} representation.
-     * 
+     *
      * @param reflectedValue
      * @return
      */
@@ -627,7 +686,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     /**
      * If one of the composite key members is of type {@link PropertyDescriptor} then the search-by value needs to be modified by converting the provided string representation
      * for property descriptors to the required form.
-     * 
+     *
      * @param propertyType
      * @param entityPropertyType
      * @param compositeKeyAsString
@@ -655,7 +714,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
                 final String value = isLastKeyMember ? keyValues : keyValues.substring(0, separatorIndex);
                 keyValues = isLastKeyMember ? "" : keyValues.substring(separatorIndex + 1);
-                
+
                 final Field field = keyMembers.get(index);
                 if (EntityUtils.isPropertyDescriptor(field.getType())) {
                     final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, entityPropertyType, field.getName()).value();
@@ -667,7 +726,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 } else {
                     convertedKeyValue.append(value);
                 }
-                
+
                 if (index < keyMembers.size() - 1) {
                     convertedKeyValue.append(keyMemberSeparator);
                 }
@@ -678,7 +737,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     /**
      * Tries to extract a property descriptor from a given string value.
-     * 
+     *
      * @param reflectedValue
      * @param matcher
      * @return
@@ -738,49 +797,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @param entity
      * @param continuations -- continuations of the entity to be used during saving
-     * 
+     *
      * @return
      */
-    public T save(final T entity, final Optional<Map<String, IContinuationData>> continuations) {
-        final boolean continuationsPresent = continuations.isPresent();
-        final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
-        
-        // iterate over properties in search of the first invalid one (without required checks)
-        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
-        .filter(mp -> mp.getFirstFailure() != null)
-        .findFirst().map(mp -> mp.getFirstFailure());
-        
-        // returns first failure if exists or successful result if there was no failure.
-        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
-        
-        if (isValid.isSuccessful()) {
-            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
-                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
-                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
-            }
-        }
-        
-        // 1) non-persistent entities should always be saved (isDirty will always be true)
-        // 2) persistent but not persisted (new) entities should always be saved (isDirty will always be true)
-        // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
-        // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
-        // 5) persistent+persisted+notDirty+valid entities saving should be skipped
-        if (!entity.isDirty() && entity.isValid().isSuccessful()) {
-            throw Result.failure("There are no changes to save.");
-        }
-        
-        if (continuationsPresent) {
-            co.setMoreData(continuations.get());
-        } else {
-            co.clearMoreData();
-        }
-        final T saved = co.save(entity);
-        if (continuationsPresent) {
-            co.clearMoreData();
-        }
-        return saved;
+    public T save(final T entity, final Map<String, IContinuationData> continuations) {
+        return EntityResourceContinuationsHelper.saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
     }
+
+
 
     /**
      * Deletes the entity.

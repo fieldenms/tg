@@ -9,7 +9,6 @@ import com.google.inject.Injector;
 import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
@@ -38,7 +37,7 @@ public class TgTestApplicationConfiguration extends Component {
         try {
             // create application IoC module and injector
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
+            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
 
             // create and configure REST server utility
@@ -57,7 +56,7 @@ public class TgTestApplicationConfiguration extends Component {
             getDefaultHost().attach(LoginInitiateResetResource.BINDING_PATH, new LoginInitiateResetResourceFactory(injector));
             getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector));
             getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(injector));
-            
+
             // FIXME The old resources need to be completely removed from the platform
 //            getDefaultHost().attach(
 //                    "/system",//

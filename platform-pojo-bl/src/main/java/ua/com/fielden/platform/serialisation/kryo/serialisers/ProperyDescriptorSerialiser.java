@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.serialisation.kryo.serialisers;
 
 import java.nio.ByteBuffer;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import java.util.Optional;
 
 import com.esotericsoftware.kryo.SerializationException;
 import com.esotericsoftware.kryo.serialize.SimpleSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
+
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
  * Serialises {@link PropertyDescriptor} instances.
@@ -32,7 +33,7 @@ public class ProperyDescriptorSerialiser extends SimpleSerializer<PropertyDescri
     public PropertyDescriptor read(final ByteBuffer buffer) {
         final String str = StringSerializer.get(buffer);
         try {
-            return PropertyDescriptor.fromString(str, factory);
+            return PropertyDescriptor.fromString(str, Optional.of(factory));
         } catch (final Exception e) {
             throw new SerializationException("Could not create from string representation \"" + str + "\"");
         }

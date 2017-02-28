@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -71,7 +70,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final T entity;
             if (companion != null) {
                 entity = companion.new_();
-                provideProxies(entity, companion.getFetchProvider());
             } else {
                 entity = factory().newEntity(this.entityType);
             }
@@ -136,19 +134,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected T provideDefaultValuesForStandardNew(final T entity, final EntityNewAction masterEntity) {
         return entity;
     };
-    
-    /**
-     * Provides <code>entity</code>'s proxies for the properties which do not take part in <code>fetchStrategy</code>.
-     *
-     * @param entity
-     * @param fetchStrategy
-     */
-    private T provideProxies(final T entity, final IFetchProvider<T> fetchStrategy) {
-        // TODO implement automatic "proxying" for the properties, which do not take part in fetchStrategy --
-        // -- it provides consistency between newly created entities and fetched entities and also reduces the
-        // size of the JSON data transmitting from server to the client
-        return entity;
-    }
 
     /**
      * Override this method to provide domain-driven <code>entity</code>'s default values for the properties.
