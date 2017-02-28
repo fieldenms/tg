@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
@@ -101,6 +102,7 @@ public class TgStopWebUiConfig {
                             .withContext(context().withSelectionCrit().build())
                             .icon("credit-card")
                             .shortDesc("TgStop map")
+                            .prefDimForView(mkDim("'auto'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build(),
                     InsertionPoints.BOTTOM

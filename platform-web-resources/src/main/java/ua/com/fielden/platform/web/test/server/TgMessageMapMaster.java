@@ -10,6 +10,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.AbstractMapMaster;
  * @author TG Team
  */
 public class TgMessageMapMaster extends AbstractMapMaster<TgMessageMap> {
+    
     public TgMessageMapMaster() {
         super(TgMessageMap.class, "gis/message/tg-message-gis-component", "MessageGisComponent");
     }
