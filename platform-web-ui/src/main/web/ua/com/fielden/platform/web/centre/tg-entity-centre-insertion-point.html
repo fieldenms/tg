@@ -224,9 +224,9 @@
 
             _closeDialog: function () {
                 Polymer.dom(document.body).removeChild(this._dialog);
+                this.detached = false;
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
-                this.detached = false;
                 this.notifyResize();
             },
 
