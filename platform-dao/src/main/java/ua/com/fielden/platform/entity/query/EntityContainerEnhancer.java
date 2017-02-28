@@ -101,7 +101,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
         if (fetchModel.isInstrumented()) {
             for (final EntityContainer<E> entityContainer : entities) {
-                entityContainer.setInstrumented();
+                entityContainer.mkInstrumented();
             }
         }
     }
