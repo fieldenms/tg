@@ -1,6 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+
 <link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
@@ -11,11 +14,14 @@
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/tg-menu-search-input.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
+
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 
@@ -130,7 +136,7 @@
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" disable-swipe force-narrow>
+        <paper-drawer-panel id="drawerPanel" on-iron-select="_updateFocus" disable-swipe force-narrow>
 
             <div class="layout vertical" drawer>
 
@@ -272,11 +278,19 @@
 
             behaviors: [
                 Polymer.NeonAnimatableBehavior,
-                Polymer.TgBehaviors.TgTooltipBehavior
+                Polymer.TgBehaviors.TgTooltipBehavior,
+                Polymer.IronA11yKeysBehavior,
+                Polymer.TgBehaviors.TgFocusRestorationBehavior
             ],
 
+            keyBindings: {
+                'f2': '_showSideMenu',
+                'esc': '_hideSideMenu'
+            },
+
             hostAttributes: {
-                class: "layout vertical"
+                class: "layout vertical",
+                tabindex: 0
             },
 
             observers: [
@@ -310,6 +324,38 @@
 
             searchMenu: function (event) {
                 this.$.menuSearcher.searchMenu();
+            },
+
+            _showSideMenu: function (event) {
+                this._lastActiveElement = document.activeElement;
+                this._wasOpenedByKey = true;
+                this.persistActiveElement(() => {
+                    this._last
+                    if (this._wasClosedByEsc && this._lastActiveElement) {
+                        this._lastActiveElement.focus();
+                    }
+                    delete this._lastActiveElement;
+                    delete this._wasClosedByEsc;
+                });
+                this.$.drawerPanel.openDrawer();
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+            },
+            
+            _hideSideMenu: function (event) {
+                this._wasClosedByEsc = true;
+                this.$.drawerPanel.closeDrawer();
+            },
+            
+            _updateFocus: function (event) {
+                if (this.$.drawerPanel.selected === "main") {
+                    if (this._wasOpenedByKey) {
+                        this.restoreActiveElement();
+                        delete this._wasOpenedByKey;
+                    }
+                }
             },
 
             _calcCheckboxTooltip: function (menu, visible) {
