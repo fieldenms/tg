@@ -247,6 +247,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
         
+        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
+        System.out.println("genEntity1.getId() == " + genEntity1.getId());
+        
+        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co(TgPersistentStatus.class).findByKey("DR")));
+        
+        System.out.print("Populating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -282,7 +288,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             e1.printStackTrace();
             throw new RuntimeException(e1);
         }
+        System.out.println("done");
         
+        System.out.print("Populating machines...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/realtimeMonitorEntities.js").getFile());
@@ -335,7 +343,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             e1.printStackTrace();
             throw new RuntimeException(e1);
         }
+        System.out.println("done");
         
+        System.out.print("Populating geozones...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/polygonEntities.js").getFile());
@@ -369,11 +379,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             e1.printStackTrace();
             throw new RuntimeException(e1);
         }
-
-        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
-        System.out.println("genEntity1.getId() == " + genEntity1.getId());
-
-        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co(TgPersistentStatus.class).findByKey("DR")));
+        System.out.println("done");
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

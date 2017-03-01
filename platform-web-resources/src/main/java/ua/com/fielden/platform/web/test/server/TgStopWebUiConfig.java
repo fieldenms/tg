@@ -3,7 +3,9 @@ package ua.com.fielden.platform.web.test.server;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.*;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import com.google.inject.Injector;
@@ -55,9 +57,12 @@ public class TgStopWebUiConfig {
                 .addCrit("machine").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("orgUnit").asMulti().autocompleter(TgOrgUnit.class).also()
                 .addCrit("gpsTime").asRange().date().also()
-                .addCrit("durationInMinutes").asRange().decimal().also()
-                .addCrit("radiusThreshould").asSingle().decimal().also()
-                .addCrit("speedThreshould").asSingle().decimal().also()
+                .addCrit("durationInMinutes").asRange().decimal().setDefaultValue(range().decimal().setFromValue(BigDecimal.valueOf(15)).value())
+                .also()
+                .addCrit("radiusThreshould").asSingle().decimal().setDefaultValue(single().decimal().setValue(BigDecimal.valueOf(500)).value())
+                .also()
+                .addCrit("speedThreshould").asSingle().decimal().setDefaultValue(single().decimal().setValue(BigDecimal.valueOf(20)).value())
+                .also()
                 .addCrit("nightStop").asMulti().bool()
 //                cdtme.getFirstTick().setValue(root(), "machine", entityVal("22763ТА"))
 //                .setValue(root(), "gpsTime", dateVal("2013-12-01 00:00:00")).setValue2(root(), "gpsTime", dateVal("2013-12-20 23:59:59"))

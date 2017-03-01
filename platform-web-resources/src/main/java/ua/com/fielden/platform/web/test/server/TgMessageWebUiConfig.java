@@ -3,9 +3,12 @@ package ua.com.fielden.platform.web.test.server;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.*;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 
 import java.util.Optional;
+
+import org.joda.time.DateTime;
 
 import com.google.inject.Injector;
 
@@ -95,8 +98,8 @@ public class TgMessageWebUiConfig {
                         shortcut("alt+n").
                         withNoParentCentreRefresh().
                         build())
-                .addCrit("machine").asMulti().autocompleter(TgMachine.class).also()
-                .addCrit("gpsTime").asRange().date()
+                .addCrit("machine").asMulti().autocompleter(TgMachine.class).setDefaultValue(multi().string().setValues("07101ТА").value()).also()
+                .addCrit("gpsTime").asRange().date().setDefaultValue(range().date().setFromValue(new DateTime(2000, 1, 1, 0, 0).toDate()).setToValue(new DateTime(2014, 5, 26, 23, 59).toDate()).value())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
                 .withScrollingConfig(ScrollConfig.configScroll().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(10000)
