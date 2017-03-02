@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
@@ -34,5 +35,11 @@ public class TgPolygonDao extends CommonEntityDao<TgPolygon> implements ITgPolyg
     @SessionRequired
     public void delete(final EntityResultQueryModel<TgPolygon> model, final Map<String, Object> paramValues) {
         defaultDelete(model, paramValues);
+    }
+    
+    @Override
+    protected IFetchProvider<TgPolygon> createFetchProvider() {
+        // needed for autocompletion of 'this' property on corresponding centre
+        return super.createFetchProvider().with("key", "desc");
     }
 }
