@@ -69,8 +69,6 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     }
 
     protected static List<TgMessage> retrieveMessages(final Map<String, Object> paramValues, final ITgMessage messageCompanion) {
-        System.out.println("paramValues == " + paramValues);
-
         logger.info("'Messages' retrieval started at " + new DateTime() + ".");
         final List<QueryProperty> qProperties = new ArrayList<>();
 
@@ -105,7 +103,6 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
         .lightweight()
         // TODO .with(DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap)).model();
         .model();
-        // System.out.println(resultQuery);
         final List<TgMessage> messages = messageCompanion.getAllEntities(resultQuery);
         logger.info("'Messages' retrieval ended at " + new DateTime() + ".");
         return messages;
@@ -189,10 +186,6 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
             currY = y;
         }
 
-        protected TgMessage getLastHardStopMessage() {
-            return messages.get(lastHardStopIndex);
-        }
-
         protected TgMessage firstMessage() {
             return messages.get(0);
         }
@@ -235,7 +228,6 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
         }
 
         public BigDecimal getDurationInMinutes() {
-            // Period p = new Period(getDuration());
             return new BigDecimal(getDuration() * 1.0 / 60000.0);
         }
 
@@ -322,7 +314,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
         }
 
         private boolean isNightStop() {
-            return getDuration() / 60000 >= 180 /* more that 3 hours */&& new Interval(new DateTime(from()), new DateTime(to())).contains(secHourOfLastDay());
+            return getDuration() / 60000 >= 180 /* more that 3 hours */ && new Interval(new DateTime(from()), new DateTime(to())).contains(secHourOfLastDay());
         }
 
         public Date from() {
@@ -368,14 +360,13 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     }
 
     private final static PeriodFormatter periodFormatter = new PeriodFormatterBuilder().//
-    appendYears().appendSuffix(" рік", " років").appendSeparator("; ").//
-    appendMonths().appendSuffix(" місяць", " місяців").appendSeparator("; ").//
-    appendWeeks().appendSuffix(" тиждень", " тижнів").appendSeparator("; ").//
-    appendDays().appendSuffix(" день", " днів").appendSeparator("; ").//
-    appendHours().appendSuffix(" година", " годин").appendSeparator("; ").//
-    appendMinutes().appendSuffix(" хвилина", " хвилин").// appendSeparator("; ").//
-    // appendSeconds().appendSuffix(" second", " seconds").
-    toFormatter();
+            appendYears().appendSuffix(" рік", " років").appendSeparator("; ").//
+            appendMonths().appendSuffix(" місяць", " місяців").appendSeparator("; ").//
+            appendWeeks().appendSuffix(" тиждень", " тижнів").appendSeparator("; ").//
+            appendDays().appendSuffix(" день", " днів").appendSeparator("; ").//
+            appendHours().appendSuffix(" година", " годин").appendSeparator("; ").//
+            appendMinutes().appendSuffix(" хвилина", " хвилин").// appendSeparator("; ").//
+            toFormatter();
 
     public final static PeriodFormatter periodFormatter() {
         return periodFormatter;
@@ -388,7 +379,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
         final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         for (final StopGroup stopGroup : stopGroups) {
-            final TgStop stop = factory.newPlainEntity(TgStop.class, null);
+            final TgStop stop = EntityFactory.newPlainEntity(TgStop.class, null);
 
             final Date from = stopGroup.from();
             final Date to = stopGroup.to();
@@ -396,9 +387,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
             final String toString = dateFormat.format(to);
             stop.setKey("" + stopGroup.getMachine() + " " + fromString + "=>" + toString);
 
-            // final Stop stop = getEntityFactory().newByKey(Stop.class, "" + stopGroup.getLastHardStopMessage());
             stop.setMachineResult(stopGroup.getMachine());
-            // stop.setGpsTime(stopGroup.getLastHardStopMessage().getGpsTime());
             stop.setOrgUnitResult(stopGroup.getMachine().getOrgUnit());
 
             final Interval interval = new Interval(new DateTime(from), new DateTime(to));
@@ -418,7 +407,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
             stop.setBaryCentreY(new BigDecimal(stopGroup.baryCentreY()));
 
             stop.setMessages(new LinkedHashSet<TgMessage>(stopGroup.messages));
-            stop.setMessagesString(/* stop.getMessages() */tooString(stopGroup.messages));
+            stop.setMessagesString(convertToString(stopGroup.messages));
 
             stops.add(stop);
         }
@@ -426,7 +415,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
         return filter(stops, paramValues, Arrays.asList("durationInMinutes", "nightStop"));
     }
 
-    public static <T extends AbstractEntity> String tooString(final Collection<T> entities) {
+    public static <T extends AbstractEntity> String convertToString(final Collection<T> entities) {
         final StringBuilder sb = new StringBuilder("");// <html>");
         for (final T e : entities) {
             sb.append(e.toString() + "<br>");

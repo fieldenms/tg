@@ -33,7 +33,6 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 // TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMessage.class)
 @TransactionEntity("packetReceived")
 public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
     // TODO public static final String MACHINE_PROP_ALIAS = "machineRouteDriver.machine";
 
     @IsProperty

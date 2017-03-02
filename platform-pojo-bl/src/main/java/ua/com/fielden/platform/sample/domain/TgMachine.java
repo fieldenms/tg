@@ -22,13 +22,10 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 @CompanionObject(ITgMachine.class)
 @MapEntityTo
 public class TgMachine extends AbstractAvlMachine<TgMessage> {
-    private static final long serialVersionUID = 5862862554383165685L;
-    
     @IsProperty
     @MapTo
     @Title(value = "Орг. підрозділ", desc = "Організаційний підрозділ, до якого належить машина")
     private TgOrgUnit orgUnit;
-
     
     @IsProperty(linkProperty = "machine")
     @Readonly

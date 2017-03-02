@@ -38,22 +38,22 @@ public class TgOrgUnit extends AbstractEntity<String> {
 
     @Observable
     public TgOrgUnit setSapName(final String sapName) {
-	this.sapName = sapName;
-	return this;
+        this.sapName = sapName;
+        return this;
     }
 
     public String getSapName() {
-	return sapName;
+        return sapName;
     }
 
     @Observable
     public TgOrgUnit setSapId(final String sapId) {
-	this.sapId = sapId;
-	return this;
+        this.sapId = sapId;
+        return this;
     }
 
     public String getSapId() {
-	return sapId;
+        return sapId;
     }
 
 }

@@ -48,36 +48,33 @@ public class TgCoordinate extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     public TgCoordinate setOrder(final Integer name) {
-	this.order = name;
-	return this;
+        this.order = name;
+        return this;
     }
 
     public Integer getOrder() {
-	return order;
+        return order;
     }
-
 
     @Observable
     public TgCoordinate setLatitude(final BigDecimal latitude) {
-	this.latitude = latitude;
-	return this;
+        this.latitude = latitude;
+        return this;
     }
 
     public BigDecimal getLatitude() {
-	return latitude;
+        return latitude;
     }
-
 
     @Observable
     public TgCoordinate setLongitude(final BigDecimal longitude) {
-	this.longitude = longitude;
-	return this;
+        this.longitude = longitude;
+        return this;
     }
 
     public BigDecimal getLongitude() {
-	return longitude;
+        return longitude;
     }
-
 
     @Observable
     public TgCoordinate setPolygon(final TgPolygon value) {

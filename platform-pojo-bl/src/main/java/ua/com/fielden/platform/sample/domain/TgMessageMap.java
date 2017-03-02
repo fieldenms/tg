@@ -14,5 +14,5 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ITgMessageMap.class)
 public class TgMessageMap extends AbstractFunctionalEntityWithCentreContext<String> {
-    private static final long serialVersionUID = 1L;
+    
 }

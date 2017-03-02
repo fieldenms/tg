@@ -14,5 +14,4 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ITgPolygonMap.class)
 public class TgPolygonMap extends AbstractFunctionalEntityWithCentreContext<String> {
-    private static final long serialVersionUID = 1L;
 }

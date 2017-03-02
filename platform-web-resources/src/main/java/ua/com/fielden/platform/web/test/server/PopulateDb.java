@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -72,7 +73,7 @@ import ua.com.fielden.platform.types.Money;
  *
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
-
+    private final Logger logger = Logger.getLogger(getClass());
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
@@ -99,7 +100,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     @Override
     protected void populateDomain() {
-        System.out.println("Creating and populating the development database...");
+        logger.info("Creating and populating the development database...");
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
@@ -118,36 +119,19 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
-        System.out.println("admin.getId() == " + admin.getId());
-
-        System.out.println("Settign up current user SU and its permissions...");
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
-        // populate testing entities
+        logger.info("\tPopulate testing entities...");
         final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
                 .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
-        System.out.println("ent1.getId() == " + ent1.getId());
         final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2.").setRequiredValidatedProp(30));
-        System.out.println("ent2.getId() == " + ent2.getId());
         final TgPersistentEntityWithProperties ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setDesc("Description for entity with key 3.").setRequiredValidatedProp(30));
-        System.out.println("ent3.getId() == " + ent3.getId());
         save(ent2.setEntityProp(ent3));
-
-        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
-        System.out.println("moneyEnt1.getId() == " + moneyEnt1.getId());
-
-        final TgPersistentEntityWithProperties bigDecimalEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
-        System.out.println("bigDecimalEnt1.getId() == " + bigDecimalEnt1.getId());
-
-        final TgPersistentEntityWithProperties stringEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30));
-        System.out.println("stringEnt1.getId() == " + stringEnt1.getId());
-
-        final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
-        System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
-
-        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
-        System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
-
+        save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
@@ -156,73 +140,37 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 .setColourProp(Colour.RED).setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"));
         de.setDesc("Default entity description");
         final TgPersistentEntityWithProperties defaultEnt = save(de);
-        System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
-
         final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial").setDesc("Description for entity with key 10.").setRequiredValidatedProp(30));
-        System.out.println("staleEnt1.getId() == " + staleEnt1.getId());
-        System.out.println("staleEnt1.getVersion() == " + staleEnt1.getVersion());
-
-        final TgPersistentEntityWithProperties staleEnt1New = save(staleEnt1.setConflictingProp("persistently modified").setRequiredValidatedProp(30));
-        System.out.println("staleEnt1New.getVersion() == " + staleEnt1New.getVersion());
+        save(staleEnt1.setConflictingProp("persistently modified").setRequiredValidatedProp(30));
 
         final TgPersistentCompositeEntity ce = new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10);
         ce.setDesc("Default composite entity description as a long text to demonstrate proper word wrapping as part of displaying the autocompleted values.");
         final TgPersistentCompositeEntity compositeEnt1 = save(ce);
-        System.out.println("compositeEnt1.getId() == " + compositeEnt1.getId());
 
         final TgPersistentEntityWithProperties exampleEntToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1).setDesc("Description for entity with key 11.").setRequiredValidatedProp(30);
-        System.out.println("exampleEntToBeSaved.getBigDecimalProp().scale() == " + exampleEntToBeSaved.getBigDecimalProp().scale());
         final TgPersistentEntityWithProperties exampleEnt1 = save(exampleEntToBeSaved);
-        System.out.println("exampleEnt1.getBigDecimalProp().scale() == " + exampleEnt1.getBigDecimalProp().scale());
-        System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
 
         save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(exampleEnt1).setAdditionalProperty(su));
 
+        logger.info("\tPopulate demo entities...");
         createDemoDomain(ent1, ent3, compositeEnt1);
-        //
-        //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
-        //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());
 
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
-        final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
-        System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
-
-        final TgEntityWithPropertyDependency entWithPropDependency = save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
-        System.out.println("entWithPropDependency.getId() == " + entWithPropDependency.getId());
-
+        save(colourEntity);
+        save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
-        System.out.println("stationMgr.getId() == " + stationMgr.getId());
-        final UserAndRoleAssociation su2StationMgr = save(new_composite(UserAndRoleAssociation.class, su, stationMgr));
-        System.out.println("su2StationMgr.getId() == " + su2StationMgr.getId());
-
-        final UserRole testRole1 = save(new_(UserRole.class, "TEST_ROLE1", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole1.getId() == " + testRole1.getId());
-
-        final UserRole testRole2 = save(new_(UserRole.class, "TEST_ROLE2", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole2.getId() == " + testRole2.getId());
-
-        final UserRole testRole3 = save(new_(UserRole.class, "TEST_ROLE3", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole3.getId() == " + testRole3.getId());
-
-        final UserRole testRole4 = save(new_(UserRole.class, "TEST_ROLE4", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole4.getId() == " + testRole4.getId());
-
-        final UserRole testRole5 = save(new_(UserRole.class, "TEST_ROLE5", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole5.getId() == " + testRole5.getId());
-
-        final UserRole testRole6 = save(new_(UserRole.class, "TEST_ROLE6", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole6.getId() == " + testRole6.getId());
-
-        final UserRole testRole7 = save(new_(UserRole.class, "TEST_ROLE7", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole7.getId() == " + testRole7.getId());
-
-        final UserRole testRole8 = save(new_(UserRole.class, "TEST_ROLE8", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole8.getId() == " + testRole8.getId());
-
-        final UserRole testRole9 = save(new_(UserRole.class, "TEST_ROLE9", "A role, which has access to the the station managing functionality."));
-        System.out.println("testRole9.getId() == " + testRole9.getId());
+        save(new_composite(UserAndRoleAssociation.class, su, stationMgr));
+        save(new_(UserRole.class, "TEST_ROLE1", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE2", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE3", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE4", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE5", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE6", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE7", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE8", "A role, which has access to the the station managing functionality."));
+        save(new_(UserRole.class, "TEST_ROLE9", "A role, which has access to the the station managing functionality."));
 
         final TgCollectionalSerialisationParent csp1 = save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
@@ -236,23 +184,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
 
-        final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
-        System.out.println("timeZone1.getId() == " + timeZone1.getId());
-        final TgEntityWithTimeZoneDates timeZone2 = save(new_(TgEntityWithTimeZoneDates.class, "KEY2").setDatePropUtc(new Date(1473057180015L)));
-        System.out.println("timeZone2.getId() == " + timeZone2.getId());
-        final TgEntityWithTimeZoneDates timeZone3 = save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
-        System.out.println("timeZone3.getId() == " + timeZone3.getId());
-        final TgEntityWithTimeZoneDates timeZone4 = save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
-        System.out.println("timeZone4.getId() == " + timeZone4.getId());
-        final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
-        System.out.println("timeZone5.getId() == " + timeZone5.getId());
+        save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
+        save(new_(TgEntityWithTimeZoneDates.class, "KEY2").setDatePropUtc(new Date(1473057180015L)));
+        save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
+        save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
+        save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         
-        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
-        System.out.println("genEntity1.getId() == " + genEntity1.getId());
+        save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
         
         save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co(TgPersistentStatus.class).findByKey("DR")));
         
-        System.out.print("Populating messages...");
+        logger.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -272,7 +214,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                     found = save(newMachine);
                     machines.put(machineKey, found);
                 }
-                final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) messageProps.get("gpsTime"))).toDate())
+                save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) messageProps.get("gpsTime"))).toDate())
                         .setX(BigDecimal.valueOf((double) messageProps.get("x")))
                         .setY(BigDecimal.valueOf((double) messageProps.get("y")))
                         .setVectorAngle((int) messageProps.get("vectorAngle"))
@@ -282,15 +224,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                         .setDin1((boolean) messageProps.get("din1"))
                         .setGpsPower((boolean) messageProps.get("gpsPower"))
                         .setTravelledDistance(BigDecimal.valueOf((double) messageProps.get("travelledDistance")))
-                        );
+                );
             }
-        } catch (final IOException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException(e1);
+        } catch (final IOException ex) {
+            throw new IllegalStateException(ex);
         }
-        System.out.println("done");
         
-        System.out.print("Populating machines...");
+        logger.info("\tPopulating machines...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/realtimeMonitorEntities.js").getFile());
@@ -326,7 +266,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 if (lastMessageObject != null) {
                     final Map<String, Object> lastMessageProps = (Map<String, Object>) ((Map<String, Object>) lastMessageObject).get("properties");
                     
-                    final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) lastMessageProps.get("gpsTime"))).toDate())
+                    save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) lastMessageProps.get("gpsTime"))).toDate())
                             .setX(BigDecimal.valueOf((double) lastMessageProps.get("x")))
                             .setY(BigDecimal.valueOf((double) lastMessageProps.get("y")))
                             .setVectorAngle((int) lastMessageProps.get("vectorAngle"))
@@ -336,16 +276,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                             .setDin1((boolean) lastMessageProps.get("din1"))
                             .setGpsPower((boolean) lastMessageProps.get("gpsPower"))
                             .setTravelledDistance(BigDecimal.valueOf(15.5)) // lastMessageProps.get("travelledDistance")
-                            );
+                    );
                 }
             }
-        } catch (final IOException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException(e1);
+        } catch (final IOException ex) {
+            throw new IllegalStateException(ex);
         }
-        System.out.println("done");
         
-        System.out.print("Populating geozones...");
+        logger.info("\tPopulating geozones...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/polygonEntities.js").getFile());
@@ -369,17 +307,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 final ArrayList<Object> coordinates = (ArrayList<Object>) polygonProps.get("coordinates");
                 for (final Object coord: coordinates) {
                     final Map<String, Object> coordProps = ((Map<String, Object>) ((Map<String, Object>) coord).get("properties"));
-                    final TgCoordinate coordinateEntity = save(new_composite(TgCoordinate.class, found, (Integer) coordProps.get("order"))
+                    save(new_composite(TgCoordinate.class, found, (Integer) coordProps.get("order"))
                             .setLongitude(BigDecimal.valueOf((double) coordProps.get("longitude")))
                             .setLatitude(BigDecimal.valueOf((double) coordProps.get("latitude")))
-                            );
+                    );
                 }
             }
-        } catch (final IOException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException(e1);
+        } catch (final IOException ex) {
+            throw new IllegalStateException(ex);
         }
-        System.out.println("done");
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
@@ -391,7 +327,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 alg.search(securityNode, predicate);
             }
 
-            System.out.println("Completed database creation and population.");
+            logger.info("Completed database creation and population.");
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }

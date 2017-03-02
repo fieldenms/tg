@@ -43,7 +43,6 @@ import ua.com.fielden.platform.sample.domain.TgStopMap;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -86,16 +85,20 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(NewEntityAction.class);
         add(ExportAction.class);
         add(TgDeletionTestEntity.class);
-        add(TgMessage.class);
         add(TgEntityWithTimeZoneDates.class);
         add(TgGeneratedEntity.class);
         add(OtherEntity.class);
+        
+        add(TgMessage.class);
+        add(TgMessageMap.class);
+        
+        add(TgOrgUnit.class);
         add(TgMachine.class);
         add(TgMachineRealtimeMonitorMap.class);
-        add(TgMessageMap.class);
+        
         add(TgStop.class);
-        add(TgOrgUnit.class);
         add(TgStopMap.class);
+        
         add(TgPolygon.class);
         add(TgCoordinate.class);
         add(TgPolygonMap.class);

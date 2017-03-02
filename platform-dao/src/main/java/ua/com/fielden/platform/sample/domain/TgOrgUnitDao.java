@@ -19,17 +19,4 @@ public class TgOrgUnitDao extends CommonEntityDao<TgOrgUnit> implements ITgOrgUn
     public TgOrgUnitDao(final IFilter filter) {
         super(filter);
     }
-    
-//    @Override
-//    @SessionRequired
-//    public void delete(final OrgUnit entity) {
-//        defaultDelete(entity);
-//    }
-//    
-//    @Override
-//    @SessionRequired
-//    public void delete(final EntityResultQueryModel<OrgUnit> model, final Map<String, Object> paramValues) {
-//        defaultDelete(model, paramValues);
-//    }
-    
 }

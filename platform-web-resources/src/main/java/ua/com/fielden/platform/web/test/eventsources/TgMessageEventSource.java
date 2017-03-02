@@ -4,13 +4,12 @@ import java.util.Date;
 
 import com.google.inject.Inject;
 
-import rx.Observable;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.observables.TgMessageChangeSubject;
 import ua.com.fielden.platform.web.sse.AbstractEventSource;
 
 /**
- * Event source to notify changes to DDS entries.
+ * Event source to notify changes to {@link TgMessage}.
  *
  * @author TG Team
  *
@@ -20,15 +19,6 @@ public class TgMessageEventSource extends AbstractEventSource<TgMessage, TgMessa
     @Inject
     protected TgMessageEventSource(final TgMessageChangeSubject observableKind) {
         super(observableKind);
-    }
-
-    /**
-     * Overridden to provide derived from the original stream that filters events.
-     */
-    @Override
-    protected Observable<TgMessage> getStream() {
-        final Observable<TgMessage> ob = super.getStream();
-        return ob;
     }
 
     @Override
