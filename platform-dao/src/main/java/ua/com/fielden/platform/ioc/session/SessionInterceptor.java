@@ -2,6 +2,8 @@ package ua.com.fielden.platform.ioc.session;
 
 import static java.util.UUID.randomUUID;
 
+import java.util.stream.Stream;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
@@ -38,7 +40,7 @@ import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
-    private transient final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger LOGGER = Logger.getLogger(SessionInterceptor.class);
     
     private ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 
@@ -52,8 +54,9 @@ public class SessionInterceptor implements MethodInterceptor {
         final Session session = sessionFactory.getCurrentSession();
         invocationOwner.setSession(session);
         final Transaction tr = session.getTransaction();
-        /*
-         * this variable indicates whether transaction should be handled in this method;
+        
+        /**
+         * This variable indicates whether transaction should be handled in this method;
          * basically, if transaction is activated in this method then it should be committed only in this method.
          * therefore, shouldCommit is assigned true only when transaction is activated here.
         */
@@ -61,9 +64,9 @@ public class SessionInterceptor implements MethodInterceptor {
         // activate transaction if it not active
         if (!tr.isActive()) {
             session.setFlushMode(FlushMode.COMMIT);
-            logger.debug("Starting new DB transaction");
+            LOGGER.debug("Starting new DB transaction");
             tr.begin();
-            logger.debug("Started new DB transaction");
+            LOGGER.debug("Started new DB transaction");
             
             // generate a GUID for the current transaction
             if (!StringUtils.isEmpty(transactionGuid.get())) {
@@ -85,11 +88,29 @@ public class SessionInterceptor implements MethodInterceptor {
         
         try {
             final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor
-            if (shouldCommit && tr.isActive()) { // if this is the invocation that activated the current transaction then we should commit it
-                logger.debug("Committing DB transaction");
-                tr.commit();
-                transactionGuid.remove();
-                logger.debug("Committed DB transaction");
+            
+            // if this is the invocation that activated the current transaction then we should commit it
+            // but only of the result of invocation is not a stream -- in that case closing of the session is the responsibility of that stream
+            if (shouldCommit && tr.isActive()) {
+                if (result instanceof Stream) {
+                    ((Stream<?>) result).onClose(() -> {
+                        try {
+                            LOGGER.debug("Committing DB transaction on stream close.");
+                            tr.commit();
+                            LOGGER.debug("Committed DB transaction on stream close.");
+                        } catch (final Exception ex) {
+                            LOGGER.fatal("Could not commit DB transaction on stream close.", ex);
+                            throw ex;
+                        } finally {
+                            transactionGuid.remove();
+                        }
+                    });
+                } else {
+                    LOGGER.debug("Committing DB transaction");
+                    tr.commit();
+                    transactionGuid.remove();
+                    LOGGER.debug("Committed DB transaction");
+                }
             } else if (session.isOpen()) {
                 // should flush only if the current session is still open
                 // this check was not needed before migrating off Hibernate 3.2.6 GA
@@ -97,14 +118,15 @@ public class SessionInterceptor implements MethodInterceptor {
             }
             return result;
         } catch (final Exception e) {
-            logger.warn(e);
+            LOGGER.warn(e);
             if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
-                logger.debug("Rolling back DB transaction");
+                LOGGER.debug("Rolling back DB transaction");
                 tr.rollback();
                 transactionGuid.remove();
-                logger.debug("Rolled back DB transaction");
+                LOGGER.debug("Rolled back DB transaction");
             }
             throw e;
         }
     }
+    
 }

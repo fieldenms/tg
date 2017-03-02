@@ -19,14 +19,17 @@ public class ScrollableResultStream {
     
     public static Stream<Object[]> streamOf(final ScrollableResults results) {
         final ScrollableResultSpliterator spliterator = new ScrollableResultSpliterator(results);
-        return StreamSupport.stream(spliterator, false).onClose(spliterator);
+        // create a new stream and make sure the scrollable result set gets closed upon stream closing.
+        return StreamSupport
+                .stream(spliterator, false)
+                .onClose(() -> results.close());
     }
 
     /**
      * A spliterator for streaming {@link ScrollableResults}.
      *
      */
-    private static class ScrollableResultSpliterator implements Spliterator<Object[]>, Runnable {
+    private static class ScrollableResultSpliterator implements Spliterator<Object[]> {
 
         private final ScrollableResults results;
 
@@ -64,14 +67,6 @@ public class ScrollableResultStream {
         @Override
         public int characteristics() {
             return ORDERED & NONNULL & IMMUTABLE;
-        }
-
-        /**
-         * Closes the scrollable resultset. Intended for the use with {@link Stream#onClose(Runnable)}.
-         */
-        @Override
-        public void run() {
-            results.close();
         }
 
     }
