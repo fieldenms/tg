@@ -5,60 +5,60 @@
 
 <script>
 (function() {
-	var RealtimeMonitorGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
-		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
-	};
-
-	RealtimeMonitorGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
-	RealtimeMonitorGisComponent.prototype.constructor = RealtimeMonitorGisComponent;
-
-	RealtimeMonitorGisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
-		return new L.GIS.RealtimeMonitorMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
-	};
-
-	RealtimeMonitorGisComponent.prototype.createEntityStyling = function () {
-		return new L.GIS.RealtimeMonitorEntityStyling();
-	};
-
-	RealtimeMonitorGisComponent.prototype.createMarkerFactory = function () {
-		return new L.GIS.RealtimeMonitorMarkerFactory();
-	};
-
-	RealtimeMonitorGisComponent.prototype.createGeometry = function (feature) {
-		if (feature) {
-		    var featureType = this.featureType(feature);
-			if (featureType === 'TgMachine') {
-				if (feature.get('lastMessage')) {
-					return L.GIS.GisComponent.prototype.createGeometry.call(this, feature.get('lastMessage'));
-				} else {
-					return null;
-				}
-			} else {
-				throw "RealtimeMonitorGisComponent.prototype.createGeometry: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
-			}
-		} else {
-			throw "RealtimeMonitorGisComponent.prototype.createGeometry: [" + feature + "] is empty.";
-		}
-	}
-
-	RealtimeMonitorGisComponent.prototype.createSummaryFeature = function (features) {
-		return null;
-	}
-
-	RealtimeMonitorGisComponent.prototype.createPopupContent = function (feature) {
-		if (feature) {
-		    var featureType = this.featureType(feature);
-			if (featureType === 'TgMachine') {
-				return L.GIS.GisComponent.prototype.createPopupContent.call(this, feature);
-			} else {
-				throw "RealtimeMonitorGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
-			}
-		} else {
-			throw "RealtimeMonitorGisComponent.prototype.createPopupContent: [" + feature + "] is empty.";
-		}
-	}
-	
-	L.GIS = L.GIS || {};
-	L.GIS.RealtimeMonitorGisComponent = RealtimeMonitorGisComponent;
+    const RealtimeMonitorGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
+        L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
+    };
+    
+    RealtimeMonitorGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
+    RealtimeMonitorGisComponent.prototype.constructor = RealtimeMonitorGisComponent;
+    
+    RealtimeMonitorGisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
+        return new L.GIS.RealtimeMonitorMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+    };
+    
+    RealtimeMonitorGisComponent.prototype.createEntityStyling = function () {
+        return new L.GIS.RealtimeMonitorEntityStyling();
+    };
+    
+    RealtimeMonitorGisComponent.prototype.createMarkerFactory = function () {
+        return new L.GIS.RealtimeMonitorMarkerFactory();
+    };
+    
+    RealtimeMonitorGisComponent.prototype.createGeometry = function (feature) {
+        if (feature) {
+            const featureType = this.featureType(feature);
+            if (featureType === 'TgMachine') {
+                if (feature.get('lastMessage')) {
+                    return L.GIS.GisComponent.prototype.createGeometry.call(this, feature.get('lastMessage'));
+                } else {
+                    return null;
+                }
+            } else {
+                throw "RealtimeMonitorGisComponent.prototype.createGeometry: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
+            }
+        } else {
+            throw "RealtimeMonitorGisComponent.prototype.createGeometry: [" + feature + "] is empty.";
+        }
+    }
+    
+    RealtimeMonitorGisComponent.prototype.createSummaryFeature = function (features) {
+        return null;
+    }
+    
+    RealtimeMonitorGisComponent.prototype.createPopupContent = function (feature) {
+        if (feature) {
+            const featureType = this.featureType(feature);
+            if (featureType === 'TgMachine') {
+                return L.GIS.GisComponent.prototype.createPopupContent.call(this, feature);
+            } else {
+                throw "RealtimeMonitorGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
+            }
+        } else {
+            throw "RealtimeMonitorGisComponent.prototype.createPopupContent: [" + feature + "] is empty.";
+        }
+    }
+    
+    L.GIS = L.GIS || {};
+    L.GIS.RealtimeMonitorGisComponent = RealtimeMonitorGisComponent;
 })();
 </script>

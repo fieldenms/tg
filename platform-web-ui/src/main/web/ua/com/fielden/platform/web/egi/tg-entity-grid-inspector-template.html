@@ -1012,10 +1012,10 @@
                 this.columns = tempColumns;
                 
                 this.columnPropertiesMapper = (function (entity) {
-                    var result = [];
-                    for (var index = 0; index < this.columns.length; index++) {
-                        var column = this.columns[index];
-                        var entry = { dotNotation: column.property, value: this._getValue(entity, column.property, column.type) };
+                    const result = [];
+                    for (let index = 0; index < this.columns.length; index++) {
+                        const column = this.columns[index];
+                        const entry = { dotNotation: column.property, value: this._getValue(entity, column.property, column.type) };
                         result.push(entry);
                     }
                     return result;
@@ -1442,25 +1442,25 @@
                     this.style.removeProperty("width");
                 }
             },
+            
             _retrievedEntitySelectionChanged: function (newValue, oldValue) {
-                // console.warn('EGI _retrievedEntitySelectionChanged: prev [', oldValue ? oldValue.entity.properties.layerId : undefined, oldValue ? oldValue.selected : undefined, '] new [', newValue.entity.properties.layerId, newValue.selected, ']');
-                var entityIndex = _findEntity(newValue.entity, this.entities);
+                const entityIndex = _findEntity(newValue.entity, this.entities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".selected", newValue.selected);
-                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected)
+                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
                     
                     if (newValue.selected) { // bring to view the entity that was checked
-                        var scrollContainer = this.querySelector("#scrollContainer");
+                        const scrollContainer = this.querySelector("#scrollContainer");
                         if (scrollContainer) {
-                            var scrollContainerHeight = scrollContainer.offsetHeight;
-                            var entityRows = scrollContainer.querySelectorAll('.table-data-row');
-                            var entityRow = entityRows[entityIndex];
-                            var entityRowHeight = entityRow.offsetHeight;
-                            var topLockPanel = this.querySelector('#topLockPanel');
-                            var topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
-                            var bottomLockPanel = this.querySelector('#bottomLockPanel');
-                            var bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
-                            var yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
+                            const scrollContainerHeight = scrollContainer.offsetHeight;
+                            const entityRows = scrollContainer.querySelectorAll('.table-data-row');
+                            const entityRow = entityRows[entityIndex];
+                            const entityRowHeight = entityRow.offsetHeight;
+                            const topLockPanel = this.querySelector('#topLockPanel');
+                            const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
+                            const bottomLockPanel = this.querySelector('#bottomLockPanel');
+                            const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
+                            const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
                             if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
                                 // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
                                 scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
@@ -1489,13 +1489,13 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
-                var selectedEntity = null;
+                let selectedEntity = null;
                 newValue.forEach(function (newEntity) {
-                    var isSelected = self.selectedEntities.indexOf(newEntity) > -1;
+                    const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
                     if (isSelected) {
                         selectedEntity = newEntity;
                     }
-                    var egiEntity = {
+                    const egiEntity = {
                         selected: isSelected,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
                         entity: newEntity

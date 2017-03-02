@@ -2,27 +2,27 @@
 
 <script>
 (function() {
-	var StopMarkerFactory= function () {
-		L.GIS.MarkerFactory.call(this);
-	};
-
-	StopMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
-	StopMarkerFactory.prototype.constructor = StopMarkerFactory;
-
-	StopMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
-		if (feature) {
-			var featureType = this.featureType(feature);
-			if (featureType === 'TgMessage') {
-				return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature, latlng);
-			} else {
-				throw "StopMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
-			}
-		} else {
-			throw "StopMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
-		}
-	}
-
-	L.GIS = L.GIS || {};
-	L.GIS.StopMarkerFactory = StopMarkerFactory;
+    const StopMarkerFactory = function () {
+        L.GIS.MarkerFactory.call(this);
+    };
+    
+    StopMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
+    StopMarkerFactory.prototype.constructor = StopMarkerFactory;
+    
+    StopMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+        if (feature) {
+            const featureType = this.featureType(feature);
+            if (featureType === 'TgMessage') {
+                return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature, latlng);
+            } else {
+                throw "StopMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
+            }
+        } else {
+            throw "StopMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
+        }
+    }
+    
+    L.GIS = L.GIS || {};
+    L.GIS.StopMarkerFactory = StopMarkerFactory;
 })();
 </script>

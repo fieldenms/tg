@@ -62,12 +62,10 @@ public class TgPolygonWebUiConfig {
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
-                    // .withSummary("_countOfAll", "COUNT(SELF)", "Кількість:Кількість гео-зон.")
                 .also()
                 .addProp("desc")
                     .order(2).asc()
                     .width(400)
-                // .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
                 .setFetchProvider(EntityUtils.fetch(TgPolygon.class).with("coordinates.longitude", "coordinates.latitude"))
                 .addInsertionPoint(
                     action(TgPolygonMap.class)

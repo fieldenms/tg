@@ -64,24 +64,15 @@ public class TgStopWebUiConfig {
                 .addCrit("speedThreshould").asSingle().decimal().setDefaultValue(single().decimal().setValue(BigDecimal.valueOf(20)).value())
                 .also()
                 .addCrit("nightStop").asMulti().bool()
-//                cdtme.getFirstTick().setValue(root(), "machine", entityVal("22763ТА"))
-//                .setValue(root(), "gpsTime", dateVal("2013-12-01 00:00:00")).setValue2(root(), "gpsTime", dateVal("2013-12-20 23:59:59"))
-//                .setValue(root(), "durationInMinutes", new BigDecimal(60.0))
-//                .setValue(root(), "radiusThreshould", new BigDecimal(500.0))
-//                .setValue(root(), "speedThreshould", new BigDecimal(20.0));
-                
-                
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']], ['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
                 .withScrollingConfig(ScrollConfig.configScroll().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(10000)
                 .setVisibleRowsCount(10)
 
                 .addProp("machineResult")
-                    // .order(1).asc()
                     .width(90)
                 .also()
                 .addProp("orgUnitResult")
-                    // .order(2).asc()
                     .width(90)
                 .also()
                 .addProp("periodString")

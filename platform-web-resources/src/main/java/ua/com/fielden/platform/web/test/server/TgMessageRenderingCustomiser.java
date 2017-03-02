@@ -31,9 +31,9 @@ public class TgMessageRenderingCustomiser implements IRenderingCustomiser<Map<St
             if (vectorSpeed == null) {
                 propStyle.put("background-color", "white");
             } else if (vectorSpeed.equals(0)) {
-                propStyle.put("background-color", "red"); // TODO adjust if needed to: CategoryChartFactory.getAwtColor(javafx.scene.paint.Color.rgb(255, 199, 206)); // javafx.scene.paint.Color.RED
+                propStyle.put("background-color", "red");
             } else {
-                propStyle.put("background-color", "green"); // TODO adjust if needed to: CategoryChartFactory.getAwtColor(javafx.scene.paint.Color.rgb(198, 239, 206)); // javafx.scene.paint.Color.GREEN
+                propStyle.put("background-color", "green");
             }
             res.put(propName, propStyle);
         }

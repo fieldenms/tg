@@ -905,28 +905,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
                 /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
                 /*  */.done()
-                .addMenuItem("GPS-треки (Web)").description(
-                        "<html><h3>GPS-треки (Web)</h3>" + //
-                        "Забезпечує можливість перегляду, моніторингу й аналізу GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
-                        "Також дозволяє переглядати обчислений кілометраж у вигляді графіка і / або таблиці." + //
-                        "</html>"
+                .addMenuItem("GPS-треки").description(
+                        "Перегляд, моніторинг та аналіз GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
+                        "Є можливість переглядати обчислений кілометраж у вигляді графіка і / або таблиці."
                 ).centre(configApp().getCentre(MiTgMessage.class).get()).done()
-                .addMenuItem("Зупинки (Web)").description(
-                        "Забезпечує можливість перегляду, моніторингу й аналізу зупинок, які були здійснені машинами компанії." + "<br><br>"
+                .addMenuItem("Зупинки").description(
+                        "Перегляд, моніторинг та аналіз зупинок, які були здійснені машинами компанії." + "<br><br>"
                       + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
-                      + "для радіусу території чи швидкості переміщення задає користувач. Також він звісно може задавати "
-                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки." + //
-                        "</html>"
+                      + "для радіусу території чи швидкості переміщення задає користувач. Також можна задавати "
+                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки."
                 ).centre(configApp().getCentre(MiTgStop.class).get()).done()
-                .addMenuItem("Моніторинг в реальному часі (web)").description(
-                        "<html><h3>Моніторинг в реальному часі (web)</h3>" + //
-                        "Центр для перегляду машин у реальному часі на карті." + //
-                        "</html>"
+                .addMenuItem("Моніторинг в реальному часі").description(
+                        "Центр для перегляду машин у реальному часі на карті."
                 ).centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
-                .addMenuItem("Гео-зони (Web)").description(
-                        "<html><h3>Гео-зони (Web)</h3>" + //
-                        "Забезпечує можливість перегляду, моніторингу й аналізу гео-зон." + //
-                        "</html>"
+                .addMenuItem("Гео-зони").description(
+                        "Перегляд, моніторинг та аналіз гео-зон."
                 ).centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")

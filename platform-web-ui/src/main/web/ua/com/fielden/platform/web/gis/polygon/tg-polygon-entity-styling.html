@@ -2,29 +2,29 @@
 
 <script>
 (function() {
-	var PolygonEntityStyling = function() {
-		L.GIS.EntityStyling.call(this);
-	};
-
-	PolygonEntityStyling.prototype = Object.create(L.GIS.EntityStyling.prototype);
-	PolygonEntityStyling.prototype.constructor = PolygonEntityStyling;
-
-	PolygonEntityStyling.prototype.getColor = function (feature) {
-		if (feature) {
-		    var featureType = this.featureType(feature);
-			if (featureType === 'TgPolygon') {
-				return "purple"; //
-			} else if (featureType === 'TgCoordinate') {
-				return "white"; // irrelevant -- markers
-			} else {
-				throw "PolygonEntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgPolygon' or 'TgCoordinate'.";
-			}
-		} else {
-			throw "PolygonEntityStyling.prototype.getColor: [" + feature + "] is empty.";
-		}
-	}
-
-	L.GIS = L.GIS || {};
-	L.GIS.PolygonEntityStyling = PolygonEntityStyling;
+    const PolygonEntityStyling = function () {
+        L.GIS.EntityStyling.call(this);
+    };
+    
+    PolygonEntityStyling.prototype = Object.create(L.GIS.EntityStyling.prototype);
+    PolygonEntityStyling.prototype.constructor = PolygonEntityStyling;
+    
+    PolygonEntityStyling.prototype.getColor = function (feature) {
+        if (feature) {
+            const featureType = this.featureType(feature);
+            if (featureType === 'TgPolygon') {
+                return "purple"; //
+            } else if (featureType === 'TgCoordinate') {
+                return "white"; // irrelevant -- markers
+            } else {
+                throw "PolygonEntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgPolygon' or 'TgCoordinate'.";
+            }
+        } else {
+            throw "PolygonEntityStyling.prototype.getColor: [" + feature + "] is empty.";
+        }
+    }
+    
+    L.GIS = L.GIS || {};
+    L.GIS.PolygonEntityStyling = PolygonEntityStyling;
 })();
 </script>

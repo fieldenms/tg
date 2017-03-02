@@ -2,31 +2,31 @@
 
 <script>
 (function() {
-	var RealtimeMonitorMarkerFactory= function() {
-		L.GIS.MarkerFactory.call(this);
-	};
-
-	RealtimeMonitorMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
-	RealtimeMonitorMarkerFactory.prototype.constructor = RealtimeMonitorMarkerFactory;
-
-	RealtimeMonitorMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
-		if (feature) {
-		    var featureType = this.featureType(feature);
-			if (featureType === 'TgMachine') {
-				if (feature.get('lastMessage')) {
-					return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature.get('lastMessage'), latlng);
-				} else {
-					throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has no 'lastMessage'. At this stage it should be strictly defined.";
-				}	
-			} else {
-				throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
-			}
-		} else {
-			throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
-		}
-	}
-
-	L.GIS = L.GIS || {};
-	L.GIS.RealtimeMonitorMarkerFactory = RealtimeMonitorMarkerFactory;
+    const RealtimeMonitorMarkerFactory = function () {
+        L.GIS.MarkerFactory.call(this);
+    };
+    
+    RealtimeMonitorMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
+    RealtimeMonitorMarkerFactory.prototype.constructor = RealtimeMonitorMarkerFactory;
+    
+    RealtimeMonitorMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+        if (feature) {
+            const featureType = this.featureType(feature);
+            if (featureType === 'TgMachine') {
+                if (feature.get('lastMessage')) {
+                    return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature.get('lastMessage'), latlng);
+                } else {
+                    throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has no 'lastMessage'. At this stage it should be strictly defined.";
+                }
+            } else {
+                throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
+            }
+        } else {
+            throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
+        }
+    }
+    
+    L.GIS = L.GIS || {};
+    L.GIS.RealtimeMonitorMarkerFactory = RealtimeMonitorMarkerFactory;
 })();
 </script>

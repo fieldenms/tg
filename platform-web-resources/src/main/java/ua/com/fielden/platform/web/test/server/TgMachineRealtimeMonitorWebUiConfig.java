@@ -63,12 +63,10 @@ public class TgMachineRealtimeMonitorWebUiConfig {
                 .setVisibleRowsCount(10)
 
                 .addProp("this")
-                    // .order(1).asc()
                     .width(80)
                     .withSummary("_countOfMachine", "COUNT(SELF)", "К-сть машин:Кількість вибраних машин.")
                 .also()
                 .addProp("orgUnit")
-                    // .order(2).asc()
                     .width(150)
                     .withSummary("_countOfOrgUnit", "COUNT(orgUnit)", "К-сть підрозділів:Кількість унікальних підрозділів для вибраних машин.")
                 .also()
