@@ -11,6 +11,8 @@ import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -22,6 +24,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
@@ -57,13 +60,15 @@ public class EntityContainerFetcher {
         final Stream<EntityContainer<E>> result = streamContainersAsIs(modelResult);
         logger.debug("Fetch model:\n" + modelResult.getFetchModel());
         
-        // TODO implement streaming
-        return result;//new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
+        // TODO implement enhancement of streamed entity containers
+        //new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
+        
+        return result;
     }
 
     
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model();
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.getQueryModel()).model();
         
         final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
         .with(queryModel.getOrderModel())
@@ -88,7 +93,7 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType) throws Exception {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model();
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.getQueryModel()).model();
         
         final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
         .with(queryModel.getOrderModel())
@@ -104,13 +109,13 @@ public class EntityContainerFetcher {
         final EntityTree<E> resultTree = new EntityResultTreeBuilder().buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
         final EntityHibernateRetrievalQueryProducer queryProducer = EntityHibernateRetrievalQueryProducer.mkQueryProducerWithoutPagination(modelResult.getSql(), resultTree.getScalarFromEntityTree(), modelResult.getParamValues());
-        
         final Query query = queryProducer.produceHibernateQuery(executionContext.getSession());
 
+        final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
+        
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
-
-        // TODO implement streaming
-        return null;//entityRawResultConverter.transformFromNativeResult(resultTree, query.list());
+        
+        return stream.map(row ->  entityRawResultConverter.transformTupleIntoEntityContainer(row, resultTree));
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryExecutionModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
