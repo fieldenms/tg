@@ -24,7 +24,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @return
      */
     protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree<E> resultTree, final List<Object> nativeResult) {
-        final List<EntityContainer<E>> result = new ArrayList<EntityContainer<E>>();
+        final List<EntityContainer<E>> result = new ArrayList<>();
 
         for (final Object nativeEntry : nativeResult) {
             final Object[] nativeEntries = nativeEntry instanceof Object[] ? (Object[]) nativeEntry : new Object[] { nativeEntry };
@@ -42,9 +42,9 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param shouldBeFetched
      * @return
      */
-    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
+    protected <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
 
-        final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType());
+        final EntityContainer<ET> entCont = new EntityContainer<>(resultTree.getResultType());
 
         for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
             entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
