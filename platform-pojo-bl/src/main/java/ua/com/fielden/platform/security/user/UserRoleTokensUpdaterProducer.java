@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
@@ -47,12 +48,19 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
     @Override
     @Authorise(UserRoleReviewToken.class)
     protected UserRoleTokensUpdater provideCurrentlyAssociatedValues(final UserRoleTokensUpdater entity, final UserRole masterEntity) {
+        final Set<String> chosenTokenIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
         final SortedSet<SecurityTokenNode> topLevelTokens = securityTokenProvider.getTopLevelSecurityTokenNodes();
         final Set<SecurityTokenInfo> linearisedTokens = lineariseTokens(topLevelTokens, factory());
-        entity.setTokens(linearisedTokens);
         
-        final Set<String> chosenRoleIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
-        entity.setChosenIds(chosenRoleIds);
+        final Map<Boolean, List<SecurityTokenInfo>> chosenAndNot = linearisedTokens.stream().collect(Collectors.partitioningBy(token -> chosenTokenIds.contains(token.getKey())));
+        
+        // show chosen items first
+        final Set<SecurityTokenInfo> allTokens = new LinkedHashSet<>();
+        allTokens.addAll(chosenAndNot.get(true));
+        allTokens.addAll(chosenAndNot.get(false));
+        entity.setTokens(allTokens);
+        
+        entity.setChosenIds(chosenTokenIds);
         return entity;
     }
     
