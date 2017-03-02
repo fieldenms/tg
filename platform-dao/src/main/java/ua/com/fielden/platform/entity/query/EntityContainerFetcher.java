@@ -46,8 +46,7 @@ public class EntityContainerFetcher {
         return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
     }
     
-    public <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel)
-            throws Exception {
+    public <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
 
@@ -58,7 +57,7 @@ public class EntityContainerFetcher {
         final Stream<EntityContainer<E>> stream = streamContainersAsIs(modelResult);
         logger.debug("Fetch model:\n" + modelResult.getFetchModel());
         
-        final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache());
+        final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache());
         
         return stream.map(container -> entityContainerEnhancer.enhance(container, modelResult.getFetchModel()));
     }
@@ -83,12 +82,12 @@ public class EntityContainerFetcher {
         
         final Query query = queryProducer.produceHibernateQuery(executionContext.getSession());
 
-        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<E>(executionContext.getEntityFactory());
+        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
         return entityRawResultConverter.transformFromNativeResult(resultTree, query.list());
     }
 
-    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType) throws Exception {
+    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType) {
         final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.getQueryModel()).model();
         
         final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
@@ -101,7 +100,7 @@ public class EntityContainerFetcher {
     }
 
     
-    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersAsIs(final QueryModelResult<E> modelResult) throws Exception {
+    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersAsIs(final QueryModelResult<E> modelResult) {
         final EntityTree<E> resultTree = new EntityResultTreeBuilder().buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
         final EntityHibernateRetrievalQueryProducer queryProducer = EntityHibernateRetrievalQueryProducer.mkQueryProducerWithoutPagination(modelResult.getSql(), resultTree.getScalarFromEntityTree(), modelResult.getParamValues());
