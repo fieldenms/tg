@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -825,6 +826,30 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
         return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
+    }
+    
+    /**
+     * Returns a stream of entities that match the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    @Override
+    @SessionRequired
+    public Stream<T> stream(QueryExecutionModel<T, ?> queryModel) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
+        
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
+        return new EntityFetcher(queryExecutionContext).streamEntities(qem);
+    }
+
+    /**
+     * Returns a stream of entities that match the provided query. Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
+     * 
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    @Override
+    @SessionRequired
+    public Stream<T> stream(QueryExecutionModel<T, ?> qem, int fetchSize) {
+        return stream(qem);
     }
 
     @Override

@@ -223,25 +223,22 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
 
     /**
      * Returns a non-parallel stream with the data based on the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      * 
      * @param qem -- EQL model
-     * @param pageCapacity -- a batch size for retrieve the next lot of data to feed the stream
+     * @param fetchSize -- a batch size for retrieve the next lot of data to feed the stream
      * @return
      */
-    default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
-        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, !instrumented() ? qem.lightweight() : qem, pageCapacity);
-        return StreamSupport.stream(spliterator, false);
-    }
+    Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize);
     
     /**
-     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default page capacity. 
+     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default fetch size. 
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      * 
      * @param qem
      * @return
      */
-    default Stream<T> stream(final QueryExecutionModel<T, ?> qem) {
-        return stream(qem, DEFAULT_PAGE_CAPACITY);
-    }
+    Stream<T> stream(final QueryExecutionModel<T, ?> qem);
     
     /**
      * Persists (saves/updates) the entity and returns the updated entity back.
