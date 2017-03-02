@@ -152,7 +152,7 @@
                                 <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
-                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
+                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuItemsRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                         <!--TODO remove groupIndex-->
@@ -221,6 +221,16 @@
                 path: path.slice(0, pathIndex).join('/')
             };
         };
+        const isDescendant = (parent, child) => {
+            let node = child.parentNode;
+            while (node != null) {
+                if (node == parent) {
+                    return true;
+                }
+                node = node.parentNode;
+            }
+            return false;
+        }
         Polymer({
 
             is: "tg-view-with-menu",
@@ -284,8 +294,7 @@
             ],
 
             keyBindings: {
-                'f2': '_showSideMenu',
-                'esc': '_hideSideMenu'
+                'f2': '_showSideMenu'
             },
 
             hostAttributes: {
@@ -297,7 +306,16 @@
                 '_updatePage(menuItem, submodule)'
             ],
 
+            ready: function () {
+                this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
+            },
+
             attached: function () {
+                console.log("---attached menu item------: " + this.menuItem.key);
+
+                Polymer.dom(this.$.menu).querySelectorAll("paper-menu").forEach(function (menu) {
+                    menu.addEventListener("keydown", this._menuKeyDown.bind(this))
+                });
                 this.async(function () {
                     if (!this._selectedPage) {
                         this.set("_selectedPage", "_");
@@ -326,36 +344,43 @@
                 this.$.menuSearcher.searchMenu();
             },
 
+            _menuItemsRendered: function (event) {
+                const subItem = event.model.firstLevelItem;
+                if (this._isMenuPresent(subItem.menu)) {
+                    console.log(this.$$("paper-menu[name='" + this._calcItemPath(subItem) + "']"), this._calcItemPath(subItem));
+                    this.$$("paper-menu[name='" + this._calcItemPath(subItem) + "']").addEventListener("keydown", this._menuKeyDown.bind(this));
+                }
+            },
+
+            _menuKeyDown: function (event) {
+                if (event.keyCode === 27 /*Escape*/ ) {
+                    this._wasClosedByEsc = true;
+                    this.$.drawerPanel.closeDrawer();
+                }
+            },
+
             _showSideMenu: function (event) {
                 this._lastActiveElement = document.activeElement;
-                this._wasOpenedByKey = true;
-                this.persistActiveElement(() => {
-                    this._last
-                    if (this._wasClosedByEsc && this._lastActiveElement) {
-                        this._lastActiveElement.focus();
-                    }
-                    delete this._lastActiveElement;
-                    delete this._wasClosedByEsc;
-                });
                 this.$.drawerPanel.openDrawer();
                 if (event.stopPropagation) event.stopPropagation();
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
                 event.returnValue = false;
             },
-            
-            _hideSideMenu: function (event) {
-                this._wasClosedByEsc = true;
-                this.$.drawerPanel.closeDrawer();
-            },
-            
+
             _updateFocus: function (event) {
                 if (this.$.drawerPanel.selected === "main") {
-                    if (this._wasOpenedByKey) {
-                        this.restoreActiveElement();
-                        delete this._wasOpenedByKey;
+                    if (this._wasClosedByEsc) {
+                        if (this._lastActiveElement && isDescendant(this, this._lastActiveElement)) {
+                            this._lastActiveElement.focus();
+                            delete this._lastActiveElement;
+                        } else {
+                            this.focus();
+                        }
+                        delete this._wasClosedByEsc;
                     }
                 }
+                
             },
 
             _calcCheckboxTooltip: function (menu, visible) {
