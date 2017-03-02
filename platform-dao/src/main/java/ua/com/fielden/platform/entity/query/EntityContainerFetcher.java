@@ -124,11 +124,11 @@ public class EntityContainerFetcher {
 
         final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getQueryModel().getResultType(), fm, qem.getParamValues());
         final String sql = entQuery.sql();
-        return new QueryModelResult<E>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
+        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
-        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<ResultQueryYieldDetails>();
+        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield yield : model.getYields()) {
             result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
         }

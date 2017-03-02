@@ -23,7 +23,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param nativeResult
      * @return
      */
-    protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree<E> resultTree, final List<Object> nativeResult) {
+    protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree<E> resultTree, final List<?> nativeResult) {
         final List<EntityContainer<E>> result = new ArrayList<>();
 
         for (final Object nativeEntry : nativeResult) {
