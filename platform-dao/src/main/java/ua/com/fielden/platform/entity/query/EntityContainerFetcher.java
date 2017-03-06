@@ -5,11 +5,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
+import org.hibernate.CacheMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 
@@ -46,15 +48,15 @@ public class EntityContainerFetcher {
         return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
     }
     
-    public <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel) {
+    public <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
 
         if (modelResult.idOnlyQuery()) {
-            return streamContainersForIdOnlyQuery(queryModel, modelResult.getResultType());
+            return streamContainersForIdOnlyQuery(queryModel, modelResult.getResultType(), fetchSize);
         }
         
-        final Stream<EntityContainer<E>> stream = streamContainersAsIs(modelResult);
+        final Stream<EntityContainer<E>> stream = streamContainersAsIs(modelResult, fetchSize);
         logger.debug("Fetch model:\n" + modelResult.getFetchModel());
         
         final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache());
@@ -87,7 +89,7 @@ public class EntityContainerFetcher {
         return entityRawResultConverter.transformFromNativeResult(resultTree, query.list());
     }
 
-    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType) {
+    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Optional<Integer> fetchSize) {
         final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.getQueryModel()).model();
         
         final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
@@ -96,16 +98,17 @@ public class EntityContainerFetcher {
         .with(queryModel.getParamValues())
         .lightweight().model();
         
-        return streamAndEnhanceContainers(idOnlyQem);
+        return streamAndEnhanceContainers(idOnlyQem, fetchSize);
     }
 
     
-    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersAsIs(final QueryModelResult<E> modelResult) {
+    private <E extends AbstractEntity<?>> Stream<EntityContainer<E>> streamContainersAsIs(final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize) {
         final EntityTree<E> resultTree = new EntityResultTreeBuilder().buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
         final EntityHibernateRetrievalQueryProducer queryProducer = EntityHibernateRetrievalQueryProducer.mkQueryProducerWithoutPagination(modelResult.getSql(), resultTree.getScalarFromEntityTree(), modelResult.getParamValues());
-        final Query query = queryProducer.produceHibernateQuery(executionContext.getSession());
-
+        final Query query = queryProducer
+                            .produceHibernateQuery(executionContext.getSession())            
+                            .setFetchSize(fetchSize.orElse(100));
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
         
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());

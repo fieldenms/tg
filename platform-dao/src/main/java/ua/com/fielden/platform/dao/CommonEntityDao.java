@@ -834,11 +834,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SessionRequired
-    public Stream<T> stream(QueryExecutionModel<T, ?> queryModel) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        return new EntityFetcher(queryExecutionContext).streamEntities(qem);
+    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
+        return stream(queryModel, 100);
     }
 
     /**
@@ -848,8 +845,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SessionRequired
-    public Stream<T> stream(QueryExecutionModel<T, ?> qem, int fetchSize) {
-        return stream(qem);
+    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
+        
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
+        return new EntityFetcher(queryExecutionContext).streamEntities(qem, Optional.of(fetchSize));
     }
 
     @Override

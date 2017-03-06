@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
@@ -51,12 +52,12 @@ public class EntityFetcher {
         }
     }
     
-    public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel) {
+    public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         try {
             final DateTime st = new DateTime();
             final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
             final Stream<EntityContainer<E>> containers = entityContainerFetcher
-                    .streamAndEnhanceContainers(queryModel)
+                    .streamAndEnhanceContainers(queryModel, fetchSize)
                     .map(c -> !queryModel.isLightweight() ? c.mkInstrumented() : c);
 
             final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory());
