@@ -211,6 +211,10 @@
             }).bind(this), 1);
         },
         
+        isInWarning: function () {
+            return this.$.decorator.classList.contains("warning");
+        }
+        
         _isMultilineText: function (editorKind) {
             return 'MULTILINE_TEXT' === editorKind;
         },
