@@ -32,18 +32,21 @@ public class SequentialGroupingStream {
     private static class SequentialGroupSplitterator<T> implements Spliterator<List<T>> {
         private final Spliterator<T> baseSpliterator;
         private final BiPredicate<T, List<T>> grouping;
-        private final Optional<Integer> groupSizeEstimate;
+        private final int groupSizeEstimate;
         private T remainder;
 
         public SequentialGroupSplitterator(final Stream<T> stream, final BiPredicate<T, List<T>> grouping, final Optional<Integer> groupSizeEstimate) {
             this.baseSpliterator = stream.spliterator();
             this.grouping = grouping;
-            this.groupSizeEstimate = groupSizeEstimate;
+            this.groupSizeEstimate = groupSizeEstimate.orElse(25);
+            if (this.groupSizeEstimate <= 0) {
+                throw new IllegalArgumentException("Groupe size estimate should be a positive integer.");
+            }
         }
 
         @Override
         public boolean tryAdvance(Consumer<? super List<T>> action) {
-            final List<T> group = new ArrayList<>(groupSizeEstimate.orElse(25));
+            final List<T> group = new ArrayList<>(groupSizeEstimate);
             if (remainder != null) {
                 group.add(remainder);
                 remainder = null;
@@ -77,7 +80,7 @@ public class SequentialGroupingStream {
 
         @Override
         public long estimateSize() {
-            return baseSpliterator.estimateSize();
+            return 1 + baseSpliterator.estimateSize() / groupSizeEstimate;
         }
 
         @Override
