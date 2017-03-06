@@ -42,7 +42,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param shouldBeFetched
      * @return
      */
-    protected <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
+    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
 
         final EntityContainer<ET> entCont = new EntityContainer<>(resultTree.getResultType());
 

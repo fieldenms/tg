@@ -41,20 +41,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     /**
-     * Enhances a single entity container.
-     * 
-     * @param entityContainer
-     * @param fetchModel
-     * @return
-     * @throws Exception
-     */
-    protected EntityContainer<E> enhance(final EntityContainer<E> entityContainer, final IRetrievalModel<E> fetchModel) {
-        final List<EntityContainer<E>> entities = new ArrayList<>();
-        entities.add(entityContainer);
-        return enhance(entities, fetchModel).get(0);
-    }
-    
-    /**
      * Enhances a list of entity containers.
      * 
      * @param entities
