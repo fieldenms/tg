@@ -33,7 +33,6 @@ import ua.com.fielden.platform.types.markers.IMoneyUserType;
 @MapEntityTo("MONEY_CLASS_TABLE")
 @CompanionObject(IEntityWithMoney.class)
 public class EntityWithMoney extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo("MONEY")
