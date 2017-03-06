@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
+import org.hibernate.CacheMode;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
@@ -42,7 +43,7 @@ public class EntityHibernateRetrievalQueryProducer {
         specifyParamValuesToHibernateQuery(sqlQuery, queryParams);
         specifyPaginationToHibernateQuery(sqlQuery, pageNumber, pageCapacity);
 
-        return sqlQuery;
+        return sqlQuery.setReadOnly(true).setCacheable(false).setCacheMode(CacheMode.IGNORE);
     }
 
     private void specifyResultingFieldsToHibernateQuery(SQLQuery query, final SortedSet<HibernateScalar> retrievedColumns) {
