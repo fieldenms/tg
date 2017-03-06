@@ -101,6 +101,21 @@ public class SequentialGroupingStreamExampleTestCase {
         assertEquals("5", groups.get(4).get(1));
     }
 
+
+    @Test
+    public void grouping_by_the_specified_number_of_elements_works_correctly_for_streams_with_a_single_element() {
+        final Stream<List<String>> stream = SequentialGroupingStream.stream(
+                Stream.of("1"), 
+                (el, group) -> group.size() < 2);
+        
+        final List<List<String>> groups = stream.collect(Collectors.toList());
+
+        assertEquals(1, groups.size());
+        
+        assertEquals(1, groups.get(0).size());
+        assertEquals("1", groups.get(0).get(0));
+    }
+
     @Test
     public void grouping_an_empty_stream_produces_an_empty_stream() {
         final Stream<List<String>> stream = SequentialGroupingStream.stream(Stream.of(), (valueToCheck, list) -> list.size() < 2);
@@ -130,4 +145,5 @@ public class SequentialGroupingStreamExampleTestCase {
         assertEquals("2", groups.get(2).get(0));
     }
 
+    
 }
