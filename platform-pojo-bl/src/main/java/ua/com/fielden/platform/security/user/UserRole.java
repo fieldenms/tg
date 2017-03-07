@@ -7,6 +7,7 @@ import java.util.Set;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -26,10 +27,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle("Role Title")
 @DescTitle("Description")
+@DescRequired
 @MapEntityTo("USER_ROLE")
 @CompanionObject(IUserRole.class)
 public class UserRole extends ActivatableAbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(value = SecurityRoleAssociation.class, linkProperty = "role")
     @Title(value = "Tokens", desc = "A list of associations between this role and various security tokens.")
