@@ -146,8 +146,7 @@
                     value: ""
                 },
                 prefDim: {
-                    type: Object,
-                    observer: "_prefDimChanged"
+                    type: Object
                 },
 
                 _wasMoved: {
@@ -202,6 +201,8 @@
                     type: Array
                 }
             },
+            
+            observers: ["_dialogMinimised(prefDim, _minimised)"],
 
             keyBindings: {
                 'alt+x': 'closeDialog',
@@ -242,10 +243,6 @@
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
 
-            _prefDimChanged: function (newValue, oldValue) {
-                this._dialogMinimised();
-            },
-
             _onCaptureClick: function (event) {
                 if (this._manager.currentOverlay() !== this) {
                     console.log("select overlay");
@@ -280,7 +277,6 @@
                     this.focus();
                 }
                 this._minimised = !this._minimised;
-                this._dialogMinimised();
                 this.notifyResize();
                 if (!this._minimised) {
                     this.restoreActiveElement();
@@ -328,12 +324,12 @@
                 return canClose;
             },
 
-            _dialogMinimised: function () {
+            _dialogMinimised: function (prefDim, minimised) {
                 var width = "";
                 var height = "";
-                if (!this._minimised && this.prefDim) {
-                    width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
-                    height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
+                if (!minimised && prefDim) {
+                    width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
                 }
                 this._setDialogBodyDimensions(width, height);
             },
@@ -507,7 +503,6 @@
                                 }));
                         }
                     }
-
                     this.updateStyles();
                     this.refit();
                     // let's open the dialog with magical async...

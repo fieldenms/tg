@@ -46,8 +46,9 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    public void setInstrumented() {
+    public EntityContainer<R> mkInstrumented() {
         this.instrumented = true;
+        return this;
     }
     
     public boolean isInstrumented() {

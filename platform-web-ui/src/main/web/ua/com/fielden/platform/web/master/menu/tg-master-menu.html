@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/app/tg-reflector.html">
 
@@ -250,6 +251,8 @@
             	type: Object
             }
         },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
         ready: function () {
         	var self = this;
