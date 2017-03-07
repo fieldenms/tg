@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -826,6 +827,30 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
         return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
     }
+    
+    /**
+     * Returns a stream of entities that match the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    @Override
+    @SessionRequired
+    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
+        return stream(queryModel, 100);
+    }
+
+    /**
+     * Returns a stream of entities that match the provided query. Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
+     * 
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    @Override
+    @SessionRequired
+    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
+        
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
+        return new EntityFetcher(queryExecutionContext).streamEntities(qem, Optional.of(fetchSize));
+    }
 
     @Override
     @SessionRequired
@@ -1247,6 +1272,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SuppressWarnings("unchecked")
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        if (getEntityType().equals(type)) {
+            return (C) this;
+        }
+        
         IEntityDao<?> co = coCache.get(type);
         if (co == null) {
             co = getCoFinder().find(type);
@@ -1263,7 +1292,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * 
      * @param moreData
      */
-    public CommonEntityDao<?> setMoreData(final Map<String, IContinuationData> moreData) {
+    public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
         clearMoreData();
         this.moreData.putAll(moreData);
         return this;

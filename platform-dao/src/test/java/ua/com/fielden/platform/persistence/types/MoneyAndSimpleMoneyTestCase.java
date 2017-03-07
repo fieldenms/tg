@@ -1,41 +1,43 @@
 package ua.com.fielden.platform.persistence.types;
 
+import static org.junit.Assert.assertEquals;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.EntityWithSimpleMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityWithMoney;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
  * Test Hibernate interaction with {@link Money} type and instrumented entities. Also test correctness of instrumented entities being handled by XStream.
  *
- * @author Yura
- * @author 01es
+ * @author TG Team
  */
-public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
+public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
     private boolean changeIndicator = false;
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() {
         changeIndicator = false;
     }
 
     @Test
-    public void testThatCanSaveAndRetrieveEntityWithMoney() {
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-        final EntityWithMoney instance = entityFactory.newEntity(EntityWithMoney.class, "name", "desc");
+    public void can_save_and_retrieve_entity_with_money() {
+        final EntityWithMoney instance =new_(EntityWithMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance("USD")));
         // saving instance of MoneyClass
-        final IEntityDao<EntityWithMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> dao = co(EntityWithMoney.class);
         dao.save(instance);
         // retrieve saved instance
         final EntityWithMoney instance2 = dao.findByKey("name");
@@ -43,10 +45,9 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
     }
 
     @Test
-    public void testThatRetrievedEntityWithMoneyIsObservable() {
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-        final IEntityWithMoney coEntityWithMoney = injector.getInstance(IEntityWithMoney.class);
-        final EntityWithMoney instance =  coEntityWithMoney.findById(1L);
+    public void retrieved_entity_with_money_is_observable() {
+        final IEntityWithMoney coEntityWithMoney = co(EntityWithMoney.class);
+        final EntityWithMoney instance =  coEntityWithMoney.findByKey("aname1");
         instance.addPropertyChangeListener("money", new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
@@ -59,12 +60,11 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
     }
 
     @Test
-    public void testThatCanSaveAndRetrieveEntityWithSimpleMoney() {
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-        final EntityWithSimpleMoney instance = entityFactory.newEntity(EntityWithSimpleMoney.class, "name", "desc");
+    public void can_save_and_retrieve_entity_with_simple_money() {
+        final EntityWithSimpleMoney instance = new_(EntityWithSimpleMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance(Locale.getDefault())));
         // saving instance of MoneyClass
-        final IEntityDao<EntityWithSimpleMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithSimpleMoney.class);
+        final EntityWithSimpleMoneyDao dao = co(EntityWithSimpleMoney.class);
         dao.save(instance);
         // retrieve saved instance
         final EntityWithSimpleMoney instance2 = dao.findByKey("name");
@@ -74,7 +74,16 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
     }
 
     @Override
-    protected String[] getDataSetPathsForInsert() {
-        return new String[] { "src/test/resources/data-files/money-user-type-test-case.flat.xml" };
+    protected void populateDomain() {
+        super.populateDomain();
+        
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-02-19 02:47:00"));
+
+        save(new_ (EntityWithMoney.class, "aname1", "desc").setMoney(Money.of("20.00")));
+        save(new_ (EntityWithMoney.class, "aname2", "desc").setMoney(Money.of("20.00")));
+        save(new_ (EntityWithMoney.class, "bname1", "desc").setMoney(Money.of("20.00")));
+        save(new_(EntityWithSimpleMoney.class, "aname1", "desc").setMoney(Money.of("20.00")));
     }
+
 }
