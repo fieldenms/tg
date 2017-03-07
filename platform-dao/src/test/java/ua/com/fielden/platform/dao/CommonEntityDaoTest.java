@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.dao;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -16,8 +22,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
  * This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
@@ -25,44 +33,38 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class CommonEntityDaoTest extends DbDrivenTestCase {
-    private final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
-    private final EntityWithDynamicCompositeKeyDao daoComposite = injector.getInstance(EntityWithDynamicCompositeKeyDao.class);
-
-    //TODO test count, delete
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-    }
+public class CommonEntityDaoTest extends AbstractDaoTestCase {
     
+    @Test
     public void test_that_entity_with_simple_key_is_handled_correctly() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         // find all
         final List<EntityWithMoney> result = dao.getPage(0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 4, result.size());
-        assertEquals("Incorrect key value.", "key1", result.get(0).getKey());
+        assertEquals("Incorrect key value.", "KEY1", result.get(0).getKey());
         // find by id
-        assertEquals("Incorrect key value.", "key1", dao.findById(1L).getKey());
+        assertEquals("Incorrect key value.", "KEY1", dao.findById(result.get(0).getId()).getKey());
         // find by key
-        assertEquals("Incorrect key value.", "key1", dao.findByKey("key1").getKey());
+        assertEquals("Incorrect key value.", "KEY1", dao.findByKey("key1").getKey());
         // find by criteria
-        final EntityResultQueryModel<EntityWithMoney> model1 = select(EntityWithMoney.class).where().prop("key").like().val("k%").model();
+        final EntityResultQueryModel<EntityWithMoney> model1 = select(EntityWithMoney.class).where().prop("key").like().val("K%").model();
         assertEquals("Incorrect number of found entities.", 4, dao.getPage(from(model1).model(), 0, 25).data().size());
         final EntityResultQueryModel<EntityWithMoney> model2 = select(EntityWithMoney.class).where().prop("key").like().val("e%").model();
         assertEquals("Incorrect number of found entities.", 0, dao.getPage(from(model2).model(), 0, 25).data().size());
     }
 
+    @Test
     public void test_that_entity_with_composite_key_is_handled_correctly() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithDynamicCompositeKeyDao daoComposite = co(EntityWithDynamicCompositeKey.class);
+
         // find all
         final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 1, result.size());
         assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), result.get(0).getKey());
-        // find by id
-        assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), daoComposite.findById(1L).getKey());
         // find by key
-        final EntityWithMoney keyPartTwo = dao.findById(1L);
-        assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), daoComposite.findByKey("key-1-1", keyPartTwo).getKey());
+        assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), daoComposite.findByKey("key-1-1", dao.findByKey("KEY1")).getKey());
         // find by criteria
         final EntityResultQueryModel<EntityWithDynamicCompositeKey> model1 = select(EntityWithDynamicCompositeKey.class).where().prop("keyPartOne").like().val("k%").model();
         assertEquals("Incorrect number of found entities.", 1, daoComposite.getPage(from(model1).model(), 0, 25).data().size());
@@ -70,7 +72,10 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect number of found entities.", 0, daoComposite.getPage(from(model2).model(), 0, 25).data().size());
     }
 
+    @Test
     public void test_that_unfiltered_pagination_works() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         final IPage<EntityWithMoney> page = dao.firstPage(2);
         assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
         assertTrue("Page should have the next one.", page.hasNext());
@@ -89,7 +94,10 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect number of instances on the last page.", 2, lastPage.data().size());
     }
 
+    @Test
     public void test_that_custom_query_pagination_works() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         final EntityResultQueryModel<EntityWithMoney> q = select(EntityWithMoney.class)//
         .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
         .model();
@@ -112,26 +120,39 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertTrue("Last page should have the previous one.", lastPage.hasPrev());
         assertEquals("Incorrect number of instances on the last page.", 1, lastPage.data().size());
     }
-    
+
+    @Test
     public void test_entity_exists_using_entity() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         final EntityWithMoney entity = dao.findByKey("key1");
         assertTrue(dao.entityExists(entity));
     }
 
+    @Test
     public void test_entity_exists_by_key() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         assertTrue(dao.entityWithKeyExists("key1"));
         assertFalse(dao.entityWithKeyExists("non-existent-key"));
     }
 
+    @Test
     public void test_entity_exists_by_composite_key() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithDynamicCompositeKeyDao daoComposite = co(EntityWithDynamicCompositeKey.class);
+
         final String keyPartOne = "key-1-1";
-        final EntityWithMoney keyPartTwo = dao.findById(1L);
+        final EntityWithMoney keyPartTwo = dao.findByKey("KEY1");
 
         assertTrue(daoComposite.entityWithKeyExists(keyPartOne, keyPartTwo));
         assertFalse(daoComposite.entityWithKeyExists("non-existent-key", keyPartTwo));
     }
 
+    @Test
     public void test_entity_is_dirty_support() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         EntityWithMoney entity = dao.findByKeyAndFetch(fetchAllInclCalc(EntityWithMoney.class), "key1");
         assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
         entity.setCalculatedProperty(new BigDecimal("0.00"));
@@ -150,7 +171,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         entity.setDesc("modified desc");
         assertTrue("Entity should be dirty after property modification after resetting the state", entity.isDirty());
 
-        EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "some key");
+        EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
         assertTrue("New entity should be dirty", newEntity.isDirty());
         newEntity.setMoney(new Money("12"));
         assertTrue("New entity should be dirty after modiciation", newEntity.isDirty());
@@ -158,7 +179,10 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertFalse("New entity should not be dirty after save", newEntity.isDirty());
     }
 
+    @Test
     public void test_entity_property_dirty_support() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         EntityWithMoney entity = dao.findByKey("key1");
         assertEquals("There should be no dirty properties after entity retrieval.", 0, entity.getDirtyProperties().size());
         final String originalDesc = entity.getDesc();
@@ -179,7 +203,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertTrue("Entity should be dirty after property modification after resetting the state", entity.isDirty());
         assertTrue("Property should be dirty after modification", entity.getProperty("desc").isDirty());
 
-        EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "some key");
+        EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
         assertTrue("New entity should be dirty", newEntity.isDirty());
         assertEquals("All properties should be dirty after entity creation.", 5, newEntity.getDirtyProperties().size());
 
@@ -196,6 +220,8 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     @Test
     public void test_original_state_can_be_restored_with_dirty_check() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         final EntityWithMoney entity = dao.findByKey("key1");
         assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
         final String originalDesc = entity.getDesc();
@@ -213,18 +239,26 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     @Test
     public void setting_original_property_value_after_change_should_make_entity_not_dirty() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         EntityWithMoney entity = dao.findByKey("key1");
+        assertFalse(entity.isDirty());
         entity.setMoney(new Money("23.25"));
         assertTrue(entity.isDirty());
 
         entity = dao.save(entity);
+        assertEquals(new Money("23.25"), entity.getMoney());
+        assertFalse(entity.isDirty());
         entity.setMoney(new Money("26.25"));
         assertTrue(entity.isDirty());
         entity.setMoney(new Money("23.25"));
         assertFalse(entity.isDirty());
     }
 
+    @Test
     public void test_date_time_support() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         EntityWithMoney entity = dao.findByKey("key1");
         // test read date time
         final DateTime dateTime = new DateTime(entity.getDateTimeProperty()); // 2009-03-01 11:00:55
@@ -267,6 +301,8 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     @Test
     public void test_entity_version_is_updated_after_save() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         EntityWithMoney entity = dao.findByKey("key1");
 
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
@@ -280,12 +316,14 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     @Test
     public void test_entity_staleness_check() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         final EntityWithMoney entity = dao.findByKey("key1");
         // update entity to simulate staleness
         entity.setDesc("new desc");
         dao.save(entity);
 
-        final EntityWithMoney entity2 = dao.findByKey("key1");
+        dao.findByKey("key1");
         assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 0L));
         //assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 1L));
         //assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 2L));
@@ -295,6 +333,8 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     
     @Test
     public void test_optimistic_locking_based_on_versioning_works_for_save() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         // get entity, which will be modified but not saved
         final EntityWithMoney entity = dao.findByKey("key1");
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
@@ -355,16 +395,23 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     //    }
 
     @Test
-    public void test_transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_save() {
+    public void transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_save() {
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
         final EntityWithMoney entity = dao.findByKey("key1");
-        assertNull("Test pre-condition is invalid -- transDate should be null.", dao.findByKey("key1").getTransDate());
-        dao.save(entity);
-        assertNull("Transaction property should not have been updated for an existing property.", dao.findByKey("key1").getTransDate());
+        final Date transDate = entity.getTransDate();
+        assertNotNull(transDate);
+        entity.setDesc("some different description");
+        final EntityWithMoney saved = dao.save(entity);
+        assertTrue(entity.getVersion() < saved.getVersion());
+        assertEquals(transDate, saved.getTransDate());
     }
 
     @Test
     public void test_transaction_date_property_for_new_entity_gets_auto_assigned_with_save() {
-        final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
+        final EntityWithMoney newEntity = new_(EntityWithMoney.class, "new entity");
         assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
         newEntity.setMoney(new Money("12")); // required property -- has to be set
         dao.save(newEntity);
@@ -373,7 +420,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
  
     @Test
     public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_save() {
-        final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+
+        final EntityWithMoney newEntity = new_(EntityWithMoney.class, "new entity");
         final Date date = new DateTime(2009, 01, 01, 0, 0, 0, 0).toDate();
         newEntity.setTransDate(date);
         newEntity.setMoney(new Money("12")); // required property -- has to be set
@@ -381,11 +430,18 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("transDate should not have been re-assigned.", date, dao.findByKey("new entity").getTransDate());
     }
 
-    @Override
-    protected String[] getDataSetPathsForInsert() {
-        return new String[] {//
-        "src/test/resources/data-files/entity-with-dynamic-composite-key-test-case.flat.xml", //
-                "src/test/resources/data-files/hibernate-query-test-case.flat.xml" };
-    }
 
+    @Override
+    protected void populateDomain() {
+        super.populateDomain();
+        
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-02-19 02:47:00"));
+
+        final EntityWithMoney keyPartTwo = save(new_ (EntityWithMoney.class, "KEY1", "desc").setMoney(new Money("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")));
+        save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", keyPartTwo));
+        save(new_ (EntityWithMoney.class, "KEY2", "desc").setMoney(new Money("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")));
+        save(new_ (EntityWithMoney.class, "KEY3", "desc").setMoney(new Money("40.00")));
+        save(new_ (EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
+    }
 }
