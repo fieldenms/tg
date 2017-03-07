@@ -1272,6 +1272,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SuppressWarnings("unchecked")
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        if (getEntityType().equals(type)) {
+            return (C) this;
+        }
+        
         IEntityDao<?> co = coCache.get(type);
         if (co == null) {
             co = getCoFinder().find(type);
@@ -1288,7 +1292,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * 
      * @param moreData
      */
-    public CommonEntityDao<?> setMoreData(final Map<String, IContinuationData> moreData) {
+    public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
         clearMoreData();
         this.moreData.putAll(moreData);
         return this;

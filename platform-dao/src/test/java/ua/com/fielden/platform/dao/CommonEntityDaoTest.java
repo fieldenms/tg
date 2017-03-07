@@ -430,7 +430,24 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertEquals("transDate should not have been re-assigned.", date, dao.findByKey("new entity").getTransDate());
     }
 
+    @Test
+    public void co_API_returns_this_for_invocations_on_companion_objects_with_their_entity_type_passed_as_argument() {
+        final EntityWithMoneyDao co1 = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co2 = co1.co(EntityWithMoney.class);
+        
+        assertTrue(co1 == co2);
+    }
 
+    @Test
+    public void co_API_caches_companion_instances() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithDynamicCompositeKeyDao co1 = co.co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co2 = co.co(EntityWithDynamicCompositeKey.class);
+        
+        assertTrue(co1 == co2);
+    }
+
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();
