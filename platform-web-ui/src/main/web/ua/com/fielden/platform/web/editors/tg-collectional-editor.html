@@ -234,7 +234,8 @@
          * Returns the text representation of the item to be shown in header or description.
          */
         _calcItemText: function (item, propName) {
-            return item.get(propName);
+            const value = item.get(propName);
+            return value ? value : '';
         },
         
         /**

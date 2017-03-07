@@ -17,7 +17,7 @@
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
 	Polymer.TgBehaviors.TgHighlightingBehavior = {
 	    _searchRegExp: function (str) {
-	        var pattern = RegExp.escape(str).replace(/%/gi, ".*");
+	        const pattern = RegExp.escape(str).replace(/%/gi, ".*");
 	        return new RegExp(pattern, 'gi');
 	    },
 	    
@@ -27,12 +27,13 @@
          * It is used to identify those parts that needs to be highlighted during rendering.
          */
         _matchedParts: function (str, searchQuery) {
-            var parts = [];
-            var text = str.toUpperCase();
+            const safeStr = str ? str : ''; 
+            const parts = [];
+            const text = safeStr.toUpperCase();
             // if all is matched then return a single value
             if ("%" == searchQuery) {
                 parts.push({
-                    part: str,
+                    part: safeStr,
                     matched: false
                 });
                 return parts;
@@ -41,21 +42,21 @@
             }
 
             // otherwise split 
-            var searchExp = this._searchRegExp(searchQuery);
-            var match;
-            var startIndex = 0;
+            const searchExp = this._searchRegExp(searchQuery);
+            let match;
+            let startIndex = 0;
             while ((match = searchExp.exec(text)) !== null) {
                 if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
-                    var part = {
-                        part: str.substring(startIndex, match.index),
+                    const part = {
+                        part: safeStr.substring(startIndex, match.index),
                         matched: false
                     };
                     parts.push(part);
                 }
 
                 // record the matched part
-                var part = {
-                    part: str.substring(match.index, searchExp.lastIndex),
+                const part = {
+                    part: safeStr.substring(match.index, searchExp.lastIndex),
                     matched: true
                 };
                 parts.push(part);
@@ -64,9 +65,9 @@
 
             }
             // check if there is an unmatched part at the end
-            if (startIndex < str.length) {
-                var part = {
-                    part: str.substring(startIndex, text.length),
+            if (startIndex < safeStr.length) {
+                const part = {
+                    part: safeStr.substring(startIndex, text.length),
                     matched: false
                 };
                 parts.push(part);
