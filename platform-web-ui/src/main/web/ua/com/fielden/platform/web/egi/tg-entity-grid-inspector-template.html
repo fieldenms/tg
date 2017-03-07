@@ -757,15 +757,21 @@
             }
             return -1;
         };
-        var _processEntitySelection = function (selectedEntities, entity, select) {
+        var _processEntitySelection = function (selectedEntities, entity, select, egi) {
             var selectedIndex = selectedEntities.indexOf(entity);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
+                        if (egi) {
+                            egi.retrievedEntitySelection = {entity: entity, selected: true};
+                        }
                 }
             } else {
                 if (selectedIndex >= 0) {
                     selectedEntities.splice(selectedIndex, 1);
+                        if (egi) {
+                            egi.retrievedEntitySelection = {entity: entity, selected: false};
+                        }
                 }
             }
         };
@@ -791,6 +797,24 @@
                     observer: "_entitiesChanged"
                 },
                 totals: Object,
+                /**
+                 * Last updated entity selection.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_retrievedEntitySelectionChanged',
+                    notify: true
+                },
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    notify: true
+                },
                 lock: {
                     type: Boolean,
                     value: false
@@ -986,6 +1010,16 @@
                     tempColumns.push(item);
                 });
                 this.columns = tempColumns;
+                
+                this.columnPropertiesMapper = (function (entity) {
+                    const result = [];
+                    for (let index = 0; index < this.columns.length; index++) {
+                        const column = this.columns[index];
+                        const entry = { dotNotation: column.property, value: this._getValue(entity, column.property, column.type) };
+                        result.push(entry);
+                    }
+                    return result;
+                }).bind(this);
 
                 //Initialising the primary action.
                 this.primaryAction = null;
@@ -1408,6 +1442,37 @@
                     this.style.removeProperty("width");
                 }
             },
+            
+            _retrievedEntitySelectionChanged: function (newValue, oldValue) {
+                const entityIndex = _findEntity(newValue.entity, this.entities);
+                if (entityIndex >= 0) {
+                    this.set("egiModel." + entityIndex + ".selected", newValue.selected);
+                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
+                    
+                    if (newValue.selected) { // bring to view the entity that was checked
+                        const scrollContainer = this.querySelector("#scrollContainer");
+                        if (scrollContainer) {
+                            const scrollContainerHeight = scrollContainer.offsetHeight;
+                            const entityRows = scrollContainer.querySelectorAll('.table-data-row');
+                            const entityRow = entityRows[entityIndex];
+                            const entityRowHeight = entityRow.offsetHeight;
+                            const topLockPanel = this.querySelector('#topLockPanel');
+                            const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
+                            const bottomLockPanel = this.querySelector('#bottomLockPanel');
+                            const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
+                            const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
+                            if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
+                                // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
+                                scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
+                            } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
+                                // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
+                                scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
+                            }
+                        }
+                    }
+                }
+            },
+            
             /**
              * Observs the changes to entities property.
              */
@@ -1424,9 +1489,14 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
+                let selectedEntity = null;
                 newValue.forEach(function (newEntity) {
-                    var egiEntity = {
-                        selected: self.selectedEntities.indexOf(newEntity) > -1,
+                    const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
+                    if (isSelected) {
+                        selectedEntity = newEntity;
+                    }
+                    const egiEntity = {
+                        selected: isSelected,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
                         entity: newEntity
                     }
@@ -1440,6 +1510,11 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
+                
+                if (selectedEntity) {
+                    self.retrievedEntitySelection = {entity: selectedEntity, selected: true};
+                }
+                
                 this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
@@ -1478,7 +1553,7 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked);
+                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
                     }
                     //Set up the last selection index (it will be used for range selection.)
                     if (target.checked) {

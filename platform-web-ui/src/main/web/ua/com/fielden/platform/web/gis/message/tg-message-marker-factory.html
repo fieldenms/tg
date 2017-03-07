@@ -1,0 +1,28 @@
+<link rel="import" href="/resources/gis/tg-marker-factory.html">
+
+<script>
+(function() {
+    const MessageMarkerFactory = function () {
+        L.GIS.MarkerFactory.call(this);
+    };
+    
+    MessageMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
+    MessageMarkerFactory.prototype.constructor = MessageMarkerFactory;
+    
+    MessageMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+        if (feature) {
+            const featureType = this.featureType(feature);
+            if (featureType === 'TgMessage') {
+                return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature, latlng);
+            } else {
+                throw "MessageMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
+            }
+        } else {
+            throw "MessageMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
+        }
+    }
+    
+    L.GIS = L.GIS || {};
+    L.GIS.MessageMarkerFactory = MessageMarkerFactory;
+})();
+</script>

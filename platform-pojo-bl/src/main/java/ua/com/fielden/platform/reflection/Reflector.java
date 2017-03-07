@@ -575,7 +575,7 @@ public final class Reflector {
                       field.isAnnotationPresent(Calculated.class) ||
                       (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
                       (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
-                      (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class)) ||
+                      (name.equals(AbstractEntity.DESC) && AnnotationReflector.isAnnotationPresent(entity.getType(), DescTitle.class)) ||
                       (Finder.isOne2One_association(entity.getType(), name))
                   );
     }
