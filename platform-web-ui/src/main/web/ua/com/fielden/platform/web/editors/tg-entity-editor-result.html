@@ -363,13 +363,13 @@
                         this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
                     } else {
-                        
                         var index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
                         this.$.selector.select(this.$.selector._indexToValue(index));
                         this._selectedIndex = index;
                     }
                 }
+                this._scrollToSelected();
             },
             
             selectPrev: function () {
@@ -385,6 +385,21 @@
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
                         this.$.selector.select(this.$.selector._indexToValue(index));
                         this._selectedIndex = index;
+                    }
+                }
+                this._scrollToSelected();
+            },
+            
+            _scrollToSelected: function () {
+                if (!isNaN(this._selectedIndex)) {
+                    const item = this.querySelectorAll(".tg-item")[this._selectedIndex];
+                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
+                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
+                        if (item.offsetTop < this.scrollTop) {
+                            this.scrollTop = item.offsetTop;
+                        } else {
+                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
+                        }
                     }
                 }
             },

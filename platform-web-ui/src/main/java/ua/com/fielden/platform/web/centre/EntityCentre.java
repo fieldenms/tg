@@ -955,7 +955,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     .attr("short-desc", el.conf().shortDesc.orElse(""))
                     .attr("long-desc", el.conf().longDesc.orElse(""))
                     .attr("retrieved-entities", "{{retrievedEntities}}")
-                    .attr("retrieved-totals", "{{retrievedTotals}}");
+                    .attr("retrieved-totals", "{{retrievedTotals}}")
+                    .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
+                    .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
                 leftInsertionPointsDom.add(insertionPoint);
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {

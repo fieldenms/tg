@@ -85,11 +85,15 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
+import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
+import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
@@ -201,6 +205,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
     public void initConfiguration() {
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
+        
+        TgMessageWebUiConfig.register(injector(), configApp());
+        TgStopWebUiConfig.register(injector(), configApp());
+        TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
+        TgPolygonWebUiConfig.register(injector(), configApp());
 
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
@@ -896,6 +905,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
                 /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
                 /*  */.done()
+                .addMenuItem("GPS-треки").description(
+                        "Перегляд, моніторинг та аналіз GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
+                        "Є можливість переглядати обчислений кілометраж у вигляді графіка і / або таблиці."
+                ).centre(configApp().getCentre(MiTgMessage.class).get()).done()
+                .addMenuItem("Зупинки").description(
+                        "Перегляд, моніторинг та аналіз зупинок, які були здійснені машинами компанії." + "<br><br>"
+                      + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
+                      + "для радіусу території чи швидкості переміщення задає користувач. Також можна задавати "
+                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки."
+                ).centre(configApp().getCentre(MiTgStop.class).get()).done()
+                .addMenuItem("Моніторинг в реальному часі").description(
+                        "Центр для перегляду машин у реальному часі на карті."
+                ).centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
+                .addMenuItem("Гео-зони").description(
+                        "Перегляд, моніторинг та аналіз гео-зон."
+                ).centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
