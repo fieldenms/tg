@@ -249,7 +249,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     }
     
     @Test
-    public void selected_available_entities_are_on_top_of_the_list_and_such_order_does_not_mutate_during_validation_cycles_in_user_roles_collectional_editor() {
+    public void available_entities_are_ordered_by_key_and_such_order_does_not_mutate_during_validation_cycles_in_user_roles_collectional_editor() {
         final User user = save(new_(User.class, newUsername));
         
         final UserRole unitTestRole = co(UserRole.class).findByKey(UNIT_TEST_ROLE);
@@ -260,20 +260,20 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater updater = createUpdater(user);
-        assertEquals(listOf(role2, role3, role1, unitTestRole), new ArrayList<>(updater.getRoles()));
+        assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(updater.getRoles()));
         
         updater.setAddedIds(setOf(role1.getId()));
         updater.setRemovedIds(setOf(role2.getId()));
-        assertEquals(listOf(role2, role3, role1, unitTestRole), new ArrayList<>(updater.getRoles()));
+        assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(updater.getRoles()));
         
         save(updater);
         
         final UserRolesUpdater newUpdater = createUpdater(user);
-        assertEquals(listOf(role1, role3, role2, unitTestRole), new ArrayList<>(newUpdater.getRoles()));
+        assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(newUpdater.getRoles()));
     }
     
     @Test
-    public void selected_available_entities_are_on_top_of_the_list_and_such_order_does_not_mutate_during_validation_cycles_in_userRole_tokens_collectional_editor() {
+    public void available_entities_are_ordered_by_key_and_such_order_does_not_mutate_during_validation_cycles_in_userRole_tokens_collectional_editor() {
         final UserRole userRole = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         
         final SecurityTokenInfo alwaysAccessible = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AlwaysAccessibleToken.class.getName());
@@ -302,12 +302,9 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         
         final UserRoleTokensUpdater newUpdater = createUpdater(userRole);
         assertEquals(listOf(
-            userDelete,
-            userRoleSave,
-            
             alwaysAccessible,
-            userReview, userSave,
-            userRoleReview, userRoleDelete
+            userReview, userDelete, userSave,
+            userRoleReview, userRoleDelete, userRoleSave
         ), new ArrayList<>(newUpdater.getTokens()));
     }
 }

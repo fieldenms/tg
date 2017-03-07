@@ -51,8 +51,8 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
         final Set<SecurityTokenInfo> linearisedTokens = lineariseTokens(topLevelTokens, factory());
         entity.setTokens(linearisedTokens);
         
-        final Set<String> chosenRoleIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
-        entity.setChosenIds(chosenRoleIds);
+        final Set<String> chosenIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
+        entity.setChosenIds(chosenIds);
         return entity;
     }
     
