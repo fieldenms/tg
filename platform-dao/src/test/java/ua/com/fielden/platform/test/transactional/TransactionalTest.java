@@ -1,13 +1,21 @@
 package ua.com.fielden.platform.test.transactional;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+
+import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
 
 /**
  * A test case for transaction support that reuses {@link EntityWithMoney} test entity class and {@link LogicThatNeedsTransaction} with transactional methods.
@@ -15,24 +23,22 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  * 
  */
-public class TransactionalTest extends DbDrivenTestCase {
+public class TransactionalTest extends AbstractDaoTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
     private EntityFactory factory;
+    
     @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        dao = injector.getInstance(EntityWithMoneyDao.class);
-        logic = injector.getInstance(LogicThatNeedsTransaction.class);
-        factory = injector.getInstance(EntityFactory.class);
-        // commit transaction opened in the parent setUp in order not to mess the transactional testing...
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
+    public void setUp()  {
+        dao = co(EntityWithMoney.class);
+        logic = getInstance(LogicThatNeedsTransaction.class);
+        factory = getInstance(EntityFactory.class);
     }
 
     @Test
     public void testSingleTransactionInvocaion() {
         logic.singleTransactionInvocaion("20.00", "30.00");
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
         assertNotNull("It is expected that transaction was committed.", dao.findByKey("one"));
         assertNotNull("It is expected that transaction was committed.", dao.findByKey("two"));
     }
@@ -40,7 +46,7 @@ public class TransactionalTest extends DbDrivenTestCase {
     @Test
     public void testNestedTransactionInvocaion() {
         logic.nestedTransactionInvocaion("20.00", "30.00");
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
         assertNotNull("It is expected that transaction was committed.", dao.findByKey("one"));
         assertNotNull("It is expected that transaction was committed.", dao.findByKey("two"));
     }
@@ -52,7 +58,7 @@ public class TransactionalTest extends DbDrivenTestCase {
             fail("should have thrown an exception");
         } catch (final RuntimeException e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (rollbacked).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (rollbacked).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
@@ -65,7 +71,7 @@ public class TransactionalTest extends DbDrivenTestCase {
             fail("should have thrown an exception");
         } catch (final RuntimeException e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (rollbacked).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (rollbacked).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
@@ -78,7 +84,7 @@ public class TransactionalTest extends DbDrivenTestCase {
             fail("should have thrown an exception");
         } catch (final RuntimeException e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
     }
 
@@ -89,33 +95,27 @@ public class TransactionalTest extends DbDrivenTestCase {
             fail("should have thrown an exception");
         } catch (final RuntimeException e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was committed.", dao.findByKey("two"));
     }
 
     @Test
     public void test_session_required_atomic_behaviour() {
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
+        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
         try {
             final EntityWithMoney one = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
                     //new EntityWithMoney("one", "first", new Money("0.00"));
             final EntityWithMoney two = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
                     //new EntityWithMoney("one", "first", new Money("0.00"));
 
-            final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
             dao.saveTwoWithException(one, two);
             fail("should have thrown an exception");
         } catch (final RuntimeException e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (committed).", dao.getSession().isOpen());
         assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was committed.", dao.findByKey("two"));
-    }
-
-    @Override
-    protected String[] getDataSetPathsForInsert() {
-        return new String[] { "src/test/resources/data-files/transactional-test-case.flat.xml" };
     }
 
 }

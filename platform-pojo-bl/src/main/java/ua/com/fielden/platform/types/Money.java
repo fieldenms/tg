@@ -156,6 +156,10 @@ public class Money implements Comparable<Money> {
     public Money(final String amount) {
         this(new BigDecimal(amount), Currency.getInstance(getDefault()));
     }
+    
+    public static Money of(final String amount) {
+        return new Money(amount);
+    }
 
     public Currency getCurrency() {
         return currency;
