@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IUserRole;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
@@ -36,10 +37,19 @@ public class UserRole extends ActivatableAbstractEntity<String> {
     @Title(value = "Tokens", desc = "A list of associations between this role and various security tokens.")
     private final Set<SecurityRoleAssociation> tokens = new HashSet<SecurityRoleAssociation>();
 
+    protected  UserRole() {}
+    
     @Override
     @Observable
     public UserRole setKey(String key) {
         super.setKey(key);
+        return this;
+    }
+    
+    @Override
+    @Observable
+    public UserRole setDesc(String desc) {
+        super.setDesc(desc);
         return this;
     }
     
