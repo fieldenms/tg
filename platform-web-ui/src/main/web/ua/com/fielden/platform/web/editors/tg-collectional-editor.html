@@ -253,28 +253,29 @@
             // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
             // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
             if (this._originalChosenIds === null) {
-                this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
-            
-                var selEntities = [];
-                var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+                const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
+                
+                const selEntities = [];
+                const chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
                 if (typeof this.entity.chosenIds === 'undefined') {
                     this._forReview = true;
                 }
                 
                 this._originalChosenIds = [];
-                
-                for (var index = 0; index < chosenIds.length; index++) {
-                    var foundEntity = this._find(this._entities, chosenIds[index]);
+                for (let index = 0; index < chosenIds.length; index++) {
+                    const foundEntity = this._find(arrivedEntities, chosenIds[index]);
                     if (foundEntity !== null) {
                         selEntities.push(foundEntity);
                         this._originalChosenIds.push(chosenIds[index]);
                     }
                 }
-    
+                
+                this._entities = this._placeSelectedOnTop(arrivedEntities, chosenIds);
+                
                 this._disableSelectionListeners = true;
                 this.$.input.clearSelection();
                 
-                for (var index = 0; index < selEntities.length; index++) {
+                for (let index = 0; index < selEntities.length; index++) {
                     this.$.input.selectItem(selEntities[index]);
                 }
                 this._disableSelectionListeners = false;
@@ -285,6 +286,24 @@
             this.provideSorting(this.entity.sortingVals, this._entities);
             
             return 'IRRELEVANT';
+        },
+        
+        /**
+         * Creates a new array of entities placing chosen ones on top and preserving the same order as in 'arrivedEntities' in each groups.
+         */
+        _placeSelectedOnTop: function (arrivedEntities, chosenIds) {
+            const selectedEntities = [];
+            const unselectedEntities = [];
+            for (let index = 0; index < arrivedEntities.length; index++) {
+                const currEntity = arrivedEntities[index];
+                const chosenIdsIndex = chosenIds.indexOf(this.idOrKey(currEntity));
+                if (chosenIdsIndex > -1) { // current entity is selected
+                    selectedEntities.push(currEntity);
+                } else { // current entity is unselected
+                    unselectedEntities.push(currEntity);
+                }
+            }
+            return selectedEntities.concat(unselectedEntities);
         },
         
         /**
