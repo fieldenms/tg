@@ -419,7 +419,7 @@
                             </template>
                         </div>
                         <!-- Fixed container -->
-                        <div id="lockContainer" class="absolute fit" style="overflow:hidden">
+                        <div id="lockContainer" class="absolute fit" on-focusin="_lockContainerFocus" style="overflow:hidden">
                             <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
@@ -1087,7 +1087,13 @@
                     wheelEvent = new WheelEvent(e.type, e);
                     scrollContainer.dispatchEvent(wheelEvent);
                 }
-                console.log(e, detail);
+            },
+            
+            _lockContainerFocus: function (event) {
+                const lockContainer = this.$$("#lockContainer")
+                lockContainer.scrollTop = 0;
+                console.log("targets rect: ", event.target, event.target.getBoundingClientRect(), "lock container rect: ", lockContainer, lockContainer.getBoundingClientRect());
+                event.preventDefault();
             },
 
             /**
