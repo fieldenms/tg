@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -113,6 +114,16 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
     }
     
     /**
+     * Additional properties to be skipped for meta-state resetting for collection modification functional entity.
+     * 'surrogateVersion' property will be skipped automatically -- no need to be listed here.
+     * 
+     * @return
+     */
+    protected List<String> skipPropertiesForMetaStateResettingInCollectionalEditor() {
+        return Arrays.asList();
+    }
+    
+    /**
      * IMPORTANT: it is necessary NOT to reset state for "surrogateVersion" property after its change.
      * This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
      * the initial value against '"surrogateVersion", that was possibly changed by another user'.
@@ -121,7 +132,10 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
      */
     @Override
     protected final List<String> skipPropertiesForMetaStateResetting() {
-        return Arrays.asList("surrogateVersion");
+        final List<String> propertiesToBeSkipped = new ArrayList<>();
+        propertiesToBeSkipped.add("surrogateVersion");
+        propertiesToBeSkipped.addAll(skipPropertiesForMetaStateResettingInCollectionalEditor());
+        return propertiesToBeSkipped;
     }
     
     /**
