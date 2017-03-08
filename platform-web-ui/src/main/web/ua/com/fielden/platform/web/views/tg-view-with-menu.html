@@ -1,6 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+
 <link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
@@ -11,11 +14,14 @@
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/tg-menu-search-input.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
+
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 
@@ -146,7 +152,7 @@
                                 <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
-                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
+                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuItemsRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                         <!--TODO remove groupIndex-->
@@ -215,6 +221,16 @@
                 path: path.slice(0, pathIndex).join('/')
             };
         };
+        const isDescendant = (parent, child) => {
+            let node = child.parentNode;
+            while (node != null) {
+                if (node == parent) {
+                    return true;
+                }
+                node = node.parentNode;
+            }
+            return false;
+        }
         Polymer({
 
             is: "tg-view-with-menu",
@@ -272,18 +288,43 @@
 
             behaviors: [
                 Polymer.NeonAnimatableBehavior,
-                Polymer.TgBehaviors.TgTooltipBehavior
+                Polymer.TgBehaviors.TgTooltipBehavior,
+                Polymer.IronA11yKeysBehavior,
+                Polymer.TgBehaviors.TgFocusRestorationBehavior
             ],
 
+            keyBindings: {
+                'f2': '_showSideMenu'
+            },
+
             hostAttributes: {
-                class: "layout vertical"
+                class: "layout vertical",
+                tabindex: 0
             },
 
             observers: [
                 '_updatePage(menuItem, submodule)'
             ],
 
+            ready: function () {
+                this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
+                this.$.drawerPanel.$.scrim.addEventListener("transitionend", event => {
+                    if (this.$.drawerPanel.selected === 'main' && event.propertyName === 'visibility' && this._wasClosedByEsc) {
+                        if (this._lastActiveElement && isDescendant(this, this._lastActiveElement)) {
+                            this._lastActiveElement.focus();
+                            delete this._lastActiveElement;
+                        } else {
+                            this.focus();
+                        }
+                        delete this._wasClosedByEsc;
+                    }
+                });
+            },
+
             attached: function () {
+                Polymer.dom(this.$.menu).querySelectorAll("paper-menu").forEach(function (menu) {
+                    menu.addEventListener("keydown", this._menuKeyDown.bind(this))
+                });
                 this.async(function () {
                     if (!this._selectedPage) {
                         this.set("_selectedPage", "_");
@@ -310,6 +351,29 @@
 
             searchMenu: function (event) {
                 this.$.menuSearcher.searchMenu();
+            },
+
+            _menuItemsRendered: function (event) {
+                const subItem = event.model.firstLevelItem;
+                if (this._isMenuPresent(subItem.menu)) {
+                    this.$$("paper-menu[name='" + this._calcItemPath(subItem) + "']").addEventListener("keydown", this._menuKeyDown.bind(this));
+                }
+            },
+
+            _menuKeyDown: function (event) {
+                if (event.keyCode === 27 /*Escape*/ ) {
+                    this._wasClosedByEsc = true;
+                    this.$.drawerPanel.closeDrawer();
+                }
+            },
+
+            _showSideMenu: function (event) {
+                this._lastActiveElement = document.activeElement;
+                this.$.drawerPanel.openDrawer();
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             },
 
             _calcCheckboxTooltip: function (menu, visible) {

@@ -85,6 +85,7 @@ class LogicThatNeedsTransaction implements ISessionEnabled {
         throw new RuntimeException("Purposeful exception.");
     }
 
+    @SessionRequired
     public void singleTransactionInvocaionWithExceptionInDao(final String amountOne) {
         final EntityWithMoney oneAmount = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money(amountOne)); 
                 //new EntityWithMoney("one", "first", new Money(amountOne));
@@ -92,6 +93,7 @@ class LogicThatNeedsTransaction implements ISessionEnabled {
         ((EntityWithMoneyDao) dao).saveWithException(oneAmount);
     }
 
+    @SessionRequired
     public void singleTransactionInvocaionWithExceptionInDao2() {
         final EntityWithMoney one = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
                 //new EntityWithMoney("one", "first", new Money("0.00"));

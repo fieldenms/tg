@@ -22,7 +22,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @MapEntityTo
 @KeyTitle(value = "User Role Id", desc = "Id of user role, whose 'tokens' collection modifies by this functional action.")
 public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
-    private static final long serialVersionUID = 1L;
     
     @IsProperty(SecurityTokenInfo.class)
     @Title(value = "Security Tokens", desc = "A list of security tokens")
@@ -38,4 +37,5 @@ public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollection
     public Set<SecurityTokenInfo> getTokens() {
         return Collections.unmodifiableSet(tokens);
     }
+    
 }

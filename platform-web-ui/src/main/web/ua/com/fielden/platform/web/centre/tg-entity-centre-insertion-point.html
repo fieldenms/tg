@@ -159,6 +159,25 @@
                     observer: '_updateElementWithRetrievedTotals',
                     notify: true
                 },
+                /**
+                 * Last updated entity selection in centre that has this insertion point's element.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_updateElementWithRetrievedEntitySelection',
+                    notify: true
+                },
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    observer: '_updateElementWithColumnPropertiesMapper',
+                    notify: true
+                },
                 _element: {
                     type: Object,
                     value: null
@@ -205,9 +224,9 @@
 
             _closeDialog: function () {
                 Polymer.dom(document.body).removeChild(this._dialog);
+                this.detached = false;
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
-                this.detached = false;
                 this.notifyResize();
             },
 
@@ -232,6 +251,18 @@
             _updateElementWithRetrievedTotals: function (newValue, oldValue) {
                 if (this._element) {
                     this._element.retrievedTotals = newValue;
+                }
+            },
+            
+            _updateElementWithRetrievedEntitySelection: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.retrievedEntitySelection = newValue;
+                }
+            },
+            
+            _updateElementWithColumnPropertiesMapper: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.columnPropertiesMapper = newValue;
                 }
             },
 
@@ -260,6 +291,14 @@
                                 self.retrievedTotals = this.retrievedTotals;
                             });
                             self._element.retrievedTotals = self.retrievedTotals;
+                            self._element.addEventListener("retrieved-entity-selection-changed", function (ev) {
+                                self.retrievedEntitySelection = this.retrievedEntitySelection;
+                            });
+                            self._element.retrievedEntitySelection = self.retrievedEntitySelection;
+                            self._element.addEventListener("column-properties-mapper-changed", function (ev) {
+                                self.columnPropertiesMapper = this.columnPropertiesMapper;
+                            });
+                            self._element.columnPropertiesMapper = self.columnPropertiesMapper;
 
                             var promise = customAction._onExecuted(null, element, null);
                             if (promise) {

@@ -36,7 +36,7 @@ final class EntityResultTreeBuilder {
         COMPOSITE_TYPE_PROP;
     }
 
-    protected <E extends AbstractEntity<?>> Map<String, MetaP> getPropsHierarchy(final Class<E> resultType, final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
+    protected <E extends AbstractEntity<?>> Map<String, MetaP> getPropsHierarchy(final Class<E> resultType, final SortedSet<ResultQueryYieldDetails> properties) {
         final Map<String, MetaP> result = new HashMap<String, MetaP>();
 
         for (final ResultQueryYieldDetails prop : properties) {
@@ -72,7 +72,7 @@ final class EntityResultTreeBuilder {
         return result;
     }
 
-    protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
+    protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final SortedSet<ResultQueryYieldDetails> properties) {
         final EntityTree<E> result = new EntityTree<E>(resultType);
 
         final Map<String, MetaP> compositeProps = getPropsHierarchy(resultType, properties);
@@ -92,7 +92,7 @@ final class EntityResultTreeBuilder {
         return result;
     }
 
-    protected ValueTree buildValueTree(final ICompositeUserTypeInstantiate hibType, final SortedSet<ResultQueryYieldDetails> properties) throws Exception {
+    protected ValueTree buildValueTree(final ICompositeUserTypeInstantiate hibType, final SortedSet<ResultQueryYieldDetails> properties) {
         final ValueTree result = new ValueTree(hibType);
 
         final Map<String, MetaP> compositeProps = getPropsHierarchy(null, properties);

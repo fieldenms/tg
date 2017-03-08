@@ -25,7 +25,6 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 @MapEntityTo("ENTITY_WITH_COMPOSITE_KEY")
 @CompanionObject(EntityWithDynamicCompositeKeyDao.class)
 public class EntityWithDynamicCompositeKey extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)
