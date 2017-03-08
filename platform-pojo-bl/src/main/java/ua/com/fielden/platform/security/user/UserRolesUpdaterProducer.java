@@ -42,8 +42,8 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
         final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
         entity.setRoles(roles);
         
-        final Set<Long> chosenRoleIds = new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList()));
-        entity.setChosenIds(chosenRoleIds);
+        final Set<Long> chosenIds = new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList()));
+        entity.setChosenIds(chosenIds);
         return entity;
     }
     

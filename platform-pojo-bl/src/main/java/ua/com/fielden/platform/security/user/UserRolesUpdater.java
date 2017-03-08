@@ -22,7 +22,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @MapEntityTo
 @KeyTitle(value = "User Id", desc = "Id of user, whose 'roles' collection modifies by this functional action.")
 public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModification<Long> {
-    private static final long serialVersionUID = 1L;
     
     @IsProperty(UserRole.class)
     @Title(value = "User Roles", desc = "A list of user roles roles")
@@ -38,4 +37,5 @@ public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModif
     public Set<UserRole> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
+    
 }
