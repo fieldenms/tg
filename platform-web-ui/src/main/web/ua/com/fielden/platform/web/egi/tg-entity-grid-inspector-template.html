@@ -309,7 +309,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative layout horizontal">
+                    <div id="baseContainer" class="relative layout horizontal" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -419,7 +419,7 @@
                             </template>
                         </div>
                         <!-- Fixed container -->
-                        <div id="lockContainer" class="absolute fit" on-focusin="_lockContainerFocus" style="overflow:hidden">
+                        <div id="lockContainer" class="absolute fit" style="overflow:hidden">
                             <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
@@ -735,6 +735,7 @@
 </dom-module>
 <script>
     (function () {
+
         var _checkCollapsiblePanelVisibility = function (layout) {
             this.collapsePanelVisible = !!(this.cardLayout && layout);
         };
@@ -762,16 +763,22 @@
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
-                        if (egi) {
-                            egi.retrievedEntitySelection = {entity: entity, selected: true};
-                        }
+                    if (egi) {
+                        egi.retrievedEntitySelection = {
+                            entity: entity,
+                            selected: true
+                        };
+                    }
                 }
             } else {
                 if (selectedIndex >= 0) {
                     selectedEntities.splice(selectedIndex, 1);
-                        if (egi) {
-                            egi.retrievedEntitySelection = {entity: entity, selected: false};
-                        }
+                    if (egi) {
+                        egi.retrievedEntitySelection = {
+                            entity: entity,
+                            selected: false
+                        };
+                    }
                 }
             }
         };
@@ -806,7 +813,7 @@
                     notify: true
                 },
                 /**
-                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
                  * consistent with the order of columns.
                  *
                  * @param entity -- the entity to be processed with the mapper function
@@ -1010,12 +1017,15 @@
                     tempColumns.push(item);
                 });
                 this.columns = tempColumns;
-                
+
                 this.columnPropertiesMapper = (function (entity) {
                     const result = [];
                     for (let index = 0; index < this.columns.length; index++) {
                         const column = this.columns[index];
-                        const entry = { dotNotation: column.property, value: this._getValue(entity, column.property, column.type) };
+                        const entry = {
+                            dotNotation: column.property,
+                            value: this._getValue(entity, column.property, column.type)
+                        };
                         result.push(entry);
                     }
                     return result;
@@ -1081,19 +1091,73 @@
 
             _handleWheel: function (e, detail) {
                 var scrollContainer = this.$$("#scrollContainer");
-                var wheelEvent;
-
                 if (scrollContainer) {
-                    wheelEvent = new WheelEvent(e.type, e);
-                    scrollContainer.dispatchEvent(wheelEvent);
+                    scrollContainer.scrollTop += e.deltaY;
+                    console.log(e)
                 }
             },
             
-            _lockContainerFocus: function (event) {
-                const lockContainer = this.$$("#lockContainer")
-                lockContainer.scrollTop = 0;
-                console.log("targets rect: ", event.target, event.target.getBoundingClientRect(), "lock container rect: ", lockContainer, lockContainer.getBoundingClientRect());
+            _isTargetInSelectedContainer: function (target) {
+                const scrollContainer = this.$$("#scrollContainer");
+                const leftLockPanel = this.$$("#leftLockPanel");
+                const rightLockPanel = this.$$("#rightLockPanel");
+                if (target && scrollContainer) {
+                    let targetParent = target;
+                    while (targetParent) {
+                        if (targetParent === scrollContainer || targetParent === leftLockPanel || targetParent === rightLockPanel) {
+                            return true;
+                        }
+                        targetParent = targetParent.parentElement;
+                    }
+                }
+                return false;
+            },
+
+            _baseContainerFocusIn: function (event) {
+                const target = (event.target || event.srcElement);
+                if (target && this._elementGainedFocus !== target && this._isTargetInSelectedContainer(target)) {
+                    this._scrollToTarget(target);
+                }
                 event.preventDefault();
+            },
+            
+            _baseContainerFocusOut: function (event) {
+                const target = event.relatedTarget;
+                if (target && this._isTargetInSelectedContainer(target)) {
+                    this._elementGainedFocus = target;
+                    this._scrollToTarget(target);
+                } else {
+                    delete this._elementGainedFocus;
+                }
+                event.preventDefault();
+            },
+
+            _scrollToTarget: function (target) {
+                const lockContainer = this.$$("#lockContainer");
+                lockContainer.scrollTop = 0;
+                const containerRect = lockContainer.getBoundingClientRect();
+                //Get the top and bottom coordinates of the visible viewport.
+                let viewTop = containerRect.top;
+                let viewBottom = containerRect.bottom;
+                //Correct the top coordinate of the visisble viewport so that it takes into account the top lock panel hight.
+                const topLeftLockPanel = this.$$("#topLockPanel");
+                if (topLeftLockPanel && topLeftLockPanel.offsetParent !== null) {
+                    viewTop = topLockPanel.getBoundingClientRect().bottom;
+                }
+                //Correct the bottom coordinate of the visisble viewport so that it takes into account the bottom lock panel hight.
+                const bottomLockPanel = this.$$("#bottomLockPanel");
+                if (bottomLockPanel && bottomLockPanel.offsetParent !== null) {
+                    viewBottom = bottomLockPanel.getBoundingClientRect().top;
+                }
+                //Check whether the focused element is in range from viewTop to viewBottom. If it is outside the range then calculate the scroll differense and add to the scrollTop of scrollContainer. Otherwise do nothing.
+                const focusedElementRect = target.getBoundingClientRect();
+                let scrollIncrement = 0;
+                if (focusedElementRect.top < viewTop) {
+                    scrollIncrement = focusedElementRect.top - viewTop;
+                } else if (focusedElementRect.bottom > viewBottom) {
+                    scrollIncrement = focusedElementRect.bottom - viewBottom;
+                }
+                this.$$("#scrollContainer").scrollTop += scrollIncrement;
             },
 
             /**
@@ -1448,13 +1512,13 @@
                     this.style.removeProperty("width");
                 }
             },
-            
+
             _retrievedEntitySelectionChanged: function (newValue, oldValue) {
                 const entityIndex = _findEntity(newValue.entity, this.entities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".selected", newValue.selected);
                     _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
-                    
+
                     if (newValue.selected) { // bring to view the entity that was checked
                         const scrollContainer = this.querySelector("#scrollContainer");
                         if (scrollContainer) {
@@ -1478,7 +1542,7 @@
                     }
                 }
             },
-            
+
             /**
              * Observs the changes to entities property.
              */
@@ -1516,11 +1580,14 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
-                
+
                 if (selectedEntity) {
-                    self.retrievedEntitySelection = {entity: selectedEntity, selected: true};
+                    self.retrievedEntitySelection = {
+                        entity: selectedEntity,
+                        selected: true
+                    };
                 }
-                
+
                 this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
