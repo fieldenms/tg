@@ -309,7 +309,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative layout horizontal" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut" on-wheel="_handleWheel">
+                    <div id="baseContainer" class="relative layout horizontal" on-focusin="_baseContainerFocusIn" on-wheel="_handleWheel" on-focusout="_baseContainerFocusOut" >
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -795,6 +795,7 @@
                 return subEntity.get(key);
             });
         };
+        const sign = (value) => value < 0 ? -1 : 1;
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -1092,71 +1093,36 @@
             _handleWheel: function (e, detail) {
                 const scrollContainer = this.$$("#scrollContainer");
                 if (scrollContainer) {
-//                    this._scrollIncrements = this._scrollIncrements || [];
-//                    if (!this._scrollTimer) {
-//                        this._scrollBy(e.deltaY, scrollContainer);
-//                    } else {
-//                        this._scrollIncrements.push(e.deltaY);
-//                    }
+                    console.log(e.deltaY);
+                    this._scrollLength = this._scrollLength || 0;
+                    if (this._scrollLength !== 0 && sign(e.deltaY) === sign(this._scrollLength)) {
+                        this._scrollLength += e.deltaY;
+                    } else {
+                        clearTimeout(this._scrollTimeout);
+                        this._scrollLength = e.deltaY;
+                        this._scrollTimeout = setTimeout(() => this._scrollBy(7, scrollContainer), 10);
+                    }
                 }
-               // event.preventDefault();
+                e.preventDefault();
             },
 
-            _scrollBy: function (length, scrollContainer) {
-                if (length !== 0) {
-                    const sign = length < 0 ? -1 : 1;
-                    let increment = sign * Math.min(8, Math.abs(length));
-                    if (scrollContainer.scrollTop + increment < 0) {
+            _scrollBy: function (increment, scrollContainer) {
+                if (this._scrollLength !== 0) {
+                    const s = sign(this._scrollLength);
+                    let newIncrement = s * Math.min(Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10), Math.abs(this._scrollLength));
+                    if (scrollContainer.scrollTop + newIncrement < 0) {
                         scrollContainer.scrollTop = 0;
-                        if (this._scrollIncrements.length > 0) {
-                            this._scrollBy(this._scrollIncrements.shift(), scrollContainer);
-                        } else {
-                            clearTimeout(this._scrollTimer);
-                            this._scrollTimer = null;
-                            return;
-                        }
-                    } else if (scrollContainer.scrollTop + increment > scrollContainer.scrollHeight - scrollContainer.clientHeight) {
+                        this._scrollLength = 0;
+                        return;
+                    } else if (scrollContainer.scrollTop + newIncrement > scrollContainer.scrollHeight - scrollContainer.clientHeight) {
                         scrollContainer.scrollTop = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+                        this._scrollLength = 0;
                         return;
                     }
-                    scrollContainer.scrollTop += increment;
-                    this._scrollLength -= increment;
-                    setTimeout(() => this._scrollBy(scrollContainer), 20);
+                    scrollContainer.scrollTop += newIncrement;
+                    this._scrollLength -= newIncrement;
+                    this._scrollTimeout = setTimeout(() => this._scrollBy(newIncrement, scrollContainer), 10);
                 }
-                
-                
-                
-//                if (length != 0) {
-//                    if (this._scrollTimer) {
-//                        clearInterval(this._scrollTimer);
-//                    }
-//                    const start = scrollContainer.scrollTop;
-//                    let correctedLength = length + (this._scrollDisatanceLeft || 0);
-//                    if (start + correctedLength < 0) {
-//                        correctedLength = -start;
-//                    } else if (start + correctedLength > scrollContainer.scrollHeight - scrollContainer.clientHeight) {
-//                        correctedLength = scrollContainer.scrollHeight - scrollContainer.clientHeight - start;
-//                    }
-//                    if (correctedLength === 0) {
-//                        return;
-//                    }
-//                    const sign = Math.abs(correctedLength) /  correctedLength;
-//                    const increment = sign * Math.max(8, Math.abs(correctedLength) / 10);
-//                    const destination = start + correctedLength;
-//                    const scroll = () => {
-//                        const nextIncrement = sign * Math.min(Math.abs(increment), Math.abs(destination - scrollContainer.scrollTop));
-//                        scrollContainer.scrollTop += nextIncrement;
-//
-//                        if (scrollContainer.scrollTop === destination) {
-//                            clearInterval(this._scrollTimer);
-//                            this._scrollDisatanceLeft = 0;
-//                            return;
-//                        }
-//                        
-//                        this._scrollDisatanceLeft = destination - scrollContainer.scrollTop;
-//                    };
-//                    this._scrollTimer = setInterval(scroll, 20);
-//                }
             },
 
             _isTargetInSelectedContainer: function (target) {
