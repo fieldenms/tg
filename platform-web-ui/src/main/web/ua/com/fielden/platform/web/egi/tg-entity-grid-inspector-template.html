@@ -1109,6 +1109,10 @@
             _scrollBy: function (increment, scrollContainer) {
                 if (this._scrollLength !== 0) {
                     const s = sign(this._scrollLength);
+                    //The expression below calculates speed and direction of scroll action
+                    //s = sign(scrollLength) - determines the direction of scroll.
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10) - calculates the accelration of the scroll. It should maximum value of previous speed or it is scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLength)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on hte last step of animation. That looks like animation slows down.
                     let newIncrement = s * Math.min(Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10), Math.abs(this._scrollLength));
                     if (scrollContainer.scrollTop + newIncrement < 0) {
                         scrollContainer.scrollTop = 0;
