@@ -296,7 +296,7 @@
             </div>
         </paper-dialog>
 
-        <template is="dom-if" if="[[!cardLayout]]" restamp>
+        <template is="dom-if" if="[[!cardLayout]]" on-dom-change="_baseContainerRendered" restamp>
             <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
                 <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
                     <!--Table toolbar-->
@@ -309,7 +309,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative layout horizontal" on-focusin="_baseContainerFocusIn" on-wheel="_handleWheel" on-focusout="_baseContainerFocusOut" >
+                    <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn"  on-focusout="_baseContainerFocusOut">
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -420,7 +420,7 @@
                         </div>
                         <!-- Fixed container -->
                         <div id="lockContainer" class="absolute fit" style="overflow:hidden">
-                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                            <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
@@ -505,7 +505,7 @@
                             <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]"></div>
                             </template>
-                            <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
+                            <template is="dom-if" on-dom-change="_rightLockPanelRendered" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                                 <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
@@ -539,7 +539,7 @@
                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                                 <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow)]]"></div>
                             </template>
-                            <template is="dom-if" if="[[_isHeaderFixed(headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_topLockPanelRendered" if="[[_isHeaderFixed(headerFixed)]]">
                                 <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -561,7 +561,7 @@
                                     </template>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
+                            <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
                                 <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="layout vertical flex" style="background-color:white;">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
@@ -930,6 +930,27 @@
                     ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
+            
+            _baseContainerRendered: function (e) {
+                this._scrollContainer = this.$$("#scrollContainer");
+                this._lockContainer = this.$$("#lockContainer");
+            },
+            
+            _leftLockPanelRendered: function (e) {
+                this._leftLockPanel = this.$$("#leftLockPanel");
+            },
+            
+            _rightLockPanelRendered: function (e) {
+                this._rightLockPanel = this.$$("#rightLockPanel");
+            },
+            
+            _topLockPanelRendered : function (e) {
+                this._topLockPanel = this.$$("#topLockPanel");
+            },
+            
+            _bottomLockPanelRendered : function (e) {
+                this._bottomLockPanel = this.$$("#bottomLockPanel");
+            },
 
             /**
              * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
@@ -1091,22 +1112,20 @@
             },
 
             _handleWheel: function (e, detail) {
-                const scrollContainer = this.$$("#scrollContainer");
-                if (scrollContainer) {
-                    console.log(e.deltaY);
+                if (this._scrollContainer) {
                     this._scrollLength = this._scrollLength || 0;
                     if (this._scrollLength !== 0 && sign(e.deltaY) === sign(this._scrollLength)) {
                         this._scrollLength += e.deltaY;
                     } else {
                         clearTimeout(this._scrollTimeout);
                         this._scrollLength = e.deltaY;
-                        this._scrollTimeout = setTimeout(() => this._scrollBy(7, scrollContainer), 10);
+                        this._scrollTimeout = setTimeout(() => this._scrollBy(7), 10);
                     }
                 }
                 e.preventDefault();
             },
 
-            _scrollBy: function (increment, scrollContainer) {
+            _scrollBy: function (increment) {
                 if (this._scrollLength !== 0) {
                     const s = sign(this._scrollLength);
                     //The expression below calculates speed and direction of scroll action
@@ -1114,29 +1133,26 @@
                     //Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10) - calculates the accelration of the scroll. It should maximum value of previous speed or it is scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
                     //Math.min(... , Math.abs(this._scrollLength)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on hte last step of animation. That looks like animation slows down.
                     let newIncrement = s * Math.min(Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10), Math.abs(this._scrollLength));
-                    if (scrollContainer.scrollTop + newIncrement < 0) {
-                        scrollContainer.scrollTop = 0;
+                    if (this._scrollContainer.scrollTop + newIncrement < 0) {
+                        this._scrollContainer.scrollTop = 0;
                         this._scrollLength = 0;
                         return;
-                    } else if (scrollContainer.scrollTop + newIncrement > scrollContainer.scrollHeight - scrollContainer.clientHeight) {
-                        scrollContainer.scrollTop = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight) {
+                        this._scrollContainer.scrollTop = this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight;
                         this._scrollLength = 0;
                         return;
                     }
-                    scrollContainer.scrollTop += newIncrement;
+                    this._scrollContainer.scrollTop += newIncrement;
                     this._scrollLength -= newIncrement;
-                    this._scrollTimeout = setTimeout(() => this._scrollBy(newIncrement, scrollContainer), 10);
+                    this._scrollTimeout = setTimeout(() => this._scrollBy(newIncrement), 10);
                 }
             },
 
             _isTargetInSelectedContainer: function (target) {
-                const scrollContainer = this.$$("#scrollContainer");
-                const leftLockPanel = this.$$("#leftLockPanel");
-                const rightLockPanel = this.$$("#rightLockPanel");
-                if (target && scrollContainer) {
+                if (target && this._scrollContainer) {
                     let targetParent = target;
                     while (targetParent) {
-                        if (targetParent === scrollContainer || targetParent === leftLockPanel || targetParent === rightLockPanel) {
+                        if (targetParent === this._scrollContainer || targetParent === this._leftLockPanel || targetParent === this._rightLockPanel) {
                             return true;
                         }
                         targetParent = targetParent.parentElement;
@@ -1165,21 +1181,18 @@
             },
 
             _scrollToTarget: function (target) {
-                const lockContainer = this.$$("#lockContainer");
-                lockContainer.scrollTop = 0;
-                const containerRect = lockContainer.getBoundingClientRect();
+                this._lockContainer.scrollTop = 0;
+                const containerRect = this._lockContainer.getBoundingClientRect();
                 //Get the top and bottom coordinates of the visible viewport.
                 let viewTop = containerRect.top;
                 let viewBottom = containerRect.bottom;
                 //Correct the top coordinate of the visisble viewport so that it takes into account the top lock panel hight.
-                const topLeftLockPanel = this.$$("#topLockPanel");
-                if (topLeftLockPanel && topLeftLockPanel.offsetParent !== null) {
-                    viewTop = topLockPanel.getBoundingClientRect().bottom;
+                if (this._topLockPanel && this._topLockPanel.offsetParent !== null) {
+                    viewTop = this._topLockPanel.getBoundingClientRect().bottom;
                 }
                 //Correct the bottom coordinate of the visisble viewport so that it takes into account the bottom lock panel hight.
-                const bottomLockPanel = this.$$("#bottomLockPanel");
-                if (bottomLockPanel && bottomLockPanel.offsetParent !== null) {
-                    viewBottom = bottomLockPanel.getBoundingClientRect().top;
+                if (this._bottomLockPanel && this._bottomLockPanel.offsetParent !== null) {
+                    viewBottom = this._bottomLockPanel.getBoundingClientRect().top;
                 }
                 //Check whether the focused element is in range from viewTop to viewBottom. If it is outside the range then calculate the scroll differense and add to the scrollTop of scrollContainer. Otherwise do nothing.
                 const focusedElementRect = target.getBoundingClientRect();
@@ -1189,11 +1202,11 @@
                 } else if (focusedElementRect.bottom > viewBottom) {
                     scrollIncrement = focusedElementRect.bottom - viewBottom;
                 }
-                this.$$("#scrollContainer").scrollTop += scrollIncrement;
+                this._scrollContainer.scrollTop += scrollIncrement;
             },
 
             /**
-             * Resize event handler that adjasts the lockcontainer size and position.
+             * Resize event handler that adjasts the lock container size and position.
              */
             _resizeEventListener: function (event, details) {
                 var baseContainer = this.$$("#baseContainer");
