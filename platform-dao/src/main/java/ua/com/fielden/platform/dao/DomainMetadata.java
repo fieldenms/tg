@@ -191,12 +191,15 @@ public class DomainMetadata {
         sb.append("\n");
         int pecalcpc = 0;
         int pecollpc = 0;
+        int peunionpc = 0;
+        sb.append(String.format(" %50s%10s%10s%10s\n", "Entity class name \\ Props count", "calc.", "collect.", "union"));
         for (final Entry<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> entry : map.entrySet()) {
             pecalcpc = pecalcpc + entry.getValue().countCalculatedProps();
             pecollpc = pecollpc + entry.getValue().countCollectionalProps();
-            sb.append("===== type: " + entry.getKey().getSimpleName() + " calculatedPropsCount = " + entry.getValue().countCalculatedProps() + " collectionalPropsCount = " + entry.getValue().countCollectionalProps() + "\n");
+            peunionpc = peunionpc + entry.getValue().countUnionEntityProps();
+            sb.append(String.format(" %50s%10s%10s%10s\n", entry.getKey().getSimpleName(), entry.getValue().countCalculatedProps(), entry.getValue().countCollectionalProps(), entry.getValue().countUnionEntityProps()));
         }
-        sb.append("=====  totals: " + map.size() + " calculatedPropsCount: " + pecalcpc + " collectionalPropsCount: " + pecollpc + "\n");
+        sb.append(String.format(" %45s%5s%10s%10s%10s", "totals:", map.size(), pecalcpc, pecollpc, peunionpc));
         return sb.toString();
     }
 
