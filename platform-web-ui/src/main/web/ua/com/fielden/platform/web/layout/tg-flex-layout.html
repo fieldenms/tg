@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="/resources/components/tg-subheader.html">
+<link rel="import" href="/resources/layout/tg-html-directive.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
@@ -46,8 +47,8 @@
                     return createSubheader.bind(this)(layoutElem, true, true);
                 },
                 "html": function (selectedElements, orderedElements, layoutElem) {
-                    var elemToReturn = document.createElement('div');
-                    elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
+                    const elemToReturn = document.createElement('tg-html-directive');
+                    //elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
                     return elemToReturn;
                 }
             },
@@ -310,6 +311,7 @@
                     type: Array
                 }
             },
+            behaviors: [Polymer.Templatizer],
             ready: function () {
                 this._subheaders = [];
                 this._editorErrorHandler = this._editorErrorHandler.bind(this);
