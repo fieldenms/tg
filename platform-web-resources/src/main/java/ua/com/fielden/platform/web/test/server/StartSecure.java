@@ -111,6 +111,13 @@ public class StartSecure {
             + "  allVehicles: tgVehicle {\n"
             + "    key\n"
             + "    active\n"
+            + "    model {\n"
+            + "      key\n"
+            + "      desc\n"
+            + "      make {\n"
+            + "        key\n"
+            + "      }\n"
+            + "    }\n"
             + "    replacedBy {\n"
             + "      key\n"
             + "    }\n"
@@ -173,6 +180,10 @@ public class StartSecure {
                         .description("Vehicle Key")
                         .type(GraphQLString))
                 .field(newFieldDefinition()
+                        .name("model")
+                        .description("Vehicle Model")
+                        .type(new GraphQLTypeReference("TgVehicleModel")))
+                .field(newFieldDefinition()
                         .name("active")
                         .description("Active")
                         .type(GraphQLBoolean))
@@ -182,6 +193,34 @@ public class StartSecure {
                         .type(new GraphQLTypeReference("TgVehicle")))
                 .build();
         types.add(tgVehicleObjectType);
+        
+        final GraphQLObjectType tgVehicleModelObjectType = newObject()
+                .name("TgVehicleModel")
+                .description("Vehicle Model in TG example app")
+                .field(newFieldDefinition()
+                        .name("key")
+                        .description("Vehicle Model Key")
+                        .type(GraphQLString))
+                .field(newFieldDefinition()
+                        .name("desc")
+                        .description("Vehicle Model Desc")
+                        .type(GraphQLString))
+                .field(newFieldDefinition()
+                        .name("make")
+                        .description("Vehicle Make")
+                        .type(new GraphQLTypeReference("TgVehicleMake")))
+                .build();
+        types.add(tgVehicleModelObjectType);
+        
+        final GraphQLObjectType tgVehicleMakeObjectType = newObject()
+                .name("TgVehicleMake")
+                .description("Vehicle Make in TG example app")
+                .field(newFieldDefinition()
+                        .name("key")
+                        .description("Vehicle Make Key")
+                        .type(GraphQLString))
+                .build();
+        types.add(tgVehicleMakeObjectType);
         
         return types;
     }
