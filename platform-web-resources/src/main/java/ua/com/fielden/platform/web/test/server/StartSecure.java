@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import static graphql.Scalars.*;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -107,7 +108,14 @@ public class StartSecure {
         final ExecutionResult execResult = graphQL.execute(
             ""
             + "{\n"
-            + "  tgVehicle {\n"
+            + "  allVehicles: tgVehicle {\n"
+            + "    key\n"
+            + "    active\n"
+            + "    replacedBy {\n"
+            + "      key\n"
+            + "    }\n"
+            + "  }\n"
+            + "  anotherAllVehicles: tgVehicle {\n"
             + "    key\n"
             + "    active\n"
             + "  }\n"
@@ -145,7 +153,7 @@ public class StartSecure {
             try {
                 final EntityResultQueryModel eqlQuery = select(entityType).model();
                 final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
-                final List entities = co.getAllEntities(from(eqlQuery).model()); // TODO fetch order etc.
+                final List entities = co.getAllEntities(from(eqlQuery).with(fetchAll(entityType)).model()); // TODO fetch order etc.
                 return entities;
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
@@ -168,6 +176,10 @@ public class StartSecure {
                         .name("active")
                         .description("Active")
                         .type(GraphQLBoolean))
+                .field(newFieldDefinition()
+                        .name("replacedBy")
+                        .description("Replaced By")
+                        .type(new GraphQLTypeReference("TgVehicle")))
                 .build();
         types.add(tgVehicleObjectType);
         
