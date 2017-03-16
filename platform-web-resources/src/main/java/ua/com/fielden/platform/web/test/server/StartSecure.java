@@ -115,6 +115,9 @@ public class StartSecure {
             ""
             + "{\n"
             + "  allVehicles: tgVehicle {\n"
+            + "    fuelUsages {\n"
+            + "      qty\n"
+            + "    }\n"
             + "    key\n"
             + "    active\n"
             + "    model {\n"
@@ -234,6 +237,10 @@ public class StartSecure {
                         .name("replacedBy")
                         .description("Replaced By")
                         .type(new GraphQLTypeReference("TgVehicle")))
+                .field(newFieldDefinition()
+                        .name("fuelUsages")
+                        .description("Fuel Usages")
+                        .type(new GraphQLList(new GraphQLTypeReference("TgFuelUsage"))))
                 .build();
         types.add(tgVehicleObjectType);
         
@@ -264,6 +271,16 @@ public class StartSecure {
                         .type(GraphQLString))
                 .build();
         types.add(tgVehicleMakeObjectType);
+        
+        final GraphQLObjectType tgFuelUsageObjectType = newObject()
+                .name("TgFuelUsage")
+                .description("Fuel Usage in TG example app")
+                .field(newFieldDefinition()
+                        .name("qty")
+                        .description("Fuel Qty")
+                        .type(TgScalars.GraphQLBigDecimal))
+                .build();
+        types.add(tgFuelUsageObjectType);
         
         return types;
     }
