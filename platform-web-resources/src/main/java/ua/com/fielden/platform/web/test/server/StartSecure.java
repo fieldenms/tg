@@ -1,15 +1,16 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static graphql.Scalars.*;
+import static graphql.Scalars.GraphQLBoolean;
+import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,9 @@ import org.restlet.util.Series;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
+import graphql.language.Field;
+import graphql.language.Selection;
+import graphql.language.SelectionSet;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLList;
@@ -35,8 +39,10 @@ import graphql.schema.GraphQLTypeReference;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -158,9 +164,19 @@ public class StartSecure {
 //                return ((Map<?, ?>) source).get(propertyName);
 //            }
             try {
+                LOGGER.error(String.format("Arguments [%s]", environment.getArguments()));
+                LOGGER.error(String.format("Context [%s]", environment.getContext()));
+                final List<Field> fields = environment.getFields();
+                LOGGER.error(String.format("Fields [%s]", fields));
+                LOGGER.error(String.format("FieldType [%s]", environment.getFieldType()));
+                LOGGER.error(String.format("ParentType [%s]", environment.getParentType()));
+                LOGGER.error(String.format("Source [%s]", environment.getSource()));
+                
                 final EntityResultQueryModel eqlQuery = select(entityType).model();
                 final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
-                final List entities = co.getAllEntities(from(eqlQuery).with(fetchAll(entityType)).model()); // TODO fetch order etc.
+                final List<Field> innerFieldsForEntityQuery = toFields(fields.get(0).getSelectionSet()); // TODO fields could be empty? could contain more than one?
+                final fetch<? extends AbstractEntity> fetchModel = EntityUtils.fetchNotInstrumented(entityType).with(properties(null, innerFieldsForEntityQuery)).fetchModel();
+                final List entities = co.getAllEntities(from(eqlQuery).with(fetchModel).model()); // TODO fetch order etc.
                 return entities;
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
@@ -169,6 +185,33 @@ public class StartSecure {
         }
     }
     
+    private static LinkedHashSet<String> properties(final String prefix, final List<Field> graphQLFields) {
+        final LinkedHashSet<String> properties = new LinkedHashSet<>();
+        for (final Field graphQLField: graphQLFields) {
+            final String property = prefix == null ? graphQLField.getName() : prefix + "." + graphQLField.getName();
+            properties.add(property);
+            
+            properties.addAll(properties(property, toFields(graphQLField.getSelectionSet())));
+        }
+        LOGGER.error(String.format("Fetching props [%s]", properties));
+        return properties;
+    }
+    
+    private static List<Field> toFields(final SelectionSet selectionSet) {
+        final List<Field> selectionFields = new ArrayList<>();
+        if (selectionSet != null) {
+            final List<Selection> selections = selectionSet.getSelections();
+            for (final Selection selection: selections) {
+                if (selection instanceof Field) {
+                    selectionFields.add((Field) selection);
+                } else {
+                    // TODO investigate what needs to be done here
+                }
+            }
+        }
+        return selectionFields;
+    }
+
     private static Set<GraphQLType> createDictionary() {
         final Set<GraphQLType> types = new LinkedHashSet<>();
         
