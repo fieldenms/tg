@@ -98,7 +98,14 @@
 			<artifactId>mail</artifactId>
 			<version>1.5.0-b01</version>
 		</dependency>
-
+		
+		<!-- Java GraphQL implementation -->
+		<dependency>
+			<groupId>com.graphql-java</groupId>
+			<artifactId>graphql-java</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+		
 		<!-- This is the same dependency as for Hibernate 3.6.10 -->
 		<dependency>
 			<groupId>javassist</groupId>
