@@ -5,12 +5,13 @@ import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +27,15 @@ import org.restlet.util.Series;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
+import graphql.language.Argument;
+import graphql.language.BooleanValue;
 import graphql.language.Field;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
+import graphql.language.Value;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
@@ -39,8 +44,10 @@ import graphql.schema.GraphQLTypeReference;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -101,6 +108,7 @@ public class StartSecure {
                         .name("tgVehicle")
                         .type(new GraphQLList(new GraphQLTypeReference("TgVehicle")))
                         .dataFetcher(new RootEntityDataFetcher(TgVehicle.class, coFinder)))
+                        
                         // .staticValue("world"))
                 .build();
         
@@ -119,7 +127,7 @@ public class StartSecure {
             + "      qty\n"
             + "    }\n"
             + "    key\n"
-            + "    active\n"
+            + "    active(value: false)\n"
             + "    model {\n"
             + "      key\n"
             + "      desc\n"
@@ -149,10 +157,10 @@ public class StartSecure {
     }
     
     private static class RootEntityDataFetcher implements DataFetcher {
-        private final Class<? extends AbstractEntity> entityType;
+        private final Class<? extends AbstractEntity<?>> entityType;
         private final ICompanionObjectFinder coFinder;
         
-        public RootEntityDataFetcher(final Class<? extends AbstractEntity> entityType, final ICompanionObjectFinder coFinder) {
+        public RootEntityDataFetcher(final Class<? extends AbstractEntity<?>> entityType, final ICompanionObjectFinder coFinder) {
             this.entityType = entityType;
             this.coFinder = coFinder;
         }
@@ -175,10 +183,46 @@ public class StartSecure {
                 LOGGER.error(String.format("ParentType [%s]", environment.getParentType()));
                 LOGGER.error(String.format("Source [%s]", environment.getSource()));
                 
-                final EntityResultQueryModel eqlQuery = select(entityType).model();
-                final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
                 final List<Field> innerFieldsForEntityQuery = toFields(fields.get(0).getSelectionSet()); // TODO fields could be empty? could contain more than one?
-                final fetch<? extends AbstractEntity> fetchModel = EntityUtils.fetchNotInstrumented(entityType).with(properties(null, innerFieldsForEntityQuery)).fetchModel();
+                final LinkedHashMap<String, List<Argument>> properties = properties(null, innerFieldsForEntityQuery);
+                
+                final Map<String, QueryProperty> queryProperties = new LinkedHashMap<>();
+                for (final Map.Entry<String, List<Argument>> propertyAndArguments: properties.entrySet()) {
+                    final String propertyName = propertyAndArguments.getKey();
+                    final List<Argument> propertyArguments = propertyAndArguments.getValue();
+                    if (!propertyArguments.isEmpty()) {
+                        final QueryProperty queryProperty = new QueryProperty(entityType, propertyName);
+                        
+                        queryProperties.put(propertyName, queryProperty);
+                        
+                        final Argument firstArgument = propertyArguments.get(0);
+                        // TODO handle other arguments
+                        
+                        // TODO check also firstArgument.getName();
+                        final Value value = firstArgument.getValue();
+                        LOGGER.error(String.format("Arg value [%s]", value));
+                        
+                        // TODO provide more type safety here 
+                        if (value instanceof BooleanValue) {
+                            final BooleanValue booleanValue = (BooleanValue) value;
+                            if (booleanValue.isValue()) {
+                                queryProperty.setValue(true);
+                                queryProperty.setValue2(false);
+                            } else {
+                                queryProperty.setValue(false);
+                                queryProperty.setValue2(true);
+                            }
+                        } else {
+                            // TODO implement other cases
+                        }
+                    }
+                }
+                
+                final ICompleted<? extends AbstractEntity<?>> query = createQuery(entityType, new ArrayList<QueryProperty>(queryProperties.values()));
+                final EntityResultQueryModel eqlQuery = query.model();
+                final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
+                
+                final fetch<? extends AbstractEntity> fetchModel = EntityUtils.fetchNotInstrumented(entityType).with(properties.keySet()).fetchModel();
                 final List entities = co.getAllEntities(from(eqlQuery).with(fetchModel).model()); // TODO fetch order etc.
                 return entities;
             } catch (final Exception e) {
@@ -188,13 +232,14 @@ public class StartSecure {
         }
     }
     
-    private static LinkedHashSet<String> properties(final String prefix, final List<Field> graphQLFields) {
-        final LinkedHashSet<String> properties = new LinkedHashSet<>();
+    private static LinkedHashMap<String, List<Argument>> properties(final String prefix, final List<Field> graphQLFields) {
+        final LinkedHashMap<String, List<Argument>> properties = new LinkedHashMap<>();
         for (final Field graphQLField: graphQLFields) {
+            final List<Argument> args = graphQLField.getArguments();
             final String property = prefix == null ? graphQLField.getName() : prefix + "." + graphQLField.getName();
-            properties.add(property);
+            properties.put(property, args);
             
-            properties.addAll(properties(property, toFields(graphQLField.getSelectionSet())));
+            properties.putAll(properties(property, toFields(graphQLField.getSelectionSet())));
         }
         LOGGER.error(String.format("Fetching props [%s]", properties));
         return properties;
@@ -230,6 +275,7 @@ public class StartSecure {
                         .description("Vehicle Model")
                         .type(new GraphQLTypeReference("TgVehicleModel")))
                 .field(newFieldDefinition()
+                        .argument(new GraphQLArgument("value", null /* description of argument */, GraphQLBoolean, null /*default value of argument */))
                         .name("active")
                         .description("Active")
                         .type(GraphQLBoolean))
