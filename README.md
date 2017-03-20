@@ -17,10 +17,10 @@ The notion of using of a single programming language for building TG-based appli
 
 Documentation and Demo applications
 -----------------------------------
-One of the very important aspect of any technology is the documentation and demo applications that could be used to learning. Currently, all our applications are propriatery.
+One of the very important aspect of any technology is the documentation and demo applications that could be used for learning. Currently, all our applications are propriatery and their source cannot be shared.
 
-The documentation forms part of this repository (LaTeX documents in `platform-doc`such as https://github.com/fieldenms/tg/blob/develop/platform-doc/doc/tg-overview/tg-overview.tex and Wiki pages). However, these are mainly the overview-type documents and design sketches. A more training-oriented documentation is in the works and will be inlined with a demo business domain for building that smaller-size demo application.
+The documentation forms part of this repository (LaTeX documents in `platform-doc`such as https://github.com/fieldenms/tg/blob/develop/platform-doc/doc/tg-overview/tg-overview.tex and Wiki pages). However, these are mainly the overview-type documents and design sketches. A more training-oriented documentation is in the works and will be inlined with a demo business domain for building a smaller-size demo application.
 
 Looking into the future
 -----------------------
-We're at a very early stage of open-sourcing the TG platform. There are very exciting plans regarding the TG development directions, which included, but are not limited to advanced static typing of the domain models, asynchronous EQL execution engine and self-tuning, real-time messaging and on and on.
+We're at a very early stage of open-sourcing the TG platform. There are very exciting plans regarding the future TG development directions, which include, but are not limited to advanced static typing of the domain models, asynchronous EQL execution engine and self-tuning, real-time messaging and on and on.
