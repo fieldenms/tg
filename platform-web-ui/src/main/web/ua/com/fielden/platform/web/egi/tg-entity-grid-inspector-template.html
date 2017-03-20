@@ -309,7 +309,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn"  on-focusout="_baseContainerFocusOut">
+                    <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -930,25 +930,25 @@
                     ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
-            
+
             _baseContainerRendered: function (e) {
                 this._scrollContainer = this.$$("#scrollContainer");
                 this._lockContainer = this.$$("#lockContainer");
             },
-            
+
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
             },
-            
+
             _rightLockPanelRendered: function (e) {
                 this._rightLockPanel = this.$$("#rightLockPanel");
             },
-            
-            _topLockPanelRendered : function (e) {
+
+            _topLockPanelRendered: function (e) {
                 this._topLockPanel = this.$$("#topLockPanel");
             },
-            
-            _bottomLockPanelRendered : function (e) {
+
+            _bottomLockPanelRendered: function (e) {
                 this._bottomLockPanel = this.$$("#bottomLockPanel");
             },
 
@@ -1113,39 +1113,94 @@
 
             _handleWheel: function (e, detail) {
                 if (this._scrollContainer) {
-                    this._scrollLength = this._scrollLength || 0;
-                    if (this._scrollLength !== 0 && sign(e.deltaY) === sign(this._scrollLength)) {
-                        this._scrollLength += e.deltaY;
+                    this._scrollLengthY = this._scrollLengthY || 0;
+                    this._scrollLengthX = this._scrollLengthX || 0;
+                    if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
+                        if (sign(e.deltaX) === sign(this._scrollLengthX)) {
+                            this._scrollLengthX += e.deltaX;
+                        } else {
+                            this._resetXscroll = e.deltaX;
+                        }
+                        if (sign(e.deltaY) === sign(this._scrollLengthY)) {
+                            this._scrollLengthY += e.deltaY;
+                        } else {
+                            this._resetYscroll = e.deltaY;
+                        }
                     } else {
-                        clearTimeout(this._scrollTimeout);
-                        this._scrollLength = e.deltaY;
-                        this._scrollTimeout = setTimeout(() => this._scrollBy(7), 10);
+                        this._scrollLengthX = e.deltaX;
+                        this._scrollLengthY = e.deltaY;
+                        setTimeout(() => this._scrollBy(7, 7), 10);
                     }
                 }
                 e.preventDefault();
             },
 
-            _scrollBy: function (increment) {
-                if (this._scrollLength !== 0) {
-                    const s = sign(this._scrollLength);
+            _scrollBy: function (incrementX, incrementY) {
+                const newIncrementX = this._scrollHorizontallyBy(incrementX);
+                const newIncrementY = this._scrollVerticallyBy(incrementY);
+                if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
+                    setTimeout(() => this._scrollBy(newIncrementX, newIncrementY), 10);
+                }
+            },
+
+            _scrollHorizontallyBy: function (increment) {
+                let newIncrement = increment;
+                if (this._resetXscroll) {
+                    this._scrollLengthX = this._resetXscroll;
+                    delete this._resetXscroll;
+                    newIncrement = 7;
+                }
+                if (this._scrollLengthX !== 0 && newIncrement !== 0) {
+                    const s = sign(this._scrollLengthX);
                     //The expression below calculates speed and direction of scroll action
-                    //s = sign(scrollLength) - determines the direction of scroll.
-                    //Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10) - calculates the accelration of the scroll. It should maximum value of previous speed or it is scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
-                    //Math.min(... , Math.abs(this._scrollLength)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on hte last step of animation. That looks like animation slows down.
-                    let newIncrement = s * Math.min(Math.max(Math.abs(increment), Math.abs(this._scrollLength) / 10), Math.abs(this._scrollLength));
+                    //s = sign(scrollLength) - determines the direction of scroll (to left or to right).
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLengthX) / 10) - calculates the accelration of the scroll. It should be maximum value of previous speed or it's scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLengthX)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on the last step of animation. That looks like animation slows down.
+                    newIncrement = s * Math.min(Math.max(Math.abs(newIncrement), Math.abs(this._scrollLengthX) / 10), Math.abs(this._scrollLengthX));
+                    if (this._scrollContainer.scrollLeft + newIncrement < 0) {
+                        this._scrollContainer.scrollLeft = 0;
+                        this._scrollLengthX = 0;
+                        return 0;
+                    } else if (this._scrollContainer.scrollLeft + newIncrement > this._scrollContainer.scrollWidth - this._scrollContainer.clientWidth) {
+                        this._scrollContainer.scrollLeft = this._scrollContainer.scrollWidth - this._scrollContainer.clientWidth;
+                        this._scrollLengthX = 0;
+                        return 0;
+                    }
+                    this._scrollContainer.scrollLeft += newIncrement;
+                    this._scrollLengthX -= newIncrement;
+                    return newIncrement;
+                }
+                return 0;
+            },
+
+            _scrollVerticallyBy: function (increment) {
+                let newIncrement = increment;
+                if (this._resetYscroll) {
+                    this._scrollLengthY = this._resetYscroll;
+                    delete this._resetYscroll;
+                    newIncrement = 7;
+                }
+                if (this._scrollLengthY !== 0 && newIncrement !== 0) {
+                    const s = sign(this._scrollLengthY);
+                    //The expression below calculates speed and direction of scroll action
+                    //s = sign(scrollLength) - determines the direction of scroll (top or down).
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLengthY) / 10) - calculates the accelration of the scroll. It should be maximum value of previous speed or it's scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLengthY)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on the last step of animation. That looks like animation slows down.
+                    newIncrement = s * Math.min(Math.max(Math.abs(newIncrement), Math.abs(this._scrollLengthY) / 10), Math.abs(this._scrollLengthY));
                     if (this._scrollContainer.scrollTop + newIncrement < 0) {
                         this._scrollContainer.scrollTop = 0;
-                        this._scrollLength = 0;
-                        return;
-                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight) {
+                        this._scrollLengthY = 0;
+                        return 0;
+                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHight - this._scrollContainer.clientHeight) {
                         this._scrollContainer.scrollTop = this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight;
-                        this._scrollLength = 0;
-                        return;
+                        this._scrollLengthY = 0;
+                        return 0;
                     }
                     this._scrollContainer.scrollTop += newIncrement;
-                    this._scrollLength -= newIncrement;
-                    this._scrollTimeout = setTimeout(() => this._scrollBy(newIncrement), 10);
+                    this._scrollLengthY -= newIncrement;
+                    return newIncrement;
                 }
+                return 0;
             },
 
             _isTargetInSelectedContainer: function (target) {
