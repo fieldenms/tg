@@ -249,43 +249,59 @@
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
-            // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
-            // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
-            // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
-            if (this._originalChosenIds === null) {
-                const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
-                
-                const selEntities = [];
-                const chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
-                if (typeof this.entity.chosenIds === 'undefined') {
-                    this._forReview = true;
-                }
-                
-                this._originalChosenIds = [];
-                for (let index = 0; index < chosenIds.length; index++) {
-                    const foundEntity = this._find(arrivedEntities, chosenIds[index]);
-                    if (foundEntity !== null) {
-                        selEntities.push(foundEntity);
-                        this._originalChosenIds.push(chosenIds[index]);
-                    }
-                }
-                
-                this._entities = this._placeSelectedOnTop(arrivedEntities, chosenIds);
-                
-                this._disableSelectionListeners = true;
-                this.$.input.clearSelection();
-                
-                for (let index = 0; index < selEntities.length; index++) {
-                    this.$.input.selectItem(selEntities[index]);
-                }
-                this._disableSelectionListeners = false;
-                
-                this.scrollToFirstFoundElement();
-            }
-            
-            this.provideSorting(this.entity.sortingVals, this._entities);
-            
             return 'IRRELEVANT';
+        },
+        
+        /**
+         * Assignes initial values as soon as 'this.entity' and 'this.originalEntity' becomes available.
+         * This method relies on a fact that the entity gets initialised earlier than originalEntity (see '_postEntityReceived' method in tg-entity-binder-behavior).
+         */
+        _originalEntityChanged: function (newValue, oldValue) {
+            Polymer.TgBehaviors.TgEditorBehavior._originalEntityChanged.call(this, newValue, oldValue);
+            
+            if (this.reflector().isEntity(newValue)) {
+                // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
+                // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
+                // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
+                if (this._originalChosenIds === null) {
+                    const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
+                    
+                    const selEntities = [];
+                    const chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+                    if (typeof this.entity.chosenIds === 'undefined') {
+                        this._forReview = true;
+                    }
+                    
+                    const originalChosenIds = typeof this.originalEntity.chosenIds === 'undefined' ? [] : this.originalEntity.get('chosenIds');
+                    this._originalChosenIds = [];
+                    for (let index = 0; index < originalChosenIds.length; index++) {
+                        const foundEntity = this._find(arrivedEntities, originalChosenIds[index]);
+                        if (foundEntity !== null) {
+                            this._originalChosenIds.push(originalChosenIds[index]);
+                        }
+                    }
+                    for (let index = 0; index < chosenIds.length; index++) {
+                        const foundEntity = this._find(arrivedEntities, chosenIds[index]);
+                        if (foundEntity !== null) {
+                            selEntities.push(foundEntity);
+                        }
+                    }
+                    
+                    this._entities = this._placeSelectedOnTop(arrivedEntities, chosenIds);
+                    
+                    this._disableSelectionListeners = true;
+                    this.$.input.clearSelection();
+                    
+                    for (let index = 0; index < selEntities.length; index++) {
+                        this.$.input.selectItem(selEntities[index]);
+                    }
+                    this._disableSelectionListeners = false;
+                    
+                    this.scrollToFirstFoundElement();
+                }
+                
+                this.provideSorting(this.entity.sortingVals, this._entities);
+            }
         },
         
         /**
@@ -504,13 +520,16 @@
 	                        var foundId = addedIds.indexOf(self.idOrKey(removed));
 	                        if (foundId > -1) {
 	                            addedIds.splice(foundId, 1);
+	                            self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
 	                        } else {
 	                            removedIds.push(self.idOrKey(removed));
+	                            self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
 	                        }
 	                        
 	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
 	                        if (foundInChosenIds > -1) {
 	                            chosenIds.splice(foundInChosenIds, 1);
+	                            self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
@@ -532,6 +551,7 @@
 	                        var foundId = removedIds.indexOf(self.idOrKey(added));
 	                        if (foundId > -1) {
 	                            removedIds.splice(foundId, 1);
+	                            self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
 	                        } 
 	                        
 	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
@@ -540,8 +560,10 @@
 	                        }
                             
                             chosenIds.push(self.idOrKey(added));
+                            self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
+                                self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
                             }
 	                        // invoke validation after user has added some item to collection
 	                        if (self._shouldInvokeValidation()) {

@@ -44,7 +44,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * <p>
  * These conflicts are most likely taken place after the user has been opened the dialog for collection modification, but hasn't finished collection modification by clicking on SAVE button.
  * 
- * Also 4) order of available entities (user roles, userRole tokens) are checked, selected entities should be on top and deselected at bottom of the list.
+ * Also 4) order of available entities (user roles, userRole tokens) are checked, by-key order is required.
  * 
  * @author TG Team
  *
