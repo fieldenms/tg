@@ -200,7 +200,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render().clazz("property-editors");
+        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currBindingEntity]]");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
@@ -335,7 +335,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
-        
+
         /**
          * Returns action configuration for concrete action kind and its number in that kind's space.
          * <p>
@@ -386,15 +386,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
-    
+
     public List<Object> getEntityActions() {
         return entityActions;
     }
-    
+
     /**
-     * Injects custom JavaScript code into respective master implementation. This code will be executed after 
+     * Injects custom JavaScript code into respective master implementation. This code will be executed after
      * master component creation.
-     * 
+     *
      * @param customCode
      * @return
      */
@@ -402,11 +402,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         this.customCode = Optional.of(customCode);
         return this;
     }
-    
+
     /**
      * Injects custom JavaScript code into respective master implementation. This code will be executed every time
      * master component is attached to client application's DOM.
-     * 
+     *
      * @param customCode
      * @return
      */

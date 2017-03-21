@@ -24,13 +24,33 @@
 
 <body unresolved>
     <template id="app" is="dom-bind">
-        <tg-flex-layout when-desktop="[[_whenDesktop]]"></tg-flex-layout>
+        <tg-flex-layout when-desktop="[[_whenDesktop]]" context="[[entity]]"></tg-flex-layout>
+        <div on-tap="_changeEntity">Change entity</div>
+        <div on-tap="_changeProp">Change property</div>
+        <div on-tap="_changeSubProp">Change sub property</div>
     </template>
 </body>
 <script>
     var app = document.querySelector("#app");
-    app.interpolatedText = "That was interpolated text."
-    app._whenDesktop = ['padding-left:16px',['html:<span style="color:blue;">{{interpolatedText}}</span>']];
+    app.entity = {
+        intObj: {
+            intText: "That was interpolated text"
+        }
+    };
+    app._changeEntity = function () {
+        app.entity = {
+            intObj: {
+                intText: "Changed entity"
+            }
+        };
+    };
+    app._changeProp = function () {
+        app.set("entity.intObj", {intText: "This is internal object text"});
+    };
+    app._changeSubProp = function () {
+        app.set("entity.intObj.intText", "This is internal object internal text");
+    };
+    app._whenDesktop = ['padding-left:16px', ['html:<span style="color:blue;">{{intObj.intText}}</span>']];
 </script>
 
 </html>

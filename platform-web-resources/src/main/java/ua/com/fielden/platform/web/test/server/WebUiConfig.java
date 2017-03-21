@@ -205,7 +205,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     public void initConfiguration() {
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
-        
+
         TgMessageWebUiConfig.register(injector(), configApp());
         TgStopWebUiConfig.register(injector(), configApp());
         TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
@@ -564,7 +564,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("domainInitProp").asSinglelineText()
                 .also()
-                
+
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
                     .shortDesc("CANCEL")
@@ -600,24 +600,29 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         "      ['padding:20px', "
                         + format("['subheader-open:Other components', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
-                        + format("['subheader-open:Other components', 'flex'],")
+                        + format("['subheader-open:Other components 1', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
-                        + format("['subheader-open:Other components', 'flex'],")
+                        + format("['subheader-open:Other components 2', 'flex'],")
                         + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
-                        + format("[[%s], [%s], [%s], [%s], ['flex']]", fmr, fmr, fmr, fmr)
+                        + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + "[['html:<span>This is binded text: </span><span style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']]"
                         + "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
-                        + "[[fmr], ['flex'], ['flex']]]").replace("fmr", fmr))
+                        + "[[fmr], ['flex'], ['flex']],"
+                        + "[['html:<span>This is binded text: </span><span style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "]").replace("fmr", fmr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "[[fmr], ['flex']]]").replace("fmr", fmr))
+                        + "[[fmr], ['flex']],"
+                        + "[['html:<span>This is binded text: </span><span style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "]").replace("fmr", fmr))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
