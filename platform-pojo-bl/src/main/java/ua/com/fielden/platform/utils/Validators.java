@@ -45,8 +45,8 @@ public final class Validators {
      *
      * @param entity
      *            -- entity which should be tested for overlapping.
-     * @param controller
-     *            -- entity controller used for executing the query.
+     * @param co
+     *            -- entity companion used for executing the query.
      * @param fromDateProperty
      *            -- name of the entity property serving as the from date.
      * @param toDateProperty
@@ -58,12 +58,12 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
     /*    */final T entity, //
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final String... matchProperties) {
         final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
-        return controller.count(model) > 0;
+        return co.count(model) > 0;
     }
 
     /**
@@ -73,8 +73,8 @@ public final class Validators {
      *
      * @param entity
      *            -- entity which should be tested for overlapping.
-     * @param controller
-     *            -- entity controller used for executing the query.
+     * @param co
+     *            -- entity companion used for executing the query.
      * @param fromDateProperty
      *            -- name of the entity property serving as the from date.
      * @param toDateProperty
@@ -90,14 +90,14 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
     /*    */final T entity, //
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final Date fromDateValue, //
             final Date toDateValue, //
             final String... matchProperties) {
         final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, fromDateValue, toDateValue, matchProperties);
-        return controller.count(model) > 0;
+        return co.count(model) > 0;
     }
 
     /**
@@ -106,7 +106,7 @@ public final class Validators {
      * @param entity
      * @param fetchModel
      *            -- the fetch model is used to initialise the overlapped entity
-     * @param controller
+     * @param co
      * @param fromDateProperty
      * @param toDateProperty
      * @param matchProperties
@@ -115,7 +115,7 @@ public final class Validators {
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
     /*    */final T entity, //
             final fetch<T> fetchModel,//
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final String... matchProperties) {
@@ -123,15 +123,15 @@ public final class Validators {
         final OrderingModel orderBy = orderBy().prop(fromDateProperty).asc().model();
 
         final fetch<T> runFetch = fetchModel != null ? fetchModel : fetch((Class<T>) entity.getType());
-        final List<T> result = controller.getFirstEntities(from(model).with(runFetch).with(orderBy).model(), 1);
-        return result.size() > 0 ? result.get(0) : null;
+        final List<T> result = co.getFirstEntities(from(model).with(runFetch).with(orderBy).model(), 1);
+        return !result.isEmpty() ? result.get(0) : null;
     }
 
     /**
      * Returns the first overlapping entity if any, <code>null</code> value otherwise. Default entity query fetch model is used for initialising the overlapped entity.
      *
      * @param entity
-     * @param controller
+     * @param co
      * @param fromDateProperty
      * @param toDateProperty
      * @param matchProperties
@@ -139,11 +139,11 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
     /*    */final T entity, //
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final String... matchProperties) {
-        return findFirstOverlapping(entity, null, controller, fromDateProperty, toDateProperty, matchProperties);
+        return findFirstOverlapping(entity, null, co, fromDateProperty, toDateProperty, matchProperties);
     }
 
     /**
@@ -320,7 +320,13 @@ public final class Validators {
      * @param matchProperties
      * @return
      */
-    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> composeOverlappingCheckQueryModel(final T entity, final String fromDateProperty, final String toDateProperty, final Date fromDateValue, final Date toDateValue, final String... matchProperties) {
+    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> composeOverlappingCheckQueryModel(
+            final T entity, 
+            final String fromDateProperty, 
+            final String toDateProperty, 
+            final Date fromDateValue, 
+            final Date toDateValue, 
+            final String... matchProperties) {
         // check preconditions
         if (fromDateValue == null) {
             throw new IllegalArgumentException("fromDateValue should not be null.");
