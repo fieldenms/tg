@@ -296,7 +296,7 @@
             </div>
         </paper-dialog>
 
-        <template is="dom-if" if="[[!cardLayout]]" restamp>
+        <template is="dom-if" if="[[!cardLayout]]" on-dom-change="_baseContainerRendered" restamp>
             <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
                 <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
                     <!--Table toolbar-->
@@ -309,7 +309,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative layout horizontal">
+                    <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -420,8 +420,8 @@
                         </div>
                         <!-- Fixed container -->
                         <div id="lockContainer" class="absolute fit" style="overflow:hidden">
-                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                                <div id="leftLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                                <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
                                         <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -505,8 +505,8 @@
                             <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]"></div>
                             </template>
-                            <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
-                                <div id="rightLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_rightLockPanelRendered" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
+                                <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
                                         <div class="action-cell layout horizontal center no-flexible">
@@ -539,7 +539,7 @@
                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                                 <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow)]]"></div>
                             </template>
-                            <template is="dom-if" if="[[_isHeaderFixed(headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_topLockPanelRendered" if="[[_isHeaderFixed(headerFixed)]]">
                                 <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -561,7 +561,7 @@
                                     </template>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
+                            <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
                                 <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="layout vertical flex" style="background-color:white;">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
@@ -735,6 +735,7 @@
 </dom-module>
 <script>
     (function () {
+
         var _checkCollapsiblePanelVisibility = function (layout) {
             this.collapsePanelVisible = !!(this.cardLayout && layout);
         };
@@ -762,16 +763,22 @@
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
-                        if (egi) {
-                            egi.retrievedEntitySelection = {entity: entity, selected: true};
-                        }
+                    if (egi) {
+                        egi.retrievedEntitySelection = {
+                            entity: entity,
+                            selected: true
+                        };
+                    }
                 }
             } else {
                 if (selectedIndex >= 0) {
                     selectedEntities.splice(selectedIndex, 1);
-                        if (egi) {
-                            egi.retrievedEntitySelection = {entity: entity, selected: false};
-                        }
+                    if (egi) {
+                        egi.retrievedEntitySelection = {
+                            entity: entity,
+                            selected: false
+                        };
+                    }
                 }
             }
         };
@@ -788,6 +795,7 @@
                 return subEntity.get(key);
             });
         };
+        const sign = (value) => value < 0 ? -1 : 1;
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -806,7 +814,7 @@
                     notify: true
                 },
                 /**
-                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
                  * consistent with the order of columns.
                  *
                  * @param entity -- the entity to be processed with the mapper function
@@ -923,6 +931,27 @@
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
 
+            _baseContainerRendered: function (e) {
+                this._scrollContainer = this.$$("#scrollContainer");
+                this._lockContainer = this.$$("#lockContainer");
+            },
+
+            _leftLockPanelRendered: function (e) {
+                this._leftLockPanel = this.$$("#leftLockPanel");
+            },
+
+            _rightLockPanelRendered: function (e) {
+                this._rightLockPanel = this.$$("#rightLockPanel");
+            },
+
+            _topLockPanelRendered: function (e) {
+                this._topLockPanel = this.$$("#topLockPanel");
+            },
+
+            _bottomLockPanelRendered: function (e) {
+                this._bottomLockPanel = this.$$("#bottomLockPanel");
+            },
+
             /**
              * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
              */
@@ -1010,12 +1039,15 @@
                     tempColumns.push(item);
                 });
                 this.columns = tempColumns;
-                
+
                 this.columnPropertiesMapper = (function (entity) {
                     const result = [];
                     for (let index = 0; index < this.columns.length; index++) {
                         const column = this.columns[index];
-                        const entry = { dotNotation: column.property, value: this._getValue(entity, column.property, column.type) };
+                        const entry = {
+                            dotNotation: column.property,
+                            value: this._getValue(entity, column.property, column.type)
+                        };
                         result.push(entry);
                     }
                     return result;
@@ -1080,18 +1112,156 @@
             },
 
             _handleWheel: function (e, detail) {
-                var scrollContainer = this.$$("#scrollContainer");
-                var wheelEvent;
-
-                if (scrollContainer) {
-                    wheelEvent = new WheelEvent(e.type, e);
-                    scrollContainer.dispatchEvent(wheelEvent);
+                if (this._scrollContainer) {
+                    this._scrollLengthY = this._scrollLengthY || 0;
+                    this._scrollLengthX = this._scrollLengthX || 0;
+                    if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
+                        if (sign(e.deltaX) === sign(this._scrollLengthX)) {
+                            this._scrollLengthX += e.deltaX;
+                        } else {
+                            this._resetXscroll = e.deltaX;
+                        }
+                        if (sign(e.deltaY) === sign(this._scrollLengthY)) {
+                            this._scrollLengthY += e.deltaY;
+                        } else {
+                            this._resetYscroll = e.deltaY;
+                        }
+                    } else {
+                        this._scrollLengthX = e.deltaX;
+                        this._scrollLengthY = e.deltaY;
+                        setTimeout(() => this._scrollBy(7, 7), 10);
+                    }
                 }
-                console.log(e, detail);
+                e.preventDefault();
+            },
+
+            _scrollBy: function (incrementX, incrementY) {
+                const newIncrementX = this._scrollHorizontallyBy(incrementX);
+                const newIncrementY = this._scrollVerticallyBy(incrementY);
+                if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
+                    setTimeout(() => this._scrollBy(newIncrementX, newIncrementY), 10);
+                }
+            },
+
+            _scrollHorizontallyBy: function (increment) {
+                let newIncrement = increment;
+                if (this._resetXscroll) {
+                    this._scrollLengthX = this._resetXscroll;
+                    delete this._resetXscroll;
+                    newIncrement = 7;
+                }
+                if (this._scrollLengthX !== 0 && newIncrement !== 0) {
+                    const s = sign(this._scrollLengthX);
+                    //The expression below calculates speed and direction of scroll action
+                    //s = sign(scrollLength) - determines the direction of scroll (to left or to right).
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLengthX) / 10) - calculates the accelration of the scroll. It should be maximum value of previous speed or it's scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLengthX)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on the last step of animation. That looks like animation slows down.
+                    newIncrement = s * Math.min(Math.max(Math.abs(newIncrement), Math.abs(this._scrollLengthX) / 10), Math.abs(this._scrollLengthX));
+                    if (this._scrollContainer.scrollLeft + newIncrement < 0) {
+                        this._scrollContainer.scrollLeft = 0;
+                        this._scrollLengthX = 0;
+                        return 0;
+                    } else if (this._scrollContainer.scrollLeft + newIncrement > this._scrollContainer.scrollWidth - this._scrollContainer.clientWidth) {
+                        this._scrollContainer.scrollLeft = this._scrollContainer.scrollWidth - this._scrollContainer.clientWidth;
+                        this._scrollLengthX = 0;
+                        return 0;
+                    }
+                    this._scrollContainer.scrollLeft += newIncrement;
+                    this._scrollLengthX -= newIncrement;
+                    return newIncrement;
+                }
+                return 0;
+            },
+
+            _scrollVerticallyBy: function (increment) {
+                let newIncrement = increment;
+                if (this._resetYscroll) {
+                    this._scrollLengthY = this._resetYscroll;
+                    delete this._resetYscroll;
+                    newIncrement = 7;
+                }
+                if (this._scrollLengthY !== 0 && newIncrement !== 0) {
+                    const s = sign(this._scrollLengthY);
+                    //The expression below calculates speed and direction of scroll action
+                    //s = sign(scrollLength) - determines the direction of scroll (top or down).
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLengthY) / 10) - calculates the accelration of the scroll. It should be maximum value of previous speed or it's scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLengthY)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on the last step of animation. That looks like animation slows down.
+                    newIncrement = s * Math.min(Math.max(Math.abs(newIncrement), Math.abs(this._scrollLengthY) / 10), Math.abs(this._scrollLengthY));
+                    if (this._scrollContainer.scrollTop + newIncrement < 0) {
+                        this._scrollContainer.scrollTop = 0;
+                        this._scrollLengthY = 0;
+                        return 0;
+                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHight - this._scrollContainer.clientHeight) {
+                        this._scrollContainer.scrollTop = this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight;
+                        this._scrollLengthY = 0;
+                        return 0;
+                    }
+                    this._scrollContainer.scrollTop += newIncrement;
+                    this._scrollLengthY -= newIncrement;
+                    return newIncrement;
+                }
+                return 0;
+            },
+
+            _isTargetInSelectedContainer: function (target) {
+                if (target && this._scrollContainer) {
+                    let targetParent = target;
+                    while (targetParent) {
+                        if (targetParent === this._scrollContainer || targetParent === this._leftLockPanel || targetParent === this._rightLockPanel) {
+                            return true;
+                        }
+                        targetParent = targetParent.parentElement;
+                    }
+                }
+                return false;
+            },
+
+            _baseContainerFocusIn: function (event) {
+                const target = (event.target || event.srcElement);
+                if (target && this._elementGainedFocus !== target && this._isTargetInSelectedContainer(target)) {
+                    this._scrollToTarget(target);
+                }
+                event.preventDefault();
+            },
+
+            _baseContainerFocusOut: function (event) {
+                const target = event.relatedTarget;
+                if (target && this._isTargetInSelectedContainer(target)) {
+                    this._elementGainedFocus = target;
+                    this._scrollToTarget(target);
+                } else {
+                    delete this._elementGainedFocus;
+                }
+                event.preventDefault();
+            },
+
+            _scrollToTarget: function (target) {
+                this._lockContainer.scrollTop = 0;
+                const containerRect = this._lockContainer.getBoundingClientRect();
+                //Get the top and bottom coordinates of the visible viewport.
+                let viewTop = containerRect.top;
+                let viewBottom = containerRect.bottom;
+                //Correct the top coordinate of the visisble viewport so that it takes into account the top lock panel hight.
+                if (this._topLockPanel && this._topLockPanel.offsetParent !== null) {
+                    viewTop = this._topLockPanel.getBoundingClientRect().bottom;
+                }
+                //Correct the bottom coordinate of the visisble viewport so that it takes into account the bottom lock panel hight.
+                if (this._bottomLockPanel && this._bottomLockPanel.offsetParent !== null) {
+                    viewBottom = this._bottomLockPanel.getBoundingClientRect().top;
+                }
+                //Check whether the focused element is in range from viewTop to viewBottom. If it is outside the range then calculate the scroll differense and add to the scrollTop of scrollContainer. Otherwise do nothing.
+                const focusedElementRect = target.getBoundingClientRect();
+                let scrollIncrement = 0;
+                if (focusedElementRect.top < viewTop) {
+                    scrollIncrement = focusedElementRect.top - viewTop;
+                } else if (focusedElementRect.bottom > viewBottom) {
+                    scrollIncrement = focusedElementRect.bottom - viewBottom;
+                }
+                this._scrollContainer.scrollTop += scrollIncrement;
             },
 
             /**
-             * Resize event handler that adjasts the lockcontainer size and position.
+             * Resize event handler that adjasts the lock container size and position.
              */
             _resizeEventListener: function (event, details) {
                 var baseContainer = this.$$("#baseContainer");
@@ -1442,13 +1612,13 @@
                     this.style.removeProperty("width");
                 }
             },
-            
+
             _retrievedEntitySelectionChanged: function (newValue, oldValue) {
                 const entityIndex = _findEntity(newValue.entity, this.entities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".selected", newValue.selected);
                     _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
-                    
+
                     if (newValue.selected) { // bring to view the entity that was checked
                         const scrollContainer = this.querySelector("#scrollContainer");
                         if (scrollContainer) {
@@ -1472,7 +1642,7 @@
                     }
                 }
             },
-            
+
             /**
              * Observs the changes to entities property.
              */
@@ -1510,11 +1680,14 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
-                
+
                 if (selectedEntity) {
-                    self.retrievedEntitySelection = {entity: selectedEntity, selected: true};
+                    self.retrievedEntitySelection = {
+                        entity: selectedEntity,
+                        selected: true
+                    };
                 }
-                
+
                 this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },

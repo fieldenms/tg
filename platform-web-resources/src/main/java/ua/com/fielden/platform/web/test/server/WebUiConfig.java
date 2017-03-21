@@ -205,7 +205,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     public void initConfiguration() {
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
-        
+
         TgMessageWebUiConfig.register(injector(), configApp());
         TgStopWebUiConfig.register(injector(), configApp());
         TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
@@ -564,7 +564,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("domainInitProp").asSinglelineText()
                 .also()
-                
+
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
                     .shortDesc("CANCEL")
