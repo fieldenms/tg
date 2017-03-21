@@ -3,6 +3,9 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -93,9 +96,8 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
 import ua.com.fielden.platform.web.centre.SortingPropertyDao;
-
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
+import ua.com.fielden.platform.web_api.GraphQLService;
+import ua.com.fielden.platform.web_api.IGraphQLService;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -238,6 +240,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
+        
+        bind(IGraphQLService.class).to(GraphQLService.class).in(Scopes.SINGLETON);
     }
 
     public Properties getProps() {

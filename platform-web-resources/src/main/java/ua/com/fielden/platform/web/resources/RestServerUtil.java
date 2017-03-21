@@ -262,6 +262,19 @@ public class RestServerUtil {
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
+    
+    /**
+     * Composes representation of a map.
+     *
+     * @return
+     */
+    public Representation rawMapJSONRepresentation(final Map<?, ?> map) {
+        logger.debug("Start building JSON map representation.");
+        // create a Result enclosing map
+        final byte[] bytes = serialiser.serialise(map, SerialiserEngines.JACKSON);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+    }
 
     /**
      * Composes representation of a map.

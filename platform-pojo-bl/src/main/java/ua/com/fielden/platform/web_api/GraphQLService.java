@@ -12,6 +12,8 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.GraphQLArgument;
@@ -41,7 +43,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public class GraphQLService {
+public class GraphQLService implements IGraphQLService {
     public final GraphQL graphQL;
     
     /**
@@ -50,6 +52,7 @@ public class GraphQLService {
      * @param applicationDomainProvider
      * @param coFinder
      */
+    @Inject
     public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder) {
         this(applicationDomainProvider.entityTypes(), coFinder);
     }
@@ -60,7 +63,7 @@ public class GraphQLService {
      * @param entityTypes
      * @param coFinder
      */
-    public GraphQLService(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder) {
+    private GraphQLService(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder) {
         final Builder queryTypeBuilder = newObject().name("BasicQuery");
         for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
             final String typeName = entityType.getSimpleName();

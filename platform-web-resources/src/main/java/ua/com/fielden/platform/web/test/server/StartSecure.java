@@ -3,11 +3,9 @@ package ua.com.fielden.platform.web.test.server;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.restlet.data.Parameter;
@@ -16,10 +14,9 @@ import org.restlet.util.Series;
 
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web_api.GraphQLService;
+import ua.com.fielden.platform.web_api.Prettyfier;
 
 /**
  * Web UI Testing Server launching class for full web server with platform Web UI web application and domain-driven persistent storage.
@@ -70,8 +67,7 @@ public class StartSecure {
 //                        .staticValue("world"))
 //                .build();
         
-        final GraphQLService graphQLService = new GraphQLService(component.injector().getInstance(IApplicationDomainProvider.class), component.injector().getInstance(ICompanionObjectFinder.class));
-        
+        final GraphQLService graphQLService = component.injector().getInstance(GraphQLService.class);
         final String queryString = 
             ""
             + "{\n"
@@ -114,56 +110,6 @@ public class StartSecure {
         }
         LOGGER.error("============ GraphQL Data: ============");
         final Map<String, Object> data = (Map<String, Object>) execResult.getData(); // graphQL.execute("{hello}").getData();
-        LOGGER.error(prettyString(data, 0, true));
-    }
-    
-    private static String prettyString(final Object data, final int indent, final boolean firstPartShouldBeIndented) {
-        final String indentStr = multiply(" ", indent);
-        // return indentStr + " = " + prettyString(data, indent);
-        final StringBuilder sb = new StringBuilder();
-        if (data instanceof Map) {
-            sb.append(firstPartShouldBeIndented ? indentStr + "{" : "{");
-            final Map<String, Object> map = (Map<String, Object>) data;
-            final Iterator<Entry<String, Object>> iter = map.entrySet().iterator();
-            if (iter.hasNext()) {
-                sb.append("\n");
-                while (iter.hasNext()) {
-                    final Entry<String, Object> entry = iter.next();
-                    sb.append(prettyString(entry.getKey(), entry.getValue(), indent + 2));
-                }
-                sb.append(indentStr + "}\n");
-            } else {
-                sb.append("}\n");
-            }
-        } else if (data instanceof List) {
-            sb.append(firstPartShouldBeIndented ? indentStr + "[" : "[");
-            final List<Object> list = (List<Object>) data;
-            final Iterator<Object> iter = list.iterator();
-            if (iter.hasNext()) {
-                sb.append(prettyString(iter.next(), indent + 2, false));
-                while (iter.hasNext()) {
-                    sb.append(prettyString(iter.next(), indent + 2, true));
-                }
-                sb.append(indentStr + "]\n");
-            } else {
-                sb.append("]\n");
-            }
-        } else {
-            sb.append(data + "\n");
-        }
-        return sb.toString();
-    }
-    
-    private static String prettyString(final String property, final Object data, final int indent) {
-        final String indentStr = multiply(" ", indent);
-        return indentStr + property + " = " + prettyString(data, indent, false);
-    }
-    
-    private static String multiply(final String s, final int count) {
-        if (count == 0) {
-            return "";
-        } else {
-            return s + multiply(s, count - 1);
-        }
+        LOGGER.error(Prettyfier.prettyString(data, 0, true));
     }
 }

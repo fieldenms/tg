@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceF
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgElementLoaderComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.WebApiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
@@ -125,6 +126,8 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         // For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
+        // Web API resource
+        router.attach("/webapi", new WebApiResourceFactory(injector));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);
