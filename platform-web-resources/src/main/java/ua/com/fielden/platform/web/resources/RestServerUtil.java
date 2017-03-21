@@ -28,6 +28,7 @@ import org.restlet.util.Series;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 
+import graphql.GraphQLError;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
@@ -264,14 +265,16 @@ public class RestServerUtil {
     }
     
     /**
-     * Composes representation of a map.
+     * Composes representation of a GraphQL query results.
      *
      * @return
      */
-    public Representation rawMapJSONRepresentation(final Map<?, ?> map) {
+    public Representation graphQLResultRepresentation(final Map<String, Object> data, final List<GraphQLError> errors) {
         logger.debug("Start building JSON map representation.");
-        // create a Result enclosing map
-        final byte[] bytes = serialiser.serialise(map, SerialiserEngines.JACKSON);
+        final Map<String, Object> result = new LinkedHashMap<>();
+        result.put("data", data);
+        result.put("errors", errors);
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }

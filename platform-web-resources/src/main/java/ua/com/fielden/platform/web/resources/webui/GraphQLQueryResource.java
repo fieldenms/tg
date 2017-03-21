@@ -61,6 +61,6 @@ public class GraphQLQueryResource extends ServerResource {
         final Map<String, Object> data = (Map<String, Object>) execResult.getData(); // graphQL.execute("{hello}").getData();
         logger.error(Prettyfier.prettyString(data, 0, true));
         
-        return restUtil.rawMapJSONRepresentation(data);
+        return restUtil.graphQLResultRepresentation(data, execResult.getErrors());
     }
 }
