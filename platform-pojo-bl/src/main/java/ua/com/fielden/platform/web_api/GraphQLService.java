@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -18,6 +19,7 @@ import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLObjectType.Builder;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
@@ -44,6 +46,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class GraphQLService implements IGraphQLService {
+    private final Logger logger = Logger.getLogger(getClass());
     public final GraphQL graphQL;
     
     /**
@@ -64,6 +67,8 @@ public class GraphQLService implements IGraphQLService {
      * @param coFinder
      */
     private GraphQLService(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder) {
+        logger.error("GraphQL Web API...");
+        logger.error("\tBuilding root query...");
         final Builder queryTypeBuilder = newObject().name("BasicQuery");
         for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
             final String typeName = entityType.getSimpleName();
@@ -72,13 +77,13 @@ public class GraphQLService implements IGraphQLService {
                     .type(new GraphQLList(new GraphQLTypeReference(typeName)))
                     .dataFetcher(new RootEntityDataFetcher(entityType, coFinder)));
         }
-        
+        final GraphQLObjectType query = queryTypeBuilder.build();
+        logger.error("\tBuilding schema...");
         final GraphQLSchema schema = GraphQLSchema.newSchema()
-                .query(queryTypeBuilder.build())
+                .query(query)
                 .build(createDictionary(entityTypes));
-                // .build();
-
-        graphQL = new GraphQL(schema); // GraphQL.newGraphQL(schema).build();
+        graphQL = new GraphQL(schema);
+        logger.error("GraphQL Web API...done");
     }
     
     private static Set<GraphQLType> createDictionary(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
