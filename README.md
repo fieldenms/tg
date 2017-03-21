@@ -3,6 +3,8 @@ TG
 
 Trident Genesis (TG) is a software development technology, which has been developed by a bunch of dedicated individuals from Ukraine and Australia with a financial support of Fielden Management Services Pty. Ltd.
 
+In essenсe, TG incapsulates **accidental complexity** in order to enable application developers to better harness the **essential complexity** that stems from the target business domain.
+
 We've built TG for our own purpose in order to remove many low level technical obstacles that are often associated with building sophisticated transactional applications such as Enterprise Asset Maintenance (EAM) or Enterprise Resource Planning (ERP) systems. And we have successfully used TG for developing large-scale and mission-critical enterprise applications.
 
 We look at the system design as the decomposition problem, which can be solved successfully with the right approach in the right context. TG establishes a well defined pattern for modelling business domains, including domain entities, processes and their interdependencies (down to the level of properties with automatic revalidation support). At the code level the description of the domain model is achieved by using a small set of base classes and various annotations. Together these constitute what we refer to as "Entity  Definition Language" (EDL), which is complemented by "Entity Query Language" (EQL) for data querying (relational databases).
