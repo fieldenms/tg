@@ -26,7 +26,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRe
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -186,7 +185,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param type
      * @return
      */
-    private static List<Field> constructKeysAndProperties(final Class<?> type) {
+    public static List<Field> constructKeysAndProperties(final Class<?> type) {
         // logger().info("Started constructKeysAndProperties for [" + type.getSimpleName() + "].");
         final List<Field> properties = Finder.findProperties(type);
         // let's remove desc and key properties as they will be added separately a couple of lines below

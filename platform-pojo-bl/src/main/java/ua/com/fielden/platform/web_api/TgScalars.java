@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.test.server;
+package ua.com.fielden.platform.web_api;
 import graphql.language.FloatValue;
 import graphql.language.IntValue;
 import graphql.schema.Coercing;
