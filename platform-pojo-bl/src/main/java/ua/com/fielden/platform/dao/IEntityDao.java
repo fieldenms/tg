@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -93,6 +94,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findById(final Long id, final fetch<T> fetchModel);
+    
+    default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
+        return Optional.ofNullable(findById(id, fetchModel)); 
+    }
 
     /**
      * Finds entity by its surrogate id.
@@ -104,6 +109,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findById(final Long id);
+    
+    default Optional<T> findByIdOptional(final Long id) {
+        return Optional.ofNullable(findById(id));
+    }
 
     /**
      * Finds entity by its business key. If the key is composite then values of the key components should be passed in the same order as defined in the entity class using
@@ -113,6 +122,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findByKey(final Object... keyValues);
+    
+    default Optional<T> findByKeyOptional(final Object... keyValues) {
+        return Optional.ofNullable(findByKey(keyValues));
+    }
 
     /**
      * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
@@ -122,6 +135,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
+    
+    default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
+        return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
+    }
 
     /**
      * Finds entity by its instance and enhances it according to provided fetch model.
@@ -131,6 +148,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
+    
+    default Optional<T> findByEntityAndFetchOptional(final fetch<T> fetchModel, final T entity) {
+        return Optional.ofNullable(findByEntityAndFetch(fetchModel, entity));
+    }
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances.
@@ -202,6 +223,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      */
     T getEntity(final QueryExecutionModel<T, ?> model);
 
+    default Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
+        return Optional.ofNullable(getEntity(model));
+    }
+    
     /**
      * Returns all entities produced by the provided query.
      *
