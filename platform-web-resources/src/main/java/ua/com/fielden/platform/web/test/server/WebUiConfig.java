@@ -605,14 +605,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + format("['subheader-open:Other components 2', 'flex'],")
                         + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
-                        + "[['html:<span>This is binded text: </span><span style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "[['html:<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],"
+                        + "[['html:<span>This is binded text for Status.desc: </span><span id=\"status_Desc_bind\" style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
                         + "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], ['flex'], ['flex']],"
-                        + "[['html:<span>This is binded text: </span><span style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "[['html:<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],"
+                        + "[['html:<span>This is binded text for Status.desc: </span><span id=\"status_Desc_bind\" style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
                         + "]").replace("fmr", fmr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], ['flex']],"
@@ -621,7 +623,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "[['html:<span>This is binded text: </span><span style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "[['html:<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],"
+                        + "[['html:<span>This is binded text for Status.desc: </span><span id=\"status_Desc_bind\" style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
                         + "]").replace("fmr", fmr))
                 .done();
 
