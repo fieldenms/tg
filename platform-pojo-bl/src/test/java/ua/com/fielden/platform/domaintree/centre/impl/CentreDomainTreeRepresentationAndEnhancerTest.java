@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
@@ -18,9 +19,9 @@ import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 
 /**
  * A test for entity centres tree representation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CentreDomainTreeRepresentationAndEnhancerTest extends AbstractDomainTreeRepresentationAndEnhancerTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,5 +104,18 @@ public class CentreDomainTreeRepresentationAndEnhancerTest extends AbstractDomai
         assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.attrCollExprProp1"));
         assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.attrCollExprProp2"));
         assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.attrCollExprProp3"));
+    }
+
+    @Test
+    public void second_tick_for_short_collectional_properties_itself_are_not_disabled() {
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "2 * integerProp", "Attr Coll Expr Prop3", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
+        dtm().getEnhancer().apply();
+        // (1-level children)
+        assertFalse("Short collectional property should not be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "shortCollection"));
+        assertFalse("Short collectional property should not be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.shortCollection"));
+        assertFalse("Short collectional property should not be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.shortCollection"));
+        assertTrue("Short collectional property should be disabled if under other collection.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.shortCollection"));
+        assertTrue("Short collectional property should be disabled if under other collection.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.shortCollection"));
+        assertTrue("Short collectional property should be disabled if under other collection.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.shortCollection"));
     }
 }

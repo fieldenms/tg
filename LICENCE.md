@@ -1,5 +1,14 @@
 MIT License
-Copyright (c) 2016 Fielden Management Services Europe LLC
+
+Copyright (c) 2011 Oles Hodych
+
+Copyright (c) 2011 Nazar Chaykivskyy
+
+Copyright (c) 2011 Yuriy Prokopiv
+
+Copyright (c) 2011 Oleh Maykovych
+
+Copyright (c) 2014 Fielden Management Services Europe LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

@@ -6,19 +6,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -34,7 +36,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  *
  */
 public class CommonEntityDaoTest extends AbstractDaoTestCase {
-    
+
     @Test
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co(EntityWithMoney.class);
@@ -52,6 +54,221 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertEquals("Incorrect number of found entities.", 4, dao.getPage(from(model1).model(), 0, 25).data().size());
         final EntityResultQueryModel<EntityWithMoney> model2 = select(EntityWithMoney.class).where().prop("key").like().val("e%").model();
         assertEquals("Incorrect number of found entities.", 0, dao.getPage(from(model2).model(), 0, 25).data().size());
+    }
+
+    @Test
+    public void finding_non_existing_entity_by_id_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        final Long nonExistingId = -10L;
+
+        final EntityWithMoney entity = co.findById(nonExistingId);
+        assertNull(entity);
+
+        final Optional<EntityWithMoney> entityOptional = co.findByIdOptional(nonExistingId);
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void finding_existing_entity_by_id_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
+            stream.forEach(entity -> {
+                final EntityWithMoney en = co.findById(entity.getId());
+                assertNotNull(en);
+
+                final Optional<EntityWithMoney> entityOptional = co.findByIdOptional(entity.getId());
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
+    }
+
+    @Test
+    public void finding_non_existing_entity_by_id_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        final Long nonExistingId = -10L;
+
+        final EntityWithMoney entity = co.findById(nonExistingId, fetchAll(EntityWithMoney.class));
+        assertNull(entity);
+
+        final Optional<EntityWithMoney> entityOptional = co.findByIdOptional(nonExistingId, fetchAll(EntityWithMoney.class));
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void finding_existing_entity_by_id_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
+            stream.forEach(entity -> {
+                final EntityWithMoney en = co.findById(entity.getId(), fetchAll(EntityWithMoney.class));
+                assertNotNull(en);
+
+                final Optional<EntityWithMoney> entityOptional = co.findByIdOptional(entity.getId(), fetchAll(EntityWithMoney.class));
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
+    }
+
+    @Test
+    public void finding_non_existing_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        final String nonExistingKey = "NON EXISTING KEY";
+
+        final EntityWithMoney entity = co.findByKey(nonExistingKey);
+        assertNull(entity);
+
+        final Optional<EntityWithMoney> entityOptional = co.findByKeyOptional(nonExistingKey);
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void finding_existing_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
+            stream.forEach(entity -> {
+                final EntityWithMoney en = co.findByKey(entity.getKey());
+                assertNotNull(en);
+
+                final Optional<EntityWithMoney> entityOptional = co.findByKeyOptional(entity.getKey());
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
+    }
+
+    @Test
+    public void finding_non_existing_composite_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        final String nonExistingKey = "NON EXISTING KEY";
+        final EntityWithMoney secondKey = co(EntityWithMoney.class).findByKey("KEY1");
+
+        final EntityWithDynamicCompositeKey entity = co.findByKey(nonExistingKey, secondKey);
+        assertNull(entity);
+
+        final Optional<EntityWithDynamicCompositeKey> entityOptional = co.findByKeyOptional(nonExistingKey, secondKey);
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void finding_existing_composite_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        try (final Stream<EntityWithDynamicCompositeKey> stream = co.stream(from(select(EntityWithDynamicCompositeKey.class).model()).model())) {
+            stream.forEach(entity -> {
+                final EntityWithDynamicCompositeKey en = co.findByKey(entity.getKeyPartOne(), entity.getKeyPartTwo());
+                assertNotNull(en);
+
+                final Optional<EntityWithDynamicCompositeKey> entityOptional = co.findByKeyOptional(entity.getKeyPartOne(), entity.getKeyPartTwo());
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
+    }    
+    
+    @Test
+    public void finding_non_existing_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        final String nonExistingKey = "NON EXISTING KEY";
+
+        final EntityWithMoney entity = co.findByKeyAndFetch(fetchAll(EntityWithMoney.class), nonExistingKey);
+        assertNull(entity);
+
+        final Optional<EntityWithMoney> entityOptional = co.findByKeyAndFetchOptional(fetchAll(EntityWithMoney.class), nonExistingKey);
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void finding_existing_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
+            stream.forEach(entity -> {
+                final EntityWithMoney en = co.findByKeyAndFetch(fetchAll(EntityWithMoney.class), entity.getKey());
+                assertNotNull(en);
+
+                final Optional<EntityWithMoney> entityOptional = co.findByKeyAndFetchOptional(fetchAll(EntityWithMoney.class), entity.getKey());
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
+    }
+    
+    @Test
+    public void finding_non_existing_composite_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        final String nonExistingKey = "NON EXISTING KEY";
+        final EntityWithMoney secondKey = co(EntityWithMoney.class).findByKey("KEY1");
+
+        final EntityWithDynamicCompositeKey entity = co.findByKeyAndFetch(fetchAll(EntityWithDynamicCompositeKey.class), nonExistingKey, secondKey);
+        assertNull(entity);
+
+        final Optional<EntityWithDynamicCompositeKey> entityOptional = co.findByKeyAndFetchOptional(fetchAll(EntityWithDynamicCompositeKey.class), nonExistingKey, secondKey);
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void finding_existing_composite_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        try (final Stream<EntityWithDynamicCompositeKey> stream = co.stream(from(select(EntityWithDynamicCompositeKey.class).model()).model())) {
+            stream.forEach(entity -> {
+                final EntityWithDynamicCompositeKey en = co.findByKeyAndFetch(fetchAll(EntityWithDynamicCompositeKey.class), entity.getKeyPartOne(), entity.getKeyPartTwo());
+                assertNotNull(en);
+
+                final Optional<EntityWithDynamicCompositeKey> entityOptional = co.findByKeyAndFetchOptional(fetchAll(EntityWithDynamicCompositeKey.class), entity.getKeyPartOne(), entity.getKeyPartTwo());
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
+    }
+
+    @Test
+    public void getEntity_with_query_that_has_empty_result_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        final String nonExistingKey = "NON EXISTING KEY";
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(select(EntityWithMoney.class).where().prop("key").eq().val(nonExistingKey).model()).model();
+
+        final EntityWithMoney entity = co.getEntity(qem);
+        assertNull(entity);
+
+        final Optional<EntityWithMoney> entityOptional = co.getEntityOptional(qem);
+        assertFalse(entityOptional.isPresent());
+    }
+
+    @Test
+    public void getEntity_with_query_that_has_non_empty_result_produces_consistent_result_for_non_optional_and_optional_versions() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+
+        try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
+            stream.forEach(entity -> {
+                final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(select(EntityWithMoney.class).where().prop("key").eq().val(entity.getKey()).model()).model();
+                
+                final EntityWithMoney en = co.getEntity(qem);
+                assertNotNull(en);
+
+                final Optional<EntityWithMoney> entityOptional = co.getEntityOptional(qem);
+                assertTrue(entityOptional.isPresent());
+
+                assertEquals(en, entityOptional.get());
+            });
+        }
     }
 
     @Test
@@ -99,8 +316,8 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithMoneyDao dao = co(EntityWithMoney.class);
 
         final EntityResultQueryModel<EntityWithMoney> q = select(EntityWithMoney.class)//
-        .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
-        .model();
+                .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
+                .model();
 
         final IPage<EntityWithMoney> page = dao.firstPage(from(q).model(), 2);
         assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
@@ -272,7 +489,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         // test save date time
         entity.setDateTimeProperty(new DateTime(2009, 03, 01, 12, 0, 55, 300).toDate());
         dao.save(entity);
-        
+
         entity = dao.findByKey("key1");
         final DateTime updatedDateTime = new DateTime(entity.getDateTimeProperty());
         assertEquals("Incorrect year.", 2009, updatedDateTime.getYear());
@@ -330,7 +547,6 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 1L));
     }
 
-    
     @Test
     public void test_optimistic_locking_based_on_versioning_works_for_save() {
         final EntityWithMoneyDao dao = co(EntityWithMoney.class);
@@ -417,7 +633,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         dao.save(newEntity);
         assertNotNull("transDate should have been assigned.", dao.findByKey("new entity").getTransDate());
     }
- 
+
     @Test
     public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_save() {
         final EntityWithMoneyDao dao = co(EntityWithMoney.class);
@@ -434,7 +650,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void co_API_returns_this_for_invocations_on_companion_objects_with_their_entity_type_passed_as_argument() {
         final EntityWithMoneyDao co1 = co(EntityWithMoney.class);
         final EntityWithMoneyDao co2 = co1.co(EntityWithMoney.class);
-        
+
         assertTrue(co1 == co2);
     }
 
@@ -443,22 +659,21 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithMoneyDao co = co(EntityWithMoney.class);
         final EntityWithDynamicCompositeKeyDao co1 = co.co(EntityWithDynamicCompositeKey.class);
         final EntityWithDynamicCompositeKeyDao co2 = co.co(EntityWithDynamicCompositeKey.class);
-        
+
         assertTrue(co1 == co2);
     }
 
-    
     @Override
     protected void populateDomain() {
         super.populateDomain();
-        
+
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-02-19 02:47:00"));
 
-        final EntityWithMoney keyPartTwo = save(new_ (EntityWithMoney.class, "KEY1", "desc").setMoney(new Money("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")));
+        final EntityWithMoney keyPartTwo = save(new_(EntityWithMoney.class, "KEY1", "desc").setMoney(new Money("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")));
         save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", keyPartTwo));
-        save(new_ (EntityWithMoney.class, "KEY2", "desc").setMoney(new Money("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")));
-        save(new_ (EntityWithMoney.class, "KEY3", "desc").setMoney(new Money("40.00")));
-        save(new_ (EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
+        save(new_(EntityWithMoney.class, "KEY2", "desc").setMoney(new Money("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")));
+        save(new_(EntityWithMoney.class, "KEY3", "desc").setMoney(new Money("40.00")));
+        save(new_(EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
     }
 }
