@@ -200,7 +200,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currBindingEntity]]");
+        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currEntity]]");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {

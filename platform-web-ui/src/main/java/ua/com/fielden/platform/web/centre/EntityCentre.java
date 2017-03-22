@@ -783,7 +783,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final FlexLayout layout = this.dslDefaultConfig.getSelectionCriteriaLayout();
 
-        final DomElement editorContainer = layout.render().attr("context", "[[_currBindingEntity]]");
+        final DomElement editorContainer = layout.render().attr("context", "[[_currEntity]]");
 
         importPaths.add(layout.importPath());
 
