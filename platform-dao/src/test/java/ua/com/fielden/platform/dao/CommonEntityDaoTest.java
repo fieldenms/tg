@@ -1,12 +1,17 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -15,18 +20,21 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -272,19 +280,44 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void finding_composite_entity_by_passing_null_as_values_for_any_of_required_key_members_returns_null() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        final String requiredKeyMember = null;
+        final EntityWithMoney optionalKeyMember = co(EntityWithMoney.class).findByKey("KEY1");
+
+        final EntityWithDynamicCompositeKey entity = co.findByKey(requiredKeyMember, optionalKeyMember);
+        assertNull(entity);
+    }
+
+    @Test
+    public void finding_composite_entity_by_passing_null_as_values_for_any_of_non_required_key_members_result_in_matching_entity() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        final String requiredKeyMember = "key-1-1";
+        final EntityWithMoney optionalKeyMember = null;
+
+        final EntityWithDynamicCompositeKey entity = co.findByKey(requiredKeyMember, optionalKeyMember);
+        assertNotNull(entity);
+        assertEquals(requiredKeyMember, entity.getKeyPartOne());
+        assertNull(entity.getKeyPartTwo());
+    }
+
+    
+    @Test
     public void test_that_entity_with_composite_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co(EntityWithMoney.class);
         final EntityWithDynamicCompositeKeyDao daoComposite = co(EntityWithDynamicCompositeKey.class);
 
         // find all
         final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(0, 25).data();
-        assertEquals("Incorrect number of retrieved entities.", 1, result.size());
+        assertEquals("Incorrect number of retrieved entities.", 2, result.size());
         assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), result.get(0).getKey());
         // find by key
         assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), daoComposite.findByKey("key-1-1", dao.findByKey("KEY1")).getKey());
         // find by criteria
         final EntityResultQueryModel<EntityWithDynamicCompositeKey> model1 = select(EntityWithDynamicCompositeKey.class).where().prop("keyPartOne").like().val("k%").model();
-        assertEquals("Incorrect number of found entities.", 1, daoComposite.getPage(from(model1).model(), 0, 25).data().size());
+        assertEquals("Incorrect number of found entities.", 2, daoComposite.getPage(from(model1).model(), 0, 25).data().size());
         final EntityResultQueryModel<EntityWithDynamicCompositeKey> model2 = select(EntityWithDynamicCompositeKey.class).where().prop("keyPartOne").like().val("e%").model();
         assertEquals("Incorrect number of found entities.", 0, daoComposite.getPage(from(model2).model(), 0, 25).data().size());
     }
@@ -672,6 +705,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         final EntityWithMoney keyPartTwo = save(new_(EntityWithMoney.class, "KEY1", "desc").setMoney(new Money("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")));
         save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", keyPartTwo));
+        save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", null)); // the second key member is optional
         save(new_(EntityWithMoney.class, "KEY2", "desc").setMoney(new Money("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")));
         save(new_(EntityWithMoney.class, "KEY3", "desc").setMoney(new Money("40.00")));
         save(new_(EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
