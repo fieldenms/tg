@@ -25,6 +25,27 @@
 <script>
     (function () {
         'use strict'
+        const countDots = function (path) {
+            return (path.match(/\./g) || []).length;
+        };
+        const stampTemplate = function (template, model) {
+            if (template && model) {
+                for (let prop in model) {
+                    template[prop] = model[prop];
+                }
+            }
+        };
+        const forEachPropValue = function (obj, callback) {
+            for (let propName in obj) {
+                const elements = obj[propName] || [];
+                elements.forEach(element => callback(element));
+            }
+        };
+        const wrapWithDiv = function (element) {
+            const div = document.createElement("div");
+            div.appendChild(element);
+            return div;
+        };
         var keyWords = {
                 "skip": function (selectedElements, orderedElements, layoutElem) {
                     return document.createElement('div');
@@ -46,9 +67,22 @@
                     return createSubheader.bind(this)(layoutElem, true, true);
                 },
                 "html": function (selectedElements, orderedElements, layoutElem) {
-                    var elemToReturn = document.createElement('div');
-                    elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
-                    return elemToReturn;
+                    this._htmlElements = this._htmlElements || {};
+                    const elements = this._htmlElements[layoutElem];
+                    let elemToReturn = elements && elements.find(element => element.parentElement === null);
+                    if (elemToReturn) {
+                        return wrapWithDiv(elemToReturn);
+                    } else {
+                        elemToReturn = document.createElement('template', 'dom-bind');
+                        elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
+                        stampTemplate(elemToReturn, this.context);
+                        if (elements) {
+                            elements.push(elemToReturn);
+                        } else {
+                            this._htmlElements[layoutElem] = [elemToReturn];
+                        }
+                        return wrapWithDiv(elemToReturn);
+                    }
                 }
             },
             createSubheader = function (layoutElem, collapsible, closed) {
@@ -306,10 +340,17 @@
                     observer: "_handleContentLoading",
                     value: false
                 },
+                context: {
+                    type: Object
+                },
                 _subheaders: {
                     type: Array
+                },
+                _htmlElements: {
+                    type: Object
                 }
             },
+            observers: ["_contextChanged(context.*)"],
             ready: function () {
                 this._subheaders = [];
                 this._editorErrorHandler = this._editorErrorHandler.bind(this);
@@ -413,6 +454,19 @@
             },
             _calcDesktopQuery: function () {
                 return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
+            },
+            _contextChanged: function (changeRecord) {
+                this._htmlElements = this._htmlElements || {};
+                const dotCount = countDots(changeRecord.path);
+                if (changeRecord.path === "context") {
+                    forEachPropValue(this._htmlElements, element => stampTemplate(element, changeRecord.value));
+                } else if (dotCount === 1) {
+                    const propName = changeRecord.path.substr(changeRecord.path.lastIndexOf(".") + 1);
+                    forEachPropValue(this._htmlElements, element => element[propName] = changeRecord.value);
+                } else {
+                    const propPath = changeRecord.path.substr(changeRecord.path.indexOf(".") + 1);
+                    forEachPropValue(this._htmlElements, element => element.notifyPath(propPath, changeRecord.value));
+                }
             }
         });
     })();
