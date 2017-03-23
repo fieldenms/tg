@@ -29,7 +29,7 @@
   allVehicles: tgVehicle {
     key
     active(value: true)
-    fuelUsages {
+    fuelUsages @include(if: false) {
       qty
     }
     model {
@@ -54,3 +54,31 @@
     active
   }
 }
+
+########### variables ############
+
+query ($vehicleActiveValue: Boolean) {
+  
+  vehiclesWithStaticArgument: tgVehicle {
+    key
+    active(value: false)
+  }
+  
+  vehiclesWithVariableArgument: tgVehicle {
+    key
+    active(value: $vehicleActiveValue)
+  }
+  
+  vehicles: tgVehicle {
+    key
+    active
+  }
+  
+}
+
+Use the following variables for query running (or use completely empty variables): 
+{
+  "vehicleActiveValue": true
+}
+
+########### variables [END] ############

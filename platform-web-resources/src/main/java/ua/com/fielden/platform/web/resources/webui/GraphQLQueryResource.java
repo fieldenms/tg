@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -48,9 +50,13 @@ public class GraphQLQueryResource extends ServerResource {
         logger.error("envelope = " + input);
         
         final String queryString = (String) input.get("query");
-        final ExecutionResult execResult = graphQLService.graphQL.execute(queryString);
+        final Map<String, Object> variables = (Map<String, Object>) Optional.ofNullable(input.getOrDefault("variables", Collections.emptyMap())).orElse(Collections.emptyMap());
         logger.error("============ GraphQL Query: ============");
         logger.error(queryString);
+        logger.error("============ GraphQL Variables: ============");
+        logger.error(variables);
+        logger.error("============ GraphQL query+variables execute... ============");
+        final ExecutionResult execResult = graphQLService.graphQL.execute(queryString, null /* TODO operationName */, variables /* this is our custom context = variables! */, variables);
         if (!execResult.getErrors().isEmpty()) {
             logger.error("============ GraphQL Errors: ============");
             for (final GraphQLError error: execResult.getErrors()) {
