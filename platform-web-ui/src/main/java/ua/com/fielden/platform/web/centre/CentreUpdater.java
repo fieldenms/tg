@@ -23,6 +23,7 @@ import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
@@ -118,7 +119,7 @@ public class CentreUpdater {
             
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType);
             // creates differences centre from the differences between 'default centre' and 'centre'
-            final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, CentreUtils.getEntityType(miType), gdtm);
+            final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, EntityResourceUtils.getEntityType(miType), gdtm);
             
             // override old 'diff centre' with recently created one and save it
             overrideAndSaveDifferencesCentre(gdtm, miType, userSpecificName, differencesCentre);
@@ -216,7 +217,7 @@ public class CentreUpdater {
         // TODO consider not copying of default centre for performance reasons:
         final ICentreDomainTreeManagerAndEnhancer defaultCentreCopy = copyCentre(getDefaultCentre(gdtm, miType), gdtm);
         // applies diffCentre on top of defaultCentreCopy to produce loadedCentre:
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentreCopy, updatedDiffCentre, CentreUtils.getEntityType(miType));
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentreCopy, updatedDiffCentre, EntityResourceUtils.getEntityType(miType));
         // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
         //  provide miType information inside its generated type to be sent to the client application. This is done through the use of 
         //  annotation miType and, in future, other custom annotations, for example @SaveAsName.
@@ -256,7 +257,7 @@ public class CentreUpdater {
             // Web UI default values application
             final ICentreDomainTreeManagerAndEnhancer defaultedCentre = applyWebUIDefaultValues(
                     gdtm.getEntityCentreManager(miType, null),
-                    CentreUtils.getEntityType(miType) //
+                    EntityResourceUtils.getEntityType(miType) //
             );
             initCentre(gdtm, miType, null, defaultedCentre); // after this action default centre will be changed in most cases!
         }

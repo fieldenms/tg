@@ -57,6 +57,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
@@ -117,7 +118,7 @@ public class CriteriaResource extends ServerResource {
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
@@ -133,9 +134,9 @@ public class CriteriaResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             return createCriteriaValidationEnvelope(
-                    EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil), 
+                    WebUiResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil), 
                     centre.getMenuItemType(), 
                     ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), 
                     restUtil, 
@@ -155,7 +156,7 @@ public class CriteriaResource extends ServerResource {
         return restUtil.rawListJSONRepresentation(
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME))
                 )//
         );
@@ -173,7 +174,7 @@ public class CriteriaResource extends ServerResource {
         return restUtil.rawListJSONRepresentation(
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
                         staleCriteriaMessage
                 )//
@@ -193,7 +194,7 @@ public class CriteriaResource extends ServerResource {
         return restUtil.rawListJSONRepresentation(
                 appliedCriteriaEntity,
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
                         createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator)
                 )//
@@ -218,12 +219,12 @@ public class CriteriaResource extends ServerResource {
     @Put
     @Override
     public Representation put(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_RESOURCE: run started.");
             //            // NOTE: the following line can be the example how 'centre running' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre running.");
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final CentreContextHolder centreContextHolder = WebUiResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
             final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
 
@@ -305,7 +306,7 @@ public class CriteriaResource extends ServerResource {
                             // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
                             // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
                             // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                            createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
+                            createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(EntityResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
             if (isRunning) {
                 updateResultantCustomObject(miType, gdtm, previouslyRunCentre, pair.getKey(), null);
             }
@@ -356,7 +357,7 @@ public class CriteriaResource extends ServerResource {
      */
     private static Map<String, Object> updateResultantCustomObject(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre, final Map<String, Object> resultantCustomObject, final String staleCriteriaMessage) {
         resultantCustomObject.put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
-        resultantCustomObject.put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));
+        resultantCustomObject.put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)));
         
         // Resultant custom object contains information whether selection criteria is stale (config button colour).
         // Such information should be updated just before returning resultant custom object to the client.

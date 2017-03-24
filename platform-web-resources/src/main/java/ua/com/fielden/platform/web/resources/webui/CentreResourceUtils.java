@@ -339,7 +339,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICriteriaGenerator critGenerator,
             final Long previousVersion,
             final IGlobalDomainTreeManager gdtm) {
-        final Class<T> entityType = getEntityType(miType);
+        final Class<T> entityType = EntityResourceUtils.getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier( () -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME) );
 
@@ -378,7 +378,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return EntityResourceUtils.disregardNotAppliedRequiredProperties(
                 resetMetaStateForCriteriaValidationPrototype(
                         validationPrototype,
-                        CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
+                        EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
                 ), new LinkedHashSet<>()//
         );
     }
@@ -504,7 +504,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
-            final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
@@ -573,12 +572,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
         // load / update fresh centre if it is not loaded yet / stale
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
-        applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
+        applyMetaValues(originalCdtmae, EntityResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,
-                CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
+                EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
 

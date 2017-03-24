@@ -47,7 +47,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * Resource for integration test of Java and JavaScript serialisation.
@@ -76,8 +76,8 @@ public class SerialisationTestResource extends ServerResource {
      */
     @Post
     public Representation checkEntitiesOnEqualityAndSendResult(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
-            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) EntityResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) WebUiResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
 
             final Result result = deepEqualsForTesting(this.entities, entities);
             if (!result.isSuccessful()) {
@@ -92,7 +92,7 @@ public class SerialisationTestResource extends ServerResource {
      */
     @Get
     public Representation sendSerialisedEntities() {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             return restUtil.listJSONRepresentation(this.entities);
         }, restUtil);
     }
