@@ -112,10 +112,12 @@ public class GraphQLService implements IGraphQLService {
         final Builder queryTypeBuilder = newObject().name("BasicQuery");
         for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
             final String typeName = entityType.getSimpleName();
+            final String rootQueryFieldDescription = String.format("Query [%s] entity.", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
             queryTypeBuilder.field(newFieldDefinition()
                 .name(StringUtils.uncapitalize(typeName))
+                .description(rootQueryFieldDescription)
                 .type(new GraphQLList(new GraphQLTypeReference(typeName)))
-                .dataFetcher(new RootEntityDataFetcher(entityType, coFinder))
+                .dataFetcher(new RootEntityFetcher(entityType, coFinder))
             );
         }
         return queryTypeBuilder.build();
@@ -139,10 +141,12 @@ public class GraphQLService implements IGraphQLService {
         for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
             final String typeName = entityType.getSimpleName();
             final String inputArgumentDescription = String.format("Input values for mutating / creating [%s] entity", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
+            final String rootMutationFieldDescription = String.format("Mutate [%s] entity.", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
             mutationTypeBuilder.field(newFieldDefinition()
                 .name(StringUtils.uncapitalize(typeName))
+                .description(rootMutationFieldDescription)
                 .type(new GraphQLList(new GraphQLTypeReference(typeName)))
-                .dataFetcher(new RootEntityDataFetcher(entityType, coFinder))
+                .dataFetcher(new RootEntityFetcher(entityType, coFinder))
                 .argument(new GraphQLArgument("input", inputArgumentDescription, new GraphQLNonNull(createMutationInputArgumentType(entityType, inputArgumentDescription)), null /*default value of argument */))
                 // TODO .argument(new GraphQLArgument("keys", String.format("Key criteria for mutating some concrete [%s] entity", typeName), createKeysType(entityType), null /*default value of argument */))
             );
