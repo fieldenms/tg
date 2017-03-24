@@ -82,3 +82,24 @@ Use the following variables for query running (or use completely empty variables
 }
 
 ########### variables [END] ############
+
+########### mutations ############
+mutation {
+  
+  addThirdVehicle: tgVehicle(input: {
+    key: "CAR3"
+    desc: "desc of CAR3"
+    active: true
+  }) {
+    key
+  }
+
+  addFourthVehicle: tgVehicle(input: {
+    key: "CAR4"
+    price: 20000.0
+  }) {
+    key
+  }
+
+}
+########### mutations [END] ############
