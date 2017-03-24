@@ -100,7 +100,7 @@ public class RootEntityDataFetcher implements DataFetcher {
             final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
             
             final fetch<? extends AbstractEntity> fetchModel = EntityUtils.fetchNotInstrumented(entityType).with(properties.keySet()).fetchModel();
-            final List entities = co.getAllEntities(from(eqlQuery).with(fetchModel).model()); // TODO fetch order etc.
+            final List entities = co.getAllEntities(from(eqlQuery).with(fetchModel).lightweight().model()); // TODO fetch order etc.
             return entities;
         } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
