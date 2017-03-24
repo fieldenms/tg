@@ -145,8 +145,8 @@ public class GraphQLService implements IGraphQLService {
             mutationTypeBuilder.field(newFieldDefinition()
                 .name(StringUtils.uncapitalize(typeName))
                 .description(rootMutationFieldDescription)
-                .type(new GraphQLList(new GraphQLTypeReference(typeName)))
-                .dataFetcher(new RootEntityFetcher(entityType, coFinder))
+                .type(new GraphQLTypeReference(typeName))
+                .dataFetcher(new RootEntityMutator(entityType, coFinder))
                 .argument(new GraphQLArgument("input", inputArgumentDescription, new GraphQLNonNull(createMutationInputArgumentType(entityType, inputArgumentDescription)), null /*default value of argument */))
                 // TODO .argument(new GraphQLArgument("keys", String.format("Key criteria for mutating some concrete [%s] entity", typeName), createKeysType(entityType), null /*default value of argument */))
             );

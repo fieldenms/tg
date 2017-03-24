@@ -84,7 +84,7 @@ Use the following variables for query running (or use completely empty variables
 ########### variables [END] ############
 
 ########### mutations ############
-mutation {
+mutation ($fourthVehicleInput: TgVehicleInput!) {
   
   addThirdVehicle: tgVehicle(input: {
     key: "CAR3"
@@ -94,12 +94,16 @@ mutation {
     key
   }
 
-  addFourthVehicle: tgVehicle(input: {
-    key: "CAR4"
-    price: 20000.0
-  }) {
+  addFourthVehicle: tgVehicle(input: $fourthVehicleInput) {
     key
   }
-
+  
+  tgMachine(input: {
+    key: "BC1487AC"
+    desc: "desc of BC1487AC"
+  }) {
+    key
+    enabled(value: true)
+  }
 }
 ########### mutations [END] ############

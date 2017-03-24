@@ -45,7 +45,7 @@ public class RootEntityMixin {
                 
                 // TODO check also firstArgument.getName();
                 final Value valueOrVariable = firstArgument.getValue();
-                LOGGER.error(String.format("Arg value / variable reference [%s]", valueOrVariable));
+                LOGGER.error(String.format("\tArg value / variable reference [%s]", valueOrVariable));
                 
                 final Optional<Object> value = RootEntityMixin.resolveValue(valueOrVariable, variables);
                 
@@ -102,7 +102,7 @@ public class RootEntityMixin {
             
             properties.putAll(properties(property, toFields(graphQLField.getSelectionSet())));
         }
-        LOGGER.error(String.format("Fetching props [%s]", properties));
+        LOGGER.error(String.format("\tFetching props [%s]", properties));
         return properties;
     }
 
