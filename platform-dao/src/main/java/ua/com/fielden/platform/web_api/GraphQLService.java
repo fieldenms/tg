@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web_api;
 
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
+import static graphql.schema.GraphQLInputObjectField.newInputObjectField;
 import static graphql.schema.GraphQLInputObjectType.newInputObject;
 import static graphql.schema.GraphQLObjectType.newObject;
-import static graphql.schema.GraphQLInputObjectField.newInputObjectField;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
@@ -34,6 +34,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.menu.AbstractView;
@@ -61,8 +62,8 @@ public class GraphQLService implements IGraphQLService {
      * @param coFinder
      */
     @Inject
-    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder) {
-        this(applicationDomainProvider.entityTypes(), coFinder);
+    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
+        this(applicationDomainProvider.entityTypes(), coFinder, entityFactory);
     }
     
     /**
@@ -71,12 +72,12 @@ public class GraphQLService implements IGraphQLService {
      * @param entityTypes
      * @param coFinder
      */
-    private GraphQLService(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder) {
+    private GraphQLService(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
         logger.error("GraphQL Web API...");
         logger.error("\tBuilding root query...");
         logger.error("\tBuilding schema...");
         final GraphQLObjectType queryType = createQueryType(entityTypes, coFinder);
-        final GraphQLObjectType mutationType = createMutationType(entityTypes, coFinder);
+        final GraphQLObjectType mutationType = createMutationType(entityTypes, coFinder, entityFactory);
         final GraphQLSchema schema = GraphQLSchema.newSchema()
                 .query(queryType)
                 .mutation(mutationType)
@@ -136,7 +137,7 @@ public class GraphQLService implements IGraphQLService {
      * @param coFinder
      * @return
      */
-    private static GraphQLObjectType createMutationType(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder) {
+    private static GraphQLObjectType createMutationType(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
         final Builder mutationTypeBuilder = newObject().name("BasicMutation");
         for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
             final String typeName = entityType.getSimpleName();
@@ -146,7 +147,7 @@ public class GraphQLService implements IGraphQLService {
                 .name(StringUtils.uncapitalize(typeName))
                 .description(rootMutationFieldDescription)
                 .type(new GraphQLTypeReference(typeName))
-                .dataFetcher(new RootEntityMutator(entityType, coFinder))
+                .dataFetcher(new RootEntityMutator(entityType, coFinder, entityFactory))
                 .argument(new GraphQLArgument("input", inputArgumentDescription, new GraphQLNonNull(createMutationInputArgumentType(entityType, inputArgumentDescription)), null /*default value of argument */))
                 // TODO .argument(new GraphQLArgument("keys", String.format("Key criteria for mutating some concrete [%s] entity", typeName), createKeysType(entityType), null /*default value of argument */))
             );
