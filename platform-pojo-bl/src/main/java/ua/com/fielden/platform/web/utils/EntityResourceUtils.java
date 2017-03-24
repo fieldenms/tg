@@ -25,31 +25,25 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.restlet.Response;
-import org.restlet.data.Status;
-import org.restlet.representation.Representation;
-
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
-import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -62,17 +56,15 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.ui.menu.MiType;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.EntityResource;
-import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 
 /**
- * This utility class contains the methods that are shared across {@link EntityResource} and {@link EntityValidationResource}.
+ * This utility class contains the methods that are shared across EntityResource and EntityValidationResource.
  *
  * @author TG Team
  *
@@ -164,11 +156,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public ICompanionObjectFinder getCompanionFinder() {
         return companionFinder;
     }
-
+    
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
-            final Class<? extends AbstractEntity<?>> originalType = CentreUtils.getOriginalType(entityType);
-            final String originalPropertyName = CentreUtils.getOriginalPropertyName(entityType, propertyName);
+            final Class<? extends AbstractEntity<?>> originalType = EntityResourceUtils.getOriginalType(entityType);
+            final String originalPropertyName = EntityResourceUtils.getOriginalPropertyName(entityType, propertyName);
 
             final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
             return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider() : fetchForPropertyOrDefault(coFinder, originalType, originalPropertyName);
@@ -753,60 +745,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Restores the holder of modified properties into the map [propertyName; webEditorSpecificValue].
-     *
-     * @param envelope
-     * @return
-     */
-    public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
-    }
-
-    /**
-     * Restores the holder of context and criteria entity.
-     *
-     * @param envelope
-     * @return
-     */
-    public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
-    }
-
-    /**
-     * Restores the {@link Result} from JSON envelope.
-     *
-     * @param envelope
-     * @return
-     */
-    public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONResult(envelope);
-    }
-
-    /**
-     * Restores the holder of saving information (modified props + centre context, if any).
-     *
-     * @param envelope
-     * @return
-     */
-    public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
-    }
-
-    /**
-     * Just saves the entity.
-     *
-     * @param entity
-     * @param continuations -- continuations of the entity to be used during saving
-     *
-     * @return
-     */
-    public T save(final T entity, final Map<String, IContinuationData> continuations) {
-        return EntityResourceContinuationsHelper.saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
-    }
-
-
-
-    /**
      * Deletes the entity.
      *
      * @param entityId
@@ -848,14 +786,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Long compoundMasterEntityId,
             final AbstractEntity<?> masterContext, final int tabCount) {
 
-        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: started.");
+        logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: started.");
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
         final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext);
-        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
+        logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
         final Pair<T, Map<String, Object>> constructed = constructEntity(modifiedPropertiesHolder, validationPrototypeWithContext, getCompanionFinder());
-        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: finished.");
+        logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: finished.");
         return constructed;
     }
 
@@ -893,23 +831,75 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public EntityFactory entityFactory() {
         return entityFactory;
     }
+    
+    public IEntityDao<T> companion() {
+        return co;
+    }
 
     /**
-     * This method wraps the function of representation creation to handle properly <b>undesired</b> server errors.
-     * <p>
-     * Please note that all <b>expected</b> exceptional situations should be handled inside the respective 'representationCreator' and one should not rely on this method for such
-     * errors.
+     * Determines the entity type for which criteria entity will be generated.
      *
-     * @param representationCreator
+     * @param miType
      * @return
      */
-    public static Representation handleUndesiredExceptions(final Response response, final Supplier<Representation> representationCreator, final RestServerUtil restUtil) {
-        try {
-            return representationCreator.get();
-        } catch (final Exception undesiredEx) {
-            logger.error(undesiredEx.getMessage(), undesiredEx);
-            response.setStatus(Status.SERVER_ERROR_INTERNAL);
-            return restUtil.errorJSONRepresentation(undesiredEx);
+    public static <T extends AbstractEntity<?>> Class<T> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
+        if (entityTypeAnnotation == null) {
+            throw new IllegalStateException(String.format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
         }
+        return (Class<T>) entityTypeAnnotation.value();
+    }
+
+    /**
+     * Determines the miType for which criteria entity was generated.
+     *
+     * @param miType
+     * @return
+     */
+    public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
+        final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
+        if (annotation == null) {
+            throw new IllegalStateException(String.format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
+        }
+        return annotation.value();
+    }
+
+    /**
+     * Determines the master type for which criteria entity was generated.
+     *
+     * @param criteriaType
+     * @return
+     */
+    public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
+        return getEntityType(getMiType(criteriaType));
+    }
+
+    /**
+     * Determines the property name of the property from which the criteria property was generated. This is only applicable for entity typed properties.
+     *
+     * @param propertyName
+     * @return
+     */
+    public static String getOriginalPropertyName(final Class<?> criteriaClass, final String propertyName) {
+        return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
+    }
+
+    /**
+     * Determines the managed (in cdtmae) counter-part for master type for which criteria entity was generated.
+     *
+     * @param criteriaType
+     * @param cdtmae
+     * @return
+     */
+    public static Class<?> getOriginalManagedType(final Class<? extends AbstractEntity<?>> criteriaType, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+        return cdtmae.getEnhancer().getManagedType(getOriginalType(criteriaType));
+    }
+
+    public static String tabs(final int tabCount) {
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < tabCount; i++) {
+            sb.append("  ");
+        }
+        return sb.toString();
     }
 }

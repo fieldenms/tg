@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * The web resource for criteria serves as a back-end mechanism of centre management. It provides a base implementation for handling the following methods:
@@ -78,9 +78,9 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
      */
     @Post
     public Representation save(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+            final Map<String, Object> modifiedPropertiesHolder = WebUiResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
             CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
@@ -100,9 +100,9 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
      */
     @Put
     public Representation discard(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+            final Map<String, Object> wasRunHolder = WebUiResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
 
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);

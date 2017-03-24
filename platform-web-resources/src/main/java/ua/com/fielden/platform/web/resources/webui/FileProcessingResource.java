@@ -22,7 +22,7 @@ import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSrouce;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * This resource should be used for uploading files to be processed with the specified functional entity.
@@ -91,7 +91,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             return restUtil.errorJSONRepresentation("File is too large.");
         } else {
             final InputStream stream = entity.getStream();
-            response = EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream), restUtil);
+            response = WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream), restUtil);
         }
 
         return response;
