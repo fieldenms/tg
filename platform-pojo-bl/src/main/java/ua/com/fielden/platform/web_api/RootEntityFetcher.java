@@ -46,8 +46,8 @@ public class RootEntityFetcher implements DataFetcher {
         } catch (final Exception e) {
             logger.error(e.getMessage(), e);
             logger.error(String.format("Quering type [%s]...done", entityType.getSimpleName()));
-            // TODO create graphQL errors to send them on client
-            return null;
+            // TODO improve errors handling
+            throw new IllegalStateException(e);
         }
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web_api;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +18,7 @@ import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.Pair;
 
 public class RootEntityMutator implements DataFetcher {
@@ -37,6 +40,10 @@ public class RootEntityMutator implements DataFetcher {
             final SavingInfoHolder savingInfoHolder = createSavingInfoHolder(environment.getArguments()); // TODO impl
             final Pair<AbstractEntity, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.<AbstractEntity>tryToSave(savingInfoHolder , (Class<AbstractEntity>) entityType, entityFactory, coFinder, (IEntityDao<AbstractEntity>) co);
             
+            if (potentiallySavedWithException.getValue().isPresent()) {
+                throw potentiallySavedWithException.getValue().get();
+            }
+            
             logger.error(String.format("Mutating type [%s]...", entityType.getSimpleName()));
             logger.error(String.format("\tArguments [%s]", environment.getArguments()));
             logger.error(String.format("\tContext [%s]", environment.getContext()));
@@ -48,8 +55,10 @@ public class RootEntityMutator implements DataFetcher {
             final List<Field> fields = environment.getFields();
             // Source was defined in GraphQLQueryResource as "variables". So we can use it here to resolve variables
             final Map<String, Object> variables = (Map<String, Object>) environment.getSource();
-            
-            final QueryExecutionModel queryModel = RootEntityMixin.generateQueryModelFrom(fields, variables, entityType);
+            final QueryProperty idQueryProperty = new QueryProperty(entityType, AbstractEntity.ID);
+            idQueryProperty.setValue(potentiallySavedWithException.getKey().getId());
+            idQueryProperty.setValue2(potentiallySavedWithException.getKey().getId());
+            final QueryExecutionModel queryModel = RootEntityMixin.generateQueryModelFrom(fields, variables, entityType, idQueryProperty);
             
             final AbstractEntity entity = co.getEntity(queryModel); // TODO fetch order etc.
             logger.error(String.format("Mutating type [%s]...done", entityType.getSimpleName()));
@@ -57,14 +66,27 @@ public class RootEntityMutator implements DataFetcher {
         } catch (final Exception e) {
             logger.error(e.getMessage(), e);
             logger.error(String.format("Mutating type [%s]...done", entityType.getSimpleName()));
-            // TODO create graphQL errors to send them on client
-            return null;
+            // TODO improve errors handling
+            throw new IllegalStateException(e);
         }
     }
 
     private SavingInfoHolder createSavingInfoHolder(final Map<String, Object> arguments) {
-        logger.error(String.format("\tArguments [%s]", arguments));
-        // TODO Auto-generated method stub
-        return null;
+        logger.error(String.format("\tCreate savingInfoHolder: arguments [%s]", arguments));
+        final SavingInfoHolder savingInfoHolder = EntityFactory.newPlainEntity(SavingInfoHolder.class, null);
+        final Map<String, Object> input = (Map<String, Object>) arguments.get("input");
+        final Map<String, Object> modifHolder = new LinkedHashMap<>();
+        modifHolder.put("version", 0);
+        modifHolder.put("id", null);
+        modifHolder.put("@@touchedProps", new ArrayList<String>());
+        
+        input.entrySet().stream().forEach(nameAndVal -> {
+            final Map<String, Object> valObject = new LinkedHashMap<>();
+            valObject.put("val", nameAndVal.getValue());
+            modifHolder.put(nameAndVal.getKey(), valObject);
+        });
+        
+        savingInfoHolder.setModifHolder(modifHolder);
+        return savingInfoHolder;
     }
 }

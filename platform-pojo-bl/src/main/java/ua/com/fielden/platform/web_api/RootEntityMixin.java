@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +30,14 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class RootEntityMixin {
     private static final Logger LOGGER = Logger.getLogger(RootEntityMixin.class);
     
-    public static QueryExecutionModel generateQueryModelFrom(final List<Field> fields, final Map<String, Object> variables, final Class<? extends AbstractEntity<?>> entityType) {
+    public static QueryExecutionModel generateQueryModelFrom(final List<Field> fields, final Map<String, Object> variables, final Class<? extends AbstractEntity<?>> entityType, final QueryProperty... additionalQueryProperties) {
         final List<Field> innerFieldsForEntityQuery = RootEntityMixin.toFields(fields.get(0).getSelectionSet()); // TODO fields could be empty? could contain more than one?
         final LinkedHashMap<String, List<Argument>> properties = RootEntityMixin.properties(null, innerFieldsForEntityQuery);
         
         final Map<String, QueryProperty> queryProperties = new LinkedHashMap<>();
+        Arrays.asList(additionalQueryProperties).stream().forEach(queryProperty -> {
+            queryProperties.put(queryProperty.getPropertyName(), queryProperty);
+        });
         for (final Map.Entry<String, List<Argument>> propertyAndArguments: properties.entrySet()) {
             final String propertyName = propertyAndArguments.getKey();
             final List<Argument> propertyArguments = propertyAndArguments.getValue();

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.functional.centre;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -76,7 +75,7 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     }
 
     @Observable
-    protected SavingInfoHolder setModifHolder(final Map<String, Object> modifHolder) {
+    public SavingInfoHolder setModifHolder(final Map<String, Object> modifHolder) {
         this.modifHolder.clear();
         this.modifHolder.putAll(modifHolder);
         return this;
