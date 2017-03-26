@@ -83,8 +83,24 @@ Use the following variables for query running (or use completely empty variables
 
 ########### variables [END] ############
 
+########### fragments (do not work yet) ############
+query VehiclesWithFragment {
+  tgVehicle {
+    ...vehicleCommons
+  }
+}
+
+fragment vehicleCommons on TgVehicle {
+  key
+  desc
+  replacedBy {
+    key
+  }
+}
+########### fragments (do not work yet) [END] ############
+
 ########### mutations ############
-mutation ($fourthVehicleInput: TgVehicleInput!) {
+mutation Misc($fourthVehicleInput: TgVehicleInput!) {
   
   addThirdVehicle: tgVehicle(input: {
     key: "CAR3"
@@ -106,4 +122,50 @@ mutation ($fourthVehicleInput: TgVehicleInput!) {
     enabled(value: true)
   }
 }
+
+query Vehicles {
+  tgVehicle {
+    key
+    desc
+    replacedBy {
+      key
+    }
+    model {
+      key
+    }
+  }
+}
+
+mutation AddVehicles($vehicleInput: TgVehicleInput!, $secVehicleInput: TgVehicleInput!) {
+  first: tgVehicle(input: $vehicleInput) {
+    key
+    desc
+    replacedBy {
+      key
+    }
+  }
+  secondDependingOnFirst: tgVehicle(input: $secVehicleInput) {
+    key
+    desc
+    replacedBy {
+      key
+    }
+  }
+}
+
+Use the following inputs for mutation running: 
+{
+  "vehicleInput": {
+    "key": "CAR20",
+    "desc": "desc of ...",
+    "model": "321"
+  },
+  "secVehicleInput": {
+    "key": "CAR21",
+    "desc": "desc of ...",
+    "model": "322",
+    "replacedBy": "CAR20" -- recently created entity ('vehicleInput') can be used! mutations are guaranteed to be sequential
+  }
+}
+
 ########### mutations [END] ############

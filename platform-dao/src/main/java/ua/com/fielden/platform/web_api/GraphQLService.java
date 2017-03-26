@@ -343,9 +343,7 @@ public class GraphQLService implements IGraphQLService {
             return Optional.empty();
             // TODO return TgScalars.GraphQLColour;
         } else if (EntityUtils.isEntityType(type)) {
-            // TODO return Optional.of(new GraphQLTypeReference(type.getSimpleName()));
-            // TODO at this stage there will be no support for input object fields of entity type
-            return Optional.empty();
+            return Optional.of(Scalars.GraphQLString);
         } else {
             throw new UnsupportedOperationException(String.format("Mutation input argument field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }

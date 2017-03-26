@@ -49,6 +49,8 @@ public class GraphQLQueryResource extends ServerResource {
         final Map<String, Object> input = (Map<String, Object>) restUtil.restoreJSONMap(envelope);
         logger.error("envelope = " + input);
         
+        final Object operationNameObj = input.get("operationName");
+        final String operationName = operationNameObj == null ? null : (String) operationNameObj;
         final String queryString = (String) input.get("query");
         final Map<String, Object> variables = (Map<String, Object>) Optional.ofNullable(input.getOrDefault("variables", Collections.emptyMap())).orElse(Collections.emptyMap());
         logger.error("============ GraphQL Query: ============");
@@ -56,7 +58,7 @@ public class GraphQLQueryResource extends ServerResource {
         logger.error("============ GraphQL Variables: ============");
         logger.error(variables);
         logger.error("============ GraphQL query+variables execute... ============");
-        final ExecutionResult execResult = graphQLService.graphQL.execute(queryString, null /* TODO operationName */, variables /* this is our custom context = variables! */, variables);
+        final ExecutionResult execResult = graphQLService.graphQL.execute(queryString, operationName, variables /* this is our custom context = variables! */, variables);
         if (!execResult.getErrors().isEmpty()) {
             logger.error("============ GraphQL Errors: ============");
             for (final GraphQLError error: execResult.getErrors()) {
