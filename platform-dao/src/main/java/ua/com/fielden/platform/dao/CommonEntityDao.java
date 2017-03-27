@@ -124,17 +124,23 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
+    private boolean instrumented = true;
+    
+    @Override
+    public boolean instrumented() {
+        return instrumented;
+    }
+
     @Override
     public <E extends IEntityDao<T>> E uninstrumented() {
+        if (!instrumented) {
+            return (E) this;
+        }
+        
         final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
-        
-        final Class<?> newCoType = new ByteBuddy().subclass(coType)
-                .method(ElementMatchers.named("instrumented")).intercept(FixedValue.value(false))
-                .make()
-                .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-                .getLoaded();
-        
-        return (E) injector.getInstance(newCoType);
+        final CommonEntityDao<T> co = (CommonEntityDao<T>) injector.getInstance(coType);
+        co.instrumented = false;
+        return (E) co;
     }
     
     /**

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -26,7 +29,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRe
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -266,7 +268,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
                 Finder.getKeyMembers(elementType).size() == 2 &&
                 Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType())) &&
-                Finder.getKeyMembers(elementType).stream().anyMatch(field -> field.getType().equals(penultAndLast.getKey()));
+                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).equals(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
     }
 
     /**

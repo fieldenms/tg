@@ -34,7 +34,7 @@
             let editor, reflector;
             
             const _new = function (id) {
-                const result = reflector.newEntityEmpty();
+                const result = reflector.newEntity('ua.com.fielden.platform.security.user.UserRole');
                 result.id = id;
                 result.key = id.toString();
                 return result;
@@ -58,10 +58,14 @@
                 entity["@@origin"] = entity;
                 entity.roles = [one, two, three, four];
                 entity.chosenIds = [];
+                const originalEntity = reflector.newEntityEmpty();
+                originalEntity["@@origin"] = originalEntity;
+                originalEntity.roles = [one, two, three, four];
+                originalEntity.chosenIds = [];
                 
                 // perform initialisation
                 editor.entity = entity;
-                editor.convertToString();
+                editor.originalEntity = originalEntity;
                 
                 // check the order
                 assert.deepEqual(editor._entities, [one, two, three, four]);
@@ -80,10 +84,14 @@
                 entity["@@origin"] = entity;
                 entity.roles = [one, two, three, four];
                 entity.chosenIds = [2, 4];
+                const originalEntity = reflector.newEntityEmpty();
+                originalEntity["@@origin"] = originalEntity;
+                originalEntity.roles = [one, two, three, four];
+                originalEntity.chosenIds = [];
                 
                 // perform initialisation
                 editor.entity = entity;
-                editor.convertToString();
+                editor.originalEntity = originalEntity;
                 
                 // check the order
                 assert.deepEqual(editor._entities, [two, four, one, three]);

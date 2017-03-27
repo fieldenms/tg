@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -123,6 +125,8 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
         try {
             return getEntity(instrumented() ? from((createQueryByKey(keyValues))).with(fetchModel).model() : from((createQueryByKey(keyValues))).with(fetchModel).lightweight().model());
+        } catch (final EntityCompanionException e) {
+            throw e;
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
@@ -203,13 +207,15 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final List<Field> keyMembers, final Object... keyValues) {
         if (getKeyType() == DynamicEntityKey.class) {
             // let's be smart about the key values and support the case where an instance of DynamicEntityKey is passed.
-            final Object[] realKeyValues = (keyValues.length == 1 && keyValues[0].getClass() == DynamicEntityKey.class) ? //
-            ((DynamicEntityKey) keyValues[0]).getKeyValues()
-                    : keyValues;
+            final Object[] realKeyValues;
+            if (keyValues.length == 1 && keyValues[0] instanceof DynamicEntityKey) {
+                realKeyValues = ((DynamicEntityKey) keyValues[0]).getKeyValues(); 
+            } else {
+                realKeyValues = keyValues;
+            }
 
             if (keyMembers.size() != realKeyValues.length) {
-                throw new IllegalArgumentException("The number of provided values (" + realKeyValues.length
-                        + ") does not match the number of properties in the entity composite key (" + keyMembers.size() + ").");
+                throw new EntityCompanionException(format("The number of provided values (%s) does not match the number of properties in the entity composite key (%s).", realKeyValues.length, keyMembers.size()));
             }
 
             ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
@@ -219,13 +225,13 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
             }
             return cc;
         } else if (keyValues.length != 1) {
-            throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
+            throw new EntityCompanionException(format("Only one key value is expected instead of %s when looking for an entity by a non-composite key.", keyValues.length));
         } else {
             return entryPoint.condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0]));
         }
     }
 
-    private ConditionModel buildConditionForKeyMember(final String propName, final Class propType, final Object propValue) {
+    private ConditionModel buildConditionForKeyMember(final String propName, final Class<?> propType, final Object propValue) {
         if (propValue == null) {
             return cond().prop(propName).isNull().model();
         } else if (String.class.equals(propType)) {
