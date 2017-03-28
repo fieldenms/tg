@@ -258,7 +258,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.save(applied, continuations, companion);
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
         return potentiallySavedWithException;
     }
 

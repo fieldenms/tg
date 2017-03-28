@@ -39,7 +39,7 @@ public class EntityResourceContinuationsHelper {
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
+    private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
         final boolean continuationsPresent = !continuations.isEmpty();
 
         // iterate over properties in search of the first invalid one (without required checks)
@@ -91,7 +91,7 @@ public class EntityResourceContinuationsHelper {
      * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
      *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
-    public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> save(final T validatedEntity, final Map<String, IContinuationData> continuations, final IEntityDao<T> companion) {
+    public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> saveWithContinuations(final T validatedEntity, final Map<String, IContinuationData> continuations, final IEntityDao<T> companion) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method
@@ -132,10 +132,17 @@ public class EntityResourceContinuationsHelper {
                 createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
         final T applied = restoreEntityFrom(savingInfoHolder, entityType, entityFactory, companionFinder, 0);
 
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations, companion);
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = saveWithContinuations(applied, continuations, companion);
         return potentiallySavedWithException;
     }
     
+    /**
+     * Creates map of continuations by continuation keys.
+     * 
+     * @param continuations
+     * @param continuationProperties
+     * @return
+     */
     public static Map<String, IContinuationData> createContinuationsMap(final List<IContinuationData> continuations, final List<String> continuationProperties) {
         final Map<String, IContinuationData> map = new LinkedHashMap<>();
         for (int index = 0; index < continuations.size(); index++) {
@@ -144,7 +151,7 @@ public class EntityResourceContinuationsHelper {
         return map;
     }
     
-    public static <T extends AbstractEntity<?>> T restoreEntityFrom(
+    private static <T extends AbstractEntity<?>> T restoreEntityFrom(
             final SavingInfoHolder savingInfoHolder,
             final Class<T> functionalEntityType,
             final EntityFactory entityFactory,
@@ -190,7 +197,7 @@ public class EntityResourceContinuationsHelper {
      * @param injector
      * @return
      */
-    public static <T extends AbstractEntity<?>> IEntityProducer<T> createEntityProducer(final EntityFactory entityFactory, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+    private static <T extends AbstractEntity<?>> IEntityProducer<T> createEntityProducer(final EntityFactory entityFactory, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
 //        return entityProducerType == null ? createDefaultEntityProducer(injector.getInstance(EntityFactory.class), this.entityType, this.coFinder)
 //                : injector.getInstance(this.entityProducerType);
         
@@ -203,7 +210,7 @@ public class EntityResourceContinuationsHelper {
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+    private static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
