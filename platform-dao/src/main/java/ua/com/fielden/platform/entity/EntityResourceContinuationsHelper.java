@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
 public class EntityResourceContinuationsHelper {
     private final static Logger logger = Logger.getLogger(EntityResourceContinuationsHelper.class);
@@ -159,16 +160,16 @@ public class EntityResourceContinuationsHelper {
             final int tabCount) {
         final DateTime start = new DateTime();
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): started.");
-        final IEntityProducer<T> entityProducer = createEntityProducer(entityFactory, functionalEntityType, companionFinder);
+        final IEntityProducer<T> producer = createEntityProducer(entityFactory, functionalEntityType, companionFinder);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): producer.");
-        final EntityResourceUtils<T> utils = new EntityResourceUtils<T>(functionalEntityType, entityProducer, entityFactory, companionFinder);
+        final IEntityDao<T> companion = companionFinder.<IEntityDao<T>, T> find(functionalEntityType);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): utils.");
         final Map<String, Object> modifHolder = savingInfoHolder.getModifHolder();
 
         final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
         final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        final T restored = restoreEntityFrom(savingInfoHolder, utils, longId, companionFinder, tabCount + 1);
+        final T restored = restoreEntityFrom(savingInfoHolder, functionalEntityType, companion, producer, longId, companionFinder, tabCount + 1);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -177,7 +178,9 @@ public class EntityResourceContinuationsHelper {
     
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
             final SavingInfoHolder savingInfoHolder,
-            final EntityResourceUtils<T> utils,
+            final Class<T> functionalEntityType,
+            final IEntityDao<T> companion,
+            final IEntityProducer<T> producer,
             final Long entityId,
             final ICompanionObjectFinder companionFinder,
             final int tabCount) {
@@ -185,7 +188,7 @@ public class EntityResourceContinuationsHelper {
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
         final T applied;
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-        applied = utils.constructEntity(modifiedPropertiesHolder, entityId).getKey();
+        applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, entityId, companion, producer, companionFinder).getKey();
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): finished.");
         return applied;

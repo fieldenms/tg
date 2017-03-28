@@ -27,9 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -41,7 +39,6 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -60,8 +57,6 @@ import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * This utility class contains the methods that are shared across EntityResource and EntityValidationResource.
@@ -69,67 +64,10 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public class EntityResourceUtils<T extends AbstractEntity<?>> {
+public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
-    private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
-    private final Class<T> entityType;
-    private final IEntityDao<T> co;
-    private final IEntityProducer<T> entityProducer;
-    private final ICompanionObjectFinder companionFinder;
-
-    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final ICompanionObjectFinder companionFinder) {
-        this.entityType = entityType;
-        this.companionFinder = companionFinder;
-        this.co = companionFinder.<IEntityDao<T>, T> find(this.entityType);
-
-        this.entityFactory = entityFactory;
-        this.entityProducer = entityProducer;
-    }
-
-    /**
-     * Initialises the entity for retrieval.
-     *
-     * @param id
-     *            -- entity identifier
-     * @return
-     */
-    public T createValidationPrototype(final Long id) {
-        final T entity;
-        if (id != null) {
-            entity = co.findById(id, co.getFetchProvider().fetchModel());
-        } else {
-            entity = entityProducer.newEntity();
-        }
-        return entity;
-    }
-
-    /**
-     * Initialises the functional entity for centre-context-dependent retrieval.
-     *
-     * @param centreContext
-     *            the context for functional entity creation
-     *
-     * @return
-     */
-    public T createValidationPrototypeWithContext(
-            final Long id,
-            final CentreContext<T, AbstractEntity<?>> centreContext,
-            final String chosenProperty,
-            final Long compoundMasterEntityId,
-            final AbstractEntity<?> masterContext) {
-        if (id != null) {
-            return co.findById(id, co.getFetchProvider().fetchModel());
-        } else {
-            final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) entityProducer;
-            defProducer.setCentreContext(centreContext);
-            defProducer.setChosenProperty(chosenProperty);
-            defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
-            defProducer.setMasterEntity(masterContext);
-            return defProducer.newEntity();
-        }
-    }
 
     /**
      * Resets the context for the entity to <code>null</code> in case where the entity is {@link AbstractFunctionalEntityWithCentreContext} descendant.
@@ -147,14 +85,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             funcEntity.getProperty("context").resetState();
         }
         return entity;
-    }
-
-    public Class<T> getEntityType() {
-        return entityType;
-    }
-
-    public ICompanionObjectFinder getCompanionFinder() {
-        return companionFinder;
     }
     
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
@@ -449,7 +379,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> appliedProps) {
+    private static <M extends AbstractEntity<?>> M disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> appliedProps) {
         if (!entity.isPersisted()) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && appliedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(Result.successful(entity));
@@ -464,7 +394,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @param entity
      */
-    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
+    private static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
@@ -742,98 +672,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(matchedPropertyDescriptors.get(0));
-    }
-
-    /**
-     * Deletes the entity.
-     *
-     * @param entityId
-     */
-    public void delete(final Long entityId) {
-        co.delete(entityFactory.newEntity(entityType, entityId));
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @param envelope
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototype(id), getCompanionFinder());
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @param envelope
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public Pair<T, Map<String, Object>> constructEntity(
-            final Map<String, Object> modifiedPropertiesHolder,
-            final CentreContext<T, AbstractEntity<?>> centreContext,
-            final String chosenProperty,
-            final Long compoundMasterEntityId,
-            final AbstractEntity<?> masterContext, final int tabCount) {
-
-        logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: started.");
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
-        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext);
-        logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
-        final Pair<T, Map<String, Object>> constructed = constructEntity(modifiedPropertiesHolder, validationPrototypeWithContext, getCompanionFinder());
-        logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: finished.");
-        return constructed;
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
-        return new Pair<>(apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder) {
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
-        return constructEntity(modifiedPropertiesHolder, id);
-    }
-
-    public EntityFactory entityFactory() {
-        return entityFactory;
-    }
-    
-    public IEntityDao<T> companion() {
-        return co;
     }
 
     /**
