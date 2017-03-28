@@ -75,19 +75,20 @@ public class EntityRestorationUtils {
      * <p>
      * All normal properties will be applied in 'validationPrototype'.
      *
-     * @param envelope
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntity(
-        final Map<String, Object> modifiedPropertiesHolder, 
-        final Long id,
+        final Map<String, Object> modifiedPropertiesHolder,
         final IEntityDao<T> companion, 
         final IEntityProducer<T> producer,
         final ICompanionObjectFinder companionFinder
     ) {
+        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
+        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
+
         return constructEntity(modifiedPropertiesHolder, createValidationPrototype(id, companion, producer), companionFinder);
     }
-
+    
     /**
      * Constructs the entity from the client envelope.
      * <p>
@@ -120,17 +121,7 @@ public class EntityRestorationUtils {
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: finished.");
         return constructed;
     }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
+    
     private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(
         final Map<String, Object> modifiedPropertiesHolder, 
         final M validationPrototype, 
@@ -138,27 +129,4 @@ public class EntityRestorationUtils {
     ) {
         return new Pair<>(EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
     }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntity(
-        final Map<String, Object> modifiedPropertiesHolder,
-        final IEntityDao<T> companion, 
-        final IEntityProducer<T> producer,
-        final ICompanionObjectFinder companionFinder
-    ) {
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
-        return constructEntity(modifiedPropertiesHolder, id, companion, producer, companionFinder);
-    }
-
 }

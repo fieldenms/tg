@@ -164,12 +164,7 @@ public class EntityResourceContinuationsHelper {
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): producer.");
         final IEntityDao<T> companion = companionFinder.<IEntityDao<T>, T> find(functionalEntityType);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): utils.");
-        final Map<String, Object> modifHolder = savingInfoHolder.getModifHolder();
-
-        final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
-        final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
-        final T restored = restoreEntityFrom(savingInfoHolder, functionalEntityType, companion, producer, longId, companionFinder, tabCount + 1);
+        final T restored = restoreEntityFrom(savingInfoHolder, functionalEntityType, companion, producer, companionFinder, tabCount + 1);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -181,14 +176,13 @@ public class EntityResourceContinuationsHelper {
             final Class<T> functionalEntityType,
             final IEntityDao<T> companion,
             final IEntityProducer<T> producer,
-            final Long entityId,
             final ICompanionObjectFinder companionFinder,
             final int tabCount) {
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
         final T applied;
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-        applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, entityId, companion, producer, companionFinder).getKey();
+        applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, companion, producer, companionFinder).getKey();
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): finished.");
         return applied;
