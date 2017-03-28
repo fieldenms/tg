@@ -86,7 +86,7 @@ public class EntityRestorationUtils {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototype(id, companion, producer), companionFinder);
+        return applyModifHolder(modifiedPropertiesHolder, createValidationPrototype(id, companion, producer), companionFinder);
     }
     
     /**
@@ -100,7 +100,7 @@ public class EntityRestorationUtils {
      * @param envelope
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntity(
+    public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntityWithContext(
         final Map<String, Object> modifiedPropertiesHolder,
         final CentreContext<T, AbstractEntity<?>> centreContext,
         final String chosenProperty,
@@ -117,12 +117,12 @@ public class EntityRestorationUtils {
 
         final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext, companion, producer);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
-        final Pair<T, Map<String, Object>> constructed = constructEntity(modifiedPropertiesHolder, validationPrototypeWithContext, companionFinder);
+        final Pair<T, Map<String, Object>> constructed = applyModifHolder(modifiedPropertiesHolder, validationPrototypeWithContext, companionFinder);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: finished.");
         return constructed;
     }
     
-    private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(
+    private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> applyModifHolder(
         final Map<String, Object> modifiedPropertiesHolder, 
         final M validationPrototype, 
         final ICompanionObjectFinder companionFinder

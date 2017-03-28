@@ -443,7 +443,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     criteriaEntity,
                     actionConfig);
             logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
-            applied = EntityRestorationUtils.constructEntity(
+            applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
                     centreContext,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
