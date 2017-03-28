@@ -3,6 +3,7 @@ package ua.com.fielden.platform.devdb_support;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 
@@ -192,7 +194,10 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
-        return factory.newEntity(entityClass, key, desc);
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        entity.setDesc(desc);
+        return entity;
     }
 
     /**
@@ -204,7 +209,9 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
-        return factory.newByKey(entityClass, key);
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        return entity;
     }
 
     /**
@@ -215,7 +222,8 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
-        return factory.newEntity(entityClass);
+        final IEntityDao<T> co = co(entityClass);
+        return co != null ? co.new_() : factory.newEntity(entityClass);
     }
 
     /**
@@ -228,6 +236,19 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public final <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
-        return factory.newByKey(entityClass, keys);
+        final T entity = new_(entityClass);
+        if (keys.length > 0) {
+            // setting composite key fields
+            final List<Field> fieldList = Finder.getKeyMembers(entityClass);
+            if (fieldList.size() != keys.length) {
+                throw new IllegalArgumentException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+            }
+            for (int index = 0; index < fieldList.size(); index++) {
+                final Field keyField = fieldList.get(index);
+                final Object keyValue = keys[index];
+                entity.set(keyField.getName(), keyValue);
+            }
+        }
+        return entity;
     }
 }
