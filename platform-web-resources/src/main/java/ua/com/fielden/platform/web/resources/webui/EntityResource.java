@@ -156,6 +156,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     public Representation retrieve(final Representation envelope) {
         return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("ENTITY_RESOURCE: retrieve started.");
+            // originallyProducedEntity is always empty during retrieval to kick in creation through producer
+            final T emptyOriginallyProducedEntity = null;
             if (envelope != null) {
                 if (FIND_OR_NEW == entityIdKind) {
                     final SavingInfoHolder savingInfoHolder = WebUiResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
@@ -168,7 +170,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     }
                     final AbstractEntity<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-                    final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(null, null, null, null, funcEntity, companion, producer);
+                    final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(null, emptyOriginallyProducedEntity, null, null, null, funcEntity, companion, producer);
                     logger.debug("ENTITY_RESOURCE: retrieve finished.");
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
@@ -179,6 +181,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
+                            emptyOriginallyProducedEntity,
                             CentreResourceUtils.createCentreContext(
                                     companionFinder,
                                     serverGdtm,
@@ -201,7 +204,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 }
             } else {
                 logger.debug("ENTITY_RESOURCE: retrieve finished.");
-                return restUtil.rawListJSONRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, companion, producer));
+                return restUtil.rawListJSONRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
             }
         }, restUtil);
     }
@@ -374,11 +377,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final int tabCount) {
         logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
+        final T originallyProducedEntity = !savingInfoHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) savingInfoHolder.getOriginallyProducedEntity() : null;
         final T applied;
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         if (centreContextHolder == null) {
             logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, companion, producer, companionFinder).getKey();
+            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, originallyProducedEntity, companion, producer, companionFinder).getKey();
             logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         } else {
             final Object compoundMasterEntityIdRaw = centreContextHolder.getCustomObject().get("@@compoundMasterEntityId");
@@ -443,8 +447,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     criteriaEntity,
                     actionConfig);
             logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
+            
             applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
+                    originallyProducedEntity,
                     centreContext,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                     compoundMasterEntityId,

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.functional.centre;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -25,12 +24,15 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ISavingInfoHolder.class)
 public class SavingInfoHolder extends AbstractEntity<String> {
-    private static final long serialVersionUID = -1062648037823353306L;
-
+    
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
     private final Map<String, Object> modifHolder = new HashMap<String, Object>();
-
+    
+    @IsProperty
+    @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
+    private AbstractEntity<?> originallyProducedEntity;
+    
     @IsProperty
     @Title(value = "Centre context holder", desc = "Centre context holder")
     private CentreContextHolder centreContextHolder;
@@ -73,6 +75,16 @@ public class SavingInfoHolder extends AbstractEntity<String> {
 
     public CentreContextHolder getCentreContextHolder() {
         return centreContextHolder;
+    }
+    
+    @Observable
+    public SavingInfoHolder setOriginallyProducedEntity(final AbstractEntity<?> originallyProducedEntity) {
+        this.originallyProducedEntity = originallyProducedEntity;
+        return this;
+    }
+
+    public AbstractEntity<?> getOriginallyProducedEntity() {
+        return originallyProducedEntity;
     }
 
     @Observable
