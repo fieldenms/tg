@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,10 +33,6 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -1028,7 +1025,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         try {
             getSession().createQuery("delete " + getEntityType().getName() + " where id = " + entity.getId()).executeUpdate();
         } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException("This entity could not be deleted due to existing dependencies.");
+            throw new EntityCompanionException("This entity could not be deleted due to existing dependencies.", e);
         }
     }
 
@@ -1088,7 +1085,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        final Set<Long> ids = new HashSet<>();
+        final Set<Long> ids = new LinkedHashSet<>();
         for (final AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
         }
@@ -1097,11 +1094,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
-        if (entitiesIds.size() == 0) {
-            throw new EntityCompanionException("No entities ids have been provided for deletion.");
+        if (entitiesIds.isEmpty()) {
+            throw new EntityCompanionException("No entity ids have been provided for deletion.");
         }
 
-        return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
+        return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType()))
+                .deleteEntities(propName, entitiesIds);
     }
 
     public DomainMetadata getDomainMetadata() {
