@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
 
@@ -10,12 +14,25 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.types.Money;
 
 public class EntityUtilsTest {
+    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
 
     @Test
     public void safe_comparison_considers_two_null_values_equal() {
@@ -32,6 +49,66 @@ public class EntityUtilsTest {
     public void safe_comparison_of_non_null_values_equals_to_the_result_of_comparing_values_directly() {
         assertEquals(Integer.valueOf(42).compareTo(Integer.valueOf(13)), EntityUtils.safeCompare(42, 13));
         assertEquals(Integer.valueOf(13).compareTo(Integer.valueOf(42)), EntityUtils.safeCompare(13, 42));
+    }
+    
+    @Test
+    public void copy_copies_all_properties_if_non_are_skipped() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = factory.newEntity(Entity.class); 
+        EntityUtils.copy(entity, copy);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Entity with no id should be recognized as drity.", copy.isDirty());
+        assertEquals("Id should have been copied", entity.getId(), copy.getId());
+        assertEquals("Version should have been copied", entity.getVersion(), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+
+    @Test
+    public void copy_does_not_copy_skipped_VERSION_and_ID() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = factory.newEntity(Entity.class); 
+        EntityUtils.copy(entity, copy, VERSION, ID);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Entity with no id should be recognized as drity.", copy.isDirty());
+        assertNull("Id should have not been copied", copy.getId());
+        assertEquals("Version should have not been copied", Long.valueOf(0), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+
+    @Test
+    public void copy_does_not_copy_skipped_properties() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = factory.newEntity(Entity.class); 
+        EntityUtils.copy(entity, copy, "money", DESC);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Entity with no id should be recognized as drity.", copy.isDirty());
+        assertEquals("Id should have been copied", entity.getId(), copy.getId());
+        assertEquals("Version should have been copied", entity.getVersion(), copy.getVersion());
+        assertNull("Property desc should have not been copied", copy.getDesc());
+        assertNull("Property money should have not been copied", copy.getMoney());
     }
 
     @Test

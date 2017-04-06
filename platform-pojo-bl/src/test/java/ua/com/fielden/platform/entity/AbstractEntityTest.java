@@ -834,6 +834,22 @@ public class AbstractEntityTest {
     }
 
     @Test
+    public void copy_without_identity_is_supported() {
+        final Entity entity = factory.newEntity(Entity.class, 1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = entity.copyWithoutIdentity(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Entity with no id should be recognized as drity.", copy.isDirty());
+        assertNull("Id should not have been copied", copy.getId());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+
+    @Test
     public void test_copy_for_parent_to_descendant() {
         final Entity entity = factory.newEntity(Entity.class, 1L);
         entity.setKey("key");
