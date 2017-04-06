@@ -2,6 +2,9 @@ package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 import java.io.Serializable;
@@ -13,13 +16,17 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -1068,5 +1075,42 @@ public class EntityUtils {
             logger.error(e.getMessage(), e);
             throw Result.failure(String.format("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage())); // throw result indicating the failure of copying
         }
+    }
+    
+    /**
+     * The most generic and most straightforward function to copy properties from instance <code>fromEntity</code> to <code>toEntity</code>.
+     * 
+     * @param fromEntity
+     * @param toEntity
+     * @param skipProperties -- a sequence of property names, which may include ID and VERSION.
+     */
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
+        // convert an array with property names to be skipped into a set for more efficient use
+        final Set<String> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
+        
+        // Under certain circumstances copying happens for an uninstrumented entity instance
+        // In such cases there would be no meta-properties, and copying would fail.
+        // Therefore, it is important to perform ad-hoc property retrieval via reflection.
+        final List<String> realProperties = Finder.streamRealProperties(fromEntity.getType()).map(field -> field.getName()).collect(Collectors.toList());
+        // Need to add ID and VERSION in order for them to be treated as entity properties
+        // They will get skipped if provided as part of skipProperties array
+        realProperties.add(ID);
+        realProperties.add(VERSION);
+
+        // Copy each identified property, which is not proxied or skipped into a new instance.
+        realProperties.stream()                
+            .filter(name -> !skipPropertyName.contains(name))
+            .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
+            .forEach(propName -> {
+                if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
+                    toEntity.setKey(new DynamicEntityKey(toEntity));
+                } else {
+                    try {
+                        toEntity.set(propName, fromEntity.get(propName));
+                    } catch (final Exception e) {
+                        logger.trace(format("Setter for property %s did not succeed during coping.", propName), e);
+                    }
+                }
+            });
     }
 }
