@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 import java.io.Serializable;
@@ -106,7 +106,7 @@ public class EntityUtils {
      * @param o2
      * @return
      */
-    public static int safeCompare(final Comparable c1, final Comparable c2) {
+    public static <T> int safeCompare(final Comparable<T> c1, final T c2) {
         if (c1 == null && c2 == null) {
             return 0;
         } else if (c1 == null) {
@@ -177,7 +177,7 @@ public class EntityUtils {
      * @return
      */
     public static Converter chooseConverterBasedUponPropertyType(final AbstractEntity<?> entity, final String propertyName, final ShowingStrategy showingStrategy) {
-        final MetaProperty metaProperty = Finder.findMetaProperty(entity, propertyName);
+        final MetaProperty<?> metaProperty = Finder.findMetaProperty(entity, propertyName);
         return chooseConverterBasedUponPropertyType(metaProperty, showingStrategy);
     }
 
@@ -228,7 +228,7 @@ public class EntityUtils {
      * @param metaProperty
      * @return
      */
-    public static Converter chooseConverterBasedUponPropertyType(final MetaProperty metaProperty, final ShowingStrategy showingStrategy) {
+    public static Converter chooseConverterBasedUponPropertyType(final MetaProperty<?> metaProperty, final ShowingStrategy showingStrategy) {
         return chooseConverterBasedUponPropertyType(metaProperty.getType(), metaProperty.getPropertyAnnotationType(), showingStrategy);
     }
 
@@ -240,9 +240,8 @@ public class EntityUtils {
      * @throws ClassCastException
      *             if the subject value is not a String
      */
-    @SuppressWarnings("unchecked")
-    public static String getLabelText(final AbstractEntity entity, final String propertyName, final ShowingStrategy showingStrategy) {
-        final MetaProperty metaProperty = findFirstFailedMetaProperty(entity, propertyName);
+    public static String getLabelText(final AbstractEntity<?> entity, final String propertyName, final ShowingStrategy showingStrategy) {
+        final MetaProperty<?> metaProperty = findFirstFailedMetaProperty(entity, propertyName);
         return getLabelText(metaProperty, false, showingStrategy);
     }
 
@@ -257,7 +256,7 @@ public class EntityUtils {
      * @param showKeyOnly
      * @return
      */
-    public static String getLabelText(final MetaProperty metaProperty, final boolean returnEmptyStringIfInvalid, final ShowingStrategy showingStrategy) {
+    public static String getLabelText(final MetaProperty<?> metaProperty, final boolean returnEmptyStringIfInvalid, final ShowingStrategy showingStrategy) {
         final ConverterFactory.Converter converter = chooseConverterBasedUponPropertyType(metaProperty, showingStrategy);
         return getLabelText(metaProperty, returnEmptyStringIfInvalid, converter);
     }
@@ -275,7 +274,7 @@ public class EntityUtils {
      * @throws ClassCastException
      *             if the subject value is not a String
      */
-    public static String getLabelText(final MetaProperty metaProperty, final boolean returnEmptyStringIfInvalid, final Converter converter) {
+    public static String getLabelText(final MetaProperty<?> metaProperty, final boolean returnEmptyStringIfInvalid, final Converter converter) {
         if (metaProperty != null) {
             // hierarchy is valid, only the last property could be invalid
             final Object value = metaProperty.getLastAttemptedValue();
@@ -359,7 +358,7 @@ public class EntityUtils {
      * @return
      */
     public static Object getCurrentValue(final AbstractEntity<?> entity, final String propertyName) {
-        final MetaProperty metaProperty = entity.getProperty(propertyName);
+        final MetaProperty<?> metaProperty = entity.getProperty(propertyName);
         if (metaProperty == null) {
             throw new IllegalArgumentException("Couldn't find meta-property named '" + propertyName + "' in " + entity);
         } else {
@@ -375,8 +374,8 @@ public class EntityUtils {
      * @param propertyName
      * @return
      */
-    public static MetaProperty findFirstFailedMetaProperty(final AbstractEntity<?> entity, final String propertyName) {
-        final List<MetaProperty> metaProperties = Finder.findMetaProperties(entity, propertyName);
+    public static MetaProperty<?> findFirstFailedMetaProperty(final AbstractEntity<?> entity, final String propertyName) {
+        final List<MetaProperty<?>> metaProperties = Finder.findMetaProperties(entity, propertyName);
         return findFirstFailedMetaProperty(metaProperties);
     }
 
@@ -386,10 +385,10 @@ public class EntityUtils {
      * @param metaProperties
      * @return
      */
-    public static MetaProperty findFirstFailedMetaProperty(final List<MetaProperty> metaProperties) {
-        MetaProperty firstFailedMetaProperty = metaProperties.get(metaProperties.size() - 1);
+    public static MetaProperty<?> findFirstFailedMetaProperty(final List<MetaProperty<?>> metaProperties) {
+        MetaProperty<?> firstFailedMetaProperty = metaProperties.get(metaProperties.size() - 1);
         for (int i = 0; i < metaProperties.size(); i++) {
-            final MetaProperty metaProperty = metaProperties.get(i);
+            final MetaProperty<?> metaProperty = metaProperties.get(i);
             if (!metaProperty.isValid() || metaProperty.hasWarnings()) {
                 firstFailedMetaProperty = metaProperty;
                 break;
@@ -466,8 +465,7 @@ public class EntityUtils {
      * @param finishSetter
      * @throws Result
      */
-    public static void validateIntegerRange(final Integer start, final Integer finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateIntegerRange(final Integer start, final Integer finish, final MetaProperty<Integer> startProperty, final MetaProperty<Integer> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
@@ -493,8 +491,7 @@ public class EntityUtils {
      * @param finishSetter
      * @throws Result
      */
-    public static void validateDoubleRange(final Double start, final Double finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateDoubleRange(final Double start, final Double finish, final MetaProperty<Double> startProperty, final MetaProperty<Double> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
@@ -520,8 +517,7 @@ public class EntityUtils {
      * @param finishSetter
      * @throws Result
      */
-    public static void validateMoneyRange(final Money start, final Money finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateMoneyRange(final Money start, final Money finish, final MetaProperty<Money> startProperty, final MetaProperty<Money> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
@@ -876,6 +872,7 @@ public class EntityUtils {
         try {
             return AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(type, dotNotationProp), IsProperty.class);
         } catch (final Exception ex) {
+            logger.warn(ex);
             return false;
         }
     }
@@ -886,11 +883,11 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static List<Field> getRealProperties(final Class entityType) {
-        final List<Field> result = new ArrayList<Field>();
+    public static List<Field> getRealProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        final List<Field> result = new ArrayList<>();
 
         for (final Field propField : Finder.findRealProperties(entityType)) { //, MapTo.class
-            if (!(propField.getName().equals("desc") && !hasDescProperty(entityType))) {
+            if (!(DESC.equals(propField.getName()) && !hasDescProperty(entityType))) {
                 result.add(propField);
             }
         }
@@ -898,7 +895,7 @@ public class EntityUtils {
         return result;
     }
 
-    public static <ET extends AbstractEntity<?>> boolean hasDescProperty(final Class<ET> entityType) {
+    public static boolean hasDescProperty(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, entityType);
     }
 
@@ -908,8 +905,8 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static List<Field> getCollectionalProperties(final Class entityType) {
-        final List<Field> result = new ArrayList<Field>();
+    public static List<Field> getCollectionalProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        final List<Field> result = new ArrayList<>();
 
         for (final Field propField : Finder.findRealProperties(entityType)) {
             if (Collection.class.isAssignableFrom(propField.getType()) && Finder.hasLinkProperty(entityType, propField.getName())) {
