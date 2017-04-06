@@ -958,7 +958,30 @@ public class AbstractEntityTest {
         assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
         assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
     }
-    
+
+    @Test
+    public void copy_happens_in_the_initialisation_mode() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = entity.copy(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertFalse("Copy is dirty", copy.isDirty());
+        assertFalse("Property key is copied, but should be recognised as not dirty", copy.getProperty("key").isDirty());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertFalse("Property desc is copied, but should be recognised as not dirty", copy.getProperty("desc").isDirty());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+        assertFalse("Property money is copied, but should be recognised as not dirty", copy.getProperty("money").isDirty());
+    }
+
     @Test
     public void copy_from_uninstrumented_proxied_instance_is_also_uninstrumented_and_proxied() {
         final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");

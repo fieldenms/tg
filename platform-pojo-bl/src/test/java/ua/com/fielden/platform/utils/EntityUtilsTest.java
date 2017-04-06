@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -109,6 +110,30 @@ public class EntityUtilsTest {
         assertEquals("Version should have been copied", entity.getVersion(), copy.getVersion());
         assertNull("Property desc should have not been copied", copy.getDesc());
         assertNull("Property money should have not been copied", copy.getMoney());
+    }
+
+    @Test
+    public void copy_does_not_occur_in_the_initialisation_mode_by_default() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = factory.newEntity(Entity.class);
+        EntityUtils.copy(entity, copy);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertTrue("Copy should be dirty", copy.isDirty());
+        assertTrue("Property key is copied and should be recognised as dirty", copy.getProperty("key").isDirty());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertTrue("Property desc is copied and should be recognised as dirty", copy.getProperty("desc").isDirty());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+        assertTrue("Property money is copied and should be recognised as dirty", copy.getProperty("money").isDirty());
     }
 
     @Test
