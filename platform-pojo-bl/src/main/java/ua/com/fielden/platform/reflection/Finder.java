@@ -125,9 +125,9 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static List<MetaProperty> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
+    public static List<MetaProperty<?>> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
-        final List<MetaProperty> metaProperties = new ArrayList<MetaProperty>();
+        final List<MetaProperty<?>> metaProperties = new ArrayList<>();
         Object owner = entity;
         for (final String propertyName : properties) {
             // if the owner is null or not an entity then there is no way to determine meta-properties at the next level.
@@ -161,8 +161,8 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static MetaProperty findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
-        final List<MetaProperty> metaProperties = findMetaProperties(entity, dotNotationExp);
+    public static MetaProperty<?> findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
+        final List<MetaProperty<?>> metaProperties = findMetaProperties(entity, dotNotationExp);
         if (dotNotationExp.split(Reflector.DOT_SPLITTER).length > metaProperties.size()) {
             return null;
         } else {
