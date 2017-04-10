@@ -71,6 +71,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap0("        savingInfoHolder['key'] = 'savingInfoHolder_key';") + //
                 wrap0("        savingInfoHolder['desc'] = 'savingInfoHolder description';") + //
                 wrap0("        savingInfoHolder['modifHolder'] = functionalEntity;") + //
+                wrap0("        savingInfoHolder['originallyProducedEntity'] = null;") + //
 
                 wrap0("        var masterEntity = self._currEntity;") + //
                 wrap0("        functionalEntity.key = { val: 'NoMatter', origVal: null };") + //

@@ -1358,31 +1358,38 @@
         
         /**
          * Creates the holder of modified properties and some savingContext.
+         *
+         * There are three cases:
+         *    1) modifiedPropertiesHolder.id !== null and the entity will be fetched from persistent storage (in this case originallyProducedEntity is always null, savingContext is not applicable)
+         *    2) modifiedPropertiesHolder.id === null && originallyProducedEntity !== null and the entity will be deserialised from originallyProducedEntity and modifHolder applied (in this case savingContext is not applicable)
+         *    3) otherwise the entity will be produced through savingContext-dependent producer (only in this case savingContext is applicable)
+         *
+         * @param originallyProducedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
          */
-        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext, continuationsMap) {
-        	var reflector = this;
-            var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+        createSavingInfoHolder: function (originallyProducedEntity, modifiedPropertiesHolder, savingContext, continuationsMap) {
+            const savingInfoHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
             savingInfoHolder['key'] = 'savingInfoHolder_key';
             savingInfoHolder['desc'] = 'savingInfoHolder description';
             savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
-        	
-        	if (savingContext) { // if saving context was defined (not 'undefined'):
+            savingInfoHolder['originallyProducedEntity'] = originallyProducedEntity;
+            
+            if (savingContext) { // if saving context was defined (not 'undefined'):
                 savingInfoHolder['centreContextHolder'] = savingContext;
-        	}
-        	
-        	if (typeof continuationsMap !== 'undefined') {
-        	    var continuations = [];
-        	    var continuationProperties = [];
-        	    for (var continuationProperty in continuationsMap) {
-        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
-        	            continuations.push(continuationsMap[continuationProperty]);
-        	            continuationProperties.push(continuationProperty);
-        	        }
-        	    }
-        	    savingInfoHolder['continuations'] = continuations;
-        	    savingInfoHolder['continuationProperties'] = continuationProperties;
-        	}
+            }
+            
+            if (typeof continuationsMap !== 'undefined') {
+                var continuations = [];
+                var continuationProperties = [];
+                for (var continuationProperty in continuationsMap) {
+                    if (continuationsMap.hasOwnProperty(continuationProperty)) {
+                        continuations.push(continuationsMap[continuationProperty]);
+                        continuationProperties.push(continuationProperty);
+                    }
+                }
+                savingInfoHolder['continuations'] = continuations;
+                savingInfoHolder['continuationProperties'] = continuationProperties;
+            }
             return savingInfoHolder;
         },
         

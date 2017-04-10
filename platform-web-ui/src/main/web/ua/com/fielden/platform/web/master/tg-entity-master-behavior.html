@@ -279,6 +279,15 @@
                 
                 focusFirstInputBound: {
                     type: Function
+                },
+                
+                /**
+                 * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
+                 * It is updated everytime when refresh process successfully completes.
+                 */
+                _originallyProducedEntity: {
+                    type: Object,
+                    value: null
                 }
             },
 
@@ -317,7 +326,7 @@
                                 null, null, forContinuations ? (this.getMasterEntity ? this.getMasterEntity : null) : null
                             );
                             this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._reset(holder), masterTypeCarrier, this._continuations);
+                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
                         }.bind(this);
 
                         var contextHolder = this._reflector().createContextHolder(
@@ -377,7 +386,7 @@
                         this._createContextHolderForEmbeddedViews = (function () {
                             var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                             this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext, this._continuations);
+                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
                         }).bind(this);
                     }
                     
@@ -743,12 +752,25 @@
                         null, null, 'true',
                         null, null, this.getMasterEntity);
 
-                    return this._validator().validate(preparedModifHolder, contextHolder);
+                    return this._validator().validate(this._originallyProducedEntity, preparedModifHolder, contextHolder);
                 } else {
-                    return this._validator().validate(preparedModifHolder, this.savingContext);
+                    return this._validator().validate(this._originallyProducedEntity, preparedModifHolder, this.savingContext);
                 }
             },
-
+            
+            /**
+             * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
+             */
+            _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+                Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+                
+                if (entity.id === null) {
+                    this._originallyProducedEntity = entity;
+                } else {
+                    this._originallyProducedEntity = null;
+                }
+            },
+            
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
@@ -774,9 +796,9 @@
                         null, null, 'true',
                         null, null, this.getMasterEntity);
 
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder, this._continuations)));
+                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(this._originallyProducedEntity, modifiedPropertiesHolder, contextHolder, this._continuations)));
                 } else {
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext, this._continuations)));
+                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(this._originallyProducedEntity, modifiedPropertiesHolder, this.savingContext, this._continuations)));
                 }
                 return this._ajaxSaver().generateRequest().completes;
             },
