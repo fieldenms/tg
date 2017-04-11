@@ -451,7 +451,7 @@
                                             }*/
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
-                                        .catch(function () {
+                                        .catch(function (error) {
                                             self._setIsRunning(false);
                                             if (self._lastAction) {
                                                 self._lastAction.restoreActiveElement();
@@ -462,7 +462,7 @@
                                         .then(function () {
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
-                                        .catch(function () {
+                                        .catch(function (error) {
                                             self._setIsRunning(false);
                                             if (self._lastAction) {
                                                 self._lastAction.restoreActiveElement();
