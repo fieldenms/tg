@@ -22,8 +22,8 @@ public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithC
 
     @Override
     protected TgExportFunctionalEntity provideDefaultValues(final TgExportFunctionalEntity entity) {
-        if (entity.getChosenProperty() != null) {
-            entity.setActionProperty(entity.getChosenProperty());
+        if (getChosenProperty() != null) {
+            entity.setActionProperty(getChosenProperty());
         }
         return entity;
     }

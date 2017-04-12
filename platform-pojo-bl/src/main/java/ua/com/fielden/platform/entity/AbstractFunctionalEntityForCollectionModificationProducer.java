@@ -65,11 +65,11 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
     
     @Override
     protected final T provideDefaultValues(final T entity) {
-        if (entity.getContext() == null) {
+        if (getContext() == null) {
             return entity; // this is used for Cancel button (no context is needed)
         }
 
-        final AbstractEntity<?> masterEntityFromContext = getMasterEntityFromContext(entity.getContext());
+        final AbstractEntity<?> masterEntityFromContext = getMasterEntityFromContext(getContext());
         if (masterEntityFromContext == null) {
             throw Result.failure("The master entity for collection modification is not provided in the context.");
         }

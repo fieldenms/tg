@@ -22,8 +22,8 @@ public class TgFunctionalEntityWithCentreContextProducer extends DefaultEntityPr
 
     @Override
     protected TgFunctionalEntityWithCentreContext provideDefaultValues(final TgFunctionalEntityWithCentreContext entity) {
-        if (entity.getContext() != null) {
-            final String contextDependentValue = "" + entity.getContext().getSelectedEntities().size() + (entity.getContext().getSelectionCrit() != null ? " && crit" : " no crit");
+        if (getContext() != null) {
+            final String contextDependentValue = "" + getContext().getSelectedEntities().size() + (getContext().getSelectionCrit() != null ? " && crit" : " no crit");
             entity.setValueToInsert(contextDependentValue);
         }
         entity.setWithBrackets(true);

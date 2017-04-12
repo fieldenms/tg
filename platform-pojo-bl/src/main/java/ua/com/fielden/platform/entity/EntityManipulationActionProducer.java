@@ -19,8 +19,8 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
 
     @Override
     protected T provideDefaultValues(final T entity) {
-        if (entity.getContext() != null) {
-            final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) entity.getContext();
+        if (getContext() != null) {
+            final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext();
             final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
             final Class<AbstractEntity<?>> entityType;
