@@ -79,11 +79,16 @@ public class EntityResourceUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> T resetContextBeforeSendingToClient(final T entity) {
-        if (entity instanceof AbstractFunctionalEntityWithCentreContext && ((AbstractFunctionalEntityWithCentreContext) entity).getContext() != null) {
-            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-            funcEntity.setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-            funcEntity.getProperty("context").resetState();
-        }
+        // TODO remove this method and its usage!
+        // TODO remove this method and its usage!
+        // TODO remove this method and its usage!
+        // TODO remove this method and its usage!
+        // TODO remove this method and its usage!
+//        if (entity instanceof AbstractFunctionalEntityWithCentreContext && ((AbstractFunctionalEntityWithCentreContext) entity).getContext() != null) {
+//            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+//            funcEntity.setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+//            funcEntity.getProperty("context").resetState();
+//        }
         return entity;
     }
     

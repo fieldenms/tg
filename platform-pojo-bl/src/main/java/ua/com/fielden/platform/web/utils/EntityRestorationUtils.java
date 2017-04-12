@@ -56,7 +56,6 @@ public class EntityRestorationUtils {
         final CentreContext<T, AbstractEntity<?>> centreContext,
         final String chosenProperty,
         final Long compoundMasterEntityId,
-        final AbstractEntity<?> masterContext,
         
         final IEntityDao<T> companion, 
         final IEntityProducer<T> producer
@@ -70,7 +69,6 @@ public class EntityRestorationUtils {
             defProducer.setCentreContext(centreContext);
             defProducer.setChosenProperty(chosenProperty);
             defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
-            defProducer.setMasterEntity(masterContext);
             return defProducer.newEntity();
         }
     }
@@ -119,7 +117,6 @@ public class EntityRestorationUtils {
         final CentreContext<T, AbstractEntity<?>> centreContext,
         final String chosenProperty,
         final Long compoundMasterEntityId,
-        final AbstractEntity<?> masterContext,
         
         final int tabCount,
         
@@ -132,7 +129,7 @@ public class EntityRestorationUtils {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, centreContext, chosenProperty, compoundMasterEntityId, masterContext, companion, producer);
+        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, centreContext, chosenProperty, compoundMasterEntityId, companion, producer);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
         final Pair<T, Map<String, Object>> constructed = applyModifHolder(modifiedPropertiesHolder, validationPrototypeWithContext, companionFinder);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: finished.");

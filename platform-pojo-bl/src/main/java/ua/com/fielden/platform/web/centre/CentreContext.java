@@ -102,7 +102,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     @Override
     public String toString() {
-        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n,\ncomputation=%s\n]", selectionCrit, selectedEntities, masterEntity, computation);
+        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s,\ncomputation=%s\n]", selectionCrit, selectedEntities, masterEntity, computation);
     }
 
     public void setComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {

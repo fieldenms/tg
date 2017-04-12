@@ -170,7 +170,25 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     }
                     final AbstractEntity<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-                    final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(null, emptyOriginallyProducedEntity, null, null, null, funcEntity, companion, producer);
+                    final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
+                            null, 
+                            emptyOriginallyProducedEntity, 
+                            CentreResourceUtils.createCentreContext(
+                                    companionFinder,
+                                    serverGdtm,
+                                    userProvider,
+                                    critGenerator,
+                                    factory,
+                                    funcEntity, /* master context */
+                                    new ArrayList<AbstractEntity<?>>(),
+                                    null,
+                                    Optional.empty()
+                            ),
+                            null, 
+                            null, 
+                            companion, 
+                            producer
+                            );
                     logger.debug("ENTITY_RESOURCE: retrieve finished.");
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
@@ -188,14 +206,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                     userProvider,
                                     critGenerator,
                                     factory,
-                                    masterEntity,
+                                    masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
                                     CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator),
                                     actionConfig
                             ),
                             !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                             null /* compound master entity id */,
-                            masterEntity, /* master context */
                             companion, 
                             producer
                             );
@@ -453,7 +470,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     centreContext,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                     compoundMasterEntityId,
-                    masterContext, tabCount + 1,
+                    tabCount + 1,
                     companion,
                     producer,
                     companionFinder

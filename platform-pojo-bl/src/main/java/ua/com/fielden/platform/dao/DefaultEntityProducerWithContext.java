@@ -27,7 +27,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     
     // optional centre context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
-    private AbstractEntity<?> masterEntity;
     private Long compoundMasterEntityId;
     private String chosenProperty;
 
@@ -76,14 +75,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-                
-                if (centreContext != null) {
-                    funcEntity.setContext(centreContext);
-                }
-                
-                if (chosenProperty != null) {
-                    funcEntity.setChosenProperty(chosenProperty);
-                }
                 
                 if (String.class.isAssignableFrom(entity.getKeyType())) {
                     ((AbstractFunctionalEntityWithCentreContext<String>) funcEntity).setKey("dummy");
@@ -158,17 +149,21 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected AbstractEntity<?> getMasterEntity() {
-        return masterEntity;
+        return centreContext == null ? null : centreContext.getMasterEntity();
     }
-
-    public void setMasterEntity(final AbstractEntity<?> masterEntity) {
-        this.masterEntity = masterEntity;
+    
+    protected CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext() {
+        return centreContext;
     }
 
     public void setCentreContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext) {
         this.centreContext = centreContext;
     }
 
+    protected String getChosenProperty() {
+        return chosenProperty;
+    }
+    
     public void setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
     }
