@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
@@ -11,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -299,13 +301,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String KEY = "key";
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
-    public static Set<String> COMMON_PROPS = new HashSet<>();
-    {
-        COMMON_PROPS.add(KEY);
-        COMMON_PROPS.add(DESC);
-        COMMON_PROPS.add("referencesCount");
-        COMMON_PROPS.add("referenced");
-    }
+    public static final Set<String> COMMON_PROPS = unmodifiableSet(new HashSet<>(Arrays.asList(new String[] {KEY, DESC, "referencesCount", "referenced"})));
 
     /**
      * Provides property change support.
@@ -1428,25 +1424,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
         copy.beginInitialising();
-        // Under certain circumstances copying happens for an uninstrumented entity instance
-        // In such cases there would be no meta-properties, and copying would fail.
-        // Therefore, it is important to perform ad-hoc property retrieval via reflection.
-        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
-
-        // Copy each identified property, which is not proxied into a new instance.
-        propertyNames
-            .filter(propName -> !proxiedPropertyNames().contains(propName))
-            .forEach(propName -> {
-                if (AbstractEntity.KEY.equals(propName) && copy.getKeyType().equals(getKeyType()) && DynamicEntityKey.class.isAssignableFrom(getKeyType())) {
-                    copy.setKey(new DynamicEntityKey(copy));
-                } else {
-                    try {
-                        copy.set(propName, get(propName));
-                    } catch (final Exception e) {
-                        logger.trace(format("Setter for property %s did not succeed during coping.", propName));
-                    }
-                }
-            });
+        EntityUtils.copy(this, copy, ID, VERSION);
         copy.endInitialising();
         return copy;
     }

@@ -144,7 +144,7 @@ public class MetadataGenerator {
             entityInfo.getProps().put(idProp.getName(), idProp);
         }
         
-        for (final Field field : getRealProperties(entityInfo.javaType())) {
+        for (final Field field : getRealProperties((Class<AbstractEntity<?>>)entityInfo.javaType())) {
             final Class javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
