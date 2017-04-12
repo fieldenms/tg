@@ -6,7 +6,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.sample.domain.mixin.TgCentreInvokerWithCentreContextMixin;
 
 /**
  * DAO implementation for companion object {@link ITgCentreInvokerWithCentreContext}.
@@ -17,13 +16,9 @@ import ua.com.fielden.platform.sample.domain.mixin.TgCentreInvokerWithCentreCont
 @EntityType(TgCentreInvokerWithCentreContext.class)
 public class TgCentreInvokerWithCentreContextDao extends CommonEntityDao<TgCentreInvokerWithCentreContext> implements ITgCentreInvokerWithCentreContext {
 
-    private final TgCentreInvokerWithCentreContextMixin mixin;
-
     @Inject
     public TgCentreInvokerWithCentreContextDao(final IFilter filter) {
         super(filter);
-
-        mixin = new TgCentreInvokerWithCentreContextMixin(this);
     }
 
     @Override
