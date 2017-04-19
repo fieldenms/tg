@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * DAO implementation for companion object {@link ITgExportFunctionalEntity}.
@@ -33,15 +32,13 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
     @Override
     @SessionRequired
     public TgExportFunctionalEntity save(final TgExportFunctionalEntity entity) {
-        final CentreContext<?,?> context = entity.getContext();
-
         try {
             Thread.sleep(3000);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
         
-        final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) context.getMasterEntity();
+        final TgPersistentEntityWithProperties me = entity.getMasterEntity();
         System.out.println(format("IS MASTER ENTITY DIRTY? %s", me.isDirty()));
         if (me.isDirty()) {
             throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");

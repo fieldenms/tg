@@ -9,7 +9,7 @@ import ua.com.fielden.platform.error.Result;
 import com.google.inject.Inject;
 
 /**
- * A producer for new instances of entity {@link TgExportFunctionalEntity}.
+ * A producer for new instances of entity {@link TgCreatePersistentStatusAction}.
  *
  * @author TG Team
  *
