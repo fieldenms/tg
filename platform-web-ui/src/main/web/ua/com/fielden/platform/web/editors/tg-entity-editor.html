@@ -193,7 +193,15 @@
                 createModifiedPropertiesHolder: {
                     type: Function
                 },
-
+                
+                /**
+                 * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
+                 * It is updated everytime when refresh process successfully completes.
+                 */
+                originallyProducedEntity: {
+                    type: Object
+                },
+                
                 /**
                  * Determines whether the selection criteria entity are required to be send inside the centre context.
                  *
@@ -509,7 +517,8 @@
                     if (this.asPartOfEntityMaster) {
                         var contextHolder = this.reflector().createContextHolder(
                             "true", null, null,
-                            this.createModifiedPropertiesHolder, null, null
+                            this.createModifiedPropertiesHolder, null, null,
+                            this.originallyProducedEntity
                         );
                         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
                         return contextHolder;

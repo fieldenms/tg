@@ -1320,11 +1320,12 @@
         /**
          * Creates the context holder to be transferred with actions, centre autocompletion process, query enhancing process etc.
          *
-         * 
+         * @param originallyProducedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
          */
         createContextHolder: function (
         		requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
-        		createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity
+        		createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity,
+        		originallyProducedEntity
         ) {
             var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
             centreContextHolder.id = null;
@@ -1334,6 +1335,9 @@
             
             if (requireSelectionCriteria !== null) {
             	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
+            	if (originallyProducedEntity) {
+            	    centreContextHolder['originallyProducedEntity'] = originallyProducedEntity;
+            	}
             }
             if (requireSelectedEntities !== null) {
             	this.provideSelectedEntities(requireSelectedEntities, centreContextHolder, getSelectedEntities);
