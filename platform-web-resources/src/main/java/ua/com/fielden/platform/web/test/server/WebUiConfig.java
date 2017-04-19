@@ -1327,7 +1327,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addTopAction(
                         action(EntityExportAction.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .withContext(context().withSelectionCrit().withSelectedEntities().withMasterEntity().build())
                                 .preAction(new ExportPreAction())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
