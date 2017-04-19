@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.Dependent;
@@ -10,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
@@ -26,8 +30,6 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 @KeyTitle(value = "Export", desc = "Export data into file")
 @CompanionObject(IEntityExportAction.class)
 public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
-    private static final long serialVersionUID = 3228002036372799747L;
-
     @IsProperty
     @Title(value = "Export all?", desc = "Export all entities?")
     @AfterChange(ExportActionHandler.class)
@@ -56,6 +58,35 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     @IsProperty
     @Title(value = "Page capacity", desc = "The number of entities on page")
     private Integer pageCapacity;
+    
+    @IsProperty
+    @Title("Context Holder")
+    private CentreContextHolder centreContextHolder;
+    
+    @IsProperty(Long.class)
+    @Title("Selected Entity IDs")
+    private Set<Long> selectedEntityIds = new LinkedHashSet<Long>();
+
+    @Observable
+    protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
+        this.selectedEntityIds.clear();
+        this.selectedEntityIds.addAll(selectedEntityIds);
+        return this;
+    }
+
+    public Set<Long> getSelectedEntityIds() {
+        return Collections.unmodifiableSet(selectedEntityIds);
+    }
+
+    @Observable
+    public EntityExportAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {
+        this.centreContextHolder = centreContextHolder;
+        return this;
+    }
+
+    public CentreContextHolder getCentreContextHolder() {
+        return centreContextHolder;
+    }
 
     @Observable
     public EntityExportAction setPageCapacity(final Integer pageCapacity) {

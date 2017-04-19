@@ -3,9 +3,9 @@ package ua.com.fielden.platform.entity;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.inject.Inject;
 
@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.serialisation.api.ICriteriaEntityRestorer;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -26,9 +27,12 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements IEntityExportAction {
+    private final ICriteriaEntityRestorer criteriaEntityRestorer;
+    
     @Inject
-    public EntityExportActionDao(final IFilter filter) {
+    public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
+        this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
 
     @Override
@@ -39,8 +43,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         if (!validation.isSuccessful()) {
             throw validation;
         }
-        //Otherwise continue data exporting.
-        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = entity.getContext().getSelectionCrit();
+        // Otherwise continue data exporting.
+        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
+        
         entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.ms-excel");
         final Map<String, Object> customObject = new LinkedHashMap<String, Object>();
@@ -58,16 +63,13 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
                 entities.addAll(selectionCrit.exportQueryRunner().apply(customObject));
             }
         } else {
-            if (entity.getContext().getSelectedEntities().isEmpty()) {
+            final Set<Long> selectedEntityIds = entity.getSelectedEntityIds();
+            if (selectedEntityIds.isEmpty()) {
                 throw Result.failure("Please select at least one entity to export");
             }
             customObject.put("@@pageNumber", -1);
             customObject.put("@@action", "export all");
-            final List<Long> ids = new ArrayList<>();
-            for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
-                ids.add(selectedEntity.getId());
-            }
-            entities = selectEntities(selectionCrit.exportQueryRunner().apply(customObject), ids);
+            entities = selectEntities(selectionCrit.exportQueryRunner().apply(customObject), selectedEntityIds);
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
@@ -86,7 +88,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
      * @param ids
      * @return
      */
-    private List<AbstractEntity<?>> selectEntities(final List<AbstractEntity<?>> data, final List<Long> longIds) {
+    private List<AbstractEntity<?>> selectEntities(final List<AbstractEntity<?>> data, final Set<Long> longIds) {
         final List<AbstractEntity<?>> list = new ArrayList<>();
         if (longIds.isEmpty()) {
             return list;

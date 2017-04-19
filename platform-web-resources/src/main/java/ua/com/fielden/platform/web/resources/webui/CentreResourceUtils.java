@@ -544,7 +544,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
 
-        return createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
+        return (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm).setCentreContextHolder(centreContextHolder);
     }
 
     /**
