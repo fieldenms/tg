@@ -16,8 +16,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.serialisation.api.ICriteriaEntityRestorer;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * DAO implementation for companion object {@link IEntityExportAction}.

@@ -55,6 +55,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -533,7 +534,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(
+        final CentreContextHolder centreContextHolder,
+        final ICompanionObjectFinder companionFinder,
+        final IGlobalDomainTreeManager gdtm,
+        final ICriteriaGenerator critGenerator,
+        
+        final IServerGlobalDomainTreeManager serverGdtm, 
+        final IUserProvider userProvider, 
+        final IWebUiConfig webUiConfig,
+        final EntityFactory entityFactory
+    ) {
         if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
             return null;
         }
@@ -544,9 +555,64 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
 
-        return (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm).setCentreContextHolder(centreContextHolder);
+        final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm).setCentreContextHolder(centreContextHolder);
+        criteriaEntity.setExportQueryRunner((final Map<String, Object> customObject) -> {
+            return runExportQuery(webUiConfig, serverGdtm, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject);
+        });
+        return criteriaEntity;
     }
+    
+    private static <T extends AbstractEntity<?>> List<AbstractEntity<?>> runExportQuery(
+        final IWebUiConfig webUiConfig, 
+        final IServerGlobalDomainTreeManager serverGdtm, 
+        final IUserProvider userProvider, 
+        final EntityFactory entityFactory, 
+        final ICompanionObjectFinder companionFinder, 
+        final ICriteriaGenerator critGenerator, 
+        
+        final CentreContextHolder centreContextHolder, 
+        final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
+        final Map<String, Object> customObject
+    ) {
+        final Class<? extends MiWithConfigurationSupport<?>> miType = EntityResourceUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
+        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
+        customObject.putAll(centreContextHolder.getCustomObject());
+        // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
+        // if the export() invocation occurs on the centre that warrants data generation
+        // then for an entity centre configuration check if a generator was provided
+        final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
 
+        final Pair<Map<String, Object>, List<?>> pair =
+                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
+                        customObject,
+                        appliedCriteriaEntity,
+                        centre.getAdditionalFetchProvider(),
+                        CriteriaResource.createQueryEnhancerAndContext(
+                                webUiConfig,
+                                companionFinder,
+                                serverGdtm,
+                                userProvider,
+                                critGenerator,
+                                entityFactory,
+                                centreContextHolder,
+                                centre.getQueryEnhancerConfig(),
+                                appliedCriteriaEntity),
+                        // There could be cases where the generated data and the queried data would have different types.
+                        // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
+                        // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
+                        // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
+                        // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
+                        createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(EntityResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
+
+        if (pair.getValue() == null) {
+            return new ArrayList<AbstractEntity<?>>();
+        } else {
+            CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
+            return (List<AbstractEntity<?>>) pair.getValue();
+        }
+    }
+    
     /**
      * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
      *

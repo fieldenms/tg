@@ -93,8 +93,9 @@
                         return deserialisedObject;
                     },
                     copyProperties = function(deserialisedObject, obj) {
+                        const exceptionalNames = ['@pdString', '@uninstrumented', '@id', '@instanceTypes', '@instanceType', '@resultType', '@id_ref']; // reserved names that can not represent metaProperty name
                         for (property in obj) {
-                            if (property !== "@pdString" && property !== "@uninstrumented" && property !== "@id" && property[0] === "@" && (!(typeof obj[property] === 'string' || obj[property] instanceof String)) && property !== "@instanceTypes" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
+                            if (property[0] === "@" && exceptionalNames.indexOf(property) === -1 && typeof obj[property] !== 'string' && !(obj[property] instanceof String) ) { // starts with @, non-string value
                                 deserialisedObject[property] = deserialiseMetaProperty(obj[property]);
                             } else if (property === "@instanceTypes" && Array.isArray(obj[property])) {
                                 console.log("!!!New Types!!!", obj[property]);

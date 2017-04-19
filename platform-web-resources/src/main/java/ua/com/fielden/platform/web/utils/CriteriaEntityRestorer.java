@@ -1,13 +1,9 @@
-package ua.com.fielden.platform.serialisation.api;
-
-import java.util.Map;
+package ua.com.fielden.platform.web.utils;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -16,8 +12,14 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.webui.CentreResourceUtils;
-import ua.com.fielden.platform.web.resources.webui.EntityResource;
+import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
+/**
+ * An implementation of pojo-bl's interface that is dependent on Web UI infrastructure (centre configuration etc.).
+ * 
+ * @author TG Team
+ *
+ */
 public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final ICompanionObjectFinder companionFinder;
     private final IServerGlobalDomainTreeManager serverGdtm;
@@ -38,13 +40,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
 
     @Override
     public EnhancedCentreEntityQueryCriteria<?, ?> restoreCriteriaEntity(final CentreContextHolder centreContextHolder) {
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> criteriaEntity = CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator);
-        
-        if (criteriaEntity != null) {
-            criteriaEntity.setExportQueryRunner((final Map<String, Object> customObject) -> {
-                return EntityResource.runExportQuery(webUiConfig, serverGdtm, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject);
-            });
-        }
-        return criteriaEntity;
+        return CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, serverGdtm, userProvider, webUiConfig, entityFactory);
     }
 }

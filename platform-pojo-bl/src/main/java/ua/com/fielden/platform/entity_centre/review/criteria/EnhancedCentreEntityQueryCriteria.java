@@ -27,6 +27,10 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
+    /**
+     * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
+     * Running of this fully-fledged query depends on query context (see property centreContextHolder).
+     */
     private Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner;
     private CentreContextHolder centreContextHolder;
 
