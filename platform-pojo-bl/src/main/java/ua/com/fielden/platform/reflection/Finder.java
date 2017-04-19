@@ -1,22 +1,20 @@
 package ua.com.fielden.platform.reflection;
 
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -127,9 +125,9 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static List<MetaProperty> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
+    public static List<MetaProperty<?>> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
-        final List<MetaProperty> metaProperties = new ArrayList<MetaProperty>();
+        final List<MetaProperty<?>> metaProperties = new ArrayList<>();
         Object owner = entity;
         for (final String propertyName : properties) {
             // if the owner is null or not an entity then there is no way to determine meta-properties at the next level.
@@ -163,8 +161,8 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static MetaProperty findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
-        final List<MetaProperty> metaProperties = findMetaProperties(entity, dotNotationExp);
+    public static MetaProperty<?> findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
+        final List<MetaProperty<?>> metaProperties = findMetaProperties(entity, dotNotationExp);
         if (dotNotationExp.split(Reflector.DOT_SPLITTER).length > metaProperties.size()) {
             return null;
         } else {

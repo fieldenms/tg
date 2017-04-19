@@ -79,7 +79,7 @@ public class FinderTest {
         entity2.setPropertyOfSelfType(entity3);
         entity3.setPropertyOfSelfType(entity);
 
-        List<MetaProperty> metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.propertyOfSelfType");
+        List<MetaProperty<?>> metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.propertyOfSelfType");
         assertEquals(4, metaProperties.size());
         assertEquals(entity, metaProperties.get(0).getEntity());
         assertEquals(entity2, metaProperties.get(1).getEntity());
@@ -160,7 +160,7 @@ public class FinderTest {
     public void testThatFindMetaPropertyWorks() {
         // /////////////////////// simple case -- first level property ////////////////////
         final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "key-1-1", "key-1-2");
-        MetaProperty metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
+        MetaProperty<?> metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
         assertNotNull("Should have found meta-property.", metaProperty);
         assertEquals("Incorrect property name as present in the meta-property.", "property", metaProperty.getName());
         // /////////////////////// complex case -- multilevel property ///////////////////

@@ -32,6 +32,7 @@ target
 *.snm
 *.vrb
 *.old
+*.xwm
 
 # Package Files #
 *.jar
