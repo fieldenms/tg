@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IAcknowledgeWarnings.class)
 @EntityTitle(value = "Acknowledge warnings", desc = "Acknowledge warnings of the current initiating entity")
 public class AcknowledgeWarnings extends AbstractFunctionalEntityWithCentreContext<String> implements IContinuationData {
-    private static final long serialVersionUID = 1L;
     
     @IsProperty(PropertyWarning.class)
     @Title(value = "Warnings", desc = "A list of user property warnings")
