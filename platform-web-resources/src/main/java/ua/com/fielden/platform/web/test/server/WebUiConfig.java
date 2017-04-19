@@ -1292,7 +1292,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 preAction(yesNo("Are you sure you want to proceed?")).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
-                                //longDesc("Functional context-dependent action 1").
+                                longDesc("Functional context-dependent action 1 (TgFunctionalEntityWithCentreContext)").
                                 prefDimForView(mkDim(300, 200)).
                                 build()
                 )
@@ -1302,7 +1302,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withSelectedEntities().build()).
                                 icon("assignment-returned").
                                 shortDesc("Function 2").
-                                longDesc("Functional context-dependent action 2").
+                                longDesc("Functional context-dependent action 2 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
                 .also()
@@ -1311,7 +1311,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withCurrentEntity().build()).
                                 icon("assignment").
                                 shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3").
+                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
                 .also()
@@ -1461,7 +1461,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
                         shortDesc("Function 5").
-                        longDesc("Functional context-dependent action 5").
+                        longDesc("Functional context-dependent action 5 (TgFunctionalEntityWithCentreContext)").
                         build())
 
                 .also();
@@ -1588,7 +1588,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
                 //                                shortDesc("Function 2.5").
-                //                                longDesc("Functional context-dependent action 2.5").
+                //                                longDesc("Functional context-dependent action 2.5 (TgFunctionalEntityWithCentreContext)").
                 //                                build()
 
                 //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
@@ -1614,16 +1614,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withSelectedEntities().build()).
                                 icon("assignment-turned-in").
                                 shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3").
+                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
                 .also()
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
                                 icon("attachment").
                                 shortDesc("Function 4").
-                                longDesc("Functional context-dependent action 4").
+                                longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 );
                 final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
