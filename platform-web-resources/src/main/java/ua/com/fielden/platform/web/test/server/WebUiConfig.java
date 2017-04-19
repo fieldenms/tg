@@ -63,14 +63,19 @@ import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -821,22 +826,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(new EntityMaster<TgStatusActivationFunctionalEntity>(
                         TgStatusActivationFunctionalEntity.class,
+                        TgStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgISStatusActivationFunctionalEntity>(
                         TgISStatusActivationFunctionalEntity.class,
+                        TgISStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgIRStatusActivationFunctionalEntity>(
                         TgIRStatusActivationFunctionalEntity.class,
+                        TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
+                        TgONStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgSRStatusActivationFunctionalEntity>(
                         TgSRStatusActivationFunctionalEntity.class,
+                        TgSRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 done();
