@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -128,6 +129,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
+        }
+        if (AbstractUnionEntity.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_union(true);
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
