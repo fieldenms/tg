@@ -39,8 +39,8 @@ import ua.com.fielden.platform.types.Money;
  */
 public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
 
-    private final List<String> dataScript = new ArrayList<String>();
-    private final List<String> truncateScript = new ArrayList<String>();
+    private final List<String> dataScript = new ArrayList<>();
+    private final List<String> truncateScript = new ArrayList<>();
 
     public final IDomainDrivenTestCaseConfiguration config;
     private final Properties props;
