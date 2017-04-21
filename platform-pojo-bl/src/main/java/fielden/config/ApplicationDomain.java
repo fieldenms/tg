@@ -6,6 +6,9 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.union.EntityOne;
+import ua.com.fielden.platform.entity.union.EntityTwo;
+import ua.com.fielden.platform.entity.union.UnionEntity;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
@@ -102,6 +105,10 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgPolygon.class);
         add(TgCoordinate.class);
         add(TgPolygonMap.class);
+        
+        add(UnionEntity.class);
+        add(EntityOne.class);
+        add(EntityTwo.class);
     }
 
     @Override

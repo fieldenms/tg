@@ -328,9 +328,10 @@
                     throw new StrictProxyException(name, this.type()._simpleClassName(), true);
                 } else if ((this.constructor.prototype.type.call(this)).isUnionEntity() && ['id', 'key', 'desc'].indexOf(name) !== -1) {
                     // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
-                    // This slightly deviates from Java 'AbstractUnionEntity' for property key.
-                    // Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
-                    const activeEntity = this.activeEntity();
+                    // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
+                    // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
+                    // 2) In case where [key / desc / id] is accessed from empty union entity -- here empty values (aka nulls) are returned, but in Java -- exception is thrown. 
+                    const activeEntity = this._activeEntity();
                     return activeEntity === null ? null : activeEntity.get(name);
                 }
                 return this[name];
@@ -342,7 +343,7 @@
          * 
          * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
          */
-        Entity.prototype.activeEntity = function () {
+        Entity.prototype._activeEntity = function () {
             const self = this;
             let activeEntity = null;
             this.traverseProperties(function (name) {
