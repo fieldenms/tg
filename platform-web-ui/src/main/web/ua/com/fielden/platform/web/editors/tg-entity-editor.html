@@ -717,7 +717,9 @@
                     } else if (typeof valueToFormat === 'string'){
                         return "<b>" + valueToFormat + "</b>";
                     } else if (valueToFormat != null) {
-                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + (valueToFormat.desc ? "<br>" + valueToFormat.desc : "");
+                        const descPart = valueToFormat.desc ? "<br>" + valueToFormat.desc :
+                            (this.reflector().isEntity(valueToFormat) && valueToFormat.type().isUnionEntity() && valueToFormat.get('desc') ? "<br>" + valueToFormat.get('desc') : "");
+                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + descPart;
                     } else {
                         return '';
                     }
