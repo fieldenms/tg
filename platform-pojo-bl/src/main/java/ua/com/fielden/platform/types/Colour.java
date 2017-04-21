@@ -5,9 +5,9 @@ import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 public class Colour {
     private final String hashlessUppercasedColourValue;
 
-    public static Colour BLACK = new Colour("000000");
-    public static Colour RED = new Colour("FF0000");
-    public static Colour WHITE = new Colour("FFFFFF");
+    public static final Colour BLACK = new Colour("000000");
+    public static final Colour RED = new Colour("FF0000");
+    public static final Colour WHITE = new Colour("FFFFFF");
 
     public Colour(final String colorValue) {
         validateColourValue(colorValue);
@@ -15,10 +15,8 @@ public class Colour {
     }
 
     private void validateColourValue(final String colourValue) {
-        if (!colourValue.matches("\\p{XDigit}{3}|\\p{XDigit}{6}")) {
-            if (!(colourValue == "")) {
-                throw new ValueObjectException("Colour value string must be composed of either 3 or 6 hexadecimal chars");
-            }
+        if (!"".equals(colourValue) && !colourValue.matches("\\p{XDigit}{3}|\\p{XDigit}{6}")) {
+            throw new ValueObjectException("Colour value string must be composed of either 3 or 6 hexadecimal chars");
         }
     }
 
