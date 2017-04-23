@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
