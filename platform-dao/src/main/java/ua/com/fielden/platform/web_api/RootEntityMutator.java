@@ -36,9 +36,9 @@ public class RootEntityMutator implements DataFetcher {
     @Override
     public Object get(final DataFetchingEnvironment environment) {
         try {
-            final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
+            final IEntityDao co = coFinder.find(entityType);
             final SavingInfoHolder savingInfoHolder = createSavingInfoHolder(environment.getArguments()); // TODO impl
-            final Pair<AbstractEntity, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.<AbstractEntity>tryToSave(savingInfoHolder , (Class<AbstractEntity>) entityType, entityFactory, coFinder, (IEntityDao<AbstractEntity>) co);
+            final Pair<AbstractEntity, Optional<Exception>> potentiallySavedWithException = (Pair<AbstractEntity, Optional<Exception>>) EntityResourceContinuationsHelper.tryToSave(savingInfoHolder , entityType, entityFactory, coFinder, co);
             
             if (potentiallySavedWithException.getValue().isPresent()) {
                 throw potentiallySavedWithException.getValue().get();
