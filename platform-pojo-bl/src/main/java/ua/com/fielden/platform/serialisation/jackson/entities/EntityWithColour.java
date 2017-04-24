@@ -24,7 +24,6 @@ import ua.com.fielden.platform.types.markers.IColourType;
 public class EntityWithColour extends AbstractEntity<String> {
 
     @IsProperty
-    @PersistentType(userType = IColourType.class)
     @Title(value = "Colour prop", desc = "Colour prop description")
     @MapTo("COLOUR")
     private Colour prop;

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
@@ -6,7 +6,8 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 
 import java.util.Optional;
 
-import ua.com.fielden.platform.security.user.UserRole;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -18,10 +19,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-import com.google.inject.Injector;
-
 /**
- * {@link UserRole} Web UI configuration.
+ * Web UI configuration for {@link CentreConfigUpdater}.
  *
  * @author TG Team
  *
@@ -62,7 +61,7 @@ public class CentreConfigurationWebUiConfig {
                 injector);
     }
 
-    public static enum CentreConfigActions {
+    public enum CentreConfigActions {
         SORT_ACTION {
             @Override
             public EntityActionConfig mkAction() {

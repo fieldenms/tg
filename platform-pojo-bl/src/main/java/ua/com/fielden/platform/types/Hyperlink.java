@@ -11,7 +11,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 /**
- * A type for representing hyper links such as <code>http://.
+ * A type for representing hyper links.
  * 
  * @author TG Team
  *
