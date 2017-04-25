@@ -515,10 +515,15 @@
             createContextHolder: function (inputText) {
                 if (this.multi === false) {
                     if (this.asPartOfEntityMaster) {
-                        var contextHolder = this.reflector().createContextHolder(
+                        const modifHolder = this.createModifiedPropertiesHolder();
+                        const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
+                        console.debug(':MASTER:AUTOCOMPLETE1', '|type', this.autocompletionType, '|id', modifHolder.id);
+                        console.debug(':MASTER:AUTOCOMPLETE2', '|mph', modifHolder);
+                        console.debug(':MASTER:AUTOCOMPLETE3', '|ope', originallyProducedEntity);
+                        const contextHolder = this.reflector().createContextHolder(
                             "true", null, null,
-                            this.createModifiedPropertiesHolder, null, null,
-                            this.originallyProducedEntity
+                            function () { return modifHolder; }, null, null,
+                            originallyProducedEntity
                         );
                         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
                         return contextHolder;

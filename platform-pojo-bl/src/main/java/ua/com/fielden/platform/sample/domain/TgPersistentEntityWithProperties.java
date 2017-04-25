@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -31,8 +30,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IColourType;
-import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 /**
  * Master entity object.
@@ -47,8 +44,6 @@ import ua.com.fielden.platform.types.markers.IHyperlinkType;
 @DescTitle(value = "Desc", desc = "Some desc description")
 @DisplayDescription
 public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-
     @IsProperty
     @MapTo
     @Title(value = "Integer prop", desc = "Integer prop desc")

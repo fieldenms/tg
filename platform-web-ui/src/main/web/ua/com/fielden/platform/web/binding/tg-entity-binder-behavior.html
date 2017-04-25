@@ -479,12 +479,16 @@
                     // cancel previous validation before starting refreshing process!
                     this._validator().abortValidationIfAny();
                     
-                	if (context) {
+                    this._reflector()._validateRetrievalContext(context, this.entityId);
+                    if (context) {
+                        console.debug(':MASTER:RETRIEVE1', '|type', this.entityType, '|id', this.entityId);
+                        console.debug(':MASTER:RETRIEVE2', '|cch or sih', context);
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
-                	} else {
-                		this._ajaxRetriever().body = null;
-                	}
+                    } else {
+                        console.debug(':MASTER:RETRIEVE', '|type', this.entityType, '|id', this.entityId);
+                        this._ajaxRetriever().body = null;
+                    }
                     return this._ajaxRetriever().generateRequest().completes;
                 }).bind(self);
                 

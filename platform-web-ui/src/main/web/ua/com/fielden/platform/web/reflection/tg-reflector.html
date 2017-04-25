@@ -1361,7 +1361,7 @@
         },
         
         /**
-         * Creates the holder of modified properties and some savingContext.
+         * Creates the holder of modified properties, originallyProducedEntity and savingContext.
          *
          * There are three cases:
          *    1) modifiedPropertiesHolder.id !== null and the entity will be fetched from persistent storage (in this case originallyProducedEntity is always null, savingContext is not applicable)
@@ -1442,6 +1442,53 @@
         		}
         	}
         	return number;
+        },
+        
+        /**
+         * Validates the presence of originallyProducedEntity based on number representation of entity id.
+         */
+        _validateOriginallyProducedEntity: function (originallyProducedEntity, idNumber) {
+            if (idNumber === null) {
+                if (!_isEntity(originallyProducedEntity)) {
+                    throw 'For new entities (null id) originallyProducedEntity should always exist.';
+                }
+            } else if (Number.isInteger(idNumber)) {
+                if (_isEntity(originallyProducedEntity)) {
+                    throw 'For existing entities (id exists) originallyProducedEntity should always be empty.';
+                }
+            } else {
+                throw 'Unknown id number [' + idNumber + ']';
+            }
+            return originallyProducedEntity;
+        },
+        
+        /**
+         * Validates the context based on string representation of entity id during retrieval process.
+         * 
+         * For non-empty context:
+         *  1) if 'new' entity is retrieved then full context (CentreContextHolder) is necessary to be able to contextually restore the entity.
+         *  2) if 'find_or_new' entity is retrieved then only master functional entity (SavingInfoHolder) is necessary to be able to contextually restore the entity -- empty context (CentreContextHolder)
+         *     will be created on server (see EntityResource.retrieve method) and master functional entity will be set into it. This is most likely the situation of embedded master inside other master.
+         */
+        _validateRetrievalContext: function (context, idString) {
+            if (context) {
+                if (idString === 'new') {
+                    if (!_isEntity(context) || context.type()._simpleClassName() !== 'CentreContextHolder') {
+                        throw 'Non-empty context for "new" entity during retrieval should be of type CentreContextHolder. Context = ' + context;
+                    }
+                } else if (idString === 'find_or_new') {
+                    if (!_isEntity(context) || context.type()._simpleClassName() !== 'SavingInfoHolder') {
+                        throw 'Non-empty context for "find_or_new" entity during retrieval should be of type SavingInfoHolder. Context = ' + context;
+                    }
+                } else {
+                    throw 'Incorrect id string [' + idString + '] for non-empty context. Context = ' + context;
+                }
+            } else {
+                if (idString && idString !== 'new') {
+                    throw 'Incorrect id string [' + idString + '] for empty context. Context = ' + context;
+                }
+            }
+            return context;
         }
     });
 })();    
