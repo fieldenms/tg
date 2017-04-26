@@ -15,7 +15,7 @@ public class MenuWebUiConfig {
     }
 
     private static EntityMaster<Menu> createMaster(final Injector injector) {
-        return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector);
+        return new EntityMaster<>(Menu.class, MenuProducer.class, null, injector);
     }
 
 }

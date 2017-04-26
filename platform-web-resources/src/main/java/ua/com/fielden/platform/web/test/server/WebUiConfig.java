@@ -99,6 +99,8 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties
 import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
@@ -125,8 +127,6 @@ import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AcknowledgeWarningsWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.resources.webui.MenuWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
