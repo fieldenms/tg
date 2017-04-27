@@ -16,8 +16,10 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
- * A structure that represents an execution context for an entity centre. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
+ * A structure that represents an execution context for functional entities. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
  * what parts of the context do they require. This allows for optimising the amount of data marshaled between between the client and server.
+ * 
+ * TODO to be renamed to Context as it also represents the context on master functional actions, not only on centre
  *
  * @author TG Team
  *
@@ -51,7 +53,9 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
 
-
+    private Long compoundMasterEntityId;
+    private String chosenProperty;
+    
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
@@ -102,7 +106,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     @Override
     public String toString() {
-        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s,\ncomputation=%s\n]", selectionCrit, selectedEntities, masterEntity, computation);
+        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s,\ncomputation=%s\n,\nchosenProperty=%s\n,\ncompoundMasterEntityId=%s\n]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, compoundMasterEntityId);
     }
 
     public void setComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
@@ -111,5 +115,21 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     public Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> getComputation() {
         return computation;
+    }
+    
+    public String getChosenProperty() {
+        return chosenProperty;
+    }
+    
+    public void setChosenProperty(final String chosenProperty) {
+        this.chosenProperty = chosenProperty;
+    }
+    
+    public Long getCompoundMasterEntityId() {
+        return compoundMasterEntityId;
+    }
+    
+    public void setCompoundMasterEntityId(final Long compoundMasterEntityId) {
+        this.compoundMasterEntityId = compoundMasterEntityId;
     }
 }

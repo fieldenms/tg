@@ -174,18 +174,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             null, 
                             emptyOriginallyProducedEntity, 
                             CentreResourceUtils.createCentreContext(
-                                    companionFinder,
-                                    serverGdtm,
-                                    userProvider,
-                                    critGenerator,
-                                    factory,
-                                    funcEntity, /* master context */
+                                    funcEntity, /* only master context, the rest should be empty */
                                     new ArrayList<AbstractEntity<?>>(),
                                     null,
-                                    Optional.empty()
+                                    Optional.empty(),
+                                    null, 
+                                    null 
                             ),
-                            null, 
-                            null, 
                             companion, 
                             producer
                             );
@@ -201,18 +196,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             null,
                             emptyOriginallyProducedEntity,
                             CentreResourceUtils.createCentreContext(
-                                    companionFinder,
-                                    serverGdtm,
-                                    userProvider,
-                                    critGenerator,
-                                    factory,
                                     masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
                                     CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, serverGdtm, userProvider, webUiConfig, factory),
-                                    actionConfig
+                                    actionConfig,
+                                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                                    null /* TODO compound master entity id -- should be empty? */
                             ),
-                            !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                            null /* compound master entity id */,
                             companion, 
                             producer
                             );
@@ -411,23 +401,19 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
-                    companionFinder,
-                    serverGdtm,
-                    userProvider,
-                    critGenerator,
-                    entityFactory,
                     masterContext,
                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
                     criteriaEntity,
-                    actionConfig);
+                    actionConfig,
+                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                    compoundMasterEntityId
+                    );
             logger.debug(EntityResourceUtils.tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
             
             applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
                     originallyProducedEntity,
                     centreContext,
-                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                    compoundMasterEntityId,
                     tabCount + 1,
                     companion,
                     producer,

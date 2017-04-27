@@ -467,7 +467,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EntityFactory entityFactory,
             final CentreContextHolder centreContextHolder,
             final M criteriaEntity,
-            final Optional<CentreContextConfig> contextConfig) {
+            final Optional<CentreContextConfig> contextConfig,
+            final String chosenProperty,
+            final Long compoundMasterEntityId
+    ) {
         if (contextConfig.isPresent()) {
             final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
             final CentreContextConfig config = contextConfig.get();
@@ -480,10 +483,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (config.withMasterEntity) {
                 context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
             }
-
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
             }
+            context.setChosenProperty(chosenProperty);
+            context.setCompoundMasterEntityId(compoundMasterEntityId);
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -505,24 +509,22 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
-            final ICompanionObjectFinder companionFinder,
-            final IServerGlobalDomainTreeManager serverGdtm,
-            final IUserProvider userProvider,
-            final ICriteriaGenerator critGenerator,
-            final EntityFactory entityFactory,
             final AbstractEntity<?> masterContext,
             final ArrayList<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
-            final Optional<EntityActionConfig> config) {
+            final Optional<EntityActionConfig> config,
+            final String chosenProperty,
+            final Long compoundMasterEntityId
+    ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
         context.setSelectedEntities((List<T>) selectedEntities);
         context.setMasterEntity(masterContext);
-
         if (config.isPresent() && config.get().context.isPresent() && config.get().context.get().withComputation()) {
             context.setComputation(config.get().context.get().computation.get());
         }
-
+        context.setChosenProperty(chosenProperty);
+        context.setCompoundMasterEntityId(compoundMasterEntityId);
         return context;
     }
 

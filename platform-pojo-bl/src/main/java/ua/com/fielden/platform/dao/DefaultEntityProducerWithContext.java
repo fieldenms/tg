@@ -21,15 +21,10 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @param <T>
  */
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T> {
-
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    
-    // optional centre context for context-dependent entity producing logic
-    private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
-    private Long compoundMasterEntityId;
-    private String chosenProperty;
-
+    // optional context for context-dependent entity producing logic
+    private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
 
@@ -38,7 +33,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         this.entityType = entityType;
         this.coFinder = companionFinder;
     }
-
     
     /**
      * A convenient way to obtain companion instances by the types of corresponding entities.
@@ -149,30 +143,22 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected AbstractEntity<?> getMasterEntity() {
-        return centreContext == null ? null : centreContext.getMasterEntity();
+        return context == null ? null : context.getMasterEntity();
     }
     
     protected CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext() {
-        return centreContext;
+        return context;
     }
 
-    public void setCentreContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext) {
-        this.centreContext = centreContext;
+    public void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
+        this.context = context;
     }
 
     protected String getChosenProperty() {
-        return chosenProperty;
-    }
-    
-    public void setChosenProperty(final String chosenProperty) {
-        this.chosenProperty = chosenProperty;
+        return context == null ? null : context.getChosenProperty();
     }
 
     protected Long getCompoundMasterEntityId() {
-        return compoundMasterEntityId;
-    }
-
-    public void setCompoundMasterEntityId(final Long compoundMasterEntityId) {
-        this.compoundMasterEntityId = compoundMasterEntityId;
+        return context == null ? null : context.getCompoundMasterEntityId();
     }
 }

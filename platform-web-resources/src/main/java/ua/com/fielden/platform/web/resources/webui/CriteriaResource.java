@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 
 import java.util.ArrayList;
@@ -10,9 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -25,9 +22,6 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.ISessionEnabled;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -388,7 +382,10 @@ public class CriteriaResource extends ServerResource {
                             entityFactory,
                             centreContextHolder,
                             criteriaEntity,
-                            queryEnhancerConfig.get().getValue())//
+                            queryEnhancerConfig.get().getValue(),
+                            null, /* chosenProperty is not applicable in queryEnhancer context */
+                            null /* compoundMasterEntityId is not applicable in queryEnhancer context */
+                            )//
             ));
         } else {
             return Optional.empty();

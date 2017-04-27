@@ -44,7 +44,7 @@ public class EntityRestorationUtils {
     /**
      * Initialises the functional entity for centre-context-dependent retrieval.
      *
-     * @param centreContext
+     * @param context
      *            the context for functional entity creation
      *
      * @return
@@ -53,9 +53,7 @@ public class EntityRestorationUtils {
         final Long id,
         final T originallyProducedEntity,
         
-        final CentreContext<T, AbstractEntity<?>> centreContext,
-        final String chosenProperty,
-        final Long compoundMasterEntityId,
+        final CentreContext<T, AbstractEntity<?>> context,
         
         final IEntityDao<T> companion, 
         final IEntityProducer<T> producer
@@ -66,9 +64,7 @@ public class EntityRestorationUtils {
             return originallyProducedEntity;
         } else {
             final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) producer;
-            defProducer.setCentreContext(centreContext);
-            defProducer.setChosenProperty(chosenProperty);
-            defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
+            defProducer.setContext(context);
             return defProducer.newEntity();
         }
     }
@@ -107,16 +103,13 @@ public class EntityRestorationUtils {
      * <p>
      * All normal properties will be applied in 'validationPrototype'.
      *
-     * @param envelope
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntityWithContext(
         final Map<String, Object> modifiedPropertiesHolder,
         final T originallyProducedEntity,
         
-        final CentreContext<T, AbstractEntity<?>> centreContext,
-        final String chosenProperty,
-        final Long compoundMasterEntityId,
+        final CentreContext<T, AbstractEntity<?>> context,
         
         final int tabCount,
         
@@ -129,7 +122,7 @@ public class EntityRestorationUtils {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, centreContext, chosenProperty, compoundMasterEntityId, companion, producer);
+        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, context, companion, producer);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
         final Pair<T, Map<String, Object>> constructed = applyModifHolder(modifiedPropertiesHolder, validationPrototypeWithContext, companionFinder);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: finished.");

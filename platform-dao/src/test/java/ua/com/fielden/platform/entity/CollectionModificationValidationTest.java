@@ -55,24 +55,24 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     private CentreConfigUpdater createUpdaterWithoutMasterEntity() {
         final CentreConfigUpdaterProducer producer = getInstance(CentreConfigUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> centreContext = new CentreContext<>();
-        producer.setCentreContext(centreContext);
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        producer.setContext(context);
         return producer.newEntity();
     }
     
     private UserRolesUpdater createUpdater(final User user) {
         final UserRolesUpdaterProducer producer = getInstance(UserRolesUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> centreContext = new CentreContext<>();
-        centreContext.setMasterEntity(user);
-        producer.setCentreContext(centreContext);
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        context.setMasterEntity(user);
+        producer.setContext(context);
         return producer.newEntity();
     }
     
     private UserRoleTokensUpdater createUpdater(final UserRole userRole) {
         final UserRoleTokensUpdaterProducer producer = getInstance(UserRoleTokensUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> centreContext = new CentreContext<>();
-        centreContext.setMasterEntity(userRole);
-        producer.setCentreContext(centreContext);
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        context.setMasterEntity(userRole);
+        producer.setContext(context);
         return producer.newEntity();
     }
     
