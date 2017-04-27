@@ -382,7 +382,7 @@
                         this._continuations = {};
                         
                         // in case of successful saving, originallyProducedEntity should be reset
-                        this._originallyProducedEntity = isContinuouslyCreated === true ? potentiallySavedOrNewEntity : null;
+                        this._originallyProducedEntity = isContinuouslyCreated === true ? potentiallySavedOrNewEntity : (potentiallySavedOrNewEntity.type().isPersistent() ? null : potentiallySavedOrNewEntity);
                         
                         // Context creator should assigned only after successful master entity saving.
                         // In case of successful assignment it gets promoted to embedded views by means of binding.
