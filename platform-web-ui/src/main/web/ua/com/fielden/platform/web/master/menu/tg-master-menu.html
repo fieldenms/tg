@@ -349,8 +349,8 @@
         	console.log('_getMasterEntityChanged', newValue);
         	
         	var context = newValue();
-        	this.menuTitle = context.modifHolder.menuTitle.val;
-        	this.sectionTitle = context.modifHolder.sectionTitle.val; 
+        	this.menuTitle = context.modifHolder.menuTitle.origVal;
+        	this.sectionTitle = context.modifHolder.sectionTitle.origVal; 
         	
  			if (this._isRefreshCycle === false) {      	
 	        	if (this.route !== this.defaultRoute) {
