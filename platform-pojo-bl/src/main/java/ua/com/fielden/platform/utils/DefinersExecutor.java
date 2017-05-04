@@ -30,7 +30,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  * The process of finalising entity initialisation consists of:<br>
  * <ul>
  *  <li>Execution of ACE handlers.
- *  <li>(re)Setting of property original values.
+ *  <li>(re)Setting of property original values (optional).
  *  <li>Completion of the entity initialisation phase by invoking {@link AbstractEntity#endInitialising()}.
  * </ul>
  * 
@@ -45,12 +45,13 @@ public class DefinersExecutor {
      * The boundary of an object graph is outlined by <code>proxied</code> properties and <code>non-entity typed</code> properties.
      *
      * @param entity -- an instance to finalise the initialisation for.
+     * @param handleOriginalValues -- indicates the need to reset original values of properties
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> T execute(final T entity) {
+    public static <T extends AbstractEntity<?>> T execute(final T entity, final boolean handleOriginalValues) {
         if (entity != null) {
-            execute(Arrays.asList(entity));
+            execute(Arrays.asList(entity), handleOriginalValues);
         }
         return entity;
     }
@@ -58,9 +59,12 @@ public class DefinersExecutor {
     /**
      * The same as {@link #execute(AbstractEntity)}, but for a list of entities.
      * 
+     * @param entities -- instances to finalise the initialisation for.
+     * @param handleOriginalValues -- indicates the need to reset original values of properties
+     * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
+    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities, final boolean handleOriginalValues) {
         if (entities == null || entities.isEmpty()) {
             return entities;
         }
@@ -78,7 +82,7 @@ public class DefinersExecutor {
                     throw new DefinersExecutorException("After full exploration of previous top-level node entity (if any) 'frontier' is necessary to be empty.");
                 }
                 frontier.push(entity);
-                explore(frontier, explored);
+                explore(frontier, explored, handleOriginalValues);
             }
         }
         return entities;
@@ -89,11 +93,13 @@ public class DefinersExecutor {
      *
      * @param frontier
      * @param explored
+     * @param handleOriginalValues
      * @return
      */
     private static void explore(
             final Deque<AbstractEntity<?>> frontier, 
-            final Set<Integer> explored) {
+            final Set<Integer> explored,
+            final boolean handleOriginalValues) {
         
         if (frontier.isEmpty()) {
             throw new DefinersExecutorException("There is nothing to process.");
@@ -131,8 +137,8 @@ public class DefinersExecutor {
                 .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()))
                 .collect(Collectors.partitioningBy(field -> isValueProxied(entity, field)));
 
-        // process properties that have id-only-proxy value if the entity is instrumented and persisted
-        if (isInstrumented && isEntityPersisted) {
+        // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted and handleOriginalValues = true
+        if (handleOriginalValues && isInstrumented && isEntityPersisted) {
             final List<Field> idOnlyProxyPropFields = propFieldsToProcess.get(true);
             for (final Field propField : idOnlyProxyPropFields) {
                 final String propName = propField.getName();
@@ -159,7 +165,7 @@ public class DefinersExecutor {
                             if (item != null && item instanceof AbstractEntity) {
                                 final AbstractEntity<?> value = (AbstractEntity<?>) item;
                                 frontier.push(value);
-                                explore(frontier, explored);
+                                explore(frontier, explored, handleOriginalValues);
                             }
                         }
                     }
@@ -168,13 +174,13 @@ public class DefinersExecutor {
                         final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
                         // produce fetch
                         frontier.push(value);
-                        explore(frontier, explored);
+                        explore(frontier, explored, handleOriginalValues);
                     }
                 }
                 
                 // original values and execution of ACE handlers is relevant only for instrumented entities
                 if (isInstrumented) {
-                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
+                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted, handleOriginalValues);
                 }
             }
         }
@@ -196,8 +202,8 @@ public class DefinersExecutor {
         return value instanceof AbstractEntity ? ((AbstractEntity<?>) value).isIdOnlyProxy() : false;
     }
 
-    private static <T> void handleOriginalValueAndACE(final MetaProperty<T> metaProp, final T propertyValue, final boolean isEntityPersisted) {
-        if (isEntityPersisted) {
+    private static <T> void handleOriginalValueAndACE(final MetaProperty<T> metaProp, final T propertyValue, final boolean isEntityPersisted, final boolean handleOriginalValues) {
+        if (handleOriginalValues && isEntityPersisted) {
             // this is very important -- original values for non-persistent entities should be left unchanged
             metaProp.setOriginalValue(propertyValue);
         }

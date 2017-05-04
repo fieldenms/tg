@@ -300,6 +300,15 @@ public class FactoryForTestingEntities {
         entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
         return finalise(entity);
     }
+    
+    public EntityWithSameEntity createEntityWithSameEntityThatIsChangedFromOriginal() {
+        final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
+        entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
+        final EntityWithSameEntity finalisedEntity = finalise(entity);
+        
+        finalisedEntity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 3L, "key3", "description")));
+        return finalisedEntity;
+    }
 
     public EntityWithSameEntity createEntityWithSameEntityCircularlyReferencingItself() {
         final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");

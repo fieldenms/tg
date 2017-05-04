@@ -409,6 +409,26 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Incorrect prop visibility.", restoredEntity.getProperty("prop").isVisible());
     }
     
+    @Test
+    public void entity_with_changedFromOriginal_prop_should_be_restored_and_its_original_value_properly_restored_too() throws Exception {
+        final EntityWithSameEntity entity = factory.createEntityWithSameEntityThatIsChangedFromOriginal();
+        assertEquals("Incorrect prop.", "key3", entity.getProp().getKey());
+        assertEquals("Incorrect validity.", true, entity.<EntityWithSameEntity>getProperty("prop").isValid());
+        assertEquals("Incorrect isChangedFromOriginal.", true, entity.<EntityWithSameEntity>getProperty("prop").isChangedFromOriginal());
+        assertEquals("Incorrect dirtiness.", true, entity.<EntityWithSameEntity>getProperty("prop").isChangedFromOriginal());
+        assertEquals("Incorrect original prop.", "key2", entity.<EntityWithSameEntity>getProperty("prop").getOriginalValue().getKey());
+        
+        final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "key3", restoredEntity.getProp().getKey());
+        assertEquals("Incorrect validity.", true, restoredEntity.<EntityWithSameEntity>getProperty("prop").isValid());
+        assertEquals("Incorrect isChangedFromOriginal.", true, restoredEntity.<EntityWithSameEntity>getProperty("prop").isChangedFromOriginal());
+        assertEquals("Incorrect dirtiness.", true, restoredEntity.<EntityWithSameEntity>getProperty("prop").isChangedFromOriginal());
+        assertEquals("Incorrect original prop.", "key2", restoredEntity.<EntityWithSameEntity>getProperty("prop").getOriginalValue().getKey());
+    }
+    
     private AbstractEntity createIdOnlyProxy() {
         final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = ((TgJackson) jacksonSerialiser).idOnlyProxiedEntityTypeCache;
         return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), 189L);

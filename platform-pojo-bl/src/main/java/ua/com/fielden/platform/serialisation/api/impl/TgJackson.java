@@ -239,7 +239,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             
             if (!deserialisedEntities.isEmpty()) {
                 // iterate through all locally cached entity instances and execute respective definers
-                DefinersExecutor.execute(deserialisedEntities);
+                DefinersExecutor.execute(deserialisedEntities, false); // original values of properties should NOT be handled here -- serialisation / deserialisation takes care of original values itself
             }
         }
     }

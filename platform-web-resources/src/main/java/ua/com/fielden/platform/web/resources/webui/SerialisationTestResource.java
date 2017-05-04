@@ -207,7 +207,7 @@ public class SerialisationTestResource extends ServerResource {
                         if (prop.getPropertyType() != null) {
                             // check property meta-info equality
                             if (e1Instrumented) {
-                                final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
+                                final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName), setOfCheckedEntities, prop.getPropertyType());
                                 if (!metaPropEq.isSuccessful()) {
                                     return metaPropEq;
                                 }
@@ -218,21 +218,11 @@ public class SerialisationTestResource extends ServerResource {
                                 }
                             } else {
                                 // check property value equality
-                                if (EntityUtils.isEntityType(prop.getPropertyType())) {
-                                    final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
-                                    if (!eq.isSuccessful()) {
-                                        return eq;
-                                    }
-                                } else {
-                                    if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
-                                        if (e1.get(propName) != null || !"okay_defined".equals(e2.get(propName))) {
-                                            return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
-                                        }
-                                    } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
-                                        final String value1 = getValue(e1, propName);
-                                        final String value2 = getValue(e2, propName);
-                                        return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
-                                    }
+                                final Object value1 = e1.get(propName);
+                                final Object value2 = e2.get(propName);
+                                final Result propValsEqual = deepEqualsForTestingForPropValues(e1, e2, setOfCheckedEntities, value1, value2, prop.getPropertyType(), propName, false);
+                                if (!propValsEqual.isSuccessful()) {
+                                    return propValsEqual;
                                 }
                             }
                         }
@@ -242,20 +232,53 @@ public class SerialisationTestResource extends ServerResource {
             }
         }
     }
-
-    private static String getValue(final AbstractEntity<?> e1, final String propName) {
-        if (e1.get(propName) != null) {
-            final Object tempValue1 = e1.get(propName);
-            if (tempValue1.getClass().isAssignableFrom(Colour.class)) {
-                return ((Colour) e1.get(propName)).getColourValue();
-            } else if (tempValue1.getClass().isAssignableFrom(Date.class)) {
-                return Long.toString(((Date) e1.get(propName)).getTime());
+    
+    private static Result deepEqualsForTestingForPropValues(
+        final AbstractEntity<?> e1, 
+        final AbstractEntity<?> e2, 
+        final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, 
+        final Object value1, 
+        final Object value2, 
+        final Class<?> propType,
+        final String propName,
+        final boolean original
+    ) {
+        if (EntityUtils.isEntityType(propType)) {
+            final Result eq = deepEqualsForTesting((AbstractEntity<?>) value1, (AbstractEntity<?>) value2, setOfCheckedEntities);
+            if (!eq.isSuccessful()) {
+                return eq;
+            }
+        } else {
+            final String origPrefix = original ? "original " : "";
+            if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
+                if (value1 != null || !"okay_defined".equals(value2)) {
+                    return Result.failure(format("e1 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
+                }
+            } else if (!EntityUtils.equalsEx(value1, value2)) { // prop equality
+                return Result.failure(format("e1 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] does not equal to e2 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, toString(value1), e2, e2.getType().getSimpleName(), propName, toString(value2)));
             }
         }
-        return e1.get(propName);
+        return Result.successful("Ok");
     }
 
-    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2) {
+    private static String toString(final Object value) {
+        if (value != null) {
+            final Object tempValue1 = value;
+            if (tempValue1.getClass().isAssignableFrom(Colour.class)) {
+                return ((Colour) value).getColourValue();
+            } else if (tempValue1.getClass().isAssignableFrom(Date.class)) {
+                return Long.toString(((Date) value).getTime());
+            }
+        }
+        return value + "";
+    }
+
+    private static <M> Result deepEqualsForTesting(
+        final MetaProperty<M> metaProp1, 
+        final MetaProperty<M> metaProp2,
+        final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, 
+        final Class<?> propType
+    ) {
         if (metaProp1 == null && metaProp2 != null) {
             return Result.failure(format("MetaProperty of originally created entity is null, but meta property of deserialised entity is not."));
         }
@@ -266,10 +289,24 @@ public class SerialisationTestResource extends ServerResource {
         if (!metaProp1.isProxy()) {
             // dirty equality
             //        if (!metaProp1.isCollectional()) {
-            if (isChangedFromOriginal(metaProp1)) {
-                if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
+            
+            if (!metaProp1.getEntity().getType().getSimpleName().equals("EntityWithDefiner") || !metaProp1.getName().equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
+                if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), isChangedFromOriginal(metaProp2))) {
                     return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
                 }
+                // please refer to provideOriginalValue method in EntityJsonDeserialiser for more details on 'dirtiness'
+//                if (!EntityUtils.equalsEx(metaProp1.isDirty(), metaProp2.isDirty())) {
+//                    return Result.failure(format("e1 [%s] prop's [%s] dirtiness [%s] does not equal to e2 [%s] prop's [%s] dirtiness [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isDirty(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isDirty()));
+//                }
+                
+                // check property original value equality
+                final Object originalValue1 = metaProp1.getOriginalValue();
+                final Object originalValue2 = metaProp2.getOriginalValue();
+                final Result propValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, originalValue1, originalValue2, propType, metaProp1.getName(), true);
+                if (!propValsEqual.isSuccessful()) {
+                    return propValsEqual;
+                }
+
             }
             //        } else {
             //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
@@ -351,6 +388,7 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithColour(),
                 factory.createEntityWithOtherEntity(),
                 factory.createEntityWithSameEntity(),
+                factory.createEntityWithSameEntityThatIsChangedFromOriginal(),
                 factory.createEntityWithSameEntityCircularlyReferencingItself(),
                 factory.createEntityWithOtherEntityCircularlyReferencingItself(),
                 factory.createEntityWithSetOfSameEntities(),

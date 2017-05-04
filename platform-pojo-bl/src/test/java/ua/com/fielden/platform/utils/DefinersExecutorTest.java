@@ -41,7 +41,7 @@ public class DefinersExecutorTest {
         parent.setKeyMember1(grandParent);
         parent.setKeyMember2("parent1");
         
-        DefinersExecutor.execute(parent);
+        DefinersExecutor.execute(parent, true);
         
         assertEquals(
                     Arrays.asList(
@@ -80,7 +80,7 @@ public class DefinersExecutorTest {
         collectionWithHandler.add(child2);
         parent.setCollectionWithHandler(collectionWithHandler);
         
-        DefinersExecutor.execute(parent);
+        DefinersExecutor.execute(parent, true);
         
         assertEquals(
                     Arrays.asList(
@@ -106,7 +106,7 @@ public class DefinersExecutorTest {
         parent.setKeyMember1(grandParent);
         parent.setKeyMember2("parent1");
         
-        DefinersExecutor.execute(parent);
+        DefinersExecutor.execute(parent, true);
         
         assertEquals(
                     Arrays.asList(
@@ -128,7 +128,7 @@ public class DefinersExecutorTest {
         parent.setKeyMember1(grandParent);
         parent.setKeyMember2("parent1");
         
-        DefinersExecutor.execute(parent);
+        DefinersExecutor.execute(parent, true);
         
         assertEquals(
                     Arrays.asList(

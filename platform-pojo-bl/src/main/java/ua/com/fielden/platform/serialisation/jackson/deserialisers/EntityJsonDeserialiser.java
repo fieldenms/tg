@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -45,7 +46,6 @@ import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.utils.EntityUtils;
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
@@ -175,12 +175,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     throw e;
                 }
                 final JsonNode metaPropNode = node.get("@" + propertyName);
+                final Optional<MetaProperty<?>> metaProperty = entity.getPropertyOptionally(propertyName);
+                provideOriginalValue(metaProperty, propertyName, metaPropNode, prop.field());
                 if (metaPropNode != null) {
                     if (metaPropNode.isNull()) {
                         throw new IllegalStateException("EntitySerialiser has got null meta property '@" + propertyName + "' when reading entity of type [" + type.getName() + "].");
                     }
-                    final Optional<MetaProperty<?>> metaProperty = entity.getPropertyOptionally(propertyName);
-                    provideChangedFromOriginal(metaProperty, propertyName, metaPropNode);
                     provideEditable(metaProperty, propertyName, metaPropNode);
                     provideRequired(metaProperty, propertyName, metaPropNode);
                     provideVisible(metaProperty, propertyName, metaPropNode);
@@ -221,22 +221,45 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     }
 
     /**
-     * Retrieves 'dirty' value from entity JSON tree.
+     * Deserialises 'changedFromOriginal' (if exists) and its corresponding 'originalValue' into meta property.
+     * <p>
+     * In case of non-existence of 'changedFromOriginal' information, originalValue and dirtiness must be reset by {@link MetaProperty#resetState()} method.
+     * <p>
+     * Please note that imperative 'dirty' flag on meta property sets to the value which is equal to 'changedFromOriginal', however
+     * the 'dirty' flag in target entity could be different from 'changedFromOriginal'.
+     * <p>
+     * TODO Please consider unification of 'changedFromOriginal' and 'dirty' flag into single concept.
      *
      * @param metaProperty
+     * @param propName
      * @param metaPropNode
+     * @param propField
+     * 
      * @return
      */
-    private void provideChangedFromOriginal(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode) {
-        final JsonNode changedPropNode = metaPropNode.get("_cfo");
-        if (changedPropNode == null) {
+    private void provideOriginalValue(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode, final Field propField) throws IOException {
+        if (metaPropNode == null || metaPropNode.get("_cfo") == null) {
             // do nothing -- there is no node and that means that there is default value
+            if (metaProperty.isPresent()) {
+                metaProperty.get().resetState();
+            }
         } else {
+            final JsonNode changedPropNode = metaPropNode.get("_cfo");
             if (changedPropNode.isNull()) {
                 throw new EntityDeserialisationException(format("EntitySerialiser has got null 'changedFromOriginal' inside meta property '@%s' when reading entity of type [%s].", propName, type.getName()));
             }
             if (metaProperty.isPresent()) {
-                metaProperty.get().setDirty(changedPropNode.asBoolean());
+                final boolean changedFromOriginalValue = changedPropNode.asBoolean();
+                
+                if (changedFromOriginalValue) {
+                    final JsonNode originalValNode = metaPropNode.get("_originalVal");
+                    final Object originalVal = determineValue(originalValNode, propField);
+                    ((MetaProperty<Object>) metaProperty.get()).setOriginalValue(originalVal);
+                    
+                    metaProperty.get().setDirty(changedFromOriginalValue);
+                } else {
+                    metaProperty.get().resetState();
+                }
             }
         }
     }
