@@ -135,10 +135,10 @@
         is: 'tg-master-menu',
 
         properties: {
-        	menuTitle: {
+        	/* menuTitle: {
         		type: String,
         		value: '[[menuTitle]]'
-        	},
+        	}, */
         	
         	sectionTitle: {
         		type: String,
@@ -338,7 +338,9 @@
         	this._isRefreshCycle = true;
         	
         	var context = this.getMasterEntity();
-        	if (context.modifHolder.forNew.origVal === true && envelope.topic === 'save.post.success') {
+        	
+        	// TODO need to check somehow if 'main' entity has been saved or 'detail'. If 'main' -- then id should be further processed, otherwise -- do nothing (id has been populated before, most likely)
+        	if (/* context.modifHolder.forNew.origVal === true && */ envelope.topic === 'save.post.success') {
         		this.augmentContextWithSavedEntity(data.id);
         	}
         	
@@ -349,8 +351,8 @@
         	console.log('_getMasterEntityChanged', newValue);
         	
         	var context = newValue();
-        	this.menuTitle = context.modifHolder.menuTitle.origVal;
-        	this.sectionTitle = context.modifHolder.sectionTitle.origVal; 
+        	/* this.menuTitle = context.modifHolder.menuTitle.origVal; */
+        	this.sectionTitle = context.modifHolder.sectionTitle.val; 
         	
  			if (this._isRefreshCycle === false) {      	
 	        	if (this.route !== this.defaultRoute) {

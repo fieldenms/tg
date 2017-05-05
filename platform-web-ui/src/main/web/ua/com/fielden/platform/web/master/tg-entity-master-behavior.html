@@ -382,7 +382,16 @@
                         this._continuations = {};
                         
                         // in case of successful saving, originallyProducedEntity should be reset
-                        this._originallyProducedEntity = isContinuouslyCreated === true ? potentiallySavedOrNewEntity : (potentiallySavedOrNewEntity.type().isPersistent() ? null : potentiallySavedOrNewEntity);
+                        // this._originallyProducedEntity = isContinuouslyCreated === true ? potentiallySavedOrNewEntity : (potentiallySavedOrNewEntity.type().isPersistent() ? null : potentiallySavedOrNewEntity);
+                        if (isContinuouslyCreated === true) {
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) {
+                            this._originallyProducedEntity = null;
+                        } else if (typeof potentiallySavedOrNewEntity['key'] !== undefined && this._reflector().isEntity(potentiallySavedOrNewEntity.get('key')) && potentiallySavedOrNewEntity.get('key').isPersisted() ) {
+                            // remain previously defined _originallyProducedEntity. TODO this is a hack. Please consider more appropriate unification!
+                        } else {
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        }
                         
                         // Context creator should assigned only after successful master entity saving.
                         // In case of successful assignment it gets promoted to embedded views by means of binding.
@@ -553,8 +562,21 @@
                 }).bind(self);
 
                 self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
-                    this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
-                    console.log("augmentContextWithSavedEntity", compoundMasterEntityId);
+                    // this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
+                    
+                    if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && compoundMasterEntityId === this._currBindingEntity['@key_id']) {
+                        // ensure that key property is touched to be able to invoke its definers, which, most likely should update sectionTitle accordingly
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
+                    } else {
+                        // ensure that key property is touched to be able to invoke its definers, which, most likely should update sectionTitle accordingly
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
+                    }
+                    // Need to provide ID to facilitate server-side reconstruction of entity-typed key using ID-based strategy instead of KEY-based.
+                    // Method setAndRegisterPropertyTouch removes '@key_id' value if it has existed previously (if not -- we are providing '@key_id' for the first time).
+                    this._currBindingEntity['@key_id'] = compoundMasterEntityId;
+                    
+                    console.debug(":MASTER: augmentContextWithSavedEntity compoundMasterEntityId = ", compoundMasterEntityId);
+                    console.debug(":MASTER: augmentContextWithSavedEntity master.is = ", this.is);
                 }).bind(self);
 
                 self._postSaverLoadingFinished = (function () {
