@@ -104,7 +104,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
-                        + "    augment-context-with-saved-entity='[[augmentContextWithSavedEntity]]'>\n"
+                        + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'>\n"
                         + menuItemActionsDom + "\n"
                         + menuItemsDom + "\n"
                         + menuItemViewsDom + "\n"

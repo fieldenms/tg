@@ -231,11 +231,13 @@
             }, 
             
             /**
-             * In case when the new entity has been just saved, there is a need to augment the context of this compound master functional entity to take into account newly created main entity.
+             * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+             * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
+             * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
              *
-             * @param compoundMasterEntityId -- the id of just saved main entity to be promoted into the the context of this compound master functional entity
+             * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
              */
-            augmentContextWithSavedEntity: {
+            augmentCompoundMasterOpenerWith: {
             	type: Function
             },
             
@@ -332,11 +334,9 @@
         _refreshCompoundMaster: function (data, envelope) {
         	this._isRefreshCycle = true;
         	
-        	var context = this.getMasterEntity();
-        	
-        	// TODO need to check somehow if 'main' entity has been saved or 'detail'. If 'main' -- then id should be further processed, otherwise -- do nothing (id has been populated before, most likely)
+        	// promotes saved entity (main or detail) id into compound master "opener" in case of successful save
         	if (envelope.topic === 'save.post.success') {
-        		this.augmentContextWithSavedEntity(data.id);
+        		this.augmentCompoundMasterOpenerWith(data.id);
         	}
         	
         	this.refreshCompoundMaster();
