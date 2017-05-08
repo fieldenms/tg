@@ -20,7 +20,7 @@ import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMa
 
 public class Compound {
 
-    protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
+    protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
             final Class<MENU_ITEM> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
             final Injector injector) {
@@ -33,7 +33,7 @@ public class Compound {
                 injector);
     }
 
-    protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
+    protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
             final Class<MENU_ITEM> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
             final Injector injector) {
@@ -72,7 +72,7 @@ public class Compound {
                 injector);
     }
 
-    protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityActionConfig miAction(
+    protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityActionConfig miAction(
             final Class<MENU_ITEM> menuItemType,
             final String icon,
             final String shortDesc,

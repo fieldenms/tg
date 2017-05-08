@@ -561,6 +561,7 @@
                     return self._createSavingPromise();
                 }).bind(self);
 
+                // TODO this method should be renamed due to changed sematics, also remove near-by artifacts
                 self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
                     // this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
                     
