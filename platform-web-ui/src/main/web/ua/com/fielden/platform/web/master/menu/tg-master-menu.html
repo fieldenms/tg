@@ -345,8 +345,9 @@
         _getMasterEntityChanged: function (newValue, oldValue) {
         	console.log('_getMasterEntityChanged', newValue);
         	
-        	var context = newValue();
-        	this.sectionTitle = context.modifHolder.sectionTitle.val; 
+        	const context = newValue();
+        	const sectionTitleValues = context.modifHolder.sectionTitle;
+        	this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal; 
         	
  			if (this._isRefreshCycle === false) {      	
 	        	if (this.route !== this.defaultRoute) {
