@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +58,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
         }
-        throw new IllegalStateException(String.format("The number of selected entities is %s, which is not appliacable for determining a current entity.", selectedEntities.size()));
+        throw new IllegalStateException(format("The number of selected entities is %s, which is not applicable for determining a current entity.", selectedEntities.size()));
     }
 
     public List<AbstractEntity<?>> getSelectedEntities() {
