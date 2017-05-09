@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.union;
+package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;

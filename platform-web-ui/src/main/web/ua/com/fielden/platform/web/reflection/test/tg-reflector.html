@@ -174,7 +174,7 @@
             });
             
             test('empty union entity gives empty values for id, key and desc properties', function (done) {
-                const union = reflector.newEntity('ua.com.fielden.platform.entity.union.UnionEntity');
+                const union = reflector.newEntity('ua.com.fielden.platform.sample.domain.UnionEntity');
                 union.key = 'bad key'; // should not really exist, but is provided for stronger checks
                 union.desc = 'bad desc'; // should not really exist, but is provided for stronger checks
                 union.id = 1; // should not really exist, but is provided for stronger checks
@@ -190,12 +190,12 @@
             });
             
             test('non-empty union entity gives values for id, key and desc properties from its active entity', function (done) {
-                const union = reflector.newEntity('ua.com.fielden.platform.entity.union.UnionEntity');
+                const union = reflector.newEntity('ua.com.fielden.platform.sample.domain.UnionEntity');
                 union.key = 'bad key'; // should not really exist, but is provided for stronger checks
                 union.desc = 'bad desc'; // should not really exist, but is provided for stronger checks
                 union.id = 1; // should not really exist, but is provided for stronger checks
                 
-                const propertyOneVal = reflector.newEntity('ua.com.fielden.platform.entity.union.EntityOne');
+                const propertyOneVal = reflector.newEntity('ua.com.fielden.platform.sample.domain.EntityOne');
                 propertyOneVal.key = 'EO1';
                 propertyOneVal.desc = 'EO1 desc';
                 propertyOneVal.id = 101;
