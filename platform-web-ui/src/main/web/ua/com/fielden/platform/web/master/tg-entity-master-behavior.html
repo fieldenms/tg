@@ -383,15 +383,11 @@
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after successful save
                         this._continuations = {};
                         
-                        // in case of successful saving, originallyProducedEntity should be reset
-                        // this._originallyProducedEntity = isContinuouslyCreated === true ? potentiallySavedOrNewEntity : (potentiallySavedOrNewEntity.type().isPersistent() ? null : potentiallySavedOrNewEntity);
-                        if (isContinuouslyCreated === true) {
+                        if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
                             this._originallyProducedEntity = potentiallySavedOrNewEntity;
-                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) {
+                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
                             this._originallyProducedEntity = null;
-                        } else if (typeof potentiallySavedOrNewEntity['key'] !== undefined && this._reflector().isEntity(potentiallySavedOrNewEntity.get('key')) && potentiallySavedOrNewEntity.get('key').isPersisted() ) {
-                            // remain previously defined _originallyProducedEntity. TODO this is a hack. Please consider more appropriate unification!
-                        } else {
+                        } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
                             this._originallyProducedEntity = potentiallySavedOrNewEntity;
                         }
                         

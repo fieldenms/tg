@@ -207,7 +207,15 @@ public class DefinersExecutor {
             // this is very important -- original values for non-persistent entities should be left unchanged
             metaProp.setOriginalValue(propertyValue);
         }
+        // TODO Consider removal of definers execution, very much like original values handling, after TgJackson deserialisation process.
+        // TODO Following lines adds ability to quick check how this works.
+        // TODO Please note that endInitialising still should occur for entities graph after deserialisation process (perhaps it could be embedded inside TgJackson logic).
+        // TODO There are some interesting examples that could be heavily affected by definers execution removal, - these include for example Parc import utilities, please check.
+        // TODO At the stage where definers are executed, there is a need to carefully implement them:
+        // TODO  for example, do not change the property from definer and then directly through setter, because direct change could be overridden afterwards using the same definer.
+        // if (handleOriginalValues) {
         metaProp.define(propertyValue);
+        // }
     }
 
 }
