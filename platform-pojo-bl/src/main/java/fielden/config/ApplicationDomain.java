@@ -1,7 +1,10 @@
 package fielden.config;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
@@ -54,8 +57,8 @@ import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
  *
  */
 public class ApplicationDomain implements IApplicationDomainProvider {
-    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
-    private static final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+    private static final Set<Class<? extends AbstractEntity<?>>> entityTypes = new LinkedHashSet<>();
+    private static final Set<Class<? extends AbstractEntity<?>>> domainTypes = new LinkedHashSet<>();
 
     private static void add(final Class<? extends AbstractEntity<?>> domainType) {
         entityTypes.add(domainType);
@@ -113,10 +116,10 @@ public class ApplicationDomain implements IApplicationDomainProvider {
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {
-        return entityTypes;
+        return Collections.unmodifiableList(entityTypes.stream().collect(Collectors.toList()));
     }
 
     public List<Class<? extends AbstractEntity<?>>> domainTypes() {
-        return domainTypes;
+        return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
 }
