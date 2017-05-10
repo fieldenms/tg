@@ -1,11 +1,16 @@
 package fielden.config;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.sample.domain.EntityOne;
+import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
@@ -40,6 +45,7 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
@@ -51,8 +57,8 @@ import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
  *
  */
 public class ApplicationDomain implements IApplicationDomainProvider {
-    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
-    private static final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+    private static final Set<Class<? extends AbstractEntity<?>>> entityTypes = new LinkedHashSet<>();
+    private static final Set<Class<? extends AbstractEntity<?>>> domainTypes = new LinkedHashSet<>();
 
     private static void add(final Class<? extends AbstractEntity<?>> domainType) {
         entityTypes.add(domainType);
@@ -102,14 +108,18 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgPolygon.class);
         add(TgCoordinate.class);
         add(TgPolygonMap.class);
+        
+        add(UnionEntity.class);
+        add(EntityOne.class);
+        add(EntityTwo.class);
     }
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {
-        return entityTypes;
+        return Collections.unmodifiableList(entityTypes.stream().collect(Collectors.toList()));
     }
 
     public List<Class<? extends AbstractEntity<?>>> domainTypes() {
-        return domainTypes;
+        return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
 }

@@ -740,7 +740,7 @@
             this.collapsePanelVisible = !!(this.cardLayout && layout);
         };
         var _areEqual = function (a, b) {
-            return a.id === b.id;
+            return a.get('id') === b.get('id');
         };
         var _hasEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
@@ -1467,7 +1467,7 @@
                         desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                     }
                 } catch (e) {
-                    desc = "";
+                    desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
                 }
                 return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
             },

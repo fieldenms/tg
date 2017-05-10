@@ -30,8 +30,6 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  */
 @KeyType(String.class)
 public abstract class AbstractUnionEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-
     /** Points out the name of a non-null property. */
     private String activePropertyName;
 

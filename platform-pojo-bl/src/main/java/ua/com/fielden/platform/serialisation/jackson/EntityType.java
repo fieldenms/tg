@@ -24,8 +24,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Entity Type Name", desc = "Entity Type Name description")
 @CompanionObject(IEntityType.class)
 public class EntityType extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-    
     @IsProperty
     @Title(value = "Identifier", desc = "Identifier of the type in context of other types for serialisation")
     private String _identifier;
@@ -59,8 +57,22 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _displayDesc;
     
     @IsProperty
-    @Title(value = "Is Continuation?", desc = "Indicated whether the associated entity type represents a continuation entity.")
+    @Title(value = "Is Continuation?", desc = "Indicates whether the associated entity type represents a continuation entity.")
     private boolean _continuation;
+    
+    @IsProperty
+    @Title(value = "Is Union?", desc = "Indicates whether the associated entity type represents an union entity.")
+    private boolean _union;
+    
+    @Observable
+    public EntityType set_union(final boolean _union) {
+        this._union = _union;
+        return this;
+    }
+
+    public boolean is_union() {
+        return _union;
+    }
 
     @Observable
     public EntityType set_displayDesc(final Boolean _displayDesc) {

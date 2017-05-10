@@ -92,8 +92,8 @@
         var createMenuEntry = function (menuItem, parent) {
             var res = [];
             var parentMenuItem = {
-                title: menuItem.key,
-                description: menuItem.desc,
+                title: menuItem.get('key'),
+                description: menuItem.get('desc'),
                 parent: parent
             };
             if (menuItem.menu && menuItem.menu.length > 0 || menuItem.view) {
