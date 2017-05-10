@@ -1484,7 +1484,7 @@
                     throw 'Incorrect id string [' + idString + '] for non-empty context. Context = ' + context;
                 }
             } else {
-                if (idString && idString !== 'new') {
+                if (idString === 'find_or_new') { // this occurs, for example, when Cancel button has been pressed -- context is undefined. 'new' or '830' idString is applicable.
                     throw 'Incorrect id string [' + idString + '] for empty context. Context = ' + context;
                 }
             }
