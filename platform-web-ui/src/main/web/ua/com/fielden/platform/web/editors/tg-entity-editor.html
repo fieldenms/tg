@@ -477,8 +477,8 @@
 
                 for (var index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
-                    // This includes correct conversion of simple and composite entities
-                    var key = this.reflector().convert(entities[index]);
+                    // This includes correct conversion of simple, composite and union entities
+                    const key = this.reflector().convert(entities[index]);
                     entities[index].key = key;
                     result.pushValue(entities[index]);
                 }
@@ -580,8 +580,7 @@
                 if (hasValuesToProcess) {
                     // compose a string value, which would be a comma separated string in case of multi
                     var selectedValuesAsStr = _.map(result.selectedValues, function (obj) {
-                        console.log(obj.key);
-                        return obj.key;
+                        return obj.key; // 'key' field contains converted representation of the entity
                     }).join(this.separator);
 
                     if (!this.multi) {

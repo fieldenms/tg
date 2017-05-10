@@ -531,7 +531,7 @@
          * Returns 'true' if the entity was persisted before and 'false' otherwise.
          */
         Entity.prototype.isPersisted = function () {
-            return this.id !== null;
+            return this.get('id') !== null;
         }
         return Entity;
 	};
@@ -584,11 +584,12 @@
          * Returns full not enhanced Java class name for the entity type.
          */
         EntityType.prototype.notEnhancedFullClassName = function () {
-            var enhancedIndex = this.key.indexOf("$$TgEntity");
+            const fullClassName = this.fullClassName();
+            const enhancedIndex = fullClassName.indexOf("$$TgEntity");
             if (enhancedIndex >= 0) {
-                return this.key.substring(0, enhancedIndex);
+                return fullClassName.substring(0, enhancedIndex);
             }
-            return this.key;
+            return fullClassName;
         }
 
         /**
@@ -1241,8 +1242,8 @@
          */
         _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
             bindingView[propertyName] = this.convert(fullValue);
-            if (this.isEntity(fullValue) && fullValue['id'] !== null) {
-                bindingView['@' + propertyName + '_id'] = fullValue['id'];
+            if (this.isEntity(fullValue) && fullValue.get('id') !== null) {
+                bindingView['@' + propertyName + '_id'] = fullValue.get('id');
             }
         },
         

@@ -188,7 +188,7 @@
                     var needsFullRefresh = true;
                     for (var index = 0; index < this.$.egi.egiModel.length; index++) {
                         var entity = this.$.egi.egiModel[index].entity;
-                        if (entity.id === msg.id) {
+                        if (entity.get('id') === msg.id) {
                             needsFullRefresh = false;
                             // let's give the browser a breathing chance...
                             this.async(function () {

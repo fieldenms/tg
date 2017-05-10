@@ -52,7 +52,7 @@
 		    test('works for new entity', function(done) {
 				master.postRetrieved = function(entity, bindingEntity, customObject) {
 				    assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
-				    assert.strictEqual(entity.id, null, "The id of entity is not correct.");
+				    assert.strictEqual(entity.get('id'), null, "The id of entity is not correct.");
 				    assert.strictEqual(entity.version, 0, "The version of entity is not correct.");
 				
 				    // properties:
@@ -127,7 +127,7 @@
 		    	
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
-	                assert.strictEqual(entity.id, 7, "The id of entity response is not correct.");
+	                assert.strictEqual(entity.get('id'), 7, "The id of entity response is not correct.");
 	                assert.strictEqual(entity.version, 0, "The version of entity response is not correct.");
 
 	                // properties:
@@ -580,7 +580,7 @@
 		    
 		    test('works for any property for new entity', function (done) {
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-	                assert.strictEqual(validatedEntity.id, null, "The id of entity is not correct.");
+	                assert.strictEqual(validatedEntity.get('id'), null, "The id of entity is not correct.");
 	                // value ok?
 	                assert.ok(validatedEntity.get("stringProp"), "Property value should be initialised.");
 	                assert.strictEqual(validatedEntity.get("stringProp"), "okok", "Property value should be correct.");
@@ -599,7 +599,7 @@
 	            };
 
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
-	                assert.strictEqual(entity.id, null, "The id of entity is not correct.");
+	                assert.strictEqual(entity.get('id'), null, "The id of entity is not correct.");
 
 	                // value ok?
 	                assert.strictEqual(entity.get("stringProp"), null, "Property value should be correct.");
@@ -769,7 +769,7 @@
 		    
 		    test('works for new entity', function (done) {
 	            master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
-	                assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
+	                assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be not null.");
 	                assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
 	             
 	                // value ok?
@@ -790,7 +790,7 @@
 	            };
 
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
-	                assert.strictEqual(entity.id, null, "Entity id should be null.");
+	                assert.strictEqual(entity.get('id'), null, "Entity id should be null.");
 	                assert.strictEqual(entity.version, 0, "Entity version should be initial.");
 	                // value ok?
 	                assert.strictEqual(entity.get("stringProp"), null, "Property value should be correct.");
@@ -824,7 +824,7 @@
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
@@ -872,7 +872,7 @@
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
@@ -919,7 +919,7 @@
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
@@ -956,7 +956,7 @@
 		    test('works for existing entity', function (done) {
 
 	            master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be not null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be 0.");
              
                     // value ok?
@@ -982,7 +982,7 @@
 	            }.bind(master);
 	            
 	            master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should remain not null.");
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should remain not null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 1, "Entity version should be increased.");
              
                     // value ok?
@@ -1025,7 +1025,7 @@
 	            };
 
 	            master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be not null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be 0.");
              
                     // value ok?
@@ -1051,7 +1051,7 @@
 	            }.bind(master);
 	            
 	            master.postSavedForExisting = function(potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should remain not null.");
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should remain not null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 1, "Entity version should be increased.");
              
                     // value ok?
@@ -1072,7 +1072,7 @@
 	            }.bind(master);
 
 	            master.postValidated = function(validatedEntity, newBindingEntity, customObject) {
-                    assert.isNotNull(validatedEntity.id, "Entity id should be not null.");
+                    assert.isNotNull(validatedEntity.get('id'), "Entity id should be not null.");
                     assert.strictEqual(validatedEntity.version, 0, "Entity version should be 0.");
              
                     // value ok?
@@ -1130,7 +1130,7 @@
                 }.bind(master);
                 
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be not null.");
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', "Entity's exceptionOccured should exist.");
@@ -1193,7 +1193,7 @@
                 }.bind(master);
                 
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), "Entity id should be not null.");
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'There are no changes to save.', "Entity's exceptionOccured should exist.");
