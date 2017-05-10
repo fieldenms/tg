@@ -716,10 +716,8 @@
                         return valueToFormat.length > 0 ? ("<b>" + valueToFormat.join(this.separator) + "</b>") : '';
                     } else if (typeof valueToFormat === 'string'){
                         return "<b>" + valueToFormat + "</b>";
-                    } else if (valueToFormat != null) {
-                        const descPart = valueToFormat.desc ? "<br>" + valueToFormat.desc :
-                            (this.reflector().isEntity(valueToFormat) && valueToFormat.type().isUnionEntity() && valueToFormat.get('desc') ? "<br>" + valueToFormat.get('desc') : "");
-                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + descPart;
+                    } else if (this.reflector().isEntity(valueToFormat)) {
+                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + (valueToFormat.get('desc') ? "<br>" + valueToFormat.get('desc') : "");
                     } else {
                         return '';
                     }
@@ -741,7 +739,7 @@
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
                     if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                        return !!entityValue.desc;
+                        return !!entityValue.get('desc');
                     }
                 }
                 return false;
@@ -750,8 +748,8 @@
             _formatDesc: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-                    if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.desc) {
-                        return entityValue.desc;
+                    if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
+                        return entityValue.get('desc');
                     }
                 }
                 return '';
