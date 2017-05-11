@@ -93,7 +93,6 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
@@ -288,7 +287,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_query_with_union_property_being_null() {
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE2").model();
-        TgBogie bogie = bogieDao.getEntity(from(qry).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
+        final TgBogie bogie = bogieDao.getEntity(from(qry).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
         assertFalse(bogie.getProperty("location").isProxy());
         assertNull(bogie.getLocation());
     }
@@ -302,9 +301,17 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_query_with_union_property_null_test_condition() {
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location").isNotNull().model();
-        assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
+        assertEquals(2, bogieDao.count(qry));
     }
 
+    @Test
+    public void can_retrieve_entities_with_union_type_property_with_different_activeProperty() {
+        final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location").isNotNull().model();
+        final List<TgBogie> bogies = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).with(orderBy().prop("key").asc().model()).model());
+        assertTrue(bogies.get(0).getLocation().activeEntity() instanceof TgWorkshop);
+        assertTrue(bogies.get(1).getLocation().activeEntity() instanceof TgWagonSlot);
+    }
+    
     @Test
     public void test_query_with_union_property_subproperties_via_query_based_source() {
         final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
@@ -1541,25 +1548,25 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_batch_deletion_of_whole_table() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
-        int count = authorDao.count(qry);
+        final int count = authorDao.count(qry);
         assertEquals(count, authorDao.batchDelete(qry));
     }
     
     @Test
     public void test_batch_deletion_by_entities() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
-        int count = authorDao.count(qry);
-        List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
+        final int count = authorDao.count(qry);
+        final List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
         assertEquals(count, authorDao.batchDelete(authors));
     }
     
     @Test
     public void test_batch_deletion_by_entities_ids() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
-        int count = authorDao.count(qry);
-        List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
-        Set<Long> ids = new HashSet<>();
-        for (TgAuthor author : authors) {
+        final int count = authorDao.count(qry);
+        final List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
+        final Set<Long> ids = new HashSet<>();
+        for (final TgAuthor author : authors) {
             ids.add(author.getId());
         }
         assertEquals(count, authorDao.batchDelete(ids));
@@ -1569,14 +1576,14 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
         final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
-        TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
         assertEquals(new BigDecimal("1"), summaryEntity.getCostPerKm());
     }
     
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_not_satisfied() {
         final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).where().prop("kms").eq().val(0).model();
-        TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
         assertNull(summaryEntity.getCostPerKm());
     }
 
@@ -1584,46 +1591,46 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void vehicle_retrieved_with_default_query_is_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-        TgVehicle vehicle = vehicleDao.getEntity(from(qry).model());
+        final TgVehicle vehicle = vehicleDao.getEntity(from(qry).model());
         assertTrue(isEntityInstrumented(vehicle));
     }
     
     @Test
     public void vehicle_retrieved_with_lightweight_query_is_not_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-        TgVehicle vehicle = vehicleDao.getEntity(from(qry).lightweight().model());
+        final TgVehicle vehicle = vehicleDao.getEntity(from(qry).lightweight().model());
         assertFalse(isEntityInstrumented(vehicle));
     }
 
     @Test
     public void vehicle_model_property_retrieved_with_default_fetch_is_not_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model");
-        TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model");
+        final TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
         assertFalse(isEntityInstrumented(vehicle.getModel()));
     }
 
     @Test
     public void vehicle_model_property_retrieved_with_instrumented_fetch_is_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
-        TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
+        final TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(vehicle.getModel()));
     }
     
     @Test
     public void vehicle_model_property_retrieved_with_instrumented_fetch_with_make_subproperty_is_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class).with("make"));
-        TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class).with("make"));
+        final TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(vehicle.getModel()));
     }
 
     @Test
     public void vehicle_property_retrieved_with_instrumented_fetch_and_being_part_of_fuel_usage_composite_key_is_instrumented() {
         final EntityResultQueryModel<TgFuelUsage> qry = select(TgFuelUsage.class).where().prop("vehicle.key").eq().val("CAR2").and().prop("fuelType.key").eq().val("P").model();
-        fetch<TgFuelUsage> fetch = fetch(TgFuelUsage.class).with("vehicle", fetchAndInstrument(TgVehicle.class));
-        TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
+        final fetch<TgFuelUsage> fetch = fetch(TgFuelUsage.class).with("vehicle", fetchAndInstrument(TgVehicle.class));
+        final TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
     }
 
@@ -1655,7 +1662,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgBogie bogie5 = save(new_(TgBogie.class, "BOGIE5", "Bogie 5"));
         final TgBogie bogie6 = save(new_(TgBogie.class, "BOGIE6", "Bogie 6"));
         final TgBogie bogie7 = save(new_(TgBogie.class, "BOGIE7", "Bogie 7"));
-
+        
         final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
         final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
 
@@ -1670,8 +1677,12 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
         save(new_composite(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
         save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
-        save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
-
+        
+        final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
+        final TgBogieLocation slotLocation = co(TgBogieLocation.class).new_();
+        slotLocation.setWagonSlot(wagonSlot);
+        save(bogie7.setLocation(slotLocation));
+        
         final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
         final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
         final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
