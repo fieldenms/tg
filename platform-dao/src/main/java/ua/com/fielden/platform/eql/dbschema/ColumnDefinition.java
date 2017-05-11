@@ -20,6 +20,10 @@ public class ColumnDefinition {
     public final int scale;
     public final int precision;
     public final String defaultValue;
+    
+    public static final int DEFAULT_STRING_LENGTH = 255;
+    public static final int DEFAULT_NUMERIC_PRECISION = 18;
+    public static final int DEFAULT_NUMERIC_SCALE = 2;
 
     public ColumnDefinition(final boolean nullable, final String name, final Class<?> javaType, final int sqlType, final int length, final int scale, final int precision, final String defaultValue) {
         if (StringUtils.isEmpty(name)) {
@@ -29,9 +33,9 @@ public class ColumnDefinition {
         this.name = name;
         this.javaType = javaType;
         this.sqlType = sqlType;
-        this.length = length;
-        this.scale = scale;
-        this.precision = precision;
+        this.length = length <= 0 ? DEFAULT_STRING_LENGTH : length;
+        this.scale = scale <= -1 ? DEFAULT_NUMERIC_SCALE : scale;
+        this.precision = precision <= -1 ? DEFAULT_NUMERIC_PRECISION : precision;
         this.defaultValue = defaultValue;
     }
 
