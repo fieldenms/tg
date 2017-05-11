@@ -52,6 +52,9 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.log4j.Logger;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
@@ -75,9 +78,16 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.dbschema.ColumnDefinition;
+import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
+    private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
+
+    
     private static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
     private static final Type H_STRING = typeResolver.basic("string");
@@ -180,9 +190,50 @@ public class DomainMetadata {
             }
         });
         
+        LOGGER.debug("\n\n" + printDdl(new SQLServer2008Dialect(), entityTypes) + "\n\n");
+
+        
+        
         //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
         //System.out.println(printEntitiesMetadataSummary("Synthetic entities metadata summary:", modelledEntityMetadataMap));
         //enhanceWithCalcProps(entityMetadataMap.values());
+    }
+    
+    
+    private String printDdl(final Dialect dialect, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+        final ColumnDefinitionExtractor fa = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
+        final StringBuilder sb = new StringBuilder();
+        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
+            if (isPersistedEntityType(entityType)) {
+//                PersistedEntity entity = new PersistedEntity(entityType.getName(), getAnnotation(entityType, MapEntityTo.class).value());
+//                result.add(entity);
+//
+//                entity.getFinalProps().add(new FinalProperty(false, ID, "_ID", Long.class, resolveToSqlType(Long.class), 0, 0, 0, null));
+//                entity.getFinalProps().add(new FinalProperty(false, VERSION, "_VERSION", Long.class, resolveToSqlType(Long.class), 0, 0, 0, null));
+//                // TODO need to determine DESC property from annotations
+//                Class<? extends Comparable> keyType = getKeyType(entityType);
+//                if (!DynamicEntityKey.class.equals(keyType)) {
+//                    // TODO need to take into account the case of key column override
+//                    MapTo mt = columnFromProperty(entityType, KEY);
+//                    entity.getFinalProps().add(new FinalProperty(false, KEY, "KEY_", keyType, resolveToSqlType(keyType), mt.length(), mt.scale(), mt.precision(), mt.defaultValue()));
+//                }
+
+                sb.append("================== " + entityType.getSimpleName() + "\n");
+                for (final Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
+                    if (!propField.getName().equals("key")) {
+                        final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
+                        final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
+                        final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
+                        final Set<ColumnDefinition> cols = fa.extractFromProperty(propField.getName(), propField.getType(), mapTo, persistedType, required);
+                        for (final ColumnDefinition columnProperty : cols) {
+                            sb.append(columnProperty.schemaString(dialect) + "\n");    
+                        }
+                        
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
     
     private String printEntitiesMetadataSummary(final String header, final Map<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> map) {
