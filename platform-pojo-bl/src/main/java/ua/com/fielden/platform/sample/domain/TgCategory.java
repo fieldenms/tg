@@ -24,12 +24,11 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgCategory extends ActivatableAbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
     @Title(value = "Selfy", desc = "Desc")
-    private TgCategory parent; // is property is introduced to test activation/deactivation of self referenced
+    private TgCategory parent; // this property is introduced to test activation/deactivation of self referenced
 
     @IsProperty
     @Title(value = "Dummy non persistent", desc = "Desc")
