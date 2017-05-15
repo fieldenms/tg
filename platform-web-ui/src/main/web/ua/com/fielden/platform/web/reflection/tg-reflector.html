@@ -1321,7 +1321,7 @@
          */
         provideMasterEntity: function(requireMasterEntity, centreContextHolder, getMasterEntity) {
 			if (requireMasterEntity === "true") {
-				centreContextHolder["masterEntity"] = getMasterEntity !== undefined ? getMasterEntity() : null;
+				centreContextHolder["masterEntity"] = getMasterEntity();
             } else if (requireMasterEntity === "false") { // 'masterEntity' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;

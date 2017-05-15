@@ -102,7 +102,27 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        // Here master entity is required for situations where new entity with compound master is created from a centre embedded into another compound master
+        // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
+        return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
+    }
+
+    /**
+     * Creates standard action for opening a compound master for a new entity where a master entity is required as part of the context. 
+     * Such actions should always be a part of some other entity master. For example, for creating of new entities from an embedded centre on some compound master.
+     * 
+     * @param openCompoundMasterActionType
+     * @param icon
+     * @param shortDesc
+     * @param longDesc
+     * @param prefDim
+     * @return
+     */
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openNewWithMaster(
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String icon,
+            final String shortDesc,
+            final String longDesc,
+            final PrefDim prefDim) {
         return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withMasterEntity().build());
     }
 
