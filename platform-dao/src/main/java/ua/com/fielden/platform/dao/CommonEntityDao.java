@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
+import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
@@ -26,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
@@ -70,6 +72,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
@@ -381,7 +384,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
             // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
             final ActivatableAbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId());
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId(), UPGRADE);
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
             if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
                 persistedValue.setIgnoreEditableState(true);
@@ -394,18 +397,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // need to process previous property value
             final AbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
             if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId());
+                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId(), UPGRADE);
                 persistedValue.setIgnoreEditableState(true);
                 getSession().update(persistedValue.decRefCount());
             }
             // also need increment refCount for a newly referenced activatable
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId());
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId(), UPGRADE);
             if (!entity.equals(persistedValue)) { // avoid counting self-references
                 // now let's check if the entity itself is an active activatable
                 // as this influences the decision to increment refCount for the newly referenced activatable
                 // because, if it's not then there is no reason to increment refCout for the referenced instance
                 // in other words, inactive entity does not count as an active referencer
-                if (entity.<Boolean> get(ACTIVE) == true) {
+                if (entity.<Boolean>get(ACTIVE)) {
                     persistedValue.setIgnoreEditableState(true);
                     getSession().update(persistedValue.incRefCount());
                 }
@@ -430,12 +433,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
-                // get value from a persisted version of entity, whch is loaded by Hibernate
+                // get value from a persisted version of entity, which is loaded by Hibernate
                 // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
                 final AbstractEntity<?> value = persistedEntity.get(prop.getName());
                 if (value != null) { // if there is actually some value
                     // load activatable value
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId(), UPGRADE);
                     persistedValue.setIgnoreEditableState(true);
                     // if activatable property value is not a self-reference
                     // then need to check if it is active and if so increment its refCount
@@ -454,7 +457,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 }
             }
 
-            // separately need to perform de-activation of deactivatable dependencies in case where the entity being saved is deactivated
+            // separately need to perform deactivation of deactivatable dependencies in case where the entity being saved is deactivated
             if (!activeProp.getValue()) {
                 final List<? extends ActivatableAbstractEntity<?>> deactivatables = Validators.findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, getCoFinder());
                 for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
@@ -564,7 +567,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) getSession().load(value.getType(), value.getId());
+                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) getSession().load(value.getType(), value.getId(), UPGRADE);
                     // the returned value could already be inactive due to some concurrent modification
                     // therefore it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive
                     if (!persistedEntity.isActive()) {
@@ -1012,6 +1015,49 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
+     * A method for deleting activatable entities.
+     * It takes care of decrementing referenced activatable dependencies if any.
+     * 
+     * @param entity
+     */
+    private void deleteActivatable(final T entity) {
+        if (!(entity instanceof ActivatableAbstractEntity)) {
+            throw new EntityCompanionException(format("Entity of type [%s] is not activatable.", entity.getType()));
+        }
+
+        // if entity is not active then it can simply be deleted without recalculating reCounts for associated activatable entities
+        if (!((ActivatableAbstractEntity<?>) entity).isActive()) {
+            defaultDelete(entity);
+        } else {
+            // only if entity is active do we need to decrement ref-counts of the referenced by it activatable entities, accept self references, which should be ignored
+            // let's collect activatable properties from entity to check them for activity and also to decrement their refCount
+            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
+            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
+            // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
+            final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) getSession().load(entity.getType(), entity.getId(), LockOptions.UPGRADE);
+            
+            activatableProps.stream()
+            .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop.getName()), prop.getType(), prop.getName()))
+            .filter(triple -> triple._1 != null)
+            .forEach(
+                    triple -> {
+                        // get value from a persisted version of entity, which is loaded by Hibernate
+                        // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
+                        final AbstractEntity<?> value = persistedEntityToBeDeleted.get(triple._3);
+                        // load the latest value for the current property of an activatable type
+                        final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(triple._2, value.getId(), UPGRADE);
+                        persistedValue.setIgnoreEditableState(true);
+                        // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
+                        if (persistedValue.isActive() && !entity.equals(persistedValue)) {
+                            getSession().update(persistedValue.decRefCount());
+                        }
+                    });
+            
+            defaultDelete((T) persistedEntityToBeDeleted);
+        }
+    }
+    
+    /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
      *
      * @param entity
@@ -1024,6 +1070,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (!entity.isPersisted()) {
             throw new EntityCompanionException("Only persisted entity instances can be deleted.");
         }
+        if (entity.isInstrumented() && entity.isDirty()) {
+            throw new EntityCompanionException("Dirty entity instances cannot be deleted.");
+        }
+        
+        if (entity instanceof ActivatableAbstractEntity && ((ActivatableAbstractEntity<?>) entity).isActive()) {
+            deleteActivatable(entity);
+        }
+        
         try {
             getSession().createQuery("delete " + getEntityType().getName() + " where id = " + entity.getId()).executeUpdate();
         } catch (final ConstraintViolationException e) {
