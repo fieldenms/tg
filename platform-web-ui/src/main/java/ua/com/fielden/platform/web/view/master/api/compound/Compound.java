@@ -102,8 +102,8 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
-        return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
+        // Here master entity is required for situations where new entity with compound master is created from a centre embedded into another compound master
+        return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withMasterEntity().build());
     }
 
     /**
