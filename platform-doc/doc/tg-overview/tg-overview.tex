@@ -1,4 +1,5 @@
 \documentclass[a4paper,12pt,oneside,openright,final]{memoir} %twocolumn,
+
 \usepackage[utf8]{inputenc}
 \usepackage[russian, ukrainian, english]{babel}
 \usepackage{etex}
@@ -7,7 +8,11 @@
 \usepackage{setspace}
 \usepackage{amssymb}
 \usepackage{amsfonts}
-\usepackage[pdftex]{graphicx}
+
+\usepackage{graphicx}
+\usepackage[printwatermark]{xwatermark}
+\newwatermark[allpages,color=red!10,angle=45,scale=5,xpos=-15,ypos=30]{DRAFT}
+
 \usepackage{alltt}
 \usepackage{moreverb}
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
@@ -24,7 +29,6 @@
 \definecolor{stringcolor}{HTML}{050505}% 2C3E82
 \definecolor{highlight}{HTML}{FFB100}
 \definecolor{annotationbgcolor}{HTML}{FFD473}
-
 
 \usepackage{wrapfig}
 \usepackage{caption}
@@ -71,6 +75,7 @@
 
 \copypagestyle{headingsnobook}{headings}
 \makeevenhead{headingsnobook}{\thepage}{}{\slshape\leftmark}
+
 
 \begin{document}
 \maketitle

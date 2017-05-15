@@ -55,10 +55,12 @@
                 
                 // create an object that closely resembles binding entity
                 const entity = reflector.newEntityEmpty();
+                entity._type = { isUnionEntity: function () { return false; } };
                 entity["@@origin"] = entity;
                 entity.roles = [one, two, three, four];
                 entity.chosenIds = [];
                 const originalEntity = reflector.newEntityEmpty();
+                originalEntity._type = { isUnionEntity: function () { return false; } };
                 originalEntity["@@origin"] = originalEntity;
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];
@@ -81,10 +83,12 @@
                 
                 // create an object that closely resembles binding entity
                 const entity = reflector.newEntityEmpty();
+                entity._type = { isUnionEntity: function () { return false; } };
                 entity["@@origin"] = entity;
                 entity.roles = [one, two, three, four];
                 entity.chosenIds = [2, 4];
                 const originalEntity = reflector.newEntityEmpty();
+                originalEntity._type = { isUnionEntity: function () { return false; } };
                 originalEntity["@@origin"] = originalEntity;
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];

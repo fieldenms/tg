@@ -740,7 +740,7 @@
             this.collapsePanelVisible = !!(this.cardLayout && layout);
         };
         var _areEqual = function (a, b) {
-            return a.id === b.id;
+            return a.get('id') === b.get('id');
         };
         var _hasEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
@@ -1126,13 +1126,15 @@
                         } else {
                             this._resetYscroll = e.deltaY;
                         }
+                        e.preventDefault();
                     } else {
                         this._scrollLengthX = e.deltaX;
                         this._scrollLengthY = e.deltaY;
-                        setTimeout(() => this._scrollBy(7, 7), 10);
+                        if (this._scrollBy(7, 7)) {
+                            e.preventDefault();
+                        }
                     }
                 }
-                e.preventDefault();
             },
 
             _scrollBy: function (incrementX, incrementY) {
@@ -1140,7 +1142,9 @@
                 const newIncrementY = this._scrollVerticallyBy(incrementY);
                 if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
                     setTimeout(() => this._scrollBy(newIncrementX, newIncrementY), 10);
+                    return true;
                 }
+                return false;
             },
 
             _scrollHorizontallyBy: function (increment) {
@@ -1191,7 +1195,7 @@
                         this._scrollContainer.scrollTop = 0;
                         this._scrollLengthY = 0;
                         return 0;
-                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHight - this._scrollContainer.clientHeight) {
+                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight) {
                         this._scrollContainer.scrollTop = this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight;
                         this._scrollLengthY = 0;
                         return 0;
@@ -1241,11 +1245,11 @@
                 //Get the top and bottom coordinates of the visible viewport.
                 let viewTop = containerRect.top;
                 let viewBottom = containerRect.bottom;
-                //Correct the top coordinate of the visisble viewport so that it takes into account the top lock panel hight.
+                //Correct the top coordinate of the visisble viewport so that it takes into account the top lock panel height.
                 if (this._topLockPanel && this._topLockPanel.offsetParent !== null) {
                     viewTop = this._topLockPanel.getBoundingClientRect().bottom;
                 }
-                //Correct the bottom coordinate of the visisble viewport so that it takes into account the bottom lock panel hight.
+                //Correct the bottom coordinate of the visisble viewport so that it takes into account the bottom lock panel height.
                 if (this._bottomLockPanel && this._bottomLockPanel.offsetParent !== null) {
                     viewBottom = this._bottomLockPanel.getBoundingClientRect().top;
                 }
@@ -1463,7 +1467,7 @@
                         desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                     }
                 } catch (e) {
-                    desc = "";
+                    desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
                 }
                 return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
             },

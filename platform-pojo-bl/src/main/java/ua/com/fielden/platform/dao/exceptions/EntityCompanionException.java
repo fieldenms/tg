@@ -12,7 +12,7 @@ public class EntityCompanionException extends RuntimeException {
     public EntityCompanionException(final String msg) {
         super(msg);
     }
-    
+
     public EntityCompanionException(final String msg, final Throwable cause) {
         super(msg, cause);
     }

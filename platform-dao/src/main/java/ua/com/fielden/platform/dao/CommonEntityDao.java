@@ -92,6 +92,8 @@ import ua.com.fielden.platform.utils.Validators;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> implements ISessionEnabled {
 
+    private static final String DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
+
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
@@ -1025,7 +1027,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         try {
             getSession().createQuery("delete " + getEntityType().getName() + " where id = " + entity.getId()).executeUpdate();
         } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException("This entity could not be deleted due to existing dependencies.", e);
+            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
         }
     }
 
@@ -1062,10 +1064,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (model == null) {
             throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
         }
-        
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
 
-        return new EntityBatchDeleterByQueryModel(queryExecutionContext).deleteEntities(model, paramValues);
+        try {
+            final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
+            return new EntityBatchDeleterByQueryModel(queryExecutionContext).deleteEntities(model, paramValues);
+        } catch (final ConstraintViolationException e) {
+            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
+        }
     }
 
     @SessionRequired
@@ -1098,8 +1103,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException("No entity ids have been provided for deletion.");
         }
 
-        return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType()))
-                .deleteEntities(propName, entitiesIds);
+        try {
+            return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
+        } catch (final ConstraintViolationException e) {
+            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
+        }
     }
 
     public DomainMetadata getDomainMetadata() {

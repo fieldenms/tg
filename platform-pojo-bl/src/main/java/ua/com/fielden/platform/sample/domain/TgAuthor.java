@@ -56,7 +56,6 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @MapTo
     @Title(value = "Web", desc = "A web page")
-    @PersistentType(userType = IHyperlinkType.class)
     private Hyperlink webpage;
     
     @IsProperty

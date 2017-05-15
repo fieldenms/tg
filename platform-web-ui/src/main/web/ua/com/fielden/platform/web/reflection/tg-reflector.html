@@ -326,11 +326,34 @@
                     throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
                 } else if (this._isIdOnlyProxy(name)) {
                     throw new StrictProxyException(name, this.type()._simpleClassName(), true);
+                } else if ((this.constructor.prototype.type.call(this)).isUnionEntity() && ['id', 'key', 'desc'].indexOf(name) !== -1) {
+                    // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
+                    // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
+                    // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
+                    // 2) In case where [key / desc / id] is accessed from empty union entity -- here empty values (aka nulls) are returned, but in Java -- exception is thrown. 
+                    const activeEntity = this._activeEntity();
+                    return activeEntity === null ? null : activeEntity.get(name);
                 }
                 return this[name];
             }
         }
-
+        
+        /**
+         * Returns 'active entity' in this union entity.
+         * 
+         * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+         */
+        Entity.prototype._activeEntity = function () {
+            const self = this;
+            let activeEntity = null;
+            this.traverseProperties(function (name) {
+                if (['key', 'desc', 'referencesCount', 'referenced'].indexOf(name) /*AbstractEntity.COMMON_PROPS*/ === -1 && self.get(name) !== null) {
+                    activeEntity = self.get(name);
+                }
+            });
+            return activeEntity;
+        }
+        
         /**
          * Returns the original property value for the entity.
          *
@@ -508,7 +531,7 @@
          * Returns 'true' if the entity was persisted before and 'false' otherwise.
          */
         Entity.prototype.isPersisted = function () {
-            return this.id !== null;
+            return this.get('id') !== null;
         }
         return Entity;
 	};
@@ -561,11 +584,12 @@
          * Returns full not enhanced Java class name for the entity type.
          */
         EntityType.prototype.notEnhancedFullClassName = function () {
-            var enhancedIndex = this.key.indexOf("$$TgEntity");
+            const fullClassName = this.fullClassName();
+            const enhancedIndex = fullClassName.indexOf("$$TgEntity");
             if (enhancedIndex >= 0) {
-                return this.key.substring(0, enhancedIndex);
+                return fullClassName.substring(0, enhancedIndex);
             }
-            return this.key;
+            return fullClassName;
         }
 
         /**
@@ -598,6 +622,14 @@
          */
         EntityType.prototype.isCompositeEntity = function () {
             return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
+        }
+        
+        /**
+         * Returns 'true' if the entity type represents union entity type, 'false' otherwise.
+         *
+         */
+        EntityType.prototype.isUnionEntity = function () {
+            return typeof this['_union'] === 'undefined' ? false : this['_union'];
         }
 
         /** 
@@ -1100,7 +1132,8 @@
             if (value === null) { // 'null' is the missing value representation for TG web editors
                 return null;
             } else if (value instanceof this.getEntityPrototype()) {
-                return ((value.constructor.prototype.type.call(value)).isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
+                return ((value.constructor.prototype.type.call(value)).isCompositeEntity()) ? this.convertCompositeEntity(value) : 
+                       (((value.constructor.prototype.type.call(value)).isUnionEntity()) ? this.convert(value._activeEntity()) : this.convertSimpleEntity(value));
             } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
                 return value;
             } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
@@ -1210,8 +1243,8 @@
          */
         _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
             bindingView[propertyName] = this.convert(fullValue);
-            if (this.isEntity(fullValue) && fullValue['id'] !== null) {
-                bindingView['@' + propertyName + '_id'] = fullValue['id'];
+            if (this.isEntity(fullValue) && fullValue.get('id') !== null) {
+                bindingView['@' + propertyName + '_id'] = fullValue.get('id');
             }
         },
         

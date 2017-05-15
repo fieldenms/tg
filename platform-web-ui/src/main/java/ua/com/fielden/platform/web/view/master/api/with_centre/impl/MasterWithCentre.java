@@ -13,6 +13,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
@@ -26,7 +27,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
 
     private final IRenderable renderable;
 
-    MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
+    MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre, final Optional<JsCode> customCode, final Optional<JsCode> customCodeOnAttach) {
         final StringBuilder attrs = new StringBuilder();
 
         //////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +64,8 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))
                 .replace("//@ready-callback", "self.classList.remove('canLeave');")
                 .replace("//@attached-callback", format("this.$.loader.attrs = %s;\n", attributes))
+                .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
+                .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivate + "");

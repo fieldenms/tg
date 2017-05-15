@@ -3,7 +3,9 @@ package ua.com.fielden.platform.entity.query;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -42,8 +44,26 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Long getId() {
         final Object idObject = primitives.get(AbstractEntity.ID);
-        return idObject != null ? Long.valueOf(((Number) idObject).longValue())
-                : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
+
+        if (idObject != null) {
+            return Long.valueOf(((Number) idObject).longValue());
+        } else if (isUnionEntityType(resultType)) {
+            final Optional<Long> opId = entities.values().stream()
+                    .map(EntityContainer::id)
+                    .filter(EntityContainer::idIsNotNull)
+                    .findFirst();
+            return opId.orElse(null);
+        } else {
+            return null;
+        }
+    }
+
+    private static Long id(final EntityContainer<? extends AbstractEntity<?>> container) {
+        return container.getId();
+    }
+
+    private static boolean idIsNotNull(final Long id) {
+        return id != null;
     }
 
     public EntityContainer<R> mkInstrumented() {
@@ -63,7 +83,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         return proxiedResultType;
     }
 
-    public void setProxiedResultType(Class<? extends R> proxiedResultType) {
+    public void setProxiedResultType(final Class<? extends R> proxiedResultType) {
         this.proxiedResultType = proxiedResultType;
     }
     
