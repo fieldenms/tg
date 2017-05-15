@@ -253,11 +253,11 @@
 		
 		return EntityInstanceProp;
 	};
-	
-	/**
-	 * 'Entity' creator. Dependencies: 'EntityInstanceProp'.
-	 */
-	var _createEntityPrototype = function (EntityInstanceProp, StrictProxyException, _isError0, _isWarning0) {
+    
+    /**
+     * 'Entity' creator. Dependencies: 'EntityInstanceProp'.
+     */
+    const _createEntityPrototype = function (EntityInstanceProp, StrictProxyException, _isError0, _isWarning0, DynamicEntityKey) {
         ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
         var Entity = function (rawObject) { // rawObject
             Object.call(this);
@@ -322,10 +322,10 @@
                     throw 'Unsupported dot-notation [' + name + '] in type [' + this.type().fullClassName() + '].';
                 }
             } else {
-                if (this._isObjectUndefined(name)) {
-                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
-                } else if (this._isIdOnlyProxy(name)) {
-                    throw new StrictProxyException(name, this.type()._simpleClassName(), true);
+                if ('key' === name && this.constructor.prototype.type.call(this).isCompositeEntity()) {
+                    const dynamicKey = new DynamicEntityKey();
+                    dynamicKey._entity = this;
+                    return dynamicKey;
                 } else if ((this.constructor.prototype.type.call(this)).isUnionEntity() && ['id', 'key', 'desc'].indexOf(name) !== -1) {
                     // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
                     // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
@@ -333,6 +333,10 @@
                     // 2) In case where [key / desc / id] is accessed from empty union entity -- here empty values (aka nulls) are returned, but in Java -- exception is thrown. 
                     const activeEntity = this._activeEntity();
                     return activeEntity === null ? null : activeEntity.get(name);
+                } else if (this._isObjectUndefined(name)) {
+                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                } else if (this._isIdOnlyProxy(name)) {
+                    throw new StrictProxyException(name, this.type()._simpleClassName(), true);
                 }
                 return this[name];
             }
@@ -535,8 +539,87 @@
         }
         return Entity;
 	};
-	
-	/**
+    
+    /**
+     * 'DynamicEntityKey' creator.
+     */
+    const _createDynamicEntityKeyPrototype = function () {
+        ////////////////////////////////////////// THE PROTOTYPE FOR DynamicEntityKey ////////////////////////////////////////// 
+        const DynamicEntityKey = function () {
+            Object.call(this);
+        };
+        DynamicEntityKey.prototype = Object.create(Object.prototype);
+        DynamicEntityKey.prototype.constructor = DynamicEntityKey;
+        
+        /**
+         * The method to convert dynamic entity key (key of composite entity) to String.
+         *
+         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.toString(). So, please be carefull and maintain it
+         * in accordance with java counterpart.
+         */
+        DynamicEntityKey.prototype._convertDynamicEntityKey = function () {
+            const compositeEntity = this._entity;
+            const compositeKeyNames = compositeEntity.type().compositeKeyNames();
+            const compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
+            
+            let str = "";
+            let first = true;
+            for (let i = 0; i < compositeKeyNames.length; i++) {
+                const compositePartName = compositeKeyNames[i];
+                const compositePart = compositeEntity.get(compositePartName);
+                if (compositePart !== null) {
+                    if (first) {
+                        str = str + _convert(compositePart);
+                        first = false;
+                    } else {
+                        str = str + compositeKeySeparator + _convert(compositePart);
+                    }
+                }
+            }
+            return str;
+        };
+        
+        /**
+         * Returns 'true' if this equals to dynamicEntityKey2, 'false' otherwise.
+         *
+         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.compareTo(). So, please be carefull and maintain it
+         * in accordance with java counterparts.
+         */
+        DynamicEntityKey.prototype._dynamicEntityKeyEqualsTo = function (dynamicEntityKey2) {
+            if (this === dynamicEntityKey2) {
+                return true;
+            }
+            if (!_isDynamicEntityKey(dynamicEntityKey2)) {
+                return false;
+            }
+            const entity1 = this._entity;
+            const entity2 = dynamicEntityKey2._entity;
+            const compositeKeyNames = entity1.type().compositeKeyNames();
+            for (let i = 0; i < compositeKeyNames.length; i++) {
+                const compositePartName = compositeKeyNames[i];
+                let compositePart1, compositePart2;
+                try {
+                    compositePart1 = entity1.get(compositePartName);
+                } catch (strictProxyEx1) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+                }
+                try {
+                    compositePart2 = entity2.get(compositePartName);
+                } catch (strictProxyEx2) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
+                }
+                
+                if (!_equalsEx(compositePart1, compositePart2)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        
+        return DynamicEntityKey;
+    };
+    
+    /**
 	 * 'EntityType' creator. Dependencies: 'EntityTypeProp'.
 	 */
 	var _createEntityTypePrototype = function (EntityTypeProp) {
@@ -782,6 +865,7 @@
 	
 	var _ETPPrototype = _createEntityTypePropPrototype();
 	var _ETPrototype = _createEntityTypePrototype(_ETPPrototype);
+	const _DEKPrototype = _createDynamicEntityKeyPrototype();
 	
 	/**
 	 * The prototype for entity's instance-scoped property. Can be reached by 'entity.prop("name")' call.
@@ -790,13 +874,20 @@
 	/**
 	 * The prototype for entities.
 	 */
-	var _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0);
+	const _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0, _DEKPrototype);
 	
     /**
      * Determines whether the specified object represents the entity.
      */
     var _isEntity = function (obj) {
         return obj !== null && (obj instanceof _EPrototype);
+    };
+    
+    /**
+     * Determines whether the specified object represents dynamic entity key.
+     */
+    const _isDynamicEntityKey = function (obj) {
+        return obj && (obj instanceof _DEKPrototype);
     };
     
     /**
@@ -813,7 +904,9 @@
 
         // TODO 1: rectify whether this implementation is good
         // TODO 2: potentially, extend implementation to support composite types: objects?
-        if (_isEntity(value1)) {
+        if (_isDynamicEntityKey(value1)) {
+            return value1._dynamicEntityKeyEqualsTo(value2);
+        } else if (_isEntity(value1)) {
             return _entitiesEqualsEx(value1, value2);
         } else if (Array.isArray(value1)) {
             return _arraysEqualsEx(value1, value2);
@@ -863,48 +956,57 @@
             return false;
         }
         // now can compare key values
-        if (entity1.type().isCompositeEntity()) {
-            var compositeKeyNames = entity1.type().compositeKeyNames();
-            for (var i = 0; i < compositeKeyNames.length; i++) {
-                var compositePartName = compositeKeyNames[i];
-                var compositePart1, compositePart2;
-                try {
-                    compositePart1 = entity1.get(compositePartName);
-                } catch (strictProxyEx1) {
-                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
-                }
-                try {
-                    compositePart2 = entity2.get(compositePartName);
-                } catch (strictProxyEx2) {
-                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
-                }
-                
-                if (!_equalsEx(compositePart1, compositePart2)) {
-                    return false;
-                }
+        let key1, key2;
+        
+        try {
+            key1 = entity1.get('key');
+        } catch (strictProxyEx1) {
+            throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+        }
+        
+        try {
+            key2 = entity2.get('key');
+        } catch (strictProxyEx2) {
+            throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
+        }
+        return _equalsEx(key1, key2);
+    };
+    
+    /**
+     * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
+     */
+    const _convert = function (value) {
+        if (value === null) { // 'null' is the missing value representation for TG web editors
+            return null;
+        } else if (value instanceof _DEKPrototype) {
+            return value._convertDynamicEntityKey();
+        } else if (value instanceof _EPrototype) {
+            return _convert(value.get('key'));
+        } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
+            return value;
+        } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
+            return value;
+        } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+            return value;
+        } else if (typeof value === "string") { // for string value -- return the same value for editors
+            return value;
+        } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
+            // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
+            var convertedArray = [];
+            for (var index = 0; index < value.length; index++) {
+                convertedArray.push(_convert(value[index]));
             }
-            return true;
+            return convertedArray;
+        } else if ( typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value")) ){ 
+            return value;
         } else {
-            var key1, key2;
-            
-            try {
-                key1 = entity1.get('key');
-            } catch (strictProxyEx1) {
-                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
-            }
-            
-            try {
-                key2 = entity2.get('key');
-            } catch (strictProxyEx2) {
-                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
-            }
-            return _equalsEx(key1, key2);
+            throw new _UCEPrototype(value);
         }
     };
-	
-	/**
-	 * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
-	 */
+    
+    /**
+     * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
+     */
     var _providePrototypes = function (typeTable, EntityType) {
         for (var key in typeTable) {
             if (typeTable.hasOwnProperty(key)) {
@@ -989,6 +1091,15 @@
          */
         _getEntityTypePrototype: function () {
             return _ETPrototype;
+        },
+        
+        /**
+         * Returns the prototype for 'DynamicEntityKey'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getDynamicEntityKeyPrototype: function () {
+            return _DEKPrototype;
         },
 
         /**
@@ -1124,71 +1235,12 @@
             newOne["version"] = 0;
             return newOne;
         },
-
+        
         /**
          * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
          */
         convert: function (value) {
-            if (value === null) { // 'null' is the missing value representation for TG web editors
-                return null;
-            } else if (value instanceof this.getEntityPrototype()) {
-                return ((value.constructor.prototype.type.call(value)).isCompositeEntity()) ? this.convertCompositeEntity(value) : 
-                       (((value.constructor.prototype.type.call(value)).isUnionEntity()) ? this.convert(value._activeEntity()) : this.convertSimpleEntity(value));
-            } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
-                return value;
-            } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
-                return value;
-            } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
-                return value;
-            } else if (typeof value === "string") { // for string value -- return the same value for editors
-                return value;
-            } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
-                // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
-                var convertedArray = [];
-                for (var index = 0; index < value.length; index++) {
-                    convertedArray.push(this.convert(value[index]));
-                }
-                return convertedArray;
-            } else if ( typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value")) ){ 
-                return value;
-            } else {
-                throw new _UCEPrototype(value);
-            }
-        },
-
-        /**
-         * The method to convert entity to String.
-         *
-         */
-        convertSimpleEntity: function (entity) {
-            return this.convert(entity.get("key"));
-        },
-
-        /**
-         * The method to convert composite entity to String.
-         *
-         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.toString(). So, please be carefull and maintain it
-         * in accordance with java counterpart.
-         */
-        convertCompositeEntity: function (compositeEntity) {
-            var compositeKeyNames = compositeEntity.type().compositeKeyNames();
-            var compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
-
-            var str = "";
-            var first = true;
-            for (var i = 0; i < compositeKeyNames.length; i++) {
-                var compositePartName = compositeKeyNames[i];
-                var compositePart = compositeEntity.get(compositePartName);
-                if (compositePart !== null) {
-                    if (first) {
-                        str = str + this.convert(compositePart);
-                        first = false;
-                    } else {
-                        str = str + compositeKeySeparator + this.convert(compositePart);
-                    }
-                }
-            }
-            return str;
+            return _convert(value);
         },
         
         /**

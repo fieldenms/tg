@@ -12,6 +12,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -45,6 +47,10 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
+import ua.com.fielden.platform.sample.domain.TgWagon;
+import ua.com.fielden.platform.sample.domain.TgWagonClass;
+import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
@@ -112,6 +118,13 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(UnionEntity.class);
         add(EntityOne.class);
         add(EntityTwo.class);
+        
+        add(TgBogieLocation.class);
+        add(TgWorkshop.class);
+        add(TgWagonSlot.class);
+        add(TgWagon.class);
+        add(TgBogie.class);
+        add(TgWagonClass.class);
     }
 
     @Override
