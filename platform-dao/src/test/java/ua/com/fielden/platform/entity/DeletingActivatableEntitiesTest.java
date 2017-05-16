@@ -82,12 +82,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
 
             for (int index = 0; index < NO_OF_CREATED_ACTIVE_DEPENDENCIES; index++) {
                 save(new_(TgSystem.class, "NEW_SYS_" + index).setActive(true).setFirstCategory(cat));
+                System.out.println("CREATED... " + co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
                 try {
                     Thread.sleep(rnd1.nextInt(10));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                System.out.println("CREATED");
             }
         });
         
@@ -96,6 +96,7 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
             
             for (int index = 0; index < NO_OF_CREATED_ACTIVE_DEPENDENCIES; index++) {
                 final TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat));
+                final String msg = "CREATED... " + co(TgCategory.class).findByKey(cat.getKey()).getRefCount();
                 try {
                     Thread.sleep(rnd2.nextInt(10));
                 } catch (Exception e) {
@@ -103,7 +104,7 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
                 }
                 
                 co(TgSystem.class).delete(sys);
-                System.out.println("CREATED/DELETED");
+                System.out.println(msg + " ... DELETED... " + co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
             }
         });
         
