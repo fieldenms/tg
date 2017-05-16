@@ -53,7 +53,7 @@ import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleterByIds;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -95,8 +95,6 @@ import ua.com.fielden.platform.utils.Validators;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> implements ISessionEnabled {
 
-    private static final String DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
-
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
@@ -113,6 +111,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Injector injector;
 
     private final IFilter filter;
+    
+    private final CommonEntityCompanionDeleteOperations<T> deleteOps;
 
     @Inject
     private IUniversalConstants universalConstants;
@@ -153,6 +153,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected CommonEntityDao(final IFilter filter) {
         this.filter = filter;
         this.hasSaveOverridden = isSaveOverridden();
+        this.deleteOps = new CommonEntityCompanionDeleteOperations<T>(this);
     }
     
     private boolean isSaveOverridden() {
@@ -616,7 +617,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      * @return
      */
-    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
+     protected final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
             // proxied property is considered to be not dirty in this context
@@ -1014,159 +1015,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
     }
 
-    /**
-     * A method for deleting activatable entities.
-     * It takes care of decrementing referenced activatable dependencies if any.
-     * 
-     * @param entity
-     */
-    private void deleteActivatable(final T entity) {
-        if (!(entity instanceof ActivatableAbstractEntity)) {
-            throw new EntityCompanionException(format("Entity of type [%s] is not activatable.", entity.getType()));
-        }
-
-        // only if entity is active do we need to decrement ref-counts of the referenced by it activatable entities, accept self references, which should be ignored
-        if (((ActivatableAbstractEntity<?>) entity).isActive()) {
-            // let's collect activatable properties from entity to check them for activity and also to decrement their refCount
-            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
-            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
-            // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
-            final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) getSession().load(entity.getType(), entity.getId(), UPGRADE);
-            
-            activatableProps.stream()
-            .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop.getName()), prop.getType(), prop.getName()))
-            .filter(triple -> triple._1 != null)
-            .forEach(
-                    triple -> {
-                        // get value from a persisted version of entity, which is loaded by Hibernate
-                        // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
-                        final AbstractEntity<?> value = persistedEntityToBeDeleted.get(triple._3);
-                        // load the latest value for the current property of an activatable type
-                        final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(triple._2, value.getId(), UPGRADE);
-                        persistedValue.setIgnoreEditableState(true);
-                        // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
-                        if (persistedValue.isActive() && !entity.equals(persistedValue)) {
-                            getSession().update(persistedValue.decRefCount());
-                        }
-                    });
-            
-            
-        }
-        
-        // delete entity by ID
-        deleteById(entity.getId());
-    }
-    
-    /**
-     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
-     *
-     * @param entity
-     */
-    @SessionRequired
-    protected void defaultDelete(final T entity) {
-        if (entity == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for an entity instance.");
-        }
-        if (!entity.isPersisted()) {
-            throw new EntityCompanionException("Only persisted entity instances can be deleted.");
-        }
-        if (entity.isInstrumented() && entity.isDirty()) {
-            throw new EntityCompanionException("Dirty entity instances cannot be deleted.");
-        }
-        
-        if (entity instanceof ActivatableAbstractEntity && ((ActivatableAbstractEntity<?>) entity).isActive()) {
-            deleteActivatable(entity);
-        } else {
-            deleteById(entity.getId());
-        }
-    }
-
-    private void deleteById(final long id) {
-        try {
-            getSession().createQuery(format("delete %s where id = %s", getEntityType().getName(), id)).executeUpdate();
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
-        }
-    }
-
-    /**
-     * A convenient default implementation for deletion of entities specified by provided query model.
-     *
-     * @param entity
-     */
-    @SessionRequired
-    protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        if (model == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
-        }
-
-        final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight().model());
-
-        for (final T entity : toBeDeleted) {
-            defaultDelete(entity);
-        }
-    }
-
-    @SessionRequired
-    protected void defaultDelete(final EntityResultQueryModel<T> model) {
-        defaultDelete(model, Collections.<String, Object> emptyMap());
-    }
-
-    /**
-     * A convenient default implementation for batch deletion of entities specified by provided query model.
-     *
-     * @param entity
-     */
-    @SessionRequired
-    protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        if (model == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
-        }
-
-        try {
-            final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-            return new EntityBatchDeleterByQueryModel(queryExecutionContext).deleteEntities(model, paramValues);
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
-        }
-    }
-
-    @SessionRequired
-    protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
-        return defaultBatchDelete(model, Collections.<String, Object> emptyMap());
-    }
-
-    @SessionRequired
-    protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return defaultBatchDeleteByPropertyValues(ID, entities);
-    }
-    
-    @SessionRequired
-    protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
-        return defaultBatchDeleteByPropertyValues(ID, entitiesIds);
-    }
-    
-    @SessionRequired
-    protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        final Set<Long> ids = new LinkedHashSet<>();
-        for (final AbstractEntity<?> entity : entities) {
-            ids.add(entity.getId());
-        }
-        return batchDelete(ids);
-    }
-    
-    @SessionRequired
-    protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
-        if (entitiesIds.isEmpty()) {
-            throw new EntityCompanionException("No entity ids have been provided for deletion.");
-        }
-
-        try {
-            return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
-        }
-    }
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
@@ -1324,7 +1172,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    private ICompanionObjectFinder getCoFinder() {
+    protected ICompanionObjectFinder getCoFinder() {
         return coFinder;
     }
 
@@ -1407,4 +1255,98 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public Map<String, IContinuationData> moreData() {
         return Collections.unmodifiableMap(moreData);
     }
+    
+    ////////////////////////////////////////////////////////////
+    /////////////// block of default delete methods ////////////
+    ////////////////////////////////////////////////////////////
+    
+    /**
+     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
+     *
+     * @param entity
+     */
+    @SessionRequired
+    protected void defaultDelete(final T entity) {
+        deleteOps.defaultDelete(entity);
+    }
+
+    /**
+     * A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
+     * 
+     * @param model
+     * @param paramValues
+     */
+    @SessionRequired
+    protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        deleteOps.defaultDelete(model, paramValues);
+    }
+    
+    /**
+     * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
+     * 
+     * @param model
+     */
+    @SessionRequired
+    protected void defaultDelete(final EntityResultQueryModel<T> model) {
+        deleteOps.defaultDelete(model);
+    }
+
+    /**
+     * A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
+     * 
+     * @param model
+     * @param paramValues
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        return deleteOps.defaultBatchDelete(model, paramValues);
+    }
+    
+    /**
+     * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
+     * 
+     * @param model
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
+        return deleteOps.defaultBatchDelete(model);
+    }
+    
+    /**
+     * Batch deletion of entities in the provided list.
+     *  
+     * @param entities
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
+        return deleteOps.defaultBatchDelete(entities);
+    }
+    
+    /**
+     * Batch deletion of entities by their ID values.
+     * 
+     * @param entitiesIds
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
+        return deleteOps.defaultBatchDelete(entitiesIds);
+    }
+    
+    /**
+     * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
+     * Those entities that have the specified property matching any of those ID values get deleted. 
+     * 
+     * @param propName
+     * @param entitiesIds
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
+        return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
+    }
+
 }
