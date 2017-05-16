@@ -37,7 +37,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
-    private final static Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
+    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";

@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
+import static java.lang.String.format;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMaxDefault;
@@ -32,6 +33,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
@@ -41,7 +43,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
-    private final Logger logger = Logger.getLogger(getClass());
+    private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
     private final List<CachedProperty> properties;
     private final EntityType entityType;
     private final boolean excludeNulls;
@@ -60,7 +62,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
         if (entityType.get_identifier() == null) {
-            throw new IllegalStateException("The identifier of the type [" + entityType + "] should be populated to be ready for serialisation.");
+            throw new SerialisationException(format("The identifier of the type [%s] should be populated to be ready for serialisation.", entityType));
         }
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
@@ -130,12 +132,11 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         value = prop.field().get(entity);
                     } catch (final IllegalAccessException e) {
                         // developer error -- please ensure that all fields are accessible
-                        e.printStackTrace();
-                        logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during serialisation process for entity [" + entity + "].", e);
-                        throw new RuntimeException(e);
+                        final String msg = format("The field [%s] is not accessible. Fatal error during serialisation process for entity [%s].", prop.field(), entity);
+                        LOGGER.error(msg, e);
+                        throw new SerialisationException(msg, e);
                     } catch (final IllegalArgumentException e) {
-                        e.printStackTrace();
-                        logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during serialisation process for entity [" + entity + "].", e);
+                        LOGGER.error(format("The field [%s] is not declared in entity with type [%s]. Fatal error during serialisation process for entity [%s].", prop.field(), type.getName(), entity), e);
                         throw e;
                     }
                     
@@ -152,7 +153,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         if (!uninstrumented) {
                             final MetaProperty<Object> metaProperty = entity.getProperty(name);
                             if (metaProperty == null) {
-                                throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
+                                throw new SerialisationException(format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
                             }
                             final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
                             if (!isEditableDefault(metaProperty)) {

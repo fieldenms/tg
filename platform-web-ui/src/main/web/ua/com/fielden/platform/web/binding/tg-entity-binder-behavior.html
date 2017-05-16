@@ -401,7 +401,7 @@
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;
                     		    if (typeof deserialisedInstance.id !== 'undefined') {
-                    		    	e.detail.entityId = deserialisedInstance.id;
+                    		    	e.detail.entityId = deserialisedInstance.get('id');
                     		    	e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
                     		    	e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
                     		    }
@@ -702,7 +702,7 @@
                 };
                 var self = this;
                 if (self._reflector().isEntity(bindingEntity)) {
-                    modPropHolder["id"] = bindingEntity["id"];
+                    modPropHolder["id"] = bindingEntity.get('id');
                     modPropHolder["version"] = bindingEntity["version"];
                     modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
 
@@ -772,8 +772,8 @@
                     self._resetState();
                 }
                 // After the entity has received, potentially its id has been updated:
-                if (self._idConvert(entity.id) !== self.entityId) {
-                    self.entityId = self._idConvert(entity.id);
+                if (self._idConvert(entity.get('id')) !== self.entityId) {
+                    self.entityId = self._idConvert(entity.get('id'));
                 }
                 // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
                 var previousModifiedPropertiesHolder = null;
@@ -860,7 +860,7 @@
             _extractBindingView: function (entity, previousModifiedPropertiesHolder, prevCurrBindingEntity) {
                 var self = this;
                 var bindingView = self._reflector().newEntity(entity.type().fullClassName());
-                bindingView["id"] = entity["id"];
+                bindingView["id"] = entity.get('id');
                 bindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
@@ -917,7 +917,7 @@
                 var originalBindingView = self._reflector().newEntityEmpty();
 
                 originalBindingView["_type"] = entity["_type"];
-                originalBindingView["id"] = entity["id"];
+                originalBindingView["id"] = entity.get('id');
                 originalBindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 

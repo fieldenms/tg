@@ -839,7 +839,7 @@
                     // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
                     // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
                     if (this._editedPropsExist || this._bindingEntityNotPersistentOrNotPersistedOrModified) {
-                        if (this._currBindingEntity.id === null) {
+                        if (this._currBindingEntity.get('id') === null) {
                             return {
                                 isNew: true,
                                 msg: "A new entity is being created. Please save your changes."

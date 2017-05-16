@@ -59,7 +59,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 // TODO there could be the hierarchy of generatedTypes!
                 // TODO there could be the hierarchy of generatedTypes!
                 // TODO there could be the hierarchy of generatedTypes!
-                final Set<Class<?>> generatedTypes = new LinkedHashSet<Class<?>>();
+                final Set<Class<?>> generatedTypes = new LinkedHashSet<>();
                 list.forEach(item -> {
                     if (item != null) {
                         final Class<?> itemClass = PropertyTypeDeterminator.stripIfNeeded(item.getClass());
@@ -68,7 +68,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                         }
                     }
                 });
-                final ArrayList<EntityType> genList = new ArrayList<EntityType>();
+                final ArrayList<EntityType> genList = new ArrayList<>();
                 generatedTypes.forEach(t -> {
                     genList.add(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) t));
                 });

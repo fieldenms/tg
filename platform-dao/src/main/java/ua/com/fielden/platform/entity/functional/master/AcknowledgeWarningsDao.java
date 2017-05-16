@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.functional.master;
 
+import static java.lang.String.format;
+
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -16,7 +20,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
  */
 @EntityType(AcknowledgeWarnings.class)
 public class AcknowledgeWarningsDao extends CommonEntityDao<AcknowledgeWarnings> implements IAcknowledgeWarnings {
-
+    private static final Logger LOGGER = Logger.getLogger(AcknowledgeWarningsDao.class);
+    
     @Inject
     public AcknowledgeWarningsDao(final IFilter filter) {
         super(filter);
