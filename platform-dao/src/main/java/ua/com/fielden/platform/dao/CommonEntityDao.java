@@ -1025,16 +1025,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException(format("Entity of type [%s] is not activatable.", entity.getType()));
         }
 
-        // if entity is not active then it can simply be deleted without recalculating reCounts for associated activatable entities
-        if (!((ActivatableAbstractEntity<?>) entity).isActive()) {
-            defaultDelete(entity);
-        } else {
-            // only if entity is active do we need to decrement ref-counts of the referenced by it activatable entities, accept self references, which should be ignored
+        // only if entity is active do we need to decrement ref-counts of the referenced by it activatable entities, accept self references, which should be ignored
+        if (((ActivatableAbstractEntity<?>) entity).isActive()) {
             // let's collect activatable properties from entity to check them for activity and also to decrement their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
             final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
             // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
-            final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) getSession().load(entity.getType(), entity.getId(), LockOptions.UPGRADE);
+            final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) getSession().load(entity.getType(), entity.getId(), UPGRADE);
             
             activatableProps.stream()
             .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop.getName()), prop.getType(), prop.getName()))
@@ -1053,8 +1050,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                         }
                     });
             
-            defaultDelete((T) persistedEntityToBeDeleted);
+            
         }
+        
+        // delete entity by ID
+        deleteById(entity.getId());
     }
     
     /**
@@ -1076,10 +1076,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         
         if (entity instanceof ActivatableAbstractEntity && ((ActivatableAbstractEntity<?>) entity).isActive()) {
             deleteActivatable(entity);
+        } else {
+            deleteById(entity.getId());
         }
-        
+    }
+
+    private void deleteById(final long id) {
         try {
-            getSession().createQuery("delete " + getEntityType().getName() + " where id = " + entity.getId()).executeUpdate();
+            getSession().createQuery(format("delete %s where id = %s", getEntityType().getName(), id)).executeUpdate();
         } catch (final ConstraintViolationException e) {
             throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
         }
