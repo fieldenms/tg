@@ -2,8 +2,13 @@ package ua.com.fielden.platform.entity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.Ignore;
@@ -63,7 +68,132 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
-    
+    @Test
+    public void deletion_with_EQL_model_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        co(TgSystem.class).delete(select(TgSystem.class).where().prop("key").in().values(sys1.getKey(), sys2.getKey()).model());
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void deletion_with_paremeterised_EQL_model_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        final Map<String, Object> params = new HashMap<>();
+        params.put("sys1", sys1.getKey());
+        params.put("sys3", sys3.getKey());
+        co(TgSystem.class).delete(select(TgSystem.class).where().prop("key").in().params("sys1", "sys3").model(), params);
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void batch_deletion_with_EQL_model_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        co(TgSystem.class).batchDelete(select(TgSystem.class).where().prop("key").in().values(sys1.getKey(), sys2.getKey()).model());
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void batch_deletion_with_paremeterised_EQL_model_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        final Map<String, Object> params = new HashMap<>();
+        params.put("sys1", sys1.getKey());
+        params.put("sys3", sys3.getKey());
+        co(TgSystem.class).batchDelete(select(TgSystem.class).where().prop("key").in().params("sys1", "sys3").model(), params);
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void batch_deletion_by_IDs_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        co(TgSystem.class).batchDelete(Arrays.asList(new Long[] {sys1.getId(), sys2.getId()}));
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void batch_deletion_by_instances_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        co(TgSystem.class).batchDelete(Arrays.asList(new TgSystem[] {sys1, sys2}));
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void batch_deletion_by_prop_matching_IDs_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        co(TgSystem.class).batchDeleteByPropertyValues("secondCategory", Arrays.asList(new Long[] {cat.getId()}));
+        
+        assertTrue(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertFalse(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
+    public void batch_deletion_by_prop_matching_values_is_supported_for_activatable_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
+        final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
+        
+        co(TgSystem.class).batchDeleteByPropertyValues("firstCategory", Arrays.asList(new TgCategory[] {cat}));
+        
+        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
     @Test
     @Ignore
     public void consistency_test_with_concurrent_creation_and_deletion_of_activatable_entities_correctly_recomputes_refCount() throws Exception {
