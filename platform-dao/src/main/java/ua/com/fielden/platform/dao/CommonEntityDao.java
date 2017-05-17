@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -26,16 +27,11 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
-import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -48,14 +44,13 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleterByIds;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -73,6 +68,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
@@ -95,8 +91,6 @@ import ua.com.fielden.platform.utils.Validators;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> implements ISessionEnabled {
 
-    private static final String DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
-
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
@@ -113,6 +107,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Injector injector;
 
     private final IFilter filter;
+    
+    private final CommonEntityCompanionDeleteOperations<T> deleteOps;
 
     @Inject
     private IUniversalConstants universalConstants;
@@ -153,6 +149,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected CommonEntityDao(final IFilter filter) {
         this.filter = filter;
         this.hasSaveOverridden = isSaveOverridden();
+        this.deleteOps = new CommonEntityCompanionDeleteOperations<T>(this);
     }
     
     private boolean isSaveOverridden() {
@@ -384,7 +381,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
             // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
             final ActivatableAbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId());
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId(), UPGRADE);
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
             if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
                 persistedValue.setIgnoreEditableState(true);
@@ -397,18 +394,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // need to process previous property value
             final AbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
             if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId());
+                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId(), UPGRADE);
                 persistedValue.setIgnoreEditableState(true);
                 getSession().update(persistedValue.decRefCount());
             }
             // also need increment refCount for a newly referenced activatable
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId());
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId(), UPGRADE);
             if (!entity.equals(persistedValue)) { // avoid counting self-references
                 // now let's check if the entity itself is an active activatable
                 // as this influences the decision to increment refCount for the newly referenced activatable
                 // because, if it's not then there is no reason to increment refCout for the referenced instance
                 // in other words, inactive entity does not count as an active referencer
-                if (entity.<Boolean> get(ACTIVE) == true) {
+                if (entity.<Boolean>get(ACTIVE)) {
                     persistedValue.setIgnoreEditableState(true);
                     getSession().update(persistedValue.incRefCount());
                 }
@@ -432,13 +429,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (activeProp.isDirty()) {
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
-            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
-                // get value from a persisted version of entity, whch is loaded by Hibernate
+            for (final T2<String, Class<ActivatableAbstractEntity<?>>> propNameAndType : collectActivatableNotDirtyProperties(entity, keyMembers)) {
+                // get value from a persisted version of entity, which is loaded by Hibernate
                 // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
-                final AbstractEntity<?> value = persistedEntity.get(prop.getName());
+                final AbstractEntity<?> value = persistedEntity.get(propNameAndType._1);
                 if (value != null) { // if there is actually some value
                     // load activatable value
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(propNameAndType._2, value.getId(), UPGRADE);
                     persistedValue.setIgnoreEditableState(true);
                     // if activatable property value is not a self-reference
                     // then need to check if it is active and if so increment its refCount
@@ -446,7 +443,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!entity.equals(persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                throw new EntityCompanionException(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
+                                throw new EntityCompanionException(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, propNameAndType._2));
                             } else { // otherwise, increment refCount
                                 getSession().update(persistedValue.incRefCount());
                             }
@@ -457,7 +454,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 }
             }
 
-            // separately need to perform de-activation of deactivatable dependencies in case where the entity being saved is deactivated
+            // separately need to perform deactivation of deactivatable dependencies in case where the entity being saved is deactivated
             if (!activeProp.getValue()) {
                 final List<? extends ActivatableAbstractEntity<?>> deactivatables = Validators.findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, getCoFinder());
                 for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
@@ -567,7 +564,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) getSession().load(value.getType(), value.getId());
+                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) getSession().load(value.getType(), value.getId(), UPGRADE);
                     // the returned value could already be inactive due to some concurrent modification
                     // therefore it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive
                     if (!persistedEntity.isActive()) {
@@ -616,16 +613,25 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      * @return
      */
-    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
-        final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
-        for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            // proxied property is considered to be not dirty in this context
-            final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
-            if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
-                addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
+     protected final Set<T2<String, Class<ActivatableAbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
+        if (entity.isInstrumented()) {
+            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
+            for (final MetaProperty<?> prop : entity.getProperties().values()) {
+                // proxied property is considered to be not dirty in this context
+                final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
+                if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
+                    addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
+                }
             }
+            return result.stream()
+                    .map(prop -> t2(prop.getName(), (Class<ActivatableAbstractEntity<?>>) prop.getType()))
+                    .collect(Collectors.toSet());
+        } else {
+            return Finder.streamRealProperties(entity.getType(), MapTo.class)
+                    .filter(field -> ActivatableAbstractEntity.class.isAssignableFrom(field.getType()))
+                    .map(field -> t2(field.getName(), (Class<ActivatableAbstractEntity<?>>) field.getType()))
+                    .collect(Collectors.toSet());
         }
-        return result;
     }
 
     /**
@@ -1014,104 +1020,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
     }
 
-    /**
-     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
-     *
-     * @param entity
-     */
-    @SessionRequired
-    protected void defaultDelete(final T entity) {
-        if (entity == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for an entity instance.");
-        }
-        if (!entity.isPersisted()) {
-            throw new EntityCompanionException("Only persisted entity instances can be deleted.");
-        }
-        try {
-            getSession().createQuery("delete " + getEntityType().getName() + " where id = " + entity.getId()).executeUpdate();
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
-        }
-    }
-
-    /**
-     * A convenient default implementation for deletion of entities specified by provided query model.
-     *
-     * @param entity
-     */
-    @SessionRequired
-    protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        if (model == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
-        }
-
-        final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight().model());
-
-        for (final T entity : toBeDeleted) {
-            defaultDelete(entity);
-        }
-    }
-
-    @SessionRequired
-    protected void defaultDelete(final EntityResultQueryModel<T> model) {
-        defaultDelete(model, Collections.<String, Object> emptyMap());
-    }
-
-    /**
-     * A convenient default implementation for batch deletion of entities specified by provided query model.
-     *
-     * @param entity
-     */
-    @SessionRequired
-    protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        if (model == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
-        }
-
-        try {
-            final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-            return new EntityBatchDeleterByQueryModel(queryExecutionContext).deleteEntities(model, paramValues);
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
-        }
-    }
-
-    @SessionRequired
-    protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
-        return defaultBatchDelete(model, Collections.<String, Object> emptyMap());
-    }
-
-    @SessionRequired
-    protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return defaultBatchDeleteByPropertyValues(ID, entities);
-    }
-    
-    @SessionRequired
-    protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
-        return defaultBatchDeleteByPropertyValues(ID, entitiesIds);
-    }
-    
-    @SessionRequired
-    protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        final Set<Long> ids = new HashSet<>();
-        for (final AbstractEntity<?> entity : entities) {
-            ids.add(entity.getId());
-        }
-        return batchDelete(ids);
-    }
-    
-    @SessionRequired
-    protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
-        if (entitiesIds.isEmpty()) {
-            throw new EntityCompanionException("No entities ids have been provided for deletion.");
-        }
-
-        try {
-            return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
-        }
-    }
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
@@ -1269,7 +1177,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    private ICompanionObjectFinder getCoFinder() {
+    protected ICompanionObjectFinder getCoFinder() {
         return coFinder;
     }
 
@@ -1352,4 +1260,110 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public Map<String, IContinuationData> moreData() {
         return Collections.unmodifiableMap(moreData);
     }
+    
+    ////////////////////////////////////////////////////////////
+    /////////////// block of default delete methods ////////////
+    ////////////////////////////////////////////////////////////
+    
+    /**
+     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
+     *
+     * @param entity
+     */
+    @SessionRequired
+    protected void defaultDelete(final T entity) {
+        deleteOps.defaultDelete(entity);
+    }
+
+    /**
+     * A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
+     * 
+     * @param model
+     * @param paramValues
+     */
+    @SessionRequired
+    protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        deleteOps.defaultDelete(model, paramValues);
+    }
+    
+    /**
+     * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
+     * 
+     * @param model
+     */
+    @SessionRequired
+    protected void defaultDelete(final EntityResultQueryModel<T> model) {
+        deleteOps.defaultDelete(model);
+    }
+
+    /**
+     * A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
+     * 
+     * @param model
+     * @param paramValues
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        return deleteOps.defaultBatchDelete(model, paramValues);
+    }
+    
+    /**
+     * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
+     * 
+     * @param model
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
+        return deleteOps.defaultBatchDelete(model);
+    }
+    
+    /**
+     * Batch deletion of entities in the provided list.
+     *  
+     * @param entities
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
+        return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
+    }
+    
+    /**
+     * Batch deletion of entities by their ID values.
+     * 
+     * @param entitiesIds
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
+        return deleteOps.defaultBatchDelete(entitiesIds);
+    }
+    
+    /**
+     * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
+     * Those entities that have the specified property matching any of those ID values get deleted. 
+     * 
+     * @param propName
+     * @param entitiesIds
+     * @return
+     */
+    @SessionRequired
+    protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
+        return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
+    }
+    
+    /**
+     * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
+     * 
+     * @param propName
+     * @param propEntities
+     * @return
+     */
+    @SessionRequired
+    protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
+        return deleteOps.defaultBatchDeleteByPropertyValues(propName, propEntities);
+    }
+
 }

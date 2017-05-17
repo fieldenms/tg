@@ -366,7 +366,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param propEntities
      * @return
      */
-    default int batchDeleteByPropertyValues(final String propName, final List<T> propEntities){
+    default <E extends AbstractEntity<?>> int batchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         throw new UnsupportedOperationException("By default batch deletion is not supported.");
     }
 

@@ -208,6 +208,35 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         }
     }
 
+    @Test
+    public void refCount_value_is_equal_to_number_of_references_from_entities_in_different_properties_rather_than_to_number_of_such_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        
+        // set properties one by one and assert refCount increasing
+        TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat));
+        
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        
+        sys = save(sys.setSecondCategory(cat));
+        
+        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        
+        // unset properties one by one and assert refCount decreasing
+        sys = save(sys.setFirstCategory(null));
+        
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        
+        sys = save(sys.setSecondCategory(null));
+        
+        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+
+        // set two properties at once and then deactive the entity to assert that refCount becomes zero
+        sys = save(sys.setFirstCategory(cat).setSecondCategory(cat));
+        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        sys = save(sys.setActive(false));
+        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();
