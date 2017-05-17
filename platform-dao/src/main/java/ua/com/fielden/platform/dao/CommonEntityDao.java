@@ -2,11 +2,11 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static org.hibernate.LockOptions.UPGRADE;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,9 +26,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -47,14 +44,13 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -72,7 +68,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
@@ -433,13 +429,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (activeProp.isDirty()) {
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
-            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
+            for (final T2<String, Class<ActivatableAbstractEntity<?>>> propNameAndType : collectActivatableNotDirtyProperties(entity, keyMembers)) {
                 // get value from a persisted version of entity, which is loaded by Hibernate
                 // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
-                final AbstractEntity<?> value = persistedEntity.get(prop.getName());
+                final AbstractEntity<?> value = persistedEntity.get(propNameAndType._1);
                 if (value != null) { // if there is actually some value
                     // load activatable value
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId(), UPGRADE);
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(propNameAndType._2, value.getId(), UPGRADE);
                     persistedValue.setIgnoreEditableState(true);
                     // if activatable property value is not a self-reference
                     // then need to check if it is active and if so increment its refCount
@@ -447,7 +443,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!entity.equals(persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                throw new EntityCompanionException(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
+                                throw new EntityCompanionException(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, propNameAndType._2));
                             } else { // otherwise, increment refCount
                                 getSession().update(persistedValue.incRefCount());
                             }
@@ -617,16 +613,25 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      * @return
      */
-     protected final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
-        final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
-        for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            // proxied property is considered to be not dirty in this context
-            final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
-            if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
-                addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
+     protected final Set<T2<String, Class<ActivatableAbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
+        if (entity.isInstrumented()) {
+            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
+            for (final MetaProperty<?> prop : entity.getProperties().values()) {
+                // proxied property is considered to be not dirty in this context
+                final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
+                if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
+                    addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
+                }
             }
+            return result.stream()
+                    .map(prop -> t2(prop.getName(), (Class<ActivatableAbstractEntity<?>>) prop.getType()))
+                    .collect(Collectors.toSet());
+        } else {
+            return Finder.streamRealProperties(entity.getType(), MapTo.class)
+                    .filter(field -> ActivatableAbstractEntity.class.isAssignableFrom(field.getType()))
+                    .map(field -> t2(field.getName(), (Class<ActivatableAbstractEntity<?>>) field.getType()))
+                    .collect(Collectors.toSet());
         }
-        return result;
     }
 
     /**
@@ -1322,7 +1327,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return deleteOps.defaultBatchDelete(entities);
+        return deleteOps.defaultBatchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
     }
     
     /**
