@@ -3,11 +3,11 @@ package ua.com.fielden.platform.dao;
 import static java.lang.String.format;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,17 +15,13 @@ import java.util.stream.Collectors;
 
 import org.hibernate.exception.ConstraintViolationException;
 
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
@@ -216,6 +212,16 @@ final class CommonEntityCompanionDeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
         }
     }
-
+    
+    /**
+     * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
+     * 
+     * @param propName
+     * @param propEntities
+     * @return
+     */
+    protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
+        return defaultBatchDeleteByPropertyValues(propName, propEntities.stream().map(v -> v.getId()).collect(Collectors.toList()));
+    }
 
 }

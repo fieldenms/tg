@@ -1353,5 +1353,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
         return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
+    
+    /**
+     * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
+     * 
+     * @param propName
+     * @param propEntities
+     * @return
+     */
+    @SessionRequired
+    protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
+        return deleteOps.defaultBatchDeleteByPropertyValues(propName, propEntities);
+    }
 
 }
