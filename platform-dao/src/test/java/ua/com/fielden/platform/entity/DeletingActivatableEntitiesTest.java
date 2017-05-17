@@ -69,6 +69,21 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void deletion_of_inactive_entities_does_not_effect_refCount_of_referenced_by_them_active_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT_1").setActive(true));
+
+        final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
+        final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(false).setSecondCategory(cat));
+
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+
+        co(TgSystem.class).delete(sys2);
+
+        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    @Test
     public void deletion_with_EQL_model_is_supported_for_activatable_entities() {
         final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
         final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
