@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -212,23 +210,55 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
     
     // CHOSEN PROPERTY:
+    /**
+     * Returns chosen property value: <code>null</code> if chosen property is not applicable,
+     * "" if property action for 'this' column was actioned, and non-empty property name otherwise
+     * (master property editor actions and centre column actions).
+     * 
+     * @return
+     */
     protected String chosenProperty() {
         return getChosenProperty();
     }
     
+    /**
+     * Returns <code>true</code> if chosen property is not applicable, <code>false</code> otherwise.
+     * 
+     * @return
+     */
     protected boolean chosenPropertyEmpty() {
-        return StringUtils.isEmpty(getChosenProperty());
+        return chosenProperty() == null;
     }
     
+    /**
+     * Returns <code>true</code> if chosen property is applicable ("" or non-empty string), <code>false</code> otherwise.
+     * 
+     * @return
+     */
     protected boolean chosenPropertyNotEmpty() {
         return !chosenPropertyEmpty();
     }
     
+    /**
+     * Returns <code>true</code> if chosen property equals to concrete non-null value, <code>false</code> otherwise.
+     * 
+     * @param value
+     * @return
+     */
     protected boolean chosenPropertyEqualsTo(final String value) {
-        if (StringUtils.isEmpty(value)) {
-            throw new EntityProducingException("Empty value is not permitted.");
+        if (value == null) {
+            throw new EntityProducingException("Null value is not permitted.");
         }
-        return value.equals(getChosenProperty());
+        return value.equals(chosenProperty());
+    }
+    
+    /**
+     * Returns <code>true</code> if action for 'this' column has been clicked, <code>false</code> otherwise.
+     * 
+     * @return
+     */
+    protected boolean chosenPropertyRepresentsThisColumn() {
+        return chosenPropertyEqualsTo("");
     }
     
     // CURRENT ENTITY:
