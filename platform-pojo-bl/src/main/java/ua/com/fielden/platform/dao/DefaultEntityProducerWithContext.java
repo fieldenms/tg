@@ -1,9 +1,15 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -158,7 +164,117 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return context == null ? null : context.getChosenProperty();
     }
 
+    @Deprecated
     protected Long getCompoundMasterEntityId() {
         return context == null ? null : context.getCompoundMasterEntityId();
+    }
+    
+    
+    
+    
+    
+    
+    
+    private AbstractEntity<?> getCurrEntity() {
+        return context == null ? null :
+               context.getSelectedEntities().size() == 1 ? context.getCurrEntity() : null;
+    }
+    
+    private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> getComputation() {
+        return context == null ? Optional.empty() : context.getComputation();
+    }
+    
+    private List<AbstractEntity<?>> getSelectedEntities() {
+        return context == null ? Collections.unmodifiableList(new ArrayList<>()) : context.getSelectedEntities();
+    }
+    
+    ////////////////////////////////// CONTEXT DECOMPOSITION API //////////////////////////////////
+    
+    // MASTER ENTITY:
+    protected AbstractEntity<?> masterEntity() {
+        return getMasterEntity();
+    }
+    
+    protected <M extends AbstractEntity<?>> M masterEntity(final Class<M> type) {
+        return (M) masterEntity();
+    }
+    
+    protected boolean masterEntityEmpty() {
+        return masterEntity() == null;
+    }
+    
+    protected boolean masterEntityNotEmpty() {
+        return !masterEntityEmpty();
+    }
+    
+    protected <M extends AbstractEntity<?>> boolean masterEntityInstanceOf(final Class<M> type) {
+        return masterEntityNotEmpty() && type.isAssignableFrom(masterEntity().getClass());
+    }
+    
+    // CHOSEN PROPERTY:
+    protected String chosenProperty() {
+        return getChosenProperty();
+    }
+    
+    protected boolean chosenPropertyEmpty() {
+        return StringUtils.isEmpty(getChosenProperty());
+    }
+    
+    protected boolean chosenPropertyNotEmpty() {
+        return !chosenPropertyEmpty();
+    }
+    
+    protected boolean chosenPropertyEqualsTo(final String value) {
+        if (StringUtils.isEmpty(value)) {
+            throw new EntityProducingException("Empty value is not permitted.");
+        }
+        return value.equals(getChosenProperty());
+    }
+    
+    // CURRENT ENTITY:
+    protected AbstractEntity<?> currentEntity() {
+        return getCurrEntity();
+    }
+    
+    protected <M extends AbstractEntity<?>> M currentEntity(final Class<M> type) {
+        return (M) currentEntity();
+    }
+    
+    protected boolean currentEntityEmpty() {
+        return currentEntity() == null;
+    }
+    
+    protected boolean currentEntityNotEmpty() {
+        return !currentEntityEmpty();
+    }
+    
+    protected <M extends AbstractEntity<?>> boolean currentEntityInstanceOf(final Class<M> type) {
+        return currentEntityNotEmpty() && type.isAssignableFrom(currentEntity().getClass());
+    }
+    
+    // COMPUTATION:
+    protected Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation() {
+        return getComputation();
+    }
+    
+    // SELECTED ENTITIES:
+    private List<AbstractEntity<?>> selectedEntities() {
+        return getSelectedEntities();
+    }
+    
+    protected boolean selectedEntitiesEmpty() {
+        return selectedEntities().isEmpty();
+    }
+    
+    protected boolean selectedEntitiesNonEmpty() {
+        return !selectedEntitiesEmpty();
+    }
+    
+    protected boolean selectedEntitiesOnlyOne() {
+        return selectedEntities().size() == 1;
+    }
+    
+    protected boolean selectedEntitiesMoreThanOne() {
+        return selectedEntities().size() > 1;
     }
 }

@@ -127,6 +127,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         this.chosenProperty = chosenProperty;
     }
     
+    @Deprecated
     public Long getCompoundMasterEntityId() {
         return compoundMasterEntityId;
     }
