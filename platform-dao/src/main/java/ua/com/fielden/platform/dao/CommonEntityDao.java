@@ -1327,7 +1327,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return deleteOps.defaultBatchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
+        return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
     }
     
     /**
