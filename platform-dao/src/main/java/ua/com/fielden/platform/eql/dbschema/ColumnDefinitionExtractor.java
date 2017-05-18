@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -18,6 +19,7 @@ import org.hibernate.usertype.UserType;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
@@ -56,16 +58,22 @@ public class ColumnDefinitionExtractor {
     public Set<ColumnDefinition> extractFromProperty(final String propName, final Class<?> propType, final MapTo mapTo, final PersistentType persistedType, final boolean required) {
 
         final Set<ColumnDefinition> result = new LinkedHashSet<>();
-
+        final String columnName = nameClause(propName, mapTo.value());
+        final Object hibTypeConverter = hibernateTypeDeterminer.getHibernateType(propType, persistedType);
+        final int length = mapTo.length();
+        final int precision = mapTo.precision();
+        final int scale = mapTo.scale();
+        
         if (isUnionEntityType(propType)) {
-            // TODO UnionEntity prop (persistedType ignore, required ignore (set to FALSE), l,s,p from MapTo ignore)
+            for (final Field subpropField : unionProperties((Class<? extends AbstractUnionEntity>) propType)) {
+                final MapTo mapToUnionSubprop = getAnnotation(subpropField, MapTo.class);
+                if (mapToUnionSubprop == null) {
+                    throw new DbSchemaException(String.format("Property [%s] in union entity type [%s] is not annotated MapTo.", subpropField.getName(), propType)); 
+                }
+                final String unionPropColumnName = columnName + "_" + (StringUtils.isEmpty(mapToUnionSubprop.value()) ? subpropField.getName().toUpperCase() : mapToUnionSubprop.value());
+                result.add(new ColumnDefinition(true, unionPropColumnName, subpropField.getType(), jdbcSqlTypeFor((Type) hibTypeConverter), mapToUnionSubprop.length(), mapToUnionSubprop.scale(), mapToUnionSubprop.precision(), mapToUnionSubprop.defaultValue()));
+            }
         } else {
-            final Object hibTypeConverter = hibernateTypeDeterminer.getHibernateType(propType, persistedType);
-            final String columnName = nameClause(propName, mapTo.value());
-            final int length = mapTo.length();
-            final int precision = mapTo.precision();
-            final int scale = mapTo.scale();
-
             if (hibTypeConverter instanceof Type) {
                 result.add(new ColumnDefinition(!required, columnName, propType, jdbcSqlTypeFor((Type) hibTypeConverter), length, scale, precision, mapTo.defaultValue()));
             } else if (hibTypeConverter instanceof UserType) {

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.dbschema;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class HibernateTypeDeterminer {
     public Object getHibernateType(final Class<?> javaType, final PersistentType persistentType) {
 
         // if javaType represents a persistent entity then simply return ID type (which is LONG)
-        if (isPersistedEntityType(javaType)) {
+        if (isPersistedEntityType(javaType) || isUnionEntityType(javaType)) {
             return H_LONG;
         }
         
