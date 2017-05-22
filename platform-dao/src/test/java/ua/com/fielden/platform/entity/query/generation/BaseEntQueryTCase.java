@@ -253,9 +253,13 @@ public class BaseEntQueryTCase {
     }
 
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type) {
-        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
+        return ppi(name, javaType, nullable, hibType, column, null, null, null, type);
     }
 
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final Integer length, final Integer precision, final Integer scale, final PropertyCategory type) {
+        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column, length, precision, scale)).hibType(hibType).type(type).build();
+    }
+    
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type) {
         return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
     }

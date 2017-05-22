@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 import java.io.Serializable;
@@ -645,6 +644,16 @@ public class EntityUtils {
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
         return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+    }
+    
+    /**
+     * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
+     * 
+     * @param entityType
+     * @return
+     */
+    public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
+        return isPersistedEntityType(getKeyType(entityType));
     }
 
     /**

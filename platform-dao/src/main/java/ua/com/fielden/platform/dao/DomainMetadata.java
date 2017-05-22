@@ -54,7 +54,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
@@ -78,10 +77,8 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.dbschema.ColumnDefinition;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.eql.dbschema.TableDefinition;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
@@ -190,7 +187,7 @@ public class DomainMetadata {
             }
         });
         
-        LOGGER.debug("\n\n" + printDdl(new SQLServer2008Dialect(), entityTypes) + "\n\n");
+        //LOGGER.debug("\n\n" + printDdl(new SQLServer2008Dialect(), entityTypes) + "\n\n");
 
         
         
@@ -201,36 +198,13 @@ public class DomainMetadata {
     
     
     private String printDdl(final Dialect dialect, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final ColumnDefinitionExtractor fa = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
+        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         final StringBuilder sb = new StringBuilder();
+        
         for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
             if (isPersistedEntityType(entityType)) {
-//                PersistedEntity entity = new PersistedEntity(entityType.getName(), getAnnotation(entityType, MapEntityTo.class).value());
-//                result.add(entity);
-//
-//                entity.getFinalProps().add(new FinalProperty(false, ID, "_ID", Long.class, resolveToSqlType(Long.class), 0, 0, 0, null));
-//                entity.getFinalProps().add(new FinalProperty(false, VERSION, "_VERSION", Long.class, resolveToSqlType(Long.class), 0, 0, 0, null));
-//                // TODO need to determine DESC property from annotations
-//                Class<? extends Comparable> keyType = getKeyType(entityType);
-//                if (!DynamicEntityKey.class.equals(keyType)) {
-//                    // TODO need to take into account the case of key column override
-//                    MapTo mt = columnFromProperty(entityType, KEY);
-//                    entity.getFinalProps().add(new FinalProperty(false, KEY, "KEY_", keyType, resolveToSqlType(keyType), mt.length(), mt.scale(), mt.precision(), mt.defaultValue()));
-//                }
-
                 sb.append("================== " + entityType.getSimpleName() + "\n");
-                for (final Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
-                    if (!propField.getName().equals("key")) {
-                        final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
-                        final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
-                        final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
-                        final Set<ColumnDefinition> cols = fa.extractFromProperty(propField.getName(), propField.getType(), mapTo, persistedType, required);
-                        for (final ColumnDefinition columnProperty : cols) {
-                            sb.append(columnProperty.schemaString(dialect) + "\n");    
-                        }
-                        
-                    }
-                }
+                sb.append(new TableDefinition(columnDefinitionExtractor, entityType).schemaString(dialect) + "\n");
             }
         }
         return sb.toString();
@@ -365,8 +339,7 @@ public class DomainMetadata {
         } else {
             switch (entityCategory) {
             case PERSISTED:
-                final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-                return new PropertyMetadata.Builder(KEY, keyType, false).column(keyColumnOverride).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
+                return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
             case QUERY_BASED:
                 return null; //FIXME
             case UNION:
@@ -441,9 +414,9 @@ public class DomainMetadata {
         for (final String propName : propNames) {
             final MapTo mapTo = getMapTo(hibType.returnedClass(), propName);
             final String mapToColumn = mapTo.value();
-            final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-            final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-            final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+            final Integer length = mapTo.length() > 0 ? mapTo.length() : null;
+            final Integer precision = mapTo.precision() >= 0 ? mapTo.precision() : null;
+            final Integer scale = mapTo.scale() >= 0 ? mapTo.scale() : null;
             final String columnName = propNames.length == 1 ? parentColumn
                     : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
             result.add(new PropertyColumn(columnName, length, precision, scale));
@@ -486,9 +459,9 @@ public class DomainMetadata {
 
     private List<PropertyColumn> getPropColumns(final Field field, final MapTo mapTo, final Object hibernateType) throws Exception {
         final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
-        final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-        final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-        final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+        final Integer length = mapTo.length() > 0 ? mapTo.length() : null;
+        final Integer precision = mapTo.precision() >= 0 ? mapTo.precision() : null;
+        final Integer scale = mapTo.scale() >= 0 ? mapTo.scale() : null;
 
         final List<PropertyColumn> result = new ArrayList<PropertyColumn>();
         if (hibernateType instanceof ICompositeUserTypeInstantiate) {

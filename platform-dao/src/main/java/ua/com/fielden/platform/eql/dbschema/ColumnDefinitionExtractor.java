@@ -1,30 +1,37 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -68,9 +75,9 @@ public class ColumnDefinitionExtractor {
             for (final Field subpropField : unionProperties((Class<? extends AbstractUnionEntity>) propType)) {
                 final MapTo mapToUnionSubprop = getAnnotation(subpropField, MapTo.class);
                 if (mapToUnionSubprop == null) {
-                    throw new DbSchemaException(String.format("Property [%s] in union entity type [%s] is not annotated MapTo.", subpropField.getName(), propType)); 
+                    throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated MapTo.", subpropField.getName(), propType)); 
                 }
-                final String unionPropColumnName = columnName + "_" + (StringUtils.isEmpty(mapToUnionSubprop.value()) ? subpropField.getName().toUpperCase() : mapToUnionSubprop.value());
+                final String unionPropColumnName = columnName + "_" + (isEmpty(mapToUnionSubprop.value()) ? subpropField.getName().toUpperCase() : mapToUnionSubprop.value());
                 result.add(new ColumnDefinition(true, unionPropColumnName, subpropField.getType(), jdbcSqlTypeFor((Type) hibTypeConverter), mapToUnionSubprop.length(), mapToUnionSubprop.scale(), mapToUnionSubprop.precision(), mapToUnionSubprop.defaultValue()));
             }
         } else {
@@ -83,7 +90,7 @@ public class ColumnDefinitionExtractor {
                 final List<Pair<String, Integer>> subprops = jdbcSqlTypeFor(compositeUserType);
                 for (final Pair<String, Integer> pair : subprops) {
                     final String parentColumn = columnName;
-                    final Field subpropField = Finder.findFieldByName(compositeUserType.returnedClass(), pair.getKey());
+                    final Field subpropField = findFieldByName(compositeUserType.returnedClass(), pair.getKey());
                     final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
                     final String subpropColumnNameSuggestion = subpropMapTo.value();
                     final Integer subpropLength = subpropMapTo.length();
@@ -95,14 +102,27 @@ public class ColumnDefinitionExtractor {
                     result.add(new ColumnDefinition(!required, subpropColumnName, subpropField.getType(), pair.getValue(), subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue()));
                 }
             } else {
-                throw new DbSchemaException(String.format("Unexpected hibernate type converter [%s].", hibTypeConverter));
+                throw new DbSchemaException(format("Unexpected hibernate type converter [%s].", hibTypeConverter));
             }
         }
 
         return result;
     }
+    
+    public ColumnDefinition extractVersionProperty() {
+        final Field versionField = Finder.getFieldByName(AbstractEntity.class, VERSION);
+        return extractFromProperty(versionField.getName(), versionField.getType(), getAnnotation(versionField, MapTo.class), null, true).iterator().next();
+    }
+
+    public Optional<ColumnDefinition> extractIdProperty(final Class<? extends AbstractEntity<?>> entityType) {
+        if (EntityUtils.isOneToOne(entityType)) {
+            return Optional.empty();
+        }
+        final Field idField = Finder.getFieldByName(AbstractEntity.class, ID);
+        return Optional.of(extractFromProperty(idField.getName(), idField.getType(), getAnnotation(idField, MapTo.class), null, true).iterator().next());
+    }
 
     private String nameClause(final String propName, final String columnNameSuggestion) {
-        return (StringUtils.isNotBlank(columnNameSuggestion) ? columnNameSuggestion : propName.toUpperCase() + "_");
+        return (isNotBlank(columnNameSuggestion) ? columnNameSuggestion : propName.toUpperCase() + "_");
     }
 }
