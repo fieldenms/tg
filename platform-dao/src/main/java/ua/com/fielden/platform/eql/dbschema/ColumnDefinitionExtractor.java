@@ -107,7 +107,7 @@ public class ColumnDefinitionExtractor {
                     result.add(new ColumnDefinition(!required, subpropColumnName, subpropField.getType(), pair.getValue(), subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue()));
                 }
             } else {
-                throw new DbSchemaException(format("Unexpected hibernate type converter [%s].", hibTypeConverter));
+                throw new DbSchemaException(format("Unexpected hibernate type converter [%s] for property [%s] of type [%s].", hibTypeConverter, propName, propType));
             }
         }
 

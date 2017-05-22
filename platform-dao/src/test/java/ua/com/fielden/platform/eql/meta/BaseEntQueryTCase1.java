@@ -17,6 +17,8 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
+import com.google.inject.Guice;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -44,6 +47,7 @@ import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -62,8 +66,6 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
-
-import com.google.inject.Guice;
 
 public class BaseEntQueryTCase1 {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -92,6 +94,12 @@ public class BaseEntQueryTCase1 {
     protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+    static {
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+    }
+
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
 
 
@@ -106,8 +114,6 @@ public class BaseEntQueryTCase1 {
     protected static final EntQueryGenerator1 qb = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER);
 
     static {
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         try {
             metadata.putAll((new MetadataGenerator(qb)).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
         } catch (final Exception e) {
