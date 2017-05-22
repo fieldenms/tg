@@ -54,6 +54,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
@@ -187,7 +188,7 @@ public class DomainMetadata {
             }
         });
         
-        //LOGGER.debug("\n\n" + printDdl(new SQLServer2008Dialect(), entityTypes) + "\n\n");
+        LOGGER.debug("\n\n" + printDdl(new SQLServer2008Dialect(), entityTypes) + "\n\n");
 
         
         

@@ -1,14 +1,20 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -31,7 +37,6 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -115,13 +120,21 @@ public class ColumnDefinitionExtractor {
     }
 
     public Optional<ColumnDefinition> extractIdProperty(final Class<? extends AbstractEntity<?>> entityType) {
-        if (EntityUtils.isOneToOne(entityType)) {
-            return Optional.empty();
+        if (isOneToOne(entityType)) {
+            return empty();
         }
         final Field idField = Finder.getFieldByName(AbstractEntity.class, ID);
-        return Optional.of(extractFromProperty(idField.getName(), idField.getType(), getAnnotation(idField, MapTo.class), null, true).iterator().next());
+        return of(extractFromProperty(idField.getName(), idField.getType(), getAnnotation(idField, MapTo.class), null, true).iterator().next());
     }
 
+    public Optional<ColumnDefinition> extractSimpleKeyProperty(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isCompositeEntity(entityType)) {
+            return empty();
+        }
+        final Field keyField = Finder.getFieldByName(AbstractEntity.class, KEY);
+        return of(extractFromProperty(keyField.getName(), getKeyType(entityType), getAnnotation(keyField, MapTo.class), null, true).iterator().next());
+    }
+    
     private String nameClause(final String propName, final String columnNameSuggestion) {
         return (isNotBlank(columnNameSuggestion) ? columnNameSuggestion : propName.toUpperCase() + "_");
     }
