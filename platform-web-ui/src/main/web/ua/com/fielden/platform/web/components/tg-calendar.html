@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
@@ -75,7 +76,7 @@
             </div>
             <div class="col relative">
                 <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-select="_onPageChange">
-                    <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}"></tg-month-selector>
+                    <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}" time-zone="[[timeZone]]"></tg-month-selector>
                     <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
                     <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
                     <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_timeSelected"></tg-number-selector>
@@ -97,6 +98,14 @@
             is: "tg-calendar",
 
             properties: {
+                /**
+                 * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
+                 * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String
+                },
+                
                 selectedDate: {
                     type: Number,
                     notify: true,
@@ -145,13 +154,11 @@
                 this._months = moment.monthsShort();
             },
 
-
             attached: function () {
-                var todayDate = new Date();
-                todayDate.setSeconds(0, 0);
-                this.selectedDate = this.selectedDate || todayDate.getTime();
-                this.selectedHour = (typeof this.selectedHour !== undefined && this.selectedHour !== null) ? this.selectedHour : todayDate.getHours();
-                this.selectedMinute = (typeof this.selectedMinute !== undefined && this.selectedMinute !== null) ? this.selectedMinute : todayDate.getMinutes();
+                var todayDate = _momentTz(this.timeZone).startOf('minute');
+                this.selectedDate = this.selectedDate || todayDate.valueOf();
+                this.selectedHour = (typeof this.selectedHour !== 'undefined' && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
+                this.selectedMinute = (typeof this.selectedMinute !== 'undefined' && this.selectedMinute !== null) ? this.selectedMinute : todayDate.minutes();
                 this.seconds = this.seconds || 0;
                 this.milis = this.milis || 0;
             },
@@ -159,20 +166,24 @@
             /**
              * Updates the calendar information according to specified date.
              */
-            _adjustDate: function (date) {
-                this.selectedDayName = moment(date).format("dddd");
-                this.selectedMonthName = moment(date).format("MMM").toUpperCase();
-                this.selectedDay = date.getDate();
-                this.selectedMonth = date.getMonth();
-                this.selectedYear = date.getFullYear();
+            _adjustDate: function (newMoment) {
+                this.selectedDayName = newMoment.format("dddd");
+                this.selectedMonthName = newMoment.format("MMM").toUpperCase();
+                this.selectedDay = newMoment.date();
+                this.selectedMonth = newMoment.month();
+                this.selectedYear = newMoment.year();
             },
             
             /**
              * Changes selected date according to changed year and month. 
              */
             _selectYearMonthDay: function (newYear, newMonth, newDay) {
-                var lastDayOfTheMonth = new Date(newYear, newMonth + 1, 0).getDate();
-                this.selectedDate = new Date(newYear, newMonth, newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay);
+                var yearMonth = { year: newYear, month: newMonth, day: 1 };
+                var lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
+                
+                var computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
+                var yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
+                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
             },
 
             /**
@@ -180,8 +191,8 @@
              */
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
-                    var newDate = new Date(newValue);
-                    this._adjustDate(newDate);
+                    var newMoment = _momentTz(newValue, this.timeZone);
+                    this._adjustDate(newMoment);
                 }
             },
 

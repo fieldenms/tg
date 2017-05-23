@@ -15,7 +15,6 @@ import ua.com.fielden.platform.sample.domain.TgAuthoriser;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgOriginator;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 

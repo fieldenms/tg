@@ -32,7 +32,7 @@
         setup(function() {
             centre = fixture('CentreFixture');
             reflector = document.querySelector('#reflector');
-            noOfIterations = 1000;
+            noOfIterations = 100;
             _calcConfidenceInterval = function (data) {
                 var n = data.length;
                 var sum = 0;
@@ -49,9 +49,9 @@
                 sum = sum / n;
                 var sigma = Math.sqrt(sum); // standard deviation
                 
-                // The value of z(alfa / 2) is taken from z-table for confidence level of 99%, for example from here (http://www.statisticshowto.com/tables/z-table/).
-                // alfa = 0.99, alfa / 2 = 0.495, find that value inside the table and check intersections: 2.5 and 0.08 => z := 2.58
-                var z = 2.58;
+                // The value of z(alfa / 2) is taken from z-table for confidence level of 95%, for example from here (http://www.statisticshowto.com/tables/z-table/).
+                // alfa = 0.95, alfa / 2 = 0.475, find that value inside the table and check intersections: 1.9 and 0.6 => z := 1.96
+                var z = 1.96;
                 var deltaX = z * (sigma / Math.sqrt(n));
                 
                 return [+((x_ - deltaX).toFixed(1)), +((x_ + deltaX).toFixed(1))];
@@ -69,7 +69,6 @@
             
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
                 var editor = _leftEditor('booleanProp');
-                console.log('_leftEditor(booleanProp) === ', editor);
                 
                 start = new Date().getTime();
                 editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -84,16 +83,15 @@
                     data.push(time);
                     console.debug('Validated in ', time, ' millis (no ', count, ').');
                     
-                    var editor = _leftEditor('booleanProp');
-                    console.log('_leftEditor(booleanProp) === ', editor);
-                    
-                    start = new Date().getTime();
-                    editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                    editor.commit();
-                    
                     if (count >= noOfIterations) {
-                        console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
-                        done();
+                        console.debug('Validated in [c1; c2] = ', _calcConfidenceInterval(data));
+                        setTimeout(done, 2000); // done();
+                    } else {
+                        var editor = _leftEditor('booleanProp');
+                        
+                        start = new Date().getTime();
+                        editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                        editor.commit();
                     }
                 }, function (error) {
                     console.error("The action was rejected with error: " + error);
@@ -130,13 +128,13 @@
                         console.debug('Saved in ', time, ' millis (no ', count, ').');
                         
                         if (count >= noOfIterations) {
-                            console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
-                            done();
+                            console.debug('Saved in [c1; c2] = ', _calcConfidenceInterval(data));
+                            setTimeout(done, 2000); // done();
+                        } else {
+                            var editor = _leftEditor('booleanProp');
+                            editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                            editor.commit();
                         }
-                        
-                        var editor = _leftEditor('booleanProp');
-                        editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                        editor.commit();
                     }, function (error) {
                         console.error("Saving was rejected with error: " + error);
                     });
@@ -175,13 +173,13 @@
                         console.debug('Discarded in ', time, ' millis (no ', count, ').');
                         
                         if (count >= noOfIterations) {
-                            console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
-                            done();
+                            console.debug('Discarded in [c1; c2] = ', _calcConfidenceInterval(data));
+                            setTimeout(done, 2000); // done();
+                        } else {
+                            var editor = _leftEditor('booleanProp');
+                            editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                            editor.commit();
                         }
-                        
-                        var editor = _leftEditor('booleanProp');
-                        editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                        editor.commit();
                     }, function (error) {
                         console.error("Discarding was rejected with error: " + error);
                     });
@@ -206,14 +204,14 @@
                     console.debug('Running in ', time, ' millis (no ', count, ').');
                     
                     if (count >= noOfIterations) {
-                        console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
-                        done();
+                        console.debug('Running in [c1; c2] = ', _calcConfidenceInterval(data));
+                        setTimeout(done, 2000); // done();
+                    } else {
+                        start = new Date().getTime();
+                        centre.run().then(_createPostRunFunction(), function (error) {
+                            console.error("Running was rejected with error: " + error);
+                        });
                     }
-                    
-                    start = new Date().getTime();
-                    centre.run().then(_createPostRunFunction(), function (error) {
-                        console.error("Running was rejected with error: " + error);
-                    });
                 };
             };
             

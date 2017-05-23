@@ -41,7 +41,7 @@ public interface IUniversalConstants {
      * 
      * @return
      */
-    String smptServer();
+    String smtpServer();
     
     /**
      * Returns a generic application <code>From</code> email address that should be used when sending emails if no more specific email address is available.

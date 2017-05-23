@@ -13,9 +13,11 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithCollection;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
@@ -58,8 +60,7 @@ public class PropertyTypeDeterminatorTest {
             fail("There is no propertyOfSelfType property in the FirstLevelEntity class");
             PropertyTypeDeterminator.determinePropertyType(SecondLevelEntity.class, "propertyOfSelfType.nonExistingProperty.anotherProperty");
             fail("There is no propertyOfSelfType.nonExistingProperty.anotherProperty property in the SecondLevelEntity class");
-        } catch (final IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+        } catch (final ReflectionException e) {
         } catch (final Exception e) {
             fail("There shouldn't be any other exception but IllegalArgumentException.");
         }

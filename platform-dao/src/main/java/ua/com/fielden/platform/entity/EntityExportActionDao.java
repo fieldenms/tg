@@ -6,7 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -16,8 +17,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IEntityExportAction}.
@@ -45,13 +44,13 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.ms-excel");
         final Map<String, Object> customObject = new LinkedHashMap<String, Object>();
-        final Set<AbstractEntity<?>> entities;
+        final List<AbstractEntity<?>> entities;
         if (entity.getAll()) {
             customObject.put("@@pageNumber", -1);
             customObject.put("@@action", "export all");
-            entities = new LinkedHashSet<>(selectionCrit.exportQueryRunner().apply(customObject));
+            entities = selectionCrit.exportQueryRunner().apply(customObject);
         } else if (entity.getPageRange()) {
-            entities = new LinkedHashSet<>();
+            entities = new ArrayList<>();
             for (int page = entity.getFromPage() - 1; page < entity.getToPage(); page++) {
                 customObject.put("@@pageCapacity", entity.getPageCapacity());
                 customObject.put("@@action", "navigate");
@@ -68,11 +67,11 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
                 ids.add(selectedEntity.getId());
             }
-            entities = new LinkedHashSet<>(selectEntities(selectionCrit.exportQueryRunner().apply(customObject), ids));
+            entities = selectEntities(selectionCrit.exportQueryRunner().apply(customObject), ids);
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(new ArrayList<>(entities), propAndTitles.getKey(), propAndTitles.getValue())));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue())));
         } catch (final IOException e) {
             throw Result.failure("Could not export data.", e);
         }

@@ -1,0 +1,7 @@
+latex architecture-overview
+latex architecture-overview
+latex architecture-overview
+dvips -o 'architecture-overview.ps' 'architecture-overview.dvi'
+ps2pdf 'architecture-overview.ps' 'architecture-overview.pdf'
+open 'architecture-overview.pdf' > /dev/null;
+

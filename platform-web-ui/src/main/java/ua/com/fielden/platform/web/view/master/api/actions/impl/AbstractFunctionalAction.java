@@ -68,6 +68,8 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap0("        var reflector = self._reflector();") + //
                 wrap0("        var savingInfoHolder = reflector.newEntity('ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder');") + //
                 wrap0("        savingInfoHolder.id = null;") + //
+                wrap0("        savingInfoHolder['key'] = 'savingInfoHolder_key';") + //
+                wrap0("        savingInfoHolder['desc'] = 'savingInfoHolder description';") + //
                 wrap0("        savingInfoHolder['modifHolder'] = functionalEntity;") + //
 
                 wrap0("        var masterEntity = self._currEntity;") + //

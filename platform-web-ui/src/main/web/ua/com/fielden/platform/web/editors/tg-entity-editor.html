@@ -68,7 +68,7 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" retrieve-container-sizes="[[_retrieveContainerSizes]]"></tg-entity-editor-result>
+        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" on-iron-overlay-canceled="_resultCanceled" retrieve-container-sizes="[[_retrieveContainerSizes]]"></tg-entity-editor-result>
 
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -342,6 +342,16 @@
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
+                    
+                    // check whether relatedTarget has anything to do with this.$.result
+                    // if it is then there is no need to cancel the overlay, which is this.$.result
+                    var parent = e.relatedTarget;
+                    while (parent !== null && parent !== this.$.result) {
+                        parent = parent.parentElement;
+                    }
+                    if (this.$.result.opened && parent !== this.$.result) {
+                        this.$.result.cancel(e);
+                    }
                 }).bind(this);
 
                 this._retrieveContainerSizes = function () {
@@ -467,8 +477,8 @@
 
                 for (var index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
-                    // This includes correct conversion of simple and composite entities
-                    var key = this.reflector().convert(entities[index]);
+                    // This includes correct conversion of simple, composite and union entities
+                    const key = this.reflector().convert(entities[index]);
                     entities[index].key = key;
                     result.pushValue(entities[index]);
                 }
@@ -488,7 +498,6 @@
                         result.open();
                     }
                     result.notifyResize();
-                    //self.async(result.notifyResize, 1);
                 }, 100);
             },
 
@@ -520,11 +529,18 @@
             },
 
             _resultOpened: function (e) {
-                this.opened = true;
-                this.async(function () {
-                    this.$.result.highlightMatchedParts();
-                }.bind(this), 100);
-
+                var self = this;
+                var activeElement = document.activeElement;
+                if (self.$.input === activeElement || /* if the autocompleter in focus */ 
+                    document.body === activeElement   /* or no other input or button in focus then show found values */) {
+                    self.opened = true;
+	                self.async(function () {
+	                    self.$.result.highlightMatchedParts();
+	                }, 100);
+                } else {
+                    self.opened = true;
+                    self.$.result.cancel(e);
+                }
             },
 
             _resultClosed: function (e) {
@@ -534,10 +550,19 @@
                     this.opened = false;
                     this._onChange();
                 }
-                Polymer.dom(document.body).removeChild(this.$.result);
-                Polymer.dom.flush();
+                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                if (elementExists) {
+                	Polymer.dom(document.body).removeChild(this.$.result);
+                	Polymer.dom.flush();
+                }
             },
-
+            
+            _resultCanceled : function (event, detail) {
+                if (detail.keyCode && detail.keyCode === 27) {
+                    this._focusInput();
+                }
+            },
+            
             /* This method handles an explicit user action for accepting selected values from an autocompleted list.
              * However, there is no guarantee that there are actually selected values.
              */
@@ -555,8 +580,7 @@
                 if (hasValuesToProcess) {
                     // compose a string value, which would be a comma separated string in case of multi
                     var selectedValuesAsStr = _.map(result.selectedValues, function (obj) {
-                        console.log(obj.key);
-                        return obj.key;
+                        return obj.key; // 'key' field contains converted representation of the entity
                     }).join(this.separator);
 
                     if (!this.multi) {
@@ -649,8 +673,9 @@
                 this.opened = true;
                 this.$.result.close();
                 this.processError(e, "search", function (errorResult) {
-                    self.postSearchedDefaultError(errorResult);
-                    //self.searching = false;
+                   	if (self.postSearchedDefaultError) {
+                    	self.postSearchedDefaultError(errorResult);
+                   	}
                 });
             },
 
@@ -690,8 +715,8 @@
                         return valueToFormat.length > 0 ? ("<b>" + valueToFormat.join(this.separator) + "</b>") : '';
                     } else if (typeof valueToFormat === 'string'){
                         return "<b>" + valueToFormat + "</b>";
-                    } else if (valueToFormat != null) {
-                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + (valueToFormat.desc ? "<br>" + valueToFormat.desc : "");
+                    } else if (this.reflector().isEntity(valueToFormat)) {
+                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + (valueToFormat.get('desc') ? "<br>" + valueToFormat.get('desc') : "");
                     } else {
                         return '';
                     }
@@ -713,7 +738,7 @@
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
                     if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                        return !!entityValue.desc;
+                        return !!entityValue.get('desc');
                     }
                 }
                 return false;
@@ -722,8 +747,8 @@
             _formatDesc: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-                    if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.desc) {
-                        return entityValue.desc;
+                    if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
+                        return entityValue.get('desc');
                     }
                 }
                 return '';

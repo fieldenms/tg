@@ -24,7 +24,6 @@ public class TgCollectionalSerialisationParentProducer extends DefaultEntityProd
     @Override
     protected TgCollectionalSerialisationParent provideDefaultValuesForStandardNew(final TgCollectionalSerialisationParent entity, final EntityNewAction masterEntity) {
         entity.setKey("DUMMY");
-        entity.resetMetaState();
         return entity;
     }
 }

@@ -8,6 +8,8 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
 <dom-module id="tg-collectional-editor">
     <style>
         iron-list {
@@ -19,6 +21,7 @@
         
         .item {
             @apply(--layout-horizontal);
+            @apply(--layout-center);
             padding: 16px 22px;
             border-bottom: 1px solid #DDD;
         }
@@ -32,8 +35,11 @@
             outline: 0;
         }
         
-        .item.selected .star {
-            color: var(--paper-blue-600);
+        paper-checkbox {
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900:);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
         .item.selected {
             background-color: var(--google-grey-100);
@@ -46,7 +52,11 @@
         
         .pad {
             @apply(--layout-vertical);
-            padding-left: 16px;
+            padding-left: 14px;
+            width: calc(100% - 40px);
+        }
+        .without-pad {
+            @apply(--layout-vertical);
             width: calc(100% - 40px);
         }
         .primary {
@@ -58,12 +68,6 @@
         }
         .dim {
             color: gray;
-        }
-        .star {
-            min-width: 24px;
-            min-height: 24px;
-            width: 24px;
-            height: 24px;
         }
         .truncate {
             white-space: nowrap;
@@ -91,16 +95,16 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
             <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_entities)]]" multi-selection>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview, _entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
-                          <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[!_sortingIconHidden(item)]]" class="star"></iron-icon>
-                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(item)]]">
+                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview, item)]]" checked="[[selected]]"></paper-checkbox>
+                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                           </div>
-                          <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
+                          <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
                               <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                               <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                           </div>
@@ -193,6 +197,14 @@
                 	}).bind(this);
             	}
             },
+            
+            /**
+             * Indicates that this collectional editor is 'for review' only and will not be selectable and no icon will exist before each item.
+             */
+            _forReview: {
+                type: Boolean,
+                value: false
+            }
         },
         
         observers: [
@@ -204,6 +216,10 @@
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
             }).bind(this);
+        },
+        
+        attached: function () {
+            this._originalChosenIds = null;
         },
         
         _calcItemTooltip: function (item) {
@@ -218,7 +234,8 @@
          * Returns the text representation of the item to be shown in header or description.
          */
         _calcItemText: function (item, propName) {
-            return item.get(propName);
+            const value = item.get(propName);
+            return value ? value : '';
         },
         
         /**
@@ -232,38 +249,84 @@
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
-            this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
-            
-            var selEntities = [];
-            var chosenIds = this.entity.get('chosenIds');
-            
-            this._originalChosenIds = [];
-            
-            for (var index = 0; index < chosenIds.length; index++) {
-                selEntities.push(this._find(this._entities, chosenIds[index]) );
-                this._originalChosenIds.push(chosenIds[index]);
-            }
-
-            this._disableSelectionListeners = true;
-            this.$.input.clearSelection();
-            
-            for (var index = 0; index < selEntities.length; index++) {
-                this.$.input.selectItem(selEntities[index]);
-            }
-            this._disableSelectionListeners = false;
-            
-            this.scrollToFirstFoundElement();
-            
-            this.provideSorting(this.entity.sortingVals, this._entities);
-            
             return 'IRRELEVANT';
+        },
+        
+        /**
+         * Assignes initial values as soon as 'this.entity' and 'this.originalEntity' becomes available.
+         * This method relies on a fact that the entity gets initialised earlier than originalEntity (see '_postEntityReceived' method in tg-entity-binder-behavior).
+         */
+        _originalEntityChanged: function (newValue, oldValue) {
+            Polymer.TgBehaviors.TgEditorBehavior._originalEntityChanged.call(this, newValue, oldValue);
+            
+            if (this.reflector().isEntity(newValue)) {
+                // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
+                // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
+                // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
+                if (this._originalChosenIds === null) {
+                    const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
+                    
+                    const selEntities = [];
+                    const chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+                    if (typeof this.entity.chosenIds === 'undefined') {
+                        this._forReview = true;
+                    }
+                    
+                    const originalChosenIds = typeof this.originalEntity.chosenIds === 'undefined' ? [] : this.originalEntity.get('chosenIds');
+                    this._originalChosenIds = [];
+                    for (let index = 0; index < originalChosenIds.length; index++) {
+                        const foundEntity = this._find(arrivedEntities, originalChosenIds[index]);
+                        if (foundEntity !== null) {
+                            this._originalChosenIds.push(originalChosenIds[index]);
+                        }
+                    }
+                    for (let index = 0; index < chosenIds.length; index++) {
+                        const foundEntity = this._find(arrivedEntities, chosenIds[index]);
+                        if (foundEntity !== null) {
+                            selEntities.push(foundEntity);
+                        }
+                    }
+                    
+                    this._entities = this._placeSelectedOnTop(arrivedEntities, chosenIds);
+                    
+                    this._disableSelectionListeners = true;
+                    this.$.input.clearSelection();
+                    
+                    for (let index = 0; index < selEntities.length; index++) {
+                        this.$.input.selectItem(selEntities[index]);
+                    }
+                    this._disableSelectionListeners = false;
+                    
+                    this.scrollToFirstFoundElement();
+                }
+                
+                this.provideSorting(this.entity.sortingVals, this._entities);
+            }
+        },
+        
+        /**
+         * Creates a new array of entities placing chosen ones on top and preserving the same order as in 'arrivedEntities' in each groups.
+         */
+        _placeSelectedOnTop: function (arrivedEntities, chosenIds) {
+            const selectedEntities = [];
+            const unselectedEntities = [];
+            for (let index = 0; index < arrivedEntities.length; index++) {
+                const currEntity = arrivedEntities[index];
+                const chosenIdsIndex = chosenIds.indexOf(this.idOrKey(currEntity));
+                if (chosenIdsIndex > -1) { // current entity is selected
+                    selectedEntities.push(currEntity);
+                } else { // current entity is unselected
+                    unselectedEntities.push(currEntity);
+                }
+            }
+            return selectedEntities.concat(unselectedEntities);
         },
         
         /**
          * Returns identifier of the entity. If it is persisted -- such identifier is represented by id, otherwise -- by key.
          */
         idOrKey: function (entity) {
-            return entity.id === null ? entity.get('key') : entity.id;
+            return entity.get('id') === null ? entity.get('key') : entity.get('id');
         },
         
         _find: function (entities, idOrKey) {
@@ -272,7 +335,7 @@
                     return entities[i];
                 }
             }
-            throw 'The entity with idOrKey ' + idOrKey + ' does not exist in entities list ' + entities;
+            return null;
         },
 
         /**
@@ -298,20 +361,30 @@
             return classes;
         },
         
-        iconForItem: function (isSelected) {
-            return isSelected ? 'star' : 'star-border';
+        _computedPadClass: function (_forReview) {
+            var classes = '';
+            if (!_forReview) {
+              classes += ' pad';
+            } else {
+              classes += ' without-pad';
+            }
+            return classes;
         },
         
         _sortingIconForItem: function (sorting) {
             return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
         
-        _sortingIconHidden: function (item) {
-            return typeof item.sorting === 'undefined';
+        _selectingIconHidden: function (_forReview, item) {
+            return _forReview || (typeof item.sorting !== 'undefined');
         },
         
-        _isSelectionEnabled: function (_entities) {
-            return _entities.length > 0 && this._sortingIconHidden(_entities[0]);
+        _sortingIconHidden: function (_forReview, item) {
+            return _forReview || (typeof item.sorting === 'undefined');
+        },
+        
+        _isSelectionEnabled: function (_forReview, _entities) {
+            return !_forReview && _entities.length > 0 && this._sortingIconHidden(_forReview, _entities[0]);
         },
         
         _caclulateSortingIconStyle: function (sorting)  {
@@ -334,6 +407,7 @@
         },
         
         _toggleOrdering: function (item, index) {
+            var self = this;
             if (item.sorting === true) {
                 this.set("_entities." + index + ".sorting", false);
             } else if (item.sorting === false) {
@@ -344,6 +418,12 @@
                 this._turnOnOrdering(index);
             }
             this.provideSorting(this.entity.sortingVals, this._entities);
+            // invoke validation after user has toggled ordering of some property
+            if (self._shouldInvokeValidation()) {
+                self.validationCallback();
+            } else {
+                self._skipValidationAction();
+            }
         },
         
         _turnOnOrdering: function (index) {
@@ -440,15 +520,24 @@
 	                        var foundId = addedIds.indexOf(self.idOrKey(removed));
 	                        if (foundId > -1) {
 	                            addedIds.splice(foundId, 1);
+	                            self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
 	                        } else {
 	                            removedIds.push(self.idOrKey(removed));
+	                            self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
 	                        }
 	                        
 	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
 	                        if (foundInChosenIds > -1) {
 	                            chosenIds.splice(foundInChosenIds, 1);
+	                            self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
+	                        }
+	                        // invoke validation after user has removed some item from collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
 	                        }
 	                    }
 	                });
@@ -462,6 +551,7 @@
 	                        var foundId = removedIds.indexOf(self.idOrKey(added));
 	                        if (foundId > -1) {
 	                            removedIds.splice(foundId, 1);
+	                            self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
 	                        } 
 	                        
 	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
@@ -470,9 +560,17 @@
 	                        }
                             
                             chosenIds.push(self.idOrKey(added));
+                            self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
+                                self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
                             }
+	                        // invoke validation after user has added some item to collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                }
 	            }, self);

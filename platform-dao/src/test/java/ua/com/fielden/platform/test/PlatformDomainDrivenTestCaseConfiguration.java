@@ -8,10 +8,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DefaultFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
@@ -31,7 +29,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
      */
-    public PlatformDomainDrivenTestCaseConfiguration() {
+    public PlatformDomainDrivenTestCaseConfiguration(final Properties hbc) {
         // instantiate all the factories and Hibernate utility
         try {
             DOMConfigurator.configure("src/test/resources/log4j.xml");
@@ -58,48 +56,15 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
             injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).getInjector();
 
             entityFactory = injector.getInstance(EntityFactory.class);
-
-            // bind domain specific validation classes
-            bindDomainValidation(hibernateModule);
-            // bind domain specific meta property configuration classes
-            bindDomainMetaProperty(hibernateModule);
         } catch (final Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Binds domain specific configurators for meta properties on entity property.
-     * 
-     * @param hibernateUtil
-     */
-    private void bindDomainMetaProperty(final PlatformTestServerModule hibernateModule) {
-        // TODO Add domain meta property binding if needed
-    }
-
-    /**
-     * Binds entity property domain validation logic.
-     * 
-     * @param hibernateUtil
-     */
-    private void bindDomainValidation(final PlatformTestServerModule hibernateModule) {
-        // TODO Add domain validation binding if needed
-    }
-
     @Override
     public EntityFactory getEntityFactory() {
         return entityFactory;
-    }
-
-    @Override
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return hibernateModule.getDomainMetaPropertyConfig();
-    }
-
-    @Override
-    public DomainValidationConfig getDomainValidationConfig() {
-        return hibernateModule.getDomainValidationConfig();
     }
 
     @Override

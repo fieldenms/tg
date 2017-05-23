@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -9,7 +11,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -59,40 +60,55 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     
     @Override
     public final T newEntity() {
-        final T entity = factory.newEntity(entityType);
-        final IEntityDao<T> companion = co(this.entityType);
-        
-        if (companion != null) {
-            provideProxies(entity, companion.getFetchProvider());
-        }
-        
-        if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
-            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-            
-            if (centreContext != null) {
-                funcEntity.setContext(centreContext);
-            }
-            
-            if (chosenProperty != null) {
-                funcEntity.setChosenProperty(chosenProperty);
-            }
-            
-            if (String.class.isAssignableFrom(entity.getKeyType())) {
-                ((AbstractFunctionalEntityWithCentreContext<String>) funcEntity).setKey("dummy");
-            }
-            // resetting of meta-state makes the functional entity not dirty for the properties, changed above. This is important not to treat them as changed when going to client application.
-            funcEntity.resetMetaState();
-        }
-        
+        final T producedEntity;
         if (getMasterEntity() != null && EntityEditAction.class.isAssignableFrom(getMasterEntity().getClass())) {
             final EntityEditAction entityEditAction = (EntityEditAction) getMasterEntity();
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
-            return provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
-        } else if (getMasterEntity() != null && EntityNewAction.class.isAssignableFrom(getMasterEntity().getClass())) {
-            return provideDefaultValuesForStandardNew(entity, (EntityNewAction) getMasterEntity());
+            producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
-            return provideDefaultValues(entity);
+            final IEntityDao<T> companion = co(this.entityType);
+            final T entity;
+            if (companion != null) {
+                entity = companion.new_();
+            } else {
+                entity = factory().newEntity(this.entityType);
+            }
+            
+            if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
+                final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+                
+                if (centreContext != null) {
+                    funcEntity.setContext(centreContext);
+                }
+                
+                if (chosenProperty != null) {
+                    funcEntity.setChosenProperty(chosenProperty);
+                }
+                
+                if (String.class.isAssignableFrom(entity.getKeyType())) {
+                    ((AbstractFunctionalEntityWithCentreContext<String>) funcEntity).setKey("dummy");
+                }
+            }
+            
+            if (getMasterEntity() != null && EntityNewAction.class.isAssignableFrom(getMasterEntity().getClass())) {
+                producedEntity = provideDefaultValuesForStandardNew(entity, (EntityNewAction) getMasterEntity());
+            } else {
+                producedEntity = provideDefaultValues(entity);
+            }
         }
+        // Resetting of meta-state makes the entity not dirty for the properties, changed above. This is important not to treat them as changed when going to client application.
+        // However, in some rare cases it is possible to specify which property should skip resetting of its state (see method skipPropertiesForMetaStateResetting()).
+        producedEntity.nonProxiedProperties().filter(mp -> !skipPropertiesForMetaStateResetting().contains(mp.getName())).forEach(mp -> mp.resetState());
+        return producedEntity;
+    }
+    
+    /**
+     * In rare cases where there is a need not to reset meta-state of the property -- this property needs to be listed in this method.
+     * 
+     * @return
+     */
+    protected List<String> skipPropertiesForMetaStateResetting() {
+        return Arrays.asList();
     }
     
     /**
@@ -118,19 +134,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected T provideDefaultValuesForStandardNew(final T entity, final EntityNewAction masterEntity) {
         return entity;
     };
-    
-    /**
-     * Provides <code>entity</code>'s proxies for the properties which do not take part in <code>fetchStrategy</code>.
-     *
-     * @param entity
-     * @param fetchStrategy
-     */
-    private T provideProxies(final T entity, final IFetchProvider<T> fetchStrategy) {
-        // TODO implement automatic "proxying" for the properties, which do not take part in fetchStrategy --
-        // -- it provides consistency between newly created entities and fetched entities and also reduces the
-        // size of the JSON data transmitting from server to the client
-        return entity;
-    }
 
     /**
      * Override this method to provide domain-driven <code>entity</code>'s default values for the properties.

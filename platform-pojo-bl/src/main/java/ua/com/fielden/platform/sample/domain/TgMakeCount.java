@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.types.Money;
@@ -32,7 +32,7 @@ public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
 
     @IsProperty
     @Title("Value")
-    @PersistedType(userType = ISimpleMoneyType.class)
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money cost;
 
     @Observable

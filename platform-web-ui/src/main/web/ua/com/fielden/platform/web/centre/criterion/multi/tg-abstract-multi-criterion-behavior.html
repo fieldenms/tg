@@ -58,13 +58,13 @@
             this.orNull = this._orNull;
             this.not = this._not;
 
-            Polymer.TgBehaviors.TgAbstractCriterionBehavior._acceptMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractCriterionBehavior[1]._acceptMetaValues.call(this);
         },
         _cancelMetaValues: function() {
             this._orNull = this.orNull;
             this._not = this.not;
             
-            Polymer.TgBehaviors.TgAbstractCriterionBehavior._cancelMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractCriterionBehavior[1]._cancelMetaValues.call(this);
         },
         
         /**
@@ -72,7 +72,7 @@
          */
         _createMetaValueEditors: function () {
         	console.log("tg-abstract-multi-criterion-behavior: _createMetaValueEditors");
-        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior._createMetaValueEditors.call(this) + 
+        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior[1]._createMetaValueEditors.call(this) + 
         		'<tg-multi-criterion-config class="layout vertical" _or-null="{{_orNullBind}}" _not="{{_notBind}}"></tg-multi-criterion-config>';
         },
         
@@ -87,7 +87,7 @@
          * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
          */
         _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
+        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
         		orNull === false && not === false;
         }
     };

@@ -4,7 +4,6 @@ public class Yield2 {
     private final ISingleOperand2 operand;
     private final String alias;
     private final boolean requiredHint;
-    private ResultQueryYieldDetails2 info;
 
     public Yield2(final ISingleOperand2 operand, final String alias, final boolean requiredHint) {
         this.operand = operand;
@@ -16,7 +15,7 @@ public class Yield2 {
         this(operand, alias, false);
     }
 
-    public Class javaType() {
+    public Class<?> javaType() {
         return operand.type();
     }
 
@@ -31,10 +30,6 @@ public class Yield2 {
 
     public String getAlias() {
         return alias;
-    }
-
-    public boolean isCompositePropertyHeader() {
-        return info != null && info.isCompositeProperty();
     }
 
     @Override

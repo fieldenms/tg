@@ -17,7 +17,7 @@ public class StringSingleCriterionWidget extends AbstractSingleCriterionWidget {
      * @param propertyName
      */
     public StringSingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super(propertyName,
+        super(root, propertyName,
                 new SinglelineTextWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)

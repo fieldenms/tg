@@ -143,7 +143,7 @@ public class TitlesDescsGetter {
      *
      * @return
      */
-    public static Pair<String, String> getEntityTitleAndDescInCollectionalPropertyContex(final Class<?> collectionalPropertyType, final Class<?> entityWithCollectionalPropertyType) {
+    public static Pair<String, String> getEntityTitleAndDescInCollectionalPropertyContex(final Class<? extends AbstractEntity<?>> collectionalPropertyType, final Class<?> entityWithCollectionalPropertyType) {
         final Pair<String, String> tad = getEntityTitleAndDesc(collectionalPropertyType);
 
         // TODO : improve!
@@ -157,7 +157,7 @@ public class TitlesDescsGetter {
      * @param entityType
      * @return
      */
-    public static Pair<String, String> getEntityTitleAndDesc(final Class<?> entityType) {
+    public static Pair<String, String> getEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> entityType) {
         final EntityTitle entityTitleAnnotation = AnnotationReflector.getAnnotation(entityType, EntityTitle.class);
         final String title = entityTitleAnnotation != null ? entityTitleAnnotation.value() : "";
         final String desc = entityTitleAnnotation != null ? entityTitleAnnotation.desc() : "";
@@ -169,7 +169,7 @@ public class TitlesDescsGetter {
     /**
      * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
-    public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<?> klass) {
+    public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
         final String s = breakClassName(klass.getSimpleName());
         return new Pair<String, String>(s, s + " entity");
     }
@@ -195,7 +195,7 @@ public class TitlesDescsGetter {
         return -1;
     }
 
-    public static String processReqErrorMsg(final String propName, final Class<?> entityType) {
+    public static String processReqErrorMsg(final String propName, final Class<? extends AbstractEntity<?>> entityType) {
         String errorMsg = "";
         if (AbstractEntity.KEY.equals(propName)) {
             if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, entityType)) {
@@ -223,7 +223,7 @@ public class TitlesDescsGetter {
         return errorMsg;
     }
 
-    public static String processEntityExistsErrorMsg(final String propName, final Object errouneousValue, final Class<?> entityType) {
+    public static String processEntityExistsErrorMsg(final String propName, final Object errouneousValue, final Class<? extends AbstractEntity<?>> entityType) {
         String errorMsg = "";
 
         try {

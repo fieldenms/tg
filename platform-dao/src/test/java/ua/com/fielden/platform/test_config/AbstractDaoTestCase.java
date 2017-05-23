@@ -66,7 +66,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         save(new_composite(UserAndRoleAssociation.class, testUser, admin));
         
         // provide access to all security tokens for the test role
-        final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
+        final IApplicationSettings settings = getInstance(IApplicationSettings.class);
         final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
         final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));

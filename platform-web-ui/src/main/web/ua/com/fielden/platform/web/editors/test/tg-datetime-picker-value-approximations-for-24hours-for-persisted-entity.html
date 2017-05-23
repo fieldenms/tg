@@ -14,6 +14,7 @@
     <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
     
     <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/resources/reflection/tg-date-utils.html">
     <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
 </head>
 
@@ -62,13 +63,13 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf9999 = reflector.millisDateRepresentation(9999); /* 01/01/1970 2:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 4:00:09.999 AM in Tbilisi locale (UTC+04:00) */
-                    assert.strictEqual(edProperty._editingValue, localisedMomentOf9999, "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
-                    // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
+                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
+                    assert.strictEqual(edProperty._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
 
-                    assert.strictEqual(entity.get("dateProp"), 9999, "'property' value should be non-empty on start.");
-                    assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding 'property' value should be non-empty on start.");
+                    assert.strictEqual(entity.get("dateProp"), 3609999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding 'property' value should be non-empty on start.");
 
                     edProperty._editingValue = targetEditingValue;
                     edProperty.commit();
@@ -88,13 +89,13 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf9999 = reflector.millisDateRepresentation(9999); /* 01/01/1970 2:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 4:00:09.999 AM in Tbilisi locale (UTC+04:00) */
-                    assert.strictEqual(edProperty._editingValue, localisedMomentOf9999, "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
+                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
+                    assert.strictEqual(edProperty._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
 
-                    assert.strictEqual(entity.get("dateProp"), 9999, "'property' value should be non-empty on start.");
-                    assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding 'property' value should be non-empty on start.");
+                    assert.strictEqual(entity.get("dateProp"), 3609999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding 'property' value should be non-empty on start.");
 
                     edProperty._editingValue = targetEditingValue;
                     edProperty.commit();
@@ -107,6 +108,87 @@
 
                 master.retrieve();
             };
+            
+            // ===============================
+            // day+month aproximations into 'current year' date
+            var currYearStr = _momentTz().format('YYYY'); // '2016';
+            
+            test('[9/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '9/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[09/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '09/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  ] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  ', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  21:45] to [09/09/' + currYearStr + ' 21:45]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21:45', '09/09/' + currYearStr + ' 21:45');
+            });
+            
+            test('[ 9 / 09  21 ] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21 ', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9p] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, '9/9 9p', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9:47:14.567p] to [09/09/' + currYearStr + ' 21:47:14.567]', function(done) {
+                correctlyApproximates(done, '9/9 9:47:14.567p', '09/09/' + currYearStr + ' 21:47:14.567');
+            });
+            
+            // ===============================
+            // time portion aproximations into 'today' date
+            var todayStr = _momentTz().format('L'); // '17/10/2016';
+            
+            test('[11:03] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:03', todayStr + ' 11:03');
+            });
+            
+            test('[21:45] to [' + todayStr + ' 21:45]', function(done) {
+                correctlyApproximates(done, '21:45', todayStr + ' 21:45');
+            });
+            
+            test('[9:37] to [' + todayStr + ' 09:37]', function(done) {
+                correctlyApproximates(done, '9:37', todayStr + ' 09:37');
+            });
+            
+            test('[9:7] to [' + todayStr + ' 09:07]', function(done) {
+                correctlyApproximates(done, '9:7', todayStr + ' 09:07');
+            });
+            
+            test('[9:7p] to [' + todayStr + ' 21:07]', function(done) {
+                correctlyApproximates(done, '9:7p', todayStr + ' 21:07');
+            });
+            
+            test('[21:7] to [' + todayStr + ' 21:07]', function(done) {
+                correctlyApproximates(done, '21:7', todayStr + ' 21:07');
+            });
+            
+            test('[23:05:34.567] to [' + todayStr + ' 23:05:34.567]', function(done) {
+                correctlyApproximates(done, '23:05:34.567', todayStr + ' 23:05:34.567');
+            });
+            
+            test('[21:5:34.567] to [' + todayStr + ' 21:05:34.567]', function(done) {
+                correctlyApproximates(done, '21:5:34.567', todayStr + ' 21:05:34.567');
+            });
+            
+            test('[9:5:34.567] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5:34.567', todayStr + ' 09:05:34.567');
+            });
+            
+            test('[9:5 : 34  .  567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5 : 34  .  567  ', todayStr + ' 09:05:34.567');
+            });
+            
+            test('[9:5:34.567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5:34.567  ', todayStr + ' 09:05:34.567');
+            });
+            // ===============================
             
             test('[09/09/2002 11:03] to [09/09/2002 11:03]', function (done) {
                 correctlyApproximates(done, '09/09/2002 11:03', '09/09/2002 11:03');
@@ -121,7 +203,7 @@
             });
             
             test('[09/09/2002] to [09/09/2002 23:59:59.999] in case of editor with timePortionToBecomeEndOfDay as true', function (done) {
-                correctlyApproximates(done, '09/09/2002', '09/09/2002 23:59:59.999', reflector._millis('09/09/2002 23:59:59.999'));
+                correctlyApproximates(done, '09/09/2002', '09/09/2002 23:59:59.999', _millis('09/09/2002 23:59:59.999'));
             });
             
             test('[9/09/2002] to [09/09/2002 00:00]', function (done) {

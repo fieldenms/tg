@@ -2,18 +2,16 @@ package ua.com.fielden.web;
 
 import org.hibernate.SessionFactory;
 
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
-
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
+import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarningDao;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
@@ -55,16 +53,20 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
 import ua.com.fielden.platform.web.centre.SortingPropertyDao;
+
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -98,7 +100,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ISerialiser0.class).to(Serialiser0.class);
         bind(ISerialiser.class).to(Serialiser.class);
         // bind DAO
-        bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
@@ -108,11 +110,12 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
+        bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
+        bind(IPropertyWarning.class).to(PropertyWarningDao.class);
         bindConstant().annotatedWith(Names.named("attachments.location")).to(".");
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
-        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);

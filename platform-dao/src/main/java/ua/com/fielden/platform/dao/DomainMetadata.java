@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,12 +49,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -67,14 +70,12 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Optional;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 public class DomainMetadata {
     private static final TypeResolver typeResolver = new TypeResolver();
@@ -97,10 +98,10 @@ public class DomainMetadata {
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
-    private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata> persistedEntityMetadataMap = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap = new HashMap<>();
+    private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> persistedEntityMetadataMap;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
@@ -120,6 +121,11 @@ public class DomainMetadata {
         this.dbVersion = dbVersion;
         this.userMapTo = userMapTo;
 
+        this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
+        this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        this.modelledEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
             id = new PropertyColumn("_ID");
@@ -149,7 +155,9 @@ public class DomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
-        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
+
+        // the following operations are a bit heave and benefit from parallel processing
+        entityTypes.parallelStream().forEach(entityType -> {
             try {
                 switch (baseInfoForDomainMetadata.getCategory(entityType)) {
                 case PERSISTED:
@@ -170,7 +178,7 @@ public class DomainMetadata {
                 e.printStackTrace();
                 throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
             }
-        }
+        });
         
         //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
         //System.out.println(printEntitiesMetadataSummary("Synthetic entities metadata summary:", modelledEntityMetadataMap));
@@ -398,7 +406,7 @@ public class DomainMetadata {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class javaType, final PersistedType persistedType, final boolean entity) {
+    private Object getHibernateType(final Class javaType, final PersistentType persistedType, final boolean entity) {
         final String hibernateTypeName = persistedType != null ? persistedType.value() : null;
         final Class hibernateUserTypeImplementor = persistedType != null ? persistedType.userType() : Void.class;
 
@@ -449,7 +457,7 @@ public class DomainMetadata {
         final Boolean compositeKeyMemberOptionalityInfo = getCompositeKeyMemberOptionalityInfo(entityType, propName);
         final boolean isCompositeKeyMember = compositeKeyMemberOptionalityInfo != null;
         final boolean isRequired = isAnnotationPresent(field, Required.class);
-        final PersistedType persistedType = getPersistedType(entityType, propName);
+        final PersistentType persistedType = getPersistedType(entityType, propName);
         final boolean nullable = !(isRequired || (isCompositeKeyMember && !compositeKeyMemberOptionalityInfo));
 
         final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
@@ -502,7 +510,7 @@ public class DomainMetadata {
         final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(getAnnotation(calculatedPropfield, Calculated.class).category());
 
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+        final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
         final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
@@ -512,7 +520,7 @@ public class DomainMetadata {
 
     private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+        final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
         //final ExpressionModel expressionModel = expr().prop("id").model(); // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
@@ -522,7 +530,7 @@ public class DomainMetadata {
 
     private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+        final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? SYNTHETIC_COMPONENT_HEADER : SYNTHETIC;
         return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).type(propCat).build();
@@ -546,8 +554,8 @@ public class DomainMetadata {
         return isCompositeKeyMember ? isOptionalCompositeKeyMember : null;
     }
 
-    private PersistedType getPersistedType(final Class entityType, final String propName) {
-        return getPropertyAnnotation(PersistedType.class, entityType, propName);
+    private PersistentType getPersistedType(final Class entityType, final String propName) {
+        return getPropertyAnnotation(PersistentType.class, entityType, propName);
     }
 
     private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {
@@ -558,7 +566,7 @@ public class DomainMetadata {
         return hibTypesDefaults;
     }
 
-    public Collection<PersistedEntityMetadata> getPersistedEntityMetadatas() {
+    public Collection<PersistedEntityMetadata<?>> getPersistedEntityMetadatas() {
         return Collections.unmodifiableCollection(persistedEntityMetadataMap.values());
     }
 
@@ -566,7 +574,7 @@ public class DomainMetadata {
         return dbVersion;
     }
 
-    public Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata> getPersistedEntityMetadataMap() {
+    public Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> getPersistedEntityMetadataMap() {
         return persistedEntityMetadataMap;
     }
 

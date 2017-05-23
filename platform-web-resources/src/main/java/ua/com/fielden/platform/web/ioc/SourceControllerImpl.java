@@ -139,9 +139,9 @@ public class SourceControllerImpl implements ISourceController {
 
     private LinkedHashSet<String> calculateRootDependenciesFor(final String source) {
         if (source == null) {
-            return new LinkedHashSet<String>();
+            return new LinkedHashSet<>();
         } else {
-            final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source, new LinkedHashSet<String>());
+            final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source, new LinkedHashSet<>());
             return dependentResourceURIs;
         }
     }

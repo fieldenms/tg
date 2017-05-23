@@ -67,7 +67,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
@@ -323,7 +323,7 @@ public class DomainMetadata {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class javaType, final PersistedType persistedType) {
+    private Object getHibernateType(final Class javaType, final PersistentType persistedType) {
         if (isPersistedEntityType(javaType)) {
             return typeResolver.basic("long");
         }
@@ -439,13 +439,13 @@ public class DomainMetadata {
     private CommonInfo determineCommonInfo(final Class<? extends AbstractEntity<?>> holdingEntityType, final Field propertyField) {
         final String propName = propertyField.getName();
         final Class javaType = determinePropertyType(holdingEntityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(holdingEntityType, propName);
+        final PersistentType persistedType = getPersistedType(holdingEntityType, propName);
         final Object hibernateType = getHibernateType(javaType, persistedType);
         return new CommonInfo(propName, javaType, persistedType, hibernateType);
     }
 
     private static class CommonInfo {
-        public CommonInfo(final String propName, final Class javaType, final PersistedType persistedType, final Object hibernateType) {
+        public CommonInfo(final String propName, final Class javaType, final PersistentType persistedType, final Object hibernateType) {
             super();
             this.propName = propName;
             this.javaType = javaType;
@@ -455,7 +455,7 @@ public class DomainMetadata {
 
         final String propName;
         final Class javaType;
-        final PersistedType persistedType;
+        final PersistentType persistedType;
         final Object hibernateType;
     }
 
@@ -475,8 +475,8 @@ public class DomainMetadata {
         return getPropertyAnnotation(CompositeKeyMember.class, entityType, propName);
     }
 
-    private PersistedType getPersistedType(final Class entityType, final String propName) {
-        return getPropertyAnnotation(PersistedType.class, entityType, propName);
+    private PersistentType getPersistedType(final Class entityType, final String propName) {
+        return getPropertyAnnotation(PersistentType.class, entityType, propName);
     }
 
     private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {

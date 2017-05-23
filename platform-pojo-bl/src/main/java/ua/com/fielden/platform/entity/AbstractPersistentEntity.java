@@ -20,7 +20,6 @@ import ua.com.fielden.platform.security.user.User;
  */
 @SuppressWarnings("rawtypes")
 public abstract class AbstractPersistentEntity<K extends Comparable> extends AbstractEntity<K> {
-    private static final long serialVersionUID = 1L;
     
     /** Convenient constants to reference properties by name */
     public static final String CREATED_BY = "createdBy";

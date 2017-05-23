@@ -1,18 +1,112 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
-<link rel="import" href="/resources/polymer/paper-styles/color.html">
-<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
-<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-styles/shadow.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
+<style is="custom-style">
+    .insertion-point-dialog > #insertionPointContent {
+        background-color: white;
+        @apply(--shadow-elevation-2dp);
+    }
+    .insertion-point-dialog .title-bar paper-icon-button {
+        transform: scale(-1, -1);
+    }
+    #insertionPointContent .truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #insertionPointContent .title-bar {
+        padding: 0 16px;
+        height: 44px;
+        min-height: 44px;
+        font-size: 18px;
+        cursor: default;
+        color: white;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-color: var(--paper-light-blue-600);
+    }
+    #insertionPointContent paper-icon-button {
+        width: 22px;
+        height: 22px;
+        padding: 0px;
+    }
+    #insertionPointContent paper-icon-button.expand-colapse-button {
+        stroke: var(--paper-grey-100);
+        fill: var(--paper-grey-100);
+        color: var(--paper-grey-100);
+    }
+    #insertionPointContent paper-icon-button.expand-colapse-button:hover {
+        stroke: var(--paper-grey-300);
+        fill: var(--paper-grey-300);
+        color: var(--paper-grey-300);
+    }
+</style>
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
-    	<paper-material id="pm" style="margin: 10px; background: white; border-radius: 2px;">
-        	<tg-element-loader id="elementLoader"></tg-element-loader>
+        <style>
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .title-bar {
+                padding: 0 16px;
+                height: 44px;
+                min-height: 44px;
+                font-size: 18px;
+                cursor: default;
+                color: white;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                background-color: var(--paper-light-blue-600);
+            }
+            paper-icon-button {
+                width: 22px;
+                height: 22px;
+                padding: 0px;
+            }
+            paper-icon-button.expand-colapse-button {
+                stroke: var(--paper-grey-100);
+                fill: var(--paper-grey-100);
+                color: var(--paper-grey-100);
+            }
+            paper-icon-button.expand-colapse-button:hover {
+                stroke: var(--paper-grey-300);
+                fill: var(--paper-grey-300);
+                color: var(--paper-grey-300);
+            }
+        </style>
+        <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
+            <div id="insertionPointContent" class="layout vertical flex">
+                <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
+                    <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                </div>
+                <div id="loadableContent" class="relative flex">
+                    <tg-element-loader id="elementLoader"></tg-element-loader>
+                </div>
+            </div>
         </paper-material>
         <tg-toast id="toaster"></tg-toast>
     </template>
@@ -23,17 +117,32 @@
 
             is: "tg-entity-centre-insertion-point",
 
-            behaviors: [Polymer.IronResizableBehavior],
+            behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             listeners: {
                 'iron-resize': '_onIronResize'
             },
-            
+
             properties: {
                 activated: {
                     type: Boolean,
                     value: false
                 },
+                /**
+                 * Determnes whether insertion point is in the detached mode or not.
+                 */
+                detached: {
+                    type: Boolean,
+                    value: false
+                },
+                /**
+                 * The title for insertion point
+                 */
+                shortDesc: String,
+                /**
+                 * The explanation description for insertion point
+                 */
+                longDesc: String,
                 /**
                  * The entities retrieved when running centre that has this insertion point
                  */
@@ -50,22 +159,87 @@
                     observer: '_updateElementWithRetrievedTotals',
                     notify: true
                 },
+                /**
+                 * Last updated entity selection in centre that has this insertion point's element.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_updateElementWithRetrievedEntitySelection',
+                    notify: true
+                },
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    observer: '_updateElementWithColumnPropertiesMapper',
+                    notify: true
+                },
                 _element: {
                     type: Object,
                     value: null
+                },
+                /**
+                 * The dialog for detached insertion point.
+                 */
+                _dialog: Object
+            },
+
+            observers: ['_adjustView(detached)'],
+
+            ready: function () {
+                this.triggerElement = this.$.insertionPointContent;
+            },
+
+            /**
+             * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
+             */
+            _createDialog: function () {
+                var dialog = document.createElement('div');
+                dialog.classList.toggle("insertion-point-dialog", true);
+                dialog.classList.toggle("layout", true);
+                dialog.classList.toggle("vertical", true);
+                dialog.style.position = "absolute";
+                dialog.style.top = "2%";
+                dialog.style.left = "2%";
+                dialog.style.width = "96%";
+                dialog.style.height = "96%";
+                dialog.style.zIndex = "1";
+                return dialog;
+            },
+
+            _showDialog: function () {
+                if (!this._dialog) {
+                    this._dialog = this._createDialog();
                 }
+
+                this.detached = true;
+                Polymer.dom(document.body).appendChild(this._dialog);
+                Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
+                Polymer.dom.flush();
+            },
+
+            _closeDialog: function () {
+                Polymer.dom(document.body).removeChild(this._dialog);
+                this.detached = false;
+                Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
+                Polymer.dom.flush();
+                this.notifyResize();
             },
 
             _getElement: function (customAction) {
-            	var self = this;
-            	if (self._element) {
-            	    return Promise.resolve(self._element);
-            	} else {
-           			self.$.elementLoader.import = customAction.componentUri;
-               		self.$.elementLoader.elementName = customAction.elementName;
-               		self.$.elementLoader.attrs = customAction.attrs;
-               		return self.$.elementLoader.reload();
-            	}
+                var self = this;
+                if (self._element) {
+                    return Promise.resolve(self._element);
+                } else {
+                    self.$.elementLoader.import = customAction.componentUri;
+                    self.$.elementLoader.elementName = customAction.elementName;
+                    self.$.elementLoader.attrs = customAction.attrs;
+                    return self.$.elementLoader.reload();
+                }
             },
 
             _updateElementWithRetrievedEntities: function (newValue, oldValue) {
@@ -73,13 +247,25 @@
                     this._element.retrievedEntities = newValue;
                 }
             },
-            
+
             _updateElementWithRetrievedTotals: function (newValue, oldValue) {
                 if (this._element) {
                     this._element.retrievedTotals = newValue;
                 }
             },
             
+            _updateElementWithRetrievedEntitySelection: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.retrievedEntitySelection = newValue;
+                }
+            },
+            
+            _updateElementWithColumnPropertiesMapper: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.columnPropertiesMapper = newValue;
+                }
+            },
+
             /**
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              */
@@ -87,59 +273,90 @@
                 var self = this;
                 if (this.activated === true) {
                     return self._getElement(customAction)
-		                   .then(function (element) {
-		                   		return customAction._onExecuted(null, element, null);
-		                   });
+                        .then(function (element) {
+                            return customAction._onExecuted(null, element, null).then(function () {
+                                customAction.restoreActiveElement();
+                            });
+                        });
                 } else { // else need to first load and create the element to be inserted
-                   	self._getElement(customAction)
-                           .then(function (element) {
-                               self.activated = true;
-                               self._element = element;
-                               self._element.addEventListener("retrieved-entities-changed", function (ev) {
-                                   self.retrievedEntities = this.retrievedEntities;
-                               });
-                               self._element.retrievedEntities = self.retrievedEntities;
-                               self._element.addEventListener("retrieved-totals-changed", function (ev) {
-                                   self.retrievedTotals = this.retrievedTotals;
-                               });
-                               self._element.retrievedTotals = self.retrievedTotals;
-                               
-                               var promise = customAction._onExecuted(null, element, null);
-                               if (promise) {
-                               	return promise
-                               	.then(function () {self._adjustView();});
-                               } else {
-                                   return Promise.resolve()
-                                   .then(function () {self._adjustView();});
-                               }
-                           })
-                           .catch(function (error) {
-                               self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
-                               self.$.toaster.hasMore = true;
-                               self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
+                    self._getElement(customAction)
+                        .then(function (element) {
+                            self.activated = true;
+                            self._element = element;
+                            self._element.addEventListener("retrieved-entities-changed", function (ev) {
+                                self.retrievedEntities = this.retrievedEntities;
+                            });
+                            self._element.retrievedEntities = self.retrievedEntities;
+                            self._element.addEventListener("retrieved-totals-changed", function (ev) {
+                                self.retrievedTotals = this.retrievedTotals;
+                            });
+                            self._element.retrievedTotals = self.retrievedTotals;
+                            self._element.addEventListener("retrieved-entity-selection-changed", function (ev) {
+                                self.retrievedEntitySelection = this.retrievedEntitySelection;
+                            });
+                            self._element.retrievedEntitySelection = self.retrievedEntitySelection;
+                            self._element.addEventListener("column-properties-mapper-changed", function (ev) {
+                                self.columnPropertiesMapper = this.columnPropertiesMapper;
+                            });
+                            self._element.columnPropertiesMapper = self.columnPropertiesMapper;
+
+                            var promise = customAction._onExecuted(null, element, null);
+                            if (promise) {
+                                return promise
+                                    .then(function () {
+                                        self._adjustView(self.detached);
+                                        customAction.restoreActiveElement();
+                                    });
+                            } else {
+                                return Promise.resolve()
+                                    .then(function () {
+                                        self._adjustView(self.detached);
+                                        customAction.restoreActiveElement();
+                                    });
+                            }
+                        })
+                        .catch(function (error) {
+                            self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
+                            self.$.toaster.hasMore = true;
+                            self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
                                                       <b>Error cause:</b><br>' + error.message;
-                               self.$.toaster.showProgress = false;
-                               self.$.toaster.show();
-                           });
+                            self.$.toaster.showProgress = false;
+                            self.$.toaster.show();
+                        });
                 }
             },
 
-            _adjustView: function () {
+            _adjustView: function (detached) {
                 var self = this;
-                
-                if (this.$.elementLoader.prefDim) {
-                	var prefDim = this.$.elementLoader.prefDim;
-                	this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
-                	this.$.pm.style.height = prefDim.height() + prefDim.heightUnit;
+                if (this.$.elementLoader.prefDim && detached === false) {
+                    var prefDim = this.$.elementLoader.prefDim;
+                    this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
+                    this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
                 } else {
-                    this.$.pm.width = "auto";
-                    this.$.pm.height = "auto";
+                    this.$.loadableContent.style.width = "100%";
+                    this.$.loadableContent.style.height = "100%";
                 }
                 this.updateStyles();
             },
-            
+
             _onIronResize: function () {
-                this._adjustView();
+                this._adjustView(this.detached);
+            },
+
+            _expandColapseTap: function (event) {
+                if (this.detached) {
+                    this._closeDialog();
+                } else {
+                    this._showDialog();
+                }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+            },
+            
+            _hasTitleBar: function (shortDesc) {
+                return !!shortDesc;
             }
         });
     })();

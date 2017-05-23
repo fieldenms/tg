@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.factory;
 
+import static java.lang.String.*;
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -15,6 +18,8 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
  */
 public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
+    private static final Logger LOGGER = Logger.getLogger(DefaultCompanionObjectFinderImpl.class);
+    
     @Inject
     private Injector injector;
 
@@ -22,10 +27,10 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type) {
         if (type.isAnnotationPresent(CompanionObject.class)) {
             try {
-                final Class<T> controllerType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
-                return injector.getInstance(controllerType);
+                final Class<T> coType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
+                return injector.getInstance(coType);
             } catch (final Exception e) {
-                e.printStackTrace();
+                LOGGER.warn(format("Could not locate companion for type [%s].", type.getName()), e);
                 // if controller could not be instantiated for whatever reason it can be considered non-existent
                 // thus, returning null
                 return null;

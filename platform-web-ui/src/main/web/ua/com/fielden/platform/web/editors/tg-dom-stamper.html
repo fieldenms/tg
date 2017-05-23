@@ -9,7 +9,9 @@
 
  -->
 <dom-module id="tg-dom-stamper">
-    <template></template>
+    <template>
+        <content></content>
+    </template>
 </dom-module>
 
 <script>
@@ -27,7 +29,7 @@
     	},
         
     	_domTextChanged: function (newDomText) {
-    	    Polymer.dom(this.root).innerHTML = newDomText;
+    	    Polymer.dom(this).innerHTML = newDomText;
     	}
     });
 </script>

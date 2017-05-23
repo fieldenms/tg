@@ -1,11 +1,15 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
+<link rel="import" href="/resources/images/tg-icons.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -18,43 +22,141 @@
                 overflow: auto;
                 /* this is to make host scorable when needed */
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+                @apply(--layout-vertical);
+
+            }
+            .title-bar {
+                padding: 0 16px;
+                height: 44px;
+                min-height: 44px;
+                font-size: 18px;
+                cursor: default;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                background-color: var(--paper-light-blue-600);
+            }
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .title-text {
+                pointer-events: none;
+                overflow: hidden;
+            }
+            .static-title {
+                color: white;
+            }
+            .dynamic-title {
+                color: white;
+            }
+            .vertical-splitter {
+                border-left: 1px solid white;
+                height: 1.5em;
+                margin: 0 5px
             }
             paper-icon-button {
-                color: var(--paper-deep-orange-300);
-                --paper-icon-button: {
-                    position: absolute;
-                    top: 0;
-                    right: 0;
-                    width: 34px;
-                    height: 34px;
-                };
+                width: 22px;
+                height: 22px;
+                padding: 0px;
             }
-            paper-icon-button:hover {
-                color: var(--paper-deep-orange-600);
+            paper-icon-button.close-button {
+                stroke: var(--paper-grey-100);
+                fill: var(--paper-grey-100);
+                color: var(--paper-grey-100);
+            }
+            paper-icon-button.close-button:hover {
+                stroke: var(--paper-grey-300);
+                fill: var(--paper-grey-300);
+                color: var(--paper-grey-300);
+            }
+            paper-icon-button.minimize-button {
+                width: 19px;
+                height: 19px;
+                stroke: var(--paper-grey-100);
+                fill: var(--paper-grey-100);
+                color: var(--paper-grey-100);
+            }
+            paper-icon-button.minimize-button:hover {
+                stroke: var(--paper-grey-300);
+                fill: var(--paper-grey-300);
+                color: var(--paper-grey-300);
             }
         </style>
-        <tg-element-loader id="elementLoader"></tg-element-loader>
+        <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+            <div class="title-text layout horizontal center flex">
+                <span class="static-title truncate">[[staticTitle]]</span>
+                <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
+                <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
+            </div>
+            <div class="layout horizontal center" style="margin-left:10px">
+                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+            </div>
+        </div>
+        <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
+            <tg-element-loader id="elementLoader"></tg-element-loader>
+        </div>
         <tg-toast id="toaster"></tg-toast>
-        <paper-icon-button icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
     </template>
 </dom-module>
 <script>
     (function () {
+        var findParentDialog = function (action) {
+            var parent = action;
+            while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                parent = parent.parentElement;
+            }
+            return parent;
+        }
         Polymer({
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronOverlayBehavior],
+            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
-                'iron-overlay-closed': '_dialogClosed'
+                'iron-overlay-closed': '_dialogClosed',
+                'tg-dynamic-title-changed': '_updateDynamicTitle'
+            },
+
+            hostAttributes: {
+                'tabindex': '0'
             },
 
             properties: {
                 isRunning: {
                     type: Boolean,
                     readOnly: true
+                },
+
+                /**
+                 * Title bar properties firs of them is static title and the other one is dynamic it can changed when user interacts with dialog.
+                 */
+                staticTitle: {
+                    type: String,
+                    value: ""
+                },
+                dynamicTitle: {
+                    type: String,
+                    value: ""
+                },
+                prefDim: {
+                    type: Object
+                },
+
+                _wasMoved: {
+                    type: Boolean,
+                    value: false
+                },
+
+                _minimised: {
+                    type: Boolean,
+                    value: false
                 },
 
                 /* Postal subscription to events that trigger dialog closing.
@@ -87,20 +189,105 @@
                 /** A master element that corresponds to the _lastAction. */
                 _lastElement: {
                     type: Object
+                },
+
+                /**The parent dialog tow wchich this dialog is a child.*/
+                _parentDialog: {
+                    type: Object
+                },
+
+                /**List of child dialogs*/
+                _childDialogs: {
+                    type: Array
                 }
+            },
+            
+            observers: ["_dialogMinimised(prefDim, _minimised)"],
+
+            keyBindings: {
+                'alt+x': 'closeDialog',
+                'alt+m': 'minimizeDialog'
             },
 
             ready: function () {
-                this.noAutoFocus = false;
+                this.noAutoFocus = true;
                 this.noCancelOnOutsideClick = true;
                 this.noCancelOnEscKey = true;
+
+                this._parentDialog = null;
+                this._childDialogs = [];
+
+                // Listen to mousedown or touchstart to be sure to be the first to capture
+                // clicks outside the overlay.
+                this._onCaptureClick = this._onCaptureClick.bind(this);
+                this._onCaptureFocus = this._onCaptureFocus.bind(this);
+                this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
+
+                this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
+                this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
 
                 this._setIsRunning(false);
             },
 
+            attached: function () {
+                var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+                this.addEventListener(clickEvent, this._onCaptureClick, true);
+                this.addEventListener('focus', this._onCaptureFocus, true);
+                this.addEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+
+            detached: function () {
+                var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+                this.removeEventListener(clickEvent, this._onCaptureClick, true);
+                this.removeEventListener('focus', this._onCaptureFocus, true);
+                this.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+
+            _onCaptureClick: function (event) {
+                if (this._manager.currentOverlay() !== this) {
+                    console.log("select overlay");
+                    this._bringToFront();
+                }
+            },
+
+            _onCaptureFocus: function (event) {
+                if (this._manager.currentOverlay() !== this) {
+                    console.log("select overlay");
+                    this._bringToFront();
+                }
+            },
+
+            _onCaptureKeyDown: function (event) {
+                if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab') && this._manager.currentOverlay() !== this) {
+                    console.log("select overlay");
+                    this._bringToFront();
+                }
+            },
+
+            _bringToFront: function () {
+                this._manager.addOverlay(this);
+                this._childDialogs.forEach(function (childDialog) {
+                    childDialog._bringToFront();
+                });
+            },
+
+            minimizeDialog: function () {
+                if (!this._minimised) {
+                    this.persistActiveElement();
+                    this.focus();
+                }
+                this._minimised = !this._minimised;
+                this.notifyResize();
+                if (!this._minimised) {
+                    this.restoreActiveElement();
+                }
+            },
+
             closeDialog: function () {
                 var canClose = true;
-                if (this._lastElement.classList.contains('canLeave')) {
+                //Try to close children first.
+                canClose = this._closeChildren();
+                if (canClose && this._lastElement.classList.contains('canLeave')) {
                     var reason = this._lastElement.canLeave();
                     if (reason !== undefined) {
                         canClose = false;
@@ -121,16 +308,89 @@
                 }
             },
 
+            _closeChildren: function () {
+                var canClose = true;
+
+                this._childDialogs.slice().forEach(function (dialog) {
+                    dialog.closeDialog();
+                    if (dialog.opened) {
+                        canClose = false
+                        if (dialog._childDialogs.length === 0) {
+                            dialog._focusDialogWithInput();
+                        }
+                    }
+                });
+
+                return canClose;
+            },
+
+            _dialogMinimised: function (prefDim, minimised) {
+                var width = "";
+                var height = "";
+                if (!minimised && prefDim) {
+                    width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                }
+                this._setDialogBodyDimensions(width, height);
+            },
+
+            _setDialogBodyDimensions: function (width, height) {
+                this.style.width = width;
+                // +44px - height of the title bar please see styles for .title-bar selector.
+                this.style.height = height && "calc(" + height + " + 44px)";
+            },
+
+            _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
+                return !(staticTitle && dynamicTitle);
+            },
+
+            _updateDynamicTitle: function (e) {
+                this.dynamicTitle = e.detail;
+            },
+
+            _moveDialog: function (e) {
+                var target = e.target || e.srcElement;
+                if (target === this.$.titleBar) {
+                    switch (e.detail.state) {
+                    case 'start':
+                        this.$.titleBar.style.cursor = 'move';
+                        break;
+                    case 'track':
+                        this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
+                        this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                        this._wasMoved = true;
+                        break;
+                    case 'end':
+                        this.$.titleBar.style.removeProperty('cursor');
+                        break;
+                    }
+                }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+            },
+
             _closeDialogAndIndicateActionCompletion: function (action) {
                 if (this._lastAction) {
                     this._lastAction.isActionInProgress = false;
+                }
+                if (this._minimised) {
+                    this.restoreActiveElement();
+                }
+                if (this._parentDialog) {
+                    var childIndex = this._parentDialog._childDialogs.indexOf(this);
+                    if (childIndex > -1) {
+                        this._parentDialog._childDialogs.splice(childIndex, 1);
+                    }
+                    this._parentDialog = null;
                 }
                 this.close();
             },
 
             _handleCloseEvent: function (data, envelope) {
                 if (data.canClose === true) {
-                	this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                    this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },
 
@@ -138,17 +398,18 @@
             _getElement: function (customAction) {
                 var self = this;
                 var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-                if (self._cachedElements.hasOwnProperty(key)) {
+                // disabled chache (temprarily?) to support polymorphic masters
+                /* if (self._cachedElements.hasOwnProperty(key)) { 
                     console.log("Reusing cached element:", key);
                     var element = self._cachedElements[key];
                     self.$.elementLoader.insert(element);
                     return Promise.resolve(element);
-                } else {
-                    self.$.elementLoader.import = customAction.componentUri;
-                    self.$.elementLoader.elementName = customAction.elementName;
-                    self.$.elementLoader.attrs = customAction.attrs;
-                    return self.$.elementLoader.reload();
-                }
+                } else { */
+                self.$.elementLoader.import = customAction.componentUri;
+                self.$.elementLoader.elementName = customAction.elementName;
+                self.$.elementLoader.attrs = customAction.attrs;
+                return self.$.elementLoader.reload();
+                //}
             },
 
             /*
@@ -164,11 +425,16 @@
                     this.$.toaster.showProgress = false;
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
+                    if (customAction) {
+                        customAction.restoreActiveElement();
+                    }
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
                         self._lastAction = customAction;
                         self._setIsRunning(true);
+                        self.staticTitle = customAction.shortDesc;
+                        this.dynamicTitle = null;
 
                         self._getElement(customAction)
                             .then(function (element) {
@@ -176,25 +442,31 @@
                                 if (promise) {
                                     return promise
                                         .then(function () {
-                                            var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                            /*var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-            	                                    console.log("caching:", key);
-                                                	self._cachedElements[key] = element;
+                                                    console.log("caching:", key);
+                                                    self._cachedElements[key] = element;
                                                 }
-                                            }
+                                            }*/
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
-                                        .catch(function () {
+                                        .catch(function (error) {
                                             self._setIsRunning(false);
+                                            if (self._lastAction) {
+                                                self._lastAction.restoreActiveElement();
+                                            }
                                         });
                                 } else {
                                     return Promise.resolve()
                                         .then(function () {
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
-                                        .catch(function () {
+                                        .catch(function (error) {
                                             self._setIsRunning(false);
+                                            if (self._lastAction) {
+                                                self._lastAction.restoreActiveElement();
+                                            }
                                         });
                                 }
                             })
@@ -205,6 +477,9 @@
 	                                                      <b>Error cause:</b><br>' + error.message;
                                 self.$.toaster.showProgress = false;
                                 self.$.toaster.show();
+                                if (self._lastAction) {
+                                    self._lastAction.restoreActiveElement();
+                                }
                             });
                     }
                 }
@@ -228,41 +503,58 @@
                                 }));
                         }
                     }
-
-                    if (element.prefDim) {
-                        var prefDim = element.prefDim;
-                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                    } else {
-                        this.style.width = "auto";
-                        this.style.height = "auto";
-                    }
                     this.updateStyles();
                     this.refit();
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
-                        this.addEventListener('binding-entity-appeared', this._focusAndRefit.bind(this));
+                        //Configuring the dialog hierarchy.
+                        var actionsDialog = findParentDialog(action);
+                        if (actionsDialog) {
+                            actionsDialog._childDialogs.push(this);
+                            this._parentDialog = actionsDialog;
+                        }
+                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
+                        this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         this._focusAndRefit(); // this is a legacy support
                         this.open();
                     }.bind(this), 200);
                 }
             },
 
+            /**
+             * Listener that listens binding entity appeared event and focuses first input.
+             */
+            _focusDialogWithInput: function (e) {
+                if (this._lastElement.focusFirstInput) {
+                    this._lastElement.focusFirstInput();
+                }
+            },
+
+            /**
+             * Listener that listens binding entity appeared event and refits loaded master.
+             */
+            _fitWhenFirstTimeOpened: function (e) {
+                this.async(function () {
+                    this.refit();
+                }.bind(this), 50);
+                this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
+            },
+
             /** 
-             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound. 
+             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound.
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
-            _focusAndRefit: function() {
+            _focusAndRefit: function () {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
                 if (this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
-                }                            
-    		},
+                }
+            },
 
-            
+
             _dialogOpened: function (e, detail, source) {
                 // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
                 // a more appropriate place for refitting is post entity binding
@@ -283,6 +575,18 @@
                         postal.unsubscribe(this._subscriptions[index]);
                     }
                     this._subscriptions.length = 0;
+                    this._wasMoved = false;
+                    this._minimised = false;
+
+                    if (this._lastAction) {
+                        this._lastAction.restoreActiveElement();
+                    }
+                }
+            },
+
+            _onIronResize: function () {
+                if (!this._wasMoved && !this._minimised) {
+                    Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
             }
         });

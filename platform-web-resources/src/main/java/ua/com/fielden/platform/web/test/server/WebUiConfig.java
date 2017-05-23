@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
@@ -17,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
@@ -35,6 +38,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.sample.domain.ExportAction;
@@ -78,13 +82,21 @@ import ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated;
 import ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
+import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
+import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
@@ -110,11 +122,15 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
+import ua.com.fielden.platform.web.resources.webui.AcknowledgeWarningsWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.MenuWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.server.config.LayoutComposer;
+import ua.com.fielden.platform.web.test.server.config.StandardActions;
+import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
+import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -124,8 +140,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -160,7 +174,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private EntityMaster<ExportAction> createExportActionMaster() {
-        final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+        final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
         final String actionButton = "'margin: 10px', 'width: 110px'";
         final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
                 .forEntity(ExportAction.class)
@@ -170,11 +184,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.shortDesc("CANCEL")
                 /*      */.longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         " ['padding:20px', "
-                        + " [['flex']],"
-                        + format(bottomButtonPanel, actionButton, actionButton)
-                        + "]"))
+                        + " [['flex']]]"))
                 .done();
         final EntityMaster<ExportAction> master = new EntityMaster<ExportAction>(
                 ExportAction.class,
@@ -193,6 +206,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
 
+        TgMessageWebUiConfig.register(injector(), configApp());
+        TgStopWebUiConfig.register(injector(), configApp());
+        TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
+        TgPolygonWebUiConfig.register(injector(), configApp());
+
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
                 EntityCentreBuilder.centreFor(TgDeletionTestEntity.class)
@@ -200,7 +218,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withSelectionCrit().build()).
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
-                                longDesc("Add new delete action").
+                                longDesc("Add new action").
+                                shortcut("alt+n").
                                 withNoParentCentreRefresh().
                                 build())
                         .also()
@@ -209,6 +228,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("remove-circle-outline").
                                 shortDesc("Delete selected").
                                 longDesc("Deletes the selected entities").
+                                shortcut("alt+d").
                                 build())
                         .addProp("this").also()
                         .addProp("desc")
@@ -223,22 +243,36 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                      key
                 + format("['justified', [%s]],", outer)
                 //                      desc
-                + format("['justified', [%s]],", outer)
-                + format("['margin-top: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle)
+                + format("['justified', [%s]]", outer)
                 + "]");
+        final String actionBarLayout = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle);
         @SuppressWarnings("unchecked")
         final IMaster<TgDeletionTestEntity> deletionMaster = masterBuilder.forEntity(TgDeletionTestEntity.class)
             .addProp("key").asSinglelineText().also()//
             .addProp("desc").asSinglelineText().also()
             .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancels current changes if any or refresh the data")
             .addAction(MasterActions.SAVE)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
+            .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
+            .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
+
+        AcknowledgeWarningsWebUiConfig.register(injector(), configApp());
+        TgEntityWithTimeZoneDatesWebUiConfig.register(injector(), configApp());
+        TgGeneratedEntityWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
-                        .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).
-                        setLayoutFor(Device.DESKTOP, Optional.empty(), "[[]]")
+                        .addTopAction(CentreConfigActions.SORT_ACTION.mkAction()).also()
+                        .addTopAction(StandardActions.EXPORT_ACTION.mkAction(TgFetchProviderTestEntity.class))
+                        .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).also()
+                        .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                            .setDefaultValue(
+                                single()
+                                .entity(TgPersistentEntityWithProperties.class)
+                                .setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))
+                                .value()
+                            ).
+                        setLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkGridForCentre(1, 2))
 
                         .addProp("property")
                         .setFetchProvider(EntityUtils.fetch(TgFetchProviderTestEntity.class).with("additionalProperty"))
@@ -340,6 +374,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
 
+        final MenuWebUiConfig menuWebUiConfig = new MenuWebUiConfig(injector());
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
@@ -380,6 +415,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
                                 ))
                         .icon("accessibility")
+                        .withStyle("fill: none; stroke: red; stroke-linejoin: round; stroke-linecap: round;")
                         .shortDesc("Dummy")
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
@@ -421,6 +457,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
                                 ))
                         .icon("accessibility")
+                        .withStyle("color: green")
                         .shortDesc("Dummy")
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
@@ -508,15 +545,31 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("add-circle")
                         .shortDesc("Create Status")
                         .longDesc("Creates new status and assignes it back to the Status property")
+                        .shortcut("ctrl+shift+l")
                         .build())
                 .also()
                 .addProp("colourProp").asColour()
+                .also()
+                .addProp("hyperlinkProp").asHyperlink()
+                .also()
+                .addProp("integerProp").asSpinner()
+                .also()
+                .addProp("producerInitProp").asAutocompleter()
+                .also()
+                .addProp("moneyProp").asMoney()
+                .also()
+                .addProp("nonConflictingProp").asSinglelineText()
+                .also()
+                .addProp("conflictingProp").asSinglelineText()
+                .also()
+                .addProp("domainInitProp").asSinglelineText()
                 .also()
 
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
                     .shortDesc("CANCEL")
                     .longDesc("Cancels any changes and closes the master (if in dialog)")
+                    // .shortcut("ctrl+x") // overridden from default esc
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction(
@@ -530,29 +583,39 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("trending-up")
                         .shortDesc("Export")
                         .longDesc("Export action")
+                        .shortcut("ctrl+shift+e")
                         .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
+                    // .shortDesc("SAVE")
+                    // .longDesc("SAVE")
+                    // .shortcut("ctrl+shift+s") // -- overridden from default ctrl+s
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        format("['horizontal', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
+                        + format("['subheader-open:Other components', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("['subheader-open:Other components 1', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
-                        + format("[[%s], ['flex']],", fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
-                        + "    ]"))
+                        + format("['subheader-open:Other components 2', 'flex'],")
+                        + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
+                        + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + "[['html:<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],"
+                        + "[['html:<span>This is binded text for Status.desc: </span><span id=\"status_Desc_bind\" style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], ['flex'], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]")
-                        .replace("fmr", fmr)
-                        .replace("actionMr", actionMr))
+                        + "[['html:<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],"
+                        + "[['html:<span>This is binded text for Status.desc: </span><span id=\"status_Desc_bind\" style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "]").replace("fmr", fmr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
@@ -560,10 +623,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]")
-                        .replace("fmr", fmr)
-                        .replace("actionMr", actionMr))
+                        + "[['html:<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],"
+                        + "[['html:<span>This is binded text for Status.desc: </span><span id=\"status_Desc_bind\" style=\"color:blue\">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]"
+                        + "]").replace("fmr", fmr))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
@@ -601,20 +663,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .addAction(MasterActions.VALIDATE).addAction(MasterActions.SAVE).addAction(MasterActions.EDIT).addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        "['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]".replace("actionMr", actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
                         + "[[fmr], ['flex']],"
+                        + "[['flex']]]").replace("fmr", fmr))
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                        + "[[fmr],['flex']],"
+                        + "[['flex']]]").replace("fmr", fmr))
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
-                                + "[[fmr],['flex']],"
-                                + "[['flex']],"
-                                + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                                + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
-                                        + "[['flex']],"
-                                        + "[['flex']],"
-                                        + "[['flex']],"
-                                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
+                        + "[['flex']],"
+                        + "[['flex']]]").replace("fmr", fmr)).done();
 
         final IMaster<TgEntityWithPropertyDependency> masterConfigForPropDependencyExample = new SimpleMasterBuilder<TgEntityWithPropertyDependency>()
             .forEntity(TgEntityWithPropertyDependency.class)
@@ -623,6 +683,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addProp("dependentProp").asSinglelineText()
             .also()
             .addProp("roles").asSinglelineText()
+            .also()
+            .addProp("key").asSinglelineText()
             .also()
             .addAction(MasterActions.REFRESH)
             //      */.icon("trending-up") SHORT-CUT
@@ -633,11 +695,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.EDIT)
             .addAction(MasterActions.VIEW)
 
+            .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                    format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                    "      ['padding:20px', "
-                    + format("[[%s], [%s], ['flex']],", fmr, fmr)
-                    + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
-                    + "    ]"))
+                    "['padding:20px', "
+                    + format("[[%s], [%s], [%s], ['flex']]", fmr, fmr, fmr)
+                    + "]"))
             .done();
 
         final IMaster<TgCollectionalSerialisationParent> masterConfigForCollSerialisationTest = new SimpleMasterBuilder<TgCollectionalSerialisationParent>()
@@ -657,11 +720,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', "
-                        + format("[[%s], [%s], ['flex']],", fmr, fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
-                        + "    ]"))
+                        "['padding:20px', "
+                        + format("[[%s], [%s], ['flex']]", fmr, fmr)
+                        + "]"))
                 .done();
 
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
@@ -679,18 +743,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        "['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]".replace("actionMr", actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
-                        + "[[mr], [mr]], "
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                        + "[[mr], [mr]]]").replace("mr", mr))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'margin:20px',"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]]]").replace("mr", mr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['margin:20px',"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("actionMr", actionMr))
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']]]"))
                 .done();
 
         final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
@@ -704,6 +764,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, injector());
+        final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
 
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
 
@@ -714,6 +775,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(entityEditActionMaster).
             addMaster(entityDeleteActionMaster).
             addMaster(entityExportActionMaster).
+            addMaster(genericMenuSaveMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).
@@ -728,6 +790,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
                     injector())).
+            addMaster(menuWebUiConfig.master).
             addMaster(userWebUiConfig.master).
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
@@ -837,12 +900,35 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
-                .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
-                .addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
-                .addMenuItem("Custom View").description("Custom view description").view(customView).done()
-                .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
-                .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
-                .addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
+                /*  */.addMenuItem("Custom group").description("Custom group")
+                /*    */.addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                /*    */.addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
+                /*  */.done()
+                /*  */.addMenuItem("Custom View").description("Custom view description").view(customView).done()
+                /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
+                /*  */.addMenuItem("Last group").description("Last group")
+                /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
+                /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
+                /*    */.addMenuItem("TimeZones Example").description("TimeZone properties handling example").centre(configApp().getCentre(MiTgEntityWithTimeZoneDates.class).get()).done()
+                /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
+                /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
+                /*  */.done()
+                .addMenuItem("GPS-треки").description(
+                        "Перегляд, моніторинг та аналіз GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
+                        "Є можливість переглядати обчислений кілометраж у вигляді графіка і / або таблиці."
+                ).centre(configApp().getCentre(MiTgMessage.class).get()).done()
+                .addMenuItem("Зупинки").description(
+                        "Перегляд, моніторинг та аналіз зупинок, які були здійснені машинами компанії." + "<br><br>"
+                      + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
+                      + "для радіусу території чи швидкості переміщення задає користувач. Також можна задавати "
+                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки."
+                ).centre(configApp().getCentre(MiTgStop.class).get()).done()
+                .addMenuItem("Моніторинг в реальному часі").description(
+                        "Центр для перегляду машин у реальному часі на карті."
+                ).centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
+                .addMenuItem("Гео-зони").description(
+                        "Перегляд, моніторинг та аналіз гео-зон."
+                ).centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
@@ -903,8 +989,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#D35F5F")
                 .view(null)
                 .done()
-                .setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]")
-                .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
+                .setLayoutFor(Device.DESKTOP, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], [], [{\"colspan\": 2}]],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[], [], [{\"colspan\": 2}]]]")
+                .setLayoutFor(Device.TABLET, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"rowspan\": 2,\"colspan\": 2}]],[[], []],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"colspan\": 2}]]]")
                 .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
     }
@@ -915,9 +1001,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 + "  ['vertical', "
                 + "      ['width:300px', 'flex'], "
                 + "      ['width:300px', 'flex']"
-                + "  ],"
-                + "  ['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]"
-                + "]";
+                + "  ]]";
+        final String actionBarLayout = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]";
         final IMaster<TgCreatePersistentStatusAction> config =
                 new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
                 .addProp("statusCode").asSinglelineText()
@@ -926,6 +1011,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCLE").longDesc("Cancles the action")
                 .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
@@ -956,7 +1042,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
-            System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext());
+            System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext() + " getContext().getComputation() = " + getContext().getComputation());
             return incompleteEql.model();
         }
     }
@@ -1071,19 +1157,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
+    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            if ("DR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("dR", "X");
-            } else if ("IS".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("iS", "X");
-            } else if ("IR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("iR", "X");
-            } else if ("ON".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("oN", "X");
-            } else if ("SR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("sR", "X");
+
+            final AbstractEntity<?> status = (AbstractEntity<?>) entity.get("status");
+            if (status == null) {
+                System.out.println(format("Status is null for entity [%s].", entity));
+            } else {
+                if ("DR".equals(status.getKey())) {
+                    entity.set("dR", "X");
+                } else if ("IS".equals(status.getKey())) {
+                    entity.set("iS", "X");
+                } else if ("IR".equals(status.getKey())) {
+                    entity.set("iR", "X");
+                } else if ("ON".equals(status.getKey())) {
+                    entity.set("oN", "X");
+                } else if ("SR".equals(status.getKey())) {
+                    entity.set("sR", "X");
+                }
             }
         }
     }
@@ -1108,6 +1200,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
+            System.out.println("DetailsCentreQueryEnhancer: computation function == " + context.get().getComputation());
             if (context.get().getMasterEntity() != null) {
                 System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
                 final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
@@ -1139,7 +1232,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 return where.prop("status").eq().val(justUpdatedEntity.getStatus());
             }
 
-            return where.prop("status").eq().val(coStatus.findByKey("IS"));
+            // here're two examples of how one could implemented constrains on subproperties as part of query enhancer, which suffers from EQL 2 limitation of not being able to parse
+            // dotnotated expressions in this context
+
+            // Approach 1:  Use subquery for in/notIn.
+            final EntityResultQueryModel<TgPersistentStatus> query = select(TgPersistentStatus.class).where().prop("key").in().values("IS", "IR").model();
+            return where.prop("status").in().model(query);
+
+            // Approach 2: Use subquery for exists/notExists
+            //final EntityResultQueryModel<TgPersistentStatus> query = select(TgPersistentStatus.class).where().prop("key").in().values("IS", "IR").and().prop("id").eq().extProp("status").model();
+            //return where.exists(query);
         }
     }
 
@@ -1156,6 +1258,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
                                 longDesc("Start coninuous creatio of entities").
+                                shortcut("alt+n").
                                 build())
                 .also()
                 .addTopAction(action(EntityDeleteAction.class).
@@ -1170,6 +1273,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("remove-circle-outline").
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
+                        shortcut("alt+d").
                         build())
                 .also()
                 .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
@@ -1191,7 +1295,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .icon("assignment-ind")
                             .shortDesc("Function 4")
                             .longDesc("Functional context-dependent action 4")
-                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                            .prefDimForView(mkDim("document.body.clientWidth / 4 + 'px'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build()
                     ).also();
@@ -1261,7 +1365,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/ withComputation(entity -> 3).build())
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
@@ -1446,7 +1550,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50)
+                .addProp("stringProp").minWidth(50).also()
+                .addProp("colourProp").width(40).also()
+                .addProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
@@ -1488,8 +1594,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addPrimaryAction(action(EntityEditAction.class).
                         withContext(context().withCurrentEntity().withSelectionCrit().build()).
                         icon("editor:mode-edit").
+                        withStyle("color: green").
                         shortDesc("Edit entity").
                         longDesc("Opens master for editing this entity").
+                        // withNoParentCentreRefresh().
                         build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
@@ -1513,6 +1621,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
                                         ))
                                 .icon("accessibility")
+                                .withStyle("color: red")
                                 .shortDesc("Dummy")
                                 .longDesc("Dummy action, simply prints its result into console.")
                                 .build()
@@ -1540,11 +1649,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
         if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation(entity -> 5).build());
         } else {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration;
+            afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }
-        // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+
 
         final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
@@ -1560,19 +1669,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .also()
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-//                if (isComposite) {
-//                    return scl.addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                                .icon("assignment-ind")
-//                                .shortDesc("Insertion Point")
-//                                .longDesc("Functional context-dependent Insertion Point")
-//                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-//                                .withNoParentCentreRefresh()
-//                                .build(),
-//                            InsertionPoints.RIGHT)
-//                            .build();
-//                }
+        //        if (isComposite) {
+        //            return scl.addInsertionPoint(
+        //                    action(TgCentreInvokerWithCentreContext.class)
+        //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+        //                            .icon("assignment-ind")
+        //                            .shortDesc("Insertion Point")
+        //                            .longDesc("Functional context-dependent Insertion Point")
+        //                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+        //                            .withNoParentCentreRefresh()
+        //                            .build(),
+        //                    InsertionPoints.RIGHT)
+        //                    .build();
+        //        }
         return scl.build();
     }
 

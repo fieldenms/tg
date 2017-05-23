@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -13,9 +15,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.sample.domain.validators.TgPublishedYearly_AuthorValidator;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Master entity object.
@@ -46,7 +46,6 @@ public class TgPublishedYearly extends AbstractEntity<DynamicEntityKey> {
     private TgAuthor author;
 
     @Observable
-    @EntityExists(TgAuthor.class)
     public TgPublishedYearly setAuthor(final TgAuthor author) {
         this.author = author;
         return this;

@@ -3,9 +3,75 @@
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <script>
     (function () {
+        var generateCriteriaName = function (root, property, suffix) {
+            var rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
+            return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");
+        };
+        var isNot = function (query) {
+            return /.+\!=.*/.test(query);
+        };
+        var isMissing = function (value) {
+            return /^\{.*\}$/.test(value);
+        };
+        var getValueFromMissing = function (value) {
+            return /^\{(.*)\}$/.exec(value)[1];
+        }
+        var isRange = function (value) {
+            return /^(\[|\().*,\s*.*(\]|\))$/.test(value);
+        };
+        var isBoolean = function (value) {
+            return /(true|false)/.test(value);
+        };
+        var shouldExcludeFirstParam = function (value) {
+            return /^\(/.test(value);
+        };
+        var shouldExcludeSecondParam = function (value) {
+            return /\)$/.test(value);
+        };
+        var getFirstValue = function (queryParam) {
+            return /^(\[|\()(.*),\s*.*(\]|\))$/.exec(queryParam)[2];
+        };
+        var getSecondValue = function (queryParam) {
+            return /^(\[|\().*,\s*(.*)(\]|\))$/.exec(queryParam)[2];
+        };
+        var generateQueryParam = function (root, query) {
+            var queryParam = {
+                not: isNot(query)
+            };
+            var queryParts, isBool;
+            if (queryParam.not) {
+                queryParts = query.split("!=");
+            } else {
+                queryParts = query.split("=");
+            }
+            queryParam.criteriaId = "criterion_4_" + generateCriteriaName(root, queryParts[0]);
+            queryParam.isMissing = isMissing(queryParts[1]);
+            if (queryParam.isMissing) {
+                queryParts[1] = getValueFromMissing(queryParts[1]);
+            }
+            isBool = isBoolean(queryParts[1]);
+            if (isRange(queryParts[1])) {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "from");
+                queryParam.firstEditorValue = getFirstValue(queryParts[1]);
+                queryParam.secondEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "not" : "to");
+                queryParam.secondEditorValue = getSecondValue(queryParts[1]);
+                if (!isBool) {
+                    queryParam.exclude1 = shouldExcludeFirstParam(queryParts[1]);
+                    queryParam.exclude2 = shouldExcludeSecondParam(queryParts[1]);
+                }
+            } else {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "");
+                queryParam.firstEditorValue = queryParts[1];
+            }
+            return queryParam;
+        };
+
+
+
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
             properties: {
@@ -35,6 +101,23 @@
                 retrievedTotals: {
                     type: Object,
                     observer: '_retrievedTotalsChanged'
+                },
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    observer: '_columnPropertiesMapperChanged'
+                },
+                /**
+                 * Last updated entity selection in this centre.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_retrievedEntitySelectionChanged'
                 },
                 /**
                  * The menu item type, that identifies this entity centre.
@@ -104,6 +187,11 @@
                 },
 
                 /**
+                 * Parameters for running query.
+                 */
+                queryPart: String,
+
+                /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
                  */
                 enforcePostSaveRefresh: {
@@ -133,24 +221,32 @@
                 _criteriaLoaded: {
                     type: Boolean
                 },
-
+                
+                /**
+                 * Indicates whether some action (run, save or discard) is currently in progress.
+                 */
+                _actionInProgress: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 _saverDisabled: {
                     type: Boolean,
-                    computed: '_computeSaverDisabled(_centreChanged)'
+                    computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
                 },
                 _discarderDisabled: {
                     type: Boolean,
-                    computed: '_computeDiscarderDisabled(_centreChanged)'
+                    computed: '_computeDiscarderDisabled(_centreChanged, _actionInProgress)'
                 },
 
                 _runnerDisabled: {
                     type: Boolean,
-                    computed: '_computeRunnerDisabled(_criteriaLoaded)'
+                    computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
                 },
 
                 _viewerDisabled: {
                     type: Boolean,
-                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun)'
+                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
                 },
 
                 _url: {
@@ -202,6 +298,8 @@
 
                 /**
                  * Starts the process of centre run.
+                 *
+                 * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
                  */
                 run: {
                     type: Function
@@ -250,32 +348,33 @@
                 var self = this;
                 if (oldValue === undefined) {
                     self.retrieve().then(function () {
-                        if (self.autoRun) {
+                        self._setQueryParams();
+                        if (self.autoRun || self.queryPart) {
                             self.run();
                         }
                     });
                 } else {
-                    if (self.autoRun) {
+                    self._setQueryParams();
+                    if (self.autoRun || self.queryPart) {
                         self.run();
                     }
                 }
             },
 
-
-            _computeSaverDisabled: function (_centreChanged) {
-                return !this.canSave(_centreChanged);
+            _computeSaverDisabled: function (_centreChanged, _actionInProgress) {
+                return _actionInProgress === true || !this.canSave(_centreChanged);
             },
 
-            _computeDiscarderDisabled: function (_centreChanged) {
-                return !this.canDiscard(_centreChanged);
+            _computeDiscarderDisabled: function (_centreChanged, _actionInProgress) {
+                return _actionInProgress === true || !this.canDiscard(_centreChanged);
             },
 
-            _computeRunnerDisabled: function (_criteriaLoaded) {
-                return _criteriaLoaded === false;
+            _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
+                return _actionInProgress === true || _criteriaLoaded === false;
             },
 
-            _computeViewerDisabled: function (_criteriaLoaded, _wasRun) {
-                return _criteriaLoaded === false || _wasRun !== "yes";
+            _computeViewerDisabled: function (_criteriaLoaded, _wasRun, _actionInProgress) {
+                return _actionInProgress === true || _criteriaLoaded === false || _wasRun !== "yes";
             },
 
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -284,6 +383,14 @@
 
             _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
                 this.$.egi.totals = retrievedTotals;
+            },
+            
+            _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
+                this.$.egi.retrievedEntitySelection = retrievedEntitySelection;
+            },
+            
+            _columnPropertiesMapperChanged: function (columnPropertiesMapper, oldValue) {
+                this.$.egi.columnPropertiesMapper = columnPropertiesMapper;
             },
 
             /**
@@ -297,7 +404,7 @@
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity === null || criteriaEntity.isValid()) {
+                    if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
@@ -308,6 +415,10 @@
                                 this._selectedView = 1;
                             }, 100);
                             this._triggerRun = false;
+                        }
+                        if (this.$.selection_criteria._wasRun !== 'yes') {
+                            this.$.selection_criteria._wasRun = 'yes';
+                            console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                         }
                     }
                 }).bind(self);
@@ -360,14 +471,14 @@
                 }).bind(self);
 
                 self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
                 }).bind(self);
 
-                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
 
                 self.save = (function () {
@@ -376,6 +487,7 @@
                     }
                     console.log("CENTRE SAVE");
 
+                    self._actionInProgress = true;
                     var sc = this.$.selection_criteria;
                     var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
 
@@ -383,7 +495,9 @@
                     sc._validator().abortValidationIfAny();
 
                     this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
-                    return this._ajaxSaver().generateRequest().completes;
+                    return this._ajaxSaver().generateRequest().completes.then(function () {
+                        self._actionInProgress = false;
+                    });
                 }).bind(self);
 
                 self.discard = (function () {
@@ -392,6 +506,7 @@
                     }
                     console.log("CENTRE DISCARD");
 
+                    self._actionInProgress = true;
                     var sc = this.$.selection_criteria;
 
                     // cancel previous validation before starting Discard process!
@@ -400,21 +515,25 @@
                     var customObject = {};
                     customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
-                    return this._ajaxDiscarder().generateRequest().completes;
+                    return this._ajaxDiscarder().generateRequest().completes.then(function () {
+                        self._actionInProgress = false;
+                    });
                 }).bind(self);
 
-                self.run = (function () {
+                self.run = (function (isSortingAction) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
 
                     var self = this;
+                    self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self.$.egi.collapseAllCards();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run()
+                    return self.$.selection_criteria.run(isSortingAction)
                         .then(function () {
                             self.runInsertionPointActions();
+                            self._actionInProgress = false;
                         });
                 }).bind(self);
 
@@ -472,7 +591,7 @@
                 });
 
                 //Select the result view if autoRun is true
-                if (self.autoRun) {
+                if (self.autoRun || self.queryPart) {
                     self._selectedView = 1;
                 }
             },
@@ -489,6 +608,41 @@
                 return this.entityType.substring(ind);
             },
 
+            /**
+             * Set the query params to selection criteria if they exists.
+             */
+            _setQueryParams: function () {
+                var self = this;
+                var root = self._simpleEntityType();
+                var queries = [];
+                var paramObject = [];
+                if (self.queryPart) {
+                    queries = self.queryPart.split("&");
+                }
+                paramObject = queries.map(function (query) {
+                    return generateQueryParam(root, query)
+                });
+                paramObject.forEach(function (queryParam) {
+                    var criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
+                    var firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
+                    var secondEditor = queryParam.secondEditorName && self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.secondEditorName + ']');
+                    if (criterion && criterion._iconButtonVisible()) {
+                        criterion._orNull = queryParam.isMissing;
+                        criterion._not = queryParam.not;
+                        criterion._exclusive = queryParam.exclude1;
+                        criterion._exclusive2 = queryParam.exclude2;
+                        criterion._acceptMetaValues();
+                    }
+                    if (firstEditor) {
+                        firstEditor._editingValue = queryParam.firstEditorValue;
+                        firstEditor.commit();
+                    }
+                    if (secondEditor) {
+                        secondEditor._editingValue = queryParam.secondEditorValue;
+                        secondEditor.commit();
+                    }
+                });
+            },
 
             /**
              * Activate the view with selection criteria.
@@ -516,10 +670,12 @@
              */
             currentPage: function () {
                 var self = this;
+                self.persistActiveElement();
                 return this.$.selection_criteria.currentPage()
                     .then(function () {
                         console.log("current page invocation");
                         self.runInsertionPointActions();
+                        self.restoreActiveElement();
                     });
             },
 
@@ -527,28 +683,44 @@
              * Starts the process of retrieving first page (only after run() has been already performed).
              */
             firstPage: function () {
-                return this.$.selection_criteria.firstPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.firstPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
              * Starts the process of retrieving last page (only after run() has been already performed).
              */
             lastPage: function () {
-                return this.$.selection_criteria.lastPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.lastPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
              * Starts the process of retrieving next page (only after run() has been already performed).
              */
             nextPage: function () {
-                return this.$.selection_criteria.nextPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.nextPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
              * Starts the process of retrieving prev page (only after run() has been already performed).
              */
             prevPage: function () {
-                return this.$.selection_criteria.prevPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.prevPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
@@ -674,7 +846,7 @@
             }
         };
 
-        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior];
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior];
 
     })();
 </script>

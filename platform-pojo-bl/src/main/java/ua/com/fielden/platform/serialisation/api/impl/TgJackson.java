@@ -24,6 +24,7 @@ import com.google.common.base.Charsets;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -40,12 +41,15 @@ import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArrayListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArraysArrayListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ColourJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.HyperlinkJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ColourJsonSerialiser;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.HyperlinkJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -68,13 +72,15 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private final EntityFactory factory;
     private final EntityTypeInfoGetter entityTypeInfoGetter;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
+    public final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
         entityTypeInfoGetter = new EntityTypeInfoGetter();
         this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
@@ -87,6 +93,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         
         this.module.addSerializer(Colour.class, new ColourJsonSerialiser());
         this.module.addDeserializer(Colour.class, new ColourJsonDeserialiser());
+        
+        this.module.addSerializer(Hyperlink.class, new HyperlinkJsonSerialiser());
+        this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser<Result>(this));
@@ -103,11 +112,11 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, false);
-        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, false);
+        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, false);
+        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, false);
         for (final Class<?> type : provider.classes()) {
             if (EntityUtils.isPropertyDescriptor(type)) {
-                new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, true);
+                new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, true);
             } else if (AbstractEntity.class.isAssignableFrom(type)) {
                 registerNewEntityType((Class<AbstractEntity<?>>) type);
             }
@@ -121,7 +130,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder).getEntityTypeInfo();
+        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache).getEntityTypeInfo();
     }
 
     @Override

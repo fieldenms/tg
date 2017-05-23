@@ -22,7 +22,7 @@ public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
     }
 
     @Override
-    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final Object entity = property.getEntity();
         if (newValue == null) { // no violation
             return new Result(entity, "Value is null.");

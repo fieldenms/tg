@@ -8,8 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
@@ -29,13 +34,10 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
 
 /**
  *
@@ -279,18 +281,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
      */
-    private final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType;
+    private final Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType;
 
     /**
      * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
      */
-    private final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType;
+    private final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType;
 
-    ////////////////////////////////////////////////
-    ///////// QUERY ENHANCER AND FETCH /////////////
-    ////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////
+    ///////// QUERY ENHANCER, GENERATOR and FETCH /////////////
+    ///////////////////////////////////////////////////////////
 
     private final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig;
+    private final Pair<Class<?>, Class<?>> generatorTypes;
     private final IFetchProvider<T> fetchProvider;
 
     ///////////////////////////////////
@@ -353,9 +356,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
             final EntityActionConfig resultSetPrimaryEntityAction,
             final List<EntityActionConfig> resultSetSecondaryEntityActions,
-            final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType,
-            final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
+            final Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType,
+            final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
+            final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -416,6 +420,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultSetRenderingCustomiserType = resultSetRenderingCustomiserType;
         this.resultSetCustomPropAssignmentHandlerType = resultSetCustomPropAssignmentHandlerType;
         this.queryEnhancerConfig = queryEnhancerConfig;
+        this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
     }
 
@@ -465,6 +470,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(queryEnhancerConfig);
     }
 
+    public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
+        return Optional.ofNullable(generatorTypes);
+    }
+
     public Optional<IFetchProvider<T>> getFetchProvider() {
         return Optional.ofNullable(fetchProvider);
     }
@@ -502,12 +511,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public List<Pair<String, Boolean>> getAdditionalPropsForAutocompleter(final String critName) {
-        List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
-        if (props == null) {
-            props = new ArrayList<>();
-            props.add(Pair.pair(AbstractEntity.DESC, false));
-        }
-        return props;
+        final List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
+        return props != null ? props : new ArrayList<>();
     }
 
     public Optional<List<String>> getSelectionCriteria() {
@@ -671,7 +676,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForDateSelectionCriteria));
     }
 
-    public Optional<Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>>> getResultSetRenderingCustomiserType() {
+    public Optional<Class<? extends IRenderingCustomiser<?>>> getResultSetRenderingCustomiserType() {
         return Optional.ofNullable(resultSetRenderingCustomiserType);
     }
 
@@ -682,8 +687,49 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(resultSetOrdering));
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
+    }
+
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     *
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        if (FunctionalActionKind.TOP_LEVEL == actionKind) {
+            if (!getTopLevelActions().isPresent()) {
+                throw new IllegalArgumentException("No top-level action exists.");
+            }
+            return getTopLevelActions().get().get(actionNumber).getKey();
+        } else if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+            if (!getResultSetPrimaryEntityAction().isPresent()) {
+                throw new IllegalArgumentException("No primary result-set action exists.");
+            }
+            return getResultSetPrimaryEntityAction().get();
+        } else if (FunctionalActionKind.SECONDARY_RESULT_SET == actionKind) {
+            if (!getResultSetSecondaryEntityActions().isPresent()) {
+                throw new IllegalArgumentException("No secondary result-set action exists.");
+            }
+            return getResultSetSecondaryEntityActions().get().get(actionNumber);
+        } else if (FunctionalActionKind.PROP == actionKind) {
+            if (!getResultSetProperties().isPresent()) {
+                throw new IllegalArgumentException("No result-set property exists.");
+            }
+            return getResultSetProperties().get().stream()
+                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get())
+                    .collect(Collectors.toList())
+                    .get(actionNumber);
+        } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
+            if (!getInsertionPointActions().isPresent()) {
+                throw new IllegalArgumentException("No insertion point exists.");
+            }
+            return getInsertionPointActions().get().get(actionNumber);
+        } // TODO implement other types
+        throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
 
     public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {

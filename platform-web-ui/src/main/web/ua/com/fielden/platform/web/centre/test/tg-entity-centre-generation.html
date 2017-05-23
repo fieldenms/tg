@@ -1,0 +1,323 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+    
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+    
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgGeneratedEntity">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgGeneratedEntity-centre id="centre"></tg-MiTgGeneratedEntity-centre>
+        </template>
+    </test-fixture>
+
+    <script>
+    var _changeCentreCriteriaWithAction = function (centre, thisStr, createdByStr, singleStr, multiStr, action) {
+        var edThis = centre.$.selection_criteria.$.editor_4_tgGeneratedEntity_;
+        var edCreatedBy = centre.$.selection_criteria.$.editor_4_tgGeneratedEntity_createdBy;
+        var edSingle = centre.$.selection_criteria.$.editor_4_tgGeneratedEntity_critOnlySingleProp;
+        var edMulti = centre.$.selection_criteria.$.editor_4_tgGeneratedEntity_critOnlyMultiProp;
+        if (edThis._editingValue === thisStr && edCreatedBy._editingValue === createdByStr && edSingle._editingValue === singleStr && edMulti._editingValue === multiStr) {
+            action();
+        } else {
+            centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
+                newValidationPromise.then(function(value) {
+                    action();
+                }, function (error) {
+                    console.error("The action was rejected with error: " + error);
+                });
+            };
+            edThis._editingValue = thisStr;
+            edThis.commit();
+            edCreatedBy._editingValue = createdByStr;
+            edCreatedBy.commit();
+            edSingle._editingValue = singleStr;
+            edSingle.commit();
+            edMulti._editingValue = multiStr;
+            edMulti.commit();
+        }
+    };
+    
+    suite('entity centre', function() {
+        var centre, reflector;
+    
+        setup(function() {
+            centre = fixture('CentreFixture');
+            reflector = document.querySelector('#reflector');
+        });
+    
+        test('generation occurs during simple run', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    
+                    assert.strictEqual(resultEntities.length, 10, 'The count of resultant entities for the centre should be 10 (DEMO single criterion). Page capacity is 30 for this centre.');
+                    
+                    centre._postRun = old_postRun;
+                    done();
+                }
+                
+                _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', '', function () {
+                    centre.run();
+                });
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', '', '', function () {
+                    centre.run();
+                });
+            };
+            
+            centre.retrieve();
+        });
+        
+        test('generation does not occur during sorting run', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    
+                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after sorting. Page capacity is 30 for this centre.');
+                    
+                    centre._postRun = old_postRun;
+                    done();
+                }
+                
+                _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', '', function () {
+                    centre.run(true); // isSortingAction = true
+                });
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', '', '', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
+        
+        test('generation does not occur during page refresh', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    
+                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after page refresh. Page capacity is 30 for this centre.');
+                    
+                    centre._postRun = old_postRun;
+                    done();
+                }
+                
+                _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', '', function () {
+                    centre.currentPage();
+                });
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', '', '', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
+        
+        test('generation does not occur during next page', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.strictEqual(resultEntities.length, 30, 'The count of resultant entities for the centre should be 30 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
+                assert.strictEqual(centre.retrievedTotals.get('total_count_'), 45, 'The count of all entities for the centre should be 45 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    
+                    assert.strictEqual(resultEntities.length, 15, 'The count of resultant entities for the centre should be 15 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
+                    assert.strictEqual(centre.retrievedTotals.get('total_count_'), 45, 'The count of all entities for the centre should be 45 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
+                    
+                    centre._postRun = old_postRun;
+                    done();
+                }
+                
+                _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', '', function () {
+                    centre.nextPage();
+                });
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', '', 'A*,B*,C*', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
+        
+        test('first run generation does not occur in case of generator exception', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
+                assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
+                assert.strictEqual(criteriaEntity.isValidWithoutException(), false, 'Criteria entity should be valid, but should have an exception.');
+                assert.strictEqual(criteriaEntity.exceptionOccured().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
+                
+                centre.async(function () {
+                    assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
+                    assert.strictEqual(centre._viewerDisabled, true, 'The viewer button should remain disabled after unsuccessful generation (first RUN).');
+                    assert.strictEqual(centre._runnerDisabled, false, 'The runner button should remain enabled after unsuccessful generation (first RUN).');
+                    
+                    done();
+                }, 200);
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', 'SU', '', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
+        
+        test('consequent generation exceptions does not alter previous centre results and ability to interact with them', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25 after generation.');
+                
+                // go to selection criteria
+                centre._activateSelectionCriteriaView();
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+
+                    assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
+                    assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
+                    assert.strictEqual(criteriaEntity.isValidWithoutException(), false, 'Criteria entity should be valid, but should have an exception.');
+                    assert.strictEqual(criteriaEntity.exceptionOccured().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
+                    
+                    centre.async(function () {
+                        assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
+                        assert.strictEqual(centre._viewerDisabled, false, 'The viewer button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
+                        assert.strictEqual(centre._runnerDisabled, false, 'The runner button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
+                        assert.ok(centre.$.selection_criteria.staleCriteriaMessage, 'Criteria should be stale.');
+                        
+                        var firstTime = false;
+                        
+                        centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                            old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                            
+                            assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should remain 25 after page refresh.');
+                            
+                            // master opening and saving of its entity should perform well after generation exception on previous centre results
+                           	if (firstTime === false) {
+                                   assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25.');
+                               	var entity = resultEntities[0];
+                                   
+                                   var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                                   editAction.currentEntity = entity;
+                                   var value = editAction._run();
+                                   
+                                   editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                                       console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+                                       
+                                       var outerMaster = editAction._masterReferenceForTesting;
+                                       var innerMaster = outerMaster.$$('tg-tggeneratedentity-master');
+                                       var loader = outerMaster.$.loader;
+                                       
+                                       outerMaster.addEventListener('after-load', function (event) {
+                                           var embeddedMaster = event.detail;
+                                           
+                           		        var edProperty = embeddedMaster.$.editor_4_desc;
+                           		        
+                           		        embeddedMaster.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                           	                assert.strictEqual(edProperty._editingValue, 'new description', "_editingValue should be correct.");
+                           	                assert.strictEqual(edProperty._commValue, 'new description', "_commValue should be correct.");
+                           	                assert.strictEqual(edProperty._acceptedValue, 'new description', "_acceptedValue should be correct.");
+                           	                
+                           	                assert.strictEqual(potentiallySavedOrNewEntity.get("desc"), 'new description', "'property' value should be correct.");
+
+                           	                done();
+                           	            };
+                                           
+                                           embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                           	                edProperty._editingValue = 'new description';
+                           	                edProperty.commit();
+                           	                embeddedMaster.save();
+                           	            };
+                                       });
+                                   }
+                                   
+                                   firstTime = true;
+                           	} else {
+                           	    assert.strictEqual(resultEntities.length, 25, 'The count of refreshed entities for the centre should be 25.');
+                           	}
+                        }
+                        
+                        // go to selection criteria
+                        centre._activateSelectionCriteriaView();
+                        
+                        _changeCentreCriteriaWithAction(centre, '', '', 'SU', 'A*', function () {
+                            centre.currentPage();
+                        });
+                    }, 200);
+                }
+                
+                _changeCentreCriteriaWithAction(centre, '', '', 'SU', 'A*', function () {
+                    centre.run();
+                });
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', 'A*', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
+    });
+    </script>
+
+</body>
+
+</html>

@@ -35,10 +35,6 @@ public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(3)
     private KeyEntity keyEntityMember;
 
-    protected EntityWithCompositeKey() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public String getFirstKeyMember() {
         return firstKeyMember;
     }

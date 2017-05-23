@@ -18,9 +18,10 @@ public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>>
     @Override
     public DomElement render() {
         final DomElement flexElement = new DomElement("tg-flex-layout");
+        final int hashCode = hashCode();
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
-                flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout]]");
+                flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout_" + hashCode + "]]");
             }
         }
         return flexElement;
@@ -39,9 +40,10 @@ public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>>
     @Override
     public JsCode code() {
         final StringBuilder code = new StringBuilder();
+        final int hashCode = hashCode();
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
-                code.append("this._" +layout.getKey().toString() + "Layout = " + layouts.get(layout).get() + ";\n");
+                code.append("this._" + layout.getKey().toString() + "Layout_" + hashCode + " = " + layouts.get(layout).get() + ";\n");
             }
         }
         return new JsCode(code.toString());

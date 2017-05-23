@@ -1,0 +1,494 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/d3-lib.html">
+
+<dom-module id="d3-chart-spike">
+
+    <template>
+        <style>
+            :host {
+                @apply(--layout-horizontal);
+
+            }
+            svg {
+                @apply(--layout-flex);
+
+            }
+            .background {
+                fill: #DDD;
+            }
+            .grid path,
+            .grid line {
+                fill: none;
+                stroke: #fff;
+            }
+            .bar {
+                fill: steelblue;
+            }
+            .bar:hover {
+                stroke: white;
+                stroke-width: 1px;
+                cursor: pointer;
+            }
+            .chart-label,
+            .x-axis-label,
+            .y-axis-label {
+                font-family: sans-serif;
+                font-size: 12px;
+                stroke: none;
+                fill: #000;
+                pointer-events: none;
+            }
+            .chart-label {
+                font-weight: bold;
+            }
+            .mark-text {
+                font-family: sans-serif;
+                font-size: 10px;
+                stroke: none;
+                fill: #000;
+                pointer-events: none;
+            }
+            .mark-rect {
+                fill: #d8d7ba;
+                stroke: #c0c0c0;
+                vector-effect: non-scaling-stroke;
+                pointer-events: none;
+            }
+        </style>
+
+        <!-- local DOM for your element -->
+        <svg id="chart" class="bar-chart"></svg>
+        <!-- data bindings in local DOM -->
+    </template>
+
+    <script>
+        (function () {
+            // Holds the default margins for bar chart.
+            const defaultMargin = {
+                top: 20,
+                right: 20,
+                bottom: 30,
+                left: 40
+            };
+            //Returns new margin that is a result of merge of two margin objects: old and new one.
+            const initMargins = (newMargin, oldMargin) => {
+                return {
+                    top: newMargin.hasOwnProperty("top") ? newMargin.top : oldMargin.top,
+                    bottom: newMargin.hasOwnProperty("bottom") ? newMargin.bottom : oldMargin.bottom,
+                    right: newMargin.hasOwnProperty("right") ? newMargin.right : oldMargin.right,
+                    left: newMargin.hasOwnProperty("left") ? newMargin.left : oldMargin.left
+                };
+            };
+
+            const initDataOptions = (newDataOptions, oldDataOptions) => {
+                    return {
+                        groupPropName: newDataOptions.hasOwnProperty("groupPropName") ? newDataOptions.groupPropName : oldDataOptions.groupPropName,
+                        valuePropName: newDataOptions.hasOwnProperty("valuePropName") ? newDataOptions.valuePropName : oldDataOptions.valuePropName,
+                        colorPropName: newDataOptions.hasOwnProperty("colorPropName") ? newDataOptions.colorPropName : oldDataOptions.colorPropName
+                    };
+                }
+                // The following two functions create domain values for x axis and y axis accordingly.
+            const xDomain = (data, dataOptions) => data.map(d => d[dataOptions.groupPropName]);
+            const yDomain = (data, dataOptions) => {
+                let maxRange = d3.max(data, d => d[dataOptions.valuePropName]);
+                return [0, maxRange + 0.1 * maxRange];
+            };
+            // The following two functions create scales for x axis and y axis accordingly.
+            const xScale = (w, data, dataOptions) => {
+                return d3.scaleBand()
+                    .rangeRound([0, w])
+                    .padding(0.1) // could be configurable 
+                    .domain(xDomain(data, dataOptions));
+            };
+            const yScale = (h, data, dataOptions) => {
+                return d3.scaleLinear()
+                    .range([h, 0])
+                    .domain(yDomain(data, dataOptions))
+            };
+            // Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined.
+            const bar = (selection, dataOptions, x, y, h, tooltipCallback, clickCallback) => {
+                const selectedBar = selection
+                    .style("fill", d => d[dataOptions.colorPropName])
+                    .attr("x", d => x(d[dataOptions.groupPropName]))
+                    .attr("y", d => y(d[dataOptions.valuePropName]))
+                    .attr("height", d => h - y(d[dataOptions.valuePropName]))
+                    .attr("width", x.bandwidth());
+                if (tooltipCallback) {
+                    selectedBar.attr("tooltip-text", tooltipCallback);
+                }
+                if (clickCallback) {
+                    selectedBar.on("click", clickCallback);
+                }
+            };
+
+            const marker = (selection, dataOptions, x, y, h, unscalableNodes, markerGenerator, draw) => {
+                const markerSelection = selection.attr("transform", d => "translate(" + (x(d[dataOptions.groupPropName]) + x.bandwidth() / 2) + ", " + (y(d[dataOptions.valuePropName]) - 10) + ")");
+                if (draw) {
+                    selection.each(function (d) {
+                        let rect = d3.select(this).append("rect").attr("class", "mark-rect");
+                        let text = d3.select(this).append("text").attr("class", "mark-text").style("text-anchor", "middle").text(markerGenerator(d))
+                        let textBox = text.node().getBBox();
+                        rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                    }).each(function () {
+                        unscalableNodes.push(this);
+                    });
+                } else {
+                    selection.each(function (d) {
+                        let text = d3.select(this).select(".mark-text").text(markerGenerator(d))
+                        let textBox = text.node().getBBox();
+                        d3.select(this).select(".mark-rect").attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                    });
+                }
+            };
+
+            // Counteract all transforms applied above to an element.
+            // Apply a translation to the element to have it remain at a local position
+            const unscale = (el, container) => {
+                let xf;
+                if (el.transform.baseVal.length < 2) {
+                    // Keep a single transform matrix in the stack for fighting transformations
+                    // Be sure to apply this transformation after existing transformations (translate)
+                    xf = container.node().ownerSVGElement.createSVGTransform();
+                    el.transform.baseVal.appendItem(xf);
+                } else {
+                    xf = el.transform.baseVal[1];
+                }
+                let m = container.node().getTransformToElement(el.parentNode);
+                m.e = 0; // Ignore (preserve) any translations done up to this point
+                m.f = 10 * (1 - m.d);
+                xf.setMatrix(m);
+            };
+
+            const removeUnscalableNodes = (selection, unscalableNodes) => {
+                selection.each(function (d) {
+                    unscalableNode.remove(this);
+                });
+            }
+
+            d3.barChart = (container) => {
+                let options = {
+                    width: defaultMargin.right + defaultMargin.left,
+                    height: defaultMargin.bottom + defaultMargin.top,
+                    margin: defaultMargin,
+                    label: "",
+                    xAxis: {
+                        label: ""
+                    },
+                    yAxis: {
+                        label: ""
+                    },
+                    dataOptions: {
+                        groupPropName: "name",
+                        valuePropName: "value",
+                        colorPropName: "color"
+                    },
+                    tooltipCallback: d => d[options.dataOptions.groupPropName] + ": " + d[options.dataOptions.valuePropName],
+                    clickCallback: d => alert("you clicked " + d[options.dataOptions.groupPropName] + ": " + d[options.dataOptions.valuePropName]),
+                    markerGenerator: d => d[options.dataOptions.valuePropName],
+                };
+                let data = [];
+                let currentTransform = d3.zoomIdentity;
+                let unscalableNodes = [];
+
+                // Drawing the chart 
+                let w = options.width - options.margin.left - options.margin.right;
+                let h = options.height - options.margin.bottom - options.margin.top;
+                // Create x and y scales for grid and axis.
+                let x = xScale(w, data, options.dataOptions);
+                let y = yScale(h, data, options.dataOptions);
+                // Creating grid that should be modifiable
+                const yGrid = d3.axisLeft(y).tickSize(-w).tickFormat("");
+                // Createing x and y axis they also should be modifiable.
+                const xAxis = d3.axisBottom(x);
+                const yAxis = d3.axisLeft(y).ticks(10);
+                // Create a clip path so that zoomed or panned parts would be cut of
+                const clipPath = d3.select(container)
+                    .append('defs')
+                    .append("clipPath").attr("id", "chart-area")
+                    .append("rect").attr("width", w).attr("height", h);
+                // Create the chart area
+                const g = d3.select(container).append("g")
+                    .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
+                // Draw background
+                const background = g.append("rect")
+                    .attr("class", "background")
+                    .attr("width", w)
+                    .attr("height", h);
+                // Draw y grid
+                const yGridGroup = g.append("g")
+                    .attr("class", "grid y-grid")
+                    .call(yGrid);
+                // Draw containr that will contain bar chart and its markers and should be clipped with clip-path
+                const graphContainer = g.append("g").attr("clip-path", "url(#chart-area)").append("g").attr("class", "chart-container");
+                // Create zoom behavior
+                const zoom = d3.zoom()
+                    .scaleExtent([1, 10])
+                    .translateExtent([[0, 0], [0, h]])
+                    .extent([[0, 0], [0, h]])
+                    .on("zoom", () => {
+                        currentTransform = d3.event.transform;
+                        yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
+                        yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
+                        graphContainer.attr("transform", "translate(0, " + currentTransform.y + ")scale(1, " + currentTransform.k + ")");
+                        unscalableNodes.forEach(el => unscale(el, g));
+                    });
+                g.call(zoom).on("dblclick.zoom", null);
+                // Draw bars
+                graphContainer.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect").attr("class", "bar")
+                    .call(bar, options.dataOptions, x, y, h, options.tooltipCallback, options.clickCallback);
+                // Draw markers
+                graphContainer.selectAll(".marker")
+                    .data(data)
+                    .enter().append("g").attr("class", "marker")
+                    .call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator, true);
+                // Draw x axis
+                const xAxisGroup = g.append("g")
+                    .attr("class", "axis x-axis")
+                    .attr("transform", "translate(0," + h + ")")
+                    .call(xAxis);
+                // Draw y axis
+                const yAxisGroup = g.append("g")
+                    .attr("class", "axis y-axis")
+                    .call(yAxis);
+                // Create labels for chart and axis
+                const chartLabel = d3.select(container)
+                    .append("text")
+                    .attr("class", "chart-label")
+                    .style("text-anchor", "middle")
+                    .style("alignment-baseline", "baseline")
+                    .attr("x", options.margin.left + w / 2)
+                    .attr("y", options.margin.top - 10)
+                    .text(options.label);
+                const xAxisLabel = d3.select(container)
+                    .append("text")
+                    .attr("class", "x-axis-label")
+                    .style("text-anchor", "middle")
+                    .style("alignment-baseline", "hanging")
+                    .attr("x", options.margin.left + w / 2)
+                    .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10)
+                    .text(options.xAxis.label);
+                const yAxisLabel = d3.select(container)
+                    .append("text")
+                    .attr("class", "y-axis-label")
+                    .style("text-anchor", "middle")
+                    .style("alignment-baseline", "baseline")
+                    .attr("x", -options.margin.top - h / 2)
+                    .attr("y", options.margin.left - yAxisGroup.node().getBBox().width - 10)
+                    .attr("transform", "rotate(-90)")
+                    .text(options.yAxis.label);
+
+                const updateChart = () => {
+                    let oldY = yAxis.scale().invert(0);
+                    // Calculate new width and height without margins.
+                    w = options.width - options.margin.left - options.margin.right;
+                    h = options.height - options.margin.bottom - options.margin.top;
+                    if (w < 0) {
+                        options.width = options.margin.left + options.margin.right
+                        w = 0;
+                    }
+                    if (h < 0) {
+                        options.height = options.margin.bottom + options.margin.top;
+                        h = 0;
+                    }
+                    // Create new scales acoording to new width and height.
+                    x = xScale(w, data, options.dataOptions);
+                    y = yScale(h, data, options.dataOptions);
+                    // Update clip path according to new width and height.
+                    clipPath.attr("width", w).attr("height", h);
+                    // Update chart group node according to new margins. 
+                    g.attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
+                    // Update background rectangle according to new width and height
+                    background.attr("width", w).attr("height", h);
+                    // Update grids according to new viewport width and height.
+                    yGridGroup.call(yGrid.scale(y).tickSize(-w));
+                    xAxisGroup.attr("transform", "translate(0," + h + ")").call(xAxis.scale(x));
+                    yAxisGroup.call(yAxis.scale(y));
+                    // Trigger zoom event in order to retranslte the container according to new extents.
+                    zoom.translateExtent([[0, 0], [0, h]])
+                        .extent([[0, 0], [0, h]]);
+                    //g.call(zoom.translateBy, 0, 0);
+                    // Update bars.
+                    const barsData = graphContainer.selectAll(".bar").data(data).call(bar, options.dataOptions, x, y, h, options.tooltipCallback);
+                    barsData.enter().append("rect").attr("class", "bar").call(bar, options.dataOptions, x, y, h, options.tooltipCallback, options.clickCallback);
+                    barsData.exit().remove();
+                    // Update markers.
+                    const markers = graphContainer.selectAll(".marker").data(data).call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator);
+                    markers.enter().append("g").attr("class", "marker").call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator, true);
+                    markers.exit().call(removeUnscalableNodes, unscalableNodes).remove();
+                    unscalableNodes.forEach(el => unscale(el, g));
+                    // Rescale grid along y axis and also rescale y axis.
+                    yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
+                    yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
+                    // Update chart and axis captioins
+                    chartLabel
+                        .attr("x", options.margin.left + w / 2)
+                        .attr("y", options.margin.top - 10)
+                        .text(options.label);
+                    xAxisLabel
+                        .attr("x", options.margin.left + w / 2)
+                        .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10)
+                        .text(options.xAxis.label);
+                    yAxisLabel
+                        .attr("x", -options.margin.top - h / 2)
+                        .attr("y", options.margin.left - yAxisGroup.node().getBBox().width - 10)
+                        .text(options.yAxis.label);
+                    //Update the container translation in order to remain current translate position when window size was changed
+                    let newH = yAxis.scale()(oldY);
+                    g.call(zoom.translateBy, 0, (0 - newH) / currentTransform.k);
+                };
+
+                const chart = {
+                    width: w => {
+                        if (w > 0) {
+                            options.width = w;
+                            updateChart();
+                            return chart;
+                        } else {
+                            return width;
+                        }
+                    },
+                    height: h => {
+                        if (h > 0) {
+                            options.height = h;
+                            updateChart();
+                            return chart;
+                        } else {
+                            return height;
+                        }
+                    },
+                    options: o => {
+                        if (options) {
+                            let shouldUpdateChart = (o.width || o.width === 0) || (o.height || o.height === 0) || o.margin || o.dataOptions;
+                            options.width = o.width || o.width === 0 ? o.width : options.width;
+                            options.height = o.height || o.height === 0 ? o.height : options.height;
+                            options.margin = o.margin ? initMargins(o.margin, options.margin) : options.margin;
+                            options.dataOptions = o.dataOptions ? initDataOptions(o.dataOptions, options.dataOptions) : options.dataOptions;
+                            if (o.label) {
+                                options.label = o.label;
+                                g.select(".chart-label").text(options.label);
+                            }
+                            if (o.xAxis && o.xAxis.label) {
+                                options.xAxis.label = o.xAxis.label;
+                                g.select(".x-axis-label").text(options.xAxis.label);
+                            }
+                            if (o.yAxis && o.yAxis.label) {
+                                options.yAxis.label = o.yAxis.label;
+                                g.select(".y-axis-label").text(options.yAxis.label);
+                            }
+                            if (o.tooltipCallback) {
+                                options.tooltipCallback = o.tooltipCallback;
+                                g.selectAll(".bar").attr("tooltip-text", options.tooltipCallback);
+                            }
+                            if (o.clickCallback) {
+                                options.clickCallback = o.clickCallback;
+                                g.selectAll(".bar").on("click", options.clickCallback);
+                            }
+                            if (o.markerGenerator) {
+                                options.markerGenerator = o.markerGenerator;
+                                g.selectAll(".marker").call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator);
+                            }
+                            if (shouldUpdateChart) {
+                                updateChart();
+                            }
+                        }
+                    },
+                    data: d => {
+                        if (d) {
+                            data = d;
+                            updateChart();
+                            return chart;
+                        } else {
+                            return data;
+                        }
+                    }
+                };
+
+                return chart;
+            };
+
+            // element registration
+            Polymer({
+                is: "d3-chart-spike",
+
+                // add properties and methods on the element's prototype
+
+                properties: {
+                    // Declare properties for the element's public API
+                    data: {
+                        type: Array,
+                        observer: "_dataChanged"
+                    },
+
+                    options: {
+                        type: Object,
+                        observer: "_chartOptionsChanged"
+                    },
+
+                    _chart: Object
+                },
+
+                behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+
+                ready: function () {
+                    this._chart = d3.barChart(this.$.chart);
+                    if (this.data) {
+                        this._chart.data(this.data);
+                    }
+                    if (this.options) {
+                        this._chart.options(this.options);
+                    }
+                    this.scopeSubtree(this.$.chart, true);
+                    this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+                },
+
+                attached: function () {
+                    this._waitForDimensions(0);
+                },
+
+                _waitForDimensions: function (time) {
+                    var self = this;
+                    this.async(function () {
+                        if (this.offsetWidth && this.offsetHeight && this._cahrt) {
+                            this._chart.options({
+                                width: self.offsetWidth,
+                                height: self.offsetHeight
+                            });
+                        } else {
+                            this._waitForDimensions(100);
+                        }
+                    }, time);
+                },
+
+                _dataChanged: function (newData, oldData) {
+                    if (this._chart) {
+                        this._chart.data(newData);
+                    }
+                },
+
+                _chartOptionsChanged: function (newOptions, oldOptions) {
+                    if (this._chart) {
+                        this._chart.options(newOptions);
+                    }
+                },
+
+                _resizeEventListener: function (event, details) {
+                    var self = this;
+                    if (this._chart) {
+                        this._chart.options({
+                            width: self.offsetWidth,
+                            height: self.offsetHeight
+                        });
+                    }
+                }
+            });
+        })();
+    </script>
+
+</dom-module>

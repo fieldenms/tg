@@ -6,7 +6,7 @@
      * Determines whether the result represents the error.
      */
     var _isError0 = function (result) {
-        return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+        return result !== null && (result["@resultType"] === "ua.com.fielden.platform.error.Result" || result["@resultType"] === "ua.com.fielden.platform.web.utils.PropertyConflict") && (typeof result.ex !== 'undefined');
     };
 
     /**
@@ -31,6 +31,15 @@
         };
         EntityTypeProp.prototype = Object.create(Object.prototype);
         EntityTypeProp.prototype.constructor = EntityTypeProp;
+        
+        /**
+         * Returns specific time-zone for the property of type date.
+         *
+         * IMPORTANT: do not use '_timeZone' field directly!
+         */
+        EntityTypeProp.prototype.timeZone = function () {
+            return typeof this._timeZone === 'undefined' ? null : this._timeZone;
+        }
 
         /**
          * Returns 'true' when the type property is secrete, false otherwise.
@@ -48,6 +57,24 @@
          */
         EntityTypeProp.prototype.isUpperCase = function () {
             return typeof this._upperCase === 'undefined' ? false : this._upperCase;
+        }
+        
+        /**
+         * Returns 'true' when the property should be displayed only with date portion, false otherwise.
+         *
+         * IMPORTANT: do not use '_date' field directly!
+         */
+        EntityTypeProp.prototype.isDate = function () {
+            return typeof this._date === 'undefined' ? false : this._date;
+        }
+        
+        /**
+         * Returns 'true' when the property should be displayed only with time portion, false otherwise.
+         *
+         * IMPORTANT: do not use '_time' field directly!
+         */
+        EntityTypeProp.prototype.isTime = function () {
+            return typeof this._time === 'undefined' ? false : this._time;
         }
 
         /** 
@@ -226,11 +253,11 @@
 		
 		return EntityInstanceProp;
 	};
-	
-	/**
-	 * 'Entity' creator. Dependencies: 'EntityInstanceProp'.
-	 */
-	var _createEntityPrototype = function (EntityInstanceProp, StrictProxyException, _isError0, _isWarning0) {
+    
+    /**
+     * 'Entity' creator. Dependencies: 'EntityInstanceProp'.
+     */
+    const _createEntityPrototype = function (EntityInstanceProp, StrictProxyException, _isError0, _isWarning0, DynamicEntityKey) {
         ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
         var Entity = function (rawObject) { // rawObject
             Object.call(this);
@@ -281,15 +308,56 @@
                 var first = name.slice(0, dotIndex);
                 var rest = name.slice(dotIndex + 1);
                 var firstVal = this.get(first);
-                return firstVal === null ? null : firstVal.get(rest);
+                if (firstVal === null) {
+                    return null;
+                } else if (_isEntity(firstVal)) {
+                    return firstVal.get(rest);
+                } else if (firstVal instanceof Array) {
+                    var internalList = [];
+                    for (var index = 0; index < firstVal.length; index++) {
+                        internalList.push(firstVal[index].get(rest));
+                    }
+                    return internalList;
+                } else {
+                    throw 'Unsupported dot-notation [' + name + '] in type [' + this.type().fullClassName() + '].';
+                }
             } else {
-                if (this._isObjectUndefined(name)) {
-                    throw new StrictProxyException(name, this.type()._simpleClassName());
+                if ('key' === name && this.constructor.prototype.type.call(this).isCompositeEntity()) {
+                    const dynamicKey = new DynamicEntityKey();
+                    dynamicKey._entity = this;
+                    return dynamicKey;
+                } else if ((this.constructor.prototype.type.call(this)).isUnionEntity() && ['id', 'key', 'desc'].indexOf(name) !== -1) {
+                    // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
+                    // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
+                    // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
+                    // 2) In case where [key / desc / id] is accessed from empty union entity -- here empty values (aka nulls) are returned, but in Java -- exception is thrown. 
+                    const activeEntity = this._activeEntity();
+                    return activeEntity === null ? null : activeEntity.get(name);
+                } else if (this._isObjectUndefined(name)) {
+                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                } else if (this._isIdOnlyProxy(name)) {
+                    throw new StrictProxyException(name, this.type()._simpleClassName(), true);
                 }
                 return this[name];
             }
         }
-
+        
+        /**
+         * Returns 'active entity' in this union entity.
+         * 
+         * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+         */
+        Entity.prototype._activeEntity = function () {
+            const self = this;
+            let activeEntity = null;
+            this.traverseProperties(function (name) {
+                if (['key', 'desc', 'referencesCount', 'referenced'].indexOf(name) /*AbstractEntity.COMMON_PROPS*/ === -1 && self.get(name) !== null) {
+                    activeEntity = self.get(name);
+                }
+            });
+            return activeEntity;
+        }
+        
         /**
          * Returns the original property value for the entity.
          *
@@ -311,6 +379,14 @@
         Entity.prototype._isObjectUndefined = function (name) {
             return (typeof this[name] === 'undefined') || (typeof this[name] === 'function');
         }
+        
+        /**
+         * Returns 'true' if property represents id-only proxy instance, 'false' otherwise.
+         *
+         */
+        Entity.prototype._isIdOnlyProxy = function (name) {
+            return typeof this[name] === 'string' && (this[name].lastIndexOf('_______id_only_proxy_______', 0) === 0); // starts with 'id-only' prefix
+        }
 
         /**
          * Sets the property value for the entity.
@@ -321,9 +397,54 @@
             this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
             return this[name] = value;
         }
+         
+        /**
+         * Sets the property value for the [binding!]entity and registers property 'touch'.
+         *
+         * In case where user interaction takes place, this method registers such 'property touch' for the purposes 
+         * of collecting the queue of 'touched' properties.
+         *
+         * The property that was touched last will reside last in that queue. Also the count of 'touches' is recorded
+         * for each property (mainly for logging purposes).
+         *
+         * Please, note that 'touched' property does not mean 'modified' from technical perspective.
+         * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
+         * to have properly invoked its ACE handlers.
+         *
+         * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
+         */
+        Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value) {
+            var result = this.set(propertyName, value);
+            
+            var touched = this["@@touchedProps"];
+            var names = touched.names;
+            var counts = touched.counts;
+            var index = names.indexOf(propertyName);
+            if (index > -1) {
+                var prevCount = counts[index];
+                names.splice(index, 1);
+                counts.splice(index, 1);
+                names.push(propertyName);
+                counts.push(prevCount + 1);
+            } else {
+                names.push(propertyName);
+                counts.push(1);
+            }
+            // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
+            if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
+                delete this['@' + propertyName + '_id'];
+            }
+            console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
+            
+            return result;
+        }
 
         /**
          * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+         * 
+         * Proxy: 
+         *    a) proxied properties are missing in serialised entity graph -- this method disregards such properties;
+         *    b) id-only proxy properties exist (foe e.g. '_______id_only_proxy_______673') -- this method disregards such properties too.
          *
          * @param propertyCallback -- function(propertyName) to be called on each property
          */
@@ -331,7 +452,9 @@
             var entity = this;
             for (var membName in entity) {
                 if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
-                    propertyCallback(membName);
+                    if (!entity._isObjectUndefined(membName) && !entity._isIdOnlyProxy(membName)) {
+                        propertyCallback(membName);
+                    }
                 }
             }
         }
@@ -345,10 +468,10 @@
         }
         
         /**
-         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during saving.
+         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
          *
          */
-        Entity.prototype.isValidWithoutSavingException = function () {
+        Entity.prototype.isValidWithoutException = function () {
             return this.isValid() && !this.exceptionOccured();
         }
         
@@ -412,12 +535,91 @@
          * Returns 'true' if the entity was persisted before and 'false' otherwise.
          */
         Entity.prototype.isPersisted = function () {
-            return this.id !== null;
+            return this.get('id') !== null;
         }
         return Entity;
 	};
-	
-	/**
+    
+    /**
+     * 'DynamicEntityKey' creator.
+     */
+    const _createDynamicEntityKeyPrototype = function () {
+        ////////////////////////////////////////// THE PROTOTYPE FOR DynamicEntityKey ////////////////////////////////////////// 
+        const DynamicEntityKey = function () {
+            Object.call(this);
+        };
+        DynamicEntityKey.prototype = Object.create(Object.prototype);
+        DynamicEntityKey.prototype.constructor = DynamicEntityKey;
+        
+        /**
+         * The method to convert dynamic entity key (key of composite entity) to String.
+         *
+         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.toString(). So, please be carefull and maintain it
+         * in accordance with java counterpart.
+         */
+        DynamicEntityKey.prototype._convertDynamicEntityKey = function () {
+            const compositeEntity = this._entity;
+            const compositeKeyNames = compositeEntity.type().compositeKeyNames();
+            const compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
+            
+            let str = "";
+            let first = true;
+            for (let i = 0; i < compositeKeyNames.length; i++) {
+                const compositePartName = compositeKeyNames[i];
+                const compositePart = compositeEntity.get(compositePartName);
+                if (compositePart !== null) {
+                    if (first) {
+                        str = str + _convert(compositePart);
+                        first = false;
+                    } else {
+                        str = str + compositeKeySeparator + _convert(compositePart);
+                    }
+                }
+            }
+            return str;
+        };
+        
+        /**
+         * Returns 'true' if this equals to dynamicEntityKey2, 'false' otherwise.
+         *
+         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.compareTo(). So, please be carefull and maintain it
+         * in accordance with java counterparts.
+         */
+        DynamicEntityKey.prototype._dynamicEntityKeyEqualsTo = function (dynamicEntityKey2) {
+            if (this === dynamicEntityKey2) {
+                return true;
+            }
+            if (!_isDynamicEntityKey(dynamicEntityKey2)) {
+                return false;
+            }
+            const entity1 = this._entity;
+            const entity2 = dynamicEntityKey2._entity;
+            const compositeKeyNames = entity1.type().compositeKeyNames();
+            for (let i = 0; i < compositeKeyNames.length; i++) {
+                const compositePartName = compositeKeyNames[i];
+                let compositePart1, compositePart2;
+                try {
+                    compositePart1 = entity1.get(compositePartName);
+                } catch (strictProxyEx1) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+                }
+                try {
+                    compositePart2 = entity2.get(compositePartName);
+                } catch (strictProxyEx2) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
+                }
+                
+                if (!_equalsEx(compositePart1, compositePart2)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        
+        return DynamicEntityKey;
+    };
+    
+    /**
 	 * 'EntityType' creator. Dependencies: 'EntityTypeProp'.
 	 */
 	var _createEntityTypePrototype = function (EntityTypeProp) {
@@ -465,11 +667,12 @@
          * Returns full not enhanced Java class name for the entity type.
          */
         EntityType.prototype.notEnhancedFullClassName = function () {
-            var enhancedIndex = this.key.indexOf("$$TgEntity");
+            const fullClassName = this.fullClassName();
+            const enhancedIndex = fullClassName.indexOf("$$TgEntity");
             if (enhancedIndex >= 0) {
-                return this.key.substring(0, enhancedIndex);
+                return fullClassName.substring(0, enhancedIndex);
             }
-            return this.key;
+            return fullClassName;
         }
 
         /**
@@ -503,6 +706,14 @@
         EntityType.prototype.isCompositeEntity = function () {
             return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
         }
+        
+        /**
+         * Returns 'true' if the entity type represents union entity type, 'false' otherwise.
+         *
+         */
+        EntityType.prototype.isUnionEntity = function () {
+            return typeof this['_union'] === 'undefined' ? false : this['_union'];
+        }
 
         /** 
          * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
@@ -524,6 +735,14 @@
          */
         EntityType.prototype.isPersistent = function () {
             return this['_persistent'] === true;
+        }
+        
+        /**
+         * Returns 'true' if the entity type represents a continuation entity.
+         *
+         */
+        EntityType.prototype.isContinuation = function () {
+            return typeof this['_continuation'] === 'undefined' ? false : this['_continuation'];
         }
         
         /**
@@ -594,10 +813,10 @@
 	   	/**
 	  	 * Exception prototype for strict proxy exceptions.
 	  	 */
-		var StrictProxyException = function (propName, simpleClassName) { // rawObject
+		var StrictProxyException = function (propName, simpleClassName, isIdOnlyProxy) { // rawObject
 	        Object.call(this);
 	
-	        this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
+	        this.message = "Strict proxy exception: property [" + propName + "] " + (isIdOnlyProxy === true ? "is id-only proxy" : "does not exist") + " in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
 	    };
 	    StrictProxyException.prototype = Object.create(Object.prototype);
 	    StrictProxyException.prototype.constructor = StrictProxyException;
@@ -646,6 +865,7 @@
 	
 	var _ETPPrototype = _createEntityTypePropPrototype();
 	var _ETPrototype = _createEntityTypePrototype(_ETPPrototype);
+	const _DEKPrototype = _createDynamicEntityKeyPrototype();
 	
 	/**
 	 * The prototype for entity's instance-scoped property. Can be reached by 'entity.prop("name")' call.
@@ -654,13 +874,20 @@
 	/**
 	 * The prototype for entities.
 	 */
-	var _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0);
+	const _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0, _DEKPrototype);
 	
     /**
      * Determines whether the specified object represents the entity.
      */
     var _isEntity = function (obj) {
         return obj !== null && (obj instanceof _EPrototype);
+    };
+    
+    /**
+     * Determines whether the specified object represents dynamic entity key.
+     */
+    const _isDynamicEntityKey = function (obj) {
+        return obj && (obj instanceof _DEKPrototype);
     };
     
     /**
@@ -677,7 +904,9 @@
 
         // TODO 1: rectify whether this implementation is good
         // TODO 2: potentially, extend implementation to support composite types: objects?
-        if (_isEntity(value1)) {
+        if (_isDynamicEntityKey(value1)) {
+            return value1._dynamicEntityKeyEqualsTo(value2);
+        } else if (_isEntity(value1)) {
             return _entitiesEqualsEx(value1, value2);
         } else if (Array.isArray(value1)) {
             return _arraysEqualsEx(value1, value2);
@@ -727,48 +956,57 @@
             return false;
         }
         // now can compare key values
-        if (entity1.type().isCompositeEntity()) {
-            var compositeKeyNames = entity1.type().compositeKeyNames();
-            for (var i = 0; i < compositeKeyNames.length; i++) {
-                var compositePartName = compositeKeyNames[i];
-                var compositePart1, compositePart2;
-                try {
-                    compositePart1 = entity1.get(compositePartName);
-                } catch (strictProxyEx1) {
-                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
-                }
-                try {
-                    compositePart2 = entity2.get(compositePartName);
-                } catch (strictProxyEx2) {
-                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
-                }
-                
-                if (!_equalsEx(compositePart1, compositePart2)) {
-                    return false;
-                }
+        let key1, key2;
+        
+        try {
+            key1 = entity1.get('key');
+        } catch (strictProxyEx1) {
+            throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+        }
+        
+        try {
+            key2 = entity2.get('key');
+        } catch (strictProxyEx2) {
+            throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
+        }
+        return _equalsEx(key1, key2);
+    };
+    
+    /**
+     * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
+     */
+    const _convert = function (value) {
+        if (value === null) { // 'null' is the missing value representation for TG web editors
+            return null;
+        } else if (value instanceof _DEKPrototype) {
+            return value._convertDynamicEntityKey();
+        } else if (value instanceof _EPrototype) {
+            return _convert(value.get('key'));
+        } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
+            return value;
+        } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
+            return value;
+        } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+            return value;
+        } else if (typeof value === "string") { // for string value -- return the same value for editors
+            return value;
+        } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
+            // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
+            var convertedArray = [];
+            for (var index = 0; index < value.length; index++) {
+                convertedArray.push(_convert(value[index]));
             }
-            return true;
+            return convertedArray;
+        } else if ( typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value")) ){ 
+            return value;
         } else {
-            var key1, key2;
-            
-            try {
-                key1 = entity1.get('key');
-            } catch (strictProxyEx1) {
-                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
-            }
-            
-            try {
-                key2 = entity2.get('key');
-            } catch (strictProxyEx2) {
-                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
-            }
-            return _equalsEx(key1, key2);
+            throw new _UCEPrototype(value);
         }
     };
-	
-	/**
-	 * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
-	 */
+    
+    /**
+     * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
+     */
     var _providePrototypes = function (typeTable, EntityType) {
         for (var key in typeTable) {
             if (typeTable.hasOwnProperty(key)) {
@@ -853,6 +1091,15 @@
          */
         _getEntityTypePrototype: function () {
             return _ETPrototype;
+        },
+        
+        /**
+         * Returns the prototype for 'DynamicEntityKey'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getDynamicEntityKeyPrototype: function () {
+            return _DEKPrototype;
         },
 
         /**
@@ -988,70 +1235,69 @@
             newOne["version"] = 0;
             return newOne;
         },
-
+        
         /**
          * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
          */
         convert: function (value) {
-            if (value === null) { // 'null' is the missing value representation for TG web editors
-                return null;
-            } else if (value instanceof this.getEntityPrototype()) {
-                return (value.type().isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
-            } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
-                return value;
-            } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
-                return value;
-            } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
-                return value;
-            } else if (typeof value === "string") { // for string value -- return the same value for editors
-                return value;
-            } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
-                // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
-                var convertedArray = [];
-                for (var index = 0; index < value.length; index++) {
-                    convertedArray.push(this.convert(value[index]));
-                }
-                return convertedArray;
-            } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
-                return value;
-            } else {
-                throw new _UCEPrototype(value);
-            }
+            return _convert(value);
         },
-
+        
         /**
-         * The method to convert entity to String.
+         * Converts the value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'bindingView' binding entity.
          *
+         * This implementation takes care of the aspect of property validity and, in case where the property is invalid, then the values are taken from previously bound property ('previousModifiedPropertiesHolder').
+         * This ensures that corresponding editor will show invalid value, that was edited by the user and did not pass server-side validation (fully fledged entity contains previous valid value in this case + validation error).
          */
-        convertSimpleEntity: function (entity) {
-            return this.convert(entity.get("key"));
-        },
-
-        /**
-         * The method to convert composite entity to String.
-         *
-         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.toString(). So, please be carefull and maintain it
-         * in accordance with java counterpart.
-         */
-        convertCompositeEntity: function (compositeEntity) {
-            var compositeKeyNames = compositeEntity.type().compositeKeyNames();
-            var compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
-
-            var str = "";
-            var first = true;
-            for (var i = 0; i < compositeKeyNames.length; i++) {
-                var compositePartName = compositeKeyNames[i];
-                var compositePart = compositeEntity.get(compositePartName);
-                if (compositePart !== null) {
-                    if (first) {
-                        str = str + this.convert(compositePart);
-                        first = false;
+        convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
+            if (this.isError(entity.prop(propertyName).validationResult())) {
+                if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
+                    // bind the received from server property value
+                    this._convertFullPropertyValue(bindingView, propertyName, entity.get(propertyName));
+                } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+                    if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                        // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                        //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                        //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
+                        bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                        if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
+                            bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
+                        }
                     } else {
-                        str = str + compositeKeySeparator + this.convert(compositePart);
+                        bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                        if (typeof previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
+                            bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].valId;
+                        }
                     }
                 }
+            } else {
+                var fullValue = entity.get(propertyName);
+                this._convertFullPropertyValue(bindingView, propertyName, fullValue);
+                
+                if (this.isEntity(fullValue)) {
+                    bindingView["@" + propertyName + "_desc"] = this.convert(fullValue.get("desc"));
+                }
             }
-            return str;
+            if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
+                throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
+            }
+        },
+        
+        /**
+         * Converts original value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'originalBindingView' binding entity.
+         */
+        convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
+            this._convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
+        },
+        
+        /**
+         * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. 
+         */
+        _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
+            bindingView[propertyName] = this.convert(fullValue);
+            if (this.isEntity(fullValue) && fullValue.get('id') !== null) {
+                bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+            }
         },
         
         /**
@@ -1128,8 +1374,7 @@
         provideMasterEntity: function(requireMasterEntity, centreContextHolder, getMasterEntity) {
 			if (requireMasterEntity === "true") {
 				centreContextHolder["masterEntity"] = getMasterEntity();
-            } else if (requireMasterEntity === "false") {
-            	centreContextHolder["masterEntity"] = null;
+            } else if (requireMasterEntity === "false") { // 'masterEntity' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;
             }
@@ -1143,8 +1388,8 @@
 				centreContextHolder["selectedEntities"] = getSelectedEntities();
             } else if (requireSelectedEntities === "ONE") {
             	centreContextHolder["selectedEntities"] = getSelectedEntities().length > 0 ? [getSelectedEntities()[0]] : [];
-            } else if (requireSelectedEntities === "NONE") {
-            	centreContextHolder["selectedEntities"] = null;
+            } else if (requireSelectedEntities === "NONE") { // 'selectedEntities' will be proxied after server-side deserialisation
+                centreContextHolder["selectedEntities"] = [];
             } else {
             	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
             }
@@ -1168,7 +1413,9 @@
         ) {
             var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
             centreContextHolder.id = null;
-            centreContextHolder["customObject"] = {}; // should always exist, potentially empty
+            centreContextHolder['customObject'] = {}; // should always exist, potentially empty
+            centreContextHolder['key'] = 'centreContextHolder_key';
+            centreContextHolder['desc'] = 'centreContextHolder description';
             
             if (requireSelectionCriteria !== null) {
             	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
@@ -1188,8 +1435,7 @@
         provideSelectionCriteria: function(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder) {
 			if (requireSelectionCriteria === "true") {
 				centreContextHolder["modifHolder"] = createModifiedPropertiesHolder();
-            } else if (requireSelectionCriteria === "false") {
-            	centreContextHolder["modifHolder"] = null;
+            } else if (requireSelectionCriteria === "false") { // 'modifHolder' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
             }
@@ -1198,14 +1444,29 @@
         /**
          * Creates the holder of modified properties and some savingContext.
          */
-        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext, continuationsMap) {
         	var reflector = this;
             var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
-            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+            savingInfoHolder['key'] = 'savingInfoHolder_key';
+            savingInfoHolder['desc'] = 'savingInfoHolder description';
+            savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
         	
         	if (savingContext) { // if saving context was defined (not 'undefined'):
-                savingInfoHolder["centreContextHolder"] = savingContext;
+                savingInfoHolder['centreContextHolder'] = savingContext;
+        	}
+        	
+        	if (typeof continuationsMap !== 'undefined') {
+        	    var continuations = [];
+        	    var continuationProperties = [];
+        	    for (var continuationProperty in continuationsMap) {
+        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
+        	            continuations.push(continuationsMap[continuationProperty]);
+        	            continuationProperties.push(continuationProperty);
+        	        }
+        	    }
+        	    savingInfoHolder['continuations'] = continuations;
+        	    savingInfoHolder['continuationProperties'] = continuationProperties;
         	}
             return savingInfoHolder;
         },
@@ -1255,31 +1516,6 @@
         		}
         	}
         	return number;
-        },
-        
-    	/**
-    	 * Returns milliseconds from 1-st Jan 1970 in current locale, defined in momentjs.
-    	 * 
-    	 * Please, use this function only in environment with moment(...) function defined.
-    	 * Currently it is used in date-specific unit testing.
-    	 */
-        _millis: function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
-            return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
-        },
-        
-        millisDateRepresentation: function (dateMillis) {
-            var millisecondsRemainder = dateMillis % 1000;
-            var millisecondsExist = (millisecondsRemainder !== 0);
-            if (millisecondsExist) {
-                return moment(dateMillis).format('L LTS');
-            } else {
-                var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
-                var secondsExist = (secondsRemainder !== 0);
-                if (secondsExist) {
-                    return moment(dateMillis).format('L LTS');
-                }
-            }
-            return moment(dateMillis).format('L LT');
         }
     });
 })();    

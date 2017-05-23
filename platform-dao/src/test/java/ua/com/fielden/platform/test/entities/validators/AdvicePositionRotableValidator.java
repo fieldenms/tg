@@ -18,9 +18,9 @@ import ua.com.fielden.platform.test.domain.entities.Rotable;
 public class AdvicePositionRotableValidator implements IBeforeChangeEventHandler<Rotable> {
 
     @Override
-    public Result handle(final MetaProperty<Rotable> property, final Rotable newValue, final Rotable oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Rotable> property, final Rotable newValue, final Set<Annotation> mutatorAnnotations) {
         final AdvicePosition pos = (AdvicePosition) property.getEntity();
-        if (!newValue.equals(oldValue)) {
+        if (!newValue.equals(property.getValue())) {
             if (pos.getAdvice().rotables().contains(newValue)) {
                 return new Result(pos, new IllegalArgumentException("The same rotable cannot be used twice."));
             }

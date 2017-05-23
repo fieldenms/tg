@@ -33,14 +33,6 @@ public interface ISecurityTokenController {
     List<UserRole> findUserRolesFor(final Class<? extends ISecurityToken> securityTokenClass);
 
     /**
-     * Override it to provide the ability to persist the {@link UserRole}s associated with {@link ISecurityToken}s.
-     * 
-     * @param tokenToRoleAssocations
-     *            -- a map between tokens and roles that need to be associated
-     */
-    void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssocations);
-
-    /**
      * Returns all distinct {@link UserRole}s (It is needed for building SecurityTreeTableModel)
      * 
      * @return

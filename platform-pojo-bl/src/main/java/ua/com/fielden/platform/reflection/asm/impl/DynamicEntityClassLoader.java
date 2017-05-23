@@ -23,7 +23,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
     private final Map<String, Pair<Class<?>, byte[]>> cache = new ConcurrentHashMap<>(512);
     
 
-    private static DynamicEntityClassLoader instance;
+    private static volatile DynamicEntityClassLoader instance;
 
     public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
         if (instance == null) {

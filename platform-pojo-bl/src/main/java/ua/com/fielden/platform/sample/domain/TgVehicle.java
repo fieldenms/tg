@@ -19,11 +19,10 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -33,7 +32,6 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 @Ignore
 @CompanionObject(ITgVehicle.class)
 public class TgVehicle extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
@@ -56,12 +54,12 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title("Price")
-    @PersistedType(userType = ISimpleMoneyType.class)
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money price;
 
     @IsProperty
     @MapTo
-    @PersistedType(userType = ISimpleMoneyType.class)
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money purchasePrice;
 
     @IsProperty
@@ -109,7 +107,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty
     @Calculated
     @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount")
-    @PersistedType(userType = ISimpleMoneyType.class)
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money sumOfPrices;
     private static final ExpressionModel sumOfPrices_ = expr().val(1).mult().prop("price.amount").add().prop("purchasePrice.amount").model();
 
@@ -302,7 +300,6 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgVehicleModel.class)
     public TgVehicle setModel(final TgVehicleModel model) {
         this.model = model;
         return this;
@@ -313,7 +310,6 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgOrgUnit5.class)
     public TgVehicle setStation(final TgOrgUnit5 station) {
         this.station = station;
         return this;
@@ -334,7 +330,6 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgVehicle.class)
     public TgVehicle setReplacedBy(final TgVehicle replacedBy) {
         this.replacedBy = replacedBy;
         return this;

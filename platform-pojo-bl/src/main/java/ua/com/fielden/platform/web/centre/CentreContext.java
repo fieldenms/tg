@@ -1,12 +1,21 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * A structure that represents an execution context for an entity centre. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
@@ -39,12 +48,17 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private M masterEntity;
 
+    /**
+     * The computation function used to calculate additional information for action on entity centre.
+     */
+    private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
+
 
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
         }
-        throw new IllegalStateException(String.format("The number of selected entities is %s, which is not appliacable for determining a current entity.", selectedEntities.size()));
+        throw new IllegalStateException(format("The number of selected entities is %s, which is not applicable for determining a current entity.", selectedEntities.size()));
     }
 
     public List<AbstractEntity<?>> getSelectedEntities() {
@@ -55,10 +69,20 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 	public void setSelectedEntities(final List<T> selectedEntities) {
         this.selectedEntities.clear();
         if (selectedEntities != null) {
-        	for (AbstractEntity<?> el: selectedEntities) {
-        		// let's be smart about types and try to handle the situation with generated types
-        		this.selectedEntities.add((T) el.copy(el.getDerivedFromType()));
-        	}
+            for (final AbstractEntity<?> el: selectedEntities) {
+                final Class<? extends AbstractEntity<?>> originalType = el.getDerivedFromType();
+                final List<String> originalTypeProperties = Finder.streamRealProperties(originalType)
+                    .map(field -> field.getName())
+                    .collect(Collectors.toList());
+                final String[] propsToBeProxied = Finder.streamRealProperties(el.getClass())
+                    .map(field -> field.getName())
+                    .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
+                    .collect(Collectors.toList())
+                    .toArray(new String[] {});
+                    
+                // let's be smart about types and try to handle the situation with generated types
+                this.selectedEntities.add((T) el.copy(EntityProxyContainer.proxy(originalType, propsToBeProxied)));
+            }
         }
     }
 
@@ -80,6 +104,14 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     @Override
     public String toString() {
-        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n]", selectionCrit, selectedEntities, masterEntity);
+        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n,\ncomputation=%s\n]", selectionCrit, selectedEntities, masterEntity, computation);
+    }
+
+    public void setComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        this.computation = Optional.of(computation);
+    }
+
+    public Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> getComputation() {
+        return computation;
     }
 }

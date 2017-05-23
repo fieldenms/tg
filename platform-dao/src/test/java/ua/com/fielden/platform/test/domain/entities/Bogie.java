@@ -66,7 +66,6 @@ public class Bogie extends Rotable {
     }
 
     @Override
-    @EntityExists(BogieClass.class)
     @Observable
     public Bogie setRotableClass(final RotableClass klass) {
         super.setRotableClass(klass);

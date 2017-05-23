@@ -6,9 +6,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.security.user.User;
 
 public class BaseInfoForDomainMetadata {
     private final MapEntityTo userMapTo;
-    private final Map<Class<? extends AbstractEntity<?>>, EntityTypeInfo> map = new HashMap<>();
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo> map = new ConcurrentHashMap<>();
 
     public BaseInfoForDomainMetadata(final MapEntityTo userMapTo) {
         this.userMapTo = userMapTo;

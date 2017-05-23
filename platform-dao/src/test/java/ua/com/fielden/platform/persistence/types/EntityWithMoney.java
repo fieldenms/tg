@@ -5,8 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
-import ua.com.fielden.platform.dao.EntityWithMoneyDao;
+import ua.com.fielden.platform.dao.IEntityWithMoney;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -16,11 +15,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyUserType;
 
 /**
  * This is a test entity, which is currently used for testing of classes {@link Money} and {@link HibernateValueMatcher}.
@@ -31,29 +28,27 @@ import ua.com.fielden.platform.types.markers.IMoneyUserType;
 @KeyType(String.class)
 @DescTitle("Description")
 @MapEntityTo("MONEY_CLASS_TABLE")
-@CompanionObject(EntityWithMoneyDao.class)
+@CompanionObject(IEntityWithMoney.class)
 public class EntityWithMoney extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo("MONEY")
-    @PersistedType(userType = IMoneyUserType.class)
     private Money money;
+    
     @IsProperty
     @MapTo("DATE_TIME")
     private Date dateTimeProperty;
 
-    private static final ExpressionModel calculatedProperty_ = expr().prop("money.amount").add().prop("money.amount").model();
     @IsProperty
     @Calculated
     private BigDecimal calculatedProperty;
+    private static final ExpressionModel calculatedProperty_ = expr().prop("money.amount").add().prop("money.amount").model();
 
     @IsProperty(assignBeforeSave = true)
     @MapTo("TRANS_DATE_TIME")
     private Date transDate;
 
-    protected EntityWithMoney() {
-    }
+    protected EntityWithMoney() {}
 
     public EntityWithMoney(final String key, final String desc, final Money money) {
         super(null, key, desc);

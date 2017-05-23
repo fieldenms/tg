@@ -10,10 +10,11 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -38,14 +39,14 @@ public final class Validators {
     private Validators() {
     }
 
-    
+
     /**
-     * Identifies whether the provided entity overlaps with any of the existing entities.
+     * Identifies whether the provided entity overlaps with any of the existing entities. <em>fromDate</em> and <em>toDate</em> values are extracted from the <em>entity</em>.
      *
      * @param entity
      *            -- entity which should be tested for overlapping.
-     * @param controller
-     *            -- entity controller used for executing the query.
+     * @param co
+     *            -- entity companion used for executing the query.
      * @param fromDateProperty
      *            -- name of the entity property serving as the from date.
      * @param toDateProperty
@@ -57,12 +58,46 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
     /*    */final T entity, //
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final String... matchProperties) {
         final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
-        return controller.count(model) > 0;
+        return co.count(model) > 0;
+    }
+
+    /**
+     * Identifies whether the provided entity overlaps with any of the existing entities. 
+     * <em>fromDateValue</em> and <em>toDateValue</em> are passed in as separate parameters - 
+     * this is especially useful if overlap check is performed as part of the validation of fromDateProperty or toDateProperty. 
+     *
+     * @param entity
+     *            -- entity which should be tested for overlapping.
+     * @param co
+     *            -- entity companion used for executing the query.
+     * @param fromDateProperty
+     *            -- name of the entity property serving as the from date.
+     * @param toDateProperty
+     *            -- name of the entity property serving as the to date.
+     * @param fromDateValue
+     *            -- value serving as the from date.
+     * @param toDateValue
+     *            -- value serving as the to date.
+     * @param matchProperties
+     *            -- names of properties used for matching entity by, for example person in case of Timesheet entity. Could be empty, which would mean that overlapping happens
+     *            against all existing entities of this type.
+     * @return <i>true</i> if there is at least one overlapped entity.
+     */
+    public static <T extends AbstractEntity<?>> boolean overlaps(//
+    /*    */final T entity, //
+            final IEntityDao<T> co, //
+            final String fromDateProperty, //
+            final String toDateProperty, //
+            final Date fromDateValue, //
+            final Date toDateValue, //
+            final String... matchProperties) {
+        final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, fromDateValue, toDateValue, matchProperties);
+        return co.count(model) > 0;
     }
 
     /**
@@ -71,7 +106,7 @@ public final class Validators {
      * @param entity
      * @param fetchModel
      *            -- the fetch model is used to initialise the overlapped entity
-     * @param controller
+     * @param co
      * @param fromDateProperty
      * @param toDateProperty
      * @param matchProperties
@@ -80,7 +115,7 @@ public final class Validators {
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
     /*    */final T entity, //
             final fetch<T> fetchModel,//
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final String... matchProperties) {
@@ -88,15 +123,15 @@ public final class Validators {
         final OrderingModel orderBy = orderBy().prop(fromDateProperty).asc().model();
 
         final fetch<T> runFetch = fetchModel != null ? fetchModel : fetch((Class<T>) entity.getType());
-        final List<T> result = controller.getFirstEntities(from(model).with(runFetch).with(orderBy).model(), 1);
-        return result.size() > 0 ? result.get(0) : null;
+        final List<T> result = co.getFirstEntities(from(model).with(runFetch).with(orderBy).model(), 1);
+        return !result.isEmpty() ? result.get(0) : null;
     }
 
     /**
      * Returns the first overlapping entity if any, <code>null</code> value otherwise. Default entity query fetch model is used for initialising the overlapped entity.
      *
      * @param entity
-     * @param controller
+     * @param co
      * @param fromDateProperty
      * @param toDateProperty
      * @param matchProperties
@@ -104,11 +139,11 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
     /*    */final T entity, //
-            final IEntityDao<T> controller, //
+            final IEntityDao<T> co, //
             final String fromDateProperty, //
             final String toDateProperty, //
             final String... matchProperties) {
-        return findFirstOverlapping(entity, null, controller, fromDateProperty, toDateProperty, matchProperties);
+        return findFirstOverlapping(entity, null, co, fromDateProperty, toDateProperty, matchProperties);
     }
 
     /**
@@ -119,7 +154,7 @@ public final class Validators {
      * @param entityType
      * @return
      */
-    public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
+    public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesOperations coAggregate) {
         // there should be exactly 0 active and persisted dependencies to not yet persisted entity
         if (!entity.isPersisted()) {
             return 0;
@@ -255,7 +290,7 @@ public final class Validators {
     }
 
     /**
-     * A helper method, which produces query model for overlapping validation.
+     * A helper method, which produces query model for overlapping validation. <em>fromDate</em> and <em>toDate</em> values are extracted from the <em>entity</em>.
      *
      * @param entity
      * @param fromDateProperty
@@ -265,8 +300,36 @@ public final class Validators {
      */
     private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> composeOverlappingCheckQueryModel(final T entity, final String fromDateProperty, final String toDateProperty, final String... matchProperties) {
         // check preconditions
-        if (entity.get(fromDateProperty) == null) {
+        final Date fromDateValue = entity.get(fromDateProperty);
+        if (fromDateValue == null) {
             throw new IllegalArgumentException("Property \"" + fromDateProperty + "\" should have a value.");
+        }
+
+        return composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, fromDateValue, entity.get(toDateProperty), matchProperties);
+    }
+
+
+    /**
+     * A helper method, which produces query model for overlapping validation. <em>fromDateValue</em> and <em>toDateValue</em> are passed in as separate parameters.
+     *
+     * @param entity
+     * @param fromDateProperty
+     * @param toDateProperty
+     * @param fromDateValue
+     * @param toDateValue
+     * @param matchProperties
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> composeOverlappingCheckQueryModel(
+            final T entity, 
+            final String fromDateProperty, 
+            final String toDateProperty, 
+            final Date fromDateValue, 
+            final Date toDateValue, 
+            final String... matchProperties) {
+        // check preconditions
+        if (fromDateValue == null) {
+            throw new IllegalArgumentException("fromDateValue should not be null.");
         }
 
         /////////////// start query composition ///////////////////
@@ -291,23 +354,23 @@ public final class Validators {
         // 2. toDateProperty has no value (open period).
 
         // Condition for the end of the period for potentially overlapped existing entities
-        condition_1: cc = cc.and().//
-        /*              */begin().//
+        condition_1: cc = cc.and().
+        /*              */begin().
         /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
-                /*                  */or().//
-                /*                  */prop(toDateProperty).gt().val(entity.get(fromDateProperty))./* the end of the potentially overlapped entity is AFTER the fromDateProperty value of the entity under test */
-                /*              */end();//.
+        /*                  */or().
+        /*                  */prop(toDateProperty).gt().val(fromDateValue)./* the end of the potentially overlapped entity is AFTER the fromDateValue */
+        /*              */end();
 
         // Condition for the beginning of the period for potentially overlapped existing entities
         // Open ended period does not require any condition, because any toDateProperty of the potentially overlapped entity would be BEFORE such an end.
         // Thus, if the condition_1 holds then there is an overlap and there is no reason to add any conditions
         // If condition_1 does not hold then there is no overlap and there is no reason to add any conditions too.
         // Closed ended period does require an additional condition to ensure the beginning of the potentially overlapped entity if BEFORE that end value of the entity under test
-        condition_2: if (entity.get(toDateProperty) != null) {
+        condition_2: if (toDateValue != null) {
             cc = cc.and().//
             /*    */begin().//
-            /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
-                    /*    */end();
+            /*        */prop(fromDateProperty).lt().val(toDateValue)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
+            /*    */end();
         }
 
         // make a model with result ordered by fromDateProperty, which is only required if at some stage it would be used for selecting overlapped entities.

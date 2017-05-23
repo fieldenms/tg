@@ -6,12 +6,14 @@ import ua.com.fielden.platform.web.menu.IModuleMenuConfigWithDone;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig0;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig1;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig2;
+import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig2WithDone;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig3;
+import ua.com.fielden.platform.web.menu.item.IModuleMenuConfigWithView;
 import ua.com.fielden.platform.web.menu.module.impl.ModuleMenuConfig;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuItem;
 import ua.com.fielden.platform.web.menu.module.impl.WebView;
 
-public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, IModuleMenuConfig2 {
+public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, IModuleMenuConfigWithView, IModuleMenuConfig2, IModuleMenuConfig2WithDone {
 
     private final WebMenuItem menuItem;
     private final ModuleMenuConfig moduleMenuConfig;
@@ -28,13 +30,13 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, I
     }
 
     @Override
-    public IModuleMenuConfig2 centre(final EntityCentre<?> centre) {
+    public IModuleMenuConfigWithView centre(final EntityCentre<?> centre) {
         menuItem.view(new WebView(centre));
         return this;
     }
 
     @Override
-    public IModuleMenuConfig2 view(final AbstractCustomView view) {
+    public IModuleMenuConfigWithView view(final AbstractCustomView view) {
         menuItem.view(new WebView(view));
         return this;
     }
@@ -45,7 +47,8 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, I
     }
 
     @Override
-    public IModuleMenuConfig3 addSubMenuItem(final String title) {
-        return new SubMenuItemConfig(menuItem.addSubMenuItem(title), this);
+    public IModuleMenuConfig3 addMenuItem(final String title) {
+        return new SubMenuItemConfig(menuItem.addMenuItem(title), this);
     }
+
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.reflection.Reflector;
  *
  */
 @KeyType(String.class)
+@CompanionObject(IEntityAggregates.class)
 public class EntityAggregates extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

@@ -1,6 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+
 <style is="custom-style">
     .meta-value-editor paper-button {
         color: var(--paper-light-blue-500);
@@ -10,10 +12,20 @@
     .meta-value-editor paper-button:hover {
          background: var(--paper-light-blue-50);
     }
+    
+    .meta-value-editor > paper-dialog-scrollable {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .metavalue-editor {
+    	padding-top: 24px;
+    }
+    
 </style>
 <script>
     Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
+    Polymer.TgBehaviors.TgAbstractCriterionBehaviorImpl = {
 
         properties: {
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,12 +104,30 @@
             domBind._datePrefixBind = self._datePrefix;
             domBind._dateMnemonicBind = self._dateMnemonic;
             domBind._andBeforeBind = self._andBefore;
+            
+            domBind._onCaptureKeyDown = function (e) {
+                var dialog = this.$.metaValueEditor;
+                if (e.keyCode === 13) {
+                    this._acceptMetaValuesBind();
+                    dialog.close();
+                }
+            }.bind(domBind);
+            
+            domBind._openedBind = function (e) {
+                document.addEventListener('keydown', this._onCaptureKeyDown, true);
+            }.bind(domBind);
 
             domBind._closedBind = function (e) {
                 var dialog = this.$.metaValueEditor;
+                //Remove registered listeners on document.
+                document.removeEventListener('keydown', this._onCaptureKeyDown, true);
+                
                 Polymer.dom(document.body).removeChild(dialog);
                 Polymer.dom(document.body).removeChild(this);
                 Polymer.dom.flush();
+                //Restoring focus and icon button state.
+                self._dom().$.iconButton.disabled = false;
+                self.restoreActiveElement();
             }.bind(domBind);
 
             domBind._cancelMetaValuesBind = function () {
@@ -124,6 +154,8 @@
 
             domBind.open = function () {
                 var dialog = this.$.metaValueEditor;
+                self.persistActiveElement();
+                self._dom().$.iconButton.disabled = true;
                 Polymer.dom(document.body).appendChild(dialog);
                 Polymer.dom.flush();
                 // let's open the dialog with magical async...
@@ -134,7 +166,7 @@
             }.bind(domBind);
 
             var div = domBind.content.ownerDocument.createElement('div');
-            div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+            div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_openedBind">' +
 
             '<paper-dialog-scrollable>' +
                 '<div class="metavalue-editor layout vertical">' +
@@ -201,4 +233,10 @@
             throw "not implemented";
         }
     };
+    
+	
+	Polymer.TgBehaviors.TgAbstractCriterionBehavior = [
+		Polymer.TgBehaviors.TgFocusRestorationBehavior,
+		Polymer.TgBehaviors.TgAbstractCriterionBehaviorImpl
+	];
 </script>

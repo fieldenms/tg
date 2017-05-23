@@ -49,7 +49,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -66,7 +66,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
-    private final IMainMenuItemController mainMenuItemController;
+    private final IMainMenuItem mainMenuItemController;
     private final IEntityCentreConfig entityCentreConfigController;
     private final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController;
     private final IEntityMasterConfig entityMasterConfigController;
@@ -83,7 +83,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
         super(serialiser);
         this.factory = factory;
         this.userProvider = userProvider;
@@ -837,7 +837,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 } else {
                     if (!isEntityCentreManagerOwner(menuItemType, null)) {
                         error("Unable to save a NON-PRINCIPLE entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                                + currentUser() + "] -- the base user [" + baseOfTheCurrentUser() + "] owns this entity centre.");
+                                + currentUser() + "] -- the base user [id = " + baseOfTheCurrentUser().getId() + "] owns this entity centre.");
                     } else {
                         error("Unable to save non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
                                 + currentUser() + "].");
@@ -929,7 +929,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 init(menuItemType, newName, copyMgr, true);
             } else { // > 1
                 error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser()
-                        + "] or its base [" + baseOfTheCurrentUser() + "].");
+                        + "] or its base [id = " + baseOfTheCurrentUser().getId() + "].");
             }
             return this;
         }

@@ -35,7 +35,13 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
+        if ("save".equals(this.name().toLowerCase())) {
+            attrs.put("id", "_saveAction");
+        }
         attrs.put("role", this.name().toLowerCase());
+        if (focusingCallback() != null) {
+            attrs.put("focusing-callback", "[[" + focusingCallback() + "]]");
+        }
         attrs.put("event-channel", "[[centreUuid]]");
         final String actionSelector = "_actions." + this.name();
 

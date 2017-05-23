@@ -23,7 +23,6 @@ public class ExportActionProducer extends DefaultEntityProducerWithContext<Expor
     protected ExportAction provideDefaultValues(final ExportAction entity) {
         entity.setKey("EXPORT");
         entity.setCount(10);
-        entity.resetMetaState();
         return entity;
     }
 }

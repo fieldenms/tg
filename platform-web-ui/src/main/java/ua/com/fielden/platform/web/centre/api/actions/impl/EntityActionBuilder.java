@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.centre.api.actions.impl;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
@@ -17,9 +15,11 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder1;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder3;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder4;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder4IconStyle;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder5;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7a;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -28,14 +28,18 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 
-public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
+import com.google.inject.Injector;
+
+public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder4IconStyle<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
     private Injector injector;
     private IWebUiBuilder builder;
     private Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
     private CentreContextConfig context;
     private String icon;
+    private String iconStyle;
     private String shortDesc;
     private String longDesc;
+    private String shortcut;
     private IPreAction preAciton;
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
@@ -52,7 +56,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
         return new EntityActionBuilder<T>().addAction(functionalEntity);
     }
-    
+
     /**
      * A starting point to entity action configuration.
      *
@@ -71,7 +75,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      *
      * @return
      */
-    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7<T> actionOff() {
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7a<T> actionOff() {
         return new EntityActionBuilder<T>().noAction();
     }
 
@@ -87,8 +91,10 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
                     functionalEntity,
                     context,
                     icon,
+                    iconStyle,
                     shortDesc,
                     longDesc,
+                    shortcut,
                     preAciton,
                     successPostAction,
                     errorPostAction,
@@ -128,12 +134,18 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     @Override
-    public IEntityActionBuilder5<T> icon(final String iconName) {
+    public IEntityActionBuilder4IconStyle<T> icon(final String iconName) {
         if (StringUtils.isEmpty(iconName)) {
             throw new IllegalArgumentException("Icon name should be provided.");
         }
 
         this.icon = iconName;
+        return this;
+    }
+
+    @Override
+    public IEntityActionBuilder5<T> withStyle(final String iconStyle) {
+        this.iconStyle = iconStyle;
         return this;
     }
 
@@ -178,7 +190,17 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     @Override
-    public IEntityActionBuilder7<T> noAction() {
+    public IEntityActionBuilder7a<T> shortcut(final String shortcut) {
+        if (StringUtils.isEmpty(shortcut)) {
+            throw new IllegalArgumentException("Shortcut should be provided.");
+        }
+
+        this.shortcut = shortcut;
+        return this;
+    }
+
+    @Override
+    public IEntityActionBuilder7a<T> noAction() {
         this.returnNoAction = true;
         return this;
     }
@@ -200,7 +222,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         builder.register(Compound.detailsCentre(functionalEntity, builder.register(embeddedCentre), injector));
         return this;
     }
-    
+
     @Override
     public IEntityActionBuilder0<T> withView(final EntityMaster<?> embeddedMaster) {
         builder.register(Compound.detailsMaster(functionalEntity, builder.register(embeddedMaster), injector));

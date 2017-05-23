@@ -53,7 +53,7 @@ public class EntQuery implements ISingleOperand {
 
     private EntQuery master;
 
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger LOGGER = Logger.getLogger(EntQuery.class);
 
     private boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);
@@ -71,7 +71,7 @@ public class EntQuery implements ISingleOperand {
      * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
      * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
      */
-    private List<EntProp> unresolvedProps = new ArrayList<EntProp>();
+    private List<EntProp> unresolvedProps = new ArrayList<>();
 
     @Override
     public String toString() {
@@ -147,7 +147,7 @@ public class EntQuery implements ISingleOperand {
             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-            logger.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
+            LOGGER.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
                     //                    if (ppi.isSynthetic()) {
@@ -160,7 +160,7 @@ public class EntQuery implements ISingleOperand {
                     //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
                     ;
                     if (!skipProperty) {
-                        logger.debug(" add yield: " + ppi);
+                        LOGGER.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
@@ -243,17 +243,17 @@ public class EntQuery implements ISingleOperand {
 
     private void adjustYieldsModelAccordingToFetchModel(final IRetrievalModel fetchModel) {
         if (fetchModel == null) {
-            logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
+            LOGGER.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
-            logger.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
+            LOGGER.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
 
             for (final Yield yield : yields.getYields()) {
                 if (shouldYieldBeRemoved(fetchModel, yield)) {
                     toBeRemoved.add(yield);
-                    logger.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
+                    LOGGER.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
                 } else {
-                    logger.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
+                    LOGGER.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
                 }
             }
             yields.removeYields(toBeRemoved);
@@ -417,9 +417,9 @@ public class EntQuery implements ISingleOperand {
             if (filteringCondition == null) {
                 return originalConditions;
             }
-            logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
+            LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
             final List<CompoundCondition> others = new ArrayList();
-            others.add(new CompoundCondition(LogicalOperator.AND, originalConditions));
+            others.add(new CompoundCondition(LogicalOperator.AND, new GroupedConditions(false, originalConditions)));
             return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel())
                     : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
         } else {
@@ -570,8 +570,8 @@ public class EntQuery implements ISingleOperand {
                     final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
                     final PropResolutionInfo pri = propResolutionResult.getKey();
                     propResolutionResult.getValue().addReferencingProp(pri);
-                    if (pri.getProp().expressionModel != null && !pri.getEntProp().isExpression()) {
-                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().expressionModel).getResult().getValue());
+                    if (pri.getProp().getExpressionModel() != null && !pri.getEntProp().isExpression()) {
+                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().getExpressionModel()).getResult().getValue());
                     }
                 }
 

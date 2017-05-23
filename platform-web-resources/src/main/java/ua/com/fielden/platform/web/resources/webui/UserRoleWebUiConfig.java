@@ -8,8 +8,6 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 
 import java.util.Optional;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -28,6 +26,8 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
+import com.google.inject.Injector;
+
 /**
  * {@link UserRole} Web UI configuration.
  *
@@ -36,8 +36,8 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  */
 public class UserRoleWebUiConfig {
     private static final String actionButton = "'margin: 10px', 'width: 110px'";
-    private static final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
-    
+    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+
     public final EntityMaster<UserRoleTokensUpdater> tokensUpdater;
     public final EntityCentre<UserRole> centre;
     public final EntityMaster<UserRole> master;
@@ -60,11 +60,11 @@ public class UserRoleWebUiConfig {
                 + format("[[%s], [%s]], ", fmr, fmrLast)
                 + format("['flex']")
                 + "]";
-        
+
         final EntityCentre<UserRole> userRoleCentre = new EntityCentre<>(MiUserRole.class, "User Roles",
                 EntityCentreBuilder.centreFor(UserRole.class)
                 .runAutomatically()
-                .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()                
+                .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()
                 .addTopAction(UserRoleActions.DELETE_ACTION.mkAction())
                 .addCrit("this").asMulti().autocompleter(UserRole.class).also()
                 .addCrit(ActivatableAbstractEntity.ACTIVE).asMulti().bool().also()
@@ -90,12 +90,11 @@ public class UserRoleWebUiConfig {
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
         final String fmr = "'flex'";
 
-        final String layout = 
+        final String layout =
             "['padding:20px', 'width: 300px', "
             + format("[%s],", fmr)
             + format("[%s],", fmr)
-            + format("[%s],", fmr)
-            + format(bottomButtonPanel, actionButton, actionButton)
+            + format("[%s]", fmr)
             + "]";
         final IMaster<UserRole> masterConfigForUserRole = new SimpleMasterBuilder<UserRole>()
                 .forEntity(UserRole.class)
@@ -108,6 +107,7 @@ public class UserRoleWebUiConfig {
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
                 .addAction(MasterActions.SAVE).longDesc("Save changes")
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
         return new EntityMaster<UserRole>(
@@ -130,10 +130,10 @@ public class UserRoleWebUiConfig {
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:500px', "
-                        + format("['flex', ['flex']],")
-                        + format(bottomButtonPanel, actionButton, actionButton)
+                        + format("['flex', ['flex']]")
                         + "    ]"))
                 .done();
         return new EntityMaster<UserRoleTokensUpdater>(
@@ -142,9 +142,9 @@ public class UserRoleWebUiConfig {
                 masterConfig,
                 injector);
     }
-    
+
     private static enum UserRoleActions {
-        
+
         NEW_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -153,11 +153,12 @@ public class UserRoleWebUiConfig {
                         .icon("add-circle-outline")
                         .shortDesc("Add new User Role")
                         .longDesc("Initiates creation of a new User Role.")
+                        .shortcut("alt+n")
                         .build();
             }
 
         },
-        
+
         EDIT_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -170,7 +171,7 @@ public class UserRoleWebUiConfig {
             }
 
         },
-        
+
         DELETE_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -181,11 +182,12 @@ public class UserRoleWebUiConfig {
                         .icon("remove-circle-outline")
                         .shortDesc(desc)
                         .longDesc(desc)
+                        .shortcut("alt+d")
                         .build();
             }
 
         },
-        
+
         MANAGE_SECURITY_TOKEN_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -196,7 +198,7 @@ public class UserRoleWebUiConfig {
                         .longDesc("Add/remove security token associations for the current user role.")
                         .build();
             }
-            
+
         };
 
         public abstract EntityActionConfig mkAction();

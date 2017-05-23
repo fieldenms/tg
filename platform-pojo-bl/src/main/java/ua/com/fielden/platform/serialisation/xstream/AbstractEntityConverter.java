@@ -2,8 +2,14 @@ package ua.com.fielden.platform.serialisation.xstream;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.thoughtworks.xstream.converters.ConversionException;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -11,11 +17,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
-
-import com.thoughtworks.xstream.converters.ConversionException;
-import com.thoughtworks.xstream.converters.Converter;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 
 /**
  * This an XStream converter for marshaling and unmarshaling {@link AbstractEntity} descendants.
@@ -53,7 +54,7 @@ public abstract class AbstractEntityConverter implements Converter {
 
             if (PropertyDescriptor.class.isAssignableFrom(entityType)) {
                 final String to_string = reader.getAttribute("to-string");
-                return PropertyDescriptor.fromString(to_string, factory);
+                return PropertyDescriptor.fromString(to_string, Optional.of(factory));
             } else {
 
                 final AbstractEntity entity = factory.newEntity(entityType, id);

@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 /**
  * Class representing file attachment association with an entity of any type.
@@ -37,16 +36,11 @@ public class EntityAttachmentAssociation extends AbstractEntity<DynamicEntityKey
     @MapTo("ID_ANY_ENTITY")
     private Long entityId;
 
-    protected EntityAttachmentAssociation() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public Attachment getAttachment() {
         return attachment;
     }
 
     @Observable
-    @EntityExists(Attachment.class)
     public EntityAttachmentAssociation setAttachment(final Attachment attachment) {
         this.attachment = attachment;
         return this;

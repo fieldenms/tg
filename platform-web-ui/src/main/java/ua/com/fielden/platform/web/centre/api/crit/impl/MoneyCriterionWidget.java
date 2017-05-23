@@ -17,7 +17,7 @@ public class MoneyCriterionWidget extends AbstractRangeCriterionWidget {
      * @param propertyName
      */
     public MoneyCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/multi/range/tg-range-criterion", propertyName,
+        super(root, "centre/criterion/multi/range/tg-range-criterion", propertyName,
                 new MoneyWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey()

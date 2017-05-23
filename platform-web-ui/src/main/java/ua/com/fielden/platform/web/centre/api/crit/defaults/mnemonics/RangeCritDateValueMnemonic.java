@@ -55,7 +55,7 @@ public class RangeCritDateValueMnemonic {
             throw new IllegalArgumentException("Criteria from/to values should not be provided at the same time as period mnemonic.");
         }
 
-        if (!fromValue.isPresent() && !fromValue.isPresent() && !period.isPresent() && !checkForMissingValue) {
+        if (!fromValue.isPresent() && !period.isPresent() && !checkForMissingValue) {
             throw new IllegalArgumentException("Either criteria from/to values or a period mnemonic or a check for missing values is required.");
         }
 

@@ -85,7 +85,9 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
             attrs.put("debug", "true");
         }
         attrs.put("id", "editor_4_"+ this.propertyName);
-        attrs.put("entity", "[[_currBindingEntity]]");
+        attrs.put("entity", "{{_currBindingEntity}}");
+        attrs.put("original-entity", "{{_originalBindingEntity}}");
+        attrs.put("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]");
         attrs.put("property-name", this.propertyName);
         attrs.put("validation-callback", this.skipValidation ? "[[doNotValidate]]" : "[[validate]]");
         attrs.put("prop-title", this.title);

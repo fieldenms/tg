@@ -3,6 +3,7 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -14,7 +15,6 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -54,14 +54,16 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     public List<T> findMatches(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
+        queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
         return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).lightweight().model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().upperCase().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
+        queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
         return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).lightweight().model(), getPageSize());
     }

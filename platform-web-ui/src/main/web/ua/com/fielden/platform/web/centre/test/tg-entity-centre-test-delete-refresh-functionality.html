@@ -34,7 +34,7 @@
                 reflector = document.querySelector('#reflector');
             });
 
-            test('refresh after entity deleteion works', function (done) {
+            test('refresh after entity deletion works', function (done) {
                 var old_postRun = centre._postRun;
                 var deleteAction, newAction, testingPhase, keyEditor, descEditor;
 
@@ -49,11 +49,10 @@
                         newAction._run();
                     } else if (testingPhase === 'third') {
                         assert.strictEqual(resultEntities.length, 2, "The number of refreshed entities is incorrect should be 2 but wass: " + resultEntities.length + ".");
-                        var entities = centre.$.egi.entities;
-                        var selection = centre.$.egi.selectedEntities;
+                        var entities = centre.$.egi.egiModel;
                         var index;
                         for (index = 0; index < entities.length; index++) {
-                            selection.push(entities[index]);
+                            entities[index].selected = true;
                         }
                         testingPhase = 'finish';
                         deleteAction._run();

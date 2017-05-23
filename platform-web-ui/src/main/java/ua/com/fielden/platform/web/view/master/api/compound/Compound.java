@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.view.master.api.compound;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,9 +19,9 @@ import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCe
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
 
 public class Compound {
-    
+
     protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
-            final Class<MENU_ITEM> menuItemType, 
+            final Class<MENU_ITEM> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
             final Injector injector) {
         return new EntityMaster<MENU_ITEM>(
@@ -30,7 +32,7 @@ public class Compound {
                 /*  */.done(),
                 injector);
     }
-    
+
     protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
             final Class<MENU_ITEM> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
@@ -43,7 +45,7 @@ public class Compound {
                     .done(),
                 injector);
     }
-    
+
     public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsCentre(
             final Class<DETAILS_ACTION> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
@@ -56,7 +58,7 @@ public class Compound {
                     .done(),
                 injector);
     }
-    
+
     public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsMaster(
             final Class<DETAILS_ACTION> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
@@ -69,11 +71,11 @@ public class Compound {
                     .done(),
                 injector);
     }
-    
+
     protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityActionConfig miAction(
-            final Class<MENU_ITEM> menuItemType, 
-            final String icon, 
-            final String shortDesc, 
+            final Class<MENU_ITEM> menuItemType,
+            final String icon,
+            final String shortDesc,
             final String longDesc) {
         return action(menuItemType)
                 .withContext(context().withMasterEntity().build())
@@ -83,10 +85,10 @@ public class Compound {
                 .withNoParentCentreRefresh()
                 .build();
     }
-    
+
     /**
      * Creates standard action of opening compound master for new entity. This is usually to be placed as "+" top level action on some centre.
-     * 
+     *
      * @param openCompoundMasterActionType -- functional entity type for compound master opening
      * @param icon -- icon for action
      * @param shortDesc -- short description of action
@@ -95,52 +97,134 @@ public class Compound {
      * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openNew(
-            final Class<OPEN_ACTION> openCompoundMasterActionType, 
-            final String icon, 
-            final String shortDesc, 
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String icon,
+            final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
         // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
         return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
     }
-    
+
+    /**
+     * Creates standard action for opening a compound master for a new entity where a master entity is required as part of the context. 
+     * Such actions should always be a part of some other entity master. For example, for creating of new entities from an embedded centre on some compound master.
+     * 
+     * @param openCompoundMasterActionType
+     * @param icon
+     * @param shortDesc
+     * @param longDesc
+     * @param prefDim
+     * @return
+     */
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openNewWithMaster(
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String icon,
+            final String shortDesc,
+            final String longDesc,
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withMasterEntity().build());
+    }
+
     /**
      * Creates standard action of opening compound master to edit entity. This is usually to be placed as property action on some centre.
-     * 
+     *
      * @param openCompoundMasterActionType -- functional entity type for compound master opening
      * @param shortDesc -- short description of action
      * @param prefDim - preferred dimension for compound master dialog
      * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
-            final Class<OPEN_ACTION> openCompoundMasterActionType, 
-            final String shortDesc, 
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String shortDesc,
             final PrefDim prefDim) {
         return open(openCompoundMasterActionType, null, shortDesc, null, prefDim, context().withCurrentEntity().build());
     }
-    
+
+    /**
+     * Creates standard action of opening compound master to edit entity. This is usually to be placed as property action on some centre.
+     *
+     * @param openCompoundMasterActionType -- functional entity type for compound master opening
+     * @param shortDesc -- short description of action
+     * @param longDesc -- long description of action
+     * @param prefDim - preferred dimension for compound master dialog
+     * @return
+     */
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String shortDesc,
+            final String longDesc,
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, null, shortDesc, longDesc, prefDim, context().withCurrentEntity().build());
+    }
+
+    /**
+     * Creates standard action of opening compound master to edit entity. This is usually to be placed as property action on some centre.
+     *
+     * @param openCompoundMasterActionType -- functional entity type for compound master opening
+     * @param icon -- icon for action
+     * @param shortDesc -- short description of action
+     * @param longDesc -- long description of action
+     * @param prefDim - preferred dimension for compound master dialog
+     * @return
+     */
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String icon,
+            final String shortDesc,
+            final String longDesc,
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withCurrentEntity().build());
+    }
+
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
-            final Class<OPEN_ACTION> openCompoundMasterActionType, 
-            final String icon, 
-            final String shortDesc, 
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String icon,
+            final String shortDesc,
             final String longDesc,
             final PrefDim prefDim,
             final CentreContextConfig centreContextConfig
             ) {
-        return icon != null ? 
-                action(openCompoundMasterActionType)
-                    .withContext(centreContextConfig)
-                    .icon(icon)
-                    .shortDesc(shortDesc)
-                    .longDesc(longDesc)
-                    .prefDimForView(prefDim)
-                    .withNoParentCentreRefresh()
-                    .build():
-                action(openCompoundMasterActionType)
-                    .withContext(centreContextConfig)
-                    .shortDesc(shortDesc)
-                    .prefDimForView(prefDim)
-                    .withNoParentCentreRefresh()
-                    .build();
+        if (icon != null) {
+            if (StringUtils.isEmpty(longDesc)) {
+                return action(openCompoundMasterActionType)
+                        .withContext(centreContextConfig)
+                        .icon(icon)
+                        .shortDesc(shortDesc)
+                        .shortcut("alt+n")
+                        .prefDimForView(prefDim)
+                        .withNoParentCentreRefresh()
+                        .build();
+            } else {
+                return action(openCompoundMasterActionType)
+                        .withContext(centreContextConfig)
+                        .icon(icon)
+                        .shortDesc(shortDesc)
+                        .longDesc(longDesc)
+                        .shortcut("alt+n")
+                        .prefDimForView(prefDim)
+                        .withNoParentCentreRefresh()
+                        .build();
+            }
+        } else {
+            if (StringUtils.isEmpty(longDesc)) {
+                return action(openCompoundMasterActionType)
+                        .withContext(centreContextConfig)
+                        .shortDesc(shortDesc)
+                        .shortcut("alt+n")
+                        .prefDimForView(prefDim)
+                        .withNoParentCentreRefresh()
+                        .build();
+            } else {
+                return action(openCompoundMasterActionType)
+                        .withContext(centreContextConfig)
+                        .shortDesc(shortDesc)
+                        .longDesc(longDesc)
+                        .shortcut("alt+n")
+                        .prefDimForView(prefDim)
+                        .withNoParentCentreRefresh()
+                        .build();
+            }
+        }
     }
 }

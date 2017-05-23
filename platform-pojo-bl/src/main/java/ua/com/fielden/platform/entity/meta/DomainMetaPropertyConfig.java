@@ -9,6 +9,7 @@ import java.util.Map;
  * @author 01es
  *
  */
+@Deprecated
 public class DomainMetaPropertyConfig {
     private final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> domainMetaDefiners = new HashMap<>();
 

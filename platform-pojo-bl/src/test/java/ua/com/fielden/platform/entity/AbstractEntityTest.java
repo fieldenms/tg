@@ -7,36 +7,39 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity1;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity2;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity4;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
@@ -44,9 +47,9 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-
-import com.google.inject.Injector;
 
 /**
  * Unit test for :
@@ -68,13 +71,13 @@ public class AbstractEntityTest {
         module.getDomainValidationConfig().setValidator(Entity.class, "doubles", new HappyValidator());
         module.getDomainValidationConfig().setValidator(Entity.class, "number", new HappyValidator() {
             @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 if (newValue != null && newValue.equals(35)) {
                     return new Result(property, new Exception("Domain : Value 35 is not permitted."));
                 } else if (newValue != null && newValue.equals(77)) {
                     return new Warning("DOMAIN validation : The value of 77 is dangerous.");
                 }
-                return super.handle(property, newValue, oldValue, mutatorAnnotations);
+                return super.handle(property, newValue, mutatorAnnotations);
             }
         });
     }
@@ -193,27 +196,29 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void testThatFinalValidationWorks() {
-        entity.setFinalProperty(null);
-        assertTrue("Property finalProperty validation failed when assigning null.", entity.getProperty("finalProperty").isValid());
+    public void final_property_for_non_persistent_entity_can_only_be_assigned_once() {
+        assertTrue(entity.getProperty("finalProperty").isEditable());
         entity.setFinalProperty(60.0);
-        assertTrue("Property finalProperty validation failed when assigning non-null value for the first time.", entity.getProperty("finalProperty").isValid());
+        assertTrue(entity.getProperty("finalProperty").isValid());
+        assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        assertFalse(entity.getProperty("finalProperty").isEditable());
+        
         entity.setFinalProperty(31.0);
-        assertTrue("Property finalProperty validation failed when assigning non-null value the second time for non-persistent entity.", entity.getProperty("finalProperty").isValid());
-
-        // making entity "persistent"
-        try {
-            final Method method = Reflector.getMethod(AbstractEntity.class, "setId", Long.class);
-            method.setAccessible(true);
-            method.invoke(entity, 1L);
-            method.setAccessible(false);
-        } catch (final Exception e) {
-            fail(e.getMessage());
-        }
-        entity.setFinalProperty(35.0);
-        assertFalse("Property finalProperty validation failed when assigning non-null value the second time for persistent entity.", entity.getProperty("finalProperty").isValid());
-        assertEquals("Incorrect value for last invalid value.", new Double(35.0), entity.getProperty("finalProperty").getLastInvalidValue());
+        assertFalse(entity.getProperty("finalProperty").isValid());
+        assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        assertFalse(entity.getProperty("finalProperty").isEditable());
     }
+    
+    @Test
+    public void persistentOnly_final_property_for_non_persistent_entity_yields_invalid_definition() {
+        final Either<Exception, EntityInvalidDefinition> result = Try(() -> factory.newEntity(EntityInvalidDefinition.class, "key", "desc"));
+        assertTrue(result instanceof Left);
+        final Throwable rootCause = ExceptionUtils.getRootCause(((Left<Exception, EntityInvalidDefinition>) result).value);
+        assertTrue(rootCause instanceof EntityDefinitionException);
+        assertEquals(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", EntityInvalidDefinition.class.getSimpleName(), "firstProperty"),
+                rootCause.getMessage());
+    }
+    
 
     @Test
     public void testNewEntityWithDynamicKey() {
@@ -291,7 +296,6 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>meta-property correctly records old and new sizes correctly (this is actually done by {@link ObservableMutatorInterceptor}))
      * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
@@ -315,8 +319,14 @@ public class AbstractEntityTest {
         entity.setDoubles(Arrays.asList(new Double[] { 2.0 }));
 
         assertEquals("Property should have been observed.", true, observed);
-        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
+        
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { 2.0, 3.0 }), doublesProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
+        
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be a requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -332,7 +342,6 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>meta-property correctly records old and new sizes correctly (this is actually done by {@link ObservableMutatorInterceptor}))
      * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
@@ -353,8 +362,14 @@ public class AbstractEntityTest {
 
         assertEquals("Property should have been observed.", true, observed);
         assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
-        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
+
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
+        
         assertNotNull("There should be a domain validation result.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertNotNull("There should be requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         assertTrue("Requiredness validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
@@ -370,7 +385,6 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>meta-property correctly records old and new sizes correctly (this is actually done by {@link ObservableMutatorInterceptor}))
      * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
@@ -391,8 +405,14 @@ public class AbstractEntityTest {
 
         assertTrue("Property should have been observed.", observed);
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
-        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
+        
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
+        
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be requiredness validation result.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -591,23 +611,21 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void testMetaPropertyRequirementValidation() {
+    public void required_by_declaration_property_cannot_have_null_value() {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
         assertTrue("Should be required", firstPropertyMetaProp.isRequired());
         assertTrue("REQUIREDValidator should be present for 'required' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
+        
         entity.setFirstProperty(null);
         assertFalse("Required property is not yet populated and thus entity should be invalid.", entity.isValid().isSuccessful());
 
         entity.setFirstProperty(56);
         assertTrue("Required property with not null value have to be valid.", firstPropertyMetaProp.isValid());
         assertTrue("Should remain required", firstPropertyMetaProp.isRequired());
-
-        firstPropertyMetaProp.setRequired(false);
-        assertFalse("Should not be required", firstPropertyMetaProp.isRequired());
-        assertTrue("REQUIREDValidator should be present for 'required in the past' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-        entity.setFirstProperty(null);
-        assertTrue("Not 'required' property with null value has to be valid.", firstPropertyMetaProp.isValid());
-
+    }
+    
+    @Test
+    public void not_required_by_declaration_property_may_have_its_requiredness_changed_at_runtime() {
         final MetaProperty<Money> secondMetaProperty = entity.getProperty("money");
         secondMetaProperty.setRequired(true);
         assertTrue("Should be required", secondMetaProperty.isRequired());
@@ -620,46 +638,22 @@ public class AbstractEntityTest {
         assertTrue("Not 'required' property (with no NotNullValidator) with null value have to be valid.", secondMetaProperty.isValid());
     }
 
-    /**
-     * The requirement checks inside MetaProperty's isValid() method, rather than inside AbstractEntity's isValid(). So this logic this tests here.
-     */
     @Test
-    public void testAbstractEntityRequirementValidation() {
+    public void required_by_declaration_property_without_a_value_is_invalid_at_both_meta_property_and_entity_levels() {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
-
-        firstPropertyMetaProp.setRequired(false);
-        assertFalse("Should not be required", firstPropertyMetaProp.isRequired());
-        assertTrue("REQUIREDValidator should be present for 'required in the past' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-
-        // check MetProperty's isValid() requiredness forcing.
-        assertNull("Not required property first failure with null value should be null (before isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertTrue("Not required property with null value should be valid.", firstPropertyMetaProp.isValid());
-        assertNull("Not required property first failure with null value should be null (after isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertTrue("Entity with not-required property with null value should be valid.", entity.isValid().isSuccessful());
-
-        firstPropertyMetaProp.setRequired(true);
 
         assertNull("Required property (with null value) first failure should be null (before isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
         assertFalse("Required property (with null value) should be invalid.", firstPropertyMetaProp.isValidWithRequiredCheck());
         assertNotNull("Required property (with null value) first failure should be null (after isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
         assertFalse("Entity with required property with null value should be invalid.", entity.isValid().isSuccessful());
-
-        // at these cases no MetaProperty isValid() performs manually, just AE isValid() :
-
-        firstPropertyMetaProp.setRequired(false);
-
-        // check MetProperty's isValid() requiredness forcing.
-        assertNull("Not required property first failure with null value should be null (before AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertTrue("Entity with not-required property with null value should be valid.", entity.isValid().isSuccessful());
-        assertNull("Not required property first failure with null value should be null (after AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-
-        firstPropertyMetaProp.setRequired(true);
-
-        assertNull("Required property (with null value) first failure should be null (before AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertFalse("Entity with required property with null value should be invalid.", entity.isValid().isSuccessful());
-        assertNotNull("Required property (with null value) first failure should be null (after AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
     }
 
+    @Test(expected=EntityDefinitionException.class)
+    public void relaxing_requiredness_for_properties_declared_as_required_is_not_permitted() {
+        final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
+        firstPropertyMetaProp.setRequired(false);
+    }
+    
     @Test
     public void testSetterExceptionsAndResultsHandling() {
         final MetaProperty<Integer> property = entity.getProperty("number");
@@ -840,6 +834,22 @@ public class AbstractEntityTest {
     }
 
     @Test
+    public void copy_without_identity_is_supported() {
+        final Entity entity = factory.newEntity(Entity.class, 1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = entity.copyWithoutIdentity(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Entity with no id should be recognized as drity.", copy.isDirty());
+        assertNull("Id should not have been copied", copy.getId());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+
+    @Test
     public void test_copy_for_parent_to_descendant() {
         final Entity entity = factory.newEntity(Entity.class, 1L);
         entity.setKey("key");
@@ -878,7 +888,6 @@ public class AbstractEntityTest {
     @Test
     public void test_copy_for_entities_with_dynamic_key() {
         final CorrectEntityWithDynamicEntityKey one = factory.newEntity(CorrectEntityWithDynamicEntityKey.class, 1L);
-        ;
         one.property1 = 38L;
         one.property2 = 98L;
         final DynamicEntityKey keyOne = new DynamicEntityKey(one);
@@ -912,9 +921,9 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void test_copy_from_non_instrumented_instance() {
+    public void copy_from_non_instrumented_instance_is_also_non_instrumented() {
         final Entity entity = new Entity();
-        entity.setEntityFactory(factory); // factory is required at all times
+        entity.setVersion(42L);
         entity.setId(1L);
         entity.setKey("key");
         entity.setDesc("description");
@@ -923,15 +932,94 @@ public class AbstractEntityTest {
         final Entity copy = entity.copy(Entity.class);
 
         assertEquals("Copy does not equal to the original instance", entity, copy);
-        assertFalse("Should have not been dirty", copy.isDirty());
-        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertFalse("Copy is instrumented", copy.isInstrumented());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+    
+    @Test
+    public void copy_from_instrumented_instance_is_also_instrumented() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = entity.copy(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertFalse("Copy is dirty", copy.isDirty());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
         assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
         assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
     }
 
+    @Test
+    public void copy_happens_in_the_initialisation_mode() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
+
+        final Entity copy = entity.copy(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertFalse("Copy is dirty", copy.isDirty());
+        assertFalse("Property key is copied, but should be recognised as not dirty", copy.getProperty("key").isDirty());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertFalse("Property desc is copied, but should be recognised as not dirty", copy.getProperty("desc").isDirty());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+        assertFalse("Property money is copied, but should be recognised as not dirty", copy.getProperty("money").isDirty());
+    }
 
     @Test
-    public void test_equals_for_instances_of_the_same_type_with_the_same_key_values() {
+    public void copy_from_uninstrumented_proxied_instance_is_also_uninstrumented_and_proxied() {
+        final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
+        
+        final Entity entity = EntityFactory.newPlainEntity(type, 12L);
+        entity.setVersion(42L);
+        entity.setKey("key");
+        entity.setDesc("description");
+
+        final Entity copy = entity.copy(type);
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertFalse("Copy is instrumented", copy.isInstrumented());
+        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertEquals("Versions should match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Proxied properties do not match", entity.proxiedPropertyNames(), copy.proxiedPropertyNames());
+    }
+
+    @Test
+    public void copy_from_instrumented_proxied_instance_is_also_instrumented_and_proxied() {
+        final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
+        
+        final Entity entity = factory.newEntity(type, 12L);
+        entity.setVersion(42L);
+        entity.setKey("key");
+        entity.setDesc("description");
+
+        final Entity copy = entity.copy(type);
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertEquals("Versions should match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Proxied properties do not match", entity.proxiedPropertyNames(), copy.proxiedPropertyNames());
+    }
+
+    @Test
+    public void two_instances_of_the_same_type_with_the_same_key_values_are_equal() {
         final Entity thisEntity = factory.newEntity(Entity.class, 1L);
         thisEntity.setKey("key");
         final Entity thatEntity = factory.newEntity(Entity.class, 2L);
@@ -1032,87 +1120,6 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void test_entity_locking_during_validation_of_its_property() throws Exception {
-        final EntityWithLocableProperty entity = factory.newEntity(EntityWithLocableProperty.class);
-
-        // changing property happens on a separate thread
-        final Thread changingThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // this call should put setting into a long running mode until property validation is unlocked
-                entity.setLockPropertyValidation(true);
-                entity.setLockableProperty(Money.zero);
-            }
-        });
-        changingThread.start();
-
-        // validation happens on a separate thread
-        final Thread validationThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                entity.isValid();
-            }
-        });
-        validationThread.start();
-
-        // both threads should be alive
-        assertTrue(changingThread.isAlive());
-        assertTrue(validationThread.isAlive());
-
-        assertNull(entity.getLockableProperty()); // property should not have been changed yet
-
-        entity.setLockPropertyValidation(false); // release property validation lock
-
-        // wait for both threads to complete
-        changingThread.join();
-        validationThread.join();
-
-        assertNotNull(entity.getLockableProperty()); // property should have been changed already
-        assertNotNull(entity.isValid().isSuccessful());
-    }
-
-    @Test
-    public void test_entity_locking_during_its_validation() throws Exception {
-        final EntityWithLocableValidation entity = factory.newEntity(EntityWithLocableValidation.class);
-
-        // validation happens on a separate thread
-        final Thread validationThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // this call should put entity validation into a long running mode until validation is unlocked explicitly
-                entity.setLockEntityValidation(true);
-                entity.isValid();
-            }
-        });
-        validationThread.start();
-
-        // changing property happens on a separate thread
-        final Thread changingThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // this should lock due to a running entity validation process
-                entity.setMoney(Money.zero);
-            }
-        });
-        changingThread.start();
-        
-        // both threads should be alive
-        assertTrue(changingThread.isAlive());
-        assertTrue(validationThread.isAlive());
-
-        assertNull(entity.getMoney()); // property should not have been changed yet
-
-        entity.setLockEntityValidation(false); // release validation lock
-
-        // wait for both threads to complete
-        validationThread.join();
-        changingThread.join();
-
-        assertNotNull(entity.getMoney()); // property should have been changed already
-        assertNotNull(entity.isValid().isSuccessful());
-    }
-
-    @Test
     public void sameAs_for_two_entities_with_same_id_should_return_true() {
         final Entity thisEntity = factory.newEntity(Entity.class, 1L, "key1", "description");
         final Entity thatEntity = factory.newEntity(Entity.class, 1L, "key2", "description");
@@ -1210,4 +1217,56 @@ public class AbstractEntityTest {
                         TitlesDescsGetter.getEntityTitleAndDesc(Entity.class).getKey()),
                 descProperty.getFirstFailure().getMessage());
     }
+    
+    @Test
+    public void warnings_are_empty_for_entity_without_any_properties_with_warnings() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setDesc("some desc");
+        entity.setIntProp(20);
+        
+        assertFalse(entity.hasWarnings());
+        assertTrue(entity.warnings().isEmpty());
+        assertTrue(entity.isValid().isSuccessful());
+        assertTrue(entity.isValid().isSuccessfulWithoutWarning());
+    }
+    
+    @Test
+    public void number_of_warnings_is_equal_to_number_of_entity_properties_with_warnings() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setDesc("some desc");
+        entity.setSelfRefProp(entity);
+        entity.setIntProp(120);
+        
+        assertTrue(entity.hasWarnings());
+        assertEquals(2, entity.warnings().size());
+        assertTrue(entity.isValid().isSuccessful());
+        assertFalse(entity.isValid().isSuccessfulWithoutWarning());
+    }
+    
+    @Test
+    public void one_warning_is_identified_for_entity_with_one_property_in_error_and_one_property_with_warning() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setSelfRefProp(null);
+        entity.setIntProp(120);
+        
+        assertFalse(entity.isValid().isSuccessful());
+        assertTrue(entity.hasWarnings());
+        assertEquals(1, entity.warnings().size());
+    }
+    
+    @Test
+    public void warnings_are_identified_correctly_after_reassigning_the_property_value_to_valid_one() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+
+        // assign warning triggering value
+        entity.setIntProp(120);
+        assertTrue(entity.hasWarnings());
+        assertEquals(1, entity.warnings().size());
+
+        // assign warning clearing value
+        entity.setIntProp(20);
+        assertFalse(entity.hasWarnings());
+        assertEquals(0, entity.warnings().size());
+    }
+
 }

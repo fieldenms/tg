@@ -2,16 +2,19 @@
 
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
+<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -36,7 +39,7 @@
     <style>
         /*miscellanea styles*/
         .lock-layer {
-            opacity:0.5;
+            opacity: 0.5;
             display: none;
             background-color: white;
         }
@@ -148,16 +151,16 @@
             display: none;
         }
         paper-checkbox.blue {
-            --paper-checkbox-checked-color: #0288D1;
-            --paper-checkbox-checked-ink-color: #0288D1;
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
         }
         paper-checkbox.header {
-            --paper-checkbox-unchecked-color: #757575;
-            --paper-checkbox-unchecked-ink-color: #757575;
+            --paper-checkbox-unchecked-color: var(--paper-grey-600);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-600);
         }
         paper-checkbox.body {
-            --paper-checkbox-unchecked-color: #212121;
-            --paper-checkbox-unchecked-ink-color: #212121;
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
         }
         .table-icon {
             --iron-icon-width: 1.3rem;
@@ -274,12 +277,9 @@
                         <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
                             <div class="data-label truncate">[[item.columnTitle]]</div>
                             <div class="data-value relative">
-                                <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
-                                    <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item.property)]]"></iron-icon>
-                                </template>
-                                <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
-                                    <div class="truncate">[[_getValue(totals, item.property, item.type)]]</div>
-                                </template>
+                                <iron-icon class="card-icon" hidden$="[[!_isBooleanProp(totals, item)]]" icon="[[_getBooleanIcon(totals, item.property)]]"></iron-icon>
+                                <a class="truncate" hidden$="[[!_isHyperlinkProp(totals, item)]]" href$="[[_getValue(totals, item.property, item.type)]]">[[_getValue(totals, item.property, item.type)]]</a>
+                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(totals, item)]]">[[_getValue(totals, item.property, item.type)]]</div>
                             </div>
                         </div>
                     </template>
@@ -290,9 +290,9 @@
             </div>
         </paper-dialog>
 
-        <template is="dom-if" if="[[!cardLayout]]" restamp>
+        <template is="dom-if" if="[[!cardLayout]]" on-dom-change="_baseContainerRendered" restamp>
             <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
-                <div class="layout vertical data-table">
+                <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
                     <!--Table toolbar-->
                     <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                         <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -303,7 +303,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative layout horizontal">
+                    <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -335,21 +335,17 @@
                                     <template is="dom-if" if="[[primaryAction]]">
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                                             </template>
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column">
-                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
+                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                             <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
-                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
-                                                </div>
-                                                <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                                    <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                                </template>
-                                                <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                                    <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
-                                                </template>
+                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
+                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
+                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                             </template>
                                         </div>
                                     </template>
@@ -357,7 +353,7 @@
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isSecondaryActionsFixed(secondaryActionsFixed)]]">
                                                 <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                    <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                    <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" action-kind="[[secondaryActions.0.actionKind]]" number-of-action="[[secondaryActions.0.numberOfAction]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]" icon-style="[[secondaryActions.0.iconStyle]]"></tg-ui-action>
                                                 </template>
                                                 <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                     <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
@@ -383,12 +379,9 @@
                                             <template is="dom-if" if="[[summary]]">
                                                 <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
                                                     <template is="dom-if" if="[[!_isColumnFixed(summaryIndex, numOfFixedCols)]]">
-                                                        <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                            <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                        </template>
-                                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                            <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                                        </template>
+                                                        <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(totals, summary)]]" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                        <a class="truncate" hidden$="[[!_isHyperlinkProp(totals, summary)]]" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                        <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(totals, summary)]]" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                     </template>
                                                 </div>
                                             </template>
@@ -408,8 +401,8 @@
                         </div>
                         <!-- Fixed container -->
                         <div id="lockContainer" class="absolute fit" style="overflow:hidden">
-                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                                <div id="leftLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                                <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
                                         <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -434,18 +427,15 @@
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
-                                                    <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                    <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
+                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                                     <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
-                                                    <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                                        <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, true)]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                                    </template>
-                                                    <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                                        <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, false)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
-                                                    </template>
+                                                    <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                    <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
+                                                    <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                                 </div>
                                             </template>
                                         </div>
@@ -466,12 +456,9 @@
                                                     <template is="dom-if" if="[[_isColumnFixed(summaryIndex, numOfFixedCols)]]">
                                                         <template is="dom-if" if="[[summary]]">
                                                             <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
-                                                                <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                                    <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                                </template>
-                                                                <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                                    <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                                                </template>
+                                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(totals, summary)]]" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(totals, summary)]]" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(totals, summary)]]" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                             </div>
                                                         </template>
                                                         <template is="dom-if" if="[[!summary]]">
@@ -487,8 +474,8 @@
                             <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]"></div>
                             </template>
-                            <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
-                                <div id="rightLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_rightLockPanelRendered" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
+                                <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
                                         <div class="action-cell layout horizontal center no-flexible">
@@ -499,7 +486,7 @@
                                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                         <div class="action-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                             <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" action-kind="[[secondaryActions.0.actionKind]]" number-of-action="[[secondaryActions.0.numberOfAction]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]" icon-style="[[secondaryActions.0.iconStyle]]"></tg-ui-action>
                                             </template>
                                             <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                 <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
@@ -521,7 +508,7 @@
                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                                 <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow)]]"></div>
                             </template>
-                            <template is="dom-if" if="[[_isHeaderFixed(headerFixed)]]">
+                            <template is="dom-if" on-dom-change="_topLockPanelRendered" if="[[_isHeaderFixed(headerFixed)]]">
                                 <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -543,7 +530,7 @@
                                     </template>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
+                            <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
                                 <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="layout vertical flex" style="background-color:white;">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
@@ -559,12 +546,9 @@
                                                     <template is="dom-if" if="[[!_isColumnFixed(summaryIndex, numOfFixedCols)]]">
                                                         <template is="dom-if" if="[[summary]]">
                                                             <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
-                                                                <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                                    <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                                </template>
-                                                                <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                                    <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                                                </template>
+                                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(totals, summary)]]" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(totals, summary)]]" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(totals, summary)]]" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                             </div>
                                                         </template>
                                                         <template is="dom-if" if="[[!summary]]">
@@ -621,12 +605,9 @@
                                                 <template is="dom-if" if="[[_isColumnFixed(summaryIndex, numOfFixedCols)]]">
                                                     <template is="dom-if" if="[[summary]]">
                                                         <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
-                                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                            </template>
-                                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                                <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                                            </template>
+                                                            <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(totals, summary)]]" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(totals, summary)]]" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(totals, summary)]]" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                         </div>
                                                     </template>
                                                     <template is="dom-if" if="[[!summary]]">
@@ -678,13 +659,13 @@
                         <div class="layout horizontal center relative">
                             <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]"></paper-checkbox>
                             <template is="dom-if" if="[[primaryAction]]">
-                                <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </template>
                         </div>
                         <div class="layout horizontal center relative">
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                 <template is="dom-repeat" items="[[secondaryActions]]">
-                                    <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]" should-refresh-parent-centre-after-save="[[item.shouldRefreshParentCentreAfterSave]]" ui-role="[[item.uiRole]]"></tg-ui-action>
+                                    <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" action-kind="[[item.actionKind]]" number-of-action="[[item.numberOfAction]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]" should-refresh-parent-centre-after-save="[[item.shouldRefreshParentCentreAfterSave]]" ui-role="[[item.uiRole]]" icon-style="[[item.iconStyle]]"></tg-ui-action>
                                 </template>
                             </template>
                         </div>
@@ -711,40 +692,67 @@
 </dom-module>
 <script>
     (function () {
+
         var _checkCollapsiblePanelVisibility = function (layout) {
-                this.collapsePanelVisible = !!(this.cardLayout && layout);
-            },
-            _areEqual = function (a, b) {
-                return a.id === b.id;
-            },
-            _hasEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return true;
+            this.collapsePanelVisible = !!(this.cardLayout && layout);
+        };
+        var _areEqual = function (a, b) {
+            return a.get('id') === b.get('id');
+        };
+        var _hasEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        var _findEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        };
+        var _processEntitySelection = function (selectedEntities, entity, select, egi) {
+            var selectedIndex = selectedEntities.indexOf(entity);
+            if (select) {
+                if (selectedIndex < 0) {
+                    selectedEntities.push(entity);
+                    if (egi) {
+                        egi.retrievedEntitySelection = {
+                            entity: entity,
+                            selected: true
+                        };
                     }
                 }
-                return false;
-            },
-            _findEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return i;
+            } else {
+                if (selectedIndex >= 0) {
+                    selectedEntities.splice(selectedIndex, 1);
+                    if (egi) {
+                        egi.retrievedEntitySelection = {
+                            entity: entity,
+                            selected: false
+                        };
                     }
                 }
-                return -1;
-            },
-            _processEntitySelection = function (selectedEntities, entity, select) {
-                var selectedIndex = selectedEntities.indexOf(entity);
-                if (select) {
-                    if (selectedIndex < 0) {
-                        selectedEntities.push(entity);
+            }
+        };
+        var generateShortCollection = function (entity, property, typeObject) {
+            var collectionValue = entity.get(property);
+            var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
+            var keys = typeObject.compositeKeyNames();
+            return collectionValue.map(function (subEntity) {
+                var key = keys.find(function (key) {
+                    if (subEntity.get(key) !== containerPropertyValue) {
+                        return key;
                     }
-                } else {
-                    if (selectedIndex >= 0) {
-                        selectedEntities.splice(selectedIndex, 1);
-                    }
-                }
-            };
+                });
+                return subEntity.get(key);
+            });
+        };
+        const sign = (value) => value < 0 ? -1 : 1;
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -754,6 +762,24 @@
                     observer: "_entitiesChanged"
                 },
                 totals: Object,
+                /**
+                 * Last updated entity selection.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_retrievedEntitySelectionChanged',
+                    notify: true
+                },
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    notify: true
+                },
                 lock: {
                     type: Boolean,
                     value: false
@@ -860,8 +886,80 @@
                         '_mobileLongLayoutChanged(longLayout.mobile)'
                     ],
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior],
-            
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
+
+            _baseContainerRendered: function (e) {
+                this._scrollContainer = this.$$("#scrollContainer");
+                this._lockContainer = this.$$("#lockContainer");
+            },
+
+            _leftLockPanelRendered: function (e) {
+                this._leftLockPanel = this.$$("#leftLockPanel");
+            },
+
+            _rightLockPanelRendered: function (e) {
+                this._rightLockPanel = this.$$("#rightLockPanel");
+            },
+
+            _topLockPanelRendered: function (e) {
+                this._topLockPanel = this.$$("#topLockPanel");
+            },
+
+            _bottomLockPanelRendered: function (e) {
+                this._bottomLockPanel = this.$$("#bottomLockPanel");
+            },
+
+            /**
+             * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
+             */
+            _ownKeyBindings: {
+                '@SHORTCUTS': '_shortcutPressed'
+            },
+
+            _shortcutPressed: function (e) {
+                var shortcut = e.detail.combo;
+                console.debug('Master shortcut', shortcut, 'processing...');
+
+                var iconButton = this.querySelector('paper-icon-button[shortcut="' + shortcut + '"]');
+                if (iconButton) {
+                    // Respect nodes that are disabled in the UI.
+                    if (window.getComputedStyle(iconButton)['pointer-events'] !== 'none') {
+                        iconButton.focus();
+                        MockInteractions.tap(iconButton);
+                    }
+                } else {
+                    var action = this.querySelector('tg-action[shortcut="' + shortcut + '"]');
+                    if (action) {
+                        // Respect nodes that are disabled in the UI.
+                        if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
+                            action.$.actionButton.focus();
+                            action._asyncRun();
+                        }
+                    } else {
+                        var uiAction = this.querySelector('tg-ui-action[shortcut="' + shortcut + '"]');
+                        if (uiAction) {
+                            // Respect nodes that are disabled in the UI.
+                            if (!uiAction.isActionInProgress) {
+                                if (uiAction.isIconButton) {
+                                    uiAction.$.iActionButton.focus();
+                                } else {
+                                    uiAction.$.bActionButton.focus();
+                                }
+                                uiAction._run();
+                            }
+                        } else {
+                            console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
+                        }
+                    }
+                }
+
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+                console.debug('Master shortcut', shortcut, 'processing... done');
+            },
+
             /**
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
@@ -899,6 +997,19 @@
                 });
                 this.columns = tempColumns;
 
+                this.columnPropertiesMapper = (function (entity) {
+                    const result = [];
+                    for (let index = 0; index < this.columns.length; index++) {
+                        const column = this.columns[index];
+                        const entry = {
+                            dotNotation: column.property,
+                            value: this._getValue(entity, column.property, column.type)
+                        };
+                        result.push(entry);
+                    }
+                    return result;
+                }).bind(this);
+
                 //Initialising the primary action.
                 this.primaryAction = null;
                 this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
@@ -914,7 +1025,19 @@
             },
 
             attached: function () {
+                var self = this;
                 this._updateTableSizeAsync();
+                this.async(function () {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                }, 1)
+            },
+
+            _getKeyEventTarget: function () {
+                var parent = this;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    parent = parent.parentElement;
+                }
+                return parent || this;
             },
 
             updateProgress: function (percentage, clazz, isVisible) {
@@ -930,11 +1053,11 @@
                 }
                 progressBar.updateStyles();
             },
-            
-            _checkSelectionState: function(event) {
+
+            _checkSelectionState: function (event) {
                 this._rangeSelection = event.shiftKey;
             },
-            
+
             _mouseRowEnter: function (event, detail) {
                 var index = event.model.entityIndex;
                 this.set("egiModel." + index + ".over", true);
@@ -946,18 +1069,160 @@
             },
 
             _handleWheel: function (e, detail) {
-                var scrollContainer = this.$$("#scrollContainer");
-                var wheelEvent;
-
-                if (scrollContainer) {
-                    wheelEvent = new WheelEvent(e.type, e);
-                    scrollContainer.dispatchEvent(wheelEvent);
+                if (this._scrollContainer) {
+                    this._scrollLengthY = this._scrollLengthY || 0;
+                    this._scrollLengthX = this._scrollLengthX || 0;
+                    if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
+                        if (sign(e.deltaX) === sign(this._scrollLengthX)) {
+                            this._scrollLengthX += e.deltaX;
+                        } else {
+                            this._resetXscroll = e.deltaX;
+                        }
+                        if (sign(e.deltaY) === sign(this._scrollLengthY)) {
+                            this._scrollLengthY += e.deltaY;
+                        } else {
+                            this._resetYscroll = e.deltaY;
+                        }
+                        e.preventDefault();
+                    } else {
+                        this._scrollLengthX = e.deltaX;
+                        this._scrollLengthY = e.deltaY;
+                        if (this._scrollBy(7, 7)) {
+                            e.preventDefault();
+                        }
+                    }
                 }
-                console.log(e, detail);
+            },
+
+            _scrollBy: function (incrementX, incrementY) {
+                const newIncrementX = this._scrollHorizontallyBy(incrementX);
+                const newIncrementY = this._scrollVerticallyBy(incrementY);
+                if (this._scrollLengthX !== 0 || this._scrollLengthY !== 0) {
+                    setTimeout(() => this._scrollBy(newIncrementX, newIncrementY), 10);
+                    return true;
+                }
+                return false;
+            },
+
+            _scrollHorizontallyBy: function (increment) {
+                let newIncrement = increment;
+                if (this._resetXscroll) {
+                    this._scrollLengthX = this._resetXscroll;
+                    delete this._resetXscroll;
+                    newIncrement = 7;
+                }
+                if (this._scrollLengthX !== 0 && newIncrement !== 0) {
+                    const s = sign(this._scrollLengthX);
+                    //The expression below calculates speed and direction of scroll action
+                    //s = sign(scrollLength) - determines the direction of scroll (to left or to right).
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLengthX) / 10) - calculates the accelration of the scroll. It should be maximum value of previous speed or it's scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLengthX)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on the last step of animation. That looks like animation slows down.
+                    newIncrement = s * Math.min(Math.max(Math.abs(newIncrement), Math.abs(this._scrollLengthX) / 10), Math.abs(this._scrollLengthX));
+                    if (this._scrollContainer.scrollLeft + newIncrement < 0) {
+                        this._scrollContainer.scrollLeft = 0;
+                        this._scrollLengthX = 0;
+                        return 0;
+                    } else if (this._scrollContainer.scrollLeft + newIncrement > this._scrollContainer.scrollWidth - this._scrollContainer.clientWidth) {
+                        this._scrollContainer.scrollLeft = this._scrollContainer.scrollWidth - this._scrollContainer.clientWidth;
+                        this._scrollLengthX = 0;
+                        return 0;
+                    }
+                    this._scrollContainer.scrollLeft += newIncrement;
+                    this._scrollLengthX -= newIncrement;
+                    return newIncrement;
+                }
+                return 0;
+            },
+
+            _scrollVerticallyBy: function (increment) {
+                let newIncrement = increment;
+                if (this._resetYscroll) {
+                    this._scrollLengthY = this._resetYscroll;
+                    delete this._resetYscroll;
+                    newIncrement = 7;
+                }
+                if (this._scrollLengthY !== 0 && newIncrement !== 0) {
+                    const s = sign(this._scrollLengthY);
+                    //The expression below calculates speed and direction of scroll action
+                    //s = sign(scrollLength) - determines the direction of scroll (top or down).
+                    //Math.max(Math.abs(increment), Math.abs(this._scrollLengthY) / 10) - calculates the accelration of the scroll. It should be maximum value of previous speed or it's scroll length devided by 10 (10 - how many steps of animation should be performed. (i.e. if scroll length was increased then speed of scroll would rise comparing to initial speed. initial speed is 7 px.)).
+                    //Math.min(... , Math.abs(this._scrollLengthY)) - calculates the last step of animation. The increment might be bigger then the scroll length to scroll. Then we should choose scroll length as a one step of animation. This situation happens only on the last step of animation. That looks like animation slows down.
+                    newIncrement = s * Math.min(Math.max(Math.abs(newIncrement), Math.abs(this._scrollLengthY) / 10), Math.abs(this._scrollLengthY));
+                    if (this._scrollContainer.scrollTop + newIncrement < 0) {
+                        this._scrollContainer.scrollTop = 0;
+                        this._scrollLengthY = 0;
+                        return 0;
+                    } else if (this._scrollContainer.scrollTop + newIncrement > this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight) {
+                        this._scrollContainer.scrollTop = this._scrollContainer.scrollHeight - this._scrollContainer.clientHeight;
+                        this._scrollLengthY = 0;
+                        return 0;
+                    }
+                    this._scrollContainer.scrollTop += newIncrement;
+                    this._scrollLengthY -= newIncrement;
+                    return newIncrement;
+                }
+                return 0;
+            },
+
+            _isTargetInSelectedContainer: function (target) {
+                if (target && this._scrollContainer) {
+                    let targetParent = target;
+                    while (targetParent) {
+                        if (targetParent === this._scrollContainer || targetParent === this._leftLockPanel || targetParent === this._rightLockPanel) {
+                            return true;
+                        }
+                        targetParent = targetParent.parentElement;
+                    }
+                }
+                return false;
+            },
+
+            _baseContainerFocusIn: function (event) {
+                const target = (event.target || event.srcElement);
+                if (target && this._elementGainedFocus !== target && this._isTargetInSelectedContainer(target)) {
+                    this._scrollToTarget(target);
+                }
+                event.preventDefault();
+            },
+
+            _baseContainerFocusOut: function (event) {
+                const target = event.relatedTarget;
+                if (target && this._isTargetInSelectedContainer(target)) {
+                    this._elementGainedFocus = target;
+                    this._scrollToTarget(target);
+                } else {
+                    delete this._elementGainedFocus;
+                }
+                event.preventDefault();
+            },
+
+            _scrollToTarget: function (target) {
+                this._lockContainer.scrollTop = 0;
+                const containerRect = this._lockContainer.getBoundingClientRect();
+                //Get the top and bottom coordinates of the visible viewport.
+                let viewTop = containerRect.top;
+                let viewBottom = containerRect.bottom;
+                //Correct the top coordinate of the visisble viewport so that it takes into account the top lock panel height.
+                if (this._topLockPanel && this._topLockPanel.offsetParent !== null) {
+                    viewTop = this._topLockPanel.getBoundingClientRect().bottom;
+                }
+                //Correct the bottom coordinate of the visisble viewport so that it takes into account the bottom lock panel height.
+                if (this._bottomLockPanel && this._bottomLockPanel.offsetParent !== null) {
+                    viewBottom = this._bottomLockPanel.getBoundingClientRect().top;
+                }
+                //Check whether the focused element is in range from viewTop to viewBottom. If it is outside the range then calculate the scroll differense and add to the scrollTop of scrollContainer. Otherwise do nothing.
+                const focusedElementRect = target.getBoundingClientRect();
+                let scrollIncrement = 0;
+                if (focusedElementRect.top < viewTop) {
+                    scrollIncrement = focusedElementRect.top - viewTop;
+                } else if (focusedElementRect.bottom > viewBottom) {
+                    scrollIncrement = focusedElementRect.bottom - viewBottom;
+                }
+                this._scrollContainer.scrollTop += scrollIncrement;
             },
 
             /**
-             * Resize event handler that adjasts the lockcontainer size and position.
+             * Resize event handler that adjasts the lock container size and position.
              */
             _resizeEventListener: function (event, details) {
                 var baseContainer = this.$$("#baseContainer");
@@ -1118,42 +1383,53 @@
             },
 
             _getTooltip: function (entity, column, action) {
-                var property = entity.prop(column.property);
-                var validationResult = property.validationResult();
-                var value;
-                var tooltip = "";
-                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
-                } else if (column.tooltipProperty) {
-                    value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                    tooltip = value && ("<b>" + value  + "</b>");
-                } else if (this.$.reflector.findTypeByName(column.type)) {
-                    tooltip = this._generateEntityTooltip(entity, column);
-                } else {
-                    value = this._getValue(entity, column.property, column.type).toString();
-                    tooltip = value && ("<b>" + value + "</b>");
+                try {
+                    var property = entity.prop(column.property);
+                    var validationResult = property.validationResult();
+                    var value;
+                    var tooltip = "";
+                    if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                        tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
+                    } else if (column.tooltipProperty) {
+                        value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                        tooltip = value && ("<b>" + value + "</b>");
+                    } else if (this.$.reflector.findTypeByName(column.type)) {
+                        tooltip = this._generateEntityTooltip(entity, column);
+                    } else {
+                        value = this._getValue(entity, column.property, column.type).toString();
+                        tooltip = value && ("<b>" + value + "</b>");
+                    }
+                    if (column.columnDesc) {
+                        tooltip += (tooltip && "<br><br>") + column.columnDesc;
+                    }
+                    if (action && (action.shortDesc || action.longDesc)) {
+                        tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
+                    }
+                    return tooltip;
+                } catch (e) {
+                    return '';
                 }
-                if (column.columnDesc) {
-                    tooltip += (tooltip && "<br><br>") + column.columnDesc;
-                }
-                if (action && (action.shortDesc || action.longDesc)) {
-                    tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
-                }
-                return tooltip;
             },
-            
+
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
                 try {
-                    desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    if (Array.isArray(this._get(entity, column.property))) {
+                        desc = generateShortCollection(entity, column.property, this.$.reflector.findTypeByName(column.type))
+                            .map(function (subEntity) {
+                                return subEntity.get("desc");
+                            }).join(", ");
+                    } else {
+                        desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    }
                 } catch (e) {
-                    desc = "";
+                    desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
                 }
                 return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
             },
-            
-            _generateActionTooltip: function(action) {
+
+            _generateActionTooltip: function (action) {
                 var shortDesc = "<b>" + action.shortDesc + "</b>";
                 var longDesc;
                 if (shortDesc) {
@@ -1162,12 +1438,12 @@
                     longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
                 }
                 var tooltip = shortDesc + longDesc;
-                return tooltip && "<div style='display:flex;'>" + 
+                return tooltip && "<div style='display:flex;'>" +
                     "<div style='margin-right:10px;'>With action: </div>" +
                     "<div style='flex-grow:1;'>" + tooltip + "</div>" +
                     "</div>"
             },
- 
+
             _getTotalTooltip: function (summary) {
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
@@ -1297,6 +1573,37 @@
                     this.style.removeProperty("width");
                 }
             },
+
+            _retrievedEntitySelectionChanged: function (newValue, oldValue) {
+                const entityIndex = _findEntity(newValue.entity, this.entities);
+                if (entityIndex >= 0) {
+                    this.set("egiModel." + entityIndex + ".selected", newValue.selected);
+                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
+
+                    if (newValue.selected) { // bring to view the entity that was checked
+                        const scrollContainer = this.querySelector("#scrollContainer");
+                        if (scrollContainer) {
+                            const scrollContainerHeight = scrollContainer.offsetHeight;
+                            const entityRows = scrollContainer.querySelectorAll('.table-data-row');
+                            const entityRow = entityRows[entityIndex];
+                            const entityRowHeight = entityRow.offsetHeight;
+                            const topLockPanel = this.querySelector('#topLockPanel');
+                            const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
+                            const bottomLockPanel = this.querySelector('#bottomLockPanel');
+                            const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
+                            const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
+                            if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
+                                // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
+                                scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
+                            } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
+                                // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
+                                scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
+                            }
+                        }
+                    }
+                }
+            },
+
             /**
              * Observs the changes to entities property.
              */
@@ -1313,9 +1620,14 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
+                let selectedEntity = null;
                 newValue.forEach(function (newEntity) {
-                    var egiEntity = {
-                        selected: self.selectedEntities.indexOf(newEntity) > -1,
+                    const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
+                    if (isSelected) {
+                        selectedEntity = newEntity;
+                    }
+                    const egiEntity = {
+                        selected: isSelected,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
                         entity: newEntity
                     }
@@ -1329,6 +1641,14 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
+
+                if (selectedEntity) {
+                    self.retrievedEntitySelection = {
+                        entity: selectedEntity,
+                        selected: true
+                    };
+                }
+
                 this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
@@ -1367,7 +1687,7 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked);
+                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
                     }
                     //Set up the last selection index (it will be used for range selection.)
                     if (target.checked) {
@@ -1378,20 +1698,22 @@
                     //Set up selecteAll property.
                     if (this.selectedAll && !target.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) { return elem.selected })) {
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
+                        return elem.selected
+                    })) {
                         this.selectedAll = true;
                     }
                     this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
             },
-            
+
             /**
-             * Selects the range fromIndex toIndex of entities. 
+             * Selects the range fromIndex toIndex of entities.
              */
             _selectRange: function (fromIndex, toIndex) {
                 var from = fromIndex < toIndex ? fromIndex : toIndex;
-                var to  = fromIndex < toIndex ? toIndex : fromIndex;
+                var to = fromIndex < toIndex ? toIndex : fromIndex;
                 var index;
                 for (index = from; index <= to; index++) {
                     if (!this.egiModel[index].selected) {
@@ -1400,7 +1722,7 @@
                     }
                 }
             },
-            
+
             /**
              * Toggles the card's collapse panel for the specified entity.
              */
@@ -1528,7 +1850,8 @@
             },
 
             _calculateFixedColsWidth: function (numOfFixedCols) {
-                var colIndex, fixedColsWidth = 0, numOfFixedPaddings = 0;
+                var colIndex, fixedColsWidth = 0,
+                    numOfFixedPaddings = 0;
                 for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {
                     if (this.columns[colIndex].width > 0) {
                         fixedColsWidth += this.columns[colIndex].width;
@@ -1562,24 +1885,31 @@
                 if (entity === null || property === null || type === null || this._get(entity, property) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(type)) {
-                    return this.$.reflector.convert(this._get(entity, property));
-                } else if (type === 'Date') {
-                    return this.$.reflector.millisDateRepresentation(entity.get(property));
+                    var propertyValue = this._get(entity, property);
+                    if (Array.isArray(propertyValue)) {
+                        propertyValue = generateShortCollection(entity, property, this.$.reflector.findTypeByName(type));
+                    }
+                    return Array.isArray(propertyValue) ? this.$.reflector.convert(propertyValue).join(", ") : this.$.reflector.convert(propertyValue);
+                } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
+                    var splitedType = type.split(':');
+                    return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
                         return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
                     } else {
                         return this.$.reflector.formatNumber(entity.get(property), this.$.appConfig.locale);
                     }
+                } else if (type === 'Money') {
+                    return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);
+                } else if (type === 'Colour') {
+                    return '#' + entity.get(property)['hashlessUppercasedColourValue'];
+                } else if (type === 'Hyperlink') {
+                    return entity.get(property)['value'];
                 } else {
-                    if (type === 'Money') {
-                        return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);;
-                    } else {
-                        return entity.get(property);
-                    }
+                    return entity.get(property);
                 }
             },
-            
+
             /**
              * Returns true if egi conatains at least one entity from entitiesToSearch list, otherwise returns false.
              */
@@ -1592,7 +1922,7 @@
                 }
                 return false;
             },
-            
+
             /**
              * Determines whether property is boolean or not.
              */
@@ -1600,10 +1930,16 @@
                 return column.type === 'Boolean' && this._get(entity, column.property) !== null
             },
             /**
+             * Determines whether property is Hypelink or not.
+             */
+            _isHyperlinkProp: function (entity, column) {
+                return column.type === 'Hyperlink' && this._get(entity, column.property) !== null
+            },
+            /**
              * Determines whether property is not boolean property or is.
              */
-            _isNotBooleanProp: function (entity, column) {
-                return column.type !== 'Boolean';
+            _isNotBooleanOrHyperlinkProp: function (entity, column) {
+                return !(this._isBooleanProp(entity, column) || this._isHyperlinkProp(entity, column));
             },
             /**
              * determines whether secondary actions is only one or not.
@@ -1617,6 +1953,12 @@
             _getBooleanIcon: function (entity, property) {
                 return "icons:" + (this._get(entity, property) ? "check" : "clear");
             },
+
+            /** Identifies if there is a column action for the specified entity and column. */
+            _hasAction: function (entity, column) {
+                return column.customAction || this._isHyperlinkProp(entity, column) === true;
+            },
+
             /**
              * Tap action on data column. TODO: implement this.
              */
@@ -1625,7 +1967,15 @@
             },
 
             tap: function (entity, property, column) {
-                column.runAction(entity);
+                if (column.runAction(entity) === false) {
+                    // if the property is a hyperlink and there was no custom action associted with it
+                    // then let's open the linked resources
+                    if (this._isHyperlinkProp(entity, column) === true) {
+                        var url = this._getValue(entity, column.property, column.type);
+                        var win = window.open(url, '_blank');
+                        win.focus();
+                    }
+                }
             },
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
@@ -1689,7 +2039,7 @@
                 }.bind(this));
                 return selectedRows;
             },
-            
+
             /**
              * Clears the selection on current page.
              */
@@ -1702,7 +2052,7 @@
                     }
                 }
             },
-            
+
             /**
              * Clears selection.
              */

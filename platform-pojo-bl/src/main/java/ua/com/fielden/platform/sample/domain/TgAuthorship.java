@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyTitle("Authorship")
 @KeyType(DynamicEntityKey.class)
@@ -56,7 +55,6 @@ public class TgAuthorship extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @EntityExists(TgAuthor.class)
     public TgAuthorship setAuthor(final TgAuthor author) {
         this.author = author;
         return this;

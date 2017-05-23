@@ -82,7 +82,17 @@
                  */
                 entity: {
                 	type: Object,
-                	observer: '_entityChanged'
+                	observer: '_entityChanged',
+                	notify: true
+                },
+                
+                /**
+                 * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
+                 */
+                originalEntity: {
+                	type: Object,
+                	observer: '_originalEntityChanged',
+                	notify: true
                 },
                 
                 /**
@@ -131,6 +141,13 @@
                  */
                 debug: {
                 	type: Boolean
+                },
+                
+                /**
+                 * This modif holder is needed for lazy value conversion.
+                 */
+                previousModifiedPropertiesHolder: {
+                    type: Object
                 },
 
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +340,9 @@
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             
             observers: [
-            	'_recordDefinition(entity, propertyName, _editorValidationMsg)'
+            	'_recordDefinition(entity, propertyName, _editorValidationMsg)',
+            	'_identifyModification(_editingValue, originalEntity)',
+    		    '_editedPropsChanged(entity.@editedProps)'
 			],
 
             ready: function () {
@@ -343,6 +362,29 @@
                     this._validationComponentsDefined = true;
                 }
             },
+            
+            _identifyModification: function (_editingValue, originalEntity) {
+                if (this.reflector().isEntity(this.entity)) {
+                    var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
+                    // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
+                    var prevEditedProps = this.entity['@editedProps'];
+                    var newEditedProps = {};
+                    for (var prop in prevEditedProps) {
+                        if (prevEditedProps.hasOwnProperty(prop)) {
+                            newEditedProps[prop] = prevEditedProps[prop];
+                        }
+                    }
+                    if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
+                        newEditedProps[this.propertyName] = true;
+                    } else {
+                        delete newEditedProps[this.propertyName];
+                    }
+                    this.set('entity.@editedProps', newEditedProps);
+                }
+            },
+            
+    		_editedPropsChanged: function (editedProps) {
+    		},
             
             /**
              * This function returns the tooltip for this editor.
@@ -412,6 +454,13 @@
                     this.commit();
                 }
             },
+            
+            _originalEntityChanged: function (newValue, oldValue) {
+                if (this.reflector().isEntity(newValue)) {
+                    // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
+                    this.reflector().convertOriginalPropertyValue(newValue, this.propertyName, newValue["@@origin"]);
+                }
+            },
 
             /**
              * This method is called once the entity was changed from the outside of the component.
@@ -425,6 +474,11 @@
                     // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
                     // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
                     this._refreshCycleStarted = true;
+                    
+                    // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
+                    if (!this.reflector().isDotNotated(this.propertyName)) {
+                        this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
+                    }
                     
                     var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(convertedValue);
@@ -452,6 +506,7 @@
                     // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
                     this._updateMessagesForEntity(newValue);
                 }
+                this._tryFireErrorMsg(this._error);
             },
             
             _updateMessagesForEntity: function (newEntity) {
@@ -508,8 +563,7 @@
                     // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
                 } else {
                 	if (this.reflector().isEntity(this.entity)) {
-	                    this.entity.set(this.propertyName, newValue);
-	                    this._registerPropertyTouch(this.entity, this.propertyName);
+	                    this.entity.setAndRegisterPropertyTouch(this.propertyName, newValue);
 	                    
     	                if (this._shouldInvokeValidation()) {
         	                this.validationCallback();
@@ -518,35 +572,6 @@
                     	}
                 	}
                 }
-            },
-            
-            /**
-             * In case where user interaction takes place, this method registers such 'property touch' for the purposes 
-             * of collecting the queue of 'touched' properties.
-             *
-             * The property that was touched last will reside last in that queue. Also the count of 'touches' is recorded
-             * for each property (mainly for logging purposes).
-             *
-             * Please, note that 'touched' property does not mean 'modified' from technical perspective.
-             * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
-             * to have properly invoked its ACE handlers.
-             */
-            _registerPropertyTouch: function (bindingEntity, propertyName) {
-                var touched = bindingEntity["@@touchedProps"];
-                var names = touched.names;
-                var counts = touched.counts;
-                var index = names.indexOf(propertyName);
-                if (index > -1) {
-                    var prevCount = counts[index];
-                    names.splice(index, 1);
-                    counts.splice(index, 1);
-                    names.push(propertyName);
-                    counts.push(prevCount + 1);
-                } else {
-                    names.push(propertyName);
-                    counts.push(1);
-                }
-                console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             },
 
             /**
@@ -632,6 +657,13 @@
             _editorValidationMsgChanged: function (newValue, oldValue) {
                 if (this._validationComponentsDefined === true) {
                     this._bindMessages(this.entity, this.propertyName, newValue);
+                    this._tryFireErrorMsg(newValue);
+                }
+            },
+            
+            _tryFireErrorMsg: function (error) {
+                if (error) {
+                    this.fire('editor-error-appeared', this);
                 }
             },
 
@@ -695,7 +727,7 @@
              * Overide this to provide custom formatting for tooltip text.
              */
             _formatTooltipText: function (value) {
-                var formatedText = this._formatText(value);
+                const formatedText = this._formatText(value);
                 return formatedText && "<b>" + formatedText + "</b>";
             },
             

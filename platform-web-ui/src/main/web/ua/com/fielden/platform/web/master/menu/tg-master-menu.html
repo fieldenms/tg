@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/app/tg-reflector.html">
 
@@ -50,6 +51,7 @@
         
         paper-menu {
             padding: 0px;
+            cursor: pointer;
         }
         
         paper-menu iron-icon {
@@ -91,6 +93,12 @@
         iron-pages {
             padding: 8px 8px;
         }
+            
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
     <template>
 		<tg-reflector id="reflector"></tg-reflector>
@@ -101,11 +109,6 @@
             <!-- Drawer Scroll Header Panel -->
             <paper-scroll-header-panel drawer fixed id="drawer">
 
-                <!-- Drawer Toolbar -->
-                <paper-toolbar id="drawerToolbar" class="tool-bar">
-                    <span style="font-size: 18px; height: 44px;">[[menuTitle]]</span>
-                </paper-toolbar>
-
                 <!-- Drawer Content -->
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
 	            	<content id="menuItems" select=".menu-item"></content>        
@@ -113,13 +116,7 @@
             </paper-scroll-header-panel>
 
             <!-- Main Area -->
-            <paper-scroll-header-panel main fixed>
-
-                <!-- Main Toolbar -->
-                <paper-toolbar id="mainToolbar" style="height: 44px;">
-                    <!-- Application name -->
-                    <span style="font-size: 18px; height: 44px;">[[sectionTitle]]</span>
-                </paper-toolbar>
+            <paper-scroll-header-panel main fixed class="relative">
 
                 <!-- Main Content -->
                 <div>
@@ -145,7 +142,8 @@
         	
         	sectionTitle: {
         		type: String,
-        		value: '[[sectionTitle]]'
+        		value: '[[sectionTitle]]',
+                observer: '_sectionTitleChanged'
         	},
         	
         	/* active menu item */
@@ -253,6 +251,8 @@
             	type: Object
             }
         },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
         ready: function () {
         	var self = this;
@@ -273,6 +273,7 @@
         			tgUiActions[index].createContextHolder = self._createContextHolderForMenu;
         			tgUiActions[index].showDialog = self._showMenuItemView.bind(self);
         			tgUiActions[index].attrs.centreUuid = self.uuid;
+        			tgUiActions[index].style.display = 'none';
         		}
         	}
         	
@@ -325,6 +326,12 @@
                     }
                 });
             }
+            //Needed to set the dynamic title
+            this.fire('tg-dynamic-title-changed', this.sectionTitle);
+        },
+        
+        _sectionTitleChanged: function (newValue, oldValue) {
+            this.fire('tg-dynamic-title-changed', newValue);
         },
         
         _refreshCompoundMaster: function (data, envelope) {
@@ -390,7 +397,12 @@
  		},
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
+            var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+            
+            if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
+                oldSection._element.removeOwnKeyBindings();
+            }
  			action._run();
  		}
     });

@@ -1,4 +1,7 @@
 <!--@imports-->
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
@@ -8,6 +11,13 @@
 <dom-module id="tg-@entity_type-master"> <!-- TODO layout vertical -->
     <template>
     	<style>
+            tg-entity-master[with-dimensions]::shadow #masterContainer{
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+            }
     		.property-action-icon {
             	--tg-ui-action-width: 1.9rem;
                 --tg-ui-action-height: 1.9rem;
@@ -44,7 +54,6 @@
    	        <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
    	        <!--@tg-entity-master-content-->
    	        <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
-   	        
     	</tg-entity-master>
     </template>
 </dom-module>
@@ -54,9 +63,22 @@
         Polymer({
         	is: 'tg-@entity_type-master',
         	
-        	behaviors: [ Polymer.TgBehaviors.TgEntityMasterBehavior ],
+        	behaviors: [ 	Polymer.IronA11yKeysBehavior,
+        					Polymer.TgBehaviors.TgEntityMasterBehavior ],
+            
+            hostAttributes: {
+                'tabindex': '0'
+            },
         	
         	properties: {
+                /**
+                 * Preferred dimensions.
+                 */
+                prefDim: {
+                    type: Object,
+                    value: @prefDim
+                },
+                
         		/**
         		 * The property which indicates whether entity master is 'UI-less'.
         		 */
@@ -81,6 +103,8 @@
              */
             ready: function () {
                 var self = this;
+                self.isMasterTemplate = true;
+                self._registrationListener = self._registrationListener.bind(self);
                 self.classList.add("canLeave");
                 
                 // the value for property uuid needs to be assign only if this has not been done yet
@@ -90,11 +114,24 @@
                 //START OF GENERATED JS LOGIC
                 //@ready-callback
                 //END OF GENERATED JS LOGIC
+                
+                //@master-is-ready-custom-code
+                
             },// end of ready
             
             attached: function () {
                 var self = this;
+                if (self.prefDim) {
+                    self._masterDom().setAttribute('with-dimensions', 'true');
+                } else {
+                    self._masterDom().removeAttribute('with-dimensions');
+                }
                 self.async(function() {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                    if (self._shouldOverridePrefDim()) {
+                        self.keyEventTarget.prefDim = self.prefDim;
+                    }
+                    
                     self.primaryAction = [
                         //generatedPrimaryActions
                     ];
@@ -103,8 +140,85 @@
                         //generatedPropActions
                     ];
                 }, 1);
-            	
-            	//@attached-callback
+                
+                //@attached-callback
+                
+                //@master-has-been-attached-custom-code
+                
+            },
+            
+            addOwnKeyBindings: function () {
+                var ownKeyBindings = this._ownKeyBindings;
+                if (this.$.loader) {
+                    if (this.$.loader.wasLoaded) {
+                        if (typeof this.$.loader.loadedElement.addOwnKeyBindings === 'function') {
+                            this.$.loader.loadedElement.addOwnKeyBindings();
+                            return;
+                        }
+                    } else {
+                        this.$.loader.addEventListener('after-load', this._registrationListener);
+                        return;
+                    }
+                }
+                for (var shortcuts in ownKeyBindings) {
+                    this.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
+                }
+            },
+            
+            removeOwnKeyBindings: function () {
+                if (this.$.loader) {
+                    if (this.$.loader.wasLoaded) {
+                        if (typeof this.$.loader.loadedElement.removeOwnKeyBindings === 'function') {
+                            this.$.loader.loadedElement.removeOwnKeyBindings();
+                            return;
+                        }
+                    } else {
+                        return;
+                    }
+                }
+                Polymer.IronA11yKeysBehavior.removeOwnKeyBindings.call(this);
+            },
+            
+            _shouldOverridePrefDim: function () {
+                var parent = this.parentElement;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    if (parent.isMasterTemplate && parent.prefDim) {
+                        return false;
+                    }
+                    parent = parent.parentElement;
+                }
+                return true;
+            },
+            
+            _registrationListener: function (e) {
+                var target = e.target || e.srcElement;
+                
+                if (target === this.$.loader) {
+                    if (e.detail && typeof e.detail.addOwnKeyBindings === 'function'){
+                        e.detail.addOwnKeyBindings();
+                    }
+                
+                    this.$.loader.removeEventListener('after-load', this._registrationListener);
+                }
+            },
+            
+            /**
+             * Returns the key event target it might be a dialog or this element if the master is not in dialog.
+             * Also it configures key bindings if the master is not a part of compound master.
+             */
+            _getKeyEventTarget: function () {
+                var parent = this;
+                var automaticAddKeyBindings = true;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    if (parent.tagName === 'TG-MASTER-MENU-ITEM-SECTION') {
+                        automaticAddKeyBindings = false;
+                    }
+                    parent = parent.parentElement;
+                }
+                if (automaticAddKeyBindings) {
+                    this.addOwnKeyBindings();
+                }
+                return parent || this;
             },
             
             _masterDom: function () {
@@ -151,11 +265,49 @@
              */
             _toastGreeting: function () {
             	return this._masterDom()._toastGreeting();
-            }
+            },
             
-            /* _handleScroll: function(e) {
-               this.fire("scroll-container", e.target);
-            } */
+            /**
+             * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
+             */
+            _ownKeyBindings: {
+                '@SHORTCUTS': '_shortcutPressed'
+            },
+            
+            _shortcutPressed: function (e) {
+                var shortcut = e.detail.combo;
+                console.debug('Master shortcut', shortcut, 'processing...');
+                
+                var action = this.$$('tg-action[shortcut="' + shortcut + '"]');
+                if (action) {
+                    // Respect nodes that are disabled in the UI.
+                    if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
+                        action.$.actionButton.focus();
+                        action._asyncRun();
+                    }
+                } else {
+                    var uiAction = this.$$('tg-ui-action[shortcut="' + shortcut + '"]');
+                    if (uiAction) {
+                        // Respect nodes that are disabled in the UI.
+                        if (!uiAction.isActionInProgress) {
+                            if (uiAction.isIconButton) {
+                                uiAction.$.iActionButton.focus();
+                            } else {
+                                uiAction.$.bActionButton.focus();
+                            }
+                            uiAction._run();
+                        }
+                    } else {
+                        console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
+                    }
+                }
+
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+                console.debug('Master shortcut', shortcut, 'processing... done');
+            }
         });
     })();
 </script>

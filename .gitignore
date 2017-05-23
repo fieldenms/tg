@@ -3,6 +3,7 @@ rebel.xml
 *.orig
 *.aux
 *.db
+*.script
 *.backup
 *.tex~
 *.bib~
@@ -31,6 +32,7 @@ target
 *.snm
 *.vrb
 *.old
+*.xwm
 
 # Package Files #
 *.jar
@@ -45,3 +47,4 @@ hs_err_pid*
 
 # JRevel project config files
 rebel.xml
+bin/

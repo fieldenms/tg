@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
-import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;

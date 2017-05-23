@@ -12,9 +12,9 @@ public class EntityAggregatesReportSource implements JRRewindableDataSource {
     private int index = -1;
 
     private final EntityAggregates[] data;
-    private final Map<String, Class> props;
+    private final Map<String, Class<?>> props;
 
-    public EntityAggregatesReportSource(final EntityAggregates[] data, final Map<String, Class> props) {
+    public EntityAggregatesReportSource(final EntityAggregates[] data, final Map<String, Class<?>> props) {
         this.data = data;
         this.props = props;
     }

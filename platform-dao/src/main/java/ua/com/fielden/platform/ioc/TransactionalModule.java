@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
@@ -53,12 +54,15 @@ public abstract class TransactionalModule extends EntityModule {
      */
     public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
             throws Exception {
+
         final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
                 props, //
                 defaultHibernateTypes, //
                 applicationEntityTypes,//
                 getUserMapTo());
+        
         final Configuration cfg = hcf.build();
+
         interceptor = new ProxyInterceptor();
         hibernateUtil = new HibernateUtil(interceptor, cfg);
 
@@ -66,6 +70,7 @@ public abstract class TransactionalModule extends EntityModule {
         this.domainMetadata = hcf.getDomainMetadata();
         this.idOnlyProxiedEntityTypeCache = hcf.getIdOnlyProxiedEntityTypeCache();
         this.applicationEntityTypes = applicationEntityTypes;
+        
     }
 
     protected void initHibernateConfig(final EntityFactory factory) {
@@ -99,6 +104,7 @@ public abstract class TransactionalModule extends EntityModule {
 
         if (idOnlyProxiedEntityTypeCache != null) {
             bind(IdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
+            bind(IIdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
         }
         
         // hibernate util

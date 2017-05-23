@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -39,12 +40,12 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
 
     @Override
     protected String generateInsertStmt(final List<PropertyMetadata> fields, final String tableName) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
         sb.append(tableName);
         sb.append(" (");
-        final StringBuffer sbValues = new StringBuffer();
+        final StringBuilder sbValues = new StringBuilder();
         sbValues.append(" VALUES(");
         for (final Iterator<PropertyMetadata> iterator = fields.iterator(); iterator.hasNext();) {
             final PropertyMetadata propName = iterator.next();
@@ -62,7 +63,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         return sb.toString();
     }
 
-    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final int id) throws Exception {
+    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final int id) throws SQLException {
         final List<Object> result = new ArrayList<>();
         for (final Container container : getContainers()) {
             final List<Object> values = new ArrayList<>();
@@ -73,7 +74,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         }
 
         for (final PropertyMetadata propMetadata : extraFields) {
-            result.add(propMetadata.getName().equals("id") ? id : 0);
+            result.add(propMetadata.getName().equals(AbstractEntity.ID) ? id : 0);
         }
 
         return result;

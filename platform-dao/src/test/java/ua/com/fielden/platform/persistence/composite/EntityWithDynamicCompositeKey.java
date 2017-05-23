@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 
 /**
@@ -25,23 +26,22 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 @MapEntityTo("ENTITY_WITH_COMPOSITE_KEY")
 @CompanionObject(EntityWithDynamicCompositeKeyDao.class)
 public class EntityWithDynamicCompositeKey extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)
     @MapTo("KEY_PART_ONE")
     private String keyPartOne;
+    
     @IsProperty
     @CompositeKeyMember(2)
+    @Optional
     @MapTo("MONEY_CLASS_ID")
     private EntityWithMoney keyPartTwo;
 
     protected EntityWithDynamicCompositeKey() {
-        setKey(new DynamicEntityKey(this));
     }
 
     public EntityWithDynamicCompositeKey(final String keyPartOne, final EntityWithMoney keyPartTwo) {
-        this();
         setKeyPartOne(keyPartOne);
         setKeyPartTwo(keyPartTwo);
     }

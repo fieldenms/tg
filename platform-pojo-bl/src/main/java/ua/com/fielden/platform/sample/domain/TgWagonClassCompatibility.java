@@ -36,10 +36,6 @@ public class TgWagonClassCompatibility extends AbstractEntity<DynamicEntityKey> 
     @MapTo
     private String status;
 
-    public TgWagonClassCompatibility() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public TgWagonClass getWagonClass() {
         return wagonClass;
     }

@@ -33,7 +33,6 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 // TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMessage.class)
 @TransactionEntity("packetReceived")
 public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
     // TODO public static final String MACHINE_PROP_ALIAS = "machineRouteDriver.machine";
 
     @IsProperty
@@ -43,12 +42,12 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     private Date gpsTime;
 
     @IsProperty
-    @MapTo
+    @MapTo(precision = 18, scale = 10)
     @Title(value = "X-координата", desc = "Значення довготи")
     private BigDecimal x;
 
     @IsProperty
-    @MapTo
+    @MapTo(precision = 18, scale = 10)
     @Title(value = "Y-координата", desc = "Значення широти")
     private BigDecimal y;
 
@@ -78,12 +77,12 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     private boolean din1;
 
     @IsProperty
-    @MapTo
+    @MapTo(precision = 18, scale = 2)
     @Title(value = "Вольтаж БЖ", desc = "Вольтаж блоку живлення.")
     private BigDecimal powerSupplyVoltage;
 
     @IsProperty
-    @MapTo
+    @MapTo(precision = 18, scale = 2)
     @Title(value = "Вольтаж акумулятора", desc = "Вольтаж акумулятора.")
     private BigDecimal batteryVoltage;
 
@@ -93,7 +92,7 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     private boolean gpsPower;
 
     @IsProperty
-    @MapTo("distance_")
+    @MapTo(value = "distance_", precision = 18, scale = 2)
     // TODO
     @Readonly
     @Required

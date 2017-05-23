@@ -287,7 +287,7 @@ public class RestServerUtil {
      *
      * @return
      */
-    public <T extends AbstractEntity> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
+    public <T extends AbstractEntity<?>> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
         logger.debug("Start building lifecycle representation:" + new DateTime());
         try {
             // create a Result enclosing lifecycle data
@@ -351,9 +351,18 @@ public class RestServerUtil {
             if (ex instanceof Result) {
                 final Result thrownResult = (Result) ex;
                 if (thrownResult.isSuccessful()) {
-                    throw Result.failure(String.format("The successful result [%s] was thrown during unsuccesful saving of entity [%s]. This is most likely programming error.", thrownResult, entity));
+                    throw Result.failure(String.format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
                 }
-                if (ex != entity.isValid()) {
+                
+                // iterate over properties in search of the first invalid one (without required checks)
+                final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+                .filter(mp -> mp.getFirstFailure() != null)
+                .findFirst().map(mp -> mp.getFirstFailure());
+                
+                // returns first failure if exists or successful result if there was no failure.
+                final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
+                
+                if (ex != isValid) {
                     // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
                     // Please, note that the Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
                     // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
@@ -362,7 +371,7 @@ public class RestServerUtil {
                     logger.error(ex.getMessage(), ex);
                 }
                 result = thrownResult.copyWith(entity);
-                logger.warn(String.format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity [%s]. Its instance [%s] will be overridden with the [%s] entity to be able to bind the entity to respective master.", thrownResult, entity, thrownResult.getInstance(), entity));
+                logger.warn(String.format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. Its instance will be overridden by the entity with id [%s] to be able to bind the entity to respective master.", thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
             } else {
                 logger.error(ex.getMessage(), ex);
                 result = new Result(entity, ex);

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -26,7 +29,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRe
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -44,9 +46,9 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * A base domain tree representation for all TG trees. Includes strict TG domain rules that should be used by all specific tree implementations. <br>
  * <br>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
     /**
@@ -100,7 +102,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Constructs recursively the list of properties using given list of fields.
-     * 
+     *
      * @param rootType
      * @param path
      * @param fieldsAndKeys
@@ -168,7 +170,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Determines the lists of common and union fields for concrete union entity type.
-     * 
+     *
      * @param unionClass
      * @return
      */
@@ -182,7 +184,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Forms a list of fields for "type" in order ["key" or key members => "desc" (if exists) => other properties in order as declared in domain].
-     * 
+     *
      * @param type
      * @return
      */
@@ -211,7 +213,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * Forms a list of fields for "type" in order ["key" or key members => "desc" (if exists) => other properties in order as declared in domain] and chooses only fields with
      * <code>names</code>.
-     * 
+     *
      * @param type
      * @param names
      * @return
@@ -229,7 +231,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Returns <code>true</code> if property is collection itself.
-     * 
+     *
      * @param root
      * @param property
      * @return
@@ -240,13 +242,38 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             return false;
         }
         final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-        final Class<?> realType = isEntityItself ? null : PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
-        return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
+        final Class<?> realType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
+        return realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
+    }
+
+    /**
+     * Returns <code>true</code> if property is short collection itself.
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    public static boolean isShortCollection(final Class<?> root, final String property) {
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        if (isEntityItself) {
+            return false;
+        }
+        final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
+        final Class<?> realType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
+        final Class<?> elementType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+
+        // return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
+        return Collection.class.isAssignableFrom(realType) &&
+                EntityUtils.isEntityType(elementType) &&
+                EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                Finder.getKeyMembers(elementType).size() == 2 &&
+                Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType())) &&
+                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).equals(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
     }
 
     /**
      * Returns parent collection for specified property.
-     * 
+     *
      * @param root
      * @param property
      * @return
@@ -260,7 +287,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Returns <code>true</code> if property is in collectional hierarchy.
-     * 
+     *
      * @param root
      * @param property
      * @return
@@ -272,13 +299,27 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Returns <code>true</code> if property is in collectional hierarchy or is collection itself.
-     * 
+     *
      * @param root
      * @param property
      * @return
      */
     public static boolean isCollectionOrInCollectionHierarchy(final Class<?> root, final String property) {
         return isCollection(root, property) || isInCollectionHierarchy(root, property);
+    }
+
+    /**
+     * Returns <code>true</code> if property is in collectional hierarchy or is collection itself (not <i>short</i>).
+     * <p>
+     * <i>Short</i> collections are represented with 'one-to-many' association, where 'many' type contains strictly two composite keys: one key is of 'one' type and other is of
+     * other entity type.
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    public static boolean isNotShortCollectionOrInCollectionHierarchy(final Class<?> root, final String property) {
+        return (isCollection(root, property) && !isShortCollection(root, property)) || isInCollectionHierarchy(root, property);
     }
 
     @Override
@@ -297,49 +338,20 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
         // final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
         // logger().info("\t\t\tstarted conditions...");
-        final boolean excl = manuallyExcludedProperties.contains(key(root, property))
-                || // exclude manually excluded properties
-                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName)
-                && propertyType == null
-                || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
-                !isEntityItself
-                && AbstractEntity.KEY.equals(lastPropertyName)
-                && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType)
-                || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
-                !isEntityItself
-                && AbstractEntity.KEY.equals(lastPropertyName)
-                && !EntityUtils.isEntityType(propertyType)
-                || // exclude "key" -- "key" is not of entity type
-                !isEntityItself
-                && AbstractEntity.DESC.equals(lastPropertyName)
-                && !EntityDescriptor.hasDesc(penultType)
-                || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
-                !isEntityItself
-                && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class)
-                || // exclude non-TG properties (not annotated by @IsProperty)
-                isEntityItself
-                && !rootTypes().contains(propertyType)
-                || // exclude entities of non-"root types"
-                EntityUtils.isEnum(propertyType)
-                || // exclude enumeration properties / entities
-                EntityUtils.isEntityType(propertyType)
-                && Modifier.isAbstract(propertyType.getModifiers())
-                || // exclude properties / entities of entity type with 'abstract' modifier
-                EntityUtils.isEntityType(propertyType)
-                && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType)
-                || // exclude properties / entities of entity type without KeyType annotation
-                !isEntityItself
-                && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName)
-                || // exclude invisible properties
-                !isEntityItself
-                && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName)
-                || // exclude invisible properties
+        final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
+                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
+                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
+                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
+                !isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !EntityDescriptor.hasDesc(penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
+                !isEntityItself && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
+                isEntityItself && !rootTypes().contains(propertyType) || // exclude entities of non-"root types"
+                EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
+                EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
+                EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
+                !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
+                !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
                 // !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
-                !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName)
-                && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName))
-                || // exclude link properties in one2many and one2one associations
-                !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, root, penultPropertyName)
-                || // exclude property if it is a child of other AE crit-only property (collection)
+                !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName)) || // exclude link properties in one2many and one2one associations
                 !isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
@@ -348,11 +360,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * Finds a complete set of <b>NOT ENHANCED</b> types in hierarchy of dot-notation expression, excluding the type of last property and including the type of root class.<br>
      * <br>
-     * 
+     *
      * E.g. : "WorkOrder$$1.vehicle.fuelUsages.vehicle.fuelCards.initDate" => <br>
      * => [WorkOrder.class, Vehicle.class, FuelUsage.class, FuelCard.class] (if addCollectionalElementType = true) or <br>
      * => [WorkOrder.class, Vehicle.class, Collection.class] (if addCollectionalElementType = false)
-     * 
+     *
      * @param root
      * @param property
      * @param addCollectionalElementType
@@ -401,9 +413,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Weak implementation of the {@link IPropertyListener} interface.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private static class WeakPropertyListener implements IPropertyListener {
 
@@ -442,9 +454,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * An {@link ArrayList} specific implementation which listens to structure modifications (add / remove elements) and fires appropriate events.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class ListenedArrayList extends ArrayList<String> {
         private static final long serialVersionUID = -4295706377290507263L;
@@ -589,7 +601,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * <p>
      * Please note that you can only mutate this list with methods {@link List#add(Object)} and {@link List#remove(Object)} to correctly reflect the changes on depending objects.
      * (e.g. UI tree models, checked properties etc.)
-     * 
+     *
      * @param root
      * @return
      */
@@ -627,7 +639,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Enables or disables listening for each {@link ListenedArrayList} structures.
-     * 
+     *
      * @param enable
      */
     private void enableListening(final boolean enable) {
@@ -687,7 +699,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * This method loads all missing properties on the tree path as defined in <code>fromPath</code> and <code>toPath</code> for type <code>root</code>. Please note that property
      * <code>fromPath</code> should be loaded itself (perhaps without its children).
-     * 
+     *
      * @param managedType
      * @param fromPath
      * @param toPath
@@ -745,7 +757,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Throws an {@link IllegalArgumentException} if the property is excluded.
-     * 
+     *
      * @param dtr
      * @param root
      * @param property
@@ -786,14 +798,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * An abstract tick representation. <br>
      * <br>
-     * 
+     *
      * Includes default implementations of "disabling/immutable checking", that contain: <br>
      * a) manual state management; <br>
      * b) resolution of conflicts with excluded properties; <br>
      * c) automatic disabling of "immutably checked" properties.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static abstract class AbstractTickRepresentation implements ITickRepresentationWithMutability {
         private final EnhancementSet disabledManuallyProperties;
@@ -878,7 +890,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
         /**
          * Fires disablement event for specified property (the property has been disabled successfully).
-         * 
+         *
          * @param root
          * @param property
          */
@@ -986,7 +998,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Returns <code>true</code> if the property is calculated.
-     * 
+     *
      * @param root
      * @param property
      * @return
@@ -997,7 +1009,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * Returns <code>true</code> if the property is calculated with one of the specified categories.
-     * 
+     *
      * @param root
      * @param property
      * @param types
@@ -1027,9 +1039,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     /**
      * A specific Kryo serialiser for {@link AbstractDomainTreeRepresentation}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected abstract static class AbstractDomainTreeRepresentationSerialiser<T extends AbstractDomainTreeRepresentation> extends AbstractDomainTreeSerialiser<T> {
         public AbstractDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {

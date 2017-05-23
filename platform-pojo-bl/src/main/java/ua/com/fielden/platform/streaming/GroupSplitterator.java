@@ -9,14 +9,14 @@ public class GroupSplitterator<T> implements Spliterator<T> {
     
     private final Spliterator<T> baseSpliterator;
     private final GroupProcessor<T> gp;
-    
-    public static <T> Stream<T> stream(final Stream<T> stream, final GroupProcessor<T> gp) {
-        return StreamSupport.stream(new GroupSplitterator<T>(stream, gp), false);
-    }
-    
+
     public GroupSplitterator(final Stream<T> stream, final GroupProcessor<T> gp) {
         this.baseSpliterator = stream.spliterator();
         this.gp = gp;
+    }
+
+    public static <T> Stream<T> stream(final Stream<T> stream, final GroupProcessor<T> gp) {
+        return StreamSupport.stream(new GroupSplitterator<T>(stream, gp), false);
     }
     
     @Override

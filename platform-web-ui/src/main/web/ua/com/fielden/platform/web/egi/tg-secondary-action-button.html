@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-secondary-action-button">
     <style>
@@ -31,12 +32,12 @@
         }
     </style>
     <template>
-        <paper-icon-button icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
-        <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened">
+        <paper-icon-button id="dropDownButton" icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
+        <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
             <div class="dropdown-content">
                 <div class="layout vertical">
                     <template is="dom-repeat" items="[[actions]]" as="action">
-                        <tg-ui-action show-dialog="[[action.showDialog]]" current-entity="[[currentEntity]]" short-desc="[[action.shortDesc]]" long-desc="[[action.longDesc]]" icon="[[action.icon]]" component-uri="[[action.componentUri]]" element-name="[[action.elementName]]" element-alias="[[action.elementAlias]]" attrs="[[action.attrs]]" create-context-holder="[[action.createContextHolder]]" require-selection-criteria="[[action.requireSelectionCriteria]]" require-selected-entities="[[action.requireSelectedEntities]]" require-master-entity="[[action.requireMasterEntity]]" pre-action="[[action.preAction]]" post-action-success="[[action.postActionSuccess]]" post-action-error="[[action.postActionError]]" should-refresh-parent-centre-after-save="[[action.shouldRefreshParentCentreAfterSave]]" ui-role="[[action.uiRole]]"></tg-ui-action>
+                        <tg-ui-action show-dialog="[[action.showDialog]]" current-entity="[[currentEntity]]" short-desc="[[action.shortDesc]]" long-desc="[[action.longDesc]]" icon="[[action.icon]]" component-uri="[[action.componentUri]]" element-name="[[action.elementName]]" element-alias="[[action.elementAlias]]" action-kind="[[action.actionKind]]" number-of-action="[[action.numberOfAction]]" attrs="[[action.attrs]]" create-context-holder="[[action.createContextHolder]]" require-selection-criteria="[[action.requireSelectionCriteria]]" require-selected-entities="[[action.requireSelectedEntities]]" require-master-entity="[[action.requireMasterEntity]]" pre-action="[[action.preAction]]" post-action-success="[[action.postActionSuccess]]" post-action-error="[[action.postActionError]]" should-refresh-parent-centre-after-save="[[action.shouldRefreshParentCentreAfterSave]]" ui-role="[[action.uiRole]]"  icon-style="[[action.iconStyle]]"></tg-ui-action>
                     </template>
                 </div>
             </div>
@@ -48,6 +49,8 @@
         Polymer({
 
             is: "tg-secondary-action-button",
+            
+            behaviors: [ Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior ],
 
             properties: {
                 actions: Array,
@@ -59,9 +62,8 @@
                 currentEntity: Object
             },
             
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
-
             _showDropdown: function (e, detail) {
+                this.persistActiveElement();
                 this.$.dropdown.open();
             },
 
@@ -74,6 +76,10 @@
                 actions.forEach(function (action) {
                     action._updateSpinnerIfNeeded();
                 });
+            },
+            
+            _dropdownClosed: function () {
+                this.restoreActiveElement();
             }
         });
     })();

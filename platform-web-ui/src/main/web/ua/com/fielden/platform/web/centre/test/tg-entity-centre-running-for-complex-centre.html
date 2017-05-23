@@ -157,8 +157,66 @@
             };
 
  			centre.retrieve();
-	    });
-	});
+        });
+        
+        test('saving through EntityEditAction embedded master works for warnings acknowledgement continuation and it does contain parent context', function (done) {
+            var old_postRun = centre._postRun;
+            var firstTime = false;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                if (firstTime === false) {
+                    assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                    var entity = resultEntities[0];
+                    
+                    var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                    editAction.currentEntity = entity;
+                    var value = editAction._run();
+                    
+                    editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                        var outerMaster = editAction._masterReferenceForTesting;
+                        
+                        outerMaster.addEventListener('after-load', function (event) {
+                            var embeddedMaster = event.detail;
+                            
+                            var edProperty = embeddedMaster.$.editor_4_requiredValidatedProp;
+                            
+                            embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                                embeddedMaster.save().then(function () {
+                                    var acknowledgeWarningsAction = embeddedMaster.querySelector('tg-ui-action[continuation-property="_acknowledgedForTheFirstTime"]');
+                                    acknowledgeWarningsAction._masterReferenceForTestingChanged = function (newValue) {
+                                        // EntityEditAction modifHolder should be present as parent context for masterEntity of acknowledge warnings action
+                                        assert.ok(newValue.savingContext.masterEntity.centreContextHolder.masterEntity.modifHolder.entityId);
+                                        newValue.save().then(function () {
+                                            done();
+                                        });
+                                    };
+                                });
+                            };
+                            
+                            embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                embeddedMaster.$.editor_4_entityProp._editingValue = 'DEFAULT_KEY';
+                                embeddedMaster.$.editor_4_entityProp.commit();
+                                edProperty._editingValue = (edProperty._editingValue === '300') ? '301' : '300';
+                                edProperty.commit();
+                            };
+                        });
+                    }
+                    
+                    firstTime = true;
+                } else {
+                    assert.strictEqual(resultEntities.length, 20, 'The count of refreshed entity for the centre should be 20.');
+                }
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                centre.run();
+            };
+            
+            centre.retrieve();
+        });
+    });
     </script>
 
 </body>

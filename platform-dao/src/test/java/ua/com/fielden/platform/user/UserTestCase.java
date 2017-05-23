@@ -8,14 +8,30 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Optional;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -40,7 +56,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
         final User user = new_(User.class);
-        final String value = format("USER%s1", User.passwordResetUuidSeperator);
+        final String value = format("USER%s1", User.SECRET_RESET_UUID_SEPERATOR);
         user.setKey(value);
         assertFalse(user.getProperty(KEY).isValid());
         assertEquals(format(StringValidator.validationErrorTemplate, value, KEY, User.class.getSimpleName()), user.getProperty("key").getFirstFailure().getMessage());
@@ -151,7 +167,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final Optional<User> user = coUser.assignPasswordResetUuid("USER3");
         assertTrue(user.isPresent());
         
-        final String[] uuidParts = user.get().getResetUuid().split(User.passwordResetUuidSeperator);
+        final String[] uuidParts = user.get().getResetUuid().split(User.SECRET_RESET_UUID_SEPERATOR);
         assertEquals(3, uuidParts.length);
         assertEquals(user.get().getKey(), uuidParts[0]);
         assertEquals(consts.now().plusHours(24).getMillis(), Long.valueOf(uuidParts[2]).longValue());
@@ -257,7 +273,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User currUser = up.getUser();
         assertNotNull(currUser);
         assertTrue(currUser.isPersisted());
-        assertEquals(5L, currUser.getVersion().longValue());
+        assertEquals(1L, currUser.getVersion().longValue());
         
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-16 16:36:57"));
@@ -265,14 +281,14 @@ public class UserTestCase extends AbstractDaoTestCase {
         // modify and save
         final String email = "new_email@company.com";
         final User savedUser = save(currUser.setEmail(email));
-        assertEquals(6L, savedUser.getVersion().longValue());
+        assertEquals(2L, savedUser.getVersion().longValue());
         
         // refresh the user instance in the provider
         up.setUsername(currUser.getKey(), co(User.class));
         
         final User user = up.getUser();
         assertTrue(user.isPersisted());
-        assertEquals(6L, savedUser.getVersion().longValue());
+        assertEquals(2L, savedUser.getVersion().longValue());
         assertEquals(email, user.getEmail());
         
         assertNotNull(user.getLastUpdatedBy());
@@ -282,13 +298,19 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertNotNull(user.getLastUpdatedTransactionGuid());
     }
     
+    @Test
+    public void property_lastUpdatedBy_is_fetched_as_id_only_proxy_even_for_a_fetchOnly_strategy_for_owning_entity() {
+        final User user = co(User.class).findByKeyAndFetch(fetchOnly(User.class), "USER1");
+        assertTrue(user.getLastUpdatedBy().isIdOnlyProxy());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();
         
         // add inactive users with no email addresses
         coUser.save(new_(User.class, "INACTIVE_USER").setBase(true).setActive(false));
-        coUser.save(new_(User.class, "USER1").setBase(true));
+        coUser.save(coUser.save(new_(User.class, "USER1").setBase(true)).setEmail("USER1@company.com"));
         coUser.save(new_(User.class, "USER2").setBase(true));
 
         // add active users with email addresses
