@@ -25,7 +25,15 @@ public class ColumnDefinition {
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
 
-    public ColumnDefinition(final boolean nullable, final String name, final Class<?> javaType, final int sqlType, final int length, final int scale, final int precision, final String defaultValue) {
+    public ColumnDefinition(
+            final boolean nullable, 
+            final String name, 
+            final Class<?> javaType, 
+            final int sqlType, 
+            final int length, 
+            final int scale, 
+            final int precision, 
+            final String defaultValue) {
         if (StringUtils.isEmpty(name)) {
             throw new DbSchemaException("Column name can not be empty!");
         }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -8,10 +10,12 @@ import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.dialect.Dialect;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -26,7 +30,7 @@ public class TableDefinition {
         this.columns = populateColumns(columnDefinitionExtractor, entityType);
     }
 
-    private Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
+    private static Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final Set<ColumnDefinition> columns = new LinkedHashSet<>();
         
         columnDefinitionExtractor.extractIdProperty(entityType)
@@ -36,7 +40,7 @@ public class TableDefinition {
         columns.add(columnDefinitionExtractor.extractVersionProperty());
         
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
-            if (!shouldIgnore(propField)) {
+            if (!shouldIgnore(propField, entityType)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
@@ -47,7 +51,7 @@ public class TableDefinition {
         return columns;
     }
 
-    private boolean shouldIgnore(final Field propField) {
+    private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
         return KEY.equals(propField.getName()) || DESC.equals(propField.getName()) && EntityUtils.hasDescProperty(entityType);
     }
 
@@ -59,10 +63,25 @@ public class TableDefinition {
      */
     public String schemaString(final Dialect dialect) {
         final StringBuilder sb = new StringBuilder();
-        for (final ColumnDefinition columnProperty : columns) {
-            sb.append(columnProperty.schemaString(dialect) + "\n");
-        }
-
+        sb.append(format("CREATE TABLE %s (", tableName(entityType)));
+        sb.append("\n");
+        sb.append(columns.stream().map(col -> "    " + col.schemaString(dialect)).collect(Collectors.joining(",\n")));
+        sb.append("\n)");
         return sb.toString();
+    }
+
+    /**
+     * Computes the table name for a given entity.
+     *
+     * @param entityType
+     * @return
+     */
+    public static String tableName(final Class<? extends AbstractEntity<?>> entityType) {
+        final MapEntityTo mapEntityTo = entityType.getAnnotation(MapEntityTo.class);
+        if (isEmpty(mapEntityTo.value())) {
+            return entityType.getSimpleName().toUpperCase() + "_";
+        } else {
+            return mapEntityTo.value();
+        }
     }
 }
