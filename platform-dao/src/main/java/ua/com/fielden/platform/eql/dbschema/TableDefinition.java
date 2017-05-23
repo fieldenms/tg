@@ -33,10 +33,11 @@ public class TableDefinition {
     private static Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final Set<ColumnDefinition> columns = new LinkedHashSet<>();
         
-        columnDefinitionExtractor.extractIdProperty(entityType)
-        .map(id -> columns.add(id));
+        columns.add(columnDefinitionExtractor.extractIdProperty(entityType));
+
         columnDefinitionExtractor.extractSimpleKeyProperty(entityType)
         .map(key -> columns.add(key));
+        
         columns.add(columnDefinitionExtractor.extractVersionProperty());
         
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {

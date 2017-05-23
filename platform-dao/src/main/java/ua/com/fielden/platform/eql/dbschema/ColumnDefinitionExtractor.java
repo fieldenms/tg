@@ -119,16 +119,13 @@ public class ColumnDefinitionExtractor {
         return extractFromProperty(versionField.getName(), versionField.getType(), getAnnotation(versionField, MapTo.class), null, true).iterator().next();
     }
 
-    public Optional<ColumnDefinition> extractIdProperty(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isOneToOne(entityType)) {
-            return empty();
-        }
+    public ColumnDefinition extractIdProperty(final Class<? extends AbstractEntity<?>> entityType) {
         final Field idField = Finder.getFieldByName(AbstractEntity.class, ID);
-        return of(extractFromProperty(idField.getName(), idField.getType(), getAnnotation(idField, MapTo.class), null, true).iterator().next());
+        return extractFromProperty(idField.getName(), idField.getType(), getAnnotation(idField, MapTo.class), null, true).iterator().next();
     }
 
     public Optional<ColumnDefinition> extractSimpleKeyProperty(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isCompositeEntity(entityType)) {
+        if (isCompositeEntity(entityType) || isOneToOne(entityType)) {
             return empty();
         }
         final Field keyField = Finder.getFieldByName(AbstractEntity.class, KEY);
