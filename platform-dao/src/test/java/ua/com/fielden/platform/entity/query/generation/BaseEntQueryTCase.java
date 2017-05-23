@@ -43,7 +43,9 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.HyperlinkType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -64,6 +66,8 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
@@ -105,6 +109,8 @@ public class BaseEntQueryTCase {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        hibTypeDefaults.put(Colour.class, ColourType.class);
+        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
     }
 
     protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.dao;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -41,6 +42,16 @@ public interface IEntityAggregatesOperations extends IComputationMonitor {
      * @return
      */
     EntityAggregates getEntity(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model);
+
+    /**
+     * The same as {@link #getEntity(QueryExecutionModel)}, but wraps the result in type {@link Optional}.
+     *
+     * @param model
+     * @return
+     */
+    default Optional<EntityAggregates> getEntityOptional(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
+        return Optional.ofNullable(getEntity(model));
+    }
 
     /**
      * Returns results from running given aggregation query.

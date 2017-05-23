@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -90,8 +91,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         properties = createCachedProperties(type);
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
@@ -128,6 +129,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
+        }
+        if (AbstractUnionEntity.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_union(true);
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
@@ -222,7 +226,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return newId.toString();
     }
 
-    static private ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
+    private static ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
         @Override
         protected JacksonContext initialValue() {
             return new JacksonContext();
@@ -267,7 +271,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * @author TG Team
      *
      */
-    public final static class CachedProperty {
+    public static final class CachedProperty {
         private final Field field;
         private Class<?> propertyType;
         private boolean entityTyped = false;
@@ -299,7 +303,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      *
      * @see Context
      */
-    static public JacksonContext getContext() {
+    public static JacksonContext getContext() {
         return contextThreadLocal.get();
     }
 }

@@ -162,15 +162,13 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private TgPersistentStatus status;
 
     @IsProperty
-    @PersistentType(userType = IColourType.class)
-    @Title(value = "Colour prop", desc = "Colour prop description")
+    @Title(value = "Colour prop W", desc = "Colour prop description")
     @MapTo
     private Colour colourProp;
 
     @IsProperty
     @MapTo
     @Title(value = "Hyperlink", desc = "A property of type Hyperlink.")
-    @PersistentType(userType = IHyperlinkType.class)
     private Hyperlink hyperlinkProp;
     
     @IsProperty

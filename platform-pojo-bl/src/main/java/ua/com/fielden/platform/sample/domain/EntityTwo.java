@@ -1,6 +1,7 @@
-package ua.com.fielden.platform.entity.union;
+package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -8,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 @KeyType(Integer.class)
 @DescTitle("Description")
+@CompanionObject(IEntityTwo.class)
 public class EntityTwo extends AbstractEntity<Integer> {
     @IsProperty
     private String stringProperty;

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review;
 
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_DATE;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isQueryBasedEntityType;
@@ -19,7 +21,7 @@ public class DynamicFetchBuilder {
 
     /**
      * Creates "fetch property" model for entity query criteria.
-     * 
+     *
      * @return
      */
     public static <T extends AbstractEntity<?>> fetch<T> createFetchOnlyModel(final Class<T> managedType, final Set<String> fetchProperties) {
@@ -28,7 +30,7 @@ public class DynamicFetchBuilder {
 
     /**
      * Creates "fetch property" model for entity query criteria.
-     * 
+     *
      * @return
      */
     public static <T extends AbstractEntity<?>> fetch<T> createFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
@@ -37,23 +39,23 @@ public class DynamicFetchBuilder {
 
     /**
      * Creates "fetch property" model for entity query criteria totals.
-     * 
+     *
      * @return
      */
     public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
         final fetch<T> result = fetch(managedType, fetchProperties, true);
-        return isQueryBasedEntityType(managedType) ? result.without(AbstractEntity.ID) : withoutLowLevelProps(managedType, result);
+        return isQueryBasedEntityType(managedType) ? result : withoutLowLevelProps(managedType, result);
     }
 
     /**
      * Constructs a fetch strategy based on the provided <code>uncompletedFetch</code> without so called <code>low level</code> properties,
      * such as <code>id</code>, <code>version</code> for all entity types and <code>active</code>, <code>refCount</code> for activatable entity types.
-     * 
+     *
      * @param managedType
      * @param uncompletedFetch
      * @return
      */
-    private static <T extends AbstractEntity<?>> fetch<T> withoutLowLevelProps(Class<T> managedType, final fetch<T> uncompletedFetch) {
+    private static <T extends AbstractEntity<?>> fetch<T> withoutLowLevelProps(final Class<T> managedType, final fetch<T> uncompletedFetch) {
         final fetch<T> result;
         if (ActivatableAbstractEntity.class.isAssignableFrom(managedType)) {
             result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION)
@@ -65,13 +67,13 @@ public class DynamicFetchBuilder {
         } else {
             result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION);
         }
-        
+
         return result;
     }
 
     /**
      * Creates general fetch model for passed properties and type.
-     * 
+     *
      * @param managedType
      * @param fetchProperties
      */
@@ -87,7 +89,7 @@ public class DynamicFetchBuilder {
 
     /**
      * Builds the fetch model for subtree specified with treeNode parameter.
-     * 
+     *
      * @param entityType
      *            - The type for fetch model.
      * @param treeNode

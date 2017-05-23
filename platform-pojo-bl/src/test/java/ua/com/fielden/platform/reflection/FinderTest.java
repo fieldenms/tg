@@ -79,7 +79,7 @@ public class FinderTest {
         entity2.setPropertyOfSelfType(entity3);
         entity3.setPropertyOfSelfType(entity);
 
-        List<MetaProperty> metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.propertyOfSelfType");
+        List<MetaProperty<?>> metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.propertyOfSelfType");
         assertEquals(4, metaProperties.size());
         assertEquals(entity, metaProperties.get(0).getEntity());
         assertEquals(entity2, metaProperties.get(1).getEntity());
@@ -160,7 +160,7 @@ public class FinderTest {
     public void testThatFindMetaPropertyWorks() {
         // /////////////////////// simple case -- first level property ////////////////////
         final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "key-1-1", "key-1-2");
-        MetaProperty metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
+        MetaProperty<?> metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
         assertNotNull("Should have found meta-property.", metaProperty);
         assertEquals("Incorrect property name as present in the meta-property.", "property", metaProperty.getName());
         // /////////////////////// complex case -- multilevel property ///////////////////
@@ -493,13 +493,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "uncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
             fail("There shouldn't be any getUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
         unionEntity.setComplexPartEntity(complexEntity);
@@ -517,13 +515,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "anotherUncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getAnotherUncommonProperty()");
             fail("There shouldn't be any getAnotherUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
         unionEntity.setDynamicKeyPartEntity(dynamicEntity);
@@ -541,13 +537,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "uncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
             fail("There shouldn't be any getUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         // Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
         unionEntity = factory.newEntity(UnionEntityForReflector.class);

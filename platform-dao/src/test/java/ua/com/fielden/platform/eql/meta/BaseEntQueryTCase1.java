@@ -16,6 +16,7 @@ import java.util.Map;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.YesNoType;
 
 import com.google.inject.Guice;
 
@@ -46,7 +47,9 @@ import ua.com.fielden.platform.eql.s1.processing.StandAloneExpressionBuilder1;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.HyperlinkType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -65,6 +68,8 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
 public class BaseEntQueryTCase1 {
@@ -95,9 +100,13 @@ public class BaseEntQueryTCase1 {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
     static {
+        hibTypeDefaults.put(boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Boolean.class, YesNoType.class);
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        hibTypeDefaults.put(Colour.class, ColourType.class);
+        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
     }
 
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();

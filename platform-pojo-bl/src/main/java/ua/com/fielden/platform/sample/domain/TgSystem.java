@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgSystem extends ActivatableAbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

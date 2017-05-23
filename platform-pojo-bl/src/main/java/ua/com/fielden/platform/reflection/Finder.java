@@ -1,22 +1,20 @@
 package ua.com.fielden.platform.reflection;
 
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -127,9 +125,9 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static List<MetaProperty> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
+    public static List<MetaProperty<?>> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
-        final List<MetaProperty> metaProperties = new ArrayList<MetaProperty>();
+        final List<MetaProperty<?>> metaProperties = new ArrayList<>();
         Object owner = entity;
         for (final String propertyName : properties) {
             // if the owner is null or not an entity then there is no way to determine meta-properties at the next level.
@@ -163,8 +161,8 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static MetaProperty findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
-        final List<MetaProperty> metaProperties = findMetaProperties(entity, dotNotationExp);
+    public static MetaProperty<?> findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
+        final List<MetaProperty<?>> metaProperties = findMetaProperties(entity, dotNotationExp);
         if (dotNotationExp.split(Reflector.DOT_SPLITTER).length > metaProperties.size()) {
             return null;
         } else {
@@ -487,19 +485,20 @@ public class Finder {
     /**
      * This method is similar to {@link #findFieldByName(Class, String)}, but returns property values rather than type information.
      *
-     * @param instance
+     * @param entity
      * @param dotNotationExp
      * @return
      * @throws Exception
      */
-    public static <T> T findFieldValueByName(final Object instance, final String dotNotationExp) throws Exception {
-        if (instance == null) {
+    public static <T> T findFieldValueByName(final AbstractEntity<?> entity, final String dotNotationExp) {
+        if (entity == null) {
             return null;
         }
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
-        Object value = instance;
-        for (final String property : properties) {
-            value = getPropertyValue(value, property);
+        final String[] propNames = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        Object value = entity;
+        for (final String propName : propNames) {
+            value = getPropertyValue((AbstractEntity<?>) value, propName);
+            
             if (value == null) {
                 return null;
             }
@@ -693,7 +692,6 @@ public class Finder {
             }
             return field.isPresent() ? getFieldValue(field.get(), valueToRetrieveFrom) : null;
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new ReflectionException(format("Could not obtain value of property [%s] for union entity [%s]. Potentially \"activeEntity.\" prefix should be explicitly specified.", property, value.getType().getName()), e);
         }
     }
@@ -713,17 +711,17 @@ public class Finder {
      * @throws InvocationTargetException
      */
     private static Object getAbstractUnionEntityMethodValue(final AbstractUnionEntity instance, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+            InvocationTargetException {
         try {
             final Method method = Reflector.getMethodForClass(instance.getClass(), methodName, arguments);
             return getMethodValue(method, instance);
         } catch (final NoSuchMethodException e) {
-            final AbstractEntity activeEntity = instance.activeEntity();
+            final AbstractEntity<?> activeEntity = instance.activeEntity();
             if (activeEntity != null && AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) instance.getType()).contains(methodName)) {
                 final Method method = Reflector.getMethodForClass(activeEntity.getClass(), methodName, arguments);
                 return getMethodValue(method, activeEntity);
             } else {
-                throw new RuntimeException("active entity can not be null");
+                throw new ReflectionException(format("Active entity can not be null for union entity of type [%s]", instance.getType().getSimpleName()));
             }
         }
     }
@@ -734,12 +732,16 @@ public class Finder {
      * @param field
      * @param valueToRetrieveFrom
      * @return
-     * @throws IllegalAccessException
      */
-    public static Object getFieldValue(final Field field, final Object valueToRetrieveFrom) throws IllegalAccessException {
+    public static Object getFieldValue(final Field field, final Object valueToRetrieveFrom) {
         final boolean isAccessible = field.isAccessible();
         field.setAccessible(true);
-        final Object value = field.get(valueToRetrieveFrom);
+        final Object value;
+        try {
+            value = field.get(valueToRetrieveFrom);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new ReflectionException(format("Could not access field [%s] in type [%s].", field.getName(), valueToRetrieveFrom.getClass().getSimpleName()), e);
+        }
         field.setAccessible(isAccessible);
         return value;
     }
@@ -750,14 +752,16 @@ public class Finder {
      * @param method
      * @param objectToInvokeOn
      * @return
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
      */
-    private static Object getMethodValue(final Method method, final Object objectToInvokeOn) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    private static Object getMethodValue(final Method method, final Object objectToInvokeOn) {
         final boolean isAccessible = method.isAccessible();
         method.setAccessible(true);
-        final Object value = method.invoke(objectToInvokeOn);
+        final Object value;
+        try {
+            value = method.invoke(objectToInvokeOn);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new ReflectionException(format("Could not access method [%s] in type [%s].", method.getName(), objectToInvokeOn.getClass().getSimpleName()), e);
+        }
         method.setAccessible(isAccessible);
         return value;
     }
@@ -770,24 +774,25 @@ public class Finder {
      * @return
      * @throws IllegalAccessException
      */
-    private static Object getPropertyValue(Object value, final String property) throws IllegalAccessException {
+    public static Object getPropertyValue(final AbstractEntity<?> entity, final String property) {
+        final Object value;
         if (!property.contains("()")) {
-            if (value instanceof AbstractUnionEntity) {
-                value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) value, property);
+            if (entity instanceof AbstractUnionEntity) {
+                value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) entity, property);
             } else {
-                value = getFieldValue(getFieldByName(value.getClass(), property), value);
+                value = getFieldValue(getFieldByName(entity.getClass(), property), entity);
             }
         } else {
             try {
-                if (value instanceof AbstractUnionEntity) {
-                    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) value, property.substring(0, property.length() - 2));
+                if (entity instanceof AbstractUnionEntity) {
+                    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) entity, property.substring(0, property.length() - 2));
                 } else {
-                    value = getMethodValue(Reflector.getMethod(value.getClass(), property.substring(0, property.length() - 2)), value);
+                    value = getMethodValue(Reflector.getMethod(entity.getClass(), property.substring(0, property.length() - 2)), entity);
                 }
             } catch (final NoSuchMethodException e) {
-                throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + value.getClass(), e);
+                throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + entity.getClass(), e);
             } catch (final InvocationTargetException e) {
-                throw new IllegalArgumentException("Failed to invoke parameterless method " + property + " on instance of " + value.getClass(), e);
+                throw new IllegalArgumentException("Failed to invoke parameterless method " + property + " on instance of " + entity.getClass(), e);
             }
         }
         return value;
