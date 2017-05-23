@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.test.server.config;
 
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
 import java.util.function.Function;
 
@@ -20,6 +20,8 @@ import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
+import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 
 /**
  * Enumeration of standard UI action configurations that can be uniformly used throughout Web UI configuration for different entities.
@@ -144,6 +146,53 @@ public enum StandardActions {
                     withNoParentCentreRefresh().
                     build();
         }
+    },
+
+    SEQUENCE_EDIT_ACTION {
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
+            return mkAction(entityType, null, null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
+            return mkAction(entityType, null, prefDim);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+            return mkAction(entityType, computation, null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
+
+            final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
+            if (computation != null) {
+                contextConfig = context().withSelectedEntities().withSelectionCrit().withComputation(computation);
+            } else {
+                contextConfig = context().withSelectedEntities().withSelectionCrit().withComputation(entity -> entityType);
+            }
+
+            return action(EntityEditAction.class).
+                    withContext(contextConfig.build()).
+                    postActionSuccess(new IPostAction() {
+
+                        @Override
+                        public JsCode build() {
+                            return new JsCode("    return console.log('edit entity saved');\n");
+                        }
+                    }).
+                    icon("editor:mode-edit").
+                    shortDesc(format("Edit %s", entityTitle)).
+                    longDesc(format("Opens master for editing %s", entityTitle)).
+                    prefDimForView(prefDim).
+                    withNoParentCentreRefresh().
+                    build();
+        }
+
     },
 
     DELETE_ACTION {
