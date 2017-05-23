@@ -56,17 +56,32 @@ public class TableDefinition {
     }
 
     /**
-     * Generates DDL statement for a table (without constraints or indices) based on provided RDBMS dialect.
+     * Generates a DDL statement for a table (without constraints or indices) based on provided RDBMS dialect.
      * 
      * @param dialect
      * @return
      */
-    public String schemaString(final Dialect dialect) {
+    public String createTableSchema(final Dialect dialect) {
         final StringBuilder sb = new StringBuilder();
         sb.append(format("CREATE TABLE %s (", tableName(entityType)));
         sb.append("\n");
         sb.append(columns.stream().map(col -> "    " + col.schemaString(dialect)).collect(Collectors.joining(",\n")));
-        sb.append("\n)");
+        sb.append("\n);");
+        return sb.toString();
+    }
+
+    /**
+     * Generates a DDL statement to add a primary key constraint on column <code>_ID</code>.
+     * @param dialect
+     * @return
+     */
+    public String createPkSchema(final Dialect dialect) {
+        // This statement should be suitable for majority of SQL dialogs
+        final String tableName = tableName(entityType);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(format("ALTER TABLE %s ", tableName));
+        sb.append("\n");
+        sb.append(format("ADD CONSTRAINT PK_%s_ID PRIMARY KEY (_ID);", tableName));
         return sb.toString();
     }
 

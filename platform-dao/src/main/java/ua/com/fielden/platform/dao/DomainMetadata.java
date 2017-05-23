@@ -205,7 +205,10 @@ public class DomainMetadata {
         for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
             if (isPersistedEntityType(entityType)) {
                 sb.append("================== " + entityType.getSimpleName() + "\n");
-                sb.append(new TableDefinition(columnDefinitionExtractor, entityType).schemaString(dialect) + "\n");
+                final TableDefinition tableDefinition = new TableDefinition(columnDefinitionExtractor, entityType);
+                sb.append(tableDefinition.createTableSchema(dialect) + "\n");
+                sb.append(tableDefinition.createPkSchema(dialect) + "\n");
+                sb.append("\n");
             }
         }
         return sb.toString();
