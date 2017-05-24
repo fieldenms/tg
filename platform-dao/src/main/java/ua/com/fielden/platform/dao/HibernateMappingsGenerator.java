@@ -158,7 +158,7 @@ public class HibernateMappingsGenerator {
         }
 
         for (final PropertyMetadata ppi : entityMetadata.getProps().values()) {
-            if (ppi.affectsMapping() && !specialProps.contains(ppi.getName())) {
+            if (ppi.affectsMapping() && !specialProps.contains(ppi.getName()) && !ppi.isCalculatedCompositeUserTypeHeader()) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi, dbVersion));
             }
         }
