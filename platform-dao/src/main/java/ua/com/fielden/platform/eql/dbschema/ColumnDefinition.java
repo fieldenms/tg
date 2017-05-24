@@ -20,14 +20,12 @@ public class ColumnDefinition {
     public final int scale;
     public final int precision;
     public final String defaultValue;
-    public final TableDefinition tableDefinition;
     
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
 
     public ColumnDefinition(
-            final TableDefinition tableDefinition,
             final boolean nullable, 
             final String name, 
             final Class<?> javaType, 
@@ -39,7 +37,6 @@ public class ColumnDefinition {
         if (StringUtils.isEmpty(name)) {
             throw new DbSchemaException("Column name can not be empty!");
         }
-        this.tableDefinition = tableDefinition;
         this.nullable = nullable;
         this.name = name;
         this.javaType = javaType;

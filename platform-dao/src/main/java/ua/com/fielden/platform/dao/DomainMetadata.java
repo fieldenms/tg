@@ -208,6 +208,7 @@ public class DomainMetadata {
                 final TableDefinition tableDefinition = new TableDefinition(columnDefinitionExtractor, entityType);
                 sb.append(tableDefinition.createTableSchema(dialect) + "\n");
                 sb.append(tableDefinition.createPkSchema(dialect) + "\n");
+                sb.append(tableDefinition.createFkSchema(dialect) + "\n");
                 sb.append("\n");
             }
         }
