@@ -22,30 +22,30 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class TableDefinition {
-    private final Class<? extends AbstractEntity<?>> entityType;
+    public final Class<? extends AbstractEntity<?>> entityType;
     private final Set<ColumnDefinition> columns;
 
     public TableDefinition(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
-        this.columns = populateColumns(columnDefinitionExtractor, entityType);
+        this.columns = populateColumns(this, columnDefinitionExtractor, entityType);
     }
 
-    private static Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
+    private static Set<ColumnDefinition> populateColumns(final TableDefinition tableDefinition, final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final Set<ColumnDefinition> columns = new LinkedHashSet<>();
         
-        columns.add(columnDefinitionExtractor.extractIdProperty(entityType));
+        columns.add(columnDefinitionExtractor.extractIdProperty(tableDefinition));
 
-        columnDefinitionExtractor.extractSimpleKeyProperty(entityType)
+        columnDefinitionExtractor.extractSimpleKeyProperty(tableDefinition)
         .map(key -> columns.add(key));
         
-        columns.add(columnDefinitionExtractor.extractVersionProperty());
+        columns.add(columnDefinitionExtractor.extractVersionProperty(tableDefinition));
         
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
             if (!shouldIgnore(propField, entityType)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
-                columns.addAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), mapTo, persistedType, required));
+                columns.addAll(columnDefinitionExtractor.extractFromProperty(tableDefinition, propField.getName(), propField.getType(), mapTo, persistedType, required));
             }
         }
 
