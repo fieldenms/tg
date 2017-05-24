@@ -63,13 +63,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
-            final IEntityDao<T> companion = co(this.entityType);
-            final T entity;
-            if (companion != null) {
-                entity = companion.new_();
-            } else {
-                entity = factory().newEntity(this.entityType);
-            }
+            final T entity = new_();
             
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
@@ -91,6 +85,20 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return producedEntity;
     }
     
+    /**
+     * A helper function to instantiate a new entity using either companion if available or entity factory otherwise.
+     *
+     * @return
+     */
+    private T new_() {
+        final IEntityDao<T> companion = co(this.entityType);
+        if (companion != null) {
+            return companion.new_();
+        } else {
+            return factory.newEntity(this.entityType);
+        }
+    }
+
     /**
      * In rare cases where there is a need not to reset meta-state of the property -- this property needs to be listed in this method.
      * 

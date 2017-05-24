@@ -376,7 +376,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         //     the entity has been already applied the values from 'cdtmae' during CriteriaGenerator generation process.
         //     So, we potentially have the 'required' errors -- need to disregard all of them!
         //     (for e.g., in TridentFleet it fixes the errors if no DdsStationAssigner is specified)
-        return EntityResourceUtils.disregardNotAppliedRequiredProperties(
+        return EntityResourceUtils.disregardUntouchedRequiredProperties(
                 resetMetaStateForCriteriaValidationPrototype(
                         validationPrototype,
                         EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//

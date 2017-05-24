@@ -144,8 +144,7 @@ public class EntityResourceUtils {
         final Class<M> type = (Class<M>) entity.getType();
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
-        final Set<String> appliedProps = new LinkedHashSet<>();
-        final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
+        final Set<String> touchedProps = new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps"));
 
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
@@ -157,7 +156,6 @@ public class EntityResourceUtils {
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     logger.debug(String.format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-                    appliedProps.add(name);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
@@ -185,15 +183,14 @@ public class EntityResourceUtils {
                 logger.debug(String.format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
-            appliedProps.add(name);
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
         //            It is necessary in case when some property becomes required after the change of other properties.
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        disregardNotAppliedRequiredProperties(entity, appliedProps);
-        disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, appliedProps);
+        disregardUntouchedRequiredProperties(entity, touchedProps);
+        disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, touchedProps);
 
         return entity;
     }
@@ -361,15 +358,14 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Disregards the 'required' errors for those properties, that were not 'applied' (for both criteria and simple entities).
+     * Disregards the 'required' errors for those properties, that were not 'touched' directly by the user (for both criteria and simple entities).
      *
      * @param entity
-     * @param appliedProps
-     *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
+     * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardNotAppliedRequiredProperties(final M entity, final Set<String> appliedProps) {
-        entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !appliedProps.contains(mp.getName())).forEach(mp -> {
+    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+        entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(Result.successful(entity));
         });
 
@@ -380,13 +376,12 @@ public class EntityResourceUtils {
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
      * @param entity
-     * @param appliedProps
-     *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
+     * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    private static <M extends AbstractEntity<?>> M disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> appliedProps) {
+    public static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
         if (!entity.isPersisted()) {
-            entity.nonProxiedProperties().filter(mp -> mp.isRequired() && appliedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
+            entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(Result.successful(entity));
             });
         }

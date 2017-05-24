@@ -210,7 +210,7 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
             action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
         } else {
-            entityToSave = factory.newEntity(actionType, null);
+            entityToSave = companion.new_();
             action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             if (!action.getProperty(AbstractEntity.KEY).isRequired()) {
                 // Key property, which represents id of master entity, will be null in case where master entity is new.

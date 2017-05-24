@@ -36,7 +36,6 @@ public class TgSubSystem extends AbstractEntity<String> {
     @Title(value = "Second Category", desc = "Desc")
     private TgCategory secondCategory;
 
-
     @IsProperty(assignBeforeSave = true)
     @MapTo
     @Title(value = "User", desc = "Desc")
@@ -57,9 +56,6 @@ public class TgSubSystem extends AbstractEntity<String> {
     public String getExplanation() {
         return explanation;
     }
-
-
-
 
     @Observable
     public TgSubSystem setUser(final User user) {
