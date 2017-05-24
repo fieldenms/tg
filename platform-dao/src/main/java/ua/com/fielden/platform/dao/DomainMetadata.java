@@ -215,12 +215,31 @@ public class DomainMetadata {
     
     
     private List<String> printDdl(final Dialect dialect, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+        final List<String> ddlTables = new LinkedList<>();
+        ddlTables.add("EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\";");
+        ddlTables.add(
+                "WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'))"+
+                "BEGIN"+
+                "    DECLARE @sql_alterTable_fk NVARCHAR(4000)"+
+                ""+
+                "    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']')"+
+                "    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS"+
+                "    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY'"+
+                ""+
+                "    EXEC (@sql_alterTable_fk)"+
+                "END");
+        ddlTables.add("EXEC sp_MSforeachtable @command1 = \"DROP TABLE ?\";");
+        ddlTables.add(
+                "CREATE TABLE UNIQUE_ID (" +
+                "  _ID INT NOT NULL PRIMARY KEY," +
+                "  NEXT_VALUE INT NOT NULL);");
+        ddlTables.add("INSERT INTO UNIQUE_ID VALUES(1, 0);");
+        
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         
         final List<Class<? extends AbstractEntity<?>>> persystentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
         
         //persystentTypes
-        final List<String> ddlTables = new LinkedList<>();
         final List<String> ddlFKs = new LinkedList<>();
         
         for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
