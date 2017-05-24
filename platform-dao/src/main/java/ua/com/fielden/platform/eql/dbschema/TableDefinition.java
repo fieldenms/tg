@@ -4,8 +4,10 @@ import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.lang.reflect.Field;
@@ -34,14 +36,13 @@ public class TableDefinition {
 
     private static Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final Set<ColumnDefinition> columns = new LinkedHashSet<>();
-        
+
         columns.add(columnDefinitionExtractor.extractIdProperty());
 
-        columnDefinitionExtractor.extractSimpleKeyProperty(entityType)
-        .map(key -> columns.add(key));
-        
+        columnDefinitionExtractor.extractSimpleKeyProperty(entityType).map(key -> columns.add(key));
+
         columns.add(columnDefinitionExtractor.extractVersionProperty());
-        
+
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
             if (!shouldIgnore(propField, entityType)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
@@ -58,14 +59,12 @@ public class TableDefinition {
         return KEY.equals(propField.getName()) || DESC.equals(propField.getName()) && EntityUtils.hasDescProperty(entityType);
     }
 
-    
     private void addGoIfApplicable(final Dialect dialect, final StringBuilder sb) {
         if (dialect instanceof SQLServerDialect) {
-            sb.append("\nGO\n");    
+            sb.append("\nGO\n");
         }
     }
-    
-    
+
     /**
      * Generates a DDL statement for a table (without constraints or indices) based on provided RDBMS dialect.
      * 
@@ -84,6 +83,7 @@ public class TableDefinition {
 
     /**
      * Generates a DDL statement to add a primary key constraint on column <code>_ID</code>.
+     * 
      * @param dialect
      * @return
      */
@@ -97,30 +97,43 @@ public class TableDefinition {
         addGoIfApplicable(dialect, sb);
         return sb.toString();
     }
-    
+
     /**
-     * Generates a DDL statement to add all foreign key constraints. Execution of this statement should occur only after all tables schema have been executed.  
+     * Generates a DDL statement to add all foreign key constraints. Execution of this statement should occur only after all tables schema have been executed.
+     * 
      * @param dialect
      * @return
      */
     public String createFkSchema(final Dialect dialect) {
         // This statement should be suitable for majority of SQL dialogs
         final String thisTableName = tableName(entityType);
-        return columns.stream()
-        .filter(cd -> isPersistedEntityType(cd.javaType))
-        .map(cd -> {
+        final String ddl = columns.stream().filter(cd -> isPersistedEntityType(cd.javaType)).map(cd -> {
             final StringBuilder sb = new StringBuilder();
             final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType);
-            sb.append(format("ALTER TABLE %s ", thisTableName));
-            sb.append("\n");
-            sb.append(format("ADD CONSTRAINT FK_%s_%s FOREIGN KEY (%s) REFERENCES %s (_ID);", thisTableName, cd.name, cd.name, thatTableName));
-            addGoIfApplicable(dialect, sb);
+            fkConstraint(dialect, thisTableName, cd.name, sb, thatTableName);
             return sb.toString();
-            
+
         }).collect(Collectors.joining("\n"));
-        
+
+        // let's handle a situation where entity type is one-2-one entity.
+        if (isOneToOne(entityType)) {
+            final StringBuilder sb = new StringBuilder();
+            final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) getKeyType(entityType));
+            fkConstraint(dialect, thisTableName, "_ID", sb, thatTableName);
+
+            return ddl + sb;
+        }
+
+        return ddl;
     }
-    
+
+    private void fkConstraint(final Dialect dialect, final String thisTableName, final String colName, final StringBuilder sb, final String thatTableName) {
+        sb.append(format("ALTER TABLE %s ", thisTableName));
+        sb.append("\n");
+        sb.append(format("ADD CONSTRAINT FK_%s_%s FOREIGN KEY (%s) REFERENCES %s (_ID);", thisTableName, colName, colName, thatTableName));
+        addGoIfApplicable(dialect, sb);
+    }
+
     /**
      * Computes the table name for a given entity.
      *
