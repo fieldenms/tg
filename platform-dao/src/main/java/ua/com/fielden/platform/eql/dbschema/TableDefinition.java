@@ -101,9 +101,18 @@ public class TableDefinition {
         return sb.toString();
     }
 
-    private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> stream, final Dialect dialect) {
-        // TODO Auto-generated method stub
-        return "";
+    private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+        final StringBuilder sb = new StringBuilder();
+
+        final String tableName = tableName(entityType);
+        final String keyMembersStr = cols
+                .filter(col -> col.compositeKeyMemberOrder.isPresent())
+                .sorted((col1, col2) -> Integer.compare(col1.compositeKeyMemberOrder.get(), col2.compositeKeyMemberOrder.get()))
+                .map(col -> col.name)
+                .collect(Collectors.joining(", "));
+        sb.append(format("CREATE UNIQUE INDEX KUI_%s ON %s(%s);", tableName, tableName, keyMembersStr));
+        addGoIfApplicable(dialect, sb);
+        return sb.toString();
     }
 
     private String createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
@@ -111,7 +120,8 @@ public class TableDefinition {
             final StringBuilder sb = new StringBuilder();
 
             final String tableName = tableName(entityType);
-            sb.append(format("CREATE UNIQUE INDEX UI_%s_%s ON %s(%s)", tableName, col.name, tableName, col.name));
+            final String indexName = "KEY_".equals(col.name) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name);
+            sb.append(format("CREATE UNIQUE INDEX %s ON %s(%s)", indexName, tableName, col.name));
             if (col.nullable) {
                 sb.append(format(" WHERE (%s IS NOT NULL)", col.name));
             }
