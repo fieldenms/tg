@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
@@ -37,12 +39,17 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,6 +58,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
@@ -188,8 +196,16 @@ public class DomainMetadata {
             }
         });
         
-        LOGGER.debug("\n\n" + printDdl(new SQLServer2008Dialect(), entityTypes) + "\n\n");
-
+//        final List<String> ddl = printDdl(new SQLServer2008Dialect(), entityTypes);
+//        final String goDelimiter = "\nGO\n";
+//        LOGGER.debug("\n\n" + ddl.stream().collect(joining(goDelimiter)) + "\n\n");
+//        
+//        try {
+//            Files.write(Paths.get("tg-air-ddl.sql"), ddl.stream().map(st -> st + goDelimiter).collect(toList()), StandardCharsets.UTF_8);
+//            LOGGER.debug("Completed DDL generation and saving to file.");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         
         
         //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
@@ -198,22 +214,26 @@ public class DomainMetadata {
     }
     
     
-    private String printDdl(final Dialect dialect, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    private List<String> printDdl(final Dialect dialect, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
-        final StringBuilder sb = new StringBuilder();
         
-        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
-            if (isPersistedEntityType(entityType)) {
-                sb.append("================== " + entityType.getSimpleName() + "\n");
-                final TableDefinition tableDefinition = new TableDefinition(columnDefinitionExtractor, entityType);
-                sb.append(tableDefinition.createTableSchema(dialect) + "\n");
-                sb.append(tableDefinition.createPkSchema(dialect) + "\n");
-                sb.append(tableDefinition.createFkSchema(dialect) + "\n");
-                sb.append(tableDefinition.createIndicesSchema(dialect) + "\n");
-                sb.append("\n");
-            }
+        final List<Class<? extends AbstractEntity<?>>> persystentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        
+        //persystentTypes
+        final List<String> ddlTables = new LinkedList<>();
+        final List<String> ddlFKs = new LinkedList<>();
+        
+        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+            final TableDefinition tableDefinition = new TableDefinition(columnDefinitionExtractor, entityType);
+            ddlTables.add(tableDefinition.createTableSchema(dialect));
+            ddlTables.add(tableDefinition.createPkSchema(dialect));
+            ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
+            ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
         }
-        return sb.toString();
+        final List<String> ddl = new LinkedList<>();
+        ddl.addAll(ddlTables);
+        ddl.addAll(ddlFKs);
+        return ddl;
     }
     
     private String printEntitiesMetadataSummary(final String header, final Map<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> map) {
