@@ -379,7 +379,7 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
         if (!entity.isPersisted()) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(Result.successful(entity));
