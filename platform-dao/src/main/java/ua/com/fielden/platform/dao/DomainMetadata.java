@@ -209,6 +209,7 @@ public class DomainMetadata {
                 sb.append(tableDefinition.createTableSchema(dialect) + "\n");
                 sb.append(tableDefinition.createPkSchema(dialect) + "\n");
                 sb.append(tableDefinition.createFkSchema(dialect) + "\n");
+                sb.append(tableDefinition.createIndicesSchema(dialect) + "\n");
                 sb.append("\n");
             }
         }

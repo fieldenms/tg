@@ -12,8 +12,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -83,6 +86,46 @@ public class TableDefinition {
         return sb.toString();
     }
 
+    public String createIndicesSchema(final Dialect dialect) {
+        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(cd -> cd.unique));
+        final StringBuilder sb = new StringBuilder();
+        sb.append(createUniqueCompositeIndicesSchema(columns.stream(), dialect));
+        sb.append(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
+        sb.append(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
+        return sb.toString();
+    }
+    
+    private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> stream, final Dialect dialect) {
+        // TODO Auto-generated method stub
+        return "";
+    }
+
+    private String createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+        return cols.map(col -> {
+            final StringBuilder sb = new StringBuilder();
+            
+            final String tableName = tableName(entityType);
+            sb.append(format("CREATE UNIQUE INDEX UI_%s_%s ON %s(%s)", tableName, col.name, tableName, col.name));
+            if (col.nullable) {
+                sb.append(format(" WHERE (%s IS NOT NULL)", col.name));
+            }
+            sb.append(";");
+            addGoIfApplicable(dialect, sb);
+            return sb.toString();
+        }).collect(Collectors.joining("\n"));
+    }
+
+    private String createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+        return cols.filter(col -> isPersistedEntityType(col.javaType)).map(col -> {
+            final StringBuilder sb = new StringBuilder();
+            
+            final String tableName = tableName(entityType);
+            sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name, tableName, col.name));
+            addGoIfApplicable(dialect, sb);
+            return sb.toString();
+        }).collect(Collectors.joining("\n"));
+    }
+
     /**
      * Generates a DDL statement to add a primary key constraint on column <code>_ID</code>.
      * 
@@ -128,7 +171,7 @@ public class TableDefinition {
 
         return ddl;
     }
-
+    
     private void fkConstraint(final Dialect dialect, final String thisTableName, final String colName, final StringBuilder sb, final String thatTableName) {
         sb.append(format("ALTER TABLE %s ", thisTableName));
         sb.append("\n");
