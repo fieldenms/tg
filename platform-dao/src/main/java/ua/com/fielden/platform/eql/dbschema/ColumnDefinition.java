@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import java.util.Optional;
+
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.dialect.Dialect;
 
@@ -21,6 +23,7 @@ public class ColumnDefinition {
     public final int precision;
     public final String defaultValue;
     public final boolean unique;
+    public final Optional<Integer> compositeKeyMemberOrder;
     
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
@@ -28,6 +31,7 @@ public class ColumnDefinition {
 
     public ColumnDefinition(
             final boolean unique,
+            final Optional<Integer> compositeKeyMemberOrder,
             final boolean nullable, 
             final String name, 
             final Class<?> javaType, 
@@ -40,6 +44,7 @@ public class ColumnDefinition {
             throw new DbSchemaException("Column name can not be empty!");
         }
         this.unique = unique;
+        this.compositeKeyMemberOrder = compositeKeyMemberOrder;
         this.nullable = nullable;
         this.name = name;
         this.javaType = javaType;

@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
@@ -14,6 +15,7 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,6 +24,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -53,7 +56,8 @@ public class TableDefinition {
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
                 final boolean unique = propField.isAnnotationPresent(Unique.class);
-                columns.addAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), mapTo, persistedType, required, unique));
+                final Optional<Integer> compositeKeyMemberOrder = Optional.ofNullable(propField.getAnnotation(CompositeKeyMember.class)).map(ann -> ann.value());
+                columns.addAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), mapTo, persistedType, required, unique, compositeKeyMemberOrder));
             }
         }
 
@@ -89,12 +93,14 @@ public class TableDefinition {
     public String createIndicesSchema(final Dialect dialect) {
         final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(cd -> cd.unique));
         final StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueCompositeIndicesSchema(columns.stream(), dialect));
+        if (isCompositeEntity(entityType)) {
+            sb.append(createUniqueCompositeIndicesSchema(columns.stream(), dialect));
+        }
         sb.append(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
         sb.append(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
         return sb.toString();
     }
-    
+
     private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> stream, final Dialect dialect) {
         // TODO Auto-generated method stub
         return "";
@@ -103,7 +109,7 @@ public class TableDefinition {
     private String createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         return cols.map(col -> {
             final StringBuilder sb = new StringBuilder();
-            
+
             final String tableName = tableName(entityType);
             sb.append(format("CREATE UNIQUE INDEX UI_%s_%s ON %s(%s)", tableName, col.name, tableName, col.name));
             if (col.nullable) {
@@ -118,7 +124,7 @@ public class TableDefinition {
     private String createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         return cols.filter(col -> isPersistedEntityType(col.javaType)).map(col -> {
             final StringBuilder sb = new StringBuilder();
-            
+
             final String tableName = tableName(entityType);
             sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name, tableName, col.name));
             addGoIfApplicable(dialect, sb);
@@ -171,7 +177,7 @@ public class TableDefinition {
 
         return ddl;
     }
-    
+
     private void fkConstraint(final Dialect dialect, final String thisTableName, final String colName, final StringBuilder sb, final String thatTableName) {
         sb.append(format("ALTER TABLE %s ", thisTableName));
         sb.append("\n");
