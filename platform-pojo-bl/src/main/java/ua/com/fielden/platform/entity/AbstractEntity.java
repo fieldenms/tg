@@ -257,7 +257,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     @MapTo("_ID")
     private Long id;
-    @MapTo("_VERSION")
+    @MapTo(value = "_VERSION", defaultValue = "0")
     private Long version = 0L;
     @IsProperty
     @UpperCase

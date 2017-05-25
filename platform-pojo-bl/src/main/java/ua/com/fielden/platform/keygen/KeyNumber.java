@@ -15,10 +15,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  * 
  */
 @KeyType(String.class)
-@MapEntityTo(value = "NUMBERS", keyColumn = "NUMBKEY")
+@MapEntityTo(value = "NUMBERS")
 @CompanionObject(IKeyNumber.class)
 public class KeyNumber extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     /**
      * This is bloody silly, but value is string (VARCHAR) and at the same time it is used mainly for storing integer values, which should be treated as integer.

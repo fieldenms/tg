@@ -37,7 +37,6 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 @CompanionObject(IMainMenuItem.class)
 @MapEntityTo("MAIN_MENU")
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo("ID_PARENT")

@@ -2,11 +2,11 @@ package ua.com.fielden.platform.dao;
 
 public class PropertyColumn {
     private final String name;
-    private final Long length;
-    private final Long precision;
-    private final Long scale;
+    private final Integer length;
+    private final Integer precision;
+    private final Integer scale;
 
-    public PropertyColumn(final String name, final Long length, final Long precision, final Long scale) {
+    public PropertyColumn(final String name, final Integer length, final Integer precision, final Integer scale) {
         super();
         this.name = name.toUpperCase();
         this.length = length;
@@ -26,15 +26,15 @@ public class PropertyColumn {
         return name;
     }
 
-    public Long getLength() {
+    public Integer getLength() {
         return length;
     }
 
-    public Long getPrecision() {
+    public Integer getPrecision() {
         return precision;
     }
 
-    public Long getScale() {
+    public Integer getScale() {
         return scale;
     }
 

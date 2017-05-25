@@ -52,9 +52,10 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.eql.EntityMetadata.EntityCategory;
 import ua.com.fielden.platform.dao.eql.PropertyMetadata.PropertyCategory;
@@ -80,8 +81,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 public class DomainMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
@@ -224,8 +223,7 @@ public class DomainMetadata {
         } else if (!DynamicEntityKey.class.equals(getKeyType(entityType))) {
             switch (entityCategory) {
             case PERSISTED:
-                final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
+                return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(key).hibType(typeResolver.basic(getKeyType(entityType).getName())).type(PRIMITIVE_AS_KEY).build();
             case QUERY_BASED:
                 return null; //FIXME
             case UNION:

@@ -75,12 +75,13 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
         expected.add(ppi("key", STRING, false, H_STRING, "KEY_", PRIMITIVE));
         expected.add(ppi("desc", STRING, true, H_STRING, "DESC_", PRIMITIVE));
         expected.add(ppi("model", MODEL, false, H_LONG, "MODEL_", ENTITY));
-        expected.add(ppi("price.amount", BIG_DECIMAL, true, H_BIG_DECIMAL, "PRICE_", COMPONENT_DETAILS));
-        expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, H_BIG_DECIMAL, "PURCHASEPRICE_", COMPONENT_DETAILS));
+        expected.add(ppi("price.amount", BIG_DECIMAL, true, H_BIG_DECIMAL, "PRICE_", null, 18, 2, COMPONENT_DETAILS));
+        expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, H_BIG_DECIMAL, "PURCHASEPRICE_", null, 18, 2, COMPONENT_DETAILS));
         expected.add(ppi("fuelUsages", FUEL_USAGE, true, null, Collections.<PropertyColumn> emptyList(), COLLECTIONAL));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
         actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(VEHICLE));
+        
         assertTrue(actual.containsAll(expected));
     }
 

@@ -25,7 +25,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  *
  */
 public class HibernateMappingsGenerator {
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger LOGGER = Logger.getLogger(HibernateMappingsGenerator.class);
     
     public String generateMappings(final DomainMetadata domainMetadata) {
         final Collection<PersistedEntityMetadata<?>> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
@@ -48,7 +48,7 @@ public class HibernateMappingsGenerator {
         sb.append("</hibernate-mapping>");
 
         final String result = sb.toString();
-        logger.debug("\n\n" + result + "\n\n");
+        LOGGER.debug("\n\n" + result + "\n\n");
         return result;
     }
 
@@ -158,7 +158,7 @@ public class HibernateMappingsGenerator {
         }
 
         for (final PropertyMetadata ppi : entityMetadata.getProps().values()) {
-            if (ppi.affectsMapping() && !specialProps.contains(ppi.getName())) {
+            if (ppi.affectsMapping() && !specialProps.contains(ppi.getName()) && !ppi.isCalculatedCompositeUserTypeHeader()) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi, dbVersion));
             }
         }

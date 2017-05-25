@@ -102,5 +102,15 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
         }
         return result;
     }
+    
+    public int countUnionEntityProps() {
+        int result = 0;
+        for (final PropertyMetadata propMetadata : props.values()) {
+            if (propMetadata.isUnionEntity()) {
+                result = result + 1;
+            }
+        }
+        return result;
+    }
 
 }
