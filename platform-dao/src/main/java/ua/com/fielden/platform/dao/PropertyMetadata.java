@@ -19,9 +19,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.log4j.Logger;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.type.Type;
 
@@ -100,6 +100,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return expressionModel != null && type != COMPONENT_HEADER;
     }
 
+    public boolean isCalculatedCompositeUserTypeHeader() {
+        return expressionModel != null && type == COMPONENT_HEADER;
+    }
+
     public boolean isCompositeProperty() {
         return getHibTypeAsCompositeUserType() != null;
     }
@@ -158,7 +162,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
             logger.debug("=== (COMPONENT_HEADER.equals(type)) = " + COMPONENT_HEADER.equals(type) + "=== (SYNTHETIC_COMPONENT_HEADER.equals(type)) = " + SYNTHETIC_COMPONENT_HEADER.equals(type) + " ---- (getHibTypeAsCompositeUserType() != null) = " + (getHibTypeAsCompositeUserType() != null));
             final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
             final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
-            PropertyCategory detailsPropCategory = COMPONENT_HEADER.equals(type) ?  COMPONENT_DETAILS : SYNTHETIC_COMPONENT_DETAILS;
+            final PropertyCategory detailsPropCategory = COMPONENT_HEADER.equals(type) ?  COMPONENT_DETAILS : SYNTHETIC_COMPONENT_DETAILS;
             if (subprops.size() == 1) {
                 final Object hibType = subpropsTypes.get(0);
                 if (expressionModel != null) {
