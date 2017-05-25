@@ -226,8 +226,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final AbstractEntity<?> masterEntity = masterEntity();
             if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
                 final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                if (masterFuncEntity.getContext() != null && masterFuncEntity.getContext().getMasterEntity() != null) {
-                    final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.getContext().getMasterEntity();
+                if (masterFuncEntity.context() != null && masterFuncEntity.context().getMasterEntity() != null) {
+                    final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
                     if (masterEntityOfMasterEntity.get("key") != null) {
                         return type.isAssignableFrom(masterEntityOfMasterEntity.get("key").getClass());
                     }
@@ -240,7 +240,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected <M extends AbstractEntity<?>> M masterEntityKeyOfMasterEntity(final Class<M> type) {
         final AbstractEntity<?> masterEntity = masterEntity();
         final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.getContext().getMasterEntity();
+        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
         return (M) masterEntityOfMasterEntity.get("key");
     }
     

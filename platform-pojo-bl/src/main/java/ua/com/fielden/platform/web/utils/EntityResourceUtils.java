@@ -84,11 +84,11 @@ public class EntityResourceUtils {
         // TODO remove this method and its usage!
         // TODO remove this method and its usage!
         // TODO remove this method and its usage!
-        if (entity instanceof AbstractFunctionalEntityWithCentreContext && ((AbstractFunctionalEntityWithCentreContext) entity).getContext() != null) {
-            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-            funcEntity.setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-            funcEntity.getProperty("context").resetState();
-        }
+//        if (entity instanceof AbstractFunctionalEntityWithCentreContext && ((AbstractFunctionalEntityWithCentreContext) entity).getContext() != null) {
+//            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+//            funcEntity.setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+//            funcEntity.getProperty("context").resetState();
+//        }
         return entity;
     }
     

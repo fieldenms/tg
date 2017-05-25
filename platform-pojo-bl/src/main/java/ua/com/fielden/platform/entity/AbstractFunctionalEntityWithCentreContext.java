@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -17,23 +13,23 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @param <K>
  */
 public abstract class AbstractFunctionalEntityWithCentreContext<K extends Comparable<?>> extends AbstractEntity<K> {
-//    private CentreContext<?, ?> context;
-//    
-//    public CentreContext<?, ?> context() {
-//        return context;
-//    }
-//    
-//    public void setContext(final CentreContext<?, ?> context) {
-//        this.context = context;
-//    }
+    private CentreContext<?, ?> context;
+    
+    public CentreContext<?, ?> context() {
+        return context;
+    }
+    
+    public void setContext(final CentreContext<?, ?> context) {
+        this.context = context;
+    }
     
     // TODO Please remove following properties that have been commented out once the proposed approach (no context inside functional entity) will be proved feasible.
     // TODO Also consider removal of AbstractFunctionalEntityWithCentreContext base class at all. See '.setKey("dummy")' inside DefaultEntityProducerWithContext.
     
-    @IsProperty
-    @Title(value = "Context", desc = "Context")
-    @Invisible
-    private CentreContext<?, ?> context;
+//    @IsProperty
+//    @Title(value = "Context", desc = "Context")
+//    @Invisible
+//    private CentreContext<?, ?> context;
 //    
 //    @IsProperty
 //    @Title(value = "Chosen Property", desc = "Desc")
@@ -50,13 +46,13 @@ public abstract class AbstractFunctionalEntityWithCentreContext<K extends Compar
 //        return chosenProperty;
 //    }
 //
-    @Observable
-    public AbstractFunctionalEntityWithCentreContext<K> setContext(final CentreContext<?, ?> context) {
-        this.context = context;
-        return this;
-    }
-
-    public CentreContext<?, ?> getContext() {
-        return context;
-    }
+//    @Observable
+//    public AbstractFunctionalEntityWithCentreContext<K> setContext(final CentreContext<?, ?> context) {
+//        this.context = context;
+//        return this;
+//    }
+//
+//    public CentreContext<?, ?> getContext() {
+//        return context;
+//    }
 }
