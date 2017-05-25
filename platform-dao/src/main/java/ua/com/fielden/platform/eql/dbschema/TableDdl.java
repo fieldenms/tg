@@ -34,7 +34,15 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * 
+ * Generates DDL to create a table, primary key, indices (including unique) and foreign keys for the specified persistent type.
+ * <p>
+ * There are four separate methods to generate different aspects of DDL:
+ * <ul>
+ * <li><code>createTableSchema</code> -- generates <code>CREATE TABLE</code> statement.
+ * <li><code>createPkSchema</code> -- generates DDL for creation of a primary key statement.
+ * <li><code>createIndicesSchema</code> -- generates DDL for creation of all unique and non-unique indices.
+ * <li><code>createFkSchema</code> -- generates DDL for creation of all foreign keys; it is expected that all referenced tables are present when this DDL is executed.
+ * </ul>
  * 
  * @author TG Team
  *
