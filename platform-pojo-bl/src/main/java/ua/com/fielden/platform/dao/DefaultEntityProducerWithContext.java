@@ -68,6 +68,10 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
                 
+                if (context != null) {
+                    funcEntity.setContext(context);
+                }
+                
                 if (String.class.isAssignableFrom(entity.getKeyType())) {
                     ((AbstractFunctionalEntityWithCentreContext<String>) funcEntity).setKey("dummy");
                 }
@@ -215,6 +219,29 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     
     protected <M extends AbstractEntity<?>> boolean masterEntityInstanceOf(final Class<M> type) {
         return masterEntityNotEmpty() && type.isAssignableFrom(masterEntity().getClass());
+    }
+    
+    protected <M extends AbstractEntity<?>> boolean masterEntityKeyOfMasterEntityInstanceOf(final Class<M> type) {
+        if (masterEntityNotEmpty()) {
+            final AbstractEntity<?> masterEntity = masterEntity();
+            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
+                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+                if (masterFuncEntity.getContext() != null && masterFuncEntity.getContext().getMasterEntity() != null) {
+                    final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.getContext().getMasterEntity();
+                    if (masterEntityOfMasterEntity.get("key") != null) {
+                        return type.isAssignableFrom(masterEntityOfMasterEntity.get("key").getClass());
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    protected <M extends AbstractEntity<?>> M masterEntityKeyOfMasterEntity(final Class<M> type) {
+        final AbstractEntity<?> masterEntity = masterEntity();
+        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.getContext().getMasterEntity();
+        return (M) masterEntityOfMasterEntity.get("key");
     }
     
     // CHOSEN PROPERTY:
