@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 import org.hibernate.dialect.Dialect;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -34,11 +33,17 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class TableDefinition {
+/**
+ * 
+ * 
+ * @author TG Team
+ *
+ */
+public class TableDdl {
     public final Class<? extends AbstractEntity<?>> entityType;
     private final Set<ColumnDefinition> columns;
 
-    public TableDefinition(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
+    public TableDdl(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
         this.columns = populateColumns(columnDefinitionExtractor, entityType);
     }

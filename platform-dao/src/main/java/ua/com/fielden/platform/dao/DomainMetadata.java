@@ -87,7 +87,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
-import ua.com.fielden.platform.eql.dbschema.TableDefinition;
+import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
@@ -119,6 +119,8 @@ public class DomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
+    private final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
@@ -129,7 +131,7 @@ public class DomainMetadata {
     }
 
     public DomainMetadata(//
-    final Map<Class, Class> hibTypesDefaults, //
+            final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final MapEntityTo userMapTo, //
@@ -141,6 +143,8 @@ public class DomainMetadata {
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.modelledEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        
+        this.entityTypes = new ArrayList<>(entityTypes);
         
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
@@ -196,54 +200,29 @@ public class DomainMetadata {
             }
         });
         
-//        final List<String> ddl = printDdl(new SQLServer2008Dialect(), entityTypes);
-//        final String goDelimiter = "\nGO\n";
-//        LOGGER.debug("\n\n" + ddl.stream().collect(joining(goDelimiter)) + "\n\n");
-//        
-//        try {
-//            Files.write(Paths.get("tg-air-ddl.sql"), ddl.stream().map(st -> st + goDelimiter).collect(toList()), StandardCharsets.UTF_8);
-//            LOGGER.debug("Completed DDL generation and saving to file.");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        
-        
         //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
         //System.out.println(printEntitiesMetadataSummary("Synthetic entities metadata summary:", modelledEntityMetadataMap));
         //enhanceWithCalcProps(entityMetadataMap.values());
     }
     
     
-    private List<String> printDdl(final Dialect dialect, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final List<String> ddlTables = new LinkedList<>();
-        ddlTables.add("EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\";");
-        ddlTables.add(
-                "WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'))"+
-                "BEGIN"+
-                "    DECLARE @sql_alterTable_fk NVARCHAR(4000)"+
-                ""+
-                "    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']')"+
-                "    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS"+
-                "    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY'"+
-                ""+
-                "    EXEC (@sql_alterTable_fk)"+
-                "END");
-        ddlTables.add("EXEC sp_MSforeachtable @command1 = \"DROP TABLE ?\";");
-        ddlTables.add(
-                "CREATE TABLE UNIQUE_ID (" +
-                "  _ID INT NOT NULL PRIMARY KEY," +
-                "  NEXT_VALUE INT NOT NULL);");
-        ddlTables.add("INSERT INTO UNIQUE_ID VALUES(1, 0);");
+    /**
+     * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types, which includes domain entities and auxiliary platform entities.
+     * 
+     * @param dialect
+     * @return
+     */
+    public List<String> generateDatabaseDdl(final Dialect dialect) {
         
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         
         final List<Class<? extends AbstractEntity<?>>> persystentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
         
-        //persystentTypes
+        final List<String> ddlTables = new LinkedList<>();
         final List<String> ddlFKs = new LinkedList<>();
         
         for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
-            final TableDefinition tableDefinition = new TableDefinition(columnDefinitionExtractor, entityType);
+            final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
             ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
@@ -256,7 +235,7 @@ public class DomainMetadata {
     }
     
     private String printEntitiesMetadataSummary(final String header, final Map<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> map) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append(header);
         sb.append("\n");
         int pecalcpc = 0;
