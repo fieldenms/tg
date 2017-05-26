@@ -890,6 +890,10 @@
         return obj && (obj instanceof _DEKPrototype);
     };
     
+    const _isMoney = function (value) {
+        return value !== null && typeof value === 'object' && typeof value.amount !== 'undefined';
+    };
+    
     /**
      * Returns 'true' if the regular values are equal, 'false' otherwise.
      */
@@ -910,6 +914,11 @@
             return _entitiesEqualsEx(value1, value2);
         } else if (Array.isArray(value1)) {
             return _arraysEqualsEx(value1, value2);
+        } else if (_isMoney(value1)) {
+            if (!_isMoney(value2)) {
+                return false;
+            }
+            return _equalsEx(value1.amount, value2.amount);
         }
         return value1 === value2;
     };
