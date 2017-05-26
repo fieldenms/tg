@@ -895,6 +895,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Division daily management")
                 .description("Division daily management")
+                .withAction(StandardActions.NEW_ACTIONS_WITHOUT_CONTEXT.mkAction(TgPersistentEntityWithProperties.class))
                 .icon("menu:divisional-daily-management")
                 .detailIcon("menu-detailed:divisional-daily-management")
                 .bgColor("#CFD8DC")

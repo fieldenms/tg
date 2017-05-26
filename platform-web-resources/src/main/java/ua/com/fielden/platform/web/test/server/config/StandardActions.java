@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.test.server.config;
 
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
 import java.util.function.Function;
 
@@ -65,6 +65,38 @@ public enum StandardActions {
                     prefDimForView(prefDim).
                     withNoParentCentreRefresh().
                     build();
+        }
+    },
+
+    NEW_ACTIONS_WITHOUT_CONTEXT {
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
+            return mkAction(entityType, (PrefDim) null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
+            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
+
+            return action(EntityNewAction.class).
+                    withContext(context().withSelectionCrit().withComputation(entity -> entityType).build()).
+                    icon("add-circle-outline").
+                    shortDesc(format("Add new %s", entityTitle)).
+                    longDesc(format("Start creation of %s", entityTitle)).
+                    shortcut("alt+n").
+                    prefDimForView(prefDim).
+                    withNoParentCentreRefresh().
+                    build();
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+            throw new UnsupportedOperationException("It's imposible to provide custom compution for this kind of action!");
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+            throw new UnsupportedOperationException("It's imposible to provide custom compution for this kind of action!");
         }
     },
 

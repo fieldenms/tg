@@ -22,7 +22,9 @@
         <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]">
+                <!--menu action dom-->
+            </tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
                 <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
             </template>
@@ -361,6 +363,9 @@
                 attached: function () {
                     var self = this;
                     this.async(function () {
+                        self.topLevelActions = [
+                            //actionsObject
+                        ];
                         if (!this._route.path) {
                             this.set("_route.path", "/menu");
                         }

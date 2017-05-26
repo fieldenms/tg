@@ -1,12 +1,9 @@
 package ua.com.fielden.platform.web.menu.impl;
 
-import static java.lang.String.format;
-
-import org.apache.commons.lang.StringUtils;
-
+import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.layout.TileLayout;
@@ -23,7 +20,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
  * @author TG Team
  *
  */
-public class MainMenuBuilder implements IMainMenuBuilderWithLayout, IExecutable {
+public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
 
     private final WebMainMenu mainMenu = new WebMainMenu();
     private final TileLayout tileLayout = new TileLayout();
@@ -46,26 +43,8 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout, IExecutable 
         return layoutConfig;
     }
 
-    @Override
-    public JsCode code() {
-        final String desktopLayout = this.tileLayout.getLayout(Device.DESKTOP, null).get();
-        final String tabletLayout = this.tileLayout.getLayout(Device.TABLET, null).get();
-        final String mobileLayout = this.tileLayout.getLayout(Device.MOBILE, null).get();
-        final StringBuilder menuConfig = new StringBuilder();
-        if (!StringUtils.isEmpty(desktopLayout)) {
-            menuConfig.append(format("whenDesktop: %s, ", desktopLayout));
-        }
-        if (!StringUtils.isEmpty(tabletLayout)) {
-            menuConfig.append(format("whenTablet: %s, ", tabletLayout));
-        }
-        if (!StringUtils.isEmpty(mobileLayout)) {
-            menuConfig.append(format("whenMobile: %s, ", mobileLayout));
-        }
-        menuConfig.append(format("minCellWidth: '%spx', ", tileLayout.getMinCellWidth()));
-        menuConfig.append(format("minCellHeight: '%spx', ", tileLayout.getMinCellHeight()));
-        menuConfig.append(format("items: %s", mainMenu.code()));
-
-        return new JsCode(format("{%s}", menuConfig));
+    public Pair<DomElement, JsCode> generateMenuActions() {
+        return mainMenu.generateMenuActions();
     }
 
     public Menu getMenu() {

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilderWithLayout;
 import ua.com.fielden.platform.web.menu.IModuleConfig;
@@ -12,9 +13,10 @@ import ua.com.fielden.platform.web.menu.module.IModuleConfig2;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig3;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig4;
 import ua.com.fielden.platform.web.menu.module.IModuleConfigDone;
+import ua.com.fielden.platform.web.menu.module.IModuleConfigWithAction;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfig1, IModuleConfig2, IModuleConfig3, IModuleConfig4, IModuleConfigDone {
+public class ModuleConfig implements IModuleConfig, IModuleConfigWithAction, IModuleConfig0, IModuleConfig1, IModuleConfig2, IModuleConfig3, IModuleConfig4, IModuleConfigDone {
 
     private final WebMenuModule module;
     private final MainMenuBuilder menuConfig;
@@ -25,8 +27,14 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
     }
 
     @Override
-    public IModuleConfig0 description(final String description) {
+    public IModuleConfigWithAction description(final String description) {
         module.description(description);
+        return this;
+    }
+
+    @Override
+    public IModuleConfigWithAction withAction(final EntityActionConfig actionConfig) {
+        module.addAction(actionConfig);
         return this;
     }
 
@@ -81,5 +89,4 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
     public IMainMenuBuilderWithLayout done() {
         return menuConfig;
     }
-
 }
