@@ -40,7 +40,7 @@ public class LoginCompleteResetResource extends ServerResource {
     private static final String WEAK_SECRET_ERROR = "Password is not strong enough.";
     private static final String SECRET_MISMATCH_ERROR = "The new and confirmed passwords do not match.";
     private static final String DEMO_SECRET_ERROR = "Demo password should not be used.";
-    private static final String DEMO_SECRET = "Ambulance services save many lives.";
+    private final String demoSecret;
 
     private static final Logger LOGGER = Logger.getLogger(LoginCompleteResetResource.class);
 
@@ -51,12 +51,14 @@ public class LoginCompleteResetResource extends ServerResource {
      * Creates {@link LoginCompleteResetResource}.
      */
     public LoginCompleteResetResource(//
+            final String demoSecret,
             final IUser coUser,
             final IUserProvider up,
             final Context context,
             final Request request,
             final Response response) {
         init(context, request, response);
+        this.demoSecret = demoSecret;
         this.coUser = coUser;
         this.up = up;
     }
@@ -96,11 +98,11 @@ public class LoginCompleteResetResource extends ServerResource {
         }
     }
 
-    private static Representation pageToProvideNewPassword(final String uuid, final Logger logger) {
+    private Representation pageToProvideNewPassword(final String uuid, final Logger logger) {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-complete-reset.html")
                     .replace("@title", "Login Complete Reset")
-                    .replace("@demoPassword", DEMO_SECRET)
+                    .replace("@demoPassword", demoSecret)
                     .replace("@demoPasswdError", DEMO_SECRET_ERROR)
                     .replace("@uuidExpired", UUID_EXPIRED_ERROR)
                     .replace("@weakPassword", WEAK_SECRET_ERROR)
@@ -137,7 +139,7 @@ public class LoginCompleteResetResource extends ServerResource {
                 final String passwd = form.getValues("passwd");
                 final String passwdConfirmed = form.getValues("passwd-confirmed");
                 // validate the password
-                if (DEMO_SECRET.equalsIgnoreCase(passwd)) {
+                if (demoSecret.equalsIgnoreCase(passwd)) {
                     getResponse().setEntity(new JsonRepresentation(format(msgTemplate, DEMO_SECRET_ERROR)));
                     getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 } else if (!coUser.isPasswordStrong(passwd)) {
