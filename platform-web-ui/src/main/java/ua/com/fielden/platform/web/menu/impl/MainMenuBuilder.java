@@ -4,6 +4,8 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.layout.TileLayout;
@@ -45,6 +47,10 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
 
     public Pair<DomElement, JsCode> generateMenuActions() {
         return mainMenu.generateMenuActions();
+    }
+
+    public EntityActionConfig getAtionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
+        return mainMenu.getAtionConfig(actionNumber, actionKind);
     }
 
     public Menu getMenu() {

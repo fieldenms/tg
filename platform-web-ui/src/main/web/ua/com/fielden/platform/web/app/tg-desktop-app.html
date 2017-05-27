@@ -31,7 +31,7 @@
         </neon-animated-pages>
         <tg-entity-master
             id="masterDom"
-            entity-type="ua.com.fielden.platform.menu.Menu"
+            entity-type="[[entityType]]"
             entity-id="new"
             hidden
             _post-validated-default="[[_postValidatedDefault]]"
@@ -113,6 +113,8 @@
                             return document.body;
                         }
                     },
+                    
+                    entityType: String,
                     
                     _route: {
                         type: Object,
@@ -341,6 +343,8 @@
                             this.$.menuSaveAction._run();
                         }, 500);
                     }.bind(this);
+                    //Init master realted properties
+                    this.entityType = "ua.com.fielden.platform.menu.Menu";
                     //Init master related functions.
                     this.postRetrieved = function (entity, bindingEntity, customObject) {
                         this.menuConfig = entity;

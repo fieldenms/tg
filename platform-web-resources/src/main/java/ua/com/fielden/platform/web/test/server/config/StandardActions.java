@@ -68,38 +68,6 @@ public enum StandardActions {
         }
     },
 
-    NEW_ACTIONS_WITHOUT_CONTEXT {
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
-            return mkAction(entityType, (PrefDim) null);
-        }
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
-            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
-
-            return action(EntityNewAction.class).
-                    withContext(context().withSelectionCrit().withComputation(entity -> entityType).build()).
-                    icon("add-circle-outline").
-                    shortDesc(format("Add new %s", entityTitle)).
-                    longDesc(format("Start creation of %s", entityTitle)).
-                    shortcut("alt+n").
-                    prefDimForView(prefDim).
-                    withNoParentCentreRefresh().
-                    build();
-        }
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
-            throw new UnsupportedOperationException("It's imposible to provide custom compution for this kind of action!");
-        }
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
-            throw new UnsupportedOperationException("It's imposible to provide custom compution for this kind of action!");
-        }
-    },
-
     NEW_WITH_MASTER_ACTION {
         @Override
         public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {

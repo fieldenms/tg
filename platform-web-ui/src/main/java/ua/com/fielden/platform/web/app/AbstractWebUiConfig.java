@@ -42,9 +42,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = Logger.getLogger(getClass());
     private final String title;
     private WebUiBuilder webUiBuilder;
-    private MainMenuBuilder desktopMainMenuConfig;
-    private MainMenuBuilder mobileMainMenuConfig;
     private Injector injector;
+
+    protected MainMenuBuilder desktopMainMenuConfig;
+    protected MainMenuBuilder mobileMainMenuConfig;
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
      * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
