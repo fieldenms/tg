@@ -20,9 +20,11 @@ import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
 public class LoginCompleteResetResourceFactory extends Restlet {
 
     private final Injector injector;
+    private final String demoSecret;
 
-    public LoginCompleteResetResourceFactory(final Injector injector) {
+    public LoginCompleteResetResourceFactory(final Injector injector, final String demoSecret) {
         this.injector = injector;
+        this.demoSecret = demoSecret;
     }
 
     @Override
@@ -31,6 +33,7 @@ public class LoginCompleteResetResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
             new LoginCompleteResetResource(
+                    demoSecret,
                     injector.getInstance(IUser.class),
                     injector.getInstance(IUserProvider.class),
                     getContext(),
