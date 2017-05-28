@@ -21,7 +21,7 @@ public class MenuWebUiConfig {
         return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector) {
             @Override
             public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-                return menuBuilder.getAtionConfig(actionNumber, actionKind);
+                return menuBuilder.getActionConfig(actionNumber, actionKind);
             }
         };
     }

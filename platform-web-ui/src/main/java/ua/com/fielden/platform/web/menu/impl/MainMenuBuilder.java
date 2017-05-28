@@ -49,8 +49,8 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
         return mainMenu.generateMenuActions();
     }
 
-    public EntityActionConfig getAtionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
-        return mainMenu.getAtionConfig(actionNumber, actionKind);
+    public EntityActionConfig getActionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
+        return mainMenu.getActionConfig(actionNumber, actionKind);
     }
 
     public Menu getMenu() {

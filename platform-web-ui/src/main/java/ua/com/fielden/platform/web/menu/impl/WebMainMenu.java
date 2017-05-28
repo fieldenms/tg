@@ -51,7 +51,7 @@ public class WebMainMenu implements IExecutable {
         return new Pair<>(new DomContainer().add(actionDomElements.toArray(new DomElement[0])), new JsCode(StringUtils.join(propActions, ",\n")));
     }
 
-    public EntityActionConfig getAtionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
+    public EntityActionConfig getActionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
         if (actionKind == FunctionalActionKind.TOP_LEVEL) {
             int numberOfActions = 0;
             for (final WebMenuModule webMenuModule : modules) {
