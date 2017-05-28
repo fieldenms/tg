@@ -41,6 +41,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
@@ -58,11 +59,13 @@ import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
@@ -95,6 +98,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties
 import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
@@ -105,6 +109,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
@@ -374,7 +379,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
 
-        final MenuWebUiConfig menuWebUiConfig = new MenuWebUiConfig(injector());
+        final MenuWebUiConfig menuWebUiConfig = new MenuWebUiConfig(injector(), desktopMainMenuConfig);
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
@@ -878,6 +883,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Import utilities")
                 .description("Import utilities")
+                .withAction(actionForMainMenu(TgGeneratedEntity.class, "copyright", "color: yellow", null))
                 .icon("menu:import-utilities")
                 .detailIcon("menu-detailed:import-utilities")
                 .bgColor("#5FBCD3")
@@ -895,6 +901,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Division daily management")
                 .description("Division daily management")
+                .withAction(actionForMainMenu(TgPersistentEntityWithProperties.class, "add-circle", "color: red", null))
+                .withAction(actionForMainMenu(TgEntityWithTimeZoneDates.class, "event", "color: green", null))
                 .icon("menu:divisional-daily-management")
                 .detailIcon("menu-detailed:divisional-daily-management")
                 .bgColor("#CFD8DC")
@@ -993,6 +1001,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setLayoutFor(Device.TABLET, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"rowspan\": 2,\"colspan\": 2}]],[[], []],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"colspan\": 2}]]]")
                 .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
+    }
+
+    private EntityActionConfig actionForMainMenu(final Class<? extends AbstractEntity<?>> entityType, final String icon, final String style, final PrefDim prefDim) {
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
+
+        return action(EntityNewAction.class).
+                withContext(context().withSelectionCrit().withComputation(entity -> entityType).build()).
+                icon(icon).
+                withStyle(style).
+                shortDesc(format("Add new %s", entityTitle)).
+                longDesc(format("Start creation of %s", entityTitle)).
+                shortcut("alt+n").
+                prefDimForView(prefDim).
+                withNoParentCentreRefresh().
+                build();
     }
 
     private static IMaster<TgCreatePersistentStatusAction> masterConfigForTgCreatePersistentStatusAction() {

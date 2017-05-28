@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dom;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -259,7 +260,7 @@ public class DomElement {
         		if (Boolean.TRUE.equals(value)) {
         			attrs.put(name, new NoValueAttribute(name));
         		}
-        	} else {  
+        	} else {
         		attrs.put(name, new SingleValueAttribute(name, value));
         	}
             break;
@@ -290,6 +291,15 @@ public class DomElement {
      */
     public Attribute<?> getAttr(final String name) {
         return attrs.containsKey(name) ? attrs.get(name) : null;
+    }
+
+    /**
+     * Returns all specified attributes.
+     *
+     * @return
+     */
+    public Map<String, Attribute<?>> getAttrs() {
+        return Collections.unmodifiableMap(attrs);
     }
 
     /**

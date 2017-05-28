@@ -405,7 +405,7 @@
         ready: function () {
             var self = this;
             
-            self._run = (function () {
+            self._run = (function (event) {
                 console.log(this.shortDesc + ": execute");
                 
                 self.persistActiveElement();
@@ -422,6 +422,16 @@
                     });
                 } else {
                 	this.showDialog(this);
+                }
+                if (event) {
+                    if (event.stopPropagation) {
+                        event.stopPropagation();
+                    }
+                    if (event.preventDefault) {
+                        event.preventDefault();
+                    }
+                    event.cancelBubble = true;
+                    event.returnValue = false;
                 }
             }).bind(self);
             

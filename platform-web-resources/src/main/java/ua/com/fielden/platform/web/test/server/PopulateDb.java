@@ -157,7 +157,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
         save(colourEntity);
-        save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
+        save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS").setCritOnlySingleProp(new Date()));
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
@@ -189,11 +189,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
         save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
         save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
-        
+
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
-        
+
         save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co(TgPersistentStatus.class).findByKey("DR")));
-        
+
         logger.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
@@ -206,7 +206,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             for (final Object oldMessageEntity: oldMessageEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldMessageEntity;
                 final Map<String, Object> messageProps = ((Map<String, Object>) map.get("properties"));
-                final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key"); 
+                final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key");
                 TgMachine found = machines.get(machineKey);
                 if (found == null) {
                     final TgMachine newMachine = new_(TgMachine.class, machineKey);
@@ -229,7 +229,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
         logger.info("\tPopulating machines...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -242,7 +242,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             for (final Object oldMachineEntity: oldMachineEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldMachineEntity;
                 final Map<String, Object> machineProps = ((Map<String, Object>) map.get("properties"));
-                final String machineKey = (String) machineProps.get("key"); 
+                final String machineKey = (String) machineProps.get("key");
                 TgMachine found = machines.get(machineKey);
                 if (found == null) {
                     final TgMachine newMachine = new_(TgMachine.class, machineKey);
@@ -265,7 +265,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 final Object lastMessageObject = machineProps.get("lastMessage");
                 if (lastMessageObject != null) {
                     final Map<String, Object> lastMessageProps = (Map<String, Object>) ((Map<String, Object>) lastMessageObject).get("properties");
-                    
+
                     save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) lastMessageProps.get("gpsTime"))).toDate())
                             .setX(BigDecimal.valueOf((double) lastMessageProps.get("x")))
                             .setY(BigDecimal.valueOf((double) lastMessageProps.get("y")))
@@ -282,7 +282,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
         logger.info("\tPopulating geozones...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -290,12 +290,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final InputStream stream = new FileInputStream(file);
             final ObjectMapper objectMapper = new ObjectMapper();
             final ArrayList oldPolygonEntities = objectMapper.readValue(stream, ArrayList.class);
-            
+
             final Map<String, TgPolygon> polygons = new HashMap<>();
             for (final Object oldPolygonEntity: oldPolygonEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldPolygonEntity;
                 final Map<String, Object> polygonProps = ((Map<String, Object>) map.get("properties"));
-                final String polygonKey = (String) polygonProps.get("key"); 
+                final String polygonKey = (String) polygonProps.get("key");
                 TgPolygon found = polygons.get(polygonKey);
                 if (found == null) {
                     final TgPolygon newPolygon = new_(TgPolygon.class, polygonKey);
@@ -303,7 +303,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                     found = save(newPolygon);
                     polygons.put(polygonKey, found);
                 }
-                
+
                 final ArrayList<Object> coordinates = (ArrayList<Object>) polygonProps.get("coordinates");
                 for (final Object coord: coordinates) {
                     final Map<String, Object> coordProps = ((Map<String, Object>) ((Map<String, Object>) coord).get("properties"));
