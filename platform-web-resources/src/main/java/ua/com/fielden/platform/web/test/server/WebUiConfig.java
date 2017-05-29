@@ -948,6 +948,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Maintenance")
                 .description("Maintenance")
+                .withAction(actionForMainMenu(TgPersistentEntityWithProperties.class, "add-circle", "color: red", null))
                 .icon("menu:maintenance")
                 .detailIcon("menu-detailed:maintenance")
                 .bgColor("#00AAD4")

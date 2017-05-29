@@ -63,6 +63,9 @@
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
+        .tile-toolbar[action-disabled] ::content tg-ui-action {
+            pointer-events: none;
+        }
     </style>
 
     <template>
@@ -85,7 +88,7 @@
                                         <iron-icon class="fit" style$="[[_calcIconStyleForItem(item)]]" icon="[[item.icon]]"></iron-icon>
                                     </div>
                                 </div>
-                                <div class="layut horizontal wrap">
+                                <div class="tile-toolbar layut horizontal wrap" action-disabled$="[[_isDisabled(item)]]">
                                     <content select$="[[_calcModuleSelect(item)]]"></content>
                                 </div>
                             </div>
@@ -208,6 +211,9 @@
             },
             _calcModuleSelect: function (item) {
                 return "tg-ui-action[action-module-group='" + item.key + "']"
+            },
+            _isDisabled: function(item) {
+                return !isMenuPresent(item.menu);
             }
         });
     })();
