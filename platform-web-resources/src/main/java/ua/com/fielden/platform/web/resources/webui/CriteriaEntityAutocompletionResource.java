@@ -141,8 +141,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                     centreContextHolder, 
                     criteriaEntity, 
                     contextConfig,
-                    criterionPropertyName, /* TODO would it be useful to contain criterionPropertyName and perhaps from/to or is/is_not prefixes in ChosenProperty? Please investigate. */
-                    null /* compoundMasterEntityId is not applicable here */
+                    criterionPropertyName /* TODO would it be useful to contain criterionPropertyName and perhaps from/to or is/is_not prefixes in ChosenProperty? Please investigate. */
                     );
             if (context.isPresent()) {
                 logger.debug("context for prop [" + criterionPropertyName + "] = " + context);

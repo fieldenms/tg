@@ -383,8 +383,7 @@ public class CriteriaResource extends ServerResource {
                             centreContextHolder,
                             criteriaEntity,
                             queryEnhancerConfig.get().getValue(),
-                            null, /* chosenProperty is not applicable in queryEnhancer context */
-                            null /* compoundMasterEntityId is not applicable in queryEnhancer context */
+                            null /* chosenProperty is not applicable in queryEnhancer context */
                             )//
             ));
         } else {

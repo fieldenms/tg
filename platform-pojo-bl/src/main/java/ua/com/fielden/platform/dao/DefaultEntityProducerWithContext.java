@@ -173,11 +173,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected String getChosenProperty() {
         return context == null ? null : context.getChosenProperty();
     }
-
-    @Deprecated
-    protected Long getCompoundMasterEntityId() {
-        return context == null ? null : context.getCompoundMasterEntityId();
-    }
     
     
     

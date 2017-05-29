@@ -55,7 +55,6 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
 
-    private Long compoundMasterEntityId;
     private String chosenProperty;
     
     public T getCurrEntity() {
@@ -108,7 +107,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     @Override
     public String toString() {
-        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s,\ncomputation=%s\n,\nchosenProperty=%s\n,\ncompoundMasterEntityId=%s\n]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, compoundMasterEntityId);
+        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s,\ncomputation=%s\n,\nchosenProperty=%s\n]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty);
     }
 
     public void setComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
@@ -125,14 +124,5 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     
     public void setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
-    }
-    
-    @Deprecated
-    public Long getCompoundMasterEntityId() {
-        return compoundMasterEntityId;
-    }
-    
-    public void setCompoundMasterEntityId(final Long compoundMasterEntityId) {
-        this.compoundMasterEntityId = compoundMasterEntityId;
     }
 }

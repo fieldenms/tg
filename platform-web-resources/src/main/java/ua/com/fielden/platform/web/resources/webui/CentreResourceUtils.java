@@ -468,8 +468,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final CentreContextHolder centreContextHolder,
             final M criteriaEntity,
             final Optional<CentreContextConfig> contextConfig,
-            final String chosenProperty,
-            final Long compoundMasterEntityId
+            final String chosenProperty
     ) {
         if (contextConfig.isPresent()) {
             final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
@@ -488,7 +487,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setComputation(config.computation.get());
             }
             context.setChosenProperty(chosenProperty);
-            context.setCompoundMasterEntityId(compoundMasterEntityId);
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -514,8 +512,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ArrayList<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
-            final String chosenProperty,
-            final Long compoundMasterEntityId
+            final String chosenProperty
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -525,7 +522,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             context.setComputation(config.get().context.get().computation.get());
         }
         context.setChosenProperty(chosenProperty);
-        context.setCompoundMasterEntityId(compoundMasterEntityId);
         return context;
     }
 
