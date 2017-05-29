@@ -364,6 +364,60 @@
                 done();
             });
             
+            test('equalsEx method works for money values', function (done) {
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, undefined), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, null), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, {}), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6 }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 44.6 }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD' }, { amount: 45.6 }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD' }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, taxPercent: null }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD', taxPercent: null }), true);
+                
+                assert.strictEqual(reflector.equalsEx(undefined, { amount: 45.6 }), false);
+                assert.strictEqual(reflector.equalsEx(null, { amount: 45.6 }), false);
+                assert.strictEqual(reflector.equalsEx({}, { amount: 45.6 }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD' }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD' }, { amount: 45.6 }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, taxPercent: null }, { amount: 45.6 }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD', taxPercent: null }, { amount: 45.6 }), true);
+                
+                done();
+            });
+            
+            test('equalsEx method works for colour values', function (done) {
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336' }, undefined), false);
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336' }, null), false);
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336' }, {}), false);
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336' }, { hashlessUppercasedColourValue: 'F44336' }), true);
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336' }, { hashlessUppercasedColourValue: 'F44338' }), false);
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336', redundantProp: '3' }, { hashlessUppercasedColourValue: 'F44336' }), true);
+                assert.strictEqual(reflector.equalsEx({ hashlessUppercasedColourValue: 'F44336' }, { hashlessUppercasedColourValue: 'F44336', redundantProp: '3' }), true);
+                
+                assert.strictEqual(reflector.equalsEx(undefined, { hashlessUppercasedColourValue: 'F44336' }), false);
+                assert.strictEqual(reflector.equalsEx(null, { hashlessUppercasedColourValue: 'F44336' }), false);
+                assert.strictEqual(reflector.equalsEx({}, { hashlessUppercasedColourValue: 'F44336' }), false);
+                
+                done();
+            });
+            
+            test('equalsEx method works for hyperlink values', function (done) {
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua' }, undefined), false);
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua' }, null), false);
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua' }, {}), false);
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua' }, { value: 'https://fielden.com.ua' }), true);
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua' }, { value: 'https://fielden.com.au' }), false);
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua', redundantProp: '3' }, { value: 'https://fielden.com.ua' }), true);
+                assert.strictEqual(reflector.equalsEx({ value: 'https://fielden.com.ua' }, { value: 'https://fielden.com.ua', redundantProp: '3' }), true);
+                
+                assert.strictEqual(reflector.equalsEx(undefined, { value: 'https://fielden.com.ua' }), false);
+                assert.strictEqual(reflector.equalsEx(null, { value: 'https://fielden.com.ua' }), false);
+                assert.strictEqual(reflector.equalsEx({}, { value: 'https://fielden.com.ua' }), false);
+                
+                done();
+            });
+            
             test('equalsEx method works for falsey values', function (done) {
                 assert.strictEqual(reflector.equalsEx(null, null), true, "Equal values should return 'true' from equalsEx method.");
                 assert.strictEqual(reflector.equalsEx(undefined, undefined), true, "Equal values should return 'true' from equalsEx method.");

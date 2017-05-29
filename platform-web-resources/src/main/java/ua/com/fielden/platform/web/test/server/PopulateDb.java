@@ -345,7 +345,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         for (int i = 0; i < 30; i++) {
             save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))
-                    .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic"))
+                    .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic").toUpperCase())
                     .setIntegerProp(random(43, 67, 24, 35, 18, 99, 23))
                     .setEntityProp(random(ent1, null, ent2))
                     .setBigDecimalProp(random(new BigDecimal(23).setScale(5), new BigDecimal(4).setScale(5), new BigDecimal(99).setScale(5)))
