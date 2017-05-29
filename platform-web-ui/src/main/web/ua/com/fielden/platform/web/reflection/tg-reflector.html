@@ -890,6 +890,29 @@
         return obj && (obj instanceof _DEKPrototype);
     };
     
+    const _isPropertyValueObject = function (value, subValueName) {
+        return value !== null && typeof value === 'object' && typeof value[subValueName] !== 'undefined';
+    };
+    
+    const _isMoney = function (value) {
+        return _isPropertyValueObject(value, 'amount');
+    };
+    const _moneyVal = function (value) {
+        return value['amount'];
+    };
+    const _isColour = function (value) {
+        return _isPropertyValueObject(value, 'hashlessUppercasedColourValue');
+    };
+    const _colourVal = function (value) {
+        return value['hashlessUppercasedColourValue'];
+    };
+    const _isHyperlink = function (value) {
+        return _isPropertyValueObject(value, 'value');
+    };
+    const _hyperlinkVal = function (value) {
+        return value['value'];
+    };
+    
     /**
      * Returns 'true' if the regular values are equal, 'false' otherwise.
      */
@@ -910,6 +933,12 @@
             return _entitiesEqualsEx(value1, value2);
         } else if (Array.isArray(value1)) {
             return _arraysEqualsEx(value1, value2);
+        } else if (_isMoney(value1)) {
+            return _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+        } else if (_isColour(value1)) {
+            return _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
+        } else if (_isHyperlink(value1)) {
+            return _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
         }
         return value1 === value2;
     };

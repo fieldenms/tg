@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.menu;
 
-import ua.com.fielden.platform.web.menu.module.IModuleConfig0;
+import ua.com.fielden.platform.web.menu.module.IModuleConfigWithAction;
 
 public interface IModuleConfig {
 
-    IModuleConfig0 description(String description);
+    IModuleConfigWithAction description(String description);
 
 }
