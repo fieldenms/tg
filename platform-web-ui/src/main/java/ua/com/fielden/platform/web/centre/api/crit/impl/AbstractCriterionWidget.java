@@ -11,9 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -40,6 +44,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
+    private final boolean isCritOnly;
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
 
@@ -54,6 +59,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
+        this.isCritOnly = StringUtils.isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
         this.editors = new Pair<>(editors[0].markAsCriterionEditor(), null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1].markAsCriterionEditor());
@@ -105,6 +111,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         }
         attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
+        if (isCritOnly) {
+            attrs.put("crit-only", null);
+        }
         return attrs;
     }
 

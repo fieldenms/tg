@@ -41,6 +41,13 @@
             validationCallback: {
                 type: Object
             },
+            
+            /**
+             * Indicates whether criterion for entity property has critOnly annotation or not.
+             */
+            critOnly: {
+                type: Boolean
+            },
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
@@ -223,7 +230,7 @@
          * Returns 'true' if the icon button of this criterion editor should be visible, 'false' otherwise.
          */
         _iconButtonVisible: function () {
-            return true;
+            return !this.critOnly;
         },
 
         /**

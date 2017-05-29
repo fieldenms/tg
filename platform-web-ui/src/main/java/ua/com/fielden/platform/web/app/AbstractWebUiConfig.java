@@ -9,11 +9,15 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
@@ -22,9 +26,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-
-import com.google.inject.Injector;
 
 /**
  * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
@@ -39,9 +42,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = Logger.getLogger(getClass());
     private final String title;
     private WebUiBuilder webUiBuilder;
-    private MainMenuBuilder desktopMainMenuConfig;
-    private MainMenuBuilder mobileMainMenuConfig;
     private Injector injector;
+
+    protected MainMenuBuilder desktopMainMenuConfig;
+    protected MainMenuBuilder mobileMainMenuConfig;
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
      * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
@@ -93,14 +97,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genDesktopMainWebUIComponent() {
+        final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-desktop-app.html").
-                replace("@menuConfig", desktopMainMenuConfig.code().toString());
+                replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
+                replace("//actionsObject", generatedMenu.getValue().toString());
     }
 
     @Override
     public final String genMobileMainWebUIComponent() {
+        final Pair<DomElement, JsCode> generatedMenu = mobileMainMenuConfig.generateMenuActions();
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-mobile-app.html").
-                replace("@menuConfig", mobileMainMenuConfig.code().toString());
+                replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
+                replace("//actionsObject", generatedMenu.getValue().toString());
     }
 
     @Override

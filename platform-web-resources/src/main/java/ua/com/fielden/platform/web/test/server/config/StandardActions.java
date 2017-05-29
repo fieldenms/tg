@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.test.server.config;
 
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
 import java.util.function.Function;
 

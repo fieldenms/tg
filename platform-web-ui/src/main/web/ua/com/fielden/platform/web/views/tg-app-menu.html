@@ -10,6 +10,13 @@
 <link rel="import" href="/resources/views/tg-app-animation-behavior.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/image-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <dom-module id="tg-app-menu">
     <style>
@@ -56,6 +63,9 @@
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
+        .tile-toolbar[action-disabled] ::content tg-ui-action {
+            pointer-events: none;
+        }
     </style>
 
     <template>
@@ -77,6 +87,9 @@
                                     <div class="item-icon-bg relative flex-auto" style$="[[_calcStyleForItem(item)]]">
                                         <iron-icon class="fit" style$="[[_calcIconStyleForItem(item)]]" icon="[[item.icon]]"></iron-icon>
                                     </div>
+                                </div>
+                                <div class="tile-toolbar layut horizontal wrap" action-disabled$="[[_isDisabled(item)]]">
+                                    <content select$="[[_calcModuleSelect(item)]]"></content>
                                 </div>
                             </div>
 
@@ -195,6 +208,12 @@
             },
             _calcCaptionStyleForItem: function (item) {
                 return "background-color: " + item.captionBgColor + ";";
+            },
+            _calcModuleSelect: function (item) {
+                return "tg-ui-action[action-module-group='" + item.key + "']"
+            },
+            _isDisabled: function(item) {
+                return !isMenuPresent(item.menu);
             }
         });
     })();
