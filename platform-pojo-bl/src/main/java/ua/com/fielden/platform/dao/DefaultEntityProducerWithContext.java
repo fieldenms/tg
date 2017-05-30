@@ -216,6 +216,16 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return masterEntityNotEmpty() && type.isAssignableFrom(masterEntity().getClass());
     }
     
+    protected <M extends AbstractEntity<?>> boolean masterEntityKeyInstanceOf(final Class<M> type) {
+        if (masterEntityNotEmpty()) {
+            final AbstractEntity<?> masterEntity = masterEntity();
+            if (masterEntity.get("key") != null) {
+                return type.isAssignableFrom(masterEntity.get("key").getClass());
+            }
+        }
+        return false;
+    }
+    
     protected <M extends AbstractEntity<?>> boolean masterEntityKeyOfMasterEntityInstanceOf(final Class<M> type) {
         if (masterEntityNotEmpty()) {
             final AbstractEntity<?> masterEntity = masterEntity();
@@ -230,6 +240,11 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             }
         }
         return false;
+    }
+    
+    protected <M extends AbstractEntity<?>> M masterEntityKey(final Class<M> type) {
+        final AbstractEntity<?> masterEntity = masterEntity();
+        return (M) masterEntity.get("key");
     }
     
     protected <M extends AbstractEntity<?>> M masterEntityKeyOfMasterEntity(final Class<M> type) {
