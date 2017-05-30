@@ -153,15 +153,7 @@ public class EntityUtils {
      */
     @SuppressWarnings("rawtypes")
     public static <T extends AbstractEntity<K>, K extends Comparable> int compare(final T o1, final T o2) {
-        if (o1 == o2) {
-            return 0;
-        } else if (o1 == null && o2 != null) {
-            return -1;
-        } else if (o1 != null && o2 == null) {
-            return 1;
-        } else {
-            return o1.compareTo(o2);
-        }
+        return safeCompare(o1, o2);
     }
 
 
