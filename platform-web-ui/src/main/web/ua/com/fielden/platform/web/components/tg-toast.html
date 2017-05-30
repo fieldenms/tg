@@ -243,9 +243,11 @@
                 this._showProgress = this.showProgress;
                 this._hasMore = this.hasMore;
                 
-                var oldDuration = this.$.toast.duration;
+                const oldDuration = this.$.toast.duration;
                 if (this._showProgress && !this._hasMore) {
                     this.$.toast.duration = 3600000; //1 hour
+                } else if (this._hasMore === true) {
+                    this.$.toast.duration = 5000; //5 seconds
                 } else {
                     this.$.toast.duration = 3000; //3 seconds
                 }
