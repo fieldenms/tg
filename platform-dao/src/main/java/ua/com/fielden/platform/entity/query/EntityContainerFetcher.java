@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -8,12 +9,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -26,8 +28,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.streaming.GroupProcessor;
-import ua.com.fielden.platform.streaming.GroupSplitterator;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 public class EntityContainerFetcher {
@@ -89,7 +89,12 @@ public class EntityContainerFetcher {
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
-        return entityRawResultConverter.transformFromNativeResult(resultTree, query.list());
+        // let's execute the query and time the duration
+        final DateTime st = new DateTime();
+        final List<?> res = query.list();
+        final Period pd = new Period(st, new DateTime());
+        logger.info(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.getResultType().getSimpleName()));
+        return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Optional<Integer> fetchSize) {

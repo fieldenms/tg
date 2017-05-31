@@ -37,7 +37,7 @@ public class MenuProducer implements IEntityProducer<Menu> {
 
     @Override
     public Menu newEntity() {
-        final Menu menu = menuRetirever.getMenuEntity().setCanEdit(userProvider.getUser().isBase());
+        final Menu menu = menuRetirever.getMenuEntity().setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
         //Get all invisible menu items
         final QueryExecutionModel<WebMenuItemInvisibility, EntityResultQueryModel<WebMenuItemInvisibility>> queryModel =
                 from(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(userProvider.getUser().isBase() ? userProvider.getUser()
