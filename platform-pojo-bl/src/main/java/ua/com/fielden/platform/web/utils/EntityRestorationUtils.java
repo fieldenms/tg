@@ -88,9 +88,10 @@ public class EntityRestorationUtils {
         final IEntityProducer<T> producer,
         final ICompanionObjectFinder companionFinder
     ) {
-        logger.error(String.format("constructEntity: originallyProducedEntity = [%s]", originallyProducedEntity));
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
+        logger.error(String.format("constructEntity: type = [%s] id = [%s] originallyProducedEntity = [%s]", companion.getEntityType().getSimpleName(), id, originallyProducedEntity));
+        logger.error(String.format("constructEntity: modifHolder = [%s]", modifiedPropertiesHolder));
 
         return applyModifHolder(modifiedPropertiesHolder, createValidationPrototype(id, originallyProducedEntity, companion, producer), companionFinder);
     }
@@ -117,10 +118,12 @@ public class EntityRestorationUtils {
         final IEntityProducer<T> producer,
         final ICompanionObjectFinder companionFinder
     ) {
-        logger.error(String.format("constructEntityWithContext: originallyProducedEntity = [%s]", originallyProducedEntity));
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: started.");
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
+        logger.error(String.format("constructEntityWithContext: type = [%s] id = [%s] originallyProducedEntity = [%s]", companion.getEntityType().getSimpleName(), id, originallyProducedEntity));
+        logger.error(String.format("constructEntityWithContext: modifHolder = [%s]", modifiedPropertiesHolder));
+        logger.error(String.format("constructEntityWithContext: context = [%s]", context));
 
         final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, context, companion, producer);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
