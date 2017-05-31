@@ -51,6 +51,20 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     @Title("Min cell height")
     private String minCellHeight;
 
+    @IsProperty
+    @Title("User name")
+    private String userName;
+
+    @Observable
+    public Menu setUserName(final String userName) {
+        this.userName = userName;
+        return this;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
     @Observable
     public Menu setMincellHeight(final String minCellHeight) {
         this.minCellHeight = minCellHeight;

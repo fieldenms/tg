@@ -71,9 +71,12 @@
     <template>
         <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <a href="/logout" tabIndex="-1">
-                <paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
-            </a>
+            <div class="layout horizontal center">
+                <span style="font-size:1.4rem">[[menuConfig.userName]]</span>
+                <a href="/logout" tabIndex="-1">
+                    <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout"></paper-icon-button>
+                </a>
+            </div>
         </paper-toolbar>
 
         <div class="items">
