@@ -57,7 +57,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                 return Result.successful(newValue);
             } else {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
-                return Result.failure(count, format("%s has active dependencies (%s).", entityTitle, count));
+                return Result.failure(count, format("%s [%s] has active dependencies (%s).", entityTitle, entity, count));
             }
         } else { // entity is being activated, but could be referencing inactive activatables
             // we could not rely on the fact that all activatable are fetched
