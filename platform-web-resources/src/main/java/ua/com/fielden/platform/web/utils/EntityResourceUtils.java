@@ -59,6 +59,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -287,7 +288,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
             final Object valueToBeApplied = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
             if (notFoundEntity(type, name, valToBeApplied, valueToBeApplied)) {
-                final String msg = String.format("No entity with key [%s] has been found.", valToBeApplied);
+                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
+                final String msg = format("%s [%s] was not found.", entityTitle, valToBeApplied);
                 logger.info(msg);
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {

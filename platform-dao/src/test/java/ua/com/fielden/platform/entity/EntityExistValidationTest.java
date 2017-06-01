@@ -30,7 +30,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals("Tg Category Cat2 exists, but is not active.", result.getMessage());
+        assertEquals("Tg Category [Cat2] exists, but is not active.", result.getMessage());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals("Tg Category Cat2 does not exist.", result.getMessage());
+        assertEquals("Tg Category [Cat2] does not exist.", result.getMessage());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals("Tg Category Cat2 does not exist.", result.getMessage());
+        assertEquals("Tg Category [Cat2] does not exist.", result.getMessage());
     }
 
     @Test

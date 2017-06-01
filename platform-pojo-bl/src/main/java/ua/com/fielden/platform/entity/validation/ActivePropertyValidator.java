@@ -70,7 +70,10 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableProps) {
                 final ActivatableAbstractEntity<?> value = prop.getValue();
                 if (!value.isActive()) {
-                    return Result.failure(format("Property [%s] in entity %s@%s references inactive entity %s@%s.", prop.getName(), entity, entity.getType().getName(), value, prop.getType().getName()));
+                    final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
+                    final String propTitle = TitlesDescsGetter.getTitleAndDesc(prop.getName(), entity.getType()).getKey();
+                    final String valueEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc(value.getType()).getKey();
+                    return Result.failure(format("Property [%s] in %s [%s] references inactive entity %s [%s].", propTitle, entityTitle, entity, valueEntityTitle, value));
                 }
             }
 

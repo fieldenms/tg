@@ -49,7 +49,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [parent] in entity Cat4@ua.com.fielden.platform.sample.domain.TgCategory references inactive entity Cat3@ua.com.fielden.platform.sample.domain.TgCategory.", 
+        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive entity Tg Category [Cat3].", 
                 cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
@@ -204,7 +204,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
             save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
         } catch (final Result ex) {
-            assertEquals("Tg Category Cat7 exists, but is not active.", ex.getMessage());
+            assertEquals("Tg Category [Cat7] exists, but is not active.", ex.getMessage());
         }
     }
 
