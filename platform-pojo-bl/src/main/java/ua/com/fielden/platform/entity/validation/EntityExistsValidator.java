@@ -86,7 +86,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
-                    return Result.failure(entity, format("%s [%s] does not exist.", entityTitle, newValue));
+                    return Result.failure(entity, format("%s [%s] was not found.", entityTitle, newValue));
                 } else {
                     return Result.failure(entity, format("%s [%s] exists, but is not active.", entityTitle, newValue));
                 }

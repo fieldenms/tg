@@ -57,7 +57,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                 return Result.successful(newValue);
             } else {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
-                return Result.failure(count, format("Entity %s has active dependencies (%s).", entityTitle, count));
+                return Result.failure(count, format("%s has active dependencies (%s).", entityTitle, count));
             }
         } else { // entity is being activated, but could be referencing inactive activatables
             // we could not rely on the fact that all activatable are fetched
@@ -73,7 +73,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                     final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
                     final String propTitle = TitlesDescsGetter.getTitleAndDesc(prop.getName(), entity.getType()).getKey();
                     final String valueEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc(value.getType()).getKey();
-                    return Result.failure(format("Property [%s] in %s [%s] references inactive entity %s [%s].", propTitle, entityTitle, entity, valueEntityTitle, value));
+                    return Result.failure(format("Property [%s] in %s [%s] references inactive %s [%s].", propTitle, entityTitle, entity, valueEntityTitle, value));
                 }
             }
 

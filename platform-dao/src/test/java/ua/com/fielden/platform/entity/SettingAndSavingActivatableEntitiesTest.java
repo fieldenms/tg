@@ -38,7 +38,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
         assertFalse(activeProperty.isValid());
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey();
-        assertEquals(format("Entity %s has active dependencies (%s).", entityTitle, 2), activeProperty.getFirstFailure().getMessage());
+        assertEquals(format("%s has active dependencies (%s).", entityTitle, 2), activeProperty.getFirstFailure().getMessage());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive entity Tg Category [Cat3].", 
+        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].", 
                 cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
@@ -64,7 +64,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
             fail("Should have failed");
         } catch (final EntityCompanionException ex) {
             final TgCategory cat4Full = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-            assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4Full, cat4Full.getParent(), cat4Full.getParent().getType()),
+            assertEquals(format("Tg Category [%s] has a reference to already inactive Tg Category [%s].", cat4Full, cat4Full.getParent()),
                     ex.getMessage());
         }
     }
