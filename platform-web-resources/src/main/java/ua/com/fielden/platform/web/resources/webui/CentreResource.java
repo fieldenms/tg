@@ -107,13 +107,9 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
 
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
             final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
-            // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
+            // discards fresh centre's changes (fresh centre could have no changes)
             if (CentreUtils.isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
                 CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME, updatedSavedCentre);
-            } else {
-                final String message = "Can not discard the centre that was not changed.";
-                logger.error(message);
-                throw new IllegalArgumentException(message);
             }
             
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
