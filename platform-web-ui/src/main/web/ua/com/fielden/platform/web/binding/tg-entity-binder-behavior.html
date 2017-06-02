@@ -381,7 +381,7 @@
                     	
                     	if (this._reflector().isWarning(deserialisedResult)) {
                     		console.warn(this._toastMsgForError(deserialisedResult));
-                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
+                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult), false);
                     	} else {
                     		// continue with normal handling of the result's instance
                     		var deserialisedInstance = deserialisedResult.instance;
@@ -390,7 +390,8 @@
                     		//   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
                     		// Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                     	    if (this._reflector().isError(deserialisedResult)) {
-                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
+                    	        console.log('deserialisedResult: ', deserialisedResult);
+                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), !this._reflector().isContinuationError(deserialisedResult));
                         	}
     	                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     	    if (this._reflector().isError(deserialisedResult)) {
@@ -410,7 +411,7 @@
                     } else { // other codes
                     	var error = 'Request could not be dispatched.';
                         console.warn(error);
-                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.', true);
                         // this is equivalent to server side error
                         // threfore, this._postRetrievedDefaultError should be invoked
                         this._postRetrievedDefaultError(error);
@@ -426,7 +427,7 @@
                         if (this._reflector().isError(deserialisedResult)) {
                             // throw the toast message about the server-side error
                             var msg = this._toastMsgForError(deserialisedResult);
-                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
+                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg, true);
                             // continue with custom error handling of the error result
                             customErrorHandlerFor(deserialisedResult);
                         } else {
@@ -435,7 +436,7 @@
                         }
                     } else if (xhr.status === 403) { // forbidden!
                         // TODO should prompt for login in place...
-                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.");
+                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.", true);
                         customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
@@ -608,7 +609,9 @@
             /**
              * Opens the toast with some error message including full 'moreInfo' message.
              */
-            _openToastForError: function (toastMsg, moreInfo) {
+            _openToastForError: function (toastMsg, moreInfo, isCritical) {
+                console.log('this._toastGreeting().isCritical = ', isCritical);
+                this._toastGreeting().isCritical = isCritical;
                 this._toastGreeting().text = toastMsg;
                 if (moreInfo) {
                     this._toastGreeting().hasMore = true;
@@ -619,6 +622,7 @@
       			// TODO is it still relevant? msgHeading
 				// TODO is it still relevant? msgHeading
              	this._toastGreeting().msgHeading = "Error";
+                console.log('about to show ... this._toastGreeting().isCritical = ', isCritical);
                 this._toastGreeting().show();
             },
             
