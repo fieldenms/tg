@@ -14,7 +14,12 @@
 			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
 			_or-null="{{_orNull}}"
 			_not="{{_not}}">
-            <content select=".criterion-editors"></content>
+            <div class="layout horizontal flex criterion-editors" style="margin-right:20px;">
+                <content select=".range-criterion-editor-1"></content>
+            </div>
+            <div class="layout horizontal flex criterion-editors">
+                <content select=".range-criterion-editor-2"></content>
+            </div>
 		</tg-abstract-criterion>
 	</template>
 </dom-module>
