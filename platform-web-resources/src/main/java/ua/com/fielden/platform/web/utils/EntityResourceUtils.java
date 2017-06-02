@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -288,8 +289,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
             final Object valueToBeApplied = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
             if (notFoundEntity(type, name, valToBeApplied, valueToBeApplied)) {
-                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
-                final String msg = format("%s [%s] was not found.", entityTitle, valToBeApplied);
+                final String valueAsEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, name)).getKey();
+                final String msg = format("%s [%s] was not found.", valueAsEntityTitle, valToBeApplied);
                 logger.info(msg);
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
@@ -492,7 +493,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     private static <M extends AbstractEntity<?>> boolean notFoundEntity(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
-        return reflectedValue != null && newValue == null && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
+        return reflectedValue != null && newValue == null && isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
 
     /**
