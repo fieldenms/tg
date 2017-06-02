@@ -7,11 +7,10 @@
 
     <template>
         <style>
-           
         </style>
 
         <!-- local DOM for your element -->
-        <svg id="line">
+        <svg id="line" >
             <line x1="0" y1="0" x2$="[[_width]]" y2$="[[_height]]" style="stroke:rgb(255,0,0);stroke-width:2" />
         </svg>
         <!-- data bindings in local DOM -->
@@ -19,35 +18,32 @@
 
     <script>
         (function () {
-            // element registration
-            Polymer({
-                is: "tg-cross-line",
+                // element registration
+                Polymer({
+                        is: "tg-cross-line",
 
-                // add properties and methods on the element's prototype
+                        // add properties and methods on the element's prototype
 
-                properties: {
-                    
-                    _width: Number,
-                    
-                    _hight: Number
-                },
+                        properties: {
 
-                behaviors: [Polymer.IronResizableBehavior],
+                            _width: Number,
 
-                ready: function () {
-                    this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-                },
+                            _hight: Number
+                        },
 
-                _resizeEventListener: function (event, details) {
-                    var self = this;
-                    if (this._chart) {
-                        this._chart.options({
-                            width: self.offsetWidth,
-                            height: self.offsetHeight
-                        });
+                        behaviors: [Polymer.IronResizableBehavior],
+
+                        ready: function () {
+                            this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+                        },
+
+                        _resizeEventListener: function (event, details) {
+                            var self = this;
+                            this._width = self.offsetWidth + 2,
+                            this._height: self.offsetHeight
+                        }
                     }
-                }
-            });
+                });
         })();
     </script>
 

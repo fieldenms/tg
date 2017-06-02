@@ -43,7 +43,7 @@
             pointer-events: none;
         }
         .not {
-            background-color: white;
+            background-color: var(--paper-red-300);
             opacity: 0.5;
             pointer-events: none;
         }
@@ -55,16 +55,12 @@
         .crossed { /* look at https://stackoverflow.com/questions/18012420/draw-diagonal-lines-in-div-background-with-css */
             background: linear-gradient(to top left,
                 rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0) calc(50% - 1.2px),
+                rgba(0,0,0,0) calc(50% - 0.8px),
                 rgba(0,0,0,1) 50%,
-                rgba(0,0,0,0) calc(50% + 1.2px),
+                rgba(0,0,0,0) calc(50% + 0.8px),
                 rgba(0,0,0,0) 100%
             );
             pointer-events: none;
-            top: -8px;
-            bottom: -8px;
-            left: -8px;
-            right: -8px;
         }
     </style>
     <template>
@@ -74,7 +70,7 @@
                 <content select=".criterion-editors" id="components"></content>
                 <content select=".date-mnemonic"></content>
                 <div id ="or_null_layer" class="fit mnemonic-layer or-null" hidden$="[[!_orNullVisible(critOnly, _orNull)]]"></div>
-                <div id ="not_layer" class="fit not" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
+                <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
                 <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
             </div>
             <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert" tooltip-text="Show additional criteria constraints"></paper-icon-buton>
