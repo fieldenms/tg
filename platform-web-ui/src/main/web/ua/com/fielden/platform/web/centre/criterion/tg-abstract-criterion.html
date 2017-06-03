@@ -36,14 +36,16 @@
             opacity: 0.95;
             color: var(--paper-blue-800);
             pointer-events: auto;
+  			text-overflow: ellipsis;
+            white-space: nowrap;
+  			overflow: hidden;
         }
         .or-null {
-            background-color: var(--paper-blue-900);
+            background-color: var(--paper-yellow-300);
             opacity: 0.3;
             pointer-events: none;
         }
         .not {
-            background-color: var(--paper-red-300);
             opacity: 0.5;
             pointer-events: none;
         }
@@ -53,12 +55,10 @@
             pointer-events: none;
         }
         .crossed { /* look at https://stackoverflow.com/questions/18012420/draw-diagonal-lines-in-div-background-with-css */
-            background: linear-gradient(to top left,
-                rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0) calc(50% - 0.8px),
-                rgba(0,0,0,1) 50%,
-                rgba(0,0,0,0) calc(50% + 0.8px),
-                rgba(0,0,0,0) 100%
+            background: linear-gradient(to top right,
+                rgba(0,0,0,0) calc(48% - 1.5px),
+                rgba(255,0,0,1),
+                rgba(0,0,0,0) calc(48% + 1.5px)
             );
             pointer-events: none;
         }
