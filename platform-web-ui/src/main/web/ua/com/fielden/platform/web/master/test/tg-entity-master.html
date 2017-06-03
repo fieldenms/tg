@@ -876,7 +876,7 @@
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Entity "DEMO00" of type Tg Persistent Entity With Properties already exists.', 'Entity\'s exceptionOccured should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Tg Persistent Entity With Properties [DEMO00] already exists.', 'Entity\'s exceptionOccured should exist.');
                     
                     var arrivedValue = _millis('01/02/2003 06:21:00.000');
                     
