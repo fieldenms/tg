@@ -400,7 +400,7 @@
                             </template>
                         </div>
                         <!-- Fixed container -->
-                        <div id="lockContainer" class="absolute fit" style="overflow:hidden">
+                        <div id="lockContainer" class="absolute fit" style="overflow:hidden" on-focusin="_lockContainerFocusIn" on-focusout="_lockContainerFocusOut">
                             <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
@@ -1201,6 +1201,14 @@
                     delete this._elementGainedFocus;
                 }
                 event.preventDefault();
+            },
+            
+            _lockContainerFocusIn: function () {
+                this._lockContainer.scrollTop = 0;
+            },
+            
+            _lockContainerFocusOut: function () {
+                this._lockContainer.scrollTop = 0;
             },
 
             _scrollToTarget: function (target) {

@@ -7,6 +7,7 @@
 	<template>
 		<tg-abstract-criterion 
 			id="dom"
+			crit-only="[[critOnly]]"
 			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
 			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
 			_show-meta-values-editor="[[_showMetaValuesEditor]]"
@@ -15,7 +16,14 @@
 			_not="{{_not}}"
 			_exclusive="{{_exclusive}}"
 			_exclusive2="{{_exclusive2}}">
-			<content select=".criterion-editors"></content>
+            <div class="layout horizontal flex relative criterion-editors" style="margin-right:20px;">
+                <content select=".range-criterion-editor-1"></content>
+                <div class="fit mnemonic-layer exclusive-mnemonic" hidden$="[[!_exclusive]]"></div>
+            </div>
+            <div class="layout horizontal flex relative criterion-editors">
+                <content select=".range-criterion-editor-2"></content>
+                <div class="fit mnemonic-layer exclusive-mnemonic" hidden$="[[!_exclusive2]]"></div>
+            </div>
 		</tg-abstract-criterion>
 	</template>
 </dom-module>
