@@ -2,22 +2,31 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+
+import java.lang.reflect.Field;
 
 import org.junit.Test;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.types.Money;
 
 /**
  * Test case for checking of instrumentation, proxying (in {@link PropertyTypeDeterminator}) and generation (in {@link DynamicEntityClassLoader}) characteristics
@@ -242,4 +251,33 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final AbstractEntity<?> entity = factory.newEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertEquals(entityTypeGenerated, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
+    
+    @Test
+    public void baseEntityType_correctly_determines_the_base_type_for_dynamically_generated_entity_types() throws Exception {
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        final String NEW_PROPERTY_DESC = "Description  for new money property";
+        final String NEW_PROPERTY_TITLE = "New money property";
+        final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
+        final String NEW_PROPERTY = "newProperty";
+        final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
+        final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+        final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+        // first enhancement
+        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd1).endModification();
+        // second enhancement
+        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(oneTimeEnhancedType.getName()).addProperties(pd2).endModification();
+
+        // both enhanced types should have EntityBeingEnhanced as their base type
+        assertEquals(EntityBeingEnhanced.class, PropertyTypeDeterminator.baseEntityType(oneTimeEnhancedType));
+        assertEquals(EntityBeingEnhanced.class, PropertyTypeDeterminator.baseEntityType(twoTimesEnhancedType));
+    }
+    
+    @Test
+    public void baseEntityType_correctly_determines_the_base_type_for_enhanced_entity_types() throws Exception {
+        final AbstractEntity<?> entity = factory.newEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
+        assertEquals(entityTypeGenerated, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
+
+        assertEquals(TgOwnerEntity.class, PropertyTypeDeterminator.baseEntityType(entity.getType()));
+    }
+
 }
