@@ -60,9 +60,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
         this.isCritOnly = StringUtils.isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
-        this.editors = new Pair<>(editors[0].markAsCriterionEditor(), null);
+        this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
-            this.editors.setValue(editors[1].markAsCriterionEditor());
+            this.editors.setValue(editors[1]);
         }
     }
 
@@ -74,14 +74,15 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final List<AbstractWidget> editors = editors0();
         final DomElement[] editorsDOM = new DomElement[editors.size()];
         for (int editorIndex = 0; editorIndex < editors.size(); editorIndex++) {
-            final DomElement editorElement = editors.get(editorIndex).render();
+            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex));
             editorElement.clazz("flex", true);
-            if (editors.size() > 1 && editorIndex == 0) {
-                editorElement.style("margin-right:20px");
-            }
             editorsDOM[editorIndex] = editorElement;
         }
         return editorsDOM;
+    }
+
+    protected String getCriterionClass(final int editorIndex) {
+        return "criterion-editors";
     }
 
     public List<String> editorsImportPaths() {
