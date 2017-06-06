@@ -9,6 +9,13 @@
 
 <dom-module id="tg-date-range-criterion">
     <template>
+        <style>
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
         <tg-abstract-criterion
         	id="dom"
         	crit-only="[[critOnly]]"
@@ -28,7 +35,9 @@
                 <content select=".range-criterion-editor-2"></content>
                 <div class="fit mnemonic-layer exclusive-mnemonic" hidden$="[[!_exclusive2]]"></div>
             </div>
-            <div class="fit layout horizontal center center-justified mnemonic-layer date-mnemonic" hidden$="[[!_hasDateMetaValueFor(_datePrefix)]]">[[_calcText(_datePrefix, _dateMnemonic, _andBefore)]]</div>
+            <div class="fit layout horizontal center center-justified mnemonic-layer date-mnemonic" hidden$="[[!_hasDateMetaValueFor(_datePrefix)]]">
+                <span class="truncate">[[_calcText(_datePrefix, _dateMnemonic, _andBefore)]]</span>
+            </div>
         </tg-abstract-criterion>
     </template>
 </dom-module>

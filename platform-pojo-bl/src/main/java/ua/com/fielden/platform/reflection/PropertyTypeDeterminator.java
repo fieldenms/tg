@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -251,6 +253,27 @@ public class PropertyTypeDeterminator {
             return stripIfNeeded(clazz.getSuperclass());
         }
         return clazz;
+    }
+    
+    /**
+     * A convenient function to identify the closest real type (i.e. not dynamically generated) that is the bases for the specified entity type.
+     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name. 
+     * 
+     * @param type
+     * @return
+     */
+    public static Class<? extends AbstractEntity<?>> baseEntityType(final Class<? extends AbstractEntity<?>> type) {
+        final Class<? extends AbstractEntity<?>> strippedType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(type);
+        if (strippedType.getSimpleName().contains(APPENDIX)) {
+            final String typeName = strippedType.getName();
+            try {
+                return (Class<? extends AbstractEntity<?>>) Class.forName(typeName.substring(0, typeName.indexOf(APPENDIX)));
+            } catch (ClassNotFoundException e) {
+                throw new ReflectionException(format("Could not identify a base type for entity type [%s].", typeName), e);
+            }
+        } else {
+            return strippedType;
+        }
     }
     
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
