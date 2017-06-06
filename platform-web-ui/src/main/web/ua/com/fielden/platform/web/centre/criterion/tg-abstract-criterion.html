@@ -11,6 +11,7 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <link rel="import" href="/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html">
 
@@ -26,11 +27,49 @@
         .metavalue-editor {
             padding-top: 15px;
         }
+        .mnemonic-layer, .criterion-container ::content .mnemonic-layer {
+            margin-bottom: 8px;
+            margin-top: 28px;
+        }
+        .criterion-container ::content .date-mnemonic {
+            background-color: var(--paper-blue-100);
+            opacity: 0.95;
+            color: var(--paper-blue-800);
+            pointer-events: auto;
+        }
+        .or-null {
+            background-color: var(--paper-yellow-300);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .not {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .criterion-container ::content .exclusive-mnemonic {
+            background-color: var(--paper-blue-200);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .crossed { /* look at https://stackoverflow.com/questions/18012420/draw-diagonal-lines-in-div-background-with-css */
+            background: linear-gradient(to top right,
+                rgba(0,0,0,0) calc(48% - 1.5px),
+                rgba(255,0,0,1),
+                rgba(0,0,0,0) calc(48% + 1.5px)
+            );
+            pointer-events: none;
+        }
     </style>
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <div class="layout horizontal justified flex end">
-            <content select=".criterion-editors" id="components"></content>
+            <div class="criterion-container relative layout horizontal justified flex end">
+                <content select=".criterion-editors" id="components"></content>
+                <content select=".date-mnemonic"></content>
+                <div id ="or_null_layer" class="fit mnemonic-layer or-null" hidden$="[[!_orNullVisible(critOnly, _orNull)]]"></div>
+                <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
+                <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
+            </div>
             <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert" tooltip-text="Show additional criteria constraints"></paper-icon-buton>
         </div>
     </template>
@@ -62,10 +101,37 @@
         	_exclusive2: {
         		type: Boolean,
         		notify: true
-        	}
+        	},
+        	
+            /**
+             * Indicates whether criterion for entity property has critOnly annotation or not.
+             */
+            critOnly: {
+                type: Boolean
+            }
         },
         
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],    
-
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+        
+        attached: function () {
+            // we need to use this trick to enforce invisibility after component has been attached... simple attribute binding does not work
+            this.$.or_null_layer.hidden = !this._orNullVisible(this.critOnly, this._orNull);
+            this.$.not_layer.hidden = !this._notVisible(this.critOnly, this._not);
+            this.$.crossed_layer.hidden = !this._notVisible(this.critOnly, this._not);
+        },
+        
+        /**
+         * Returns 'true' if orNull meta value exists and date layer should be present, 'false' otherwise.
+         */
+        _orNullVisible: function (critOnly, _orNull) { 
+            return critOnly === false && _orNull === true;
+        }, 
+        
+        /**
+         * Returns 'true' if 'not' meta value exists and date layer should be present, 'false' otherwise.
+         */
+        _notVisible: function (critOnly, _not) {
+            return critOnly === false && _not === true;
+        }
     });
 </script>

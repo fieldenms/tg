@@ -23,6 +23,11 @@ public abstract class AbstractRangeCriterionWidget extends AbstractMultiCriterio
     }
 
     @Override
+    protected String getCriterionClass(final int editorIndex) {
+        return "range-criterion-editor-" + (editorIndex + 1);
+    }
+
+    @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
         attrs.put("exclusive", "{{propertyModel." + this.propertyName() + ".exclusive}}");
