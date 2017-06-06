@@ -299,6 +299,7 @@
                         this.$.toaster.hasMore = false;
                         this.$.toaster.msgText = "";
                         this.$.toaster.showProgress = false;
+                        this.$.toaster.isCritical = false;
                         this.$.toaster.show();
                     }
                 }
@@ -423,6 +424,7 @@
                     this.$.toaster.hasMore = true;
                     this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
                     this.$.toaster.showProgress = false;
+                    this.$.toaster.isCritical = false;
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
                     if (customAction) {
@@ -476,6 +478,7 @@
                                 self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
 	                                                      <b>Error cause:</b><br>' + error.message;
                                 self.$.toaster.showProgress = false;
+                                self.$.toaster.isCritical = true;
                                 self.$.toaster.show();
                                 if (self._lastAction) {
                                     self._lastAction.restoreActiveElement();

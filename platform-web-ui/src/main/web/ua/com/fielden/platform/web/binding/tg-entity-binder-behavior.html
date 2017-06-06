@@ -570,12 +570,14 @@
                 this._toastGreeting().hasMore = hasMoreInfo;
                 this._toastGreeting().msgText = moreInfo;
                 this._toastGreeting().showProgress = showProgress;
+                this._toastGreeting().isCritical = false;
                 if (hasMoreInfo) {
                     if (!entity.isValid()) {
                     	// TODO is it still relevant? msgHeading
               			// TODO is it still relevant? msgHeading
       					// TODO is it still relevant? msgHeading
                         this._toastGreeting().msgHeading = "Error";
+                        this._toastGreeting().isCritical = true;
                     } else if (entity.isValidWithWarning()) {
                         this._toastGreeting().msgHeading = "Warning";
                     } else {
@@ -593,6 +595,7 @@
                 this._toastGreeting().hasMore = hasMoreInfo;
                 this._toastGreeting().msgText = moreInfo;
                 this._toastGreeting().showProgress = showProgress;
+                this._toastGreeting().isCritical = false;
                 if (hasMoreInfo) {
                     this._toastGreeting().msgHeading = "Info";
                 }
