@@ -5,6 +5,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -21,8 +23,6 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource;
 import ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-
-import com.google.inject.Injector;
 
 /**
  * A factory for entity autocompletion resources which instantiate resources based on entity type and propertyName of the autocompletion property.
@@ -100,7 +100,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 if (master != null) {
                     valueMatcher = master.createValueMatcher(propertyName);
                     entityProducer = master.createEntityProducer();
-                } else { // in case when no master is registered for the type -- use default producer and value matcher
+                } else { // in case where no master is registered for the type -- use default producer and value matcher
                     valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, coFinder);
                     entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType, coFinder);
                 }

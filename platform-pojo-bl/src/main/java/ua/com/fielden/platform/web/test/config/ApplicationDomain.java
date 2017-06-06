@@ -1,4 +1,4 @@
-package fielden.config;
+package ua.com.fielden.platform.web.test.config;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;

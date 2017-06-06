@@ -327,7 +327,7 @@
                                 </template>
                             </div>
                             <!-- Table body -->
-                            <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                            <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                                 <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                         <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
@@ -400,7 +400,7 @@
                             </template>
                         </div>
                         <!-- Fixed container -->
-                        <div id="lockContainer" class="absolute fit" style="overflow:hidden">
+                        <div id="lockContainer" class="absolute fit" style="overflow:hidden" on-focusin="_lockContainerFocusIn" on-focusout="_lockContainerFocusOut">
                             <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
@@ -896,6 +896,13 @@
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
             },
+            
+            _scrollContainerEntitiesStampedCustomAction: function () {
+            },
+            
+            _scrollContainerEntitiesStamped: function (event) {
+                this._scrollContainerEntitiesStampedCustomAction();
+            },
 
             _rightLockPanelRendered: function (e) {
                 this._rightLockPanel = this.$$("#rightLockPanel");
@@ -1195,6 +1202,14 @@
                 }
                 event.preventDefault();
             },
+            
+            _lockContainerFocusIn: function () {
+                this._lockContainer.scrollTop = 0;
+            },
+            
+            _lockContainerFocusOut: function () {
+                this._lockContainer.scrollTop = 0;
+            },
 
             _scrollToTarget: function (target) {
                 this._lockContainer.scrollTop = 0;
@@ -1379,7 +1394,7 @@
             },
 
             _selectTooltip: function (selected) {
-                return (selected ? 'Unselecct' : 'Select') + ' this entity';
+                return (selected ? 'Unselect' : 'Select') + ' this entity';
             },
 
             _getTooltip: function (entity, column, action) {
@@ -1583,27 +1598,49 @@
                     if (newValue.selected) { // bring to view the entity that was checked
                         const scrollContainer = this.querySelector("#scrollContainer");
                         if (scrollContainer) {
-                            const scrollContainerHeight = scrollContainer.offsetHeight;
                             const entityRows = scrollContainer.querySelectorAll('.table-data-row');
                             const entityRow = entityRows[entityIndex];
-                            const entityRowHeight = entityRow.offsetHeight;
-                            const topLockPanel = this.querySelector('#topLockPanel');
-                            const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
-                            const bottomLockPanel = this.querySelector('#bottomLockPanel');
-                            const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
-                            const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
-                            if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
-                                // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
-                                scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
-                            } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
-                                // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
-                                scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
+                            if (entityRow) { 
+                                this._scrollTo(entityRow, scrollContainer);
+                            } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
+                                const oldAction = this._scrollContainerEntitiesStampedCustomAction;
+                                this._scrollContainerEntitiesStampedCustomAction = (function () {
+                                    oldAction();
+                                    const scrollContainer = this.querySelector("#scrollContainer");
+                                    const entityRows = scrollContainer.querySelectorAll('.table-data-row');
+                                    const entityRow = entityRows[entityIndex];
+                                    this._scrollTo(entityRow, scrollContainer);
+                                    this._scrollContainerEntitiesStampedCustomAction = oldAction;
+                                }).bind(this);
                             }
                         }
                     }
                 }
             },
-
+            
+            /**
+             * Scrolls '' to concrete entityRow dom element.
+             *
+             * TODO 1: this function to be merged with _scrollToTarget.
+             * TODO 2: this function to support scrolling for the case where horisontal scroll bar exists (at this stage scrolled row will be hidden behind this scroll bar).
+             */
+            _scrollTo: function (entityRow, scrollContainer) {
+                const scrollContainerHeight = scrollContainer.offsetHeight;
+                const entityRowHeight = entityRow.offsetHeight;
+                const topLockPanel = this.querySelector('#topLockPanel');
+                const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
+                const bottomLockPanel = this.querySelector('#bottomLockPanel');
+                const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
+                const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
+                if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
+                     // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
+                    scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
+                } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
+                    // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
+                    scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
+                }
+            },
+            
             /**
              * Observs the changes to entities property.
              */

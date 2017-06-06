@@ -74,7 +74,7 @@ public class HibernateConfigurationFactory {
             return DbVersion.H2;
         } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
             return DbVersion.POSTGRESQL;
-        } else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
+        } else if (dialect.contains("SQLServer")) {
             return DbVersion.MSSQL;
         } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
             return DbVersion.ORACLE;

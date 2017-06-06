@@ -1,12 +1,17 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
 public class WebMenuModule implements IExecutable {
 
-    private final String title;
+    public final String title;
+
     private String description;
     private String bgColor;
     private String captionBgColor;
@@ -14,6 +19,7 @@ public class WebMenuModule implements IExecutable {
     private String detailIcon;
     private WebMenu menu;
     private WebView view;
+    private List<EntityActionConfig> actions = new ArrayList<>();
 
     public WebMenuModule(final String title) {
         this.title = title;
@@ -52,6 +58,15 @@ public class WebMenuModule implements IExecutable {
     public WebMenuModule view(final WebView view) {
         this.view = view;
         return this;
+    }
+
+    public WebMenuModule addAction(final EntityActionConfig action) {
+        this.actions.add(action);
+        return this;
+    }
+
+    public List<EntityActionConfig> getActions() {
+        return actions;
     }
 
     @Override

@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -142,6 +141,21 @@ public class EntityUtils {
         }
         return entity1 == entity2;
     }
+
+    /**
+     * A convenient method to safely compare entity values even if they are <code>null</code>.
+     * <p>
+     * The <code>null</code> value is considered to be smaller than a non-null value.
+     *
+     * @param o1
+     * @param o2
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public static <T extends AbstractEntity<K>, K extends Comparable> int compare(final T o1, final T o2) {
+        return safeCompare(o1, o2);
+    }
+
 
     /**
      * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEquals(AbstractEntity, AbstractEntity)} method
@@ -648,6 +662,16 @@ public class EntityUtils {
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
         return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+    }
+    
+    /**
+     * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
+     * 
+     * @param entityType
+     * @return
+     */
+    public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
+        return isPersistedEntityType(getKeyType(entityType));
     }
 
     /**

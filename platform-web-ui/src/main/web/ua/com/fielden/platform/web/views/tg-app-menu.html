@@ -10,13 +10,19 @@
 <link rel="import" href="/resources/views/tg-app-animation-behavior.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/image-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <dom-module id="tg-app-menu">
     <style>
         :host {
             overflow: hidden;
             --paper-toolbar-background: var(--paper-light-blue-700);
-            ;
             --paper-toolbar-color: white;
             --paper-toolbar-height: 44px;
         }
@@ -56,14 +62,20 @@
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
+        .tile-toolbar[action-disabled] ::content tg-ui-action {
+            pointer-events: none;
+        }
     </style>
 
     <template>
         <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <a href="/logout" tabIndex="-1">
-                <paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
-            </a>
+            <div class="layout horizontal center">
+                <span style="font-size:1rem; padding-right:4px;">[[menuConfig.userName]]</span>
+                <a href="/logout" tabIndex="-1">
+                    <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout"></paper-icon-button>
+                </a>
+            </div>
         </paper-toolbar>
 
         <div class="items">
@@ -77,6 +89,9 @@
                                     <div class="item-icon-bg relative flex-auto" style$="[[_calcStyleForItem(item)]]">
                                         <iron-icon class="fit" style$="[[_calcIconStyleForItem(item)]]" icon="[[item.icon]]"></iron-icon>
                                     </div>
+                                </div>
+                                <div class="tile-toolbar layut horizontal wrap" action-disabled$="[[_isDisabled(item)]]">
+                                    <content select$="[[_calcModuleSelect(item)]]"></content>
                                 </div>
                             </div>
 
@@ -195,6 +210,12 @@
             },
             _calcCaptionStyleForItem: function (item) {
                 return "background-color: " + item.captionBgColor + ";";
+            },
+            _calcModuleSelect: function (item) {
+                return "tg-ui-action[action-module-group='" + item.key + "']"
+            },
+            _isDisabled: function(item) {
+                return !isMenuPresent(item.menu);
             }
         });
     })();

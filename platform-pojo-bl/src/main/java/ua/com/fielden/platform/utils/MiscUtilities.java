@@ -59,14 +59,14 @@ public class MiscUtilities {
      * @return
      */
     public static String[] prepare(final List<String> criteria) {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         if (criteria != null) {
             for (final String crit : criteria) {
                 result.add(PojoValueMatcher.prepare(crit));
             }
         }
         // eliminate empty or null values
-        final List<String> finalRes = new ArrayList<String>();
+        final List<String> finalRes = new ArrayList<>();
         for (final String value : result) {
             if (!StringUtils.isEmpty(value)) {
                 finalRes.add(value);

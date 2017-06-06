@@ -165,12 +165,86 @@
 	                edProperty._editingValue = 'IS';
 	                edProperty.commit();
 	            };
-
-	            master.retrieve();
-		    });
-		    
-		});
-	</script>
+                
+                master.retrieve();
+            });
+            
+            test('clears requiredness errors for crit-only and explicitly required properties', function (done) {
+                const edProperty = master.$.editor_4_property;
+                const edDependentProp = master.$.editor_4_dependentProp;
+                
+                master.postValidated = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.get('critOnlySingleProp'), null);
+                    assert.strictEqual(entity.prop('critOnlySingleProp').isRequired(), true);
+                    assert.strictEqual(entity.prop('critOnlySingleProp').validationResult(), null);
+                    done();
+                };
+                
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    edProperty._editingValue = 'IS';
+                    edProperty.commit();
+                };
+                
+                master.retrieve();
+            });
+            
+            test('clears requiredness errors for untouched properties', function (done) {
+                const edProperty = master.$.editor_4_property;
+                const edDependentProp = master.$.editor_4_dependentProp;
+                
+                master.postValidated = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.get('dependentProp'), 'InService');
+                    assert.strictEqual(entity.prop('dependentProp').isRequired(), false);
+                    assert.strictEqual(entity.prop('dependentProp').validationResult(), null);
+                    
+                    master.postValidated = function (entity, bindingEntity, customObject) {
+                        assert.strictEqual(entity.get('dependentProp'), null);
+                        assert.strictEqual(entity.prop('dependentProp').isRequired(), true);
+                        assert.strictEqual(entity.prop('dependentProp').validationResult(), null);
+                        done();
+                    };
+                    
+                    edProperty._editingValue = 'DR';
+                    edProperty.commit();
+                };
+                
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    edProperty._editingValue = 'IS';
+                    edProperty.commit();
+                };
+                
+                master.retrieve();
+            });
+            
+            test('clears requiredness errors for touched properties for new entity', function (done) {
+                const edProperty = master.$.editor_4_property;
+                const edDependentProp = master.$.editor_4_dependentProp;
+                
+                master.postValidated = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.get('property'), 'IS');
+                    assert.strictEqual(entity.prop('property').isRequired(), true);
+                    assert.strictEqual(entity.prop('property').validationResult(), null);
+                    
+                    master.postValidated = function (entity, bindingEntity, customObject) {
+                        assert.strictEqual(entity.get('property'), null);
+                        assert.strictEqual(entity.prop('property').isRequired(), true);
+                        assert.strictEqual(entity.prop('property').validationResult(), null);
+                        done();
+                    };
+                    
+                    edProperty._editingValue = '';
+                    edProperty.commit();
+                };
+                
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    edProperty._editingValue = 'IS';
+                    edProperty.commit();
+                };
+                
+                master.retrieve();
+            });
+        });
+    </script>
 </body>
 
 </html>

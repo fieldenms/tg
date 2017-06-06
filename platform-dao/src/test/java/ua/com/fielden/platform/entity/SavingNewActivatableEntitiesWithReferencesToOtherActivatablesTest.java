@@ -78,7 +78,7 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
             save(newCat1);
             fail("Should have failed due to unsuccessful revalidation of property parent.");
         } catch (final Result ex) {
-            assertEquals("Tg Category Cat1 exists, but is not active.", ex.getMessage());
+            assertEquals("Tg Category [Cat1] exists, but is not active.", ex.getMessage());
         }
     }
 

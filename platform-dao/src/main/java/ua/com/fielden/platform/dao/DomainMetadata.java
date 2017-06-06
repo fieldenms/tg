@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,7 +52,10 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
@@ -75,9 +79,14 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
+import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
+    private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
+
+    
     private static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
     private static final Type H_STRING = typeResolver.basic("string");
@@ -103,6 +112,8 @@ public class DomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
+    private final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
@@ -113,7 +124,7 @@ public class DomainMetadata {
     }
 
     public DomainMetadata(//
-    final Map<Class, Class> hibTypesDefaults, //
+            final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final MapEntityTo userMapTo, //
@@ -125,6 +136,8 @@ public class DomainMetadata {
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.modelledEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        
+        this.entityTypes = new ArrayList<>(entityTypes);
         
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
@@ -185,18 +198,50 @@ public class DomainMetadata {
         //enhanceWithCalcProps(entityMetadataMap.values());
     }
     
+    
+    /**
+     * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types, which includes domain entities and auxiliary platform entities.
+     * 
+     * @param dialect
+     * @return
+     */
+    public List<String> generateDatabaseDdl(final Dialect dialect) {
+        
+        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
+        
+        final List<Class<? extends AbstractEntity<?>>> persystentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        
+        final List<String> ddlTables = new LinkedList<>();
+        final List<String> ddlFKs = new LinkedList<>();
+        
+        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+            final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
+            ddlTables.add(tableDefinition.createTableSchema(dialect));
+            ddlTables.add(tableDefinition.createPkSchema(dialect));
+            ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
+            ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
+        }
+        final List<String> ddl = new LinkedList<>();
+        ddl.addAll(ddlTables);
+        ddl.addAll(ddlFKs);
+        return ddl;
+    }
+    
     private String printEntitiesMetadataSummary(final String header, final Map<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> map) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append(header);
         sb.append("\n");
         int pecalcpc = 0;
         int pecollpc = 0;
+        int peunionpc = 0;
+        sb.append(String.format(" %50s%10s%10s%10s\n", "Entity class name \\ Props count", "calc.", "collect.", "union"));
         for (final Entry<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> entry : map.entrySet()) {
             pecalcpc = pecalcpc + entry.getValue().countCalculatedProps();
             pecollpc = pecollpc + entry.getValue().countCollectionalProps();
-            sb.append("===== type: " + entry.getKey().getSimpleName() + " calculatedPropsCount = " + entry.getValue().countCalculatedProps() + " collectionalPropsCount = " + entry.getValue().countCollectionalProps() + "\n");
+            peunionpc = peunionpc + entry.getValue().countUnionEntityProps();
+            sb.append(String.format(" %50s%10s%10s%10s\n", entry.getKey().getSimpleName(), entry.getValue().countCalculatedProps(), entry.getValue().countCollectionalProps(), entry.getValue().countUnionEntityProps()));
         }
-        sb.append("=====  totals: " + map.size() + " calculatedPropsCount: " + pecalcpc + " collectionalPropsCount: " + pecollpc + "\n");
+        sb.append(String.format(" %45s%5s%10s%10s%10s", "totals:", map.size(), pecalcpc, pecollpc, peunionpc));
         return sb.toString();
     }
 
@@ -311,8 +356,7 @@ public class DomainMetadata {
         } else {
             switch (entityCategory) {
             case PERSISTED:
-                final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
-                return new PropertyMetadata.Builder(KEY, keyType, false).column(keyColumnOverride).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
+                return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
             case QUERY_BASED:
                 return null; //FIXME
             case UNION:
@@ -387,9 +431,9 @@ public class DomainMetadata {
         for (final String propName : propNames) {
             final MapTo mapTo = getMapTo(hibType.returnedClass(), propName);
             final String mapToColumn = mapTo.value();
-            final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-            final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-            final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+            final Integer length = mapTo.length() > 0 ? mapTo.length() : null;
+            final Integer precision = mapTo.precision() >= 0 ? mapTo.precision() : null;
+            final Integer scale = mapTo.scale() >= 0 ? mapTo.scale() : null;
             final String columnName = propNames.length == 1 ? parentColumn
                     : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
             result.add(new PropertyColumn(columnName, length, precision, scale));
@@ -432,9 +476,9 @@ public class DomainMetadata {
 
     private List<PropertyColumn> getPropColumns(final Field field, final MapTo mapTo, final Object hibernateType) throws Exception {
         final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
-        final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-        final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-        final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+        final Integer length = mapTo.length() > 0 ? mapTo.length() : null;
+        final Integer precision = mapTo.precision() >= 0 ? mapTo.precision() : null;
+        final Integer scale = mapTo.scale() >= 0 ? mapTo.scale() : null;
 
         final List<PropertyColumn> result = new ArrayList<PropertyColumn>();
         if (hibernateType instanceof ICompositeUserTypeInstantiate) {

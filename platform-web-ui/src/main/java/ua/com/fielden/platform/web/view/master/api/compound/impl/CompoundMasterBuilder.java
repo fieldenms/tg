@@ -35,14 +35,14 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
     private String currentIcon;
     private String currentShortDesc;
     private String currentLongDesc;
-    
-    public static <T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> ICompoundMasterBuilder<T, F> create(final Injector injector, final IWebUiBuilder builder) {
-        return new CompoundMasterBuilder<T, F>(injector, builder);
-    }
-    
+
     private CompoundMasterBuilder(final Injector injector, final IWebUiBuilder builder) {
         this.injector = injector;
         this.builder = builder;
+    }
+
+    public static <T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> ICompoundMasterBuilder<T, F> create(final Injector injector, final IWebUiBuilder builder) {
+        return new CompoundMasterBuilder<>(injector, builder);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
 
     @Override
     public EntityMaster<F> done() {
-        final EntityMaster<F> master = new EntityMaster<F>(
+        final EntityMaster<F> master = new EntityMaster<>(
                 type, 
                 producerType,
                 new MasterWithMenu<>(type, menuItems, defaultMenuItemNumber),

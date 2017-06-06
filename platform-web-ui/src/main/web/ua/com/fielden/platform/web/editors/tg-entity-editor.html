@@ -68,7 +68,7 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" on-iron-overlay-canceled="_resultCanceled" retrieve-container-sizes="[[_retrieveContainerSizes]]"></tg-entity-editor-result>
+        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" on-iron-overlay-canceled="_resultCanceled" retrieve-container-sizes="[[_retrieveContainerSizes]]" on-tap="_entitySelected"></tg-entity-editor-result>
 
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -560,6 +560,12 @@
             _resultCanceled : function (event, detail) {
                 if (detail.keyCode && detail.keyCode === 27) {
                     this._focusInput();
+                }
+            },
+            
+            _entitySelected: function () {
+                if (!this.multi) {
+                    this._done();
                 }
             },
             
