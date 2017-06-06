@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescReadonly;
@@ -71,6 +72,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -1201,6 +1203,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         final java.util.Optional<Result> firstFailure = nonProxiedProperties()
         .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
+        
+        disregardCritOnlyRequiredProperties(this);
 
         // returns first failure if exists or successful result if there was no failure.
         if (firstFailure.isPresent()) {
@@ -1209,6 +1213,24 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             return Result.warning(this, "There are warnings.");
         } else {
             return  Result.successful(this);
+        }
+    }
+    
+    /**
+     * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
+     *
+     * @param entity
+     */
+    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
+        final Class<?> managedType = entity.getType();
+        if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
+            entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
+                final String prop = mp.getName();
+                final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
+                if (critOnlyAnnotation != null) {
+                    mp.setRequiredValidationResult(Result.successful(entity));
+                }
+            });
         }
     }
 

@@ -263,7 +263,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         //            It is necessary in case when some property becomes required after the change of other properties.
         entity.isValid();
 
-        disregardCritOnlyRequiredProperties(entity);
         disregardUntouchedRequiredProperties(entity, touchedProps);
         disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, touchedProps);
 
@@ -463,24 +462,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         }
 
         return entity;
-    }
-
-    /**
-     * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
-     *
-     * @param entity
-     */
-    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
-        final Class<?> managedType = entity.getType();
-        if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
-            entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
-                final String prop = mp.getName();
-                final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
-                if (critOnlyAnnotation != null) {
-                    mp.setRequiredValidationResult(Result.successful(entity));
-                }
-            });
-        }
     }
 
     /**
