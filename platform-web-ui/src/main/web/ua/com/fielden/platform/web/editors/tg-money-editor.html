@@ -7,6 +7,8 @@
 
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 
+<link rel="import" href="/resources/reflection/tg-numeric-utils.html">
+
 <dom-module id="tg-money-editor">
     <style>
         /* Styles for integer and decimal property editors. */
@@ -95,6 +97,16 @@
                     return this.reflector().formatMoney(value, this.$.appConfig.locale);
                 }
                 return '';
+            },
+            
+            /**
+             * Overridden to provide value corrections.
+             */
+            _commitForDescendants: function () {
+                const correctedValue = truncateLeadingZeros(this._editingValue);
+                if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
+                    this._editingValue = correctedValue;
+                }
             }
         });
     })()
