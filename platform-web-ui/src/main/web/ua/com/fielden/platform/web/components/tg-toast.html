@@ -267,7 +267,7 @@
                 const oldDuration = this.$.toast.duration;
                 if (this._showProgress && !this._hasMore) {
                     this.$.toast.duration = 3600000; //1 hour
-                } else if (this._hasMore === true) {
+                } else if (this._isCritical === true) {
                     this.$.toast.duration = 5000; //5 seconds
                 } else {
                     this.$.toast.duration = 3000; //3 seconds
