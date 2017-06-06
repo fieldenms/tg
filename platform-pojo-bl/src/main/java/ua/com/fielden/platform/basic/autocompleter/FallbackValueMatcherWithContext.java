@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -38,7 +39,7 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         this.activeOnly = activeOnly;
         if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
-            throw new EntityException(String.format("Activatable type is expected. Entity [%s] is not activatable.", entityTitle));
+            throw new EntityException(format("Activatable type is expected. Entity [%s] is not activatable.", entityTitle));
         }
 
     }
