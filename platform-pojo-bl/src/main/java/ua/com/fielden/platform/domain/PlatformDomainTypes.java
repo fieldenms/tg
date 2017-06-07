@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditAction;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -85,5 +86,6 @@ public class PlatformDomainTypes {
         types.add(EntityMasterView.class);
         types.add(MenuSaveAction.class);
         types.add(WebMenuItemInvisibility.class);
+        types.add(SequentialEntityEditAction.class);
     }
 }
