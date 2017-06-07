@@ -28,7 +28,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>>
                       implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
 
-    private final IEntityDao<T> companion;
+    protected final IEntityDao<T> companion;
     private final fetch<T> defaultFetchModel;
     private fetch<T> fetchModel;
     private CONTEXT context;

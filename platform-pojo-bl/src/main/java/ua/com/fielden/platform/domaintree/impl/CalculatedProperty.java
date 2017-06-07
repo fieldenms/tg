@@ -423,7 +423,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     private void validateAndThrow(final String property) {
-        if (!getProperty(property).isValidWithRequiredCheck()) {
+        if (!getProperty(property).isValidWithRequiredCheck(false)) {
             throw getProperty(property).getFirstFailure();
         }
     }

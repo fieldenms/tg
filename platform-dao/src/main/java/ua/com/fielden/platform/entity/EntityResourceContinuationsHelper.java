@@ -24,8 +24,15 @@ public class EntityResourceContinuationsHelper {
     public static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
         final boolean continuationsPresent = !continuations.isEmpty();
 
-        // check fully for validation errors using isValid: this includes required checks, custom overridden entity-wide validation (aka 'validate' method overridden in descendants) etc.
-        if (entity.isValid().isSuccessful()) {
+        // iterate over properties in search of the first invalid one with required checks, but not for @CritOnly properties
+        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+                .filter(mp -> !mp.isValidWithRequiredCheck(true) && mp.getFirstFailure() != null)
+                .findFirst().map(mp -> mp.getFirstFailure());
+        
+        // returns first failure if exists or successful result if there was no failure.
+        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
+        
+        if (isValid.isSuccessful()) {
             final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
             if (entity.hasWarnings() && (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null)) {
                 throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
