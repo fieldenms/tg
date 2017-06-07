@@ -643,7 +643,7 @@ public class AbstractEntityTest {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
 
         assertNull("Required property (with null value) first failure should be null (before isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertFalse("Required property (with null value) should be invalid.", firstPropertyMetaProp.isValidWithRequiredCheck());
+        assertFalse("Required property (with null value) should be invalid.", firstPropertyMetaProp.isValidWithRequiredCheck(false));
         assertNotNull("Required property (with null value) first failure should be null (after isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
         assertFalse("Entity with required property with null value should be invalid.", entity.isValid().isSuccessful());
     }
