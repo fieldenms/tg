@@ -18,16 +18,25 @@
         .paper-toast {
             @apply(--layout-horizontal);
             @apply(--layout-center);
-            max-width: 250px;
+            max-width: 256px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-smooth: always;
+        }
+        
+        .more {
+        	padding-left: 8px;
+        	color: #03A9F4;
+        	font-weight: 800;
+        	font-smooth: always;
+            cursor: pointer;
         }
         
         /* style to truncate the toast text */
         body /deep/ paper-toast::shadow #label {
             @apply(--layout-flex);
-            max-width: 250px;
+            max-width: 248px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -61,7 +70,7 @@
     	</style>
         <paper-toast id="toast" class="paper-toast" text="[[_text]]" always-on-top> <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
-            <div hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
+            <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="more" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
     </template>
 </dom-module>
@@ -98,6 +107,10 @@
                 	type: Boolean
                 },
                 
+                isCritical: {
+                	type: Boolean,
+                	value: false
+                },
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
              	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +135,11 @@
                 _hasMore: {
                 	type: Boolean
                 },
+                
+                _isCritical: {
+                	type: Boolean,
+                	value: false
+                },
              	
                 _skipShowProgress: {
                 	type: Boolean,
@@ -130,6 +148,7 @@
         	},
 
             _showMessageDlg: function (event) {
+                const self = this;
                 // need to open dialog asynchronously for it to open on mobile devices 
                 this.async(function () {
                     // build and display the dialog
@@ -178,7 +197,8 @@
                     this.async(function () {
                         domBind.$.msgDialog.open();
                     }, 100);
-                    
+
+                    self.$.toast.close();
                 }, 100);
                 
             },
@@ -220,7 +240,7 @@
                     Polymer.dom(document.body).appendChild(this.$.toast);
                     Polymer.dom().flush();
                     this._showNewToast();
-                } else if (previousToast.error === true && previousToast.visible) {
+                } else if (previousToast.error === true && previousToast.opened) {
                     console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 } else {
                     // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
@@ -232,6 +252,7 @@
                         previousTgToast.msgText = this.msgText;
                         previousTgToast.showProgress = this.showProgress;
                         previousTgToast.hasMore = this.hasMore;
+                        previousTgToast.isCritical = this.isCritical;
                     }
                     previousTgToast._showNewToast();
                 }
@@ -242,11 +263,12 @@
                 this._msgText = this.msgText; 
                 this._showProgress = this.showProgress;
                 this._hasMore = this.hasMore;
+                this._isCritical = this.isCritical;
                 
                 const oldDuration = this.$.toast.duration;
                 if (this._showProgress && !this._hasMore) {
                     this.$.toast.duration = 3600000; //1 hour
-                } else if (this._hasMore === true) {
+                } else if (this._isCritical === true) {
                     this.$.toast.duration = 5000; //5 seconds
                 } else {
                     this.$.toast.duration = 3000; //3 seconds
@@ -260,8 +282,18 @@
                     this.$.toast._autoClose = this.$.toast.async(this.$.toast.close, this.$.toast.duration);
                 }
                 
-                this.$.toast.error = this._hasMore;
+                this.$.toast.error = this._isCritical;//this._hasMore;
+                console.log('isCritical!!', this._isCritical);
+                if (this._isCritical === true) {
+                    this.$.toast.style.background = '#D50000';
+                    this.$.btnMore.style.color = '#FFCDD2';
+                } else {
+                    this.$.toast.style.background = 'black';
+                    this.$.btnMore.style.color = '#03A9F4';
+                }
                 this.$.toast.show();
+                
+                
                 // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
             }
         })

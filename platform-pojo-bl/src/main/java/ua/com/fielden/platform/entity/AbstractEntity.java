@@ -1197,9 +1197,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (!isInstrumented()) {
             throw new EntityException(format("Uninstrumented entity [%s] should not be validated.", getType().getName()));
         }
-        // iterate over properties in search of the first invalid one
+        // iterate over properties in search of the first invalid one, including requiredness for any kind of property
         final java.util.Optional<Result> firstFailure = nonProxiedProperties()
-        .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
+        .filter(mp -> !mp.isValidWithRequiredCheck(false) && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
 
         // returns first failure if exists or successful result if there was no failure.

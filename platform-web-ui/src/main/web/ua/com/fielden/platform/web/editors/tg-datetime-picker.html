@@ -199,8 +199,12 @@
                             'h:m:ss.SSSa',
                             'H:m:ss.SSS',
                             'LT',
+                            'hmma',
+                            'Hmm',
                             'h:ma',
-                            'H:m'
+                            'H:m',
+                            'ha',
+                            'H'
                         ];
                     }
                 },
@@ -223,7 +227,7 @@
                     if (this._validMoment !== null) {
                         return this._validMoment.valueOf();
                     } else {
-                        throw "The entered date is incorrect."
+                        throw 'The entered ' + (this.datePortion === 'TIME' ? 'time' : 'date') + ' is incorrect.';
                     }
                 } else {
                     return null;

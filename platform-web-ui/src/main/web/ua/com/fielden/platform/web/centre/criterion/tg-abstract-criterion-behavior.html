@@ -46,7 +46,8 @@
              * Indicates whether criterion for entity property has critOnly annotation or not.
              */
             critOnly: {
-                type: Boolean
+                type: Boolean,
+                value: false
             },
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +137,16 @@
                 self._dom().$.iconButton.disabled = false;
                 self.restoreActiveElement();
             }.bind(domBind);
+            
+            domBind._clearMetaValues = function () {
+                domBind._orNullBind = false;
+                domBind._notBind = false;
+                domBind._exclusiveBind = false;
+                domBind._exclusive2Bind = false;
+                domBind._datePrefixBind = null;
+                domBind._dateMnemonicBind = null;
+                domBind._andBeforeBind = null;
+            };
 
             domBind._cancelMetaValuesBind = function () {
                 self._cancelMetaValues();
@@ -181,9 +192,12 @@
                 '</div>' +
                 '</paper-dialog-scrollable>' +
 
-            '<div class="buttons">' +
-                '<paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValuesBind">Cancel</paper-button>' +
-                '<paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValuesBind">Ok</paper-button>' +
+            '<div class="layout horizontal justified" style="padding:8px; margin:0;">' +
+                '<paper-button class="blue" on-tap="_clearMetaValues">Clear</paper-button>' +
+                '<div class="layout horizontal">' +
+                    '<paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValuesBind">Cancel</paper-button>' +
+                    '<paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValuesBind">Ok</paper-button>' +
+                '<div>'
                 '</div>' +
                 '</paper-dialog>';
 

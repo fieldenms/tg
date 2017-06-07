@@ -55,7 +55,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (newValue == null) {
                 return Result.successful(entity);
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
-                return Result.failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, newValue.getType().getName()));
+                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
+                return Result.failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
 
             // the notion of existence is different for activatable and non-activatable entities,
@@ -82,12 +83,12 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 }
             }
 
-            if ((!exists) || (exists && !activeEnough)) {
+            if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
-                    return Result.failure(entity, format("%s %s does not exist.", entityTitle, newValue));
+                    return Result.failure(entity, format("%s [%s] was not found.", entityTitle, newValue));
                 } else {
-                    return Result.failure(entity, format("%s %s exists, but is not active.", entityTitle, newValue));
+                    return Result.failure(entity, format("%s [%s] exists, but is not active.", entityTitle, newValue));
                 }
             } else {
                 return Result.successful(entity);

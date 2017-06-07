@@ -145,32 +145,12 @@
             // time portion aproximations into 'today' date
             var todayStr = _momentTz().format('L'); // '17/10/2016';
             
-            test('[11:03] to [' + todayStr + ' 11:03]', function(done) {
-                correctlyApproximates(done, '11:03', todayStr + ' 11:03');
+            test('[11:03:34.567] to [' + todayStr + ' 11:03:34.567]', function(done) {
+                correctlyApproximates(done, '11:03:34.567', todayStr + ' 11:03:34.567');
             });
             
-            test('[21:45] to [' + todayStr + ' 21:45]', function(done) {
-                correctlyApproximates(done, '21:45', todayStr + ' 21:45');
-            });
-            
-            test('[9:37] to [' + todayStr + ' 09:37]', function(done) {
-                correctlyApproximates(done, '9:37', todayStr + ' 09:37');
-            });
-            
-            test('[9:7] to [' + todayStr + ' 09:07]', function(done) {
-                correctlyApproximates(done, '9:7', todayStr + ' 09:07');
-            });
-            
-            test('[9:7p] to [' + todayStr + ' 21:07]', function(done) {
-                correctlyApproximates(done, '9:7p', todayStr + ' 21:07');
-            });
-            
-            test('[21:7] to [' + todayStr + ' 21:07]', function(done) {
-                correctlyApproximates(done, '21:7', todayStr + ' 21:07');
-            });
-            
-            test('[23:05:34.567] to [' + todayStr + ' 23:05:34.567]', function(done) {
-                correctlyApproximates(done, '23:05:34.567', todayStr + ' 23:05:34.567');
+            test('[23:03:34.567] to [' + todayStr + ' 23:03:34.567]', function(done) {
+                correctlyApproximates(done, '23:03:34.567', todayStr + ' 23:03:34.567');
             });
             
             test('[21:5:34.567] to [' + todayStr + ' 21:05:34.567]', function(done) {
@@ -181,6 +161,127 @@
                 correctlyApproximates(done, '9:5:34.567', todayStr + ' 09:05:34.567');
             });
             
+            // h:m:ss.SSSa
+            test('[11:03:34.567a] to [' + todayStr + ' 11:03:34.567]', function(done) {
+                correctlyApproximates(done, '11:03:34.567a', todayStr + ' 11:03:34.567');
+            });
+            
+            test('[11:03:34.567p] to [' + todayStr + ' 23:03:34.567]', function(done) {
+                correctlyApproximates(done, '11:03:34.567p', todayStr + ' 23:03:34.567');
+            });
+            // hmma
+            test('[1103a] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '1103a', todayStr + ' 11:03');
+            });
+            
+            test('[103a] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '103a', todayStr + ' 01:03');
+            });
+            
+            test('[1103p] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '1103p', todayStr + ' 23:03');
+            });
+            
+            test('[103p] to [' + todayStr + ' 13:03]', function(done) {
+                correctlyApproximates(done, '103p', todayStr + ' 13:03');
+            });
+            // Hmm
+            test('[1103] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '1103', todayStr + ' 11:03');
+            });
+            
+            test('[103] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '103', todayStr + ' 01:03');
+            });
+            
+            test('[2303] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '2303', todayStr + ' 23:03');
+            });
+            // h:ma
+            test('[11:03a] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:03a', todayStr + ' 11:03');
+            });
+            
+            test('[1:03a] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:03a', todayStr + ' 01:03');
+            });
+            
+            test('[11:03p] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '11:03p', todayStr + ' 23:03');
+            });
+            
+            test('[1:03p] to [' + todayStr + ' 13:03]', function(done) {
+                correctlyApproximates(done, '1:03p', todayStr + ' 13:03');
+            });
+            
+            test('[11:3a] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:3a', todayStr + ' 11:03');
+            });
+            
+            test('[1:3a] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:3a', todayStr + ' 01:03');
+            });
+            
+            test('[11:3p] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '11:3p', todayStr + ' 23:03');
+            });
+            
+            test('[1:3p] to [' + todayStr + ' 13:03]', function(done) {
+                correctlyApproximates(done, '1:3p', todayStr + ' 13:03');
+            });
+            // H:m
+            test('[11:03] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:03', todayStr + ' 11:03');
+            });
+            
+            test('[1:03] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:03', todayStr + ' 01:03');
+            });
+            
+            test('[23:03] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '23:03', todayStr + ' 23:03');
+            });
+            
+            test('[11:3] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:3', todayStr + ' 11:03');
+            });
+            
+            test('[1:3] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:3', todayStr + ' 01:03');
+            });
+            
+            test('[23:3] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '23:3', todayStr + ' 23:03');
+            });
+            // ha
+            test('[11a] to [' + todayStr + ' 11:00]', function(done) {
+                correctlyApproximates(done, '11a', todayStr + ' 11:00');
+            });
+            
+            test('[1a] to [' + todayStr + ' 01:00]', function(done) {
+                correctlyApproximates(done, '1a', todayStr + ' 01:00');
+            });
+            
+            test('[11p] to [' + todayStr + ' 23:00]', function(done) {
+                correctlyApproximates(done, '11p', todayStr + ' 23:00');
+            });
+            
+            test('[1p] to [' + todayStr + ' 13:00]', function(done) {
+                correctlyApproximates(done, '1p', todayStr + ' 13:00');
+            });
+            // H
+            test('[11] to [' + todayStr + ' 11:00]', function(done) {
+                correctlyApproximates(done, '11', todayStr + ' 11:00');
+            });
+            
+            test('[1] to [' + todayStr + ' 01:00]', function(done) {
+                correctlyApproximates(done, '1', todayStr + ' 01:00');
+            });
+            
+            test('[23] to [' + todayStr + ' 23:00]', function(done) {
+                correctlyApproximates(done, '23', todayStr + ' 23:00');
+            });
+            // spaces
             test('[9:5 : 34  .  567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
                 correctlyApproximates(done, '9:5 : 34  .  567  ', todayStr + ' 09:05:34.567');
             });
@@ -334,10 +435,6 @@
             
             test('[9/] to [9/]', function(done) {
                 incorrectlyApproximates(done, '9/');
-            });
-            
-            test('[9] to [9]', function(done) {
-                incorrectlyApproximates(done, '9');
             });
             
             test('[01/01/201] to [01/01/201]', function(done) {

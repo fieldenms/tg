@@ -47,7 +47,7 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
             save(cat1_v2.setDesc("other desc"));
             fail("Saving should have failed");
         } catch (final EntityCompanionException ex) {
-            assertEquals("Could not resolve conflicting changes. Entity Cat1 (Tg Category) could not be saved.", ex.getMessage());
+            assertEquals("Could not resolve conflicting changes. Tg Category [Cat1] could not be saved.", ex.getMessage());
         }
 
     }

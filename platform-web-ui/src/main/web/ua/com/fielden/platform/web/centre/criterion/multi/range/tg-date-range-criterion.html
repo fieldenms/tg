@@ -9,8 +9,16 @@
 
 <dom-module id="tg-date-range-criterion">
     <template>
+        <style>
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
         <tg-abstract-criterion
         	id="dom"
+        	crit-only="[[critOnly]]"
         	_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
         	_accept-meta-values="[[_acceptMetaValuesForBinding]]"
         	_show-meta-values-editor="[[_showMetaValuesEditor]]"
@@ -19,7 +27,17 @@
         	_not="{{_not}}"
         	_exclusive="{{_exclusive}}"
         	_exclusive2="{{_exclusive2}}">
-            <content select=".criterion-editors"></content>
+            <div class="layout horizontal flex relative criterion-editors" style="margin-right:20px;">
+                <content select=".range-criterion-editor-1"></content>
+                <div class="fit mnemonic-layer exclusive-mnemonic" hidden$="[[!_exclusive]]"></div>
+            </div>
+            <div class="layout horizontal flex relative criterion-editors">
+                <content select=".range-criterion-editor-2"></content>
+                <div class="fit mnemonic-layer exclusive-mnemonic" hidden$="[[!_exclusive2]]"></div>
+            </div>
+            <div class="fit layout horizontal center center-justified mnemonic-layer date-mnemonic" hidden$="[[!_hasDateMetaValueFor(_datePrefix)]]">
+                <span class="truncate">[[_calcText(_datePrefix, _dateMnemonic, _andBefore)]]</span>
+            </div>
         </tg-abstract-criterion>
     </template>
 </dom-module>
@@ -105,7 +123,37 @@
 
             Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._acceptMetaValues.call(this);
         },
-
+        
+        /**
+         * Calculates date layer's text based on applied mnemonic.
+         */
+        _calcText: function (_datePrefix, _dateMnemonic, _andBefore) {
+            /* this._datePrefixes = ["PREV", "CURR", "NEXT"];
+            this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
+            this._andBefores = ["THIS", "BEFORE", "AFTER"];
+            this._prefixTitles = ["Previous", "Current", "Next"];
+            this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
+            this._andBeforeTitles = ["", " and before", " and after"]; */
+            const _mnemonicIds = ['WEEK', 'MONTH', 'QRT1', 'QRT2', 'QRT3', 'QRT4', 'YEAR', 'OZ_FIN_YEAR'];
+            const _mnemonicTitles = ['week', 'month', 'year\'s 1-st quarter', 'year\'s 2-nd quarter', 'year\'s 3-rd quarter', 'year\'s 4-th quarter', 'year', 'financial year'];
+            const _andBeforeSuffix = _andBefore === true ? ' and before' : (_andBefore === false ? ' and after' : '');
+            if ('DAY' === _dateMnemonic) {
+                const day = 'PREV' === _datePrefix ? 'Yesterday' : ('CURR' === _datePrefix ? 'Today' : 'Tomorrow');
+                return day + _andBeforeSuffix;
+            } else {
+                const prefix = 'PREV' === _datePrefix ? 'Previous' : ('CURR' === _datePrefix ? 'Current' : 'Next');
+                const period = _mnemonicTitles[_mnemonicIds.indexOf(_dateMnemonic)];
+                return prefix + ' ' + period + _andBeforeSuffix;
+            }
+        },
+        
+        /**
+         * Returns 'true' if date specific meta value exists and date layer should be present, 'false' otherwise.
+         */
+        _hasDateMetaValueFor: function (_datePrefix) {
+            return _datePrefix !== null && this._iconButtonVisible();
+        },
+        
         _cancelMetaValues: function () {
             this._datePrefix = this.datePrefix;
             this._dateMnemonic = this.dateMnemonic;

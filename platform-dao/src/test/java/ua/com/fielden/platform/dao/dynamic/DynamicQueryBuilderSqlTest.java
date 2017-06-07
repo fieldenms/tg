@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getPropertyNameWithoutKeyPart;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepare;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,8 @@ import org.hibernate.cfg.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -32,6 +35,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -50,8 +55,6 @@ import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import com.google.inject.Injector;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -524,10 +527,86 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     @Test
-    public void test_atomic_query_composition_for_entity_type() {
-        test_atomic_query_composition_for_entity_type("entityProp");
+    public void query_composition_for_properties_of_entity_type_with_wildcard_selection_crit_value_uses_iLike_operator() {
+        final String propertyName = "entityProp";
+        
+        set_up();
+        final QueryProperty property = queryProperties.get(propertyName);
+        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+
+        final String cbn = property.getConditionBuildingName();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+        /**/iJoin.where().condition(cond() //
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+        /*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[]) DynamicQueryBuilder.prepare((List<String>) property.getValue())).model()) //
+        /*  */.model()) //
+        /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
 
+    @Test
+    public void query_composition_for_properties_of_entity_type_without_wildcard_selection_crit_value_uses_in_operator_with_subselect() {
+        final String propertyName = "entityProp";
+        
+        set_up();
+        final QueryProperty property = queryProperties.get(propertyName);
+        final String[] critValues = new String[] {"some val 1", "some val 2"};
+        property.setValue(Arrays.asList(critValues));
+
+
+        final String cbn = property.getConditionBuildingName();
+        final String cbnNoKey = cbn.substring(0, cbn.length() - 4); // cut off ".key" from the name
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+        /**/iJoin.where().condition(cond() //
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+        /*  */.condition(cond().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop("key").in().values("some val 1", "some val 2").model()).model()) //
+        /*  */.model()) //
+        /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void query_composition_for_properties_of_entity_type_with_and_without_wildcard_selection_crit_value_uses_combination_of_in_operator_with_subselect_and_iLike_operator() {
+        final String propertyName = "entityProp";
+        
+        set_up();
+        final QueryProperty property = queryProperties.get(propertyName);
+        final String[] critValues = new String[] {"some val 1", "some val 2*", "some val 3*", "some val 4",};
+        property.setValue(Arrays.asList(critValues));
+        
+        final String[] critValuesWithWildcard = new String[] {"some val 2*", "some val 3*"};
+
+        final String cbn = property.getConditionBuildingName();
+        final String cbnNoKey = cbn.substring(0, cbn.length() - 4); // cut off ".key" from the name
+
+        
+        final EntityResultQueryModel<SlaveEntity> subSelect = select(SlaveEntity.class).where().prop("key").in().values("some val 1", "some val 4").model();
+        final ConditionModel whereCondition = cond()
+                .condition(
+                        cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull()
+                            .and()
+                            .condition(
+                                cond().prop(cbnNoKey).in().model(subSelect)
+                                .or().prop(cbn).iLike().anyOfValues(prepare(Arrays.asList(critValuesWithWildcard)))
+                                .model())
+                        .model())
+                .model();
+                
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+        /**/iJoin.where().condition(whereCondition);
+        
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    
     private void test_atomic_query_composition_for_string_type(final String propertyName) {
         set_up();
         final QueryProperty property = queryProperties.get(propertyName);
@@ -547,24 +626,6 @@ public class DynamicQueryBuilderSqlTest {
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
-    private void test_atomic_query_composition_for_entity_type(final String propertyName) {
-        set_up();
-        final QueryProperty property = queryProperties.get(propertyName);
-        property.setValue(Arrays.asList("some val 1", "some val 2"));
-
-        final String cbn = property.getConditionBuildingName();
-
-        final ICompleted<? extends AbstractEntity<?>> expected = //
-        /**/iJoin.where().condition(cond() //
-        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-        /*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[]) DynamicQueryBuilder.prepare((List<String>) property.getValue())).model()) //
-        /*  */.model()) //
-        /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
-
-        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
-        //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////// 2. Property level (Negation / Null) /////////////////////
@@ -1204,25 +1265,25 @@ public class DynamicQueryBuilderSqlTest {
         QueryProperty property = null;
 
         property = unionProps.get("");
-        property.setValue(Arrays.asList("some val 1", "some val 2"));
+        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
 
         property = unionProps.get("desc");
         property.setValue("Some string value");
 
         property = unionProps.get("location");
-        property.setValue(Arrays.asList("some val 1", "some val 2"));
+        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.workshop");
-        property.setValue(Arrays.asList("some val 1", "some val 2"));
+        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.workshop.desc");
         property.setValue("Some string value");
 
         property = unionProps.get("location.wagonSlot");
-        property.setValue(Arrays.asList("some val 1", "some val 2"));
+        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.wagonSlot.wagon");
-        property.setValue(Arrays.asList("some val 1", "some val 2"));
+        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.wagonSlot.position");
         property.setValue(3);
@@ -1231,18 +1292,18 @@ public class DynamicQueryBuilderSqlTest {
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/select(TgBogie.class).as(alias).where().condition(cond() //
         /*  */.condition(cond().prop(alias).isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] { "some val 1", "some val 2" }).model())//
+        /*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".desc").isNotNull().and() //
         /*    */.condition(cond().prop(alias + ".desc").iLike().anyOfValues(new Object[] { "Some string value" }).model()) //
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".location").isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".location.key").iLike().anyOfValues(new Object[] { "some val 1", "some val 2" }).model())//
+        /*    */.condition(cond().prop(alias + ".location.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*  */.model()).and()//
         /*    */.condition(cond()//
         /*	*/.condition(cond()//
         /*	  */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.workshop.key").iLike().anyOfValues(new Object[] { "some val 1", "some val 2" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.workshop.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.workshop.desc").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.workshop.desc").iLike().anyOfValues(new Object[] { "Some string value" }).model())
@@ -1251,10 +1312,10 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.or()//
         /*	*/.condition(cond()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.key").iLike().anyOfValues(new Object[] { "some val 1", "some val 2" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.wagon").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon.key").iLike().anyOfValues(new Object[] { "some val 1", "some val 2" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.position").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.wagonSlot.position").ge().iVal(3).and().prop(alias + ".location.wagonSlot.position").le().iVal(7).model())//

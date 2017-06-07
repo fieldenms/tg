@@ -6,8 +6,14 @@
      * Determines whether the result represents the error.
      */
     var _isError0 = function (result) {
-        return result !== null && (result["@resultType"] === "ua.com.fielden.platform.error.Result" || result["@resultType"] === "ua.com.fielden.platform.web.utils.PropertyConflict") && (typeof result.ex !== 'undefined');
+        return result !== null 
+        	&& (result["@resultType"] === "ua.com.fielden.platform.error.Result" || result["@resultType"] === "ua.com.fielden.platform.web.utils.PropertyConflict") 
+        	&& (typeof result.ex !== 'undefined');
     };
+    
+    var _isContinuationError0 = function (result) {
+        return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
+    }
 
     /**
      * Determines whether the result represents the warning.
@@ -1152,6 +1158,13 @@
          */
         isError: function (result) {
             return _isError0(result);
+        },
+
+        /**
+         * Determines whether result represents an error that indicates continuation.
+         */
+        isContinuationError: function (result) {
+            return _isContinuationError0(result);
         },
 
         /**

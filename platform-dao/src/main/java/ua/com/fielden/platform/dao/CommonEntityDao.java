@@ -91,6 +91,8 @@ import ua.com.fielden.platform.utils.Validators;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> implements ISessionEnabled {
 
+    private static final String ERR_MSG_NO_QUERY_PROVIDED = "There was no query provided to retrieve the data.";
+    
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
@@ -315,7 +317,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
         if (count == 1 && entity.getId().longValue() != ((Number) ids.get(0).get(AbstractEntity.ID)).longValue()) {
-            throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
+            throw new EntityCompanionException(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 
         // load the entity directly from the session
@@ -323,7 +325,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         persistedEntity.setIgnoreEditableState(true);
         // check for data staleness and try to resolve the conflict is possible (refer #83)
         if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion() && !canResolveConflict(entity, persistedEntity)) {
-            throw new EntityCompanionException(format("Could not resolve conflicting changes. Entity %s (%s) could not be saved.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey()));
+            throw new EntityCompanionException(format("Could not resolve conflicting changes. %s [%s] could not be saved.", TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey(), entity));
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
@@ -443,7 +445,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!entity.equals(persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                throw new EntityCompanionException(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, propNameAndType._2));
+                                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
+                                final String persistedValueTitle = TitlesDescsGetter.getEntityTitleAndDesc(propNameAndType._2).getKey();
+                                throw new EntityCompanionException(format("%s [%s] has a reference to already inactive %s [%s].", entityTitle, entity, persistedValueTitle, persistedValue));
                             } else { // otherwise, increment refCount
                                 getSession().update(persistedValue.incRefCount());
                             }
@@ -534,7 +538,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // let's make sure that entity is not a duplicate
         final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
         if (count > 0) {
-            throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
+            throw new EntityCompanionException(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 
         // process transactional assignments
@@ -1113,7 +1117,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
                 }
             }
             return null;
@@ -1127,7 +1131,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
                 }
             }
             return null;
@@ -1141,7 +1145,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
                 }
             }
             return null;
@@ -1155,7 +1159,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
                 }
             }
             return null;
