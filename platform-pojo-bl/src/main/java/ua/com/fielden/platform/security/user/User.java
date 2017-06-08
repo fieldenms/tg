@@ -234,7 +234,7 @@ public class User extends ActivatableAbstractEntity<String> {
         } else if (system_users.isOneOf(this)) {
             throw Result.failure(format("User %s is an application built-in account and should remain a base user.", getKey()));
         }
-        getProperty("basedOnUser").setRequired(!base);
+        getPropertyOptionally("basedOnUser").map(p -> p.setRequired(!base));
         return this;
     }
 

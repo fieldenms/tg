@@ -8,30 +8,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Optional;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -303,19 +288,50 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User user = co(User.class).findByKeyAndFetch(fetchOnly(User.class), "USER1");
         assertTrue(user.getLastUpdatedBy().isIdOnlyProxy());
     }
-    
+ 
+    @Test
+    public void if_base_prop_is_set_to_false_then_prop_basedOnUser_becomes_required() {
+        final User user1 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER1");
+        user1.setBase(false);
+        
+        assertTrue(user1.getProperty("basedOnUser").isRequired());
+        
+        final User user3 = coUser.findByKey("USER2");
+        user1.setBasedOnUser(user3);
+        
+        final User user1saved = save(user1);
+        assertEquals(user3, user1saved.getBasedOnUser());
+    }
+
+
+    @Test
+    public void if_base_prop_is_set_to_true_then_prop_basedOnUser_becomes_not_required_and_its_value_is_removed() {
+        final User user5 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER5");
+        assertTrue(user5.getProperty("basedOnUser").isRequired());
+        assertNotNull(user5.getBasedOnUser());
+        user5.setBase(true);
+        assertFalse(user5.getProperty("basedOnUser").isRequired());
+        assertNull(user5.getBasedOnUser());
+        
+        final User user5saved = save(user5);
+        assertTrue(user5saved.isBase());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
         
         // add inactive users with no email addresses
         coUser.save(new_(User.class, "INACTIVE_USER").setBase(true).setActive(false));
-        coUser.save(coUser.save(new_(User.class, "USER1").setBase(true)).setEmail("USER1@company.com"));
+        final User user1 = coUser.save(coUser.save(new_(User.class, "USER1").setBase(true)).setEmail("USER1@company.com"));
         coUser.save(new_(User.class, "USER2").setBase(true));
 
         // add active users with email addresses
         coUser.save(new_(User.class, "USER3").setBase(true).setEmail("USER3@company.com").setActive(true));
         coUser.save(new_(User.class, "USER4").setBase(true).setEmail("USER4@company.com").setActive(true));
+        
+        // based on user
+        coUser.save(new_(User.class, "USER5").setBasedOnUser(user1).setEmail("USER5@company.com"));
     }
 
 }
