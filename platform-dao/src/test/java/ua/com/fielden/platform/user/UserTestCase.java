@@ -8,30 +8,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Optional;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -39,6 +24,7 @@ import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -303,6 +289,97 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User user = co(User.class).findByKeyAndFetch(fetchOnly(User.class), "USER1");
         assertTrue(user.getLastUpdatedBy().isIdOnlyProxy());
     }
+ 
+    @Test
+    public void if_base_prop_is_set_to_false_then_prop_basedOnUser_becomes_required() {
+        final User user1 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER1");
+        user1.setBase(false);
+        
+        assertTrue(user1.getProperty("basedOnUser").isRequired());
+        
+        final User user3 = coUser.findByKey("USER2");
+        user1.setBasedOnUser(user3);
+        
+        final User user1saved = save(user1);
+        assertEquals(user3, user1saved.getBasedOnUser());
+    }
+
+
+    @Test
+    public void if_base_prop_is_set_to_true_then_prop_basedOnUser_becomes_not_required_and_its_value_is_removed() {
+        final User user5 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER5");
+        assertTrue(user5.getProperty("basedOnUser").isRequired());
+        assertNotNull(user5.getBasedOnUser());
+        user5.setBase(true);
+        assertFalse(user5.getProperty("basedOnUser").isRequired());
+        assertNull(user5.getBasedOnUser());
+        
+        final User user5saved = save(user5);
+        assertTrue(user5saved.isBase());
+    }
+    
+    @Test
+    public void system_users_cannot_have_property_base_changed() {
+        final User unitTestUser = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
+        assertNotNull(unitTestUser);
+        assertTrue(unitTestUser.isBase());
+        assertTrue(unitTestUser.getProperty("base").isValid());
+        unitTestUser.setBase(false);
+        assertFalse(unitTestUser.getProperty("base").isValid());
+        assertTrue(unitTestUser.isBase());
+    }
+
+    @Test
+    public void the_use_of_self_as_basedOnUser_is_not_permitted() {
+        final User user1 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER1");
+        assertTrue(user1.getProperty("basedOnUser").isValid());
+        user1.setBasedOnUser(user1);
+        assertFalse(user1.getProperty("basedOnUser").isValid());
+        assertEquals(UserBaseOnUserValidator.SELF_REFERENCE_IS_NOT_PERMITTED, user1.getProperty("basedOnUser").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void system_users_cannot_have_property_basedOnUser_changed() {
+        final User unitTestUser = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
+        assertNotNull(unitTestUser);
+        assertNull(unitTestUser.getBasedOnUser());
+        assertTrue(unitTestUser.getProperty("basedOnUser").isValid());
+        final User user3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        unitTestUser.setBasedOnUser(user3);
+        assertFalse(unitTestUser.getProperty("basedOnUser").isValid());
+        assertNull(unitTestUser.getBasedOnUser());
+        assertEquals(format(UserBaseOnUserValidator.SYSTEM_BUILT_IN_ACCOUNTS_CANNOT_HAVE_BASED_ON_USER, unitTestUser.getKey()), unitTestUser.getProperty("basedOnUser").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void only_a_base_user_can_be_set_as_basedOnUser() {
+        final User user5 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER5");
+        assertTrue(user5.getProperty("basedOnUser").isValid());
+        assertEquals("USER1", user5.getBasedOnUser().getKey());
+        
+        final User nonbaseUser6 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER6");
+        user5.setBasedOnUser(nonbaseUser6);
+        assertFalse(user5.getProperty("basedOnUser").isValid());
+        assertEquals("USER1", user5.getBasedOnUser().getKey());
+        assertEquals(format(UserBaseOnUserValidator.ONLY_BASE_USER_CAN_BE_USED_FOR_INHERITANCE, nonbaseUser6.getKey()), user5.getProperty("basedOnUser").getFirstFailure().getMessage());
+        
+        final User baseUser3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        user5.setBasedOnUser(baseUser3);
+        final User savedUser5 = save(user5);
+        assertTrue(savedUser5.getProperty("basedOnUser").isValid());
+        assertEquals("USER3", savedUser5.getBasedOnUser().getKey());
+    }
+
+    @Test
+    public void once_basedOnUser_is_assigned_to_a_base_user_then_its_property_base_becomes_false() {
+        final User user3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        assertTrue(user3.isBase());
+
+        final User baseUser4 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER4");
+        user3.setBasedOnUser(baseUser4);
+        assertFalse(user3.isBase());
+    }
+
     
     @Override
     protected void populateDomain() {
@@ -310,12 +387,16 @@ public class UserTestCase extends AbstractDaoTestCase {
         
         // add inactive users with no email addresses
         coUser.save(new_(User.class, "INACTIVE_USER").setBase(true).setActive(false));
-        coUser.save(coUser.save(new_(User.class, "USER1").setBase(true)).setEmail("USER1@company.com"));
+        final User user1 = coUser.save(coUser.save(new_(User.class, "USER1").setBase(true)).setEmail("USER1@company.com"));
         coUser.save(new_(User.class, "USER2").setBase(true));
 
         // add active users with email addresses
         coUser.save(new_(User.class, "USER3").setBase(true).setEmail("USER3@company.com").setActive(true));
         coUser.save(new_(User.class, "USER4").setBase(true).setEmail("USER4@company.com").setActive(true));
+        
+        // based on users
+        coUser.save(new_(User.class, "USER5").setBasedOnUser(user1).setEmail("USER5@company.com"));
+        coUser.save(new_(User.class, "USER6").setBasedOnUser(user1).setEmail("USER6@company.com"));
     }
 
 }
