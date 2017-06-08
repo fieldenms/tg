@@ -316,6 +316,17 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User user5saved = save(user5);
         assertTrue(user5saved.isBase());
     }
+    
+    @Test
+    public void system_users_cannot_have_property_base_changed() {
+        final User unitTestUser = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
+        assertNotNull(unitTestUser);
+        assertTrue(unitTestUser.isBase());
+        assertTrue(unitTestUser.getProperty("base").isValid());
+        unitTestUser.setBase(false);
+        assertFalse(unitTestUser.getProperty("base").isValid());
+        assertTrue(unitTestUser.isBase());
+    }
 
     @Override
     protected void populateDomain() {

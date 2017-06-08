@@ -28,6 +28,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
+import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
+import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -93,6 +95,8 @@ public class User extends ActivatableAbstractEntity<String> {
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
     @MapTo
+    @BeforeChange(@Handler(UserBaseValidator.class))
+    @AfterChange(UserBaseDefiner.class)
     private boolean base = false;
 
     @IsProperty
@@ -229,12 +233,6 @@ public class User extends ActivatableAbstractEntity<String> {
     @Observable
     public User setBase(final boolean base) {
         this.base = base;
-        if (base) {
-            setBasedOnUser(null);
-        } else if (system_users.isOneOf(this)) {
-            throw Result.failure(format("User %s is an application built-in account and should remain a base user.", getKey()));
-        }
-        getPropertyOptionally("basedOnUser").map(p -> p.setRequired(!base));
         return this;
     }
 
