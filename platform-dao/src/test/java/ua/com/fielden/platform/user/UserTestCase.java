@@ -370,6 +370,16 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertEquals("USER3", savedUser5.getBasedOnUser().getKey());
     }
 
+    @Test
+    public void once_basedOnUser_is_assigned_to_a_base_user_then_its_property_base_becomes_false() {
+        final User user3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        assertTrue(user3.isBase());
+
+        final User baseUser4 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER4");
+        user3.setBasedOnUser(baseUser4);
+        assertFalse(user3.isBase());
+    }
+
     
     @Override
     protected void populateDomain() {

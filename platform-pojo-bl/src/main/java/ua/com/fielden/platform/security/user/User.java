@@ -29,6 +29,7 @@ import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
+import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
@@ -104,6 +105,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
     @MapTo
     @BeforeChange(@Handler(UserBaseOnUserValidator.class))
+    @AfterChange(UserBasedOnUserDefiner.class)
     private User basedOnUser;
 
     @IsProperty
@@ -245,9 +247,6 @@ public class User extends ActivatableAbstractEntity<String> {
     @Observable
     public User setBasedOnUser(final User basedOnUser) {
         this.basedOnUser = basedOnUser;
-        if (basedOnUser != null) {
-            setBase(false);
-        }
         return this;
     }
 
