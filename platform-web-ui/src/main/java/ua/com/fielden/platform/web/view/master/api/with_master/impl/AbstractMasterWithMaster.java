@@ -41,7 +41,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "        return undefined;\n"
                         + "    }\n"
                         + "}.bind(this);\n"
-                        + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n")
+                                + "this.addEventListener('after-load', (function (e) {" + afterLoadCallback("e.detail", "_currBindingEntity") + "}).bind(this));\n")
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
@@ -52,6 +52,10 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                 return new InnerTextElement(entityMasterStr);
             }
         };
+    }
+
+    protected String afterLoadCallback(final String embededMaster, final String bindingEntity) {
+        return "this._assignPostSavedHandlersForEmbeddedMaster.bind(this)(" + embededMaster + ")";
     }
 
     protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave);
@@ -69,7 +73,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     public IRenderable render() {
         return renderable;
     }
-    
+
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");

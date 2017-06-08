@@ -593,8 +593,7 @@
              * This is required in order to assign the postSaved and postSavedError handler calls to the embedded master, so
              * that it would act like it is the master and the wrapping master is just that -- a mere wrapper for providing context.
              */
-            _assignPostSavedHandlersForEmbeddedMaster: function (e) {
-                var embeddedMaster = e.detail;
+            _assignPostSavedHandlersForEmbeddedMaster: function (embeddedMaster) {
                 embeddedMaster.postSaved = this.postSaved;
                 embeddedMaster.postSavedError = this.postSavedError;
             },
