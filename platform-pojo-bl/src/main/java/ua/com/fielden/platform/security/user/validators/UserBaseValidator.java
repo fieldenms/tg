@@ -13,7 +13,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 
 /**
- * Ensures the validity of changes to property <code>base</code> of type {@link User}.
+ * Ensures the validity of changes to property <code>base</code> in {@link User}.
  * 
  * @author TG Team
  *

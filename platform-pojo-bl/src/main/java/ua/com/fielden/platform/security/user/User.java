@@ -29,6 +29,7 @@ import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
+import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
 /**
@@ -102,6 +103,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @IsProperty
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
     @MapTo
+    @BeforeChange(@Handler(UserBaseOnUserValidator.class))
     private User basedOnUser;
 
     @IsProperty
@@ -242,18 +244,6 @@ public class User extends ActivatableAbstractEntity<String> {
 
     @Observable
     public User setBasedOnUser(final User basedOnUser) {
-        if (basedOnUser == this) {
-            throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
-        }
-
-        if (basedOnUser != null && system_users.isOneOf(this)) {
-            throw Result.failure(format("User %s is an application built-in account and cannot have a base user.", getKey()));
-        }
-
-        if (basedOnUser != null && !basedOnUser.isBase()) {
-            throw Result.failure(format("User %s is not a base user and thus cannot be used for inheritance.", basedOnUser.getKey()));
-        }
-
         this.basedOnUser = basedOnUser;
         if (basedOnUser != null) {
             setBase(false);
