@@ -3,6 +3,9 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -25,6 +28,8 @@ import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
+import ua.com.fielden.platform.entity.ISequentialEntityEditAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditActionDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -93,9 +98,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
 import ua.com.fielden.platform.web.centre.SortingPropertyDao;
-
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -205,6 +207,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
+        bind(ISequentialEntityEditAction.class).to(SequentialEntityEditActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
         bind(IEntityExportAction.class).to(EntityExportActionDao.class);
 

@@ -20,9 +20,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle("Sequentila edit")
 @CompanionObject(ISequentialEntityEditAction.class)
-public class SequentialEntityEditAction extends AbstractEntityManipulationAction {
+public class SequentialEntityEditAction extends EntityEditAction {
 
-    @IsProperty
+    @IsProperty(Long.class)
     @Title("Entity ids' to edit")
     private List<Long> entitiesToEdit = new ArrayList<Long>();
 
@@ -33,7 +33,7 @@ public class SequentialEntityEditAction extends AbstractEntityManipulationAction
         return this;
     }
 
-    public List<Long> getName() {
+    public List<Long> getEntitiesToEdit() {
         return Collections.unmodifiableList(entitiesToEdit);
     }
 

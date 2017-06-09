@@ -23,6 +23,11 @@ public class SequentialEntityEditActionProducer extends EntityManipulationAction
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) sequentialEditEntity.getContext();
             final List<Long> entitiesToEdit = context.getSelectedEntities().stream().map(e -> e.getId()).collect(Collectors.toList());
             sequentialEditEntity.setEntitiesToEdit(entitiesToEdit);
+            if (entitiesToEdit.size() > 0) {
+                sequentialEditEntity.setEntityId(entitiesToEdit.get(0).toString());
+            } else {
+                throw new IllegalStateException("There are no entity to edit");
+            }
         }
         return sequentialEditEntity;
     }

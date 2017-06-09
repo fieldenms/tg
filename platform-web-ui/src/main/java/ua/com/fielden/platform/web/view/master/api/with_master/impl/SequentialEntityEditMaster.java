@@ -14,7 +14,6 @@ public class SequentialEntityEditMaster extends AbstractMasterWithMaster<Sequent
         return "{" +
                 "   currentState: 'EDIT', " +
                 "   centreUuid: this.centreUuid, " +
-                "   entityId: " + bindingEntityName + ".entitiesToEdit[0], " +
                 "   entityType: " + bindingEntityName + ".entityType, " +
                 "   shouldRefreshParentCentreAfterSave: " + shouldRefreshParentCentreAfterSave +
                 "};";
@@ -32,7 +31,14 @@ public class SequentialEntityEditMaster extends AbstractMasterWithMaster<Sequent
 
     @Override
     protected String afterLoadCallback(final String embededMaster, final String bindingEntity) {
-        return "this._assignPostSavedHandlersForEmbeddedMaster.bind(this)(" + embededMaster + ")";
+        return embededMaster + ".postSaved = (function(potentiallySavedOrNewEntity, newBindingEntity){\n" +
+                    "this."+ bindingEntity + ".entitiesToEdit.shift();\n" + 
+                    "this.postSaved(potentiallySavedOrNewEntity, newBindingEntity);\n" +
+                    /*embededMaster + ".entityId = this."+ bindingEntity + ".entitiesToEdit[0];\n" + */
+                    embededMaster + ".entityId = 'find_or_new';\n" +
+                    embededMaster + ".retrieve(" + embededMaster + ".getMasterEntity());\n"
+                + "}).bind(this);\n" + 
+                embededMaster + ".postSavedError = this.postSavedError;\n";
     }
 
 }

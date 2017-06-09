@@ -14,9 +14,8 @@ class EntityManipulationMaster<T extends AbstractEntityManipulationAction> exten
         return "{" +
                 "   currentState: 'EDIT', " +
                 "   centreUuid: this.centreUuid, " +
-                "   entityId: " + bindingEntityName + ".entityId, " +
                 "   entityType: " + bindingEntityName + ".entityType, " +
-                "   shouldRefreshParentCentreAfterSave: " + shouldRefreshParentCentreAfterSave + 
+                "   shouldRefreshParentCentreAfterSave: " + shouldRefreshParentCentreAfterSave +
                 "};";
     }
 

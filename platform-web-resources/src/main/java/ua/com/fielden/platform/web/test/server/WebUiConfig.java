@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -767,6 +768,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
         final EntityMaster<EntityNewAction> entityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<SequentialEntityEditAction> sequentialEntityEditActionMaster = StandardMastersWebUiConfig.createSequentialEntityEditMaster(injector());
         final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, injector());
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
@@ -778,6 +780,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().
             addMaster(entityNewActionMaster).
             addMaster(entityEditActionMaster).
+            addMaster(sequentialEntityEditActionMaster).
             addMaster(entityDeleteActionMaster).
             addMaster(entityExportActionMaster).
             addMaster(genericMenuSaveMaster).

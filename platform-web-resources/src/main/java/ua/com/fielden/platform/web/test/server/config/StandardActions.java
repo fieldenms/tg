@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
@@ -176,7 +177,7 @@ public enum StandardActions {
                 contextConfig = context().withSelectedEntities().withSelectionCrit().withComputation(entity -> entityType);
             }
 
-            return action(EntityEditAction.class).
+            return action(SequentialEntityEditAction.class).
                     withContext(contextConfig.build()).
                     postActionSuccess(new IPostAction() {
 

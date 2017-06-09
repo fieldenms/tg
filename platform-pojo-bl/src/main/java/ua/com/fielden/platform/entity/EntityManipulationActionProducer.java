@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -7,8 +9,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.web.centre.CentreContext;
-
-import com.google.inject.Inject;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
 
@@ -21,7 +21,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     protected T provideDefaultValues(final T entity) {
         if (entity.getContext() != null) {
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) entity.getContext();
-            final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
+            final AbstractEntity<?> currEntity = context.getSelectedEntities().size() != 1 ? null : context.getCurrEntity();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
             final Class<AbstractEntity<?>> entityType;
             if (context.getComputation().isPresent()) {
@@ -47,7 +47,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
 
     /**
      * Determines the type of tg-entity-master to be displayed from a) selCrit or b) currEntity depending on whether it is {@link EntityNewAction} or {@link EntityEditAction}.
-     * 
+     *
      * @param currEntity
      * @param selCrit
      * @return

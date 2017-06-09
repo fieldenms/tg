@@ -4,20 +4,23 @@ import static java.lang.String.format;
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
+import ua.com.fielden.platform.entity.SequentialEntityEditAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditActionProducer;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
-
-import com.google.inject.Injector;
+import ua.com.fielden.platform.web.view.master.api.with_master.impl.SequentialEntityEditMaster;
 
 public class StandardMastersWebUiConfig {
 
@@ -38,6 +41,13 @@ public class StandardMastersWebUiConfig {
                 /*  */.forEntityWithSaveOnActivate(EntityEditAction.class)
                 /*  */.withMaster(null) // the master instance is not passing here, this is generic implementation, and master type is calculated from currentEntity context
                 /*  */.done(),
+                injector);
+    }
+
+    public static EntityMaster<SequentialEntityEditAction> createSequentialEntityEditMaster(final Injector injector) {
+        return new EntityMaster<SequentialEntityEditAction>(SequentialEntityEditAction.class,
+                SequentialEntityEditActionProducer.class,
+                new SequentialEntityEditMaster(true),
                 injector);
     }
 
