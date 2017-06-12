@@ -968,7 +968,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
         }
+        //Generating shortcuts for EGI
+        final StringBuilder shortcuts = new StringBuilder();
 
+        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
+            shortcuts.append(shortcut + " ");
+        }
+
+        if (topLevelActions.isPresent()) {
+
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+                final EntityActionConfig config = topLevelAction.getKey();
+                if (config.shortcut.isPresent()) {
+                    shortcuts.append(config.shortcut.get() + " ");
+                }
+            }
+        }
+        ///////////////////////////////////////
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
@@ -986,6 +1003,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getSimpleName()).
+                //egi related properties
+                replace("@customShortcuts", shortcuts).
+                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
+                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
+                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
+                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
+                replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
+                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
+                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
+                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
+                replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
+                ///////////////////////
                 replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
                 replace("//toolbarGeneratedFunction", dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
                 replace("/*toolbarStyles*/", dslDefaultConfig.getToolbarConfig().styles().toString()).

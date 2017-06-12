@@ -1,0 +1,47 @@
+<template is="dom-if" if="[[cardLayout]]" restamp>
+    <div class="card-toolbar layout vertical">
+        <div class="layout horizontal center">
+            <content select=".entity-specific-action"></content>
+        </div>
+        <div class="layout horizontal center">
+            <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged" tooltip-text$="[[_selectAllTooltip(selectedAll)]]"></paper-checkbox>
+            <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
+            <content select=".standart-action"></content>
+        </div>
+    </div>
+    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+        <paper-material elevation="1" class="card-material layout vertical">
+            <div class="card-header layout horizontal center justified relative" style$="[[_calcCardHeaderStyle(primaryAction, secondaryActions)]]">
+                <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
+                <div class="layout horizontal center relative">
+                    <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]"></paper-checkbox>
+                    <template is="dom-if" if="[[primaryAction]]">
+                        <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
+                    </template>
+                </div>
+                <div class="layout horizontal center relative">
+                    <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
+                        <template is="dom-repeat" items="[[secondaryActions]]">
+                            <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" action-kind="[[item.actionKind]]" number-of-action="[[item.numberOfAction]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]" should-refresh-parent-centre-after-save="[[item.shouldRefreshParentCentreAfterSave]]" ui-role="[[item.uiRole]]" icon-style="[[item.iconStyle]]"></tg-ui-action>
+                        </template>
+                    </template>
+                </div>
+            </div>
+            <div class="card-body" style$="[[_calcCardStyle(collapsePanelVisible)]]">
+                <tg-flex-layout when-desktop="[[shortLayout.desktop]]" when-tablet="[[shortLayout.tablet]]" when-mobile="[[shortLayout.mobile]]">
+                    @gridCardDom
+                </tg-flex-layout>
+                <!--Collapse panel that contains other components those weren't included into main view of card-->
+                <template is="dom-if" if="[[collapsePanelVisible]]">
+                    <iron-collapse opened="[[egiEntity.opened]]">
+
+                        <tg-flex-layout when-desktop="[[longLayout.desktop]]" when-tablet="[[longLayout.tablet]]" when-mobile="[[longLayout.mobile]]">
+                            @gridCardDom
+                        </tg-flex-layout>
+                    </iron-collapse>
+                </template>
+                <paper-icon-button hidden$="[[!collapsePanelVisible]]" class="expand-button" icon="[[_calcCollapseIcon(egiEntity.opened)]]" on-tap="_toggleCollapsePanel"></paper-icon-button>
+            </div>
+        </paper-material>
+    </template>
+</template>
