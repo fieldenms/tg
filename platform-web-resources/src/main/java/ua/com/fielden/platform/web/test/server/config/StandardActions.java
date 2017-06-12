@@ -138,7 +138,7 @@ public enum StandardActions {
             return action(EntityEditAction.class).
                     withContext(contextConfig.build()).
                     icon("editor:mode-edit").
-                    shortDesc(format("SEQ", entityTitle)).
+                    shortDesc(format("Edit %", entityTitle)).
                     longDesc(format("Opens master for editing %s", entityTitle)).
                     prefDimForView(prefDim).
                     withNoParentCentreRefresh().
