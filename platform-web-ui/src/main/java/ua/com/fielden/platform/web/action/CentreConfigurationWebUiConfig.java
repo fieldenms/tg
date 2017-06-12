@@ -118,13 +118,9 @@ public class CentreConfigurationWebUiConfig {
                     @Override
                     public JsCode build() {
                         return new JsCode("\n"
-                                + "console.debug('EDIT PREACTION');\n"
-                                + ""
                                 + "if(!self.seqEditIds) {\n"
-                                + "    console.debug('EDIT PREACTION action', action);\n"
                                 + "    const selectedEntitiesToEdit = self.$.egi.getSelectedEntities();\n"
                                 + "    self.seqEditIds = selectedEntitiesToEdit.length > 0 ? selectedEntitiesToEdit : self.$.egi.entities.slice();\n"
-                                + "    console.debug('EDIT PREACTION entities to edit', self.seqEditIds);\n"
                                 + "    if (self.seqEditIds.length > 0) {\n"
                                 + "        action.currentEntity = self.seqEditIds.shift();\n"
                                 + "    }\n"
@@ -135,8 +131,6 @@ public class CentreConfigurationWebUiConfig {
                                 + "    }).bind(self);\n"
                                 + "    const updateCacheAndContinueSeqSaving = (function (data) {\n"
                                 + "        const nextEntity = this.seqEditIds.shift();\n"
-                                + "        console.debug('EDIT PREACTION seqEditIds', this.seqEditIds);\n"
-                                + "        console.debug('EDIT PREACTION next entity', nextEntity);\n"
                                 + "        if (nextEntity) {\n"
                                 + "            action.currentEntity = nextEntity;\n"
                                 + "            action._run();\n"

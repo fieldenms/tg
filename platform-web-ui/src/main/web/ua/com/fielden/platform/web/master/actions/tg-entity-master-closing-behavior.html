@@ -11,7 +11,6 @@
         createEntityActionThenCallback: function (eventChannel, role, postalLib, _afterExecution) {
             return function (ironRequest) {
                 if (eventChannel && role) {
-                    console.log('EDIT PREACTION: closing: ');
                     console.log('AJAX PROMISE THEN', ironRequest.successful);
                     if (ironRequest.xhr.status === 200 && ironRequest.successful === true) {
                         // the data to be published consists of an entityId
@@ -36,14 +35,12 @@
                             topic: role + '.post.success',
                             data: dataValue
                         });
-                        console.log('EDIT PREACTION: closing: ', dataValue, eventChannel);
                     } else {
                         postalLib.publish({
                             channel: eventChannel,
                             topic: role + '.post.error',
                             data: {}
                         });
-                        console.log('EDIT PREACTION: closing: ', {}, eventChannel);
                         
                         if (_afterExecution) {
                             // call the generic button execution logic, which ensures stopping of the spinner and handling of

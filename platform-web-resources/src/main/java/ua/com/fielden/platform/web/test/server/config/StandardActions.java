@@ -20,8 +20,6 @@ import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
-import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * Enumeration of standard UI action configurations that can be uniformly used throughout Web UI configuration for different entities.
@@ -139,43 +137,6 @@ public enum StandardActions {
 
             return action(EntityEditAction.class).
                     withContext(contextConfig.build()).
-                    preAction(new IPreAction() {
-                        
-                        @Override
-                        public JsCode build() {
-                            return new JsCode("\n"
-                                    + "console.debug('EDIT PREACTION');\n"
-                                    + ""
-                                    + "const seqEditAction = self.querySelector('tg-ui-action[short-desc=\"SEQ\"]');\n"
-                                    + "console.debug('EDIT PREACTION seqEditAction', seqEditAction);\n"
-                                    + ""
-                                    + "self.seqEditIds = [25, 26];\n"
-                                    + ""
-                                    + "const updateCacheAndContinueSeqSaving = (function () {\n"
-                                    + "    this.seqEditIds.shift();\n"
-                                    + "    console.debug('EDIT PREACTION seqEditIds', this.seqEditIds);\n"
-                                    + "    seqEditAction._run();\n"
-                                    + ""
-                                    + "}).bind(self);\n"
-                                    + "\n"
-                                    + ""
-                                    + "postal.subscribe({\n"
-                                    + "    channel: self.uuid,\n"
-                                    + "    topic: 'save.post.success',\n"
-                                    + "    callback: updateCacheAndContinueSeqSaving\n"
-                                    + "});\n"
-                                    + ""
-                                    + ""
-                                    + ""
-                                    + ""
-                                    + ""
-                                    + "console.debug('EDIT PREACTION: self.is', self.is);\n"
-                                    + "console.debug('EDIT PREACTION: self.uuid', self.uuid);\n"
-                                    + ""
-                                    + ""
-                                    + "");
-                        }
-                    }).
                     icon("editor:mode-edit").
                     shortDesc(format("SEQ", entityTitle)).
                     longDesc(format("Opens master for editing %s", entityTitle)).
