@@ -643,9 +643,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return createRenderableRepresentation(getAssociatedEntityCentreManager());
     }
 
-    public IRenderable buildEgi() {
-        return createRenderableEgiRepresentaton(getAssociatedEntityCentreManager());
-    }
+//    public IRenderable buildEgi() {
+//        return createRenderableEgiRepresentaton(getAssociatedEntityCentreManager());
+//    }
 
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();

@@ -301,8 +301,8 @@ public class SourceControllerImpl implements ISourceController {
             return getElementLoaderSource(this, webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
-        } else if (resourceURI.startsWith("/centre_ui/egi")) {
-            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
+//        } else if (resourceURI.startsWith("/centre_ui/egi")) {
+//            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
             return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/custom_view")) {
@@ -453,10 +453,10 @@ public class SourceControllerImpl implements ISourceController {
     private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {
         return ResourceFactoryUtils.getCustomView(viewName, webUiConfig).build().render().toString();
     }
-
-    private String getCentreEgiSource(final String mitypeString, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).buildEgi().render().toString();
-    }
+//
+//    private String getCentreEgiSource(final String mitypeString, final IWebUiConfig webUiConfig) {
+//        return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).buildEgi().render().toString();
+//    }
 
     ////////////////////////////////// Getting file source //////////////////////////////////
     private static String getFileSource(final String resourceURI, final List<String> resourcePaths) {
