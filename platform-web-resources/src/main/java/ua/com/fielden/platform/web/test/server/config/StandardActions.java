@@ -20,6 +20,8 @@ import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
+import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * Enumeration of standard UI action configurations that can be uniformly used throughout Web UI configuration for different entities.
@@ -146,6 +148,85 @@ public enum StandardActions {
         }
     },
 
+    SEQUENTIAL_EDIT_ACTION {
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
+            return mkAction(entityType, null, null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
+            return mkAction(entityType, null, prefDim);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+            return mkAction(entityType, computation, null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
+
+            final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
+            if (computation != null) {
+                contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(computation);
+            } else {
+                contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(entity -> entityType);
+            }
+
+            return action(EntityEditAction.class).withContext(contextConfig.build()).preAction(new IPreAction() {
+
+                @Override
+                public JsCode build() {
+                    return new JsCode("\n"
+                            + "if(!self.seqEditIds) {\n"
+                            + "    const selectedEntitiesToEdit = self.$.egi.getSelectedEntities();\n"
+                            + "    self.seqEditIds = selectedEntitiesToEdit.length > 0 ? selectedEntitiesToEdit : self.$.egi.entities.slice();\n"
+                            + "    if (self.seqEditIds.length > 0) {\n"
+                            + "        action.currentEntity = self.seqEditIds.shift();\n"
+                            + "    }\n"
+                            + "    const cancelEditing = (function (data) {\n"
+                            + "        delete this.seqEditIds;\n"
+                            + "        this.seqEditSuccessPostal.unsubscribe();\n"
+                            + "        this.seqEditCancelPostal.unsubscribe();\n"
+                            + "    }).bind(self);\n"
+                            + "    const updateCacheAndContinueSeqSaving = (function (data) {\n"
+                            + "        const nextEntity = this.seqEditIds.shift();\n"
+                            + "        if (nextEntity) {\n"
+                            + "            action.currentEntity = nextEntity;\n"
+                            + "            action._run();\n"
+                            + "        } else {\n"
+                            + "            cancelEditing(data);\n"
+                            + "        }\n"
+                            + "    }).bind(self);\n"
+                            + "    action.continuous = true;\n"
+                            + "    action.skipNext = function() {\n"
+                            + "        updateCacheAndContinueSeqSaving();\n"
+                            + "    };\n"
+                            + "    self.seqEditSuccessPostal = postal.subscribe({\n"
+                            + "        channel: self.uuid,\n"
+                            + "        topic: 'save.post.success',\n"
+                            + "        callback: updateCacheAndContinueSeqSaving\n"
+                            + "    });\n"
+                            + "    self.seqEditCancelPostal = postal.subscribe({\n"
+                            + "        channel: self.uuid,\n"
+                            + "        topic: 'refresh.post.success',\n"
+                            + "        callback: cancelEditing"
+                            + "    });\n"
+                            + "}\n");
+                }
+            }).
+            icon("editor:mode-edit").
+            shortDesc(format("Edit %s", entityTitle)).
+            longDesc(format("Edit %s", entityTitle)).
+            prefDimForView(prefDim).
+            withNoParentCentreRefresh().
+            build();
+        }
+    },
+
     DELETE_ACTION {
         @Override
         public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
@@ -164,14 +245,7 @@ public enum StandardActions {
                 contextConfig = context().withSelectedEntities().withComputation(entity -> entityType);
             }
 
-            return action(EntityDeleteAction.class).
-                    withContext(contextConfig.build()).
-                    preAction(okCancel(DELETE_CONFIRMATION.msg)).
-                    icon("remove-circle-outline").
-                    shortDesc(desc).
-                    longDesc(desc).
-                    shortcut("alt+d").
-                    build();
+            return action(EntityDeleteAction.class).withContext(contextConfig.build()).preAction(okCancel(DELETE_CONFIRMATION.msg)).icon("remove-circle-outline").shortDesc(desc).longDesc(desc).shortcut("alt+d").build();
         }
 
         @Override
