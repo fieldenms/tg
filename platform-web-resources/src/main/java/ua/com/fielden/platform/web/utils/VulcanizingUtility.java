@@ -43,7 +43,7 @@ public class VulcanizingUtility {
 
     public static String[] windowsCommands(final String prefix) {
         // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
-        return new String[] {"CMD", "/c", "vulcanize", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", "^>", prefix + "-startup-resources-origin-vulcanized.html"};
+        return new String[] {"CMD", "/c", "vulcanize", "--strip-comments", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", "^>", prefix + "-startup-resources-origin-vulcanized.html"};
         // OTHER WAY: create three files login-script.bat, desktop-script.bat and mobile-script.bat and place them where similar *.sh scripts reside.
         // Contents of the login-script.bat file should be following (brackets should be removed): [vulcanize -p "vulcan/" /login-startup-resources-origin.html ^> login-startup-resources-origin-vulcanized.html].
         // UNCOMMENT: return new String[] {"CMD", "/c", prefix + "-script.bat"};
