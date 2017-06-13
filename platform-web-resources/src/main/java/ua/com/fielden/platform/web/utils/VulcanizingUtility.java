@@ -371,13 +371,13 @@ public class VulcanizingUtility {
      */
     private static String inlineScripts(final String source, final ISourceController sourceController, final DeviceProfile deviceProfile, final Logger logger) {
         // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged charset and src, double or single quotes etc.?)
-        final String searchString = "<script src=\"";
+        final String searchString = "<script src=\"/";
         final int indexOfScriptTag = source.indexOf(searchString);
         if (indexOfScriptTag > -1) {
             final String endSearchString = "\"></script>";
-            final int endIndex = source.indexOf(endSearchString, indexOfScriptTag + searchString.length()) + endSearchString.length();
+            final int endIndex = source.indexOf(endSearchString, indexOfScriptTag + searchString.length() - 1) + endSearchString.length();
             final String scriptTag = source.substring(indexOfScriptTag, endIndex);
-            final String uri = scriptTag.substring(searchString.length(), scriptTag.length() - endSearchString.length());
+            final String uri = scriptTag.substring(searchString.length() - 1, scriptTag.length() - endSearchString.length());
             logger.info("\t\t\tInlining script [" + uri + "]...");
             return inlineScripts(source.replace(scriptTag, "<script>" + sourceController.loadSource(uri, deviceProfile).replace("//# sourceMappingURL", "//") + "\n</script>"), sourceController, deviceProfile, logger);
         } else {
