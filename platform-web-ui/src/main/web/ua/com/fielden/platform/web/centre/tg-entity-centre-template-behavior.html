@@ -1,0 +1,114 @@
+<link rel="import" href="/resources/centre/tg-entity-centre-behavior.html">
+
+<script>
+    (function () {
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgEntityCentreTemplateBehaviorImpl = {
+
+            properties: {
+                isRunning: {
+                    type: Boolean,
+                    observer: '_isRunningChanged'
+                },
+                pageNumber: Number,
+                pageCount: Number,
+                pageNumberUpdated: Number,
+                pageCountUpdated: Number,
+                staleCriteriaMessage: String
+            },
+
+            created: function () {
+                // bind SSE event handling method regardless of the fact whether this particulare
+                // centre is bound to some SSE url or not.
+                this.dataHandler = function (data) {
+                    var self = this;
+                    var msg = JSON.parse(data);
+                    // let's search for an item to update... 
+                    // if the current EGI model does not contain an updated entity then there is no need for a refresh...
+                    // TODO such update strategy might need to be revisited in future...
+                    var needsFullRefresh = true;
+                    for (var index = 0; index < this.$.egi.egiModel.length; index++) {
+                        var entity = this.$.egi.egiModel[index].entity;
+                        if (entity.get('id') === msg.id) {
+                            needsFullRefresh = false;
+                            // let's give the browser a breathing chance...
+                            this.async(function () {
+                                try {
+                                    self.refreshEntities([entity]);
+                                } catch (e) {
+                                    console.warn(e);
+                                }
+                            }, 1);
+                            break;
+                        }
+                    } // endfor
+                    if (needsFullRefresh === true) {
+                        self.refreshEntities([]);
+                    }
+                }.bind(this);
+            },
+
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            ready: function () {
+                var self = this;
+                self.classList.add("canLeave");
+            },
+
+
+            ////////////// Template related method are here in order to reduce the template size ///////////////
+            //////// Also this enforces user to provide appropriate elemnts and theitr ids when using it////////
+            focusView: function () {
+                this._dom().focusSelectedView();
+            },
+
+            addOwnKeyBindings: function () {
+                this._dom().addOwnKeyBindings();
+            },
+
+            removeOwnKeyBindings: function () {
+                this._dom().removeOwnKeyBindings();
+            },
+
+            _isRunningChanged: function (newValue, oldValue) {
+                if (newValue) {
+                    this.disableView();
+                } else {
+                    this.enableView();
+                }
+            },
+
+            confirm: function (message, buttons) {
+                return this._dom()._confirmationDialog()._showConfirmationDialog(message, buttons);
+            },
+
+            _dom: function () {
+                return this.$.dom;
+            },
+
+            /**
+             * The iron-ajax component for centre discarding.
+             */
+            _ajaxDiscarder: function () {
+                return this._dom()._ajaxDiscarder();
+            },
+
+            /**
+             * The iron-ajax component for centre saving.
+             */
+            _ajaxSaver: function () {
+                return this._dom()._ajaxSaver();
+            }
+        };
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        Polymer.TgBehaviors.TgEntityCentreTemplateBehavior = [
+            Polymer.TgBehaviors.TgEntityCentreBehavior,
+            Polymer.TgBehaviors.TgEntityCentreTemplateBehaviorImpl
+        ];
+
+    })();
+</script>

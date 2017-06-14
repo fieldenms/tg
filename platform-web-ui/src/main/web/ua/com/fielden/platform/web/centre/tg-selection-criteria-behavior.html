@@ -205,7 +205,7 @@
                 this.currentState = "EDIT";
 
                 this.staleCriteriaMessage = null;
-
+                
                 self._processRunnerResponse = function (e) {
                     self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
                         var criteriaEntity = entityAndCustomObject[0];
@@ -280,7 +280,7 @@
                     console.log("postValidated", customObject);
                 }).bind(self);
             },
-
+            
             /**
              * Overridden to populate 'propertyModel' and '_isCentreChange' flag from arrived information.
              */
@@ -616,14 +616,14 @@
                 }
 
                 return contextHolder;
-            },
+            }
 
         };
 
         Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
-   Polymer.TgBehaviors.TgEntityBinderBehavior,
-   Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
-  ];
+            Polymer.TgBehaviors.TgEntityBinderBehavior,
+            Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
+        ];
 
     })();
 </script>
