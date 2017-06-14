@@ -16,13 +16,12 @@ import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
-import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * Enumeration of standard UI action configurations that can be uniformly used throughout Web UI configuration for different entities.
@@ -211,12 +210,12 @@ public enum StandardActions {
 
         @Override
         public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
-            throw new UnsupportedOperationException("It's imposible to set preferred dimension for noUI maser!");
+            throw new ActionConfigurationException("It's imposible to set preferred dimension for noUI maser!");
         }
 
         @Override
         public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
-            throw new UnsupportedOperationException("It's imposible to set preferred dimension for noUI maser!");
+            throw new ActionConfigurationException("It's imposible to set preferred dimension for noUI maser!");
         }
 
     },
