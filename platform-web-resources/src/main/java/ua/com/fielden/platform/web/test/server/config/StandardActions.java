@@ -18,6 +18,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
+import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -176,54 +177,14 @@ public enum StandardActions {
                 contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(entity -> entityType);
             }
 
-            return action(EntityEditAction.class).withContext(contextConfig.build()).preAction(new IPreAction() {
-
-                @Override
-                public JsCode build() {
-                    return new JsCode("\n"
-                            + "if(!self.seqEditIds) {\n"
-                            + "    const selectedEntitiesToEdit = self.$.egi.getSelectedEntities();\n"
-                            + "    self.seqEditIds = selectedEntitiesToEdit.length > 0 ? selectedEntitiesToEdit : self.$.egi.entities.slice();\n"
-                            + "    if (self.seqEditIds.length > 0) {\n"
-                            + "        action.currentEntity = self.seqEditIds.shift();\n"
-                            + "    }\n"
-                            + "    const cancelEditing = (function (data) {\n"
-                            + "        delete this.seqEditIds;\n"
-                            + "        this.seqEditSuccessPostal.unsubscribe();\n"
-                            + "        this.seqEditCancelPostal.unsubscribe();\n"
-                            + "    }).bind(self);\n"
-                            + "    const updateCacheAndContinueSeqSaving = (function (data) {\n"
-                            + "        const nextEntity = this.seqEditIds.shift();\n"
-                            + "        if (nextEntity) {\n"
-                            + "            action.currentEntity = nextEntity;\n"
-                            + "            action._run();\n"
-                            + "        } else {\n"
-                            + "            cancelEditing(data);\n"
-                            + "        }\n"
-                            + "    }).bind(self);\n"
-                            + "    action.continuous = true;\n"
-                            + "    action.skipNext = function() {\n"
-                            + "        updateCacheAndContinueSeqSaving();\n"
-                            + "    };\n"
-                            + "    self.seqEditSuccessPostal = postal.subscribe({\n"
-                            + "        channel: self.uuid,\n"
-                            + "        topic: 'save.post.success',\n"
-                            + "        callback: updateCacheAndContinueSeqSaving\n"
-                            + "    });\n"
-                            + "    self.seqEditCancelPostal = postal.subscribe({\n"
-                            + "        channel: self.uuid,\n"
-                            + "        topic: 'refresh.post.success',\n"
-                            + "        callback: cancelEditing"
-                            + "    });\n"
-                            + "}\n");
-                }
-            }).
-            icon("editor:mode-edit").
-            shortDesc(format("Edit %s", entityTitle)).
-            longDesc(format("Edit %s", entityTitle)).
-            prefDimForView(prefDim).
-            withNoParentCentreRefresh().
-            build();
+            return action(EntityEditAction.class).withContext(contextConfig.build()).
+                    preAction(new SequentialEditPreAction()).
+                    icon("editor:mode-edit").
+                    shortDesc(format("Edit %s", entityTitle)).
+                    longDesc(format("Edit %s", entityTitle)).
+                    prefDimForView(prefDim).
+                    withNoParentCentreRefresh().
+                    build();
         }
     },
 
