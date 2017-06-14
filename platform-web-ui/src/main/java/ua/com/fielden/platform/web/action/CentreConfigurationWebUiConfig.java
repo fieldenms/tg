@@ -80,7 +80,6 @@ public class CentreConfigurationWebUiConfig {
                         .withNoParentCentreRefresh()
                         .build();
             }
-
         };
 
         public abstract EntityActionConfig mkAction();
