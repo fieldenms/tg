@@ -103,7 +103,12 @@ public class CentreConfigurationWebUiConfig {
                             @Override
                             public JsCode build() {
                                 // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
-                                return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n");
+                                return new JsCode(""
+                                        + "   const propColumn = self.$.egi.querySelector('tg-property-column[property=\"waType\"]');\n"
+                                        + "   propColumn.set('width', 400); \n"
+                                        + "   return true; "
+                                        + ""
+                                        + "\n");
                             }
                         })
                         .icon("av:sort-by-alpha")
