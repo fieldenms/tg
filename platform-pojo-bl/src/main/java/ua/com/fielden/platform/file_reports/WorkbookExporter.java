@@ -164,7 +164,7 @@ public class WorkbookExporter {
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
             sheet.autoSizeColumn(propIndex);
-            final int newSize = (int) min(round(sheet.getColumnWidth(propIndex) * 1.05), 255);
+            final int newSize = (int) min(round(sheet.getColumnWidth(propIndex) * 1.05), 255 * 256);
             sheet.setColumnWidth(propIndex, newSize);
         }
 
