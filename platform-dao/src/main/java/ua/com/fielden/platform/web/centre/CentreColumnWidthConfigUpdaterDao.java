@@ -35,6 +35,7 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         
         final int prevWidth = cdtmae.getSecondTick().getWidth(root, property);
         cdtmae.getSecondTick().setWidth(root, property, prevWidth + 40);
+        // cdtmae.getRepresentation().getSecondTick().setWidthByDefault(root, property, width);
         
 //        final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
 //        for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
