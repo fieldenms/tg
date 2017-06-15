@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -30,9 +31,11 @@ public class CentreConfigurationWebUiConfig {
     private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
+    public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
+        centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
     }
 
     /**
@@ -60,6 +63,15 @@ public class CentreConfigurationWebUiConfig {
                 masterConfig,
                 injector);
     }
+    
+    /**
+     * Creates no-ui entity master for {@link CentreColumWidthConfigUpdater}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreColumnWidthConfigUpdater> createCentreColumnWidthConfigUpdater(final Injector injector) {
+        return new EntityMaster<CentreColumnWidthConfigUpdater>(CentreColumnWidthConfigUpdater.class, null, injector);
+    }
 
     public enum CentreConfigActions {
         SORT_ACTION {
@@ -77,6 +89,26 @@ public class CentreConfigurationWebUiConfig {
                         .icon("av:sort-by-alpha")
                         .shortDesc("Change Sorting")
                         .longDesc("Change sorting properties for this centre.")
+                        .withNoParentCentreRefresh()
+                        .build();
+            }
+        },
+        
+        CHANGE_COLUMN_WIDTH_ACTION {
+            @Override
+            public EntityActionConfig mkAction() {
+                return action(CentreColumnWidthConfigUpdater.class)
+                        .withContext(context().withSelectionCrit().build())
+                        .postActionSuccess(new IPostAction() {
+                            @Override
+                            public JsCode build() {
+                                // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
+                                return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n");
+                            }
+                        })
+                        .icon("av:sort-by-alpha")
+                        .shortDesc("Change Column Width")
+                        .longDesc("Change column width for this centre's property.")
                         .withNoParentCentreRefresh()
                         .build();
             }

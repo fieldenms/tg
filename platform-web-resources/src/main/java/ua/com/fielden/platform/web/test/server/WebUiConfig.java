@@ -802,6 +802,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(userRoleWebUiConfig.tokensUpdater).
             // Centre configuration management
             addMaster(centreConfigurationWebUiConfig.centreConfigUpdater).
+            addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater).
             addMaster(clourMaster).//
 
                 addMaster(new EntityMaster<TgFunctionalEntityWithCentreContext>(
