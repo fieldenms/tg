@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.file_reports;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.io.ByteArrayOutputStream;
@@ -162,7 +164,8 @@ public class WorkbookExporter {
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
             sheet.autoSizeColumn(propIndex);
-            sheet.setColumnWidth(propIndex, (int) (sheet.getColumnWidth(propIndex) * 1.05));
+            final int newSize = (int) min(round(sheet.getColumnWidth(propIndex) * 1.05), 255 * 256);
+            sheet.setColumnWidth(propIndex, newSize);
         }
 
         // tripling first row height
