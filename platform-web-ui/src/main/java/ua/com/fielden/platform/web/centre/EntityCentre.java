@@ -197,12 +197,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 if (property.propName.isPresent()) {
                     final String propertyName = treeName(property.propName.get());
                     cdtmae.getSecondTick().check(entityType, propertyName, true);
+                    cdtmae.getRepresentation().getSecondTick().setWidthByDefault(entityType, propertyName, property.width);
                     cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                 } else {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
                         final String propertyName = treeName(customPropName);
                         cdtmae.getSecondTick().check(entityType, propertyName, true);
+                        cdtmae.getRepresentation().getSecondTick().setWidthByDefault(entityType, propertyName, property.width);
                         cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                     } else {
                         throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
