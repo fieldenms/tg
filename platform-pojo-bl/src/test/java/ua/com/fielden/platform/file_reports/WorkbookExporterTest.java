@@ -75,6 +75,21 @@ public class WorkbookExporterTest {
     }
 
     @Test
+    public void long_string_property_should_be_also_exportable() {
+        final MasterEntity entityToExport = new MasterEntity();
+        final String value = "very long description very long description very long description very long description very long description "
+                + "very long description very long description very long description very long description very long description very long description "
+                + "very long description very long description very long description very long description very long description very long description "
+                + "very long description very long description very long description very long description very long description very long description";
+        entityToExport.setStringProp(value);
+        final String[] propertyNames = { "stringProp" };
+        final String[] propertyTitles = { "String property" };
+        final HSSFSheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
+        final HSSFRow exportedRow = sheet.getRow(1);
+        assertEquals("String property of the exported row is incorrect", value, exportedRow.getCell(0).getStringCellValue());
+    }
+
+    @Test
     public void integer_property_can_be_exported() {
         final MasterEntity entityToExport = new MasterEntity();
         entityToExport.setIntegerProp(Integer.valueOf(1));
