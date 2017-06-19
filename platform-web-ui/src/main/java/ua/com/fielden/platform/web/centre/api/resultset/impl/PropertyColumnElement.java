@@ -124,6 +124,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
         attrs.put("width", width);
+        attrs.put("min-width", width);
         attrs.put("grow-factor", isFlexible ? growFactor : 0);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
