@@ -62,7 +62,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param titleDesc
      */
     public void addSummary(final String propertyName, final Class<?> propertyType, final Pair<String, String> titleDesc) {
-        summary.add(new SummaryElement(propertyName, width, propertyType, titleDesc));
+        summary.add(new SummaryElement(propertyName, propertyType, titleDesc));
     }
 
     /**
@@ -124,7 +124,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
         attrs.put("width", width);
-        attrs.put("min-width", width);
+        attrs.put("min-width", width);//TODO min width right now is the same as width maybe there should be separate property and API for setting min width.
         attrs.put("grow-factor", isFlexible ? growFactor : 0);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
@@ -149,7 +149,6 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     public void setGrowFactor(final int growFactor) {
         this.growFactor = growFactor;
-        summary.forEach(element -> element.setGrowFactor(growFactor));
     }
 
     @Override
