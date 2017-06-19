@@ -561,10 +561,10 @@
 </dom-module>
 <script>
     (function () {
-        var _areEqual = function (a, b) {
+        const _areEqual = function (a, b) {
             return a.get('id') === b.get('id');
         };
-        var _findEntity = function (entity, entities) {
+        const _findEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
                 if (_areEqual(entity, entities[i])) {
                     return i;
@@ -572,7 +572,7 @@
             }
             return -1;
         };
-        var _processEntitySelection = function (selectedEntities, entity, select, egi) {
+        const _processEntitySelection = function (selectedEntities, entity, select, egi) {
             var selectedIndex = selectedEntities.indexOf(entity);
             if (select) {
                 if (selectedIndex < 0) {
@@ -596,7 +596,7 @@
                 }
             }
         };
-        var generateShortCollection = function (entity, property, typeObject) {
+        const generateShortCollection = function (entity, property, typeObject) {
             var collectionValue = entity.get(property);
             var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
             var keys = typeObject.compositeKeyNames();
@@ -608,6 +608,19 @@
                 });
                 return subEntity.get(key);
             });
+        };
+        const getRelativePos = function (x, y, container) {
+            let reference = container;
+            let newPos = {
+                x: x,
+                y: y
+            }
+            while (reference) {
+                newPos.x -= reference.offsetLeft;
+                newPos.y -= reference.offsetTop;
+                reference = reference.offsetParent;
+            }
+            return newPos;
         };
         const sign = (value) => value < 0 ? -1 : 1;
         Polymer({
@@ -1862,19 +1875,34 @@
             },
 
             _changeColumnSize: function (e) {
-                //console.log("HEADER TRACK", e, e.timeStamp);
+                switch (e.detail.state) {
+                case 'start':
+                    this._startColumnResize(e);
+                    break;
+                case 'track':
+                    this._trackColumnSize(e);
+                    break;
+                case 'end':
+                    this._endColumnResizing(e);
+                    break;
+                }
+            },
+
+            _startColumnResize: function (e) {
+                this.set("columns." + e.model.index + ".growFactor", 0);
+            },
+
+            _trackColumnSize: function (e) {
                 const columnWidth = e.target.previousElementSibling.offsetWidth;
-                const columnModel = e.model.item;
-                if (e.detail.state === 'start') {
-                    this.set("columns." + e.model.index + ".growFactor", 0);
-                    console.log("EGI DRAG EVENT STARTED: ", e, columnWidth, columnModel.width, this.columns[e.model.index].width);
-                }
-                if (e.detail.state === 'track') {
-                    this.set("columns." + e.model.index + ".width", columnWidth + e.detail.ddx);
-                    this._resizeEventListener();
-                    console.log("EGI DRAG EVENT: ", e, columnWidth, columnModel.width, this.columns[e.model.index].width);
-                }
-            }
+                const newWidth = columnWidth + e.detail.ddx < e.model.item.minWidth ? e.model.item.minWidth : columnWidth + e.detail.ddx;
+                const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
+                const containerWidth = this.$.lockContainer.getBoundingClientRect().width;
+                console.log(columnWidth, newWidth, mousePos, containerWidth);
+                this.set("columns." + e.model.index + ".width", columnWidth + e.detail.ddx);
+                this._resizeEventListener();
+            },
+
+            _endColumnResizing: function (e) {}
         })
     })()
 </script>
