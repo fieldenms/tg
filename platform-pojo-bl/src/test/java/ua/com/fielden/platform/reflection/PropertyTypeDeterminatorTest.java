@@ -13,7 +13,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
