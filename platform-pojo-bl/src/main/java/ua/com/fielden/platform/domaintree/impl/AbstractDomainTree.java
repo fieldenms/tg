@@ -28,10 +28,10 @@ import com.esotericsoftware.kryo.Kryo;
  *
  */
 public abstract class AbstractDomainTree {
-    private final transient ISerialiser serialiser;
-    private final static transient Logger logger = Logger.getLogger(AbstractDomainTree.class);
+    private final ISerialiser serialiser;
+    private static final Logger logger = Logger.getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
-    protected final static String PLACEHOLDER = "-placeholder-origin-";
+    protected static final String PLACEHOLDER = "-placeholder-origin-";
 
     protected static Logger logger() {
         return logger;
@@ -276,7 +276,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static <T> EnhancementRootsMap<T> createRootsMap() {
-        return new EnhancementRootsMap<T>();
+        return new EnhancementRootsMap<>();
     }
 
     /**
