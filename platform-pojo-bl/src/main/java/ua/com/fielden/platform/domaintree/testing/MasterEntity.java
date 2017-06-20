@@ -28,10 +28,6 @@ import ua.com.fielden.platform.types.Money;
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
 public class MasterEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-
-    public MasterEntity() {
-    }
 
     public enum EnumType {
         ONE, TWO
@@ -85,7 +81,7 @@ public class MasterEntity extends AbstractEntity<String> {
 
     ///////// Collections /////////
     @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
-    private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
+    private List<SlaveEntity> collection = new ArrayList<>();
 
     @IsProperty(ShortSlaveEntity.class)
     private List<ShortSlaveEntity> shortCollection = new ArrayList<>();
