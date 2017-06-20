@@ -17,17 +17,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface MapTo {
 
     /**
-     * Represents column name
+     * Represents an alternative column name. If the value is empty then the column name is derived based on the predefined rules.
      * 
      * @return
      */
     String value() default "";
     
+    /**
+     * A default value for a column. It is used for database schema generation.
+     * 
+     * @return
+     */
     String defaultValue() default "";
-
-    int length() default 0;
-
-    int precision() default -1;
-
-    int scale() default -1;
 }

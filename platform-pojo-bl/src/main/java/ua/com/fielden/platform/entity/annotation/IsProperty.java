@@ -127,4 +127,28 @@ public @interface IsProperty {
      * @return
      */
     boolean assignBeforeSave() default false;
+    
+    /**
+     * Length indicates the maximum length of a value for a <code>String</code> property.
+     * 
+     * @return
+     */
+    int length() default 0;
+
+    /**
+     * Precision is the number of digits in a number. For example, the number 123.45 has a precision of 5.
+     * <p>
+     * This parameter is applicable only to properties of type <code>BigDecimal</code>. 
+     * @return
+     */
+    int precision() default -1;
+
+    
+    /**
+     * Scale is the number of digits to the right of the decimal point in a number. For example, the number 123.45 has a scale of 2.
+     * <p>
+     * This parameter is applicable only to properties of type <code>BigDecimal</code>.
+     * @return
+     */
+    int scale() default -1;
 }
