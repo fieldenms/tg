@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.ParameterizedType;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithCollection;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithNumericProps;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.KeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
@@ -268,4 +270,32 @@ public class PropertyTypeDeterminatorTest {
         assertEquals(PropertyDescriptor.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "propertyDescriptor"));
         assertEquals(PropertyDescriptor.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "getPropertyDescriptor()"));
     }
+    
+    @Test
+    public void properties_of_type_Long_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericLong"));
+    }
+    
+    @Test
+    public void properties_of_type_Integer_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericInteger"));
+    }
+    
+    @Test
+    public void properties_of_type_BigDecimal_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericBigDecimal"));
+    }
+    
+    @Test
+    public void properties_of_type_Money_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericMoney"));
+    }
+
+    @Test
+    public void properties_of_non_numeric_typs_are_not_recognized_as_numeric() {
+        assertFalse(isNumeric(Entity.class, "propertyDescriptor"));
+        assertFalse(isNumeric(Entity.class, "monitoring"));
+        assertFalse(isNumeric(Entity.class, "doubles"));
+    }
+
 }
