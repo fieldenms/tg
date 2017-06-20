@@ -22,7 +22,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle("Leveled Entity No")
 @DescTitle(value = "Description")
 public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implements ISomeInterface {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(2)
