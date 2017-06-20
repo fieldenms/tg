@@ -19,12 +19,14 @@ import java.util.Set;
 import javax.swing.event.EventListenerList;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -40,6 +42,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -51,10 +54,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
+    private final Logger logger = Logger.getLogger(this.getClass());
+    
     /**
      * 0 -- to load only first level properties, Integer.MAX_VALUE -- to load all properties (obviously without cross-references ones);
      */
-    private static Integer LOADING_LEVEL = 0;
+    private static final Integer LOADING_LEVEL = 0;
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementSet manuallyExcludedProperties;
     private final AbstractTickRepresentation firstTick;
@@ -88,8 +93,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             dtrField.set(secondTick, this);
             dtrField.setAccessible(isAccessible);
         } catch (final Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
+            logger.fatal(e);
+            throw new DomainTreeException("Could not instantiate doman tree representation.", e);
         }
 
         this.includedProperties = createRootsMap();
@@ -109,7 +114,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private List<String> constructProperties(final Class<?> managedType, final String path, final List<Field> fieldsAndKeys) {
-        final List<String> newIncludedProps = new ArrayList<String>();
+        final List<String> newIncludedProps = new ArrayList<>();
         for (final Field field : fieldsAndKeys) {
             final String property = StringUtils.isEmpty(path) ? field.getName() : path + "." + field.getName();
             final String reflectionProperty = reflectionProperty(property);
@@ -339,6 +344,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
         // logger().info("\t\t\tstarted conditions...");
         final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
+                Money.class.isAssignableFrom(penultType) || // all properties within type Money should be excluded at this stage
                 !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
                 !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
                 !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
