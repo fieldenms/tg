@@ -83,7 +83,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface IsProperty {
-    public static String stubForLinkProperty = "----dummy-property----";
+    public static String STUB_FOR_LINK_PROPERTY = "----dummy-property----";
     public static final int DEFAULT_LENGTH = 0;
     public static final int DEFAULT_PRECISION = -1;
     public static final int DEFAULT_SCALE = -1;
@@ -123,7 +123,7 @@ public @interface IsProperty {
      *
      * @return
      */
-    String linkProperty() default stubForLinkProperty;
+    String linkProperty() default STUB_FOR_LINK_PROPERTY;
 
     /**
      * Declares property as such that should be assigned automatically before entity is saved for the first time.
