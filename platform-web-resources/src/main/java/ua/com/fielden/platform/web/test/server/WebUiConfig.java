@@ -1305,8 +1305,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
                 .also()
-                .addTopAction(CentreConfigActions.CHANGE_COLUMN_WIDTH_ACTION.mkAction())
-                .also()
                 .addTopAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
                         icon("add-circle").

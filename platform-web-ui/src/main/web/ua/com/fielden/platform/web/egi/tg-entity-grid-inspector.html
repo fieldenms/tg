@@ -59,7 +59,7 @@
             right: 0;
             width: 10px;
         }
-        .resizing-box:hover {
+        .resizing-box:hover, .resizing-action{
             cursor: col-resize;
             border-right: 2px solid var(--paper-light-blue-700);
         }
@@ -96,7 +96,6 @@
             font-weight: 400;
             color: #757575;
             height: 3rem;
-            cursor: default;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
@@ -107,7 +106,6 @@
             color: #212121;
             height: 1.5rem;
             border-top: 1px solid #e3e3e3;
-            cursor: default;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
@@ -127,7 +125,6 @@
             font-size: 0.9rem;
             color: #757575;
             height: 1.5rem;
-            cursor: default;
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -662,7 +659,7 @@
                     type: Number,
                     value: 0
                 },
-                
+
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
@@ -1619,7 +1616,7 @@
                 }
                 return style;
             },
-            
+
             /**
              * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
              */
@@ -1628,7 +1625,7 @@
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property]);
                 });
             },
-            
+
             /**
              * Calculates the style for empty total's cell.
              */
@@ -1895,9 +1892,15 @@
                     this._endColumnResizing(e);
                     break;
                 }
+                if (e.stopPropagation) e.stopPropagation();
+                if (e.preventDefault) e.preventDefault();
+                e.cancelBubble = true;
+                e.returnValue = false;
             },
 
             _startColumnResize: function (e) {
+                document.body.style.cursor = "col-resize";
+                e.target.classList.toggle("resizing-action", true);
                 this.set("columns." + e.model.index + ".growFactor", 0);
             },
 
@@ -1906,12 +1909,20 @@
                 const newWidth = columnWidth + e.detail.ddx < e.model.item.minWidth ? e.model.item.minWidth : columnWidth + e.detail.ddx;
                 const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
                 const containerWidth = this.$.lockContainer.getBoundingClientRect().width;
-                console.log(columnWidth, newWidth, mousePos, containerWidth);
-                this.set("columns." + e.model.index + ".width", columnWidth + e.detail.ddx);
+                console.log(columnWidth, newWidth, mousePos, containerWidth, );
+                this.set("columns." + e.model.index + ".width", newWidth);
                 this._resizeEventListener();
+
             },
 
-            _endColumnResizing: function (e) {}
+            _endColumnResizing: function (e) {
+                document.body.style.cursor = "default";
+                e.target.classList.toggle("resizing-action", false);
+                this.fire("tg-egi-column-change", {
+                    columnName: e.model.item.property,
+                    columnWidth: e.model.item.width
+                });
+            }
         })
     })()
 </script>

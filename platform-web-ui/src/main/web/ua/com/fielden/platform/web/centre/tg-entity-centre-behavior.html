@@ -4,41 +4,42 @@
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <script>
     (function () {
-        var generateCriteriaName = function (root, property, suffix) {
+        const generateCriteriaName = function (root, property, suffix) {
             var rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
             return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");
         };
-        var isNot = function (query) {
+        const isNot = function (query) {
             return /.+\!=.*/.test(query);
         };
-        var isMissing = function (value) {
+        const isMissing = function (value) {
             return /^\{.*\}$/.test(value);
         };
-        var getValueFromMissing = function (value) {
+        const getValueFromMissing = function (value) {
             return /^\{(.*)\}$/.exec(value)[1];
         }
-        var isRange = function (value) {
+        const isRange = function (value) {
             return /^(\[|\().*,\s*.*(\]|\))$/.test(value);
         };
-        var isBoolean = function (value) {
+        const isBoolean = function (value) {
             return /(true|false)/.test(value);
         };
-        var shouldExcludeFirstParam = function (value) {
+        const shouldExcludeFirstParam = function (value) {
             return /^\(/.test(value);
         };
-        var shouldExcludeSecondParam = function (value) {
+        const shouldExcludeSecondParam = function (value) {
             return /\)$/.test(value);
         };
-        var getFirstValue = function (queryParam) {
+        const getFirstValue = function (queryParam) {
             return /^(\[|\()(.*),\s*.*(\]|\))$/.exec(queryParam)[2];
         };
-        var getSecondValue = function (queryParam) {
+        const getSecondValue = function (queryParam) {
             return /^(\[|\().*,\s*(.*)(\]|\))$/.exec(queryParam)[2];
         };
-        var generateQueryParam = function (root, query) {
+        const generateQueryParam = function (root, query) {
             var queryParam = {
                 not: isNot(query)
             };
@@ -69,7 +70,32 @@
             }
             return queryParam;
         };
-
+        const createColumnAction = function (entityCentre) {
+            
+            const actionModel = document.createElement("tg-ui-action");
+            actionModel.uiRole = 'ICON';
+            actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater';
+            actionModel.elementName = 'tg-CentreColumnWidthConfigUpdater-master';
+            actionModel.showDialog = entityCentre._showDialog;
+            actionModel.createContextHolder = entityCentre._createContextHolder;
+            actionModel.preAction = function (action) {
+                action.modifyFunctionalEntity = (function (bindingEntity, master) {
+                    action.modifyValue4Property('propName', bindingEntity, actionModel.columnName);
+                    action.modifyValue4Property('newWidth', bindingEntity, actionModel.columnWidth);
+                });
+                return true;
+            };
+            actionModel.postActionSuccess = function (functionalEntity) {};
+            actionModel.postActionError = function (functionalEntity) {};
+            actionModel.attrs = {
+                entityType:'ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater', currentState:'EDIT', centreUuid: entityCentre.uuid
+            };
+            actionModel.requireSelectionCriteria = 'true';
+            actionModel.requireSelectedEntities = 'NONE';
+            actionModel.requireMasterEntity = 'false';
+            
+            return actionModel;
+        };
 
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
@@ -103,7 +129,7 @@
                     observer: '_retrievedTotalsChanged'
                 },
                 /**
-                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
                  * consistent with the order of columns.
                  *
                  * @param entity -- the entity to be processed with the mapper function
@@ -221,7 +247,7 @@
                 _criteriaLoaded: {
                     type: Boolean
                 },
-                
+
                 /**
                  * Indicates whether some action (run, save or discard) is currently in progress.
                  */
@@ -229,7 +255,7 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 _saverDisabled: {
                     type: Boolean,
                     computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
@@ -343,6 +369,10 @@
                     value: 'EDIT'
                 }
             },
+            
+            listeners: {
+                "tg-egi-column-change": "_saveColumnWidth"
+            },
 
             _getMasterEntityAssigned: function (newValue, oldValue) {
                 var self = this;
@@ -384,11 +414,11 @@
             _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
                 this.$.egi.totals = retrievedTotals;
             },
-            
+
             _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
                 this.$.egi.retrievedEntitySelection = retrievedEntitySelection;
             },
-            
+
             _columnPropertiesMapperChanged: function (columnPropertiesMapper, oldValue) {
                 this.$.egi.columnPropertiesMapper = columnPropertiesMapper;
             },
@@ -565,6 +595,8 @@
                     this.$.egi.updateProgress(percentage, clazz, isVisible);
                 }).bind(self);
 
+                this._columnAction = createColumnAction(self);
+
             }, // end of ready callback
 
             attached: function () {
@@ -594,6 +626,12 @@
 
             detached: function () {
                 this.masterSavedListener.unsubscribe();
+            },
+            
+            _saveColumnWidth: function (e) {
+                this._columnAction.columnName = e.detail.columnName;
+                this._columnAction.columnWidth = e.detail.columnWidth;
+                this._columnAction._run();
             },
 
             /**

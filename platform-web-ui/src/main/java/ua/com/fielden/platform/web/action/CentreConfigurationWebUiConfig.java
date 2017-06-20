@@ -18,7 +18,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
-import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
@@ -64,7 +63,7 @@ public class CentreConfigurationWebUiConfig {
                 masterConfig,
                 injector);
     }
-    
+
     /**
      * Creates no-ui entity master for {@link CentreColumWidthConfigUpdater}.
      *
@@ -90,34 +89,6 @@ public class CentreConfigurationWebUiConfig {
                         .icon("av:sort-by-alpha")
                         .shortDesc("Change Sorting")
                         .longDesc("Change sorting properties for this centre.")
-                        .withNoParentCentreRefresh()
-                        .build();
-            }
-        },
-        
-        CHANGE_COLUMN_WIDTH_ACTION {
-            @Override
-            public EntityActionConfig mkAction() {
-                return action(CentreColumnWidthConfigUpdater.class)
-                        .withContext(context().withSelectionCrit().build())
-                        .preAction(new IPreAction() {
-                            @Override
-                            public JsCode build() {
-                                return new JsCode(""
-                                        + "    const propColumn = self.$.egi.querySelector('tg-property-column[property=\"integerProp\"]');\n"
-                                        + "    console.debug('propColumn = ', propColumn);"
-                                        + "    action.modifyFunctionalEntity = (function (bindingEntity, master) {\n"
-                                        + "        action.modifyValue4Property('propName', bindingEntity, 'integerProp');\n"
-                                        + "        action.modifyValue4Property('newWidth', bindingEntity, propColumn.width);\n"
-                                        + "    });\n"
-                                        + "    return true;\n"
-                                        + "\n"
-                                        + "\n");
-                            }
-                        })
-                        .icon("av:sort-by-alpha")
-                        .shortDesc("Change Column Width")
-                        .longDesc("Change column width for this centre's property.")
                         .withNoParentCentreRefresh()
                         .build();
             }
