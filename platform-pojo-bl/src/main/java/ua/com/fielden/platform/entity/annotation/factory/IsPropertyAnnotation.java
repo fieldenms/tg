@@ -21,6 +21,7 @@ public class IsPropertyAnnotation {
     private final int length;
     private final int precision;
     private final int scale;
+    private final boolean trailingZeros;
 
     public IsPropertyAnnotation(
             final Class<?> value, 
@@ -28,17 +29,19 @@ public class IsPropertyAnnotation {
             final boolean assignBeforeSave,
             final int length,
             final int precision,
-            final int scale) {
+            final int scale,
+            final boolean trailingZeros) {
         this.value = value;
         this.linkProperty = linkProperty;
         this.assignBeforeSave = assignBeforeSave;
         this.length = length;
         this.precision = precision;
         this.scale = scale;
+        this.trailingZeros = trailingZeros;
     }
 
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean assignBeforeSave) {
-        this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE);
+        this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE, IsProperty.DEFAULT_TRAILING_ZEROS);
     }
 
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty) {
@@ -95,6 +98,11 @@ public class IsPropertyAnnotation {
             public int scale() {
                 return scale;
             }
+            
+            @Override
+            public boolean trailingZeros() {
+                return trailingZeros;
+            }
         };
     }
 
@@ -134,6 +142,11 @@ public class IsPropertyAnnotation {
             @Override
             public int scale() {
                 return original.scale();
+            }
+
+            @Override
+            public boolean trailingZeros() {
+                return original.trailingZeros();
             }
         };
     }
