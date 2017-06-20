@@ -87,6 +87,7 @@ public @interface IsProperty {
     public static final int DEFAULT_LENGTH = 0;
     public static final int DEFAULT_PRECISION = -1;
     public static final int DEFAULT_SCALE = -1;
+    public static final boolean DEFAULT_TRAILING_ZEROS = true;
 
 
     /**
@@ -155,4 +156,12 @@ public @interface IsProperty {
      * @return
      */
     int scale() default DEFAULT_SCALE;
+    
+    /**
+     * This parameter should be used to indicate whether trailing zeros have any significance for decimal properties (including Money).
+     * Such information can be used by, for example, UI logic for displaying or hind the trailing zeros. 
+     * 
+     * @return
+     */
+    boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
 }
