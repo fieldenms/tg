@@ -33263,7 +33263,7 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
              * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
              */
             _isNecessaryForConversion: function (propertyName) {
-                return ['propName', 'newWidth',
+                return ['propName', 'newWidth', // adjust column width action
                         'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
                         'forNew', 'menuTitle', 'sectionTitle', // compound master opening actions
                         'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
@@ -34442,7 +34442,7 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
     	<style include="tg-entity-master-styles"></style>
     	<tg-entity-master id="masterDom" entity-type="[[entityType]]" entity-id="[[entityId]]" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _saver-loading="{{_saverLoading}}">
    	        
-   	        <tg-flex-layout when-tablet="[[_tabletLayout_1188671176]]" when-desktop="[[_desktopLayout_1188671176]]" when-mobile="[[_mobileLayout_1188671176]]" class="property-editors" context="[[_currEntity]]">
+   	        <tg-flex-layout when-desktop="[[_desktopLayout_1876390738]]" when-mobile="[[_mobileLayout_1876390738]]" when-tablet="[[_tabletLayout_1876390738]]" class="property-editors" context="[[_currEntity]]">
 <tg-entity-editor id="editor_4_entityProp.entityProp" entity="{{_currBindingEntity}}" original-entity="{{_originalBindingEntity}}" previous-modified-properties-holder="[[_previousModifiedPropertiesHolder]]" property-name="entityProp.entityProp" validation-callback="[[validate]]" prop-title="Entity prop" prop-desc="Entity prop desc" current-state="[[currentState]]" additional-properties="{&quot;desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[entityType]]" as-part-of-entity-master="" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]">
 <tg-ui-action ui-role="ICON" short-desc="Dummy" long-desc="Dummy action, simply prints its result into console." icon="accessibility" icon-style="fill: none; stroke: red; stroke-linejoin: round; stroke-linecap: round;" should-refresh-parent-centre-after-save="" component-uri="/master_ui/ua.com.fielden.platform.sample.domain.TgDummyAction" element-name="tg-TgDummyAction-master" number-of-action="0" action-kind="PRIMARY_RESULT_SET" element-alias="tg-TgDummyAction-master_0_PRIMARY_RESULT_SET" show-dialog="[[_showDialog]]" create-context-holder="[[_createContextHolder]]" attrs="[[primaryAction.0.attrs]]" pre-action="[[primaryAction.0.preAction]]" post-action-success="[[primaryAction.0.postActionSuccess]]" post-action-error="[[primaryAction.0.postActionError]]" chosen-property="entityProp.entityProp" require-selection-criteria="false" require-selected-entities="NONE" require-master-entity="true" class="property-action property-action-icon"></tg-ui-action>
 </tg-entity-editor>
@@ -34485,7 +34485,7 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
 <tg-singleline-text-editor id="editor_4_conflictingProp" entity="{{_currBindingEntity}}" original-entity="{{_originalBindingEntity}}" previous-modified-properties-holder="[[_previousModifiedPropertiesHolder]]" property-name="conflictingProp" validation-callback="[[validate]]" prop-title="Conflicting prop" prop-desc="Conflicting prop desc" current-state="[[currentState]]"></tg-singleline-text-editor>
 <tg-singleline-text-editor id="editor_4_domainInitProp" entity="{{_currBindingEntity}}" original-entity="{{_originalBindingEntity}}" previous-modified-properties-holder="[[_previousModifiedPropertiesHolder]]" property-name="domainInitProp" validation-callback="[[validate]]" prop-title="Domain initialised prop" prop-desc="The property that was initialised directly inside Entity type definition Java class" current-state="[[currentState]]"></tg-singleline-text-editor>
 </tg-flex-layout>
-<tg-flex-layout when-desktop="[[_desktopLayout_339186291]]" class="action-bar">
+<tg-flex-layout when-desktop="[[_desktopLayout_1359603919]]" class="action-bar">
 <tg-action entity-type="[[_actions.REFRESH.entityType]]" enabled-states="[[_actions.REFRESH.enabledStates]]" short-desc="[[_actions.REFRESH.shortDesc]]" long-desc="[[_actions.REFRESH.longDesc]]" current-state="[[currentState]]" shortcut="ctrl+r" role="refresh" event-channel="[[centreUuid]]" action="[[_actions.REFRESH.action]]" post-action="{{_postRetrievedDefault}}" post-action-error="{{_postRetrievedDefaultError}}"></tg-action>
 <tg-ui-action ui-role="BUTTON" short-desc="Export" long-desc="Export action" shortcut="ctrl+shift+e" icon="trending-up" icon-style="" should-refresh-parent-centre-after-save="" component-uri="/master_ui/ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity" element-name="tg-TgExportFunctionalEntity-master" number-of-action="11" action-kind="PRIMARY_RESULT_SET" element-alias="tg-TgExportFunctionalEntity-master_11_PRIMARY_RESULT_SET" show-dialog="[[_showDialog]]" create-context-holder="[[_createContextHolder]]" attrs="[[primaryAction.11.attrs]]" pre-action="[[primaryAction.11.preAction]]" post-action-success="[[primaryAction.11.postActionSuccess]]" post-action-error="[[primaryAction.11.postActionError]]" require-selection-criteria="false" require-selected-entities="NONE" require-master-entity="true" class="primary-action"></tg-ui-action>
 <tg-action entity-type="[[_actions.VALIDATE.entityType]]" enabled-states="[[_actions.VALIDATE.enabledStates]]" short-desc="[[_actions.VALIDATE.shortDesc]]" long-desc="[[_actions.VALIDATE.longDesc]]" current-state="[[currentState]]" role="validate" event-channel="[[centreUuid]]" action="[[_actions.VALIDATE.action]]" post-action="{{_postValidatedDefault}}" post-action-error="{{_postValidatedDefaultError}}"></tg-action>
@@ -34515,11 +34515,11 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
                 self.saveOnActivation = false;
                 
                 //START OF GENERATED JS LOGIC
-                this._tabletLayout_1188671176 = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
-this._desktopLayout_1188671176 =       ['padding:20px', ['subheader-open:Other components', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['subheader-open:Other components 1', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['subheader-open:Other components 2', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
-this._mobileLayout_1188671176 = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
+                this._desktopLayout_1876390738 =       ['padding:20px', ['subheader-open:Other components', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['subheader-open:Other components 1', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['subheader-open:Other components 2', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
+this._mobileLayout_1876390738 = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
+this._tabletLayout_1876390738 = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
 
-this._desktopLayout_339186291 = ['horizontal', 'padding: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']];
+this._desktopLayout_1359603919 = ['horizontal', 'padding: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']];
 
                     self.set('_actions.REFRESH.shortDesc', 'CANCEL');
                     self.set('_actions.REFRESH.longDesc', 'Cancels any changes and closes the master (if in dialog)');
@@ -38269,7 +38269,7 @@ postActionError: function (functionalEntity) {
                     type: Number,
                     value: 0
                 },
-
+                
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
@@ -39226,7 +39226,16 @@ postActionError: function (functionalEntity) {
                 }
                 return style;
             },
-
+            
+            /**
+             * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
+             */
+            _adjustColumnWidths: function (columnWidths) {
+                this.columns.forEach((column, columnIndex) => {
+                    this.set("columns." + columnIndex + ".width", columnWidths[column.property]);
+                });
+            },
+            
             /**
              * Calculates the style for empty total's cell.
              */
@@ -39941,19 +39950,20 @@ postActionError: function (functionalEntity) {
                 
                 self._processRunnerResponse = function (e) {
                     self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
-                        var criteriaEntity = entityAndCustomObject[0];
+                        const criteriaEntity = entityAndCustomObject[0];
                         self._provideExceptionOccured(criteriaEntity, exceptionOccured);
-                        var customObject = self._reflector().customObject(entityAndCustomObject);
-                        var resultEntities = customObject.resultEntities || [];
-                        var pageCount = customObject.pageCount;
-                        var pageNumber = customObject.pageNumber;
-                        var metaValues = customObject.metaValues;
-                        var centreChanged = customObject.isCentreChanged;
-                        var renderingHints = customObject.renderingHints || [];
-                        var summary = customObject.summary;
-                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        const customObject = self._reflector().customObject(entityAndCustomObject);
+                        const resultEntities = customObject.resultEntities || [];
+                        const pageCount = customObject.pageCount;
+                        const pageNumber = customObject.pageNumber;
+                        const metaValues = customObject.metaValues;
+                        const centreChanged = customObject.isCentreChanged;
+                        const renderingHints = customObject.renderingHints || [];
+                        const summary = customObject.summary;
+                        const staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        const columnWidths = customObject.columnWidths;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths);
                     });
                 };
 
@@ -39964,7 +39974,7 @@ postActionError: function (functionalEntity) {
                 };
 
                 // calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths) {
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
@@ -39980,7 +39990,7 @@ postActionError: function (functionalEntity) {
                         var msg = "Running completed successfully.";
                         this._openToastWithoutEntity(msg, false, msg, false);
 
-                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary);
+                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary, columnWidths);
                     } else {
                         this._setPropertyModel(metaValues);
                         this._centreChanged = centreChanged;
@@ -39989,7 +39999,7 @@ postActionError: function (functionalEntity) {
                         this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                         var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
                     }
                 }).bind(self);
 
@@ -43244,14 +43254,14 @@ postActionError: function (functionalEntity) {
                 self._selectedView = 0;
                 self._showProgress = false;
 
-                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
                     if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
                         this.retrievedEntities = resultEntities;
                         this.$.egi.renderingHints = renderingHints;
+                        this.$.egi._adjustColumnWidths(columnWidths);
                         if (this._triggerRun && this._selectedView === 0) {
                             this.async(function () {
                                 this._selectedView = 1;
@@ -44145,7 +44155,7 @@ postActionError: function (functionalEntity) {
         <style include="tg-selection-criteria-styles"></style>
         <tg-selection-criteria id="masterDom" mi-type="[[miType]]" is-running="{{isRunning}}" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-runner-response="[[_processRunnerResponse]]" _process-runner-error="[[_processRunnerError]]">
             
-            <tg-flex-layout when-tablet="[[_tabletLayout_245220560]]" when-desktop="[[_desktopLayout_245220560]]" when-mobile="[[_mobileLayout_245220560]]" context="[[_currEntity]]">
+            <tg-flex-layout when-desktop="[[_desktopLayout_1806121021]]" when-mobile="[[_mobileLayout_1806121021]]" when-tablet="[[_tabletLayout_1806121021]]" context="[[_currEntity]]">
 <tg-multi-criterion id="criterion_4_tgPersistentEntityWithProperties_" validation-callback="[[validate]]" or-null="{{propertyModel.THIS.orNull}}" not="{{propertyModel.THIS.not}}">
 <tg-entity-editor id="editor_4_tgPersistentEntityWithProperties_" entity="{{_currBindingEntity}}" original-entity="{{_originalBindingEntity}}" previous-modified-properties-holder="[[_previousModifiedPropertiesHolder]]" property-name="tgPersistentEntityWithProperties_" validation-callback="[[validate]]" prop-title="Key" prop-desc="Some key description" current-state="[[currentState]]" additional-properties="{&quot;desc&quot;: true,&quot;booleanProp&quot;: false,&quot;compositeProp&quot;: true,&quot;compositeProp.desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false" class="criterion-editors flex"></tg-entity-editor>
 </tg-multi-criterion>
@@ -44212,9 +44222,9 @@ postActionError: function (functionalEntity) {
 
             ready: function () {
                 // LAYOUT CONFIG (GENERATED)
-                this._tabletLayout_245220560 = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]];
-this._desktopLayout_245220560 = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['flex']]];
-this._mobileLayout_245220560 = [['center-justified', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']]];
+                this._desktopLayout_1806121021 = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['flex']]];
+this._mobileLayout_1806121021 = [['center-justified', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']]];
+this._tabletLayout_1806121021 = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]];
 
             },
         });
