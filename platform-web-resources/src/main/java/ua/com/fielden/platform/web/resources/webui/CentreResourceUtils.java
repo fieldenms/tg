@@ -27,6 +27,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -204,6 +205,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             data = criteriaEntity.getAllEntities();
         }
         final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
+        resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
         resultantCustomObject.put("resultEntities", resultEntities);
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
@@ -211,6 +213,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
+
+    private static Map<String, Integer> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
+        final Map<String, Integer> columnWidths = new LinkedHashMap<>();
+        for (final String property : secondTick.checkedProperties(root)) {
+            columnWidths.put(property, secondTick.getWidth(root, property));
+        }
+        return columnWidths;
+    }
 
     /**
      * Generates annotation with mi type.

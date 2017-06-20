@@ -662,7 +662,7 @@
                     type: Number,
                     value: 0
                 },
-
+                
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
@@ -1619,7 +1619,16 @@
                 }
                 return style;
             },
-
+            
+            /**
+             * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
+             */
+            _adjustColumnWidths: function (columnWidths) {
+                this.columns.forEach((column, columnIndex) => {
+                    this.set("columns." + columnIndex + ".width", columnWidths[column.property]);
+                });
+            },
+            
             /**
              * Calculates the style for empty total's cell.
              */
