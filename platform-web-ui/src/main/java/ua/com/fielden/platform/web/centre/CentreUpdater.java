@@ -423,6 +423,13 @@ public class CentreUpdater {
             }
         }
         
+        // apply widths that were marked as changed
+        for (final String property : differencesCentre.getSecondTick().checkedProperties(root)) {
+            if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.WIDTH, root, property)) {
+                targetCentre.getSecondTick().setWidth(root, property, differencesCentre.getSecondTick().getWidth(root, property));
+            }
+        }
+        
         if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.ALL_ORDERING, root, "")) {
             // need to clear all previous orderings:
             final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
@@ -508,6 +515,13 @@ public class CentreUpdater {
                         differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE2, root, property);
                     }
                 }
+            }
+        }
+        
+        // extract widths that are changed and mark them
+        for (final String property : differencesCentre.getSecondTick().checkedProperties(root)) {
+            if (!EntityUtils.equalsEx(differencesCentre.getSecondTick().getWidth(root, property), originalCentre.getSecondTick().getWidth(root, property))) {
+                differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.WIDTH, root, property);
             }
         }
         
