@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.stubForLinkProperty;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -16,11 +19,8 @@ public class IsPropertyAnnotation {
     private final String linkProperty;
 
     private final int length;
-    public static final int DEFAULT_LENGTH = 0;
     private final int precision;
-    public static final int DEFAULT_PRECISION = -1;
     private final int scale;
-    public static final int DEFAULT_SCALE = -1;
 
     public IsPropertyAnnotation(
             final Class<?> value, 

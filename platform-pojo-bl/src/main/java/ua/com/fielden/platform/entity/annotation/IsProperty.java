@@ -84,6 +84,10 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface IsProperty {
     public static String stubForLinkProperty = "----dummy-property----";
+    public static final int DEFAULT_LENGTH = 0;
+    public static final int DEFAULT_PRECISION = -1;
+    public static final int DEFAULT_SCALE = -1;
+
 
     /**
      * This setting should be used to identify a type parameter of the property type. For example, it could indicate an element type for collectional properties.
@@ -133,7 +137,7 @@ public @interface IsProperty {
      * 
      * @return
      */
-    int length() default 0;
+    int length() default DEFAULT_LENGTH;
 
     /**
      * Precision is the number of digits in a number. For example, the number 123.45 has a precision of 5.
@@ -141,7 +145,7 @@ public @interface IsProperty {
      * This parameter is applicable only to properties of type <code>BigDecimal</code>. 
      * @return
      */
-    int precision() default -1;
+    int precision() default DEFAULT_PRECISION;
 
     
     /**
@@ -150,5 +154,5 @@ public @interface IsProperty {
      * This parameter is applicable only to properties of type <code>BigDecimal</code>.
      * @return
      */
-    int scale() default -1;
+    int scale() default DEFAULT_SCALE;
 }
