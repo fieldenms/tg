@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.test.types;
+package ua.com.fielden.platform.types;
 
 import java.math.BigDecimal;
 import java.util.Currency;
