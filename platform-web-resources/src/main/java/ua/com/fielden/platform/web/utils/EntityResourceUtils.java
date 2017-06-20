@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
@@ -45,7 +46,6 @@ import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -611,9 +611,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (EntityUtils.isDate(propertyType)) {
             return reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue);
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
-            final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
-            final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
+            final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, type, propertyName);
+            final CritOnly critOnly = getPropertyAnnotation(CritOnly.class, type, propertyName);
+            final Integer propertyScale = isProperty != null && isProperty.scale() >= 0 ? ((int) isProperty.scale())
                     : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
 
             if (reflectedValue instanceof Integer) {
