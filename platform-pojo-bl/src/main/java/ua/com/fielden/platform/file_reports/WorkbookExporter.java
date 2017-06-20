@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.file_reports;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static org.apache.commons.lang.StringUtils.join;
 
 import java.io.ByteArrayOutputStream;
@@ -39,13 +41,17 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class WorkbookExporter {
 
+    private static final int MAX_COLUMN_WIDTH = 255 * 256;
+
+    private WorkbookExporter() {}
+    
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final List<M> entities, final String[] propertyNames, final String[] propertyTitles) {
         final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
         }
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<M>("Exported data", entities, propNamesAndTitles);
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles);
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
         return export(sheetsData);
@@ -162,7 +168,8 @@ public class WorkbookExporter {
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
             sheet.autoSizeColumn(propIndex);
-            sheet.setColumnWidth(propIndex, (int) (sheet.getColumnWidth(propIndex) * 1.05));
+            final int newSize = (int) min(round(sheet.getColumnWidth(propIndex) * 1.05), MAX_COLUMN_WIDTH);
+            sheet.setColumnWidth(propIndex, newSize);
         }
 
         // tripling first row height
