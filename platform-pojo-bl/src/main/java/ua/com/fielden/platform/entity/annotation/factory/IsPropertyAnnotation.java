@@ -13,10 +13,32 @@ public class IsPropertyAnnotation {
     private final boolean assignBeforeSave;
     private final String linkProperty;
 
-    public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean assignBeforeSave) {
+    private final int length;
+    public static final int DEFAULT_LENGTH = 0;
+    private final int precision;
+    public static final int DEFAULT_PRECISION = -1;
+    private final int scale;
+    public static final int DEFAULT_SCALE = -1;
+
+    public IsPropertyAnnotation(
+            final Class<?> value, 
+            final String linkProperty, 
+            final boolean assignBeforeSave,
+            final int length,
+            final int precision,
+            final int scale) {
         this.value = value;
         this.linkProperty = linkProperty;
         this.assignBeforeSave = assignBeforeSave;
+        this.length = length;
+        this.precision = precision;
+        this.scale = scale;
+    }
+
+    
+
+    public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean assignBeforeSave) {
+        this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE);
     }
 
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty) {
@@ -51,12 +73,27 @@ public class IsPropertyAnnotation {
 
             @Override
             public String linkProperty() {
-                return new String(linkProperty);
+                return linkProperty;
             }
 
             @Override
             public boolean assignBeforeSave() {
                 return assignBeforeSave;
+            }
+
+            @Override
+            public int length() {
+                return length;
+            }
+
+            @Override
+            public int precision() {
+                return precision;
+            }
+
+            @Override
+            public int scale() {
+                return scale;
             }
         };
     }
@@ -76,12 +113,27 @@ public class IsPropertyAnnotation {
 
             @Override
             public String linkProperty() {
-                return new String(original.linkProperty());
+                return original.linkProperty();
             }
 
             @Override
             public boolean assignBeforeSave() {
                 return original.assignBeforeSave();
+            }
+
+            @Override
+            public int length() {
+                return original.length();
+            }
+
+            @Override
+            public int precision() {
+                return original.precision();
+            }
+
+            @Override
+            public int scale() {
+                return original.scale();
             }
         };
     }
