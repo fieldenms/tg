@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao.eql;
 
+import static java.lang.Long.valueOf;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.dao.eql.EntityMetadata.EntityCategory.PERSISTED;
@@ -24,7 +25,6 @@ import static ua.com.fielden.platform.dao.eql.PropertyMetadata.PropertyCategory.
 import static ua.com.fielden.platform.dao.eql.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -66,6 +66,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -298,13 +299,15 @@ public class DomainMetadata {
      */
     private List<PropertyColumn> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumn) throws Exception {
         final String[] propNames = hibType.getPropertyNames();
-        final List<PropertyColumn> result = new ArrayList<PropertyColumn>();
+        final List<PropertyColumn> result = new ArrayList<>();
         for (final String propName : propNames) {
-            final MapTo mapTo = getMapTo(hibType.returnedClass(), propName);
+            final MapTo mapTo = getPropertyAnnotation(MapTo.class, hibType.returnedClass(), propName);
+            final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, hibType.returnedClass(), propName);
+
             final String mapToColumn = mapTo.value();
-            final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-            final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-            final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+            final Long length = isProperty.length() > 0 ? valueOf(isProperty.length()) : null;
+            final Long precision = isProperty.precision() >= 0 ? valueOf(isProperty.precision()) : null;
+            final Long scale = isProperty.scale() >= 0 ? valueOf(isProperty.scale()) : null;
             final String columnName = propNames.length == 1 ? parentColumn
                     : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
             result.add(new PropertyColumn(columnName, length, precision, scale));
@@ -345,13 +348,13 @@ public class DomainMetadata {
         }
     }
 
-    private List<PropertyColumn> getPropColumns(final Field field, final MapTo mapTo, final Object hibernateType) throws Exception {
+    private List<PropertyColumn> getPropColumns(final Field field, final IsProperty isProperty, final MapTo mapTo, final Object hibernateType) throws Exception {
         final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
-        final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-        final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-        final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+        final Long length = isProperty.length() > 0 ? valueOf(isProperty.length()) : null;
+        final Long precision = isProperty.precision() >= 0 ? valueOf(isProperty.precision()) : null;
+        final Long scale = isProperty.scale() >= 0 ? valueOf(isProperty.scale()) : null;
 
-        final List<PropertyColumn> result = new ArrayList<PropertyColumn>();
+        final List<PropertyColumn> result = new ArrayList<>();
         if (hibernateType instanceof ICompositeUserTypeInstantiate) {
             final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
             for (final PropertyColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
@@ -368,7 +371,6 @@ public class DomainMetadata {
 
         final boolean isEntity = isPersistedEntityType(commonInfo.javaType);
         final boolean isUnionEntity = isUnionEntityType(commonInfo.javaType);
-        final MapTo mapTo = getMapTo(entityType, commonInfo.propName);
         final boolean isCompositeKeyMember = getCompositeKeyMember(entityType, commonInfo.propName) != null;
         final boolean isRequired = AnnotationReflector.isAnnotationPresent(field, Required.class);
         final boolean nullable = !(isRequired || isCompositeKeyMember);
@@ -384,14 +386,16 @@ public class DomainMetadata {
             propertyCategory = isCompositeKeyMember ? PRIMITIVE_MEMBER_OF_COMPOSITE_KEY : PRIMITIVE;
         }
 
-        return new PropertyMetadata.Builder(commonInfo.propName, commonInfo.javaType, nullable).type(propertyCategory).hibType(commonInfo.hibernateType).columns(getPropColumns(field, mapTo, commonInfo.hibernateType)).build();
+        final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, commonInfo.propName);
+        final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, commonInfo.propName);
+        return new PropertyMetadata.Builder(commonInfo.propName, commonInfo.javaType, nullable).type(propertyCategory).hibType(commonInfo.hibernateType).columns(getPropColumns(field, isProperty, mapTo, commonInfo.hibernateType)).build();
     }
 
-    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) throws Exception {
+    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
         return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(Hibernate.STRING).type(VIRTUAL_OVERRIDE).build();
     }
 
-    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) {
         return new PropertyMetadata.Builder("referencesCount", Integer.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(Hibernate.INTEGER).type(EXPRESSION_COMMON).build();
     }
 
@@ -436,7 +440,7 @@ public class DomainMetadata {
 
     private CommonInfo determineCommonInfo(final Class<? extends AbstractEntity<?>> holdingEntityType, final Field propertyField) {
         final String propName = propertyField.getName();
-        final Class javaType = determinePropertyType(holdingEntityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+        final Class<?> javaType = determinePropertyType(holdingEntityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
         final PersistentType persistedType = getPersistedType(holdingEntityType, propName);
         final Object hibernateType = getHibernateType(javaType, persistedType);
         return new CommonInfo(propName, javaType, persistedType, hibernateType);
@@ -452,7 +456,7 @@ public class DomainMetadata {
         }
 
         final String propName;
-        final Class javaType;
+        final Class<?> javaType;
         final PersistentType persistedType;
         final Object hibernateType;
     }
@@ -461,24 +465,12 @@ public class DomainMetadata {
         return new PropertyMetadata.Builder(field.getName(), determinePropertyType(entityType, field.getName()), true).type(COLLECTIONAL).build();
     }
 
-    private MapEntityTo getMapEntityTo(final Class entityType) {
-        return getAnnotation(entityType, MapEntityTo.class);
-    }
-
-    private MapTo getMapTo(final Class entityType, final String propName) {
-        return getPropertyAnnotation(MapTo.class, entityType, propName);
-    }
-
     private CompositeKeyMember getCompositeKeyMember(final Class entityType, final String propName) {
         return getPropertyAnnotation(CompositeKeyMember.class, entityType, propName);
     }
 
-    private PersistentType getPersistedType(final Class entityType, final String propName) {
+    private PersistentType getPersistedType(final Class<?> entityType, final String propName) {
         return getPropertyAnnotation(PersistentType.class, entityType, propName);
-    }
-
-    private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {
-        return getPropertyAnnotation(Calculated.class, entityType, propName);
     }
 
     private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getUnionEntityModels(final Class<ET> entityType) {
