@@ -84,9 +84,9 @@ public class User extends ActivatableAbstractEntity<String> {
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
     
-    @IsProperty
+    @IsProperty(length = 255)
     @Invisible
-    @MapTo(length = 255)
+    @MapTo
     @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 

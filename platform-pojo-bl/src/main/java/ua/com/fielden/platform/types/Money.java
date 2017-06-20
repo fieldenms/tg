@@ -17,6 +17,7 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Random;
 
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 
 /**
@@ -52,14 +53,23 @@ public class Money implements Comparable<Money> {
      */
     public static final Money zero = new Money("0.00");
 
-    @MapTo(precision = 18, scale = 2)
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo
     private final BigDecimal amount;
-    @MapTo(precision = 18, scale = 2)
+    
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo
     private final BigDecimal exTaxAmount;
-    @MapTo(precision = 18, scale = 2)
+    
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo
     private final BigDecimal taxAmount;
+    
+    @IsProperty
     @MapTo
     private final Integer taxPercent;
+    
+    @IsProperty
     @MapTo
     private final Currency currency;
 
