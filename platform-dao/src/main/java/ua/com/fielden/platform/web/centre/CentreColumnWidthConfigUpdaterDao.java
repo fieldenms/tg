@@ -31,30 +31,12 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         final ICentreDomainTreeManagerAndEnhancer cdtmae = (ICentreDomainTreeManagerAndEnhancer) criteriaEntityBeingUpdated.freshCentreSupplier().get();
         
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        final String property = "waType";
+        final String property = action.getPropName();
+        final Integer newWidth = action.getNewWidth();
         
-        final int prevWidth = cdtmae.getSecondTick().getWidth(root, property);
-        cdtmae.getSecondTick().setWidth(root, property, prevWidth + 40);
+        cdtmae.getSecondTick().setWidth(root, property, newWidth);
         // cdtmae.getRepresentation().getSecondTick().setWidthByDefault(root, property, width);
         
-//        final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
-//        for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
-//            if (Ordering.ASCENDING == orderedProperty.getValue()) {
-//                cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-//            }
-//            cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-//  TODO      }
-//        
-//        for (final String sortingVal: action.getSortingVals()) {
-//            final String[] splitted = sortingVal.split(":");
-//            final String name = splitted[0].equals("this") ? "" : splitted[0];
-//            cdtmae.getSecondTick().toggleOrdering(root, name);
-//            if ("desc".equals(splitted[1])) {
-//                cdtmae.getSecondTick().toggleOrdering(root, name);
-//            }
-//        }
-        
-        // after width has been altered, the action saving should proceed:
         return super.save(action);
     }
 }

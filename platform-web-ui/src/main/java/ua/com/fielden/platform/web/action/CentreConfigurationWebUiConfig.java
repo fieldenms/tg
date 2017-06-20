@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
@@ -99,15 +100,18 @@ public class CentreConfigurationWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(CentreColumnWidthConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
-                        .postActionSuccess(new IPostAction() {
+                        .preAction(new IPreAction() {
                             @Override
                             public JsCode build() {
-                                // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
                                 return new JsCode(""
-                                        + "   const propColumn = self.$.egi.querySelector('tg-property-column[property=\"waType\"]');\n"
-                                        + "   // TODO this setting does not have any impact: propColumn.set('width', 400); \n"
-                                        + "   return true; "
-                                        + ""
+                                        + "    const propColumn = self.$.egi.querySelector('tg-property-column[property=\"integerProp\"]');\n"
+                                        + "    console.debug('propColumn = ', propColumn);"
+                                        + "    action.modifyFunctionalEntity = (function (bindingEntity, master) {\n"
+                                        + "        action.modifyValue4Property('propName', bindingEntity, 'integerProp');\n"
+                                        + "        action.modifyValue4Property('newWidth', bindingEntity, propColumn.width);\n"
+                                        + "    });\n"
+                                        + "    return true;\n"
+                                        + "\n"
                                         + "\n");
                             }
                         })
