@@ -32,8 +32,10 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
@@ -47,7 +49,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class ColumnDefinitionExtractor {
     private final HibernateTypeDeterminer hibernateTypeDeterminer;
-
+    private static final IsProperty defaultIsPropertyAnnotation = new IsPropertyAnnotation().newInstance();
+    
     public ColumnDefinitionExtractor(final Injector hibTypesInjector, final Map<Class<?>, Object> hibTypesDefaults) {
         this.hibernateTypeDeterminer = new HibernateTypeDeterminer(hibTypesInjector, hibTypesDefaults);
     }
@@ -62,19 +65,28 @@ public class ColumnDefinitionExtractor {
      * 
      * @param propName
      * @param propType
+     * @param isProperty
      * @param mapTo
      * @param persistedType
      * @param required
      * @return
      */
-    public Set<ColumnDefinition> extractFromProperty(final String propName, final Class<?> propType, final MapTo mapTo, final PersistentType persistedType, final boolean required, final boolean unique, final Optional<Integer> compositeKeyMemberOrder) {
+    public Set<ColumnDefinition> extractFromProperty(
+            final String propName, 
+            final Class<?> propType, 
+            final IsProperty isProperty, 
+            final MapTo mapTo, 
+            final PersistentType persistedType, 
+            final boolean required, 
+            final boolean unique, 
+            final Optional<Integer> compositeKeyMemberOrder) {
 
         final Set<ColumnDefinition> result = new LinkedHashSet<>();
         final String columnName = nameClause(propName, mapTo.value());
         final Object hibTypeConverter = hibernateTypeDeterminer.getHibernateType(propType, persistedType);
-        final int length = mapTo.length();
-        final int precision = mapTo.precision();
-        final int scale = mapTo.scale();
+        final int length = isProperty.length();
+        final int precision = isProperty.precision();
+        final int scale = isProperty.scale();
         
         if (isUnionEntityType(propType)) {
             for (final Field subpropField : unionProperties((Class<? extends AbstractUnionEntity>) propType)) {
@@ -82,8 +94,14 @@ public class ColumnDefinitionExtractor {
                 if (mapToUnionSubprop == null) {
                     throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated MapTo.", subpropField.getName(), propType)); 
                 }
+
+                final IsProperty isPropertyUnionSubprop = getAnnotation(subpropField, IsProperty.class);
+                if (isPropertyUnionSubprop == null) {
+                    throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated IsProperty.", subpropField.getName(), propType)); 
+                }
+                
                 final String unionPropColumnName = columnName + "_" + (isEmpty(mapToUnionSubprop.value()) ? subpropField.getName().toUpperCase() : mapToUnionSubprop.value());
-                result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, true, unionPropColumnName, subpropField.getType(), jdbcSqlTypeFor((Type) hibTypeConverter), mapToUnionSubprop.length(), mapToUnionSubprop.scale(), mapToUnionSubprop.precision(), mapToUnionSubprop.defaultValue()));
+                result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, true, unionPropColumnName, subpropField.getType(), jdbcSqlTypeFor((Type) hibTypeConverter), isPropertyUnionSubprop.length(), isPropertyUnionSubprop.scale(), isPropertyUnionSubprop.precision(), mapToUnionSubprop.defaultValue()));
             }
         } else {
             if (hibTypeConverter instanceof Type) {
@@ -97,10 +115,11 @@ public class ColumnDefinitionExtractor {
                     final String parentColumn = columnName;
                     final Field subpropField = findFieldByName(compositeUserType.returnedClass(), pair.getKey());
                     final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
+                    final IsProperty subpropIsProperty = getAnnotation(subpropField, IsProperty.class);
                     final String subpropColumnNameSuggestion = subpropMapTo.value();
-                    final Integer subpropLength = subpropMapTo.length();
-                    final Integer subpropPrecision = subpropMapTo.precision();
-                    final Integer subpropScale = subpropMapTo.scale();
+                    final Integer subpropLength = subpropIsProperty.length();
+                    final Integer subpropPrecision = subpropIsProperty.precision();
+                    final Integer subpropScale = subpropIsProperty.scale();
                     final String subpropColumnName = subprops.size() == 1 ? parentColumn
                             : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(subpropColumnNameSuggestion) ? pair.getKey().toUpperCase() : subpropColumnNameSuggestion));
 
@@ -120,12 +139,12 @@ public class ColumnDefinitionExtractor {
     
     public ColumnDefinition extractVersionProperty() {
         final Field versionField = Finder.getFieldByName(AbstractEntity.class, VERSION);
-        return extractFromProperty(versionField.getName(), versionField.getType(), getAnnotation(versionField, MapTo.class), null, true, false, empty()).iterator().next();
+        return extractFromProperty(versionField.getName(), versionField.getType(), defaultIsPropertyAnnotation, getAnnotation(versionField, MapTo.class), null, true, false, empty()).iterator().next();
     }
 
     public ColumnDefinition extractIdProperty() {
         final Field idField = Finder.getFieldByName(AbstractEntity.class, ID);
-        return extractFromProperty(idField.getName(), idField.getType(), getAnnotation(idField, MapTo.class), null, true, false, empty()).iterator().next();
+        return extractFromProperty(idField.getName(), idField.getType(), defaultIsPropertyAnnotation, getAnnotation(idField, MapTo.class), null, true, false, empty()).iterator().next();
     }
 
     public Optional<ColumnDefinition> extractSimpleKeyProperty(final Class<? extends AbstractEntity<?>> entityType) {
@@ -133,7 +152,7 @@ public class ColumnDefinitionExtractor {
             return empty();
         }
         final Field keyField = Finder.getFieldByName(AbstractEntity.class, KEY);
-        return of(extractFromProperty(keyField.getName(), getKeyType(entityType), getAnnotation(keyField, MapTo.class), null, true, true, empty()).iterator().next());
+        return of(extractFromProperty(keyField.getName(), getKeyType(entityType), getAnnotation(keyField, IsProperty.class), getAnnotation(keyField, MapTo.class), null, true, true, empty()).iterator().next());
     }
     
     private String nameClause(final String propName, final String columnNameSuggestion) {

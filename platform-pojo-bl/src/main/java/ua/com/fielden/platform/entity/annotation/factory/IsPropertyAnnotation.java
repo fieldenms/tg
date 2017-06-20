@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
+import static ua.com.fielden.platform.entity.annotation.IsProperty.stubForLinkProperty;
+
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 
 /**
@@ -35,8 +37,6 @@ public class IsPropertyAnnotation {
         this.scale = scale;
     }
 
-    
-
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean assignBeforeSave) {
         this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE);
     }
@@ -46,11 +46,11 @@ public class IsPropertyAnnotation {
     }
 
     public IsPropertyAnnotation(final Class<?> value) {
-        this(value, "----dummy-property----", false);
+        this(value, stubForLinkProperty, false);
     }
 
     public IsPropertyAnnotation() {
-        this(Void.class, "----dummy-property----", false);
+        this(Void.class, stubForLinkProperty, false);
     }
 
     public IsPropertyAnnotation value(final Class<?> value) {

@@ -257,14 +257,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     @MapTo("_ID")
     private Long id;
+    
     @MapTo(value = "_VERSION", defaultValue = "0")
     private Long version = 0L;
+    
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
     @Required
     private K key;
-    private transient final boolean compositeKey;
+    
+    private final boolean compositeKey;
+    
     @IsProperty
     @MapTo("DESC_")
     private String desc;
