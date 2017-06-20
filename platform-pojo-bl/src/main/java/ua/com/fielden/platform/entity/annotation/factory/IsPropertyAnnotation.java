@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.annotation.factory;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.stubForLinkProperty;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.STUB_FOR_LINK_PROPERTY;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 
@@ -46,11 +46,11 @@ public class IsPropertyAnnotation {
     }
 
     public IsPropertyAnnotation(final Class<?> value) {
-        this(value, stubForLinkProperty, false);
+        this(value, STUB_FOR_LINK_PROPERTY, false);
     }
 
     public IsPropertyAnnotation() {
-        this(Void.class, stubForLinkProperty, false);
+        this(Void.class, STUB_FOR_LINK_PROPERTY, false);
     }
 
     public IsPropertyAnnotation value(final Class<?> value) {

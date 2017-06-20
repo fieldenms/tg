@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.STUB_FOR_LINK_PROPERTY;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.lang.annotation.Annotation;
@@ -988,7 +989,7 @@ public class Finder {
 
         final IsProperty propAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
         // check if meta-data is present and if so use it
-        if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
+        if (!STUB_FOR_LINK_PROPERTY.equals(propAnnotation.linkProperty())) {
             return propAnnotation.linkProperty();
         }
         // otherwise try to determine link property dynamically based on property type and composite key
