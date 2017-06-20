@@ -117,9 +117,24 @@ public class ColumnDefinitionExtractor {
                     final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
                     final IsProperty subpropIsProperty = getAnnotation(subpropField, IsProperty.class);
                     final String subpropColumnNameSuggestion = subpropMapTo.value();
-                    final Integer subpropLength = subpropIsProperty.length();
-                    final Integer subpropPrecision = subpropIsProperty.precision();
-                    final Integer subpropScale = subpropIsProperty.scale();
+                    final int subpropLength = subpropIsProperty.length();
+
+                    // properties of type Money need special handling as the precision and scale for Money.amount can be overridden
+                    final int subpropPrecision;
+                    if (Money.class.isAssignableFrom(compositeUserType.returnedClass()) && "amount".equals(subpropField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
+                        subpropPrecision = precision; 
+                    } else {
+                        subpropPrecision = subpropIsProperty.precision();
+                    }
+                    
+                    final int subpropScale;
+                    if (Money.class.isAssignableFrom(compositeUserType.returnedClass()) && "amount".equals(subpropField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
+                        subpropScale = scale; 
+                    } else {
+                        subpropScale = subpropIsProperty.scale();
+                    }
+                    
+                    
                     final String subpropColumnName = subprops.size() == 1 ? parentColumn
                             : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(subpropColumnNameSuggestion) ? pair.getKey().toUpperCase() : subpropColumnNameSuggestion));
 
