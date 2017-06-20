@@ -342,6 +342,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier( () -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME) );
+        validationPrototype.setColumnWidthAdjuster( (propName, newWidth) -> {
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidth);
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidth);
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
+            
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidth);
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+        });
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
         final boolean idAccessible = idField.isAccessible();
