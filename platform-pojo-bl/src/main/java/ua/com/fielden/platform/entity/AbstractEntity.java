@@ -760,7 +760,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param propertyAnnotationType
      */
     private void earlyRuntimePropertyDefinitionValidation(final String propName, final Class<?> type, final boolean isCollectional, final IsProperty isPropertyAnnotation, final Class<?> propertyAnnotationType) {
-        if (!isNumeric(type) &&
+        final boolean isNumeric = isNumeric(type);
+        
+        if (!isNumeric &&
             (isPropertyAnnotation.precision() != DEFAULT_PRECISION || 
              isPropertyAnnotation.scale() != DEFAULT_SCALE || 
              isPropertyAnnotation.trailingZeros() != DEFAULT_TRAILING_ZEROS)) {
@@ -770,7 +772,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             
         }
 
-        if (isNumeric(type) && 
+        if (isNumeric &&
             (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) && 
             (isPropertyAnnotation.precision() <= 0 || isPropertyAnnotation.scale() < 0)) {
             final String error = format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
@@ -778,7 +780,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new EntityDefinitionException(error);
         }
 
-        if (isNumeric(type) && isPropertyAnnotation.precision() != DEFAULT_PRECISION && isPropertyAnnotation.precision() <= isPropertyAnnotation.scale()) {
+        if (isNumeric && isPropertyAnnotation.precision() != DEFAULT_PRECISION && isPropertyAnnotation.precision() <= isPropertyAnnotation.scale()) {
                 final String error = format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
                 logger.error(error);
                 throw new EntityDefinitionException(error);
