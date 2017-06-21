@@ -26,7 +26,7 @@ public class EntityWithNumericProps extends AbstractEntity<String> {
     @IsProperty
     private Long numericLong;
     
-    @IsProperty
+    @IsProperty(precision = 18, scale = 4)
     private Money numericMoney;
 
     @Observable
