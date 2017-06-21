@@ -86,7 +86,6 @@ public class WorkbookExporter {
         return wb;
     }
 
-    @SuppressWarnings("unchecked")
     private static <M extends AbstractEntity<?>> void addSheetWithData(final HSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
         final HSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
@@ -122,50 +121,7 @@ public class WorkbookExporter {
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
         final AtomicInteger index = new AtomicInteger(0);
-        sheetData.getEntities().forEach(entity -> {
-            final HSSFRow row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
-            // iterate through values in the current table row and populate the sheet row
-            for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
-                final HSSFCell cell = row.createCell(propIndex); // create new cell
-                if (propIndex < sheetData.getPropNames().size() - 1) { // the last column should not have right border
-                    cell.setCellStyle(dataCellStyle);
-                }
-                final String propertyName = sheetData.getPropNames().get(propIndex);
-                final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
-                // need to try to do the best job with types
-                if (shortCollectionalProps.containsKey(propertyName)) {
-                    cell.setCellType(HSSFCell.CELL_TYPE_STRING);
-                    cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
-                } else if (value instanceof Date) {
-                    cell.setCellValue((Date) value);
-                    cell.setCellStyle(dateCellStyle);
-                } else if (value instanceof DateTime) {
-                    cell.setCellValue(((DateTime) value).toDate());
-                    cell.setCellStyle(dateCellStyle);
-                } else if (value instanceof Number) {
-                    cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-                    cell.setCellValue(((Number) value).doubleValue());
-                } else if (value instanceof Boolean) {
-                    cell.setCellType(HSSFCell.CELL_TYPE_BOOLEAN);
-                    cell.setCellValue((Boolean) value);
-                } else if (value == null) { // if null then leave call blank
-                    cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
-                } else { // otherwise treat value as String
-                    cell.setCellType(HSSFCell.CELL_TYPE_STRING);
-                    if (EntityUtils.isCollectional(value.getClass())) {
-                        final Optional<String> keyToInclude = findKeyToExclude((Collection<?>) value);
-                        if (keyToInclude.isPresent()) {
-                            shortCollectionalProps.put(propertyName, keyToInclude.get());
-                            cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, keyToInclude.get()), ", "));
-                        } else {
-                            cell.setCellValue(join((Collection<?>) value, ", "));
-                        }
-                    } else {
-                        cell.setCellValue(value.toString());
-                    }
-                }
-            }
-        });
+        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -179,6 +135,51 @@ public class WorkbookExporter {
 
         // freezing first row
         sheet.createFreezePane(0, 1);
+    }
+
+    private static <M extends AbstractEntity<?>> void addRow(final AtomicInteger index, M entity, final DataForWorkbookSheet<M> sheetData, final HSSFSheet sheet, final CellStyle dateCellStyle, final Map<String, String> shortCollectionalProps, final HSSFCellStyle dataCellStyle) {
+        final HSSFRow row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
+        // iterate through values in the current table row and populate the sheet row
+        for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
+            final HSSFCell cell = row.createCell(propIndex); // create new cell
+            if (propIndex < sheetData.getPropNames().size() - 1) { // the last column should not have right border
+                cell.setCellStyle(dataCellStyle);
+            }
+            final String propertyName = sheetData.getPropNames().get(propIndex);
+            final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
+            // need to try to do the best job with types
+            if (shortCollectionalProps.containsKey(propertyName)) {
+                cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+                cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
+            } else if (value instanceof Date) {
+                cell.setCellValue((Date) value);
+                cell.setCellStyle(dateCellStyle);
+            } else if (value instanceof DateTime) {
+                cell.setCellValue(((DateTime) value).toDate());
+                cell.setCellStyle(dateCellStyle);
+            } else if (value instanceof Number) {
+                cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+                cell.setCellValue(((Number) value).doubleValue());
+            } else if (value instanceof Boolean) {
+                cell.setCellType(HSSFCell.CELL_TYPE_BOOLEAN);
+                cell.setCellValue((Boolean) value);
+            } else if (value == null) { // if null then leave call blank
+                cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
+            } else { // otherwise treat value as String
+                cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+                if (EntityUtils.isCollectional(value.getClass())) {
+                    final Optional<String> keyToInclude = findKeyToExclude((Collection<?>) value);
+                    if (keyToInclude.isPresent()) {
+                        shortCollectionalProps.put(propertyName, keyToInclude.get());
+                        cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, keyToInclude.get()), ", "));
+                    } else {
+                        cell.setCellValue(join((Collection<?>) value, ", "));
+                    }
+                } else {
+                    cell.setCellValue(value.toString());
+                }
+            }
+        }
     }
 
     private static List<AbstractEntity<?>> createShortColection(final Collection<AbstractEntity<?>> collection, final String keyToInclude) {
