@@ -41,7 +41,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 @CompanionObject(IEntityCentreConfig.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)

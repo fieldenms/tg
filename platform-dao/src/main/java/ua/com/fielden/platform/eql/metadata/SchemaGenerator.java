@@ -18,6 +18,7 @@ import org.hibernate.type.TypeResolver;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.reflection.Finder;
@@ -30,17 +31,13 @@ public class SchemaGenerator {
         this.entityTypes = entityTypes;
     }
 
-    private int resolveToSqlType(Class javaType) {
+    private int resolveToSqlType(final Class<?> javaType) {
         // TODO take into account hibtype name from @PersistedType value. 
         if (isPersistedEntityType(javaType)) {
             return 4;
         }
 
         return typeResolver.heuristicType(javaType.getName()).sqlTypes(null)[0];
-    }
-
-    private MapTo columnFromProperty(Class<? extends AbstractEntity<?>> entityType, String propName) {
-        return  getPropertyAnnotation(MapTo.class, entityType, propName);
     }
 
     public List<PersistedEntity> generate() {
@@ -54,11 +51,11 @@ public class SchemaGenerator {
                 entity.getFinalProps().add(new FinalProperty(false, ID, "_ID", Long.class, resolveToSqlType(Long.class), 0, 0, 0, null));
                 entity.getFinalProps().add(new FinalProperty(false, VERSION, "_VERSION", Long.class, resolveToSqlType(Long.class), 0, 0, 0, null));
                 // TODO need to determine DESC property from annotations
-                Class<? extends Comparable> keyType = getKeyType(entityType);
+                Class<? extends Comparable<?>> keyType = getKeyType(entityType);
                 if (!DynamicEntityKey.class.equals(keyType)) {
-                    // TODO need to take into account the case of key column override
-                    MapTo mt = columnFromProperty(entityType, KEY);
-                    entity.getFinalProps().add(new FinalProperty(false, KEY, "KEY_", keyType, resolveToSqlType(keyType), mt.length(), mt.scale(), mt.precision(), mt.defaultValue()));
+                    final MapTo mt = getPropertyAnnotation(MapTo.class, entityType, KEY);
+                    final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, KEY);
+                    entity.getFinalProps().add(new FinalProperty(false, KEY, "KEY_", keyType, resolveToSqlType(keyType), isProperty.length(), isProperty.scale(), isProperty.precision(), mt.defaultValue()));
                 }
                 for (Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
                     if (!propField.getName().equals("key")) {
@@ -72,8 +69,9 @@ public class SchemaGenerator {
                                 boolean.class.equals(propField.getType())
                                 );
                         if (!special) {
-                            MapTo mt = columnFromProperty(entityType, propField.getName());
-                            entity.getFinalProps().add(new FinalProperty(false, propField.getName(), mt.value(), propField.getType(), resolveToSqlType(propField.getType()), mt.length(), mt.scale(), mt.precision(), mt.defaultValue()));
+                            final MapTo mt = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
+                            final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propField.getName());                            
+                            entity.getFinalProps().add(new FinalProperty(false, propField.getName(), mt.value(), propField.getType(), resolveToSqlType(propField.getType()), isProperty.length(), isProperty.scale(), isProperty.precision(), mt.defaultValue()));
                         }
                     }
                 }

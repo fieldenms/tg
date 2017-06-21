@@ -41,13 +41,13 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @CompositeKeyMember(2)
     private Date gpsTime;
 
-    @IsProperty
-    @MapTo(precision = 18, scale = 10)
+    @IsProperty(precision = 18, scale = 10)
+    @MapTo
     @Title(value = "X-координата", desc = "Значення довготи")
     private BigDecimal x;
 
-    @IsProperty
-    @MapTo(precision = 18, scale = 10)
+    @IsProperty(precision = 18, scale = 10)
+    @MapTo
     @Title(value = "Y-координата", desc = "Значення широти")
     private BigDecimal y;
 
@@ -76,13 +76,13 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @Title(value = "Запалення?", desc = "Вказує, чи двигун працював у момент генерування повідомлення.")
     private boolean din1;
 
-    @IsProperty
-    @MapTo(precision = 18, scale = 2)
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo
     @Title(value = "Вольтаж БЖ", desc = "Вольтаж блоку живлення.")
     private BigDecimal powerSupplyVoltage;
 
-    @IsProperty
-    @MapTo(precision = 18, scale = 2)
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo
     @Title(value = "Вольтаж акумулятора", desc = "Вольтаж акумулятора.")
     private BigDecimal batteryVoltage;
 
@@ -91,8 +91,8 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @Title(value = "GPS напруга?", desc = "Вказує, чи GPS модуль живився від зовнішнього джерела (не від внутрішнього акумулятора) у момент генерування повідомлення.")
     private boolean gpsPower;
 
-    @IsProperty
-    @MapTo(value = "distance_", precision = 18, scale = 2)
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo(value = "distance_")
     // TODO
     @Readonly
     @Required

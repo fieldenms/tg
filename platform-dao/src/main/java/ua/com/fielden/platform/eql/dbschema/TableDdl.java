@@ -26,6 +26,7 @@ import org.hibernate.dialect.Dialect;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -68,11 +69,12 @@ public class TableDdl {
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
             if (!shouldIgnore(propField, entityType)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
+                final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
                 final boolean unique = propField.isAnnotationPresent(Unique.class);
                 final Optional<Integer> compositeKeyMemberOrder = Optional.ofNullable(propField.getAnnotation(CompositeKeyMember.class)).map(ann -> ann.value());
-                columns.addAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), mapTo, persistedType, required, unique, compositeKeyMemberOrder));
+                columns.addAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
             }
         }
 

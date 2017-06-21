@@ -2,11 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
-
-import java.lang.reflect.Field;
 
 import org.junit.Test;
 

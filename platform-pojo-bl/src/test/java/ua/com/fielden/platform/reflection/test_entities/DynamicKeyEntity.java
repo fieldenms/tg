@@ -13,8 +13,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @DescTitle(value = "Dynamic description")
 public class DynamicKeyEntity extends AbstractEntity<DynamicEntityKey> {
 
-    private static final long serialVersionUID = 1779449465249616599L;
-
     @IsProperty
     @CompositeKeyMember(1)
     private String firstKeyMemeber;

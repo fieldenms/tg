@@ -104,7 +104,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
         this.freezedAnalyses.putAll(freezedAnalyses);
 
-        this.analysisListeners = new ArrayList<IAnalysisListener>();
+        this.analysisListeners = new ArrayList<>();
 
         for (final IAbstractAnalysisDomainTreeManager analysisManager : this.persistentAnalyses.values()) {
             initAnalysisManagerReferencesOn(analysisManager, this);
