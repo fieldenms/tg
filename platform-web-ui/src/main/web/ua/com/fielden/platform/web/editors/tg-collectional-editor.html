@@ -95,11 +95,11 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
             <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview, _entities)]]" multi-selection>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview, item)]]">
-                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview, item)]]" checked="[[selected]]"></paper-checkbox>
+                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview)]]">
+                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                           <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -375,16 +375,16 @@
             return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
         
-        _selectingIconHidden: function (_forReview, item) {
-            return _forReview || (typeof item.sorting !== 'undefined');
+        _selectingIconHidden: function (_forReview) {
+            return _forReview;
         },
         
         _sortingIconHidden: function (_forReview, item) {
             return _forReview || (typeof item.sorting === 'undefined');
         },
         
-        _isSelectionEnabled: function (_forReview, _entities) {
-            return !_forReview && _entities.length > 0 && this._sortingIconHidden(_forReview, _entities[0]);
+        _isSelectionEnabled: function (_forReview) {
+            return !_forReview;
         },
         
         _caclulateSortingIconStyle: function (sorting)  {
@@ -393,8 +393,8 @@
             return style;
         },
         
-        _calculateItemStyle: function (_forReview, item) {
-            return !_forReview && typeof item.sorting === 'undefined' ? 'cursor: pointer;' : 'cursor: default;';
+        _calculateItemStyle: function (_forReview) {
+            return !_forReview ? 'cursor: pointer;' : 'cursor: default;';
         },
         
         _calculateOrder: function (sortingNumber) {
