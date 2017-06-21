@@ -326,7 +326,7 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center-center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                             <div class="resizing-box" on-track="_changeColumnSize" hidden$="[[!_canResize(item, index, numOfFixedCols)]]"></div>
                                         </div>
@@ -482,8 +482,8 @@
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
-                            <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal center table-header-row" style="top:0;left:0">
-                                <div class="table-cell" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                            <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal table-header-row" style="top:0;left:0">
+                                <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
@@ -492,7 +492,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                         <div class="resizing-box" on-track="_changeColumnSize" hidden$="[[!_canResize(item, index, numOfFixedCols)]]"></div>
                                     </div>
@@ -623,9 +623,9 @@
         const calculateTotalColumnWidth = function (columns) {
             return columns.reduce((accum, curr) => accum += curr.width, 0);
         };
-        const calculateFixedColumnWidthExcept = function (egi, columnIndex) {
-            const columnElements = egi.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
+        const calculateFixedColumnWidthExcept = function (egi, columnIndex, columnElements) {
             let fixedColumnWidth = 0;
+            const indexCorrection = (+!!egi.primaryAction) /*if primary action exists then correct index for 1 to exlcude it when calculating the fixed column width*/ + 1 // 1 for checkbox element cause it's always in the dom and must be excluded when calculated the width of fixed columns;
             if (egi.checkboxVisible) {
                 fixedColumnWidth += columnElements[0].offsetWidth;
             }
@@ -634,11 +634,21 @@
             }
             for (let i = 0; i < egi.numOfFixedCols; i++) {
                 if (columnIndex !== i) {
-                    fixedColumnWidth += columnElements[i + 2].offsetWidth;
+                    fixedColumnWidth += columnElements[i + indexCorrection].offsetWidth;
                 }
             }
             if (egi.secondaryActionsFixed && egi.secondaryActions.length > 0) {
                 fixedColumnWidth += columnElements[columnElements.length - 1].offsetWidth;
+            }
+            return fixedColumnWidth;
+        };
+        const calculateFixedCheckboxsAndActionsWidth = function (egi, columnElements) {
+            let fixedColumnWidth = 0;
+            if (egi.checkboxVisible) {
+                fixedColumnWidth += columnElements[0].offsetWidth;
+            }
+            if (egi.primaryAction) {
+                fixedColumnWidth += columnElements[1].offsetWidth;
             }
             return fixedColumnWidth;
         };
@@ -692,7 +702,7 @@
                 //Controls visiblity of checkboxes at the beginnig of the header and each data row.
                 checkboxVisible: {
                     type: Boolean,
-                    value: true
+                    value: false
                 },
 
                 //Scrolling related properties.
@@ -1204,10 +1214,6 @@
                 return index < numOfFixedCols;
             },
 
-            _isSummaryFixed: function () {
-                console.log(arguments);
-            },
-
             _isSummaryPresentAndFixed: function (totals, summaryFixed) {
                 return totals && summaryFixed;
             },
@@ -1645,6 +1651,7 @@
                 this.columns.forEach((column, columnIndex) => {
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property]);
                 });
+                this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
             },
 
             /**
@@ -1930,10 +1937,15 @@
                 document.body.style.cursor = "col-resize";
                 e.target.classList.toggle("resizing-action", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
+                const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
                 let containerLeft = 0;
                 if (this._leftLockPanel && this._leftLockPanel.offsetParent !== null) {
-                    containerLeft = this._leftLockPanel.offsetWidth;
+                    if (e.model.index < this.numOfFixedCols) {
+                        containerLeft = calculateFixedCheckboxsAndActionsWidth(this, columnElements);
+                    } else {
+                        containerLeft = this._leftLockPanel.offsetWidth;
+                    }
                 }
                 if (this._rightLockPanel && this._rightLockPanel.offsetParent !== null) {
                     containerWidth -= this._rightLockPanel.offsetWidth;
@@ -1943,7 +1955,7 @@
                     oldColumnWidth: e.model.item.width,
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
-                    otherFixedColumnWidth: e.model.index < self.numOfFixedCols ? calculateFixedColumnWidthExcept(this, e.model.index) : undefined,
+                    otherFixedColumnWidth: e.model.index < self.numOfFixedCols ? calculateFixedColumnWidthExcept(this, e.model.index, columnElements) : undefined,
                     widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth
                 };
             },
@@ -1959,7 +1971,6 @@
                     } else if (mousePos.x < this._columnResizingObject.containerLeft) {
                         newWidth += -10; //-10 is increment in case if mouse goes out of the border of EGI
                     }
-                    console.log(mousePos, this._columnResizingObject, newWidth, columnWidth);
                     //Correct size if EGI is less then min width.
                     if (newWidth < e.model.item.minWidth) {
                         newWidth = e.model.item.minWidth;
@@ -1985,10 +1996,10 @@
                 document.body.style.cursor = "default";
                 e.target.classList.toggle("resizing-action", false);
                 if (this._columnResizingObject && this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
-                    //                    this.fire("tg-egi-column-change", {
-                    //                        columnName: e.model.item.property,
-                    //                        columnWidth: e.model.item.width
-                    //                    });
+                    this.fire("tg-egi-column-change", {
+                        columnName: e.model.item.property,
+                        columnWidth: e.model.item.width
+                    });
                 }
                 delete this._columnResizingObject;
             }

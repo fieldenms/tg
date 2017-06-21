@@ -1005,14 +1005,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@mi_type", miType.getSimpleName()).
                 //egi related properties
                 replace("@customShortcuts", shortcuts).
-                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
-                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
-                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
-                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
+                replace("@toolbarVisible", dslDefaultConfig.shouldHideToolbar() ? "": "toolbar-visible").
+                replace("@checkboxVisible", dslDefaultConfig.shouldHideCheckboxes() ? "": "checkbox-visible").
+                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() ? "checkboxes-fixed" : "").
+                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() ? "checkboxes-with-primary-actions-fixed" : "").
                 replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
-                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
-                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
-                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
+                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() ? "secondary-actions-fixed" : "").
+                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() ? "header-fixed" : "").
+                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() ? "summary-fixed": "").
                 replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
                 ///////////////////////
                 replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).

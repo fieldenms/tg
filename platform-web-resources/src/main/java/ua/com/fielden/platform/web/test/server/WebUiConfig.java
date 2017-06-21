@@ -1477,12 +1477,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 //.hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(2).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this")
                     .order(2).asc()
-                    .minWidth(60);
+                    .width(60);
 
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {
@@ -1562,7 +1562,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("bigDecimalProp")
                     .minWidth(68);
 
-                    final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
+        final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
                             beforeSummaryConfForBigDecimalProp
                                 .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
@@ -1609,7 +1609,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
                                 + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
                                 + "[['flex', 'select:property=stringProp']]"
-                                + "]")
+                                        + "]")
                 //                .also()
                 //                .addProp("status")
 
@@ -1618,14 +1618,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(action(EntityEditAction.class).
-                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
-                        icon("editor:mode-edit").
-                        withStyle("color: green").
-                        shortDesc("Edit entity").
-                        longDesc("Opens master for editing this entity").
+                        .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
+                                .icon("editor:mode-edit")
+                                .withStyle("color: green")
+                                .shortDesc("Edit entity")
+                                .longDesc("Opens master for editing this entity").build()).
                         // withNoParentCentreRefresh().
-                        build())
+                                //build());
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1637,7 +1636,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                build()
 
                 //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
-                .also()
+                        also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
