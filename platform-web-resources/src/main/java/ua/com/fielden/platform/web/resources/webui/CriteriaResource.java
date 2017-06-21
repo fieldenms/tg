@@ -320,12 +320,12 @@ public class CriteriaResource extends ServerResource {
                 }
                 pair.getKey().put("renderingHints", renderingHints);
             } else {
-                pair.getKey().put("renderingHints", new ArrayList<Object>());
+                pair.getKey().put("renderingHints", new ArrayList<>());
             }
 
             enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
-            final ArrayList<Object> list = new ArrayList<Object>();
+            final ArrayList<Object> list = new ArrayList<>();
             list.add(isRunning ? previouslyRunCriteriaEntity : null);
             list.add(pair.getKey());
 

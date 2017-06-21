@@ -69,7 +69,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
-    private final static Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
     private enum RunActions {
         RUN("run"),
@@ -176,7 +176,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
         }
         IPage<T> page = null;
-        List<T> data = new ArrayList<T>();
+        final List<T> data;
         final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
         final String action = (String) customObject.get("@@action");
         if (isRunning(customObject)) {
@@ -194,6 +194,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             try {
                 page = criteriaEntity.getPage(pageNumber, pageCapacity);
             } catch (final Exception e) {
+                logger.error(e);
                 final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
                 page = navigatedData.getKey();
                 resultantCustomObject.put("summary", navigatedData.getValue());
@@ -202,12 +203,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         } else if (RunActions.EXPORTALL.toString().equals(action)) {
             page = null;
             data = criteriaEntity.getAllEntities();
+        } else {
+            data = new ArrayList<>();
         }
-        final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
-        resultantCustomObject.put("resultEntities", resultEntities);
+        resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
-        return new Pair<>(resultantCustomObject, resultEntities);
+        return new Pair<>(resultantCustomObject, data);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
