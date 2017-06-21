@@ -98,7 +98,7 @@
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview, _entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
+                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview, item)]]">
                           <paper-checkbox hidden$="[[_selectingIconHidden(_forReview, item)]]" checked="[[selected]]"></paper-checkbox>
                           <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
@@ -393,8 +393,8 @@
             return style;
         },
         
-        _calculateItemStyle: function (sorting) {
-            return typeof sorting === 'undefined' ? 'cursor: pointer;' : 'cursor: default;';
+        _calculateItemStyle: function (_forReview, item) {
+            return !_forReview && typeof item.sorting === 'undefined' ? 'cursor: pointer;' : 'cursor: default;';
         },
         
         _calculateOrder: function (sortingNumber) {
