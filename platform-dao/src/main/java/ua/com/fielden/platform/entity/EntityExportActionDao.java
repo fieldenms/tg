@@ -3,9 +3,10 @@ package ua.com.fielden.platform.entity;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.inject.Inject;
 
@@ -43,20 +44,21 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = entity.getContext().getSelectionCrit();
         entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.ms-excel");
-        final Map<String, Object> customObject = new LinkedHashMap<String, Object>();
-        final List<AbstractEntity<?>> entities;
+        final Map<String, Object> customObject = new LinkedHashMap<>();
+        final Stream<AbstractEntity<?>> entities;
         if (entity.getAll()) {
             customObject.put("@@pageNumber", -1);
             customObject.put("@@action", "export all");
             entities = selectionCrit.exportQueryRunner().apply(customObject);
         } else if (entity.getPageRange()) {
-            entities = new ArrayList<>();
+            final List<AbstractEntity<?>> intermediate = new ArrayList<>();
             for (int page = entity.getFromPage() - 1; page < entity.getToPage(); page++) {
                 customObject.put("@@pageCapacity", entity.getPageCapacity());
                 customObject.put("@@action", "navigate");
                 customObject.put("@@pageNumber", page);
-                entities.addAll(selectionCrit.exportQueryRunner().apply(customObject));
+                intermediate.addAll(selectionCrit.exportQueryRunner().apply(customObject).collect(Collectors.toList()));
             }
+            entities = intermediate.stream();
         } else {
             if (entity.getContext().getSelectedEntities().isEmpty()) {
                 throw Result.failure("Please select at least one entity to export");
@@ -67,7 +69,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
                 ids.add(selectedEntity.getId());
             }
-            entities = selectEntities(selectionCrit.exportQueryRunner().apply(customObject), ids);
+            entities = selectEntities(selectionCrit.exportQueryRunner().apply(customObject).collect(Collectors.toList()), ids).stream();
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
