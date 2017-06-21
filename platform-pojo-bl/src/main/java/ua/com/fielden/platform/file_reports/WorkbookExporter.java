@@ -13,7 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.Deflater;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,7 +47,7 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
     
-    public static <M extends AbstractEntity<?>> HSSFWorkbook export(final List<M> entities, final String[] propertyNames, final String[] propertyTitles) {
+    public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
         final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
@@ -119,15 +121,15 @@ public class WorkbookExporter {
         final Map<String, String> shortCollectionalProps = new HashMap<>();
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
-        for (int index = 0; index < sheetData.getEntities().size(); index++) {
-            final HSSFRow row = sheet.createRow(index + 1); // new row starting with 1
+        final AtomicInteger index = new AtomicInteger(0);
+        sheetData.getEntities().forEach(entity -> {
+            final HSSFRow row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
             // iterate through values in the current table row and populate the sheet row
             for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
                 final HSSFCell cell = row.createCell(propIndex); // create new cell
                 if (propIndex < sheetData.getPropNames().size() - 1) { // the last column should not have right border
                     cell.setCellStyle(dataCellStyle);
                 }
-                final AbstractEntity<?> entity = sheetData.getEntities().get(index);
                 final String propertyName = sheetData.getPropNames().get(propIndex);
                 final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
                 // need to try to do the best job with types
@@ -163,7 +165,7 @@ public class WorkbookExporter {
                     }
                 }
             }
-        }
+        });
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
