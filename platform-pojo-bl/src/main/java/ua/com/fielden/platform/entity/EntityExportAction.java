@@ -17,16 +17,15 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 /**
- * Master entity object.
+ * A functional entity that represents an action for exporting entities to Excel.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Export", desc = "Export data into file")
 @CompanionObject(IEntityExportAction.class)
 public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
-    private static final long serialVersionUID = 3228002036372799747L;
 
     @IsProperty
     @Title(value = "Export all?", desc = "Export all entities?")

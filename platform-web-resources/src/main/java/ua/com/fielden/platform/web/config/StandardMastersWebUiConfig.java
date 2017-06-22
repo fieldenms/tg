@@ -4,10 +4,11 @@ import static java.lang.String.format;
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -17,12 +18,18 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
 
-import com.google.inject.Injector;
-
+/**
+ * A set of factory methods for various standard platform-level entity masters such as Export to Excel. 
+ * 
+ * @author TG Team
+ *
+ */
 public class StandardMastersWebUiConfig {
 
+    private StandardMastersWebUiConfig() {}
+    
     public static EntityMaster<EntityNewAction> createEntityNewMaster(final Injector injector) {
-        return new EntityMaster<EntityNewAction>(EntityNewAction.class,
+        return new EntityMaster<>(EntityNewAction.class,
                 EntityNewActionProducer.class,
                 new EntityManipulationMasterBuilder<EntityNewAction>()
                 /*  */.forEntityWithSaveOnActivate(EntityNewAction.class)
@@ -32,7 +39,7 @@ public class StandardMastersWebUiConfig {
     }
 
     public static EntityMaster<EntityEditAction> createEntityEditMaster(final Injector injector) {
-        return new EntityMaster<EntityEditAction>(EntityEditAction.class,
+        return new EntityMaster<>(EntityEditAction.class,
                 EntityEditActionProducer.class,
                 new EntityManipulationMasterBuilder<EntityEditAction>()
                 /*  */.forEntityWithSaveOnActivate(EntityEditAction.class)
@@ -79,13 +86,8 @@ public class StandardMastersWebUiConfig {
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), masterLayout)
                 .done();
-        final EntityMaster<EntityExportAction> master = new EntityMaster<EntityExportAction>(
-                EntityExportAction.class,
-                EntityExportActionProducer.class,
-                masterConfig,
-                injector);
 
-        return master;
+        return new EntityMaster<>(EntityExportAction.class, masterConfig, injector);
     }
 
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:

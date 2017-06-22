@@ -22,16 +22,28 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * DAO implementation for companion object {@link IEntityExportAction}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements IEntityExportAction {
+    
     @Inject
     public EntityExportActionDao(final IFilter filter) {
         super(filter);
     }
 
+    @Override
+    public EntityExportAction new_() {
+        final EntityExportAction entity = super.new_();
+        entity.setAll(true);
+        entity.setKey("Export");
+        entity.setPageCapacity(30);
+        entity.setFromPage(1);
+        entity.setToPage(1);
+        return entity;
+    }
+    
     @Override
     @SessionRequired
     public EntityExportAction save(final EntityExportAction entity) {
