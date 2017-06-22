@@ -2,6 +2,7 @@ package ua.com.fielden.platform.criteria.generator.impl;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -96,6 +97,12 @@ public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implemen
 
     @Override
     public Integer progress() {
+        return null;
+    }
+
+    @Override
+    public Stream<T> stream(QueryExecutionModel<T, ?> queryModel) {
+        // TODO Auto-generated method stub
         return null;
     }
 
