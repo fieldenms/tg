@@ -400,8 +400,11 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     if (pair.getValue() == null) {
                         return new ArrayList<AbstractEntity<?>>().stream();
                     } else {
-                        CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
-                        return ((List<AbstractEntity<?>>) pair.getValue()).stream();
+                        return CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(
+                                centre, 
+                                centre.getCustomPropertiesDefinitions(), 
+                                centre.getCustomPropertiesAsignmentHandler(), 
+                                ((List<AbstractEntity<?>>) pair.getValue()).stream());
                     }
                 });
             }
