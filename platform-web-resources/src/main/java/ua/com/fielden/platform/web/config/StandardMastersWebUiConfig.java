@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.web.config;
 
+import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
+import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
+import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
+import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+
 import static java.lang.String.format;
 
 import java.util.Optional;
@@ -49,32 +57,24 @@ public class StandardMastersWebUiConfig {
     }
 
     public static EntityMaster<EntityExportAction> createExportMaster(final Injector injector) {
-        final String actionMr = "'margin: 10px', 'width: 110px'";
-        final String inner = "'flex', 'margin-right: 20px'";
-        final String outer = "'flex'";
-
-        final String masterLayout = ("['vertical', 'padding:20px',"
-                //                                     all
-                + format("['horizontal', 'justified', [%s]],", outer)
-                //                                    pages
-                + format("['horizontal', 'justified', 'margin-top:20px', [%s]],", outer)
-                //
-                + format("['horizontal', 'justified', 'margin-bottom:20px', 'margin-left:25px', [%s], [%s]],", inner, outer)
-                //                                  selected
-                + format("['horizontal', 'justified', [%s]]", outer)
-                + "]");
-        final String buttonPanelLayout = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionMr, actionMr);
+        final FlexLayoutConfig CELL_LAYOUT = layout().flex().end();
+        
+        final String layout = cell(
+                cell(cell(CELL_LAYOUT))
+               .cell(cell(CELL_LAYOUT))
+               .cell(cell(CELL_LAYOUT))
+               .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end()),
+               layout().withStyle("padding", "20px").end()).toString();
+        
+        final String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
+        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 20px', 'wrap', 'justify-content: center'";
+        final String buttonPanelLayout = format("[%s, [%s], [%s]]", MASTER_ACTION_LAYOUT_SPECIFICATION, MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()
                 .forEntity(EntityExportAction.class)
-                .addProp("all").asCheckbox()
-                .also()
-                .addProp("pageRange").asCheckbox()
-                .also()
-                .addProp("fromPage").asSpinner()
-                .also()
-                .addProp("toPage").asSpinner()
-                .also()
-                .addProp("selected").asCheckbox()
+                .addProp(PROP_EXPORT_ALL).asCheckbox().also()
+                .addProp(PROP_EXPORT_SELECTED).asCheckbox().also()
+                .addProp(PROP_EXPORT_TOP).asCheckbox().also()
+                .addProp(PROP_NUMBER).asSpinner()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
@@ -82,14 +82,13 @@ public class StandardMastersWebUiConfig {
                 .addAction(MasterActions.SAVE)
                 /*      */.shortDesc("EXPORT")
                 /*      */.longDesc("Export action")
-
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), masterLayout)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, masterConfig, injector);
     }
-
+    
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:
 //    public static EntityMaster<EntityNewActionWithNoParentCentreRefresh> createEntityNewMasterWithNoParentCentreRefresh(final Injector injector) {
 //        return new EntityMaster<EntityNewAction>(EntityNewActionWithNoParentCentreRefresh.class,

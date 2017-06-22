@@ -36,11 +36,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     @Override
     public EntityExportAction new_() {
         final EntityExportAction entity = super.new_();
-        entity.setAll(true);
+        entity.setExportAll(true);
         entity.setKey("Export");
-        entity.setPageCapacity(30);
-        entity.setFromPage(1);
-        entity.setToPage(1);
+        entity.setNumber(10);
         return entity;
     }
     
@@ -58,19 +56,15 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setMime("application/vnd.ms-excel");
         final Map<String, Object> customObject = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
-        if (entity.getAll()) {
+        if (entity.isExportAll()) {
             customObject.put("@@pageNumber", -1);
             customObject.put("@@action", "export all");
             entities = selectionCrit.exportQueryRunner().apply(customObject);
-        } else if (entity.getPageRange()) {
-            final List<AbstractEntity<?>> intermediate = new ArrayList<>();
-            for (int page = entity.getFromPage() - 1; page < entity.getToPage(); page++) {
-                customObject.put("@@pageCapacity", entity.getPageCapacity());
-                customObject.put("@@action", "navigate");
-                customObject.put("@@pageNumber", page);
-                intermediate.addAll(selectionCrit.exportQueryRunner().apply(customObject).collect(Collectors.toList()));
-            }
-            entities = intermediate.stream();
+        } else if (entity.isExportTop()) {
+            customObject.put("@@pageCapacity", entity.getNumber());
+            customObject.put("@@action", "navigate");
+            customObject.put("@@pageNumber", 0);
+            entities = selectionCrit.exportQueryRunner().apply(customObject);
         } else {
             if (entity.getContext().getSelectedEntities().isEmpty()) {
                 throw Result.failure("Please select at least one entity to export");
