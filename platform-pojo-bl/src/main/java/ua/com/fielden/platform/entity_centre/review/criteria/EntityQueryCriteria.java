@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -613,8 +614,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
      *
-     * @param queryModel
-     *            - query model for which the first result page must be returned.
      * @return
      */
     public final List<T> getAllEntities() {
@@ -634,6 +633,28 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         } else {
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.getAllEntities(queryModel, getByteArrayForManagedType());
+        }
+    }
+
+    /**
+     * Returns a stream of entities that match the generated query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+
+    public final Stream<T> streamEntities() {
+        return streamEntities(generateQuery());
+    }
+
+    /**
+     * Returns a stream of entities that match the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel) {
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.stream(queryModel);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.stream(queryModel);
         }
     }
 
