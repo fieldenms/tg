@@ -44,6 +44,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
+    private static final int MAX_ROWS = 65535;
 
     private WorkbookExporter() {}
     
@@ -121,7 +122,7 @@ public class WorkbookExporter {
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
         final AtomicInteger index = new AtomicInteger(0);
-        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
+        sheetData.getEntities().limit(MAX_ROWS).forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
