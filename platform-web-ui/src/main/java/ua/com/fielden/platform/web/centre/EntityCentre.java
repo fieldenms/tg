@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
@@ -191,22 +192,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
         cdtmae.getEnhancer().apply();
-
         if (resultSetProps.isPresent()) {
+            final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp property : resultSetProps.get()) {
-                if (property.propName.isPresent()) {
-                    final String propertyName = treeName(property.propName.get());
-                    cdtmae.getSecondTick().check(entityType, propertyName, true);
-                    cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
-                } else {
-                    if (property.propDef.isPresent()) { // represents the 'custom' property
-                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                        final String propertyName = treeName(customPropName);
-                        cdtmae.getSecondTick().check(entityType, propertyName, true);
-                        cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
-                    } else {
-                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
-                    }
+                final String propertyName = getPropName(property);
+                cdtmae.getSecondTick().check(entityType, propertyName, true);
+                cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
+                if (growFactors.containsKey(propertyName)) {
+                    cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
                 }
                 if (property.tooltipProp.isPresent()) {
                     cdtmae.getSecondTick().check(entityType, treeName(property.tooltipProp.get()), true);
@@ -241,6 +234,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
+    }
+
+    private static String getPropName(final ResultSetProp property) {
+        if (property.propName.isPresent()) {
+            return treeName(property.propName.get());
+        } else {
+            if (property.propDef.isPresent()) { // represents the 'custom' property
+                final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
+                return treeName(customPropName);
+            } else {
+                throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+            }
+        }
     }
 
     /**
@@ -809,10 +815,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultProps.isPresent()) {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
-                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
-
-                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
+                final String resultPropName = getPropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
@@ -827,6 +831,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         null,
                         resultProp.width,
+                        centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,
                         tooltipProp,
                         egiRepresentationFor(
@@ -835,13 +840,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
                         CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
                         action);
-                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
-                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
+                if (summaryProps.isPresent() && summaryProps.get().containsKey(dslName(resultPropName))) {
+                    final List<SummaryPropDef> summaries = summaryProps.get().get(dslName(resultPropName));
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
                 }
                 propertyColumns.add(el);
             }
-            calculteGrowFactor(propertyColumns);
         }
 
         logger.debug("Initiating prop actions...");
@@ -1005,14 +1009,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@mi_type", miType.getSimpleName()).
                 //egi related properties
                 replace("@customShortcuts", shortcuts).
-                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
-                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
-                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
-                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
+                replace("@toolbarVisible", dslDefaultConfig.shouldHideToolbar() ? "": "toolbar-visible").
+                replace("@checkboxVisible", dslDefaultConfig.shouldHideCheckboxes() ? "": "checkbox-visible").
+                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() ? "checkboxes-fixed" : "").
+                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() ? "checkboxes-with-primary-actions-fixed" : "").
                 replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
-                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
-                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
-                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
+                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() ? "secondary-actions-fixed" : "").
+                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() ? "header-fixed" : "").
+                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() ? "summary-fixed": "").
                 replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
                 ///////////////////////
                 replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
@@ -1054,20 +1058,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /**
      * Calculates the relative grow factor for all columns.
      */
-    private void calculteGrowFactor(final List<PropertyColumnElement> propertyColumns) {
-        int minWidth = 0;
-        for (final PropertyColumnElement column : propertyColumns) {
-            if (minWidth == 0 && column.width > 0 && column.isFlexible) {
-                minWidth = column.width;
-            } else if (minWidth > 0 && column.width > 0 && column.isFlexible && column.width < minWidth) {
-                minWidth = column.width;
-            }
-        }
-        for (final PropertyColumnElement column : propertyColumns) {
-            if (column.isFlexible) {
-                column.setGrowFactor(minWidth > 0 ? Math.round((float) column.width / minWidth) : 0);
-            }
-        }
+    private Map<String, Integer> calculateGrowFactors(final List<ResultSetProp> propertyColumns) {
+        //Searching for the minimal column width which are not flexible and their width is greater than 0.
+        final int minWidth = propertyColumns.stream()
+                .filter(column -> column.isFlexible && column.width > 0)
+                .reduce(Integer.MAX_VALUE,
+                        (min, column) -> min > column.width ? column.width : min,
+                        (min1, min2) -> min1 < min2 ? min1 : min2);
+        //Map each resultSetProp which is not flexible and has width greater than 0 to it's grow factor.
+        return propertyColumns.stream()
+                .filter(column -> column.isFlexible && column.width > 0)
+                .collect(Collectors.toMap(
+                        column -> getPropName(column),
+                        column -> Math.round((float) column.width / minWidth)));
     }
 
     private Pair<String, String> generateGridLayoutConfig() {

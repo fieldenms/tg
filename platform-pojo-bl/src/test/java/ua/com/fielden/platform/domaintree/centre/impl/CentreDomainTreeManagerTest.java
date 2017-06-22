@@ -39,16 +39,16 @@ import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A test for {@link CentreDomainTreeManager}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     private int i, j;
-    
+
     @Override
     protected ICentreDomainTreeManager dtm() {
         return (ICentreDomainTreeManager) just_a_dtm();
@@ -267,7 +267,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
                 // SECOND TICK
 
-                // ordering/width
+                // ordering/width/grow factor
                 try {
                     dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
                     fail(message);
@@ -280,6 +280,16 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                 }
                 try {
                     dtm().getSecondTick().setWidth(MasterEntity.class, name, 87);
+                    fail(message);
+                } catch (final IllegalArgumentException e) {
+                }
+                try {
+                    dtm().getSecondTick().getGrowFactor(MasterEntity.class, name);
+                    fail(message);
+                } catch (final IllegalArgumentException e) {
+                }
+                try {
+                    dtm().getSecondTick().setGrowFactor(MasterEntity.class, name, 2);
                     fail(message);
                 } catch (final IllegalArgumentException e) {
                 }
@@ -663,6 +673,18 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         checkOrSetMethodValuesForNonCollectional(95, "dateProp", dtm().getSecondTick(), "setWidth", int.class);
 
         checkOrSetMethodValuesForNonCollectional(95, "dateProp", dtm().getSecondTick(), "getWidth");
+    }
+
+    @Test
+    public void second_tick_grow_factor_can_be_set_and_altred() {
+        // THE FIRST TIME -- returns DEFAULT VALUES //
+        // default value should be 0
+        checkOrSetMethodValuesForNonCollectional(0, "dateProp", dtm().getSecondTick(), "getGrowFactor");
+
+        // Alter and check //
+        checkOrSetMethodValuesForNonCollectional(2, "dateProp", dtm().getSecondTick(), "setGrowFactor", int.class);
+
+        checkOrSetMethodValuesForNonCollectional(2, "dateProp", dtm().getSecondTick(), "getGrowFactor");
     }
 
     @Test
