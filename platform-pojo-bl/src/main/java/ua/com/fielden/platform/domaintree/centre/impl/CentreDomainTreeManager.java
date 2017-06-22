@@ -11,6 +11,8 @@ import java.util.Set;
 
 import javax.swing.event.EventListenerList;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
@@ -33,8 +35,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Criteria (entity centre) domain tree manager. Includes support for checking (from base {@link AbstractDomainTreeManager}). <br>
@@ -917,6 +917,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      */
     public static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
         private final EnhancementPropertiesMap<Integer> propertiesWidths;
+        private final EnhancementPropertiesMap<Integer> propertiesGrowFactor;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 
         /**
@@ -926,6 +927,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         public AddToResultTickManager() {
             super();
             propertiesWidths = createPropertiesMap();
+            propertiesGrowFactor = createPropertiesMap();
             rootsListsOfOrderings = createRootsMap();
         }
 
@@ -1016,6 +1018,21 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'width' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             propertiesWidths.put(key(root, property), width);
+            return this;
+        }
+
+        @Override
+        public int getGrowFactor(final Class<?> root, final String property) {
+            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'grow factor' for 'unchecked' property [" + property + "] in type ["
+                    + root.getSimpleName() + "].");
+            return (propertiesGrowFactor.containsKey(key(root, property))) ? propertiesGrowFactor.get(key(root, property)) : 0;
+        }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int width) {
+            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'grow factor' for 'unchecked' property [" + property + "] in type ["
+                    + root.getSimpleName() + "].");
+            propertiesGrowFactor.put(key(root, property), width);
             return this;
         }
 

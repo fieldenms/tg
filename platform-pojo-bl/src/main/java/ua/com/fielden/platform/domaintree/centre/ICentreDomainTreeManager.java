@@ -826,5 +826,38 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      *
      */
     public interface IAddToResultTickManager extends IOrderingManager, IWidthManager, ITickManager {
+        /**
+         * Gets a <i>growFactor</i> for property. <br>
+         * <br>
+         *
+         * This contract should not conflict with "checked properties" (or with "used properties" -- more accurately) contract. The conflict will produce an
+         * {@link IllegalArgumentException}.<br>
+         * <br>
+         *
+         * @param root
+         *            -- a root type that contains property.
+         * @param property
+         *            -- a dot-notation expression that defines a property.
+         * @return
+         */
+        int getGrowFactor(final Class<?> root, final String property);
+
+        /**
+         * Sets a <i>growFactor</i> for property. <br>
+         * <br>
+         *
+         * This action should not conflict with "checked properties" (or with "used properties" -- more accurately) contract. The conflict will produce an
+         * {@link IllegalArgumentException}.<br>
+         * <br>
+         *
+         * @param root
+         *            -- a root type that contains property.
+         * @param property
+         *            -- a dot-notation expression that defines a property.
+         * @param width
+         *            -- a width to set
+         * @return -- a result tick representation
+         */
+        IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);
     }
 }

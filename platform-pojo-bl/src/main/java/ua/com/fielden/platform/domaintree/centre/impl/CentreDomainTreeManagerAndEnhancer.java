@@ -71,12 +71,12 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
     private final transient List<IAnalysisListener> analysisListeners;
     /**
-     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
      */
     private transient Long savedEntityId;
     /**
-     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
      */
     private transient Long savedEntityVersion;
@@ -878,6 +878,19 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public int getGrowFactor(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getGrowFactor(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            // inject an enhanced type into method implementation
+            base().setGrowFactor(enhancer().getManagedType(root), property, growFactor);
+            return this;
+        }
+
+        @Override
         public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
             throw new UnsupportedOperationException("Weak IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
         }
@@ -1151,41 +1164,41 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
         return true;
     }
-    
+
     /**
-     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @return
      */
     public Long getSavedEntityId() {
         return savedEntityId;
     }
-    
+
     /**
-     * Sets ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Sets ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @param savedEntityId
      */
     public void setSavedEntityId(final Long savedEntityId) {
         this.savedEntityId = savedEntityId;
     }
-    
+
     /**
-     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @return
      */
     public Long getSavedEntityVersion() {
         return savedEntityVersion;
     }
-    
+
     /**
-     * Sets version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Sets version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @param savedEntityVersion
      */
     public void setSavedEntityVersion(final Long savedEntityVersion) {

@@ -229,7 +229,7 @@
                             <template is="dom-repeat" items="[[columns]]">
                                 <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                     <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
-                                    <div class="resizing-box" on-track="_changeColumnSize" hidden$="[[!_canResize(item, index, numOfFixedCols)]]"></div>
+                                    <div class="resizing-box" on-track="_changeColumnSize"></div>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -328,7 +328,7 @@
                                     <template is="dom-repeat" items="[[columns]]">
                                         <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                            <div class="resizing-box" on-track="_changeColumnSize" hidden$="[[!_canResize(item, index, numOfFixedCols)]]"></div>
+                                            <div class="resizing-box" on-track="_changeColumnSize"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -434,7 +434,7 @@
                                 <template is="dom-repeat" items="[[columns]]">
                                     <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-track="_changeColumnSize" hidden$="[[!_canResize(item, index, numOfFixedCols)]]"></div>
+                                        <div class="resizing-box" on-track="_changeColumnSize"></div>
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
@@ -494,7 +494,7 @@
                                 <template is="dom-repeat" items="[[columns]]">
                                     <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-track="_changeColumnSize" hidden$="[[!_canResize(item, index, numOfFixedCols)]]"></div>
+                                        <div class="resizing-box" on-track="_changeColumnSize"></div>
                                     </div>
                                 </template>
                             </div>
@@ -1604,6 +1604,7 @@
                 }
                 return colStyle;
             },
+            
             /**
              * Calculates the column's style.
              */
