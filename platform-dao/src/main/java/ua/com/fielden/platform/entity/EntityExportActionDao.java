@@ -55,12 +55,13 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = entity.getContext().getSelectionCrit();
         entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.ms-excel");
-        final Map<String, Object> customObject = new LinkedHashMap<>();
+        final Map<String, Object> adhocParams = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
         if (entity.isExportAll()) {
-            entities = selectionCrit.exportQueryRunner().apply(customObject);
+            entities = selectionCrit.exportQueryRunner().apply(adhocParams);
         } else if (entity.isExportTop()) {
-            entities = selectionCrit.exportQueryRunner().apply(customObject).limit(entity.getNumber());
+            adhocParams.put("fetchSize", entity.getNumber());
+            entities = selectionCrit.exportQueryRunner().apply(adhocParams).limit(entity.getNumber());
         } else {
             if (entity.getContext().getSelectedEntities().isEmpty()) {
                 throw Result.failure("Please select at least one entry to export.");
@@ -69,7 +70,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
                 ids.add(selectedEntity.getId());
             }
-            entities = selectionCrit.exportQueryRunner().apply(customObject).filter(ent -> ids.contains(ent.getId()));
+            entities = selectionCrit.exportQueryRunner().apply(adhocParams).filter(ent -> ids.contains(ent.getId()));
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();

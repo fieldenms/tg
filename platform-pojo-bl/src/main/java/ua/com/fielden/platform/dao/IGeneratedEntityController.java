@@ -150,7 +150,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      * Returns a stream of entities that match the provided query.
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
-    Stream<T> stream(final QueryExecutionModel<T, ?> queryModel);
+    Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize);
     
     /**
      * Returns first entities produced by the provided query.

@@ -641,20 +641,20 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
 
-    public final Stream<T> streamEntities() {
-        return streamEntities(generateQuery());
+    public final Stream<T> streamEntities(final int fetchSize) {
+        return streamEntities(generateQuery(), fetchSize);
     }
 
     /**
      * Returns a stream of entities that match the provided query.
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
-    public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel) {
+    public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int fetchSize) {
         if (getManagedType().equals(getEntityClass())) {
-            return dao.stream(queryModel);
+            return dao.stream(queryModel, fetchSize);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.stream(queryModel);
+            return generatedEntityController.stream(queryModel, fetchSize);
         }
     }
 
