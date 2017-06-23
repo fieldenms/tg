@@ -212,6 +212,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of returning a list of entities,
      * it returns a stream. 
      * 
+     * @param adhocParams
      * @param criteriaEntity
      * @param additionalFetchProvider
      * @param queryEnhancerAndContext
@@ -219,6 +220,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
+            final Map<String, Object> adhocParams,
             final M criteriaEntity, 
             final Optional<IFetchProvider<T>> additionalFetchProvider, 
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
@@ -236,7 +238,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
         }
         
-        return criteriaEntity.streamEntities();
+        final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100; 
+        return criteriaEntity.streamEntities(fetchSize);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////

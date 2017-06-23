@@ -402,7 +402,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * A method to stream entities based on the centre query, including various transformations such as custom properties etc.
      * It is used as part of initialisation for an export query runner.
      * 
-     * @param customObject
+     * @param adhocParams
      * @param criteriaEntity
      * @param centreContextHolder
      * @param critGenerator
@@ -414,7 +414,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     private static <T extends AbstractEntity<?>> Stream<AbstractEntity<?>> stream(
-            final Map<String, Object> customObject, 
+            final Map<String, Object> adhocParams, 
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
             final CentreContextHolder centreContextHolder, 
             final ICriteriaGenerator critGenerator, 
@@ -425,7 +425,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final EntityResourceUtils<T> utils) {
         final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
-        customObject.putAll(centreContextHolder.getCustomObject());
+        adhocParams.putAll(centreContextHolder.getCustomObject());
         // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
         // if the export() invocation occurs on the centre that warrants data generation
@@ -434,6 +434,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
         final Stream<AbstractEntity<?>> stream =
                 CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithStream(
+                        adhocParams,
                         appliedCriteriaEntity,
                         centre.getAdditionalFetchProvider(),
                         CriteriaResource.createQueryEnhancerAndContext(

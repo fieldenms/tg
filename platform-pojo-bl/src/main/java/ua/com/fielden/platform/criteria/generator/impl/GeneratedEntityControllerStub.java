@@ -101,7 +101,7 @@ public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implemen
     }
 
     @Override
-    public Stream<T> stream(QueryExecutionModel<T, ?> queryModel) {
+    public Stream<T> stream(QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
