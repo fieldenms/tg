@@ -66,11 +66,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             if (entity.getContext().getSelectedEntities().isEmpty()) {
                 throw Result.failure("Please select at least one entry to export.");
             }
-            final Set<Long> ids = new HashSet<>();
-            for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
-                ids.add(selectedEntity.getId());
-            }
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams).filter(ent -> ids.contains(ent.getId()));
+            final Long[] ids = entity.getContext().getSelectedEntities().stream().map(ent -> ent.getId()).toArray(size -> new Long[size]);
+            adhocParams.put("ids", ids);
+            entities = selectionCrit.exportQueryRunner().apply(adhocParams);
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();

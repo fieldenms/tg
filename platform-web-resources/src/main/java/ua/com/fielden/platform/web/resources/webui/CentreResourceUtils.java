@@ -238,8 +238,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
         }
         
-        final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100; 
-        return criteriaEntity.streamEntities(fetchSize);
+        final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100;
+        final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
+        return criteriaEntity.streamEntities(fetchSize, ids);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
