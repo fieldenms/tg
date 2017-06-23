@@ -18,7 +18,6 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
-import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
@@ -250,7 +249,6 @@ public enum StandardActions {
 
             return action(EntityExportAction.class).
                     withContext(contextConfig.build()).
-                    preAction(new ExportPreAction()).
                     postActionSuccess(new FileSaverPostAction()).
                     icon("icons:save").
                     shortDesc(desc).
@@ -291,7 +289,6 @@ public enum StandardActions {
 
             return action(EntityExportAction.class).
                     withContext(contextConfig.build()).
-                    preAction(new ExportPreAction()).
                     postActionSuccess(new FileSaverPostAction()).
                     icon("icons:save").
                     shortDesc(desc).

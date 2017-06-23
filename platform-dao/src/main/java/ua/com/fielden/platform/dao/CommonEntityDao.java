@@ -1018,10 +1018,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-        // run the query and iterate through result exporting the data
-        final List<T> result = getEntitiesOnPage(query, null, null);
-
-        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
+        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
 

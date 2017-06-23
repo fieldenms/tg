@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -42,6 +43,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
@@ -613,8 +615,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
      *
-     * @param queryModel
-     *            - query model for which the first result page must be returned.
      * @return
      */
     public final List<T> getAllEntities() {
@@ -634,6 +634,42 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         } else {
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.getAllEntities(queryModel, getByteArrayForManagedType());
+        }
+    }
+
+    /**
+     * Returns a stream of entities that match the generated query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+
+    public final Stream<T> streamEntities(final int fetchSize, final Long... ids) {
+        return streamEntities(generateQuery(), fetchSize, ids);
+    }
+
+    /**
+     * Returns a stream of entities that match the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int fetchSize, final Long... ids) {
+        
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> qem;
+        if (ids.length == 0) {
+            qem = queryModel;
+        } else {
+            final EntityResultQueryModel<T> queryWithIds = select(getManagedType())
+                    .where()
+                    .prop("id").in().values(ids)
+                    .and()
+                    .prop("id").in().model(queryModel.getQueryModel())
+                    .model();
+            qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).lightweight().model();
+        }
+        
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.stream(qem, fetchSize);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.stream(qem, fetchSize);
         }
     }
 

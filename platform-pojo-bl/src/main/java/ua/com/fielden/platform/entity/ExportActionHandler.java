@@ -1,30 +1,35 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import static ua.com.fielden.platform.entity.EntityExportAction.EXPORT_OPTION_PROPERTIES;
+import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
+import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
 
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 
+/**
+ * A definer that governs the data export options as modeled by {@link EntityExportAction}.
+ * 
+ * @author TG Team
+ *
+ */
 public class ExportActionHandler implements IAfterChangeEventHandler<Boolean> {
 
     @Override
     public void handle(final MetaProperty<Boolean> property, final Boolean entityPropertyValue) {
         if (entityPropertyValue) {
-            final Set<String> props = new HashSet<String>(Arrays.asList("all", "pageRange", "selected"));
             final EntityExportAction entity = (EntityExportAction) property.getEntity();
-            props.remove(property.getName());
-            for (final String prop : props) {
-                entity.set(prop, false);
+            EXPORT_OPTION_PROPERTIES.stream()
+            .filter(propName -> !propName.equals(property.getName()) && entity.<Boolean>get(propName))
+            .forEach(propName -> entity.set(propName, false));
+
+            final boolean stateToAssign = PROP_EXPORT_TOP.equals(property.getName());
+            final MetaProperty<Integer> numberProperty = entity.getProperty(PROP_NUMBER);
+            numberProperty.setEditable(stateToAssign);
+            numberProperty.setRequired(stateToAssign);
+            if (!numberProperty.isEditable()) {
+                numberProperty.setValue(null);
             }
-            final MetaProperty<Integer> fromPageProperty = entity.getProperty("fromPage");
-            final MetaProperty<Integer> toPageProperty = entity.getProperty("toPage");
-            final boolean stateToAssign = "pageRange".equals(property.getName());
-            fromPageProperty.setEditable(stateToAssign);
-            fromPageProperty.setRequired(stateToAssign);
-            toPageProperty.setEditable(stateToAssign);
-            toPageProperty.setRequired(stateToAssign);
         }
     }
 
