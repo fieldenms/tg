@@ -25,6 +25,7 @@ import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
@@ -44,7 +45,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
-    private static final int MAX_ROWS = 65535;
+    private static final int MAX_ROWS = SpreadsheetVersion.EXCEL97.getLastRowIndex();
 
     private WorkbookExporter() {}
     
