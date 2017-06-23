@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
@@ -43,7 +44,6 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
@@ -64,8 +64,6 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 @KeyType(String.class)
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
-
-    private static final long serialVersionUID = 9154466083364529734L;
 
     private final DAO dao;
     private final IGeneratedEntityController<T> generatedEntityController;
@@ -657,10 +655,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             qem = queryModel;
         } else {
             final EntityResultQueryModel<T> queryWithIds = select(getManagedType())
-                    .where()
-                    .prop("id").in().values(ids)
-                    .and()
-                    .prop("id").in().model(queryModel.getQueryModel())
+                    .where().prop("id").in().values(ids)
                     .model();
             qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).lightweight().model();
         }
