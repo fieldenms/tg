@@ -38,9 +38,8 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     @Override
     public EntityExportAction new_() {
         final EntityExportAction entity = super.new_();
-        entity.setExportAll(true);
         entity.setKey("Export");
-        entity.setNumber(10);
+        entity.setExportAll(true);
         return entity;
     }
     
@@ -64,7 +63,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             entities = selectionCrit.exportQueryRunner().apply(customObject).limit(entity.getNumber());
         } else {
             if (entity.getContext().getSelectedEntities().isEmpty()) {
-                throw Result.failure("Please select at least one entity to export");
+                throw Result.failure("Please select at least one entry to export.");
             }
             final Set<Long> ids = new HashSet<>();
             for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
@@ -76,7 +75,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
             entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue())));
         } catch (final IOException e) {
-            throw Result.failure("Could not export data.", e);
+            throw Result.failure("An exception occurred during the data export.", e);
         } finally {
             entities.close();
         }
@@ -84,24 +83,4 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         return entity;
     }
 
-    /**
-     * Selects the entities from resulting <code>data</code> to contain only those, that have specified <code>longIds</code>.
-     *
-     * @param data
-     * @param ids
-     * @return
-     */
-    private List<AbstractEntity<?>> selectEntities(final List<AbstractEntity<?>> data, final List<Long> longIds) {
-        final List<AbstractEntity<?>> list = new ArrayList<>();
-        if (longIds.isEmpty()) {
-            return list;
-        } else {
-            for (final AbstractEntity<?> retrievedEntity : data) {
-                if (longIds.contains(retrievedEntity.getId())) {
-                    list.add(retrievedEntity);
-                }
-            }
-        }
-        return list;
-    }
 }

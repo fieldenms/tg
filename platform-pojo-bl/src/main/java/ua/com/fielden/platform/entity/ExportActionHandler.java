@@ -7,6 +7,12 @@ import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 
+/**
+ * A definer that governs the data export options as modeled by {@link EntityExportAction}.
+ * 
+ * @author TG Team
+ *
+ */
 public class ExportActionHandler implements IAfterChangeEventHandler<Boolean> {
 
     @Override
@@ -21,6 +27,9 @@ public class ExportActionHandler implements IAfterChangeEventHandler<Boolean> {
             final MetaProperty<Integer> numberProperty = entity.getProperty(PROP_NUMBER);
             numberProperty.setEditable(stateToAssign);
             numberProperty.setRequired(stateToAssign);
+            if (!numberProperty.isEditable()) {
+                numberProperty.setValue(null);
+            }
         }
     }
 
