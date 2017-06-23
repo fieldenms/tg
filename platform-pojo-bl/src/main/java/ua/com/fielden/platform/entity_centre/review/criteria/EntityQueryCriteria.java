@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
@@ -43,6 +43,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
@@ -641,20 +642,34 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
 
-    public final Stream<T> streamEntities(final int fetchSize) {
-        return streamEntities(generateQuery(), fetchSize);
+    public final Stream<T> streamEntities(final int fetchSize, final Long... ids) {
+        return streamEntities(generateQuery(), fetchSize, ids);
     }
 
     /**
      * Returns a stream of entities that match the provided query.
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
-    public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int fetchSize) {
+    public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int fetchSize, final Long... ids) {
+        
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> qem;
+        if (ids.length == 0) {
+            qem = queryModel;
+        } else {
+            final EntityResultQueryModel<T> queryWithIds = select(getManagedType())
+                    .where()
+                    .prop("id").in().values(ids)
+                    .and()
+                    .prop("id").in().model(queryModel.getQueryModel())
+                    .model();
+            qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).lightweight().model();
+        }
+        
         if (getManagedType().equals(getEntityClass())) {
-            return dao.stream(queryModel, fetchSize);
+            return dao.stream(qem, fetchSize);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.stream(queryModel, fetchSize);
+            return generatedEntityController.stream(qem, fetchSize);
         }
     }
 
