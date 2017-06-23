@@ -2,9 +2,11 @@ package ua.com.fielden.platform.entity;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,31 +59,26 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         final Map<String, Object> customObject = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
         if (entity.isExportAll()) {
-            customObject.put("@@pageNumber", -1);
-            customObject.put("@@action", "export all");
             entities = selectionCrit.exportQueryRunner().apply(customObject);
         } else if (entity.isExportTop()) {
-            customObject.put("@@pageCapacity", entity.getNumber());
-            customObject.put("@@action", "navigate");
-            customObject.put("@@pageNumber", 0);
-            entities = selectionCrit.exportQueryRunner().apply(customObject);
+            entities = selectionCrit.exportQueryRunner().apply(customObject).limit(entity.getNumber());
         } else {
             if (entity.getContext().getSelectedEntities().isEmpty()) {
                 throw Result.failure("Please select at least one entity to export");
             }
-            customObject.put("@@pageNumber", -1);
-            customObject.put("@@action", "export all");
-            final List<Long> ids = new ArrayList<>();
+            final Set<Long> ids = new HashSet<>();
             for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
                 ids.add(selectedEntity.getId());
             }
-            entities = selectEntities(selectionCrit.exportQueryRunner().apply(customObject).collect(Collectors.toList()), ids).stream();
+            entities = selectionCrit.exportQueryRunner().apply(customObject).filter(ent -> ids.contains(ent.getId()));
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
             entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue())));
         } catch (final IOException e) {
             throw Result.failure("Could not export data.", e);
+        } finally {
+            entities.close();
         }
 
         return entity;
