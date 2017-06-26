@@ -4,16 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.meta.test_entities.validators.EntityWithDependentPropertiesFive.INVALID;
+import static ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties.INVALID;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties;
-import ua.com.fielden.platform.entity.meta.test_entities.validators.EntityWithDependentPropertiesFive;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
@@ -236,6 +234,64 @@ public class PropertyDependencyHandlingTest {
         assertEquals("Incorrect number of setter executions", 0, entity.threeCount);
         assertEquals("Incorrect number of setter executions", 1, entity.fourCount);
         assertEquals("Incorrect number of setter executions", 0, entity.fiveCount);
+    }
+
+    @Test
+    public void handling_of_dependent_properties_can_rectify_errors_in_transitive_dependencies() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
+
+        entity.setOne(INVALID);
+        assertFalse(entity.getProperty("one").isValid());
+        assertEquals(1, entity.oneCount);
+        assertEquals(0, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
+        entity.setTwo(INVALID);
+        assertFalse(entity.getProperty("one").isValid());
+        assertFalse(entity.getProperty("two").isValid());
+        assertEquals(1, entity.oneCount);
+        assertEquals(1, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
+        // assigning a valid value to property three triggers dependency handling -- revalidation of properties one and two
+        entity.setThree("value");
+        assertFalse(entity.getProperty("one").isValid());
+        assertFalse(entity.getProperty("two").isValid());
+        assertEquals(2, entity.oneCount);
+        assertEquals(2, entity.twoCount);
+        assertEquals(1, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
+        entity.setFive(INVALID);
+        assertFalse(entity.getProperty("one").isValid());
+        assertFalse(entity.getProperty("two").isValid());
+        assertFalse(entity.getProperty("five").isValid());
+        assertEquals(2, entity.oneCount);
+        assertEquals(2, entity.twoCount);
+        assertEquals(1, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(1, entity.fiveCount);
+        
+        // assigning a valid value to property four triggers dependency handling
+        // 1.     Revalidation of property one, which fails as (oneCount <= 3) == true and the attempted value is INVALID
+        // 2.     Revalidation of property five, which succeeds and triggers revalidation of its dependent properties -- namely property one.
+        // 2.1.   Revalidation of property one succeeds as (oneCount <= 3) == false and triggers revalidation of its dependent properties -- namely property two.
+        // 2.1.1. Revalidation of property two succeeds as (twoCount <= 2) == false.
+        // all previously invalid properties should now become valid
+        entity.setFour("value");
+        assertTrue(entity.getProperty("one").isValid());
+        assertTrue(entity.getProperty("two").isValid());
+        assertTrue(entity.getProperty("five").isValid());
+        assertEquals(4, entity.oneCount);
+        assertEquals(3, entity.twoCount);
+        assertEquals(2, entity.threeCount);
+        assertEquals(1, entity.fourCount);
+        assertEquals(2, entity.fiveCount);
     }
 
 }

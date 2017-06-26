@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.meta.test_entities.validators;
 
+import static ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties.INVALID;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -12,8 +16,12 @@ public class EntityWithDependentPropertiesTwo implements IBeforeChangeEventHandl
 
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, Set<Annotation> mutatorAnnotations) {
-        ((EntityWithDependentProperties) property.getEntity()).twoCount++;
-        return Result.successful(newValue);
+        final EntityWithDependentProperties entity = (EntityWithDependentProperties) property.getEntity();
+        entity.twoCount++;
+        if (entity.twoCount <= 2 && INVALID.equals(newValue)) {
+            return failure("Invalid value at first attempt.");
+        }
+        return successful(newValue);
     }
 
 }

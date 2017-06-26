@@ -16,6 +16,8 @@ import ua.com.fielden.platform.entity.meta.test_entities.validators.EntityWithDe
 @KeyType(String.class)
 public class EntityWithDependentProperties extends AbstractEntity<String> {
 
+    public static final String INVALID = "invalid";
+    
     public int oneCount = 0;
     public int twoCount = 0;
     public int threeCount = 0;

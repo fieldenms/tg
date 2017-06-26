@@ -380,7 +380,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                                 dependentMetaProperty.setEnforceMutator(false);
                             }
                         } else if (!dependentMetaProperty.revalidate(true).isSuccessful()) { // otherwise simply re-validate and if unsuccessful then stop any further validation of dependent properties
-                            //handleDependentProperties(dependentMetaProperty);
                             break;
                         }
                     } finally {
