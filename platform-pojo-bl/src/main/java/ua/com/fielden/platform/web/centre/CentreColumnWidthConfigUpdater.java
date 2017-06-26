@@ -4,26 +4,42 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
-/** 
+/**
  * Master entity object.
- * 
+ *
  * @author Developers
  *
  */
 @KeyType(String.class)
 @CompanionObject(ICentreColumnWidthConfigUpdater.class)
 public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWithCentreContext<String> {
-    
+
     @IsProperty
     @Title(value = "Column Property", desc = "Column property name")
     private String propName;
-    
+
     @IsProperty
     @Title(value = "New Width", desc = "New width of property column")
     private Integer newWidth;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "New Grow Factor", desc = "New grow factor for column")
+    private Integer newGrowFactor;
+
+    @Observable
+    public CentreColumnWidthConfigUpdater setNewGrowFactor(final Integer newGrowFactor) {
+        this.newGrowFactor = newGrowFactor;
+        return this;
+    }
+
+    public Integer getNewGrowFactor() {
+        return newGrowFactor;
+    }
 
     @Observable
     public CentreColumnWidthConfigUpdater setNewWidth(final Integer newWidth) {
@@ -34,7 +50,7 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     public Integer getNewWidth() {
         return newWidth;
     }
-    
+
     @Observable
     public CentreColumnWidthConfigUpdater setPropName(final String propName) {
         this.propName = propName;
@@ -44,5 +60,5 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     public String getPropName() {
         return propName;
     }
-    
+
 }

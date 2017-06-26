@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.utils.Pair;
 
 //TODO must finish implementation in order to provide correct ordering, fetch model etc. Consider to provide reference on to the ICriteriaDomainTreeManager.
 /**
@@ -28,7 +29,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner;
-    private BiConsumer<String, Integer> columnWidthAdjuster;
+    private BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster;
 
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
@@ -41,12 +42,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
         super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
     }
-    
-    public void setColumnWidthAdjuster(final BiConsumer<String, Integer> columnWidthAdjuster) {
+
+    public void setColumnWidthAdjuster(final BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster) {
         this.columnWidthAdjuster = columnWidthAdjuster;
     }
 
-    public BiConsumer<String, Integer> columnWidthAdjuster() {
+    public BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster() {
         return columnWidthAdjuster;
     }
 

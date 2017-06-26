@@ -134,7 +134,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static boolean isRunning(final Map<String, Object> customObject) {
         return RunActions.RUN.toString().equals(customObject.get("@@action"));
     }
-    
+
     /**
      * Returns <code>true</code> if 'Sorting' action is performed, otherwise <code>false</code>.
      *
@@ -158,13 +158,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
-            final Map<String, Object> customObject, 
-            final M criteriaEntity, 
-            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final Map<String, Object> customObject,
+            final M criteriaEntity,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-        
+
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
@@ -214,10 +214,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
 
-    private static Map<String, Integer> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
-        final Map<String, Integer> columnWidths = new LinkedHashMap<>();
+    private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
+        final Map<String, Map<String, Integer>> columnWidths = new LinkedHashMap<>();
         for (final String property : secondTick.checkedProperties(root)) {
-            columnWidths.put(property, secondTick.getWidth(root, property));
+            final Map<String, Integer> values = new HashMap<>();
+            values.put("newWidth", secondTick.getWidth(root, property));
+            values.put("newGrowFactor", secondTick.getGrowFactor(root, property));
+            columnWidths.put(property, values);
         }
         return columnWidths;
     }
@@ -352,14 +355,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier( () -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME) );
-        validationPrototype.setColumnWidthAdjuster( (propName, newWidth) -> {
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidth);
+        validationPrototype.setColumnWidthAdjuster((propName, newWidthGrowFactorPair) -> {
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidthGrowFactorPair.getKey());
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, propName, newWidthGrowFactorPair.getValue());
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
-            
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidth);
+
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidthGrowFactorPair.getKey());
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, propName, newWidthGrowFactorPair.getValue());
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
-            
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidth);
+
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidthGrowFactorPair.getKey());
+            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, propName, newWidthGrowFactorPair.getValue());
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
         });
 
@@ -516,8 +522,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
      * 'requireMasterEntity').
-     * 
-     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to 
+     *
+     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to
      *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
      * @param centreContextHolder
      *

@@ -7,25 +7,26 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.utils.Pair;
 
-/** 
+/**
  * DAO implementation for companion object {@link ICentreColumnWidthConfigUpdater}.
- * 
+ *
  * @author Developers
  *
  */
 @EntityType(CentreColumnWidthConfigUpdater.class)
 public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreColumnWidthConfigUpdater> implements ICentreColumnWidthConfigUpdater {
-    
+
     @Inject
     public CentreColumnWidthConfigUpdaterDao(final IFilter filter, final EntityFactory factory) {
         super(filter);
     }
-    
+
     @Override
     @SessionRequired
     public CentreColumnWidthConfigUpdater save(final CentreColumnWidthConfigUpdater action) {
-        action.getContext().getSelectionCrit().columnWidthAdjuster().accept(action.getPropName(), action.getNewWidth());
+        action.getContext().getSelectionCrit().columnWidthAdjuster().accept(action.getPropName(), new Pair<Integer, Integer>(action.getNewWidth(), action.getNewGrowFactor()));
         return super.save(action);
     }
 }

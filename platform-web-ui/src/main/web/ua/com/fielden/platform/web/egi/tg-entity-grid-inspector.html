@@ -1604,7 +1604,7 @@
                 }
                 return colStyle;
             },
-            
+
             /**
              * Calculates the column's style.
              */
@@ -1650,7 +1650,8 @@
              */
             _adjustColumnWidths: function (columnWidths) {
                 this.columns.forEach((column, columnIndex) => {
-                    this.set("columns." + columnIndex + ".width", columnWidths[column.property]);
+                    this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
+                    this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
                 this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
             },
@@ -1909,28 +1910,22 @@
                 return shadowStyle;
             },
 
-            _canResize: function (column, index, numOfFixedCols) {
-                return column.growFactor === 0 || index < numOfFixedCols;
-            },
-
             _changeColumnSize: function (e) {
-                if (this._canResize(e.model.item, e.model.index, this.numOfFixedCols)) {
-                    switch (e.detail.state) {
-                    case 'start':
-                        this._startColumnResize(e);
-                        break;
-                    case 'track':
-                        this._trackColumnSize(e);
-                        break;
-                    case 'end':
-                        this._endColumnResizing(e);
-                        break;
-                    }
-                    if (e.stopPropagation) e.stopPropagation();
-                    if (e.preventDefault) e.preventDefault();
-                    e.cancelBubble = true;
-                    e.returnValue = false;
+                switch (e.detail.state) {
+                case 'start':
+                    this._startColumnResize(e);
+                    break;
+                case 'track':
+                    this._trackColumnSize(e);
+                    break;
+                case 'end':
+                    this._endColumnResizing(e);
+                    break;
                 }
+                if (e.stopPropagation) e.stopPropagation();
+                if (e.preventDefault) e.preventDefault();
+                e.cancelBubble = true;
+                e.returnValue = false;
             },
 
             _startColumnResize: function (e) {
@@ -1981,6 +1976,9 @@
                     }
                     //Change the column width if it is needed
                     if (columnWidth !== newWidth) {
+                        if (e.model.item.growFactor !== 0) {
+                            this.set("columns." + e.model.index + ".growFactor", 0);
+                        }
                         this.set("columns." + e.model.index + ".width", newWidth);
                         this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
                         this._resizeEventListener();
@@ -1998,8 +1996,9 @@
                 e.target.classList.toggle("resizing-action", false);
                 if (this._columnResizingObject && this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
                     this.fire("tg-egi-column-change", {
-                        columnName: e.model.item.property,
-                        columnWidth: e.model.item.width
+                        propName: e.model.item.property,
+                        newWidth: e.model.item.width,
+                        newGrowFactor: e.model.item.growFactor
                     });
                 }
                 delete this._columnResizingObject;

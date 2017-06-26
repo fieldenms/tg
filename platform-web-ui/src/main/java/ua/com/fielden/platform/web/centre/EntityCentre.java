@@ -30,6 +30,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
@@ -236,6 +237,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
+    /**
+     * Returns the property name for specified {@link ResultSetProp} instance. The returned property name can be used for retrieving and altering data in
+     * {@link ICentreDomainTreeManager}.
+     *
+     * @param property
+     * @return
+     */
     private static String getPropName(final ResultSetProp property) {
         if (property.propName.isPresent()) {
             return treeName(property.propName.get());
