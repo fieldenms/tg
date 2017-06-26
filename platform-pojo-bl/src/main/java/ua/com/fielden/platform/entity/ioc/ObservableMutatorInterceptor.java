@@ -357,8 +357,9 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
     }
 
     /**
-     * If there are some dependent properties for 'metaProperty' - then these dependent properties will be updated by the lastInvalidValue (only in the case of INVALID dependent
-     * properties).
+     * If there are some dependent properties for 'metaProperty' then all of the invalid dependent properties need to be attempted at reassigning the <code>lastAttamptedValue</code>,
+     * and all valid dependencies need to be revalidated.
+     * 
      *
      * @param metaProperty
      */
@@ -374,12 +375,13 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                         if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
                             dependentMetaProperty.setEnforceMutator(true);
                             try {
-                                entity.set(dependentPropertyName, dependentMetaProperty.getLastAttemptedValue());
+                                dependentMetaProperty.setValue(dependentMetaProperty.getLastAttemptedValue());
                             } finally {
                                 dependentMetaProperty.setEnforceMutator(false);
                             }
-                        } else if (dependentMetaProperty.revalidate(true).isSuccessful()) { // otherwise simply re-validate
-                            handleDependentProperties(dependentMetaProperty);
+                        } else if (!dependentMetaProperty.revalidate(true).isSuccessful()) { // otherwise simply re-validate and if unsuccessful then stop any further validation of dependent properties
+                            //handleDependentProperties(dependentMetaProperty);
+                            break;
                         }
                     } finally {
                         dependentMetaProperty.removeFromDependencyPath(metaProperty);

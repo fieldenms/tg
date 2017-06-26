@@ -4,22 +4,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import java.lang.annotation.Annotation;
-import java.util.Set;
+import static ua.com.fielden.platform.entity.meta.test_entities.validators.EntityWithDependentPropertiesFive.INVALID;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.entity.meta.test_entities.validators.EntityWithDependentPropertiesFive;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
 
 /**
  *
@@ -33,55 +30,10 @@ public class PropertyDependencyHandlingTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private EntityWithDependentProperties entity;
-
-    @Before
-    public void setUp() {
-        module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "one", new IBeforeChangeEventHandler<Object>() {
-            @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-                ((EntityWithDependentProperties) property.getEntity()).oneCount++;
-                return Result.successful(newValue);
-            }
-        });
-
-        module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "two", new IBeforeChangeEventHandler<Object>() {
-            @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-                ((EntityWithDependentProperties) property.getEntity()).twoCount++;
-                return Result.successful(newValue);
-            }
-        });
-
-        module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "three", new IBeforeChangeEventHandler<Object>() {
-            @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-                ((EntityWithDependentProperties) property.getEntity()).threeCount++;
-                return Result.successful(newValue);
-            }
-        });
-
-        module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "four", new IBeforeChangeEventHandler<Object>() {
-            @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-                ((EntityWithDependentProperties) property.getEntity()).fourCount++;
-                return Result.successful(newValue);
-            }
-        });
-
-        module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "five", new IBeforeChangeEventHandler<Object>() {
-            @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-                ((EntityWithDependentProperties) property.getEntity()).fiveCount++;
-                return new Result(new Exception());
-            }
-        });
-
-        entity = factory.newByKey(EntityWithDependentProperties.class, "key");
-    }
 
     @Test
     public void test_adding_property_to_dependency_path_when_everything_is_correct_and_there_is_circular_dependency() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").addToDependencyPath(entity.getProperty("one"));
         } catch (final Exception ex) {
@@ -91,6 +43,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_adding_property_to_dependency_path_when_everything_is_correct_and_there_is_no_circular_dependency() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("one").addToDependencyPath(entity.getProperty("four"));
         } catch (final Exception ex) {
@@ -100,6 +53,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_adding_null_property_to_dependency_path() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").addToDependencyPath(null);
             fail("Should not be able to add null to the dependency path.");
@@ -109,6 +63,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_adding_property_to_dependency_path_when_one_is_already_added() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").addToDependencyPath(entity.getProperty("one"));
             entity.getProperty("two").addToDependencyPath(entity.getProperty("one"));
@@ -120,6 +75,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_adding_property_not_from_the_dependency_list_in_case_of_circular_dependecy_to_dependency_path() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").addToDependencyPath(entity.getProperty("four"));
             fail("Should not be able to add property not from dependency list to the dependency path.");
@@ -129,6 +85,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_adding_property_not_from_the_dependency_list_in_case_of_non_circular_dependecy_to_dependency_path() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("one").addToDependencyPath(entity.getProperty("four"));
         } catch (final Exception ex) {
@@ -138,6 +95,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_removing_null_property_from_dependency_path() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").addToDependencyPath(entity.getProperty("one"));
             entity.getProperty("two").removeFromDependencyPath(null);
@@ -148,6 +106,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_removing_property_from_dependency_path_when_none_was_added() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").removeFromDependencyPath(entity.getProperty("one"));
             fail("Should not be able to remove property when the dependency path is empty.");
@@ -157,6 +116,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_removing_property_from_dependency_path_when_everything_is_ok() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         try {
             entity.getProperty("two").addToDependencyPath(entity.getProperty("one"));
             entity.getProperty("two").removeFromDependencyPath(entity.getProperty("one"));
@@ -167,6 +127,7 @@ public class PropertyDependencyHandlingTest {
 
     @Test
     public void test_dependency_path_construction() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         // emulate setting a value into property one
         entity.getProperty("two").addToDependencyPath(entity.getProperty("one"));
         entity.getProperty("three").addToDependencyPath(entity.getProperty("two"));
@@ -179,108 +140,95 @@ public class PropertyDependencyHandlingTest {
     }
 
     @Test
-    public void test_correctness_of_setter_ececution_upong_dependency_traversal_when_dependent_properties_were_not_set() {
-        // first initialise the values to make original assignment
-        entity.setOne("value");
-        entity.setTwo("value");
-        entity.oneCount = 0;
-        entity.twoCount = 0;
-        entity.threeCount = 0;
-        // this assignment should trigger revalidation for properties one and two
-        entity.setThree("value");
+    public void only_assigned_property_one_gets_revalidated_as_part_of_dependency_handling_upon_assignment_of_property_tree() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
 
-        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
-        assertEquals("Incorrect number of setter executions", 2, entity.twoCount);
-        assertEquals("Incorrect number of setter executions", 2, entity.oneCount);
+        entity.setOne("value");
+        assertEquals(1, entity.oneCount);
+        assertEquals(0, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
+        entity.setThree("value");
+        assertEquals(2, entity.oneCount);
+        assertEquals(0, entity.twoCount);
+        assertEquals(1, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
     }
 
     @Test
-    public void test_correctness_for_setter_execution_of_property_one_upon_dependency_traversal() {
-        // first initialise the values to make original assignment
-        entity.setTwo("value");
-        entity.setThree("value");
-        entity.oneCount = 0;
-        entity.twoCount = 0;
-        entity.threeCount = 0;
+    public void all_assigned_properties_get_revalidated_as_part_of_dependency_handling_upon_assignment_of_property_tree() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
 
-        // this assignment should trigger revalidation for property two, which in turn triggers for three
         entity.setOne("value");
-
-        assertEquals("Incorrect number of setter executions", 1, entity.oneCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.twoCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
-
+        assertEquals(1, entity.oneCount);
+        assertEquals(0, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
         entity.setTwo("value");
+        assertEquals(2, entity.oneCount);
+        assertEquals(1, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
         entity.setThree("value");
-
-        entity.oneCount = 0;
-        entity.twoCount = 0;
-        entity.threeCount = 0;
-
-        entity.setOne("another value");
-
-        assertEquals("Incorrect number of setter executions", 1, entity.oneCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.twoCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
+        assertEquals(3, entity.oneCount);
+        assertEquals(2, entity.twoCount);
+        assertEquals(1, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
     }
 
     @Test
-    public void test_correctness_for_setter_execution_of_property_two_upon_dependency_traversal() {
+    public void dependency_is_traversed_correctly_when_prop_five_validation_fails_and_prop_four_is_assigned_trigerring_revalidation_of_props_one_and_five() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
+
         entity.setOne("value");
+        assertEquals(1, entity.oneCount);
+        assertEquals(0, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
         entity.setTwo("value");
+        assertEquals(2, entity.oneCount);
+        assertEquals(1, entity.twoCount);
+        assertEquals(0, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
         entity.setThree("value");
-
-        entity.oneCount = 0;
-        entity.twoCount = 0;
-        entity.threeCount = 0;
-
-        entity.setTwo("another value");
-
-        assertEquals("Incorrect number of setter executions", 2, entity.oneCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.twoCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
-    }
-
-    @Test
-    public void test_correctness_for_setter_execution_of_property_three_upon_dependency_traversal() {
-        entity.setOne("value");
-        entity.setTwo("value");
-
-        entity.oneCount = 0;
-        entity.twoCount = 0;
-        entity.threeCount = 0;
-
-        entity.setThree("value");
-
-        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
-        assertEquals("Incorrect number of setter executions", 2, entity.twoCount);
-        assertEquals("Incorrect number of setter executions", 2, entity.oneCount);
-    }
-
-    @Test
-    public void test_dependency_traversal_when_prop_four_is_set_and_prop_five_validation_fails() {
-        // first initialise the values to make original assignment
-        entity.setOne("value");
-        entity.setTwo("value");
-        entity.setThree("value");
-        entity.setFive("value");
-        entity.oneCount = 0;
-        entity.twoCount = 0;
-        entity.threeCount = 0;
-        entity.fourCount = 0;
-        entity.fiveCount = 0;
-
+        assertEquals(3, entity.oneCount);
+        assertEquals(2, entity.twoCount);
+        assertEquals(1, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(0, entity.fiveCount);
+        
+        entity.setFive(INVALID);
+        assertFalse(entity.getProperty("five").isValid());
+        assertEquals(3, entity.oneCount);
+        assertEquals(2, entity.twoCount);
+        assertEquals(1, entity.threeCount);
+        assertEquals(0, entity.fourCount);
+        assertEquals(1, entity.fiveCount);
+        
         entity.setFour("value");
-
-        assertEquals("Incorrect number of setter executions", 1, entity.oneCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.twoCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.fourCount);
-        assertEquals("Incorrect number of setter executions", 1, entity.fiveCount);
+        assertTrue(entity.getProperty("five").isValid());
+        assertEquals("Should have been validated due to setting a value and 4 revalidations upon setting propties 2, 3, 4 and revalidation of property 5.", 5, entity.oneCount);
+        assertEquals("Should have been validated due to setting a value and 1 revalidations upon setting property 3.", 2, entity.twoCount);
+        assertEquals("Should have been validated due to setting a value.", 1, entity.threeCount);
+        assertEquals("Should have been validated due to setting a value.", 1, entity.fourCount);
+        assertEquals("Should have been validated due to setting a value and 1 revalidation upon setting property 4", 2, entity.fiveCount);
     }
 
     @Test
-    public void test_dependency_traversal_when_prop_four_is_set_and_no_other_prop_has_value_assigned() {
+    public void unassigned_dependent_properties_do_not_get_revalidated() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
         entity.setFour("value");
 
         assertEquals("Incorrect number of setter executions", 0, entity.oneCount);
