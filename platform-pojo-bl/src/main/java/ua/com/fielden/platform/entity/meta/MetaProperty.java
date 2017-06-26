@@ -234,6 +234,20 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public void setValue(final Object value) {
         throw new StrictProxyException(format("Invalid call [setValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
+    
+    /**
+     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same if the one being assigned.
+     * @param value -- the value to be assigned.
+     * @param enforce -- will force value assignment (with all the BCE and ACE related logic) even if it matches the current value
+     */
+    public final void setValue(final Object value, final boolean enforce) {
+        setEnforceMutator(enforce);
+        try {
+            setValue(value);
+        } finally {
+            setEnforceMutator(false);
+        }
+    }
 
     /**
      * Returns <code>true</code> if the property value is a proxy.

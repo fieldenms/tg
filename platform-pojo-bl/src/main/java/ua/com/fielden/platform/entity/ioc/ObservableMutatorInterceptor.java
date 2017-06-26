@@ -368,30 +368,41 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             final AbstractEntity<?> entity = metaProperty.getEntity();
             for (final String dependentPropertyName : metaProperty.getDependentPropertyNames()) {
                 final MetaProperty<?> dependentMetaProperty = entity.getProperty(dependentPropertyName);
-
-                if (!dependentMetaProperty.onDependencyPath(metaProperty) && !metaProperty.onDependencyPath(dependentMetaProperty)) {
-                    dependentMetaProperty.addToDependencyPath(metaProperty);
-                    try {
-                        if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
-                            dependentMetaProperty.setEnforceMutator(true);
-                            try {
-                                dependentMetaProperty.setValue(dependentMetaProperty.getLastAttemptedValue());
-                            } finally {
-                                dependentMetaProperty.setEnforceMutator(false);
-                            }
-                        } else if (!dependentMetaProperty.revalidate(true).isSuccessful()) { // otherwise simply re-validate and if unsuccessful then stop any further validation of dependent properties
-                            break;
-                        }
-                    } finally {
-                        dependentMetaProperty.removeFromDependencyPath(metaProperty);
-                    }
+                // if revalidation is unsuccessful then any further validation of dependent properties should not occur
+                if (!revalidateDependentProperty(metaProperty, dependentMetaProperty)) {
+                    break;
                 }
-                logger.debug("Dependent property [" + dependentPropertyName + "] for property [" + metaProperty.getName() + "] successfully updated.");
+                logger.debug(format("Dependent property [%s] for property [%s] successfully updated.", dependentPropertyName, metaProperty.getName()));
             }
         }
 
     }
 
+    /**
+     * Enforces setting of the last attempted value or performs revalidation of the dependent property.
+     * This happens only if neither the dependent nor the driving property is on each other's dependency path. 
+     * 
+     * @param metaProperty
+     * @param dependentMetaProperty
+     * @return if <code>false</code> then any further processing of dependent properties should cease
+     */
+    private boolean revalidateDependentProperty(final MetaProperty<?> metaProperty, final MetaProperty<?> dependentMetaProperty) {
+        if (!dependentMetaProperty.onDependencyPath(metaProperty) && !metaProperty.onDependencyPath(dependentMetaProperty)) {
+            dependentMetaProperty.addToDependencyPath(metaProperty);
+            try {
+                if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
+                    dependentMetaProperty.setValue(dependentMetaProperty.getLastAttemptedValue(), true);
+                } else { // otherwise simply re-validate and return the indication of its success
+                    return dependentMetaProperty.revalidate(true).isSuccessful();
+                }
+            } finally {
+                dependentMetaProperty.removeFromDependencyPath(metaProperty);
+            }
+        }
+        
+        return true;
+    }
+    
     /**
      * Determines correct newValue and oldValue. {@link Pair} is used to return a pair of values where the key represents newValue and the value represents oldValue.
      *
