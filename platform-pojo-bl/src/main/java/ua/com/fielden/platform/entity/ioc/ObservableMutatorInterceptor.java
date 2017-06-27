@@ -144,7 +144,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         }
     }
 
-    private boolean propertyWasValidAndNotEnforced(final MetaProperty property, final boolean wasValid) {
+    private boolean propertyWasValidAndNotEnforced(final MetaProperty<?> property, final boolean wasValid) {
         return wasValid && !property.isEnforceMutator();
     }
 
@@ -357,8 +357,9 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
     }
 
     /**
-     * If there are some dependent properties for 'metaProperty' - then these dependent properties will be updated by the lastInvalidValue (only in the case of INVALID dependent
-     * properties).
+     * If there are some dependent properties for 'metaProperty' then all of the invalid dependent properties need to be attempted at reassigning the <code>lastAttamptedValue</code>,
+     * and all valid dependencies need to be revalidated.
+     * 
      *
      * @param metaProperty
      */
@@ -367,30 +368,35 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             final AbstractEntity<?> entity = metaProperty.getEntity();
             for (final String dependentPropertyName : metaProperty.getDependentPropertyNames()) {
                 final MetaProperty<?> dependentMetaProperty = entity.getProperty(dependentPropertyName);
-
-                if (!dependentMetaProperty.onDependencyPath(metaProperty) && !metaProperty.onDependencyPath(dependentMetaProperty)) {
-                    dependentMetaProperty.addToDependencyPath(metaProperty);
-                    try {
-                        if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
-                            dependentMetaProperty.setEnforceMutator(true);
-                            try {
-                                entity.set(dependentPropertyName, dependentMetaProperty.getLastAttemptedValue());
-                            } finally {
-                                dependentMetaProperty.setEnforceMutator(false);
-                            }
-                        } else if (dependentMetaProperty.revalidate(true).isSuccessful()) { // otherwise simply re-validate
-                            handleDependentProperties(dependentMetaProperty);
-                        }
-                    } finally {
-                        dependentMetaProperty.removeFromDependencyPath(metaProperty);
-                    }
-                }
-                logger.debug("Dependent property [" + dependentPropertyName + "] for property [" + metaProperty.getName() + "] successfully updated.");
+                revalidateDependentProperty(metaProperty, dependentMetaProperty);
+                logger.debug(format("Dependent property [%s] for property [%s] was revalidated.", dependentPropertyName, metaProperty.getName()));
             }
         }
 
     }
 
+    /**
+     * Enforces setting of the last attempted value or performs revalidation of the dependent property.
+     * This happens only if neither the dependent nor the driving property is on each other's dependency path. 
+     * 
+     * @param metaProperty
+     * @param dependentMetaProperty
+     */
+    private void revalidateDependentProperty(final MetaProperty<?> metaProperty, final MetaProperty<?> dependentMetaProperty) {
+        if (!dependentMetaProperty.onDependencyPath(metaProperty) && !metaProperty.onDependencyPath(dependentMetaProperty)) {
+            dependentMetaProperty.addToDependencyPath(metaProperty);
+            try {
+                if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
+                    dependentMetaProperty.setValue(dependentMetaProperty.getLastAttemptedValue(), true);
+                } else { // otherwise simply re-validate, not ignoring requiredness
+                    dependentMetaProperty.revalidate(false);
+                }
+            } finally {
+                dependentMetaProperty.removeFromDependencyPath(metaProperty);
+            }
+        }
+    }
+    
     /**
      * Determines correct newValue and oldValue. {@link Pair} is used to return a pair of values where the key represents newValue and the value represents oldValue.
      *

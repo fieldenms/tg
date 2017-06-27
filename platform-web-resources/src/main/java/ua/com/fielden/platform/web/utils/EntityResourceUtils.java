@@ -295,7 +295,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 validateAnd(() -> {
-                    enforceSet(shouldApplyOriginalValue, name, entity, valueToBeApplied);
+                    entity.getProperty(name).setValue(valueToBeApplied, shouldApplyOriginalValue);
                 }, () -> {
                     return valueToBeApplied;
                 }, () -> {
@@ -408,29 +408,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-    }
-
-    /**
-     * Sets the value for the entity property.
-     *
-     * @param enforce - indicates whether to use 'enforced mutation'
-     * @param name
-     * @param entity
-     * @param newValue
-     */
-    private static <M extends AbstractEntity<?>> void enforceSet(final boolean enforce, final String name, final M entity, final Object newValue) {
-        if (enforce) {
-            final MetaProperty<Object> metaProperty = entity.getProperty(name);
-            final boolean currEnforceMutator = metaProperty.isEnforceMutator();
-            metaProperty.setEnforceMutator(true);
-            try {
-                entity.set(name, newValue);
-            } finally {
-                metaProperty.setEnforceMutator(currEnforceMutator);
-            }
-        } else {
-            entity.set(name, newValue);
-        }
     }
 
     /**
