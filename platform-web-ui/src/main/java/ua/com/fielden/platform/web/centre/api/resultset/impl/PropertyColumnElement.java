@@ -125,7 +125,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
         attrs.put("width", width);
-        attrs.put("min-width", width);//TODO min width right now is the same as width maybe there should be separate property and API for setting min width.
+        attrs.put("min-width", 48 > width ? width : 48);
         attrs.put("grow-factor", isFlexible ? growFactor : 0);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
