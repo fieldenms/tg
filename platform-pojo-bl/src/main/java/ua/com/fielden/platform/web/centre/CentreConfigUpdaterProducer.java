@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -34,7 +36,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
-
+    private final Logger logger = Logger.getLogger(getClass());
+    
     @Inject
     public CentreConfigUpdaterProducer(
             final EntityFactory factory,
@@ -45,7 +48,18 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
 
     @Override
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
+        final Class<?> root = masterEntity.getEntityClass();
+        final ICentreDomainTreeManagerAndEnhancer freshCentre = masterEntity.freshCentreSupplier().get();
+        
+        final List<String> freshCheckedProperties = freshCentre.getSecondTick().checkedProperties(root);
+        logger.error("Checked: [" + freshCheckedProperties + "]");
+        final List<String> freshUsedProperties = freshCentre.getSecondTick().usedProperties(root);
+        logger.error("Used: [" + freshUsedProperties + "]");
+        final List<Pair<String, Ordering>> freshSortedProperties = freshCentre.getSecondTick().orderedProperties(root);
+        logger.error("Sorted: [" + freshSortedProperties + "]");
+        final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
+        
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(freshCheckedProperties, freshSortedProperties, freshManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
         final Set<String> sortingVals = customisableColumns.stream()
@@ -54,13 +68,14 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
             .map(sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))
             .collect(Collectors.toCollection(LinkedHashSet::new));
         
+        final Set<String> chosenIds = new LinkedHashSet<>(freshUsedProperties);
+        entity.setChosenIds(chosenIds);
+        
         entity.setSortingVals(new ArrayList<>(sortingVals));
         return entity;
     }
 
-    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<?> root, final Class<?> managedType, final EntityFactory factory) {
-        final List<String> checkedProperties = cdtmae.getSecondTick().checkedProperties(root);
-        final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root);
+    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
         final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
         for (final String checkedProp: checkedProperties) {
             if ("".equals(checkedProp) || 
@@ -73,7 +88,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
                 customisableColumn.setSortable(true);
                 customisableColumn.setTitle(titleAndDesc.getKey());
 
-                final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(orderedProperties, checkedProp);
+                final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(sortedProperties, checkedProp);
                 if (orderingAndNumber != null) {
                     customisableColumn.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist
                     customisableColumn.setSortingNumber(orderingAndNumber.getValue());
