@@ -144,7 +144,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         }
     }
 
-    private boolean propertyWasValidAndNotEnforced(final MetaProperty property, final boolean wasValid) {
+    private boolean propertyWasValidAndNotEnforced(final MetaProperty<?> property, final boolean wasValid) {
         return wasValid && !property.isEnforceMutator();
     }
 

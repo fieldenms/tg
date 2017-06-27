@@ -1067,7 +1067,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     @Override
-    public void setEnforceMutator(final boolean enforceMutator) {
+    protected void setEnforceMutator(final boolean enforceMutator) {
         this.enforceMutator = enforceMutator;
     }
 

@@ -417,7 +417,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [isEnforceMutator] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public void setEnforceMutator(final boolean enforceMutator) {
+    protected void setEnforceMutator(final boolean enforceMutator) {
         throw new StrictProxyException(format("Invalid call [setEnforceMutator] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
