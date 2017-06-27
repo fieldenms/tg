@@ -20,8 +20,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ISortingProperty.class)
 @DescTitle(value = "Description", desc = "Description of this sorting property")
 public class SortingProperty extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-    
     @IsProperty
     @Title(value = "Title", desc = "Title of this sorting property")
     private String title;

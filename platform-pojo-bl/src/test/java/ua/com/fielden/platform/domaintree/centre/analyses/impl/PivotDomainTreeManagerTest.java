@@ -76,6 +76,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         final String message = "Unused property should cause IllegalArgument exception.";
 
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set width
                 try {
@@ -92,6 +93,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
 
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set width
                 try {
@@ -115,6 +117,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         final String property3 = "entityProp.entityProp.booleanProp";
 
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getFirstTick().check(MasterEntity.class, name, true);
                 dtm().getFirstTick().use(MasterEntity.class, name, true);
@@ -159,6 +162,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         final String property = "intAggExprProp";
 
         oneLevel(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getSecondTick().check(MasterEntity.class, name, true);
                 dtm().getSecondTick().use(MasterEntity.class, name, true);
@@ -232,14 +236,6 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", false);
         dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", false);
         assertEquals("List of used properties for the first tick and second usage manager is incorrect.", Arrays.asList(), dtm().getFirstTick().getSecondUsageManager().usedProperties(MasterEntity.class));
-    }
-
-    @Override
-    public void test_that_PropertyUsageListeners_work() {
-    }
-
-    @Override
-    public void test_that_WeakPropertyUsageListeners_work() {
     }
 
     @Override

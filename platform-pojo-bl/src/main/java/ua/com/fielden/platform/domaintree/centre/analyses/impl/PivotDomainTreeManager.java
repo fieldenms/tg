@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.event.EventListenerList;
-
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
@@ -89,7 +87,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
             } else if (!check) {
                 listOfUsedProperties.remove(property);
             }
-            usedPropertiesChanged(root, property, check);
             return this;
         }
 
@@ -127,18 +124,23 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (!super.equals(obj))
+            }
+            if (!super.equals(obj)) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final PivotAddToDistributionTickManager other = (PivotAddToDistributionTickManager) obj;
             if (propertiesWidths == null) {
-                if (other.propertiesWidths != null)
+                if (other.propertiesWidths != null) {
                     return false;
-            } else if (!propertiesWidths.equals(other.propertiesWidths))
+                }
+            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
                 return false;
+            }
             if (rootsListsOfUsedProperties == null) {
                 if (other.rootsListsOfUsedProperties != null) {
                     return false;
@@ -155,11 +157,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
         }
 
         private class ColumnUsageManager implements IUsageManager {
-
-            private final transient EventListenerList propertyUsageListeners;
-
             public ColumnUsageManager() {
-                propertyUsageListeners = new EventListenerList();
             }
 
             private List<String> getAndInitSecondUsedProperties(final Class<?> root, final String property) {
@@ -194,9 +192,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                 } else if (!check) {
                     listOfUsedProperties.remove(property);
                 }
-                for (final IPropertyUsageListener listener : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                    listener.propertyStateChanged(managedType, property, check, null);
-                }
                 return this;
             }
 
@@ -213,43 +208,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                     }
                 }
                 return usedProperties;
-            }
-
-            @Override
-            public IUsageManager addPropertyUsageListener(final IPropertyUsageListener listener) {
-                removeEmptyPropertyUsageListeners();
-                propertyUsageListeners.add(IPropertyUsageListener.class, listener);
-                return this;
-            }
-
-            @Override
-            public IUsageManager addWeakPropertyUsageListener(final IPropertyUsageListener listener) {
-                removeEmptyPropertyUsageListeners();
-                propertyUsageListeners.add(IPropertyUsageListener.class, new WeakPropertyUsageListener(this, listener));
-                return this;
-            }
-
-            @Override
-            public IUsageManager removePropertyUsageListener(final IPropertyUsageListener listener) {
-                for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                    if (listener == obj) {
-                        propertyUsageListeners.remove(IPropertyUsageListener.class, listener);
-                    } else if (obj instanceof WeakPropertyUsageListener) {
-                        final IPropertyUsageListener weakRef = ((WeakPropertyUsageListener) obj).getRef();
-                        if (weakRef == listener || weakRef == null) {
-                            propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                        }
-                    }
-                }
-                return this;
-            }
-
-            private void removeEmptyPropertyUsageListeners() {
-                for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                    if (obj instanceof WeakPropertyUsageListener && ((WeakPropertyUsageListener) obj).getRef() == null) {
-                        propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                    }
-                }
             }
         }
     }
@@ -301,7 +259,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                 // perform actual removal
                 listOfUsedProperties.remove(property);
             }
-            usedPropertiesChanged(root, property, check);
             return this;
         }
 
@@ -315,18 +272,23 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (!super.equals(obj))
+            }
+            if (!super.equals(obj)) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final PivotAddToAggregationTickManager other = (PivotAddToAggregationTickManager) obj;
             if (propertiesWidths == null) {
-                if (other.propertiesWidths != null)
+                if (other.propertiesWidths != null) {
                     return false;
-            } else if (!propertiesWidths.equals(other.propertiesWidths))
+                }
+            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
                 return false;
+            }
             return true;
         }
     }

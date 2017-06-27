@@ -22,8 +22,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 @CompanionObject(ICentreConfigUpdater.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
-    private static final long serialVersionUID = 1L;
-    
     @IsProperty(SortingProperty.class)
     @Title(value = "Sorting Properties", desc = "A list of sorting properties")
     private Set<SortingProperty> sortingProperties = new LinkedHashSet<SortingProperty>();
