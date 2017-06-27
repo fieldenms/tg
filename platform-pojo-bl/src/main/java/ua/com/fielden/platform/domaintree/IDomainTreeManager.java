@@ -78,7 +78,7 @@ public interface IDomainTreeManager {
      * @author TG Team
      * 
      */
-    public interface ITickManager {
+    public interface ITickManager extends IUsageManager {
         /**
          * Defines a contract which ticks for which properties should be <b>mutably</b> checked in domain tree representation. <br>
          * <br>

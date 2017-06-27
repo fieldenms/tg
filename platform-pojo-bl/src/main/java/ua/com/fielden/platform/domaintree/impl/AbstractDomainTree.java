@@ -4,8 +4,10 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager;
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -18,8 +20,6 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * A base class for representations and managers with useful utility methods.

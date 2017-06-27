@@ -16,6 +16,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPrope
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -259,6 +260,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             this.tickManager = tickManager;
         }
 
+        @Override
         public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
             if (ref.get() != null) {
                 ref.get().propertyStateChanged(root, property, hasBeenChecked, oldState, index);
@@ -291,6 +293,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      */
     public static class TickManager implements ITickManagerWithMutability {
         private final EnhancementRootsMap<List<String>> checkedProperties;
+        private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
+        
         private final transient AbstractDomainTreeRepresentation dtr;
         private final transient ITickRepresentation tr;
 
@@ -309,6 +313,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         protected TickManager(final Map<Class<?>, List<String>> checkedProperties) {
             this.checkedProperties = createRootsMap();
             this.checkedProperties.putAll(checkedProperties);
+            
+            rootsListsOfUsedProperties = createRootsMap();
 
             this.propertyCheckingListeners = new EventListenerList();
 
@@ -523,6 +529,45 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             props.add(what);
             return this;
         }
+        
+        protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
+            illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type ["
+                    + root.getSimpleName() + "].");
+            if (!rootsListsOfUsedProperties.containsKey(root)) {
+                rootsListsOfUsedProperties.put(root, new ArrayList<String>());
+            }
+            return rootsListsOfUsedProperties.get(root);
+        }
+
+        @Override
+        public boolean isUsed(final Class<?> managedType, final String property) {
+            illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property
+                    + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
+            return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+        }
+
+        @Override
+        public IUsageManager use(final Class<?> managedType, final String property, final boolean check) {
+            final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
+            if (check && !listOfUsedProperties.contains(property)) {
+                listOfUsedProperties.add(property);
+            } else if (!check) {
+                listOfUsedProperties.remove(property);
+            }
+            return this;
+        }
+
+        @Override
+        public List<String> usedProperties(final Class<?> managedType) {
+            final List<String> checkedProperties = checkedProperties(managedType);
+            final List<String> usedProperties = new ArrayList<String>();
+            for (final String property : checkedProperties) {
+                if (isUsed(managedType, property)) {
+                    usedProperties.add(property);
+                }
+            }
+            return usedProperties;
+        }
 
         protected ITickRepresentation tr() {
             return tr;
@@ -541,6 +586,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             final int prime = 31;
             int result = 1;
             result = prime * result + (checkedProperties == null ? 0 : checkedProperties.hashCode());
+            result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
             return result;
         }
 
@@ -561,6 +607,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
                     return false;
                 }
             } else if (!checkedProperties.equals(other.checkedProperties)) {
+                return false;
+            }
+            if (rootsListsOfUsedProperties == null) {
+                if (other.rootsListsOfUsedProperties != null) {
+                    return false;
+                }
+            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
                 return false;
             }
             return true;

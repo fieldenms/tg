@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToAggregationTickRepresentation;
@@ -151,18 +152,23 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (!super.equals(obj)) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final AnalysisDomainTreeManager other = (AnalysisDomainTreeManager) obj;
         if (visibleDistributedValuesNumber == null) {
-            if (other.visibleDistributedValuesNumber != null)
+            if (other.visibleDistributedValuesNumber != null) {
                 return false;
-        } else if (!visibleDistributedValuesNumber.equals(other.visibleDistributedValuesNumber))
+            }
+        } else if (!visibleDistributedValuesNumber.equals(other.visibleDistributedValuesNumber)) {
             return false;
+        }
         return true;
     }
 }

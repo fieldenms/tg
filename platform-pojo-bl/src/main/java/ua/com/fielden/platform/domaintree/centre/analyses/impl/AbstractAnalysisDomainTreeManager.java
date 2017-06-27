@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.swing.event.EventListenerList;
 
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
@@ -119,8 +120,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     }
 
     protected abstract static class AbstractAnalysisAddToDistributionTickManager extends TickManager implements IAbstractAnalysisAddToDistributionTickManager {
-        private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
-
         private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
 
         /**
@@ -129,7 +128,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
          */
         public AbstractAnalysisAddToDistributionTickManager() {
             super();
-            rootsListsOfUsedProperties = createRootsMap();
 
             parentCentreDomainTreeManager = null; // as soon as this analysis will be added into centre manager -- this field should be initialised
         }
@@ -187,83 +185,23 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             super.moveToTheEnd(managedType(root), what);
             return this;
         }
-
+        
         @Override
         public final boolean isUsed(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property
-                    + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
-            return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+            return super.isUsed(managedType(root), property);
         }
-
+        
         @Override
         public IUsageManager use(final Class<?> root, final String property, final boolean check) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
-            if (check && !listOfUsedProperties.contains(property)) {
-                listOfUsedProperties.add(property);
-            } else if (!check) {
-                listOfUsedProperties.remove(property);
-            }
-            return this;
+            return super.use(managedType(root), property, check);
         }
-
-        protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
-            illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type ["
-                    + root.getSimpleName() + "].");
-            if (!rootsListsOfUsedProperties.containsKey(root)) {
-                rootsListsOfUsedProperties.put(root, new ArrayList<String>());
-            }
-            return rootsListsOfUsedProperties.get(root);
-        }
-
+        
         @Override
         public final List<String> usedProperties(final Class<?> root) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            final List<String> checkedProperties = checkedProperties(managedType);
-            final List<String> usedProperties = new ArrayList<String>();
-            for (final String property : checkedProperties) {
-                if (isUsed(managedType, property)) {
-                    usedProperties.add(property);
-                }
-            }
-            return usedProperties;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (!super.equals(obj)) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final AbstractAnalysisAddToDistributionTickManager other = (AbstractAnalysisAddToDistributionTickManager) obj;
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
-                return false;
-            }
-            return true;
+            return super.usedProperties(managedType(root));
         }
     }
 
@@ -295,7 +233,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
     protected abstract static class AbstractAnalysisAddToAggregationTickManager extends TickManager implements IAbstractAnalysisAddToAggregationTickManager {
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
-        private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
         private final transient EventListenerList propertyOrderingListeners;
 
         private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
@@ -312,7 +249,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         public AbstractAnalysisAddToAggregationTickManager() {
             super();
             rootsListsOfOrderings = createRootsMap();
-            rootsListsOfUsedProperties = createRootsMap();
             propertyOrderingListeners = new EventListenerList();
 
             parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
@@ -375,18 +311,14 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         @Override
         public final boolean isUsed(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property
-                    + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
-            return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+            return super.isUsed(managedType(root), property);
         }
-
+        
         @Override
         public IUsageManager use(final Class<?> root, final String property, final boolean check) {
             // inject an enhanced type into method implementation
             final Class<?> managedType = managedType(root);
-
+            
             final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
             if (check && !listOfUsedProperties.contains(property)) {
                 listOfUsedProperties.add(property);
@@ -400,22 +332,13 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             }
             return this;
         }
-
+        
         @Override
         public final List<String> usedProperties(final Class<?> root) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            final List<String> checkedProperties = checkedProperties(managedType);
-            final List<String> usedProperties = new ArrayList<String>();
-            for (final String property : checkedProperties) {
-                if (isUsed(managedType, property)) {
-                    usedProperties.add(property);
-                }
-            }
-            return usedProperties;
+            return super.usedProperties(managedType(root));
         }
-
+        
         protected static boolean isOrdered(final String property, final List<Pair<String, Ordering>> orderedProperties) {
             for (final Pair<String, Ordering> pair : orderedProperties) {
                 if (property.equals(pair.getKey())) {
@@ -423,15 +346,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                 }
             }
             return false;
-        }
-
-        protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
-            illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type ["
-                    + root.getSimpleName() + "].");
-            if (!rootsListsOfUsedProperties.containsKey(root)) {
-                rootsListsOfUsedProperties.put(root, new ArrayList<String>());
-            }
-            return rootsListsOfUsedProperties.get(root);
         }
 
         @Override
@@ -518,7 +432,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             final int prime = 31;
             int result = super.hashCode();
             result = prime * result + (rootsListsOfOrderings == null ? 0 : rootsListsOfOrderings.hashCode());
-            result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
             return result;
         }
 
@@ -539,13 +452,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                     return false;
                 }
             } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
-                return false;
-            }
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
                 return false;
             }
             return true;

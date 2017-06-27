@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;

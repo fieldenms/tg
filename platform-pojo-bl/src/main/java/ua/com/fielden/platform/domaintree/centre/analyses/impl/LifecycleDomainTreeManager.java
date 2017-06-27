@@ -9,6 +9,7 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
@@ -370,28 +371,37 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (!super.equals(obj)) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final LifecycleDomainTreeManager other = (LifecycleDomainTreeManager) obj;
         if (from == null) {
-            if (other.from != null)
+            if (other.from != null) {
                 return false;
-        } else if (!from.equals(other.from))
+            }
+        } else if (!from.equals(other.from)) {
             return false;
+        }
         if (to == null) {
-            if (other.to != null)
+            if (other.to != null) {
                 return false;
-        } else if (!to.equals(other.to))
+            }
+        } else if (!to.equals(other.to)) {
             return false;
+        }
         if (total == null) {
-            if (other.total != null)
+            if (other.total != null) {
                 return false;
-        } else if (!total.equals(other.total))
+            }
+        } else if (!total.equals(other.total)) {
             return false;
+        }
         return true;
     }
 
