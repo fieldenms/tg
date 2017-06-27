@@ -901,7 +901,7 @@
              * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
              */
             _isNecessaryForConversion: function (propertyName) {
-                return ['propName', 'newWidth', // adjust column width action
+                return ['propName', 'newWidth', 'newGrowFactor',// adjust column width action
                         'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
                         'forNew', 'menuTitle', 'sectionTitle', // compound master opening actions
                         'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)

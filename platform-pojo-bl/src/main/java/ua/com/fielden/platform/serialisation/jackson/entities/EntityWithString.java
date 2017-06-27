@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Max;
 @DescTitle(value = "Special Desc", desc = "Special Desc desc")
 public class EntityWithString extends AbstractEntity<String> {
 
-    @IsProperty
+    @IsProperty(length = 10)
     @MapTo
     @Title(value = "Special Prop", desc = "Special Prop desc")
     @UpperCase

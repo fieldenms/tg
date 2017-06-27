@@ -36,13 +36,13 @@ public class TgCoordinate extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private Integer order;
 
-    @IsProperty
-    @MapTo(value = "x_", precision = 18, scale = 10)
+    @IsProperty(precision = 18, scale = 10)
+    @MapTo(value = "x_")
     @Title(value = "X-координата", desc = "Значення довготи")
     private BigDecimal longitude;
 
-    @IsProperty
-    @MapTo(value = "y_", precision = 18, scale = 10)
+    @IsProperty(precision = 18, scale = 10)
+    @MapTo(value = "y_")
     @Title(value = "Y-координата", desc = "Значення широти")
     private BigDecimal latitude;
 

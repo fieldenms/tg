@@ -2,6 +2,8 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
+import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -351,6 +353,28 @@ public class PropertyTypeDeterminator {
     public static boolean isCollectional(final Class<?> entityType, final String doNotationExp) {
         final Field field = Finder.findFieldByName(entityType, doNotationExp);
         return EntityUtils.isCollectional(field.getType());
+    }
+
+    /**
+     * Identifies whether property <code>doNotationExp</code> has a type, which is recognized as representing a numeric value such as decimal, money, long or integer.
+     * 
+     * @param entityType
+     * @param doNotationExp
+     * @return
+     */
+    public static boolean isNumeric(final Class<?> entityType, final String doNotationExp) {
+        final Field field = Finder.findFieldByName(entityType, doNotationExp);
+        return isNumeric(field.getType());
+    }
+    
+    /**
+     * Identifies whether the specified property type represents a number, which could be an integer or a decimal, including money.
+     * 
+     * @param propType
+     * @return
+     */
+    public static boolean isNumeric(final Class<?> propType) {
+        return isDecimal(propType) || isInteger(propType);
     }
 
     /**

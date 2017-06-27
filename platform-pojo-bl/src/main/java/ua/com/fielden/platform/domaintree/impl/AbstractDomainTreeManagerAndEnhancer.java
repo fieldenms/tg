@@ -72,7 +72,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     public static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
-        private final static Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
+        private static final Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
         private final IDomainTreeEnhancer baseEnhancer;
         private final IDomainTreeRepresentationWithMutability dtr;
 

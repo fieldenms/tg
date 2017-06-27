@@ -634,12 +634,12 @@ public class EntityUtils {
     
 
     /**
-     * Indicates whether type represents {@link Integer}-typed values.
+     * Indicates whether type represents an integer value, which could be either {@link Integer} or {@link Long}.
      *
      * @return
      */
     public static boolean isInteger(final Class<?> type) {
-        return Integer.class.isAssignableFrom(type);
+        return Integer.class.isAssignableFrom(type) || Long.class.isAssignableFrom(type);
     }
 
     /**
