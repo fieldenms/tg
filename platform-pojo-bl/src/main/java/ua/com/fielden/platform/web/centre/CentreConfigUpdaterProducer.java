@@ -63,8 +63,11 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root);
         final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
         for (final String checkedProp: checkedProperties) {
-            if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
-                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && !isShortCollection(managedType, checkedProp))) {
+            if ("".equals(checkedProp) || 
+                    (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
+                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && 
+                    !isShortCollection(managedType, checkedProp))
+            ) {
                 final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
                 final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
                 customisableColumn.setSortable(true);
@@ -75,6 +78,14 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
                     customisableColumn.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist
                     customisableColumn.setSortingNumber(orderingAndNumber.getValue());
                 }
+                result.add(customisableColumn);
+            } else if (
+                !AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)
+            ) {
+                final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
+                final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, checkedProp, titleAndDesc.getValue());
+                customisableColumn.setSortable(false);
+                customisableColumn.setTitle(titleAndDesc.getKey());
                 result.add(customisableColumn);
             }
         }

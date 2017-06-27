@@ -380,7 +380,7 @@
         },
         
         _sortingIconHidden: function (_forReview, item) {
-            return _forReview || (typeof item.sorting === 'undefined');
+            return _forReview || (typeof item.sorting === 'undefined') || !item.sortable; // TODO placeholder is needed instead of sorting icon 'hiding'
         },
         
         _isSelectionEnabled: function (_forReview) {
