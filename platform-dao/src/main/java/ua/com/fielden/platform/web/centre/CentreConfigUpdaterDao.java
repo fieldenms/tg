@@ -52,6 +52,19 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
             cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
         }
         
+        // un-'use' all old properties
+        final List<String> currUsedProperties = cdtmae.getSecondTick().usedProperties(root);
+        logger.error("Curr used: [" + currUsedProperties + "]");
+        for (final String currUsedProperty: currUsedProperties) {
+            cdtmae.getSecondTick().use(root, currUsedProperty, false);
+        }
+        
+        // 'use' all new properties
+        for (final String chosenId : action.getChosenIds()) {
+            cdtmae.getSecondTick().use(root, chosenId, true);
+        }
+        logger.error("New used: [" + cdtmae.getSecondTick().usedProperties(root) + "]");
+        
         for (final String sortingVal: action.getSortingVals()) {
             final String[] splitted = sortingVal.split(":");
             final String name = splitted[0].equals("this") ? "" : splitted[0];
