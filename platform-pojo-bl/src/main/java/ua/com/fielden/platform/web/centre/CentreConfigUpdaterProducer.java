@@ -59,7 +59,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         logger.error("Sorted: [" + freshSortedProperties + "]");
         final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
         
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(freshCheckedProperties, freshSortedProperties, freshManagedType, factory());
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(freshCheckedProperties, freshUsedProperties, freshSortedProperties, freshManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
         final Set<String> sortingVals = customisableColumns.stream()
@@ -75,9 +75,16 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         return entity;
     }
 
-    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
-        final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
+    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedProperties, final List<String> usedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
+        final List<String> resultantProperties = new ArrayList<>(usedProperties);
         for (final String checkedProp: checkedProperties) {
+            if (!usedProperties.contains(checkedProp)) {
+                resultantProperties.add(checkedProp);
+            }
+        }
+        
+        final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
+        for (final String checkedProp: resultantProperties) {
             if ("".equals(checkedProp) || 
                     (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
                     !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && 

@@ -198,7 +198,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final ResultSetProp property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
                 cdtmae.getSecondTick().check(entityType, propertyName, true);
-                cdtmae.getSecondTick().use(entityType, propertyName, true);
+                if (propertyName.startsWith("d")) { // TODO remove this later, only for testing
+                    cdtmae.getSecondTick().use(entityType, propertyName, true);
+                }
                 cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                 if (growFactors.containsKey(propertyName)) {
                     cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
@@ -208,6 +210,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
+        cdtmae.getSecondTick().use(entityType, "desc", false); // TODO remove this later, only for testing
+        cdtmae.getSecondTick().use(entityType, "desc", true); // TODO remove this later, only for testing
         if (summaryExpressions.isPresent()) {
             for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
