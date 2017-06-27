@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.Collections;
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -18,47 +20,33 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ICentreColumnWidthConfigUpdater.class)
 public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWithCentreContext<String> {
 
-    @IsProperty
-    @Title(value = "Column Property", desc = "Column property name")
-    private String propName;
+    @IsProperty(Object.class)
+    @Title(value = "Column widths", desc = "Column widths")
+    private Map<String, Integer> propWidths;
 
-    @IsProperty
-    @Title(value = "New Width", desc = "New width of property column")
-    private Integer newWidth;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "New Grow Factor", desc = "New grow factor for column")
-    private Integer newGrowFactor;
+    @IsProperty(Object.class)
+    @Title(value = "Column grow factors", desc = "Column grow factors")
+    private Map<String, Integer> propGrows;
 
     @Observable
-    public CentreColumnWidthConfigUpdater setNewGrowFactor(final Integer newGrowFactor) {
-        this.newGrowFactor = newGrowFactor;
+    public CentreColumnWidthConfigUpdater setPropWidths(final Map<String, Integer> propWidths) {
+        this.propWidths.clear();
+        this.propWidths.putAll(propWidths);
         return this;
     }
 
-    public Integer getNewGrowFactor() {
-        return newGrowFactor;
+    public Map<String, Integer> getPropWidths() {
+        return Collections.unmodifiableMap(this.propWidths);
     }
 
     @Observable
-    public CentreColumnWidthConfigUpdater setNewWidth(final Integer newWidth) {
-        this.newWidth = newWidth;
+    public CentreColumnWidthConfigUpdater setPropGrows(final Map<String, Integer> propGrows) {
+        this.propGrows.clear();
+        this.propGrows.putAll(propGrows);
         return this;
     }
 
-    public Integer getNewWidth() {
-        return newWidth;
+    public Map<String, Integer> getPropGrows() {
+        return Collections.unmodifiableMap(this.propGrows);
     }
-
-    @Observable
-    public CentreColumnWidthConfigUpdater setPropName(final String propName) {
-        this.propName = propName;
-        return this;
-    }
-
-    public String getPropName() {
-        return propName;
-    }
-
 }

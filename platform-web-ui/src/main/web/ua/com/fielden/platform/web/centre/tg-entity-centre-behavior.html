@@ -80,9 +80,8 @@
             actionModel.createContextHolder = entityCentre._createContextHolder;
             actionModel.preAction = function (action) {
                 action.modifyFunctionalEntity = (function (bindingEntity, master) {
-                    action.modifyValue4Property('propName', bindingEntity, actionModel.propName);
-                    action.modifyValue4Property('newWidth', bindingEntity, actionModel.newWidth);
-                    action.modifyValue4Property('newGrowFactor', bindingEntity, actionModel.newGrowFactor);
+                    action.modifyValue4Property('propWidths', bindingEntity, actionModel.propWidths);
+                    action.modifyValue4Property('propGrows', bindingEntity, actionModel.propGrows);
                 });
                 return true;
             };
@@ -630,9 +629,8 @@
             },
             
             _saveColumnWidth: function (e) {
-                this._columnAction.propName = e.detail.propName;
-                this._columnAction.newWidth = e.detail.newWidth;
-                this._columnAction.newGrowFactor = e.detail.newGrowFactor;
+                this._columnAction.propWidths = e.detail.propWidths;
+                this._columnAction.propGrows = e.detail.propGrows;
                 this._columnAction._run();
             },
 

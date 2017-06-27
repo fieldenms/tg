@@ -74,7 +74,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
     private CentreResourceUtils() { }
-    
+
     private enum RunActions {
         RUN("run"),
         REFRESH("refresh"),
@@ -212,8 +212,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of returning a list of entities,
-     * it returns a stream. 
-     * 
+     * it returns a stream.
+     *
      * @param adhocParams
      * @param criteriaEntity
      * @param additionalFetchProvider
@@ -223,11 +223,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
             final Map<String, Object> adhocParams,
-            final M criteriaEntity, 
-            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final M criteriaEntity,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
-        
+
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
@@ -239,7 +239,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (createdByUserConstraint.isPresent()) {
             criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
         }
-        
+
         final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100;
         final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
         return criteriaEntity.streamEntities(fetchSize, ids);
@@ -388,17 +388,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier( () -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME) );
-        validationPrototype.setColumnWidthAdjuster((propName, newWidthGrowFactorPair) -> {
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidthGrowFactorPair.getKey());
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, propName, newWidthGrowFactorPair.getValue());
+        validationPrototype.setColumnWidthAdjuster((propWidths, propGrows) -> {
+            propWidths.entrySet().forEach(entry -> {
+                CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), entry.getValue());
+                CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), entry.getValue());
+                CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), entry.getValue());
+            });
+
+            propGrows.entrySet().forEach(entry -> {
+                CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), entry.getValue());
+                CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), entry.getValue());
+                CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), entry.getValue());
+            });
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
-
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidthGrowFactorPair.getKey());
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, propName, newWidthGrowFactorPair.getValue());
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
-
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, propName, newWidthGrowFactorPair.getKey());
-            CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, propName, newWidthGrowFactorPair.getValue());
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
         });
 
