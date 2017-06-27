@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -145,6 +146,12 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     final QueryExecutionModel<T, ?> qem,//
             final List<byte[]> binaryTypes);
 
+    /**
+     * Returns a stream of entities that match the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize);
+    
     /**
      * Returns first entities produced by the provided query.
      *

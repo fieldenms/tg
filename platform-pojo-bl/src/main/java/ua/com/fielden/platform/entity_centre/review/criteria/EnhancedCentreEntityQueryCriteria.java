@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import com.google.inject.Inject;
 
 import com.google.inject.Inject;
 
@@ -16,8 +19,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.Pair;
-
-//TODO must finish implementation in order to provide correct ordering, fetch model etc. Consider to provide reference on to the ICriteriaDomainTreeManager.
 /**
  * This class is the base class to enhance with criteria and resultant properties.
  *
@@ -28,7 +29,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
-    private Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner;
+    private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster;
 
     /**
@@ -59,11 +60,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreSupplier;
     }
 
-    public Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner() {
+    public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {
         return exportQueryRunner;
     }
 
-    public void setExportQueryRunner(final Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner) {
+    public void setExportQueryRunner(final Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner) {
         this.exportQueryRunner = exportQueryRunner;
     }
 }

@@ -1,136 +1,111 @@
 package ua.com.fielden.platform.entity;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 /**
- * Master entity object.
+ * A functional entity that represents an action for exporting entities to Excel.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Export", desc = "Export data into file")
 @CompanionObject(IEntityExportAction.class)
 public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
-    private static final long serialVersionUID = 3228002036372799747L;
 
+    public static final String PROP_EXPORT_ALL = "exportAll";
+    public static final String PROP_EXPORT_TOP = "exportTop";
+    public static final String PROP_EXPORT_SELECTED = "exportSelected";
+    public static final String PROP_NUMBER = "number";
+    public static final Set<String> EXPORT_OPTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(PROP_EXPORT_ALL, PROP_EXPORT_TOP, PROP_EXPORT_SELECTED)));
+    
     @IsProperty
-    @Title(value = "Export all?", desc = "Export all entities?")
+    @Title(value = "Export all?", 
+           desc = "Should be used in cases where all matching entities across all pages need to be exported.")
     @AfterChange(ExportActionHandler.class)
-    private boolean all;
+    private boolean exportAll;
 
     @IsProperty
-    @Title(value = "Export pages?", desc = "Export page range?")
+    @Title(value = "Export top?", 
+           desc = "Should be used in cases where the specified number of the top matching entities need to be exported."
+                   + "If there are less mathing entities than the number specified then only those get exported.")
     @AfterChange(ExportActionHandler.class)
-    private boolean pageRange;
+    private boolean exportTop;
 
     @IsProperty
-    @Title(value = "From", desc = "From page")
-    @Dependent("toPage")
-    private Integer fromPage;
-
-    @IsProperty
-    @Title(value = "To", desc = "To page")
-    @Dependent("fromPage")
-    private Integer toPage;
+    @Title(value = "Number", desc = "The number of top matching entities to be exported.")
+    private Integer number;
 
     @IsProperty
     @Title(value = "Export selected?", desc = "Export selected entities")
     @AfterChange(ExportActionHandler.class)
-    private boolean selected;
-
-    @IsProperty
-    @Title(value = "Page capacity", desc = "The number of entities on page")
-    private Integer pageCapacity;
+    private boolean exportSelected;
 
     @Observable
-    public EntityExportAction setPageCapacity(final Integer pageCapacity) {
-        this.pageCapacity = pageCapacity;
+    public EntityExportAction setExportSelected(final boolean exportSelected) {
+        this.exportSelected = exportSelected;
         return this;
     }
 
-    public Integer getPageCapacity() {
-        return pageCapacity;
+    public boolean isExportSelected() {
+        return exportSelected;
     }
 
     @Observable
-    public EntityExportAction setSelected(final boolean selected) {
-        this.selected = selected;
-        return this;
-    }
-
-    public boolean getSelected() {
-        return selected;
-    }
-
-    @Observable
-    @GeProperty("fromPage")
     @GreaterOrEqual(1)
-    public EntityExportAction setToPage(final Integer toPage) {
-        this.toPage = toPage;
+    public EntityExportAction setNumber(final Integer number) {
+        this.number = number;
         return this;
     }
 
-    public Integer getToPage() {
-        return toPage;
+    public Integer getNumber() {
+        return number;
     }
 
     @Observable
-    @LeProperty("toPage")
-    @GreaterOrEqual(1)
-    public EntityExportAction setFromPage(final Integer fromPage) {
-        this.fromPage = fromPage;
+    public EntityExportAction setExportTop(final boolean exportTop) {
+        this.exportTop = exportTop;
         return this;
     }
 
-    public Integer getFromPage() {
-        return fromPage;
+    public boolean isExportTop() {
+        return exportTop;
     }
 
     @Observable
-    public EntityExportAction setPageRange(final boolean pageRange) {
-        this.pageRange = pageRange;
+    public EntityExportAction setExportAll(final boolean exportAll) {
+        this.exportAll = exportAll;
         return this;
     }
 
-    public boolean getPageRange() {
-        return pageRange;
-    }
-
-    @Observable
-    public EntityExportAction setAll(final boolean all) {
-        this.all = all;
-        return this;
-    }
-
-    public boolean getAll() {
-        return all;
+    public boolean isExportAll() {
+        return exportAll;
     }
 
     @Override
     protected Result validate() {
         final Result superResult = super.validate();
 
-        for (final String property : Arrays.asList("all", "pageRange", "selected")) {
+        for (final String property : EXPORT_OPTION_PROPERTIES) {
             if ((Boolean) get(property)) {
                 return superResult;
             }
         }
 
-        return superResult.isSuccessful() ? Result.failure("Nothing has been chosen for export!") : superResult;
+        return superResult.isSuccessful() ? Result.failure("One of the export options must be selected.") : superResult;
     }
 }

@@ -13,11 +13,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * 
  */
 public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends AbstractEntity<KEY> {
-    private static final long serialVersionUID = 1L;
 
-    @IsProperty
+    @IsProperty(length = 1073741824)
     @Title(value = "Configuration body", desc = "The binary representation of the configuration.")
-    @MapTo(value = "BODY", length = 1073741824)
+    @MapTo(value = "BODY")
     private byte[] configBody = new byte[] {};
 
     public byte[] getConfigBody() {

@@ -2,13 +2,14 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
-
-import com.google.inject.Inject;
 
 /**
  * TODO document this class and provide additional implementations!
@@ -98,6 +99,11 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
     @Override
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
         return companion.getAllEntities(qem);
+    }
+    
+    @Override
+    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
+        return companion.stream(queryModel, fetchSize);
     }
 
     @Override

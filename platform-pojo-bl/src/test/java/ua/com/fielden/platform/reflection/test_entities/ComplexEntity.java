@@ -10,9 +10,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle(value = "Complex entity")
 @DescTitle(value = "Complex description")
 public class ComplexEntity extends AbstractEntity<KeyEntity> {
-
-    private static final long serialVersionUID = 48391145890835138L;
-
     @IsProperty
     private String commonProperty;
 

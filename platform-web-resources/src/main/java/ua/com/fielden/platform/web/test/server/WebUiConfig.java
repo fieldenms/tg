@@ -102,7 +102,6 @@ import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
-import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -1373,7 +1372,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addTopAction(
                         action(EntityExportAction.class)
                                 .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                                .preAction(new ExportPreAction())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
