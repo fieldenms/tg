@@ -368,11 +368,8 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             final AbstractEntity<?> entity = metaProperty.getEntity();
             for (final String dependentPropertyName : metaProperty.getDependentPropertyNames()) {
                 final MetaProperty<?> dependentMetaProperty = entity.getProperty(dependentPropertyName);
-                // if revalidation is unsuccessful then any further validation of dependent properties should not occur
-                if (!revalidateDependentProperty(metaProperty, dependentMetaProperty)) {
-                    break;
-                }
-                logger.debug(format("Dependent property [%s] for property [%s] successfully updated.", dependentPropertyName, metaProperty.getName()));
+                revalidateDependentProperty(metaProperty, dependentMetaProperty);
+                logger.debug(format("Dependent property [%s] for property [%s] was revalidated.", dependentPropertyName, metaProperty.getName()));
             }
         }
 
@@ -384,23 +381,20 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      * 
      * @param metaProperty
      * @param dependentMetaProperty
-     * @return if <code>false</code> then any further processing of dependent properties should cease
      */
-    private boolean revalidateDependentProperty(final MetaProperty<?> metaProperty, final MetaProperty<?> dependentMetaProperty) {
+    private void revalidateDependentProperty(final MetaProperty<?> metaProperty, final MetaProperty<?> dependentMetaProperty) {
         if (!dependentMetaProperty.onDependencyPath(metaProperty) && !metaProperty.onDependencyPath(dependentMetaProperty)) {
             dependentMetaProperty.addToDependencyPath(metaProperty);
             try {
                 if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
                     dependentMetaProperty.setValue(dependentMetaProperty.getLastAttemptedValue(), true);
-                } else { // otherwise simply re-validate and return the indication of its success
-                    return dependentMetaProperty.revalidate(true).isSuccessful();
+                } else { // otherwise simply re-validate, not ignoring requiredness
+                    dependentMetaProperty.revalidate(false);
                 }
             } finally {
                 dependentMetaProperty.removeFromDependencyPath(metaProperty);
             }
         }
-        
-        return true;
     }
     
     /**

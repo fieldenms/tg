@@ -260,7 +260,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return revalidation result
      */
     @Override
-    public synchronized final Result revalidate(final boolean ignoreRequiredness) {
+    public final synchronized Result revalidate(final boolean ignoreRequiredness) {
         // revalidation is required only is there is an assigned value
         if (assigned) {
             return validate(getLastAttemptedValue(), validationAnnotations, ignoreRequiredness);

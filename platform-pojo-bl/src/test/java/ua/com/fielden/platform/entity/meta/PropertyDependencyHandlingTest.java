@@ -293,5 +293,23 @@ public class PropertyDependencyHandlingTest {
         assertEquals(1, entity.fourCount);
         assertEquals(2, entity.fiveCount);
     }
+    
+    @Test
+    public void requiredness_revalidation_errors_are_handled() {
+        final EntityWithDependentProperties entity = factory.newByKey(EntityWithDependentProperties.class, "key");
+        entity.getProperty("one").resetState();
+        entity.getProperty("one").setRequired(true);
+        assertTrue(entity.getProperty("one").isValid());
+        entity.getProperty("two").resetState();
+        
+        entity.setThree("value");
+
+        assertFalse(entity.getProperty("one").isValid());
+        assertEquals("Incorrect number of setter executions", 0, entity.oneCount);
+        assertEquals("Incorrect number of setter executions", 1, entity.twoCount);
+        assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
+        assertEquals("Incorrect number of setter executions", 0, entity.fourCount);
+        assertEquals("Incorrect number of setter executions", 0, entity.fiveCount);
+    }
 
 }
