@@ -540,15 +540,15 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         }
 
         @Override
-        public boolean isUsed(final Class<?> managedType, final String property) {
-            illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property
-                    + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
-            return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+        public boolean isUsed(final Class<?> root, final String property) {
+            illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property
+                    + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
+            return rootsListsOfUsedProperties.containsKey(root) && rootsListsOfUsedProperties.get(root).contains(property);
         }
 
         @Override
-        public IUsageManager use(final Class<?> managedType, final String property, final boolean check) {
-            final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
+        public IUsageManager use(final Class<?> root, final String property, final boolean check) {
+            final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
             if (check && !listOfUsedProperties.contains(property)) {
                 listOfUsedProperties.add(property);
             } else if (!check) {
@@ -558,13 +558,10 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         }
 
         @Override
-        public List<String> usedProperties(final Class<?> managedType) {
-            final List<String> checkedProperties = checkedProperties(managedType);
+        public List<String> usedProperties(final Class<?> root) {
             final List<String> usedProperties = new ArrayList<String>();
-            for (final String property : checkedProperties) {
-                if (isUsed(managedType, property)) {
-                    usedProperties.add(property);
-                }
+            if (rootsListsOfUsedProperties.containsKey(root)) {
+                usedProperties.addAll(rootsListsOfUsedProperties.get(root));
             }
             return usedProperties;
         }
