@@ -198,6 +198,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final ResultSetProp property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
                 cdtmae.getSecondTick().check(entityType, propertyName, true);
+                cdtmae.getSecondTick().use(entityType, propertyName, true);
                 cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                 if (growFactors.containsKey(propertyName)) {
                     cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));

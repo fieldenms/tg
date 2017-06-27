@@ -577,15 +577,15 @@
             }
         },
         
-        provideSorting: function (sortingVals, sortingProperties) {
+        provideSorting: function (sortingVals, customisableColumns) {
             if (typeof sortingVals !== 'undefined') {
                 while (sortingVals.length > 0) {
                     sortingVals.pop();
                 }
-                for (var index = 0; index < sortingProperties.length; index++) {
-                    var sortingProperty = sortingProperties[index];
-                    if (sortingProperty.sortingNumber >= 0) {
-                        sortingVals[sortingProperty.sortingNumber] = sortingProperty.get('key') + ':' + (sortingProperty.sorting === true ? 'asc' : 'desc');
+                for (let index = 0; index < customisableColumns.length; index++) {
+                    const customisableColumn = customisableColumns[index];
+                    if (customisableColumn.sortingNumber >= 0) {
+                        sortingVals[customisableColumn.sortingNumber] = customisableColumn.get('key') + ':' + (customisableColumn.sorting === true ? 'asc' : 'desc');
                     }
                 } 
             }

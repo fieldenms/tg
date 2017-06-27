@@ -22,9 +22,9 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 @CompanionObject(ICentreConfigUpdater.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
-    @IsProperty(SortingProperty.class)
-    @Title(value = "Sorting Properties", desc = "A list of sorting properties")
-    private Set<SortingProperty> sortingProperties = new LinkedHashSet<SortingProperty>();
+    @IsProperty(CustomisableColumn.class)
+    @Title("Customisable Columns")
+    private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<CustomisableColumn>();
     
     @IsProperty(value = String.class) 
     @Title(value = "Sorting values", desc = "Values of sorting properties -- 'asc', 'desc' or 'none' (the order is important and should be strictly the same as in 'sortingIds' property)")
@@ -43,13 +43,13 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     }
 
     @Observable
-    protected CentreConfigUpdater setSortingProperties(final Set<SortingProperty> sortingProperties) {
-        this.sortingProperties.clear();
-        this.sortingProperties.addAll(sortingProperties);
+    protected CentreConfigUpdater setCustomisableColumns(final Set<CustomisableColumn> customisableColumns) {
+        this.customisableColumns.clear();
+        this.customisableColumns.addAll(customisableColumns);
         return this;
     }
 
-    public Set<SortingProperty> getSortingProperties() {
-        return Collections.unmodifiableSet(sortingProperties);
+    public Set<CustomisableColumn> getCustomisableColumns() {
+        return Collections.unmodifiableSet(customisableColumns);
     }
 }

@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.streaming.ValueCollectors;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -46,10 +45,10 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
 
     @Override
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
-        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
-        entity.setSortingProperties(sortingProperties);
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
+        entity.setCustomisableColumns(customisableColumns);
         
-        final Set<String> sortingVals = sortingProperties.stream()
+        final Set<String> sortingVals = customisableColumns.stream()
             .filter(sp -> sp.getSortingNumber() >= 0) // consider only 'sorted' properties
             .sorted((o1, o2) -> o1.getSortingNumber().compareTo(o2.getSortingNumber()))
             .map(sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))
@@ -59,23 +58,24 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         return entity;
     }
 
-    private LinkedHashSet<SortingProperty> createSortingProperties(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<?> root, final Class<?> managedType, final EntityFactory factory) {
+    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<?> root, final Class<?> managedType, final EntityFactory factory) {
         final List<String> checkedProperties = cdtmae.getSecondTick().checkedProperties(root);
         final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root);
-        final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
+        final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
         for (final String checkedProp: checkedProperties) {
             if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
                     !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && !isShortCollection(managedType, checkedProp))) {
                 final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
-                final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
-                sortingProperty.setTitle(titleAndDesc.getKey());
+                final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
+                customisableColumn.setSortable(true);
+                customisableColumn.setTitle(titleAndDesc.getKey());
 
                 final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(orderedProperties, checkedProp);
                 if (orderingAndNumber != null) {
-                    sortingProperty.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist
-                    sortingProperty.setSortingNumber(orderingAndNumber.getValue());
+                    customisableColumn.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist
+                    customisableColumn.setSortingNumber(orderingAndNumber.getValue());
                 }
-                result.add(sortingProperty);
+                result.add(customisableColumn);
             }
         }
         return result;

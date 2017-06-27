@@ -16,24 +16,38 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(String.class)
-@KeyTitle(value = "Property Name", desc = "The Property Name of this sorting property.")
-@CompanionObject(ISortingProperty.class)
-@DescTitle(value = "Description", desc = "Description of this sorting property")
-public class SortingProperty extends AbstractEntity<String> {
+@KeyTitle(value = "Property Name", desc = "Property name of this customisable column property.")
+@CompanionObject(ICustomisableColumn.class)
+@DescTitle(value = "Description", desc = "Description of this customisable column property.")
+public class CustomisableColumn extends AbstractEntity<String> {
     @IsProperty
-    @Title(value = "Title", desc = "Title of this sorting property")
+    @Title(value = "Title", desc = "Title of this customisable column")
     private String title;
     
     @IsProperty
-    @Title(value = "Sorting", desc = "Sorting")
+    @Title("Sorting")
     private Boolean sorting = null;
     
     @IsProperty
-    @Title(value = "Sorting Number", desc = "Sorting Number")
+    @Title("Sorting Number")
     private Integer sortingNumber = -1;
+    
+    @IsProperty
+    @Title("Sortable")
+    private boolean sortable = false;
 
     @Observable
-    public SortingProperty setSortingNumber(final Integer sortingNumber) {
+    public CustomisableColumn setSortable(final boolean sortable) {
+        this.sortable = sortable;
+        return this;
+    }
+
+    public boolean getSortable() {
+        return sortable;
+    }
+
+    @Observable
+    public CustomisableColumn setSortingNumber(final Integer sortingNumber) {
         this.sortingNumber = sortingNumber;
         return this;
     }
@@ -43,7 +57,7 @@ public class SortingProperty extends AbstractEntity<String> {
     }
 
     @Observable
-    public SortingProperty setSorting(final Boolean sorting) {
+    public CustomisableColumn setSorting(final Boolean sorting) {
         this.sorting = sorting;
         return this;
     }
@@ -53,7 +67,7 @@ public class SortingProperty extends AbstractEntity<String> {
     }
 
     @Observable
-    public SortingProperty setTitle(final String title) {
+    public CustomisableColumn setTitle(final String title) {
         this.title = title;
         return this;
     }

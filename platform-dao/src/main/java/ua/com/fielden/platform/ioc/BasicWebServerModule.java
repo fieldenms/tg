@@ -96,8 +96,8 @@ import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.ISortingProperty;
-import ua.com.fielden.platform.web.centre.SortingPropertyDao;
+import ua.com.fielden.platform.web.centre.ICustomisableColumn;
+import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -219,7 +219,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
 
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
-        bind(ISortingProperty.class).to(SortingPropertyDao.class);
+        bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);

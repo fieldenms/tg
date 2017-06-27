@@ -7,15 +7,15 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 /** 
- * DAO implementation for companion object {@link ISortingProperty}.
+ * DAO implementation for companion object {@link ICustomisableColumn}.
  * 
  * @author Developers
  *
  */
-@EntityType(SortingProperty.class)
-public class SortingPropertyDao extends CommonEntityDao<SortingProperty> implements ISortingProperty {
+@EntityType(CustomisableColumn.class)
+public class CustomisableColumnDao extends CommonEntityDao<CustomisableColumn> implements ICustomisableColumn {
     @Inject
-    public SortingPropertyDao(final IFilter filter) {
+    public CustomisableColumnDao(final IFilter filter) {
         super(filter);
     }
 

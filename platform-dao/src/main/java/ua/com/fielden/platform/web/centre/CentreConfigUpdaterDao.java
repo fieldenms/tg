@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -40,11 +38,10 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     @SessionRequired
     // @Authorise(UserRoleSaveToken.class)
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
-        final CentreConfigUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getSortingProperties(), this, factory, String.class);
+        final CentreConfigUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getCustomisableColumns(), this, factory, String.class);
         
         // after all validations have passed -- the association changes could be saved:
         final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = (EnhancedCentreEntityQueryCriteria) action.refetchedMasterEntity();
-        // final Map<Object, SortingProperty> availableSortingProperties = AbstractFunctionalEntityForCollectionModificationProducer.mapById(action.getSortingProperties(), String.class);
         final ICentreDomainTreeManagerAndEnhancer cdtmae = (ICentreDomainTreeManagerAndEnhancer) criteriaEntityBeingUpdated.freshCentreSupplier().get();
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
         final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));

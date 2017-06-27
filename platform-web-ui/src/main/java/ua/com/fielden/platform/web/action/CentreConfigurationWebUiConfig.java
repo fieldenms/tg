@@ -46,10 +46,10 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector) {
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
-                .addProp("sortingProperties").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
+                .addProp("customisableColumns").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE).shortDesc("SORT").longDesc("Sorting action")
+                .addAction(MasterActions.SAVE).shortDesc("CUSTOMISE").longDesc("Customise columns action")
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
@@ -74,7 +74,7 @@ public class CentreConfigurationWebUiConfig {
     }
 
     public enum CentreConfigActions {
-        SORT_ACTION {
+        CUSTOMISE_COLUMNS_ACTION {
             @Override
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
@@ -83,12 +83,12 @@ public class CentreConfigurationWebUiConfig {
                             @Override
                             public JsCode build() {
                                 // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
-                                return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n");
+                                return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n"); // TODO invoke run only when sorting has changed
                             }
                         })
                         .icon("av:sort-by-alpha")
-                        .shortDesc("Change Sorting")
-                        .longDesc("Change sorting properties for this centre.")
+                        .shortDesc("Customise Columns")
+                        .longDesc("Customise columns for this centre.")
                         .withNoParentCentreRefresh()
                         .build();
             }
