@@ -25,6 +25,27 @@
 <script>
     (function () {
         'use strict'
+        const countDots = function (path) {
+            return (path.match(/\./g) || []).length;
+        };
+        const stampTemplate = function (template, model) {
+            if (template && model) {
+                for (let prop in model) {
+                    template[prop] = model[prop];
+                }
+            }
+        };
+        const forEachPropValue = function (obj, callback) {
+            for (let propName in obj) {
+                const elements = obj[propName] || [];
+                elements.forEach(element => callback(element));
+            }
+        };
+        const wrapWithDiv = function (element) {
+            const div = document.createElement("div");
+            div.appendChild(element);
+            return div;
+        };
         var keyWords = {
                 "skip": function (selectedElements, orderedElements, layoutElem) {
                     return document.createElement('div');
@@ -46,9 +67,22 @@
                     return createSubheader.bind(this)(layoutElem, true, true);
                 },
                 "html": function (selectedElements, orderedElements, layoutElem) {
-                    var elemToReturn = document.createElement('div');
-                    elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
-                    return elemToReturn;
+                    this._htmlElements = this._htmlElements || {};
+                    const elements = this._htmlElements[layoutElem];
+                    let elemToReturn = elements && elements.find(element => element.parentElement === null);
+                    if (elemToReturn) {
+                        return wrapWithDiv(elemToReturn);
+                    } else {
+                        elemToReturn = document.createElement('template', 'dom-bind');
+                        elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
+                        stampTemplate(elemToReturn, this.context);
+                        if (elements) {
+                            elements.push(elemToReturn);
+                        } else {
+                            this._htmlElements[layoutElem] = [elemToReturn];
+                        }
+                        return wrapWithDiv(elemToReturn);
+                    }
                 }
             },
             createSubheader = function (layoutElem, collapsible, closed) {
@@ -67,33 +101,36 @@
                 if (!Array.isArray(layout)) {
                     throw "The layout must be an array";
                 }
-                if (!this.componentsToLayout) {
-                    this.componentsToLayout = [];
-                    Array.prototype.forEach.call(Polymer.dom(this.$.elements).getDistributedNodes(), function (item) {
-                        this.componentsToLayout.push(item);
-                    }.bind(this));
-                }
-                // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
-                // This method is defined in tg-polymer-utils.
-                _removeAllLightDOMChildrenFrom(this);
-                resetSubheaderComponents.bind(this)();
+                if (this.currentLayout !== layout) {
+                    if (!this.componentsToLayout) {
+                        this.componentsToLayout = [];
+                        Array.prototype.forEach.call(Polymer.dom(this.$.elements).getDistributedNodes(), function (item) {
+                            this.componentsToLayout.push(item);
+                        }.bind(this));
+                    }
+                    // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                    // This method is defined in tg-polymer-utils.
+                    _removeAllLightDOMChildrenFrom(this);
+                    resetSubheaderComponents.bind(this)();
 
-                Polymer.dom.flush();
-                removeStylesAndClasses.bind(this)(this);
-                this.toggleClass("layout", true);
-                this.toggleClass("vertical", true);
-                if (this.debug) {
-                    setDebugStyle(this);
-                } else {
-                    removeDebugStyle(this);
+                    Polymer.dom.flush();
+                    removeStylesAndClasses.bind(this)(this);
+                    this.toggleClass("layout", true);
+                    this.toggleClass("vertical", true);
+                    if (this.debug) {
+                        setDebugStyle(this);
+                    } else {
+                        removeDebugStyle(this);
+                    }
+                    orderedElements = this.componentsToLayout.slice();
+                    splitElements.bind(this)(selectedElements, orderedElements, layout);
+                    layout.forEach((function (layoutElem) {
+                        subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
+                    }).bind(this));
+                    Polymer.dom.flush();
+                    this._setCurrentLayout(layout);
+                    this.fire('layout-finished', layout);
                 }
-                orderedElements = this.componentsToLayout.slice();
-                splitElements.bind(this)(selectedElements, orderedElements, layout);
-                layout.forEach((function (layoutElem) {
-                    subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
-                }).bind(this));
-                Polymer.dom.flush();
-                this.fire('layout-finished', layout);
             },
             resetSubheaderComponents = function () {
                 this._subheaders.forEach(function (subheader) {
@@ -293,16 +330,27 @@
                     readOnly: true,
                     observer: "_handleMobileScreen"
                 },
+                currentLayout: {
+                    type: Boolean,
+                    readOnly: true
+                },
                 contentLoaded: {
                     type: Boolean,
                     readOnly: true,
                     observer: "_handleContentLoading",
                     value: false
                 },
+                context: {
+                    type: Object
+                },
                 _subheaders: {
                     type: Array
+                },
+                _htmlElements: {
+                    type: Object
                 }
             },
+            observers: ["_contextChanged(context.*)"],
             ready: function () {
                 this._subheaders = [];
                 this._editorErrorHandler = this._editorErrorHandler.bind(this);
@@ -335,28 +383,31 @@
                 return subheaderHierarchy;
             },
             _handleMobileScreen: function (newValue, oldValue) {
-                if (newValue && this.whenMobile && this.contentLoaded) {
-                    setLayout.bind(this)(this.whenMobile);
+                const layout = this.whenMobile || this.whenTablet || this.whenDesktop;
+                if (newValue && layout && this.contentLoaded) {
+                    setLayout.bind(this)(layout);
                 }
             },
             _handleTabletScreen: function (newValue, oldValue) {
-                if (newValue && this.whenTablet && this.contentLoaded) {
-                    setLayout.bind(this)(this.whenTablet);
+                const layout = this.whenTablet || this.whenMobile || this.whenDesktop;
+                if (newValue && layout && this.contentLoaded) {
+                    setLayout.bind(this)(layout);
                 }
             },
             _handleDesktopScreen: function (newValue, oldValue) {
-                if (newValue && this.whenDesktop && this.contentLoaded) {
-                    setLayout.bind(this)(this.whenDesktop);
+                const layout = this.whenDesktop || this.whenTablet || this.whenMobile;
+                if (newValue && layout && this.contentLoaded) {
+                    setLayout.bind(this)(layout);
                 }
             },
             _handleContentLoading: function (newValue, oldValue) {
-                if (newValue) {
-                    if (this.desktopScreen && this.whenDesktop) {
-                        setLayout.bind(this)(this.whenDesktop);
-                    } else if (this.tabletScreen && this.whenTablet) {
-                        setLayout.bind(this)(this.whenTablet);
-                    } else if (this.mobileScreen && this.whenMobile) {
-                        setLayout.bind(this)(this.whenMobile);
+                if (newValue && (this.whenDesktop || this.whenTablet || this.whenMobile)) {
+                    if (this.desktopScreen) {
+                        setLayout.bind(this)(this.whenDesktop || this.whenTablet || this.whenMobile);
+                    } else if (this.tabletScreen) {
+                        setLayout.bind(this)(this.whenTablet || this.whenMobile || this.whenDesktop);
+                    } else if (this.mobileScreen) {
+                        setLayout.bind(this)(this.whenMobile || this.whenTablet || this.whenDesktop);
                     }
                 }
             },
@@ -403,6 +454,19 @@
             },
             _calcDesktopQuery: function () {
                 return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
+            },
+            _contextChanged: function (changeRecord) {
+                this._htmlElements = this._htmlElements || {};
+                const dotCount = countDots(changeRecord.path);
+                if (changeRecord.path === "context") {
+                    forEachPropValue(this._htmlElements, element => stampTemplate(element, changeRecord.value));
+                } else if (dotCount === 1) {
+                    const propName = changeRecord.path.substr(changeRecord.path.lastIndexOf(".") + 1);
+                    forEachPropValue(this._htmlElements, element => element[propName] = changeRecord.value);
+                } else {
+                    const propPath = changeRecord.path.substr(changeRecord.path.indexOf(".") + 1);
+                    forEachPropValue(this._htmlElements, element => element.notifyPath(propPath, changeRecord.value));
+                }
             }
         });
     })();

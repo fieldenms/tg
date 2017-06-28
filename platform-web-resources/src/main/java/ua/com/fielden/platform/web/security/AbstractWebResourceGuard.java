@@ -108,7 +108,6 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
-            ex.printStackTrace();
             logger.fatal(ex);
             return false;
         }

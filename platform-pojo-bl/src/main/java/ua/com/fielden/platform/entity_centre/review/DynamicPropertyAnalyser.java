@@ -14,15 +14,15 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Extends {@link DynamicCriteriaPropertyAnalyser} and implements additional algorithm for retrieving information about property type, name or fields etc.
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Just calls the appropriate super constructor.
-     * 
+     *
      * @param declaringType
      * @param dotNotationExp
      */
@@ -32,7 +32,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the annotation of the property field (see {@link #getPropertyField()} for more information).
-     * 
+     *
      * @param <T>
      * @param annotationType
      *            - specified annotation type.
@@ -45,7 +45,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * The type of the high level collection which contain this property. If this property is not in collection hierarchy it should be null.
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -63,7 +63,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * The name of the high level collection which contain this property in context of collection parent. If this property is not in collection hierarchy it should be null.
-     * 
+     *
      * @return
      */
     public String getCollectionNameInItsParentTypeContext() {
@@ -80,7 +80,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns true if property is inside more than one nested collection hierarchy.
-     * 
+     *
      * @return
      */
     public boolean isInNestedCollections() {
@@ -101,7 +101,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
      * <li>whether unions are nested</li>
      * <li>whether collections are nested</li>
      * </ul>
-     * 
+     *
      * @return
      */
     public boolean isUnionCollectionIntersects() {
@@ -121,8 +121,8 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @return
      */
     public boolean isInUnionHierarchy() {
@@ -141,7 +141,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the parent of the analysing property that is union entity.
-     * 
+     *
      * @return
      */
     public String getUnionParent() {
@@ -157,7 +157,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the {@link AbstractEntity} property name that is in union.
-     * 
+     *
      * @return
      */
     public String getUnionGroup() {
@@ -173,7 +173,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the index of the union entity.
-     * 
+     *
      * @return
      */
     private int getUnionEntityIndex() {
@@ -191,7 +191,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
      * 1) The name of this property inside collectional parent hierarchy. If this property is not in collection hierarchy it should be null.
      * <p>
      * 2) The name of collectional parent property. If this property is not in collection hierarchy it should be null.
-     * 
+     *
      * @return
      */
     public Pair<String, String> getNamesWithinCollectionalHierarchy() {
@@ -217,13 +217,13 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the name of the property needed to create criteria query.
-     * 
+     *
      * @return
      */
     public String getCriteriaFullName() {
         Class<?> keyType = getPropertyType();
         String propertyName = getAnalysingProperty();
-        // properties of type PropertyDescription do not need any prepending of "key" 
+        // properties of type PropertyDescription do not need any prepending of "key"
         if (PropertyDescriptor.class.isAssignableFrom(keyType)) {
             return propertyName;
         }
@@ -240,7 +240,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the {@link Field} instance that represents analysing property.
-     * 
+     *
      * @return
      */
     private Field getPropertyField() {
@@ -249,4 +249,5 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
         }
         return null;
     }
+
 }

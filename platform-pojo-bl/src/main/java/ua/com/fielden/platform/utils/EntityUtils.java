@@ -1,23 +1,31 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -55,7 +63,7 @@ public class EntityUtils {
     /**
      * dd/MM/yyyy format instance
      */
-    public static final SimpleDateFormat dateWithoutTimeFormat = new SimpleDateFormat("dd/MM/yyyy");
+    public static final String dateWithoutTimeFormat = "dd/MM/yyyy";
 
     /**
      * Convenient method for value to {@link String} conversion
@@ -74,7 +82,7 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
         } else if (valueType == Date.class || valueType == DateTime.class) {
             final Date date = valueType == Date.class ? (Date) value : ((DateTime) value).toDate();
-            return new SimpleDateFormat("dd/MM/yyyy").format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+            return new SimpleDateFormat(dateWithoutTimeFormat).format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
@@ -104,7 +112,7 @@ public class EntityUtils {
      * @param o2
      * @return
      */
-    public static int safeCompare(final Comparable c1, final Comparable c2) {
+    public static <T> int safeCompare(final Comparable<T> c1, final T c2) {
         if (c1 == null && c2 == null) {
             return 0;
         } else if (c1 == null) {
@@ -114,20 +122,6 @@ public class EntityUtils {
         } else {
             return c1.compareTo(c2);
         }
-    }
-
-    /**
-     * Null-safe equals.
-     *
-     * @param o1
-     * @param o2
-     * @return
-     */
-    public static boolean safeEquals(final Object o1, final Object o2) {
-        if (o1 == null && o2 == null || o1 != null && o1.equals(o2)) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -142,11 +136,26 @@ public class EntityUtils {
             if (entity1.getId() == null && entity2.getId() == null) {
                 return entity1.equals(entity2);
             } else {
-                return safeEquals(entity1.getId(), entity2.getId());
+                return equalsEx(entity1.getId(), entity2.getId());
             }
         }
         return entity1 == entity2;
     }
+
+    /**
+     * A convenient method to safely compare entity values even if they are <code>null</code>.
+     * <p>
+     * The <code>null</code> value is considered to be smaller than a non-null value.
+     *
+     * @param o1
+     * @param o2
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public static <T extends AbstractEntity<K>, K extends Comparable> int compare(final T o1, final T o2) {
+        return safeCompare(o1, o2);
+    }
+
 
     /**
      * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEquals(AbstractEntity, AbstractEntity)} method
@@ -189,7 +198,7 @@ public class EntityUtils {
      * @return
      */
     public static Converter chooseConverterBasedUponPropertyType(final AbstractEntity<?> entity, final String propertyName, final ShowingStrategy showingStrategy) {
-        final MetaProperty metaProperty = Finder.findMetaProperty(entity, propertyName);
+        final MetaProperty<?> metaProperty = Finder.findMetaProperty(entity, propertyName);
         return chooseConverterBasedUponPropertyType(metaProperty, showingStrategy);
     }
 
@@ -240,7 +249,7 @@ public class EntityUtils {
      * @param metaProperty
      * @return
      */
-    public static Converter chooseConverterBasedUponPropertyType(final MetaProperty metaProperty, final ShowingStrategy showingStrategy) {
+    public static Converter chooseConverterBasedUponPropertyType(final MetaProperty<?> metaProperty, final ShowingStrategy showingStrategy) {
         return chooseConverterBasedUponPropertyType(metaProperty.getType(), metaProperty.getPropertyAnnotationType(), showingStrategy);
     }
 
@@ -252,9 +261,8 @@ public class EntityUtils {
      * @throws ClassCastException
      *             if the subject value is not a String
      */
-    @SuppressWarnings("unchecked")
-    public static String getLabelText(final AbstractEntity entity, final String propertyName, final ShowingStrategy showingStrategy) {
-        final MetaProperty metaProperty = findFirstFailedMetaProperty(entity, propertyName);
+    public static String getLabelText(final AbstractEntity<?> entity, final String propertyName, final ShowingStrategy showingStrategy) {
+        final MetaProperty<?> metaProperty = findFirstFailedMetaProperty(entity, propertyName);
         return getLabelText(metaProperty, false, showingStrategy);
     }
 
@@ -269,7 +277,7 @@ public class EntityUtils {
      * @param showKeyOnly
      * @return
      */
-    public static String getLabelText(final MetaProperty metaProperty, final boolean returnEmptyStringIfInvalid, final ShowingStrategy showingStrategy) {
+    public static String getLabelText(final MetaProperty<?> metaProperty, final boolean returnEmptyStringIfInvalid, final ShowingStrategy showingStrategy) {
         final ConverterFactory.Converter converter = chooseConverterBasedUponPropertyType(metaProperty, showingStrategy);
         return getLabelText(metaProperty, returnEmptyStringIfInvalid, converter);
     }
@@ -287,7 +295,7 @@ public class EntityUtils {
      * @throws ClassCastException
      *             if the subject value is not a String
      */
-    public static String getLabelText(final MetaProperty metaProperty, final boolean returnEmptyStringIfInvalid, final Converter converter) {
+    public static String getLabelText(final MetaProperty<?> metaProperty, final boolean returnEmptyStringIfInvalid, final Converter converter) {
         if (metaProperty != null) {
             // hierarchy is valid, only the last property could be invalid
             final Object value = metaProperty.getLastAttemptedValue();
@@ -334,7 +342,7 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
         } else if (valueType == Date.class || valueType == DateTime.class) {
             final Object convertedValue = value instanceof DateTime ? ((DateTime) value).toDate() : value;
-            return new SimpleDateFormat("dd/MM/yyyy").format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
+            return new SimpleDateFormat(dateWithoutTimeFormat).format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
         } else {
             return value.toString();
         }
@@ -371,7 +379,7 @@ public class EntityUtils {
      * @return
      */
     public static Object getCurrentValue(final AbstractEntity<?> entity, final String propertyName) {
-        final MetaProperty metaProperty = entity.getProperty(propertyName);
+        final MetaProperty<?> metaProperty = entity.getProperty(propertyName);
         if (metaProperty == null) {
             throw new IllegalArgumentException("Couldn't find meta-property named '" + propertyName + "' in " + entity);
         } else {
@@ -387,8 +395,8 @@ public class EntityUtils {
      * @param propertyName
      * @return
      */
-    public static MetaProperty findFirstFailedMetaProperty(final AbstractEntity<?> entity, final String propertyName) {
-        final List<MetaProperty> metaProperties = Finder.findMetaProperties(entity, propertyName);
+    public static MetaProperty<?> findFirstFailedMetaProperty(final AbstractEntity<?> entity, final String propertyName) {
+        final List<MetaProperty<?>> metaProperties = Finder.findMetaProperties(entity, propertyName);
         return findFirstFailedMetaProperty(metaProperties);
     }
 
@@ -398,10 +406,10 @@ public class EntityUtils {
      * @param metaProperties
      * @return
      */
-    public static MetaProperty findFirstFailedMetaProperty(final List<MetaProperty> metaProperties) {
-        MetaProperty firstFailedMetaProperty = metaProperties.get(metaProperties.size() - 1);
+    public static MetaProperty<?> findFirstFailedMetaProperty(final List<MetaProperty<?>> metaProperties) {
+        MetaProperty<?> firstFailedMetaProperty = metaProperties.get(metaProperties.size() - 1);
         for (int i = 0; i < metaProperties.size(); i++) {
-            final MetaProperty metaProperty = metaProperties.get(i);
+            final MetaProperty<?> metaProperty = metaProperties.get(i);
             if (!metaProperty.isValid() || metaProperty.hasWarnings()) {
                 firstFailedMetaProperty = metaProperty;
                 break;
@@ -478,8 +486,7 @@ public class EntityUtils {
      * @param finishSetter
      * @throws Result
      */
-    public static void validateIntegerRange(final Integer start, final Integer finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateIntegerRange(final Integer start, final Integer finish, final MetaProperty<Integer> startProperty, final MetaProperty<Integer> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
@@ -505,8 +512,7 @@ public class EntityUtils {
      * @param finishSetter
      * @throws Result
      */
-    public static void validateDoubleRange(final Double start, final Double finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateDoubleRange(final Double start, final Double finish, final MetaProperty<Double> startProperty, final MetaProperty<Double> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
@@ -532,8 +538,7 @@ public class EntityUtils {
      * @param finishSetter
      * @throws Result
      */
-    public static void validateMoneyRange(final Money start, final Money finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateMoneyRange(final Money start, final Money finish, final MetaProperty<Money> startProperty, final MetaProperty<Money> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
@@ -629,12 +634,12 @@ public class EntityUtils {
     
 
     /**
-     * Indicates whether type represents {@link Integer}-typed values.
+     * Indicates whether type represents an integer value, which could be either {@link Integer} or {@link Long}.
      *
      * @return
      */
     public static boolean isInteger(final Class<?> type) {
-        return Integer.class.isAssignableFrom(type);
+        return Integer.class.isAssignableFrom(type) || Long.class.isAssignableFrom(type);
     }
 
     /**
@@ -657,6 +662,16 @@ public class EntityUtils {
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
         return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+    }
+    
+    /**
+     * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
+     * 
+     * @param entityType
+     * @return
+     */
+    public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
+        return isPersistedEntityType(getKeyType(entityType));
     }
 
     /**
@@ -839,44 +854,6 @@ public class EntityUtils {
     }
     
     /**
-     * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
-     * <p>
-     * FIXME this method should be removed as soon as MetaPostLoadListener will be removed 
-     * together with Hibernate loading of entity instances inside CommonEntityDao saving logic.
-     *
-     * @param instance
-     * @return
-     */
-    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
-        final boolean unionEntity = instance instanceof AbstractUnionEntity;
-//        if (!unionEntity && instance.getProperties().containsKey("key")) {
-//            final Object keyValue = instance.get("key");
-//            if (keyValue != null) {
-//                // handle property "key" assignment
-//                instance.set("key", keyValue);
-//            }
-//        }
-
-        for (final MetaProperty metaProp : instance.getProperties().values()) {
-            final boolean notNull = metaProp != null;
-            final boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-            final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
-            if (notNull && notCommonPropOfUnionEntity && notProxied) {
-                final Object newOriginalValue = instance.get(metaProp.getName());
-                if (instance.isPersisted()) {
-                    metaProp.setOriginalValue(newOriginalValue);
-                }
-                metaProp.define(newOriginalValue);
-            }
-        }
-//        if (!unionEntity) {
-//            instance.setDirty(false);
-//        }
-
-        return instance;
-    }
-
-    /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
      *
      * @param dotNotatedPropName
@@ -926,6 +903,7 @@ public class EntityUtils {
         try {
             return AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(type, dotNotationProp), IsProperty.class);
         } catch (final Exception ex) {
+            logger.warn(ex);
             return false;
         }
     }
@@ -936,11 +914,11 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static List<Field> getRealProperties(final Class entityType) {
-        final List<Field> result = new ArrayList<Field>();
+    public static List<Field> getRealProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        final List<Field> result = new ArrayList<>();
 
         for (final Field propField : Finder.findRealProperties(entityType)) { //, MapTo.class
-            if (!(propField.getName().equals("desc") && !hasDescProperty(entityType))) {
+            if (!(DESC.equals(propField.getName()) && !hasDescProperty(entityType))) {
                 result.add(propField);
             }
         }
@@ -948,7 +926,7 @@ public class EntityUtils {
         return result;
     }
 
-    public static <ET extends AbstractEntity<?>> boolean hasDescProperty(final Class<ET> entityType) {
+    public static boolean hasDescProperty(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, entityType);
     }
 
@@ -958,8 +936,8 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static List<Field> getCollectionalProperties(final Class entityType) {
-        final List<Field> result = new ArrayList<Field>();
+    public static List<Field> getCollectionalProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        final List<Field> result = new ArrayList<>();
 
         for (final Field propField : Finder.findRealProperties(entityType)) {
             if (Collection.class.isAssignableFrom(propField.getType()) && Finder.hasLinkProperty(entityType, propField.getName())) {
@@ -1097,5 +1075,66 @@ public class EntityUtils {
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
         return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
+    }
+
+    /**
+     * Tries to perform shallow copy of collectional value. If unsuccessful, throws unsuccessful {@link Result} describing the error.
+     * 
+     * @param value
+     * @return
+     */
+    public static <T> T copyCollectionalValue(final T value) {
+        if (value == null) {
+            return null; // return (null) copy
+        }
+        try {
+            final Collection<?> collection = (Collection<?>) value;
+            // try to obtain empty constructor to perform shallow copying of collection
+            final Constructor<? extends Collection> constructor = collection.getClass().getConstructor();
+            final Collection copy = constructor.newInstance();
+            copy.addAll(collection);
+            // return non-empty copy
+            return (T) copy;
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            logger.error(e.getMessage(), e);
+            throw Result.failure(String.format("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage())); // throw result indicating the failure of copying
+        }
+    }
+    
+    /**
+     * The most generic and most straightforward function to copy properties from instance <code>fromEntity</code> to <code>toEntity</code>.
+     * 
+     * @param fromEntity
+     * @param toEntity
+     * @param skipProperties -- a sequence of property names, which may include ID and VERSION.
+     */
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
+        // convert an array with property names to be skipped into a set for more efficient use
+        final Set<String> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
+        
+        // Under certain circumstances copying happens for an uninstrumented entity instance
+        // In such cases there would be no meta-properties, and copying would fail.
+        // Therefore, it is important to perform ad-hoc property retrieval via reflection.
+        final List<String> realProperties = Finder.streamRealProperties(fromEntity.getType()).map(field -> field.getName()).collect(Collectors.toList());
+        // Need to add ID and VERSION in order for them to be treated as entity properties
+        // They will get skipped if provided as part of skipProperties array
+        realProperties.add(ID);
+        realProperties.add(VERSION);
+
+        // Copy each identified property, which is not proxied or skipped into a new instance.
+        realProperties.stream()                
+            .filter(name -> !skipPropertyName.contains(name))
+            .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
+            .forEach(propName -> {
+                if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
+                    toEntity.setKey(new DynamicEntityKey(toEntity));
+                } else {
+                    try {
+                        toEntity.set(propName, fromEntity.get(propName));
+                    } catch (final Exception e) {
+                        logger.trace(format("Setter for property %s did not succeed during coping.", propName), e);
+                    }
+                }
+            });
     }
 }

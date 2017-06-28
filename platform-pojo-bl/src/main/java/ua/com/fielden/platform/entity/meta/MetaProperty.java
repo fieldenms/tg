@@ -87,7 +87,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
     }
 
-    public Result validate(final T newValue, final T oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
+    public Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         throw new StrictProxyException(format("Invalid call [validate] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -171,7 +171,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [removeWarnings] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public boolean isValidWithRequiredCheck() {
+    public boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
         throw new StrictProxyException(format("Invalid call [isValidWithRequiredCheck] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -215,10 +215,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [getOriginalValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public void setCollectionOriginalValue(final Number size) {
-        throw new StrictProxyException(format("Invalid call [setCollectionOriginalValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
     public MetaProperty<T> setOriginalValue(final T value) {
         throw new StrictProxyException(format("Invalid call [setOriginalValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -227,7 +223,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [getValueChangeCount] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public Object getPrevValue() {
+    public T getPrevValue() {
         throw new StrictProxyException(format("Invalid call [getPrevValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -237,6 +233,20 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public void setValue(final Object value) {
         throw new StrictProxyException(format("Invalid call [setValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+    
+    /**
+     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same if the one being assigned.
+     * @param value -- the value to be assigned.
+     * @param enforce -- will force value assignment (with all the BCE and ACE related logic) even if it matches the current value
+     */
+    public final void setValue(final Object value, final boolean enforce) {
+        setEnforceMutator(enforce);
+        try {
+            setValue(value);
+        } finally {
+            setEnforceMutator(false);
+        }
     }
 
     /**
@@ -351,7 +361,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [isRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public void setRequired(final boolean required) {
+    public MetaProperty<T> setRequired(final boolean required) {
         throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -407,7 +417,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [isEnforceMutator] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public void setEnforceMutator(final boolean enforceMutator) {
+    protected void setEnforceMutator(final boolean enforceMutator) {
         throw new StrictProxyException(format("Invalid call [setEnforceMutator] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -499,22 +509,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     public IAfterChangeEventHandler<T> getAceHandler() {
         throw new StrictProxyException(format("Invalid call [ getAceHandler] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public Number getCollectionOrigSize() {
-        throw new StrictProxyException(format("Invalid call [getCollectionOrigSize] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public Number getCollectionPrevSize() {
-        throw new StrictProxyException(format("Invalid call [getCollectionPrevSize] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void setCollectionOrigSize(final Number collectionOrigSize) {
-        throw new StrictProxyException(format("Invalid call [setCollectionOrigSize] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void setCollectionPrevSize(final Number collectionPrevSize) {
-        throw new StrictProxyException(format("Invalid call [setCollectionPrevSize] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public final boolean isRetrievable() {

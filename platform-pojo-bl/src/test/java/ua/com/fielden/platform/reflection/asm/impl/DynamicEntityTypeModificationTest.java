@@ -174,8 +174,8 @@ public class DynamicEntityTypeModificationTest {
         assertTrue("Incorrect type name.", entityBeingModifiedModifiedType.getName().startsWith(EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertTrue("Incorrect type name.", topLevelEntityModifiedType1.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertTrue("Incorrect type name.", topLevelEntityModifiedType2.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertNotSame(entityBeingEnhancedEnhancedType.getName(), equals(entityBeingModifiedModifiedType.getName()));
-        assertNotSame(topLevelEntityModifiedType1.getName(), equals(topLevelEntityModifiedType2.getName()));
+        assertNotSame(entityBeingEnhancedEnhancedType.getName(), entityBeingModifiedModifiedType.getName());
+        assertNotSame(topLevelEntityModifiedType1.getName(), topLevelEntityModifiedType2.getName());
     }
 
     @Test

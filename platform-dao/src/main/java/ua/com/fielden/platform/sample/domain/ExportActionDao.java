@@ -47,7 +47,7 @@ public class ExportActionDao extends CommonEntityDao<ExportAction> implements IE
         try {
             entity.setFileName("export-of-TgPersistentEntityWithProperties.xls");
             entity.setMime("application/vnd.ms-excel");
-            byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport, new String[] {"key", "desc"}, new String[] {"key", "desc"}));
+            byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}));
             entity.setData(data);
         } catch (Exception e) {
             e.printStackTrace();

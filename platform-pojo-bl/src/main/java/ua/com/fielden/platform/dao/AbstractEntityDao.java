@@ -1,26 +1,27 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.DynamicType.Builder;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -37,18 +38,20 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T> {
 
-    private final Class<? extends Comparable> keyType;
+    private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
+    
+    @Inject
+    private EntityFactory entityFactory;
 
     protected boolean getFilterable() {
         return false;
     }
 
     /**
-     * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
-     *
-     * @param entityType
+     * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
+     * An exception is thrown if the annotation is missing. 
      */
     protected AbstractEntityDao() {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
@@ -76,7 +79,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     @Override
-    public Class<? extends Comparable> getKeyType() {
+    public Class<? extends Comparable<?>> getKeyType() {
         return keyType;
     }
 
@@ -122,6 +125,8 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
         try {
             return getEntity(instrumented() ? from((createQueryByKey(keyValues))).with(fetchModel).model() : from((createQueryByKey(keyValues))).with(fetchModel).lightweight().model());
+        } catch (final EntityCompanionException e) {
+            throw e;
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
@@ -151,43 +156,88 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         if (keyValues == null || keyValues.length == 0) {
             throw new IllegalArgumentException("No key values provided.");
         }
+        final EntityResultQueryModel<T> query = attachKeyConditions(select(getEntityType()).where(), keyValues).model();
+        query.setFilterable(getFilterable());
+        return query;
+    }
+    
+    /**
+     * Creates a query for entities by their keys (simple or composite). If <code>entitiesWithKeys</code> are empty -- returns empty optional. 
+     * 
+     * @param entityType -- the entity type
+     * @param entitiesWithKeys -- the entities with <b>all</b> key values correctly fetched / assigned
+     * @return
+     */
+    public Optional<EntityResultQueryModel<T>> createQueryByKeyFor(final Collection<T> entitiesWithKeys) {
+        IWhere0<T> partQ = select(getEntityType()).where();
+        final List<Field> keyMembers = Finder.getKeyMembers(getEntityType());
+        
+        for (final Iterator<T> iter = entitiesWithKeys.iterator(); iter.hasNext();) {
+            final T entityWithKey = iter.next();
+            final ICompoundCondition0<T> or = attachKeyConditions(partQ, keyMembers, keyMembers.stream().map(keyMember -> entityWithKey.get(keyMember.getName())).toArray());
+            if (iter.hasNext()) {
+                partQ = or.or();
+            } else {
+                return Optional.of(or.model());
+            }
+        }
 
-        final IPlainJoin<T> qry = select(getEntityType());
+        return Optional.empty();
+    }
+    
+    /**
+     * Attaches key member conditions to the partially constructed query <code>entryPoint</code> based on its values. 
+     * 
+     * @param entryPoint
+     * @param keyValues
+     * @return
+     */
+    protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final Object... keyValues) {
+        return attachKeyConditions(entryPoint, Finder.getKeyMembers(getEntityType()), keyValues);
+    }
 
+    /**
+     * Attaches key member conditions to the partially constructed query <code>entryPoint</code> based on its values. 
+     * 
+     * @param entryPoint
+     * @param keyMembers
+     * @param keyValues
+     * @return
+     */
+    protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final List<Field> keyMembers, final Object... keyValues) {
         if (getKeyType() == DynamicEntityKey.class) {
-            final List<Field> list = Finder.getKeyMembers(getEntityType());
             // let's be smart about the key values and support the case where an instance of DynamicEntityKey is passed.
-            final Object[] realKeyValues = (keyValues.length == 1 && keyValues[0].getClass() == DynamicEntityKey.class) ? //
-            ((DynamicEntityKey) keyValues[0]).getKeyValues()
-                    : keyValues;
-
-            if (list.size() != realKeyValues.length) {
-                throw new IllegalArgumentException("The number of provided values (" + realKeyValues.length
-                        + ") does not match the number of properties in the entity composite key (" + list.size() + ").");
+            final Object[] realKeyValues;
+            if (keyValues.length == 1 && keyValues[0] instanceof DynamicEntityKey) {
+                realKeyValues = ((DynamicEntityKey) keyValues[0]).getKeyValues(); 
+            } else {
+                realKeyValues = keyValues;
             }
 
-            ICompoundCondition0<T> cc = qry.where().condition(buildConditionForKeyMember(list.get(0).getName(), list.get(0).getType(), realKeyValues[0]));
-
-            for (int index = 1; index < list.size(); index++) {
-                cc = cc.and().condition(buildConditionForKeyMember(list.get(index).getName(), list.get(index).getType(), realKeyValues[index]));
+            if (keyMembers.size() != realKeyValues.length) {
+                throw new EntityCompanionException(format("The number of provided values (%s) does not match the number of properties in the entity composite key (%s).", realKeyValues.length, keyMembers.size()));
             }
-            final EntityResultQueryModel<T> query = cc.model();
-            query.setFilterable(getFilterable());
-            return query;
+
+            ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
+
+            for (int index = 1; index < keyMembers.size(); index++) {
+                cc = cc.and().condition(buildConditionForKeyMember(keyMembers.get(index).getName(), keyMembers.get(index).getType(), realKeyValues[index]));
+            }
+            return cc;
         } else if (keyValues.length != 1) {
-            throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
+            throw new EntityCompanionException(format("Only one key value is expected instead of %s when looking for an entity by a non-composite key.", keyValues.length));
         } else {
-            final EntityResultQueryModel<T> query = qry.where().condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0])).model();
-            query.setFilterable(getFilterable());
-            return query;
+            return entryPoint.condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0]));
         }
     }
 
-    private ConditionModel buildConditionForKeyMember(final String propName, final Class propType, final Object propValue) {
+    private ConditionModel buildConditionForKeyMember(final String propName, final Class<?> propType, final Object propValue) {
         if (propValue == null) {
             return cond().prop(propName).isNull().model();
         } else if (String.class.equals(propType)) {
             return cond().lowerCase().prop(propName).eq().lowerCase().val(propValue).model();
+        } else if (Class.class.equals(propType)) {
+            return cond().prop(propName).eq().val(((Class<?>) propValue).getName()).model();
         } else {
             return cond().prop(propName).eq().val(propValue).model();
         }
@@ -212,4 +262,20 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         // provides a very minimalistic version of fetch provider by default (only id and version are included)
         return EntityUtils.fetch(getEntityType());
     }
+    
+    protected EntityFactory getEntityFactory() {
+        return entityFactory;
+    }
+ 
+    /**
+     * Instantiates an instrumented new entity of the type for which this object is a companion.
+     * The default entity constructor, which should be protected, is used for instantiation.
+     *
+     * @return
+     */
+    @Override
+    public T new_() {
+        return entityFactory.newEntity(getEntityType());
+    }
+
 }

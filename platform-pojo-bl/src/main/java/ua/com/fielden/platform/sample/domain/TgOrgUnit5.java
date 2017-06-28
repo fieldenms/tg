@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
@@ -38,7 +37,6 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     private TgFuelType fuelType;
 
     @Observable
-    @EntityExists(TgFuelType.class)
     public TgOrgUnit5 setFuelType(final TgFuelType fuelType) {
         this.fuelType = fuelType;
         return this;

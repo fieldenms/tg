@@ -33,7 +33,6 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 // TODO do not forget to provide companion object in its descendants -- @CompanionObject(IMessage.class)
 @TransactionEntity("packetReceived")
 public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
     // TODO public static final String MACHINE_PROP_ALIAS = "machineRouteDriver.machine";
 
     @IsProperty
@@ -42,12 +41,12 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @CompositeKeyMember(2)
     private Date gpsTime;
 
-    @IsProperty
+    @IsProperty(precision = 18, scale = 10)
     @MapTo
     @Title(value = "X-координата", desc = "Значення довготи")
     private BigDecimal x;
 
-    @IsProperty
+    @IsProperty(precision = 18, scale = 10)
     @MapTo
     @Title(value = "Y-координата", desc = "Значення широти")
     private BigDecimal y;
@@ -77,12 +76,12 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @Title(value = "Запалення?", desc = "Вказує, чи двигун працював у момент генерування повідомлення.")
     private boolean din1;
 
-    @IsProperty
+    @IsProperty(precision = 18, scale = 2)
     @MapTo
     @Title(value = "Вольтаж БЖ", desc = "Вольтаж блоку живлення.")
     private BigDecimal powerSupplyVoltage;
 
-    @IsProperty
+    @IsProperty(precision = 18, scale = 2)
     @MapTo
     @Title(value = "Вольтаж акумулятора", desc = "Вольтаж акумулятора.")
     private BigDecimal batteryVoltage;
@@ -92,8 +91,8 @@ public abstract class AbstractAvlMessage extends AbstractEntity<DynamicEntityKey
     @Title(value = "GPS напруга?", desc = "Вказує, чи GPS модуль живився від зовнішнього джерела (не від внутрішнього акумулятора) у момент генерування повідомлення.")
     private boolean gpsPower;
 
-    @IsProperty
-    @MapTo("distance_")
+    @IsProperty(precision = 18, scale = 2)
+    @MapTo(value = "distance_")
     // TODO
     @Readonly
     @Required

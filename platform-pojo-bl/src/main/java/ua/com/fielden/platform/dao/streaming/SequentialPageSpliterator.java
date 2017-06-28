@@ -19,7 +19,7 @@ import ua.com.fielden.platform.pagination.IPage;
  */
 public class SequentialPageSpliterator<T extends AbstractEntity<?>> implements Spliterator<T> {
 
-    private transient final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger LOGGER = Logger.getLogger(SequentialPageSpliterator.class);
     
     private final IEntityDao<T> companion;
     private final QueryExecutionModel<T, ?> qem;
@@ -61,7 +61,7 @@ public class SequentialPageSpliterator<T extends AbstractEntity<?>> implements S
                 currPageSliterator = currPage.data().stream().spliterator();
                 return currPageSliterator.tryAdvance(action);
             } else {
-                logger.debug(String.format("The number of page calls: %s", countOfPageRetrievals));
+                LOGGER.debug(String.format("The number of page calls: %s", countOfPageRetrievals));
                 return false;
             }
         }

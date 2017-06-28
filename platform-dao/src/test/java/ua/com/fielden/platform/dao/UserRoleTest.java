@@ -46,7 +46,7 @@ public class UserRoleTest extends AbstractDaoTestCase {
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-16 16:36:57"));
 
-        final UserRole newlySaved = save(new_(UserRole.class, "NEW ROLE").setActive(true));
+        final UserRole newlySaved = save(new_(UserRole.class, "NEW ROLE").setActive(true).setDesc("some desc"));
 
         // move to the future and change the current user
         constants.setNow(dateTime("2016-05-17 13:36:57"));

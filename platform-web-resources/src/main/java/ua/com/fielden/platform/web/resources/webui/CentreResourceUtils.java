@@ -10,12 +10,14 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -38,12 +40,12 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
@@ -57,6 +59,7 @@ import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -67,13 +70,14 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
-    private final static Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
+    private CentreResourceUtils() { }
+    
     private enum RunActions {
         RUN("run"),
         REFRESH("refresh"),
-        NAVIGATE("navigate"),
-        EXPORTALL("export all");
+        NAVIGATE("navigate");
 
         private final String action;
 
@@ -85,9 +89,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         public String toString() {
             return action;
         }
-    }
-
-    public CentreResourceUtils() {
     }
 
     ///////////////////////////////// CUSTOM OBJECTS /////////////////////////////////
@@ -131,6 +132,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static boolean isRunning(final Map<String, Object> customObject) {
         return RunActions.RUN.toString().equals(customObject.get("@@action"));
     }
+    
+    /**
+     * Returns <code>true</code> if 'Sorting' action is performed, otherwise <code>false</code>.
+     *
+     * @param customObject
+     * @return
+     */
+    public static boolean isSorting(final Map<String, Object> customObject) {
+        return customObject.containsKey("@@sortingAction");
+    }
 
     /**
      * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
@@ -141,61 +152,95 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
+     * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final M criteriaEntity, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext) {
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
+            final Map<String, Object> customObject, 
+            final M criteriaEntity, 
+            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
+            final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-
-        // the next action validates the entity one more time, but with the check for 'required' properties
-        final Result validationResult = criteriaEntity.isValid();
-
-        if (validationResult.isSuccessful()) {
-            // final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = applied;
-            criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
-            if (additionalFetchProvider.isPresent()) {
-                criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
-            }
-            if (queryEnhancerAndContext.isPresent()) {
-                final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
-                criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
-            }
-            IPage<T> page = null;
-            List<T> data = new ArrayList<T>();
-            final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
-            final String action = (String) customObject.get("@@action");
-            if (isRunning(customObject)) {
-                page = criteriaEntity.run(pageCapacity);
-                resultantCustomObject.put("summary", page.summary());
-                data = page.data();
-            } else if (RunActions.REFRESH.toString().equals(action)) {
-                final Pair<IPage<T>, T> refreshedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
-                page = refreshedData.getKey();
-                data = page.data();
-                resultantCustomObject.put("summary", refreshedData.getValue());
-            } else if (RunActions.NAVIGATE.toString().equals(action)) {
-                try {
-                    page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), pageCapacity);
-                } catch (final Exception e) {
-                    final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
-                    page = navigatedData.getKey();
-                    resultantCustomObject.put("summary", navigatedData.getValue());
-                }
-                data = page.data();
-            } else if (RunActions.EXPORTALL.toString().equals(action)) {
-                page = null;
-                data = criteriaEntity.getAllEntities();
-            }
-            customObject.remove("@@pageCapacity");
-            customObject.remove("@@exportAll");
-            customObject.remove("@@pageNumber");
-            customObject.remove("@@pageCount");
-            final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
-            resultantCustomObject.put("resultEntities", resultEntities);
-            resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
-            resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
-            return new Pair<>(resultantCustomObject, resultEntities);
+        
+        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
+        if (additionalFetchProvider.isPresent()) {
+            criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
         }
-        return new Pair<>(resultantCustomObject, null);
+        if (queryEnhancerAndContext.isPresent()) {
+            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
+            criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
+        }
+        if (createdByUserConstraint.isPresent()) {
+            criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
+        }
+        IPage<T> page = null;
+        final List<T> data;
+        final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
+        final String action = (String) customObject.get("@@action");
+        if (isRunning(customObject)) {
+            page = criteriaEntity.run(pageCapacity);
+            resultantCustomObject.put("summary", page.summary());
+            data = page.data();
+        } else if (RunActions.REFRESH.toString().equals(action)) {
+            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+            final Pair<IPage<T>, T> refreshedData = criteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
+            page = refreshedData.getKey();
+            data = page.data();
+            resultantCustomObject.put("summary", refreshedData.getValue());
+        } else if (RunActions.NAVIGATE.toString().equals(action)) {
+            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+            try {
+                page = criteriaEntity.getPage(pageNumber, pageCapacity);
+            } catch (final Exception e) {
+                logger.error(e);
+                final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
+                page = navigatedData.getKey();
+                resultantCustomObject.put("summary", navigatedData.getValue());
+            }
+            data = page.data();
+        } else {
+            data = new ArrayList<>();
+        }
+        resultantCustomObject.put("resultEntities", data);
+        resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
+        resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
+        return new Pair<>(resultantCustomObject, data);
+    }
+
+    /**
+     * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of returning a list of entities,
+     * it returns a stream. 
+     * 
+     * @param adhocParams
+     * @param criteriaEntity
+     * @param additionalFetchProvider
+     * @param queryEnhancerAndContext
+     * @param createdByUserConstraint
+     * @return
+     */
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
+            final Map<String, Object> adhocParams,
+            final M criteriaEntity, 
+            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
+            final Optional<User> createdByUserConstraint) {
+        
+        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
+        if (additionalFetchProvider.isPresent()) {
+            criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (queryEnhancerAndContext.isPresent()) {
+            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
+            criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
+        }
+        if (createdByUserConstraint.isPresent()) {
+            criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
+        }
+        
+        final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100;
+        final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
+        return criteriaEntity.streamEntities(fetchSize, ids);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
@@ -363,7 +408,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         //     the entity has been already applied the values from 'cdtmae' during CriteriaGenerator generation process.
         //     So, we potentially have the 'required' errors -- need to disregard all of them!
         //     (for e.g., in TridentFleet it fixes the errors if no DdsStationAssigner is specified)
-        return EntityResourceUtils.disregardNotAppliedRequiredProperties(
+        return EntityResourceUtils.disregardUntouchedRequiredProperties(
                 resetMetaStateForCriteriaValidationPrototype(
                         validationPrototype,
                         CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
@@ -461,10 +506,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (config.withSelectionCrit) {
                 context.setSelectionCrit(criteriaEntity);
             }
-            if (config.withAllSelectedEntities) {
-                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-            } else if (config.withCurrentEtity) {
-                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
+            if (config.withAllSelectedEntities || config.withCurrentEtity) {
+                context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
                 context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
@@ -525,7 +568,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
-        if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(centreContextHolder.getModifHolder())) {
+        if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
             return null;
         }
         final Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -552,10 +595,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
+     * Creates selection criteria entity from <code>modifPropsHolder</code>.
      *
-     * @param centreContextHolder
-     *            -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {

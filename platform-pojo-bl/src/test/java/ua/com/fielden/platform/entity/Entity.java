@@ -36,7 +36,6 @@ import ua.com.fielden.platform.types.Money;
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired("Property \"{{prop-title}}\" in entity \"{{entity-title}}\" does not permit blank values.")
 public class Entity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     public static final String NOT_NULL_MSG = "Missing value";
 
@@ -45,36 +44,50 @@ public class Entity extends AbstractEntity<String> {
     @Readonly
     @Title(value = "First Property", desc = "used for testing")
     private Integer firstProperty = null;
+
     @IsProperty
     @Title("Observable Property")
     @Required(NOT_NULL_MSG)
     private Double observableProperty = 0.0;
+
     @IsProperty
     @Monitoring(Categorizer.class)
     private String monitoring;
+
     @IsProperty
     private Double observablePropertyInitialisedAsNull;
+
     @IsProperty
     @Invisible
+    @Final(persistentOnly = false)
     private Double finalProperty;
+    
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
     @Required
     private List<Double> doubles = new ArrayList<Double>();
+    
     @IsProperty(Entity.class)
     private List<Entity> entities = new ArrayList<Entity>();
+    
     @IsProperty
     private Entity entity;
+    
     @IsProperty
     private Date date;
+    
     @IsProperty
     private Money money;
+    
     @IsProperty
     private Integer number;
+    
     @IsProperty
     @Dependent("dependent")
     private Integer main = 20;
+    
     @IsProperty
     private Integer dependent = 10;
+    
     @IsProperty
     private String strProp;
 
@@ -110,7 +123,6 @@ public class Entity extends AbstractEntity<String> {
         return finalProperty;
     }
 
-    @Final
     @Observable
     public void setFinalProperty(final Double finalProperty) {
         this.finalProperty = finalProperty;
@@ -262,6 +274,16 @@ public class Entity extends AbstractEntity<String> {
     @Observable
     public void setMonitoring(final String monitoring) {
         this.monitoring = monitoring;
+    }
+    
+    @Override
+    public void setVersion(Long ver) {
+        super.setVersion(ver);
+    }
+    
+    @Override
+    public void setId(Long id) {
+        super.setId(id);
     }
 
 }

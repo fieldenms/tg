@@ -82,7 +82,9 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     .attr("data-route", el.getDataRoute())
                     .attr("section-title", el.getShortDesc()));
             menuItemsDom.add(
-                    new DomElement("paper-item").attr("class", "menu-item").attr("data-route", el.getDataRoute())
+                    new DomElement("paper-item")
+                            .attr("class", "menu-item").attr("data-route", el.getDataRoute())
+                            .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
@@ -136,4 +138,9 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         return Optional.empty();
     }
 
+
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }

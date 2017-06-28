@@ -65,7 +65,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         // IMPORTANT: the following IF statement needs to be turned off (e.g. commented or && false added to the condition) for the purpose of running web unit test.
         // let's demonstrate a simple approach to implementing user's warning acknowledgement
         // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
-        if (entity.hasWarnings()) {
+        if (entity.hasWarnings() && false) {
             if (!moreData("acknowledgedForTheFirstTime").isPresent()) {
                 throw new NeedMoreData("Warnings need acknowledgement (first time)", AcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
             } else {
@@ -131,6 +131,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("compositeProp", "compositeProp.desc")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
                 .with("producerInitProp", "status.key", "status.desc")
-                .with("colourProp", "hyperlinkProp"); //
+                .with("colourProp", "hyperlinkProp")
+                .with("idOnlyProxyProp"); //
     }
 }

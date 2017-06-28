@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyTitle("Meter Reading")
 @KeyType(DynamicEntityKey.class)
@@ -71,7 +70,6 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     /////////////////////////////////////////////
 
     @Observable
-    @EntityExists(TgVehicle.class)
     public void setVehicle(final TgVehicle vehicle) {
         this.vehicle = vehicle;
     }
@@ -87,7 +85,6 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @EntityExists(TgWorkOrder.class)
     public void setWorkOrder(final TgWorkOrder workOrder) {
         this.workOrder = workOrder;
     }
@@ -97,7 +94,6 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @EntityExists(TgFuelUsage.class)
     public void setFuelUsage(final TgFuelUsage fuelUsage) {
         this.fuelUsage = fuelUsage;
     }

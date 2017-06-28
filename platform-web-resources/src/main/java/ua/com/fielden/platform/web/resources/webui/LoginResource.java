@@ -48,7 +48,7 @@ public class LoginResource extends ServerResource {
     
     public static final String BINDING_PATH = "/login";
     
-    private final Logger logger = Logger.getLogger(LoginResource.class);
+    private static final Logger LOGGER = Logger.getLogger(LoginResource.class);
 
     private final String domainName;
     private final String path;
@@ -87,7 +87,7 @@ public class LoginResource extends ServerResource {
     }
 
     @Override
-    protected Representation get() throws ResourceException {
+    protected Representation get() {
         try {
             // check if there is a valid authenticator
             // if there is then should respond with redirection to root /.
@@ -110,7 +110,7 @@ public class LoginResource extends ServerResource {
             return loginPage();
         } catch (final Exception ex) {
             // in case of an exception try try return a login page.
-            logger.fatal(ex);
+            LOGGER.fatal(ex);
             return loginPage();
         }
     }
@@ -120,7 +120,7 @@ public class LoginResource extends ServerResource {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final Exception ex) {
-            logger.fatal(ex);
+            LOGGER.fatal(ex);
             throw new IllegalStateException(ex);
         }
     }
@@ -136,7 +136,7 @@ public class LoginResource extends ServerResource {
 
             final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
             if (!authResult.isSuccessful()) {
-                logger.warn(format("Unsuccessful login request (%s)", credo));
+                LOGGER.warn(format("Unsuccessful login request for user [%s].", credo.getUsername()));
                 getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             } else {
@@ -149,7 +149,7 @@ public class LoginResource extends ServerResource {
                 getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
             }
         } catch (final Exception ex) {
-            logger.fatal(ex);
+            LOGGER.fatal(ex);
             getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         }
@@ -193,6 +193,7 @@ public class LoginResource extends ServerResource {
             try {
                 return new ObjectMapper().writer().writeValueAsString(this);
             } catch (final JsonProcessingException e) {
+                LOGGER.error(e);
                 return "could not serialise to JSON";
             }
         }

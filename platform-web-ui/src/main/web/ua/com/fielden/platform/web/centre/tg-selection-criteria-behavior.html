@@ -136,7 +136,8 @@
                 },
 
                 /**
-                 * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
+                 * The current number of pages after the data has been retrieved from the server.
+                 * This updating occurs not only during Run, but also during Refresh and Page Navigate actions.
                  */
                 pageCount: {
                     type: Number,
@@ -145,6 +146,9 @@
 
                 /**
                  * The current page number.
+                 *
+                 * Refresh and Page Navigate processes are heavily based on this number (it goes to server), however, this number could perhaps be 
+                 * corrected after data arrival from the server.
                  */
                 pageNumber: {
                     type: Number,
@@ -201,14 +205,14 @@
                 this.currentState = "EDIT";
 
                 this.staleCriteriaMessage = null;
-
+                
                 self._processRunnerResponse = function (e) {
                     self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
                         var criteriaEntity = entityAndCustomObject[0];
                         self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                         var customObject = self._reflector().customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
-                        var pageCount = customObject.pageCount || null;
+                        var pageCount = customObject.pageCount;
                         var pageNumber = customObject.pageNumber;
                         var metaValues = customObject.metaValues;
                         var centreChanged = customObject.isCentreChanged;
@@ -231,9 +235,10 @@
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
-                    this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
-                    // custom external action
-                    if (pageNumber !== null) {
+                    if (typeof pageCount !== 'undefined') {
+                        this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+                    }
+                    if (typeof pageNumber !== 'undefined') {
                         this.pageNumber = pageNumber;
                     }
                     this.pageNumberUpdated = this.pageNumber;
@@ -275,7 +280,7 @@
                     console.log("postValidated", customObject);
                 }).bind(self);
             },
-
+            
             /**
              * Overridden to populate 'propertyModel' and '_isCentreChange' flag from arrived information.
              */
@@ -437,45 +442,45 @@
 
             /**
              * Starts the process of centre run.
+             *
+             * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
              */
-            run: function () {
+            run: function (isSortingAction) {
                 var self = this;
                 this._openToast(null, "Loading data", false, "", true);
-                this.pageNumber = 0;
-                this.pageCount = null;
-                return this._execute(RunActions.run);
+                return this._execute(RunActions.run, isSortingAction);
             },
 
             /**
              * Starts the process of centre execution. It does not alter
+             *
+             * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
              */
-            _execute: function (action) {
+            _execute: function (action, isSortingAction) {
                 var self = this;
 
                 if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
                         .then(function () {
-                            return self._createPromise(action);
+                            return self._createPromise(action, isSortingAction);
                         });
                     return self._refreshPromiseInProgress;
                 }
 
                 // let's capture the promise being created at the instance level so that it could be referenced later...
-                self._refreshPromiseInProgress = self._createPromise(action);
+                self._refreshPromiseInProgress = self._createPromise(action, isSortingAction);
                 // ... and return it
                 return self._refreshPromiseInProgress;
             },
 
-            _createPromise: function (action) {
+            _createPromise: function (action, isSortingAction) {
                 var self = this;
 
                 return new Promise(function (resolve, reject) {
                     var _persistedModifiedPropertiesHolder = null;
                     if (action === RunActions.run) {
-                        self._wasRun = 'yes';
                         _persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                        console.debug('_wasRun has been changed to: ', self._wasRun);
                     } else if (self._wasRun === null) {
                         throw '_wasRun is not initialised, however this is not Run action, and _wasRun should be defined as yes at this stage.';
                     }
@@ -483,13 +488,12 @@
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self._validator().abortValidationIfAny();
                     resolve(
-                        // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                        //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
                         self._runModifiedProperties(
                             self._createContextHolderForRunning(function () {
                                     return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
                                 },
                                 action,
+                                isSortingAction,
                                 self.requireSelectedEntities,
                                 self.requireMasterEntity
                             )
@@ -501,7 +505,7 @@
             idsToRefresh: function (entities) {
                 var ids = [];
                 for (var i = 0; i < entities.length; i = i + 1) {
-                    ids.push(entities[i].id);
+                    ids.push(entities[i].get('id'));
                 }
                 return ids;
             },
@@ -596,29 +600,30 @@
              * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
              * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
              */
-            _createContextHolderForRunning: function (modifHolderGetter, action, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolderForRunning: function (modifHolderGetter, action, isSortingAction, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
                 var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
+                if (isSortingAction) {
+                    self._reflector().setCustomProperty(contextHolder, "@@sortingAction", true);
+                }
                 self._reflector().setCustomProperty(contextHolder, "@@action", action);
                 self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
                 if (self.pageCount !== null) {
                     self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
-                    self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
                 } else {
                     self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
-                    self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
                 }
 
                 return contextHolder;
-            },
+            }
 
         };
 
         Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
-   Polymer.TgBehaviors.TgEntityBinderBehavior,
-   Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
-  ];
+            Polymer.TgBehaviors.TgEntityBinderBehavior,
+            Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
+        ];
 
     })();
 </script>

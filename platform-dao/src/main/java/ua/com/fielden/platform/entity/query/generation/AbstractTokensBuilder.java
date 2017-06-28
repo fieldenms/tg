@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -295,8 +296,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     private Object preprocessValue(final Object value) {
         if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-            final List<Object> values = new ArrayList<Object>();
-            for (final Object object : (Iterable) value) {
+            final Iterable<?> iterable = value.getClass().isArray() ? Arrays.asList((Object[]) value) : (Collection<?>) value;
+            final List<Object> values = new ArrayList<>();
+            for (final Object object : iterable) {
                 final Object furtherPreprocessed = preprocessValue(object);
                 if (furtherPreprocessed instanceof List) {
                     values.addAll((List) furtherPreprocessed);
@@ -412,4 +414,5 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     public DbVersion getDbVersion() {
         return getQueryBuilder().getDbVersion();
     }
+    
 }

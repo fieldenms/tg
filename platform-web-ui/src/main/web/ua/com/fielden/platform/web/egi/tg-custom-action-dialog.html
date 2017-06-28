@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -63,25 +64,25 @@
                 padding: 0px;
             }
             paper-icon-button.close-button {
-				stroke: var(--paper-grey-100);
-				fill: var(--paper-grey-100);
+                stroke: var(--paper-grey-100);
+                fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
             }
             paper-icon-button.close-button:hover {
-				stroke: var(--paper-grey-300);
-				fill: var(--paper-grey-300);
+                stroke: var(--paper-grey-300);
+                fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
             paper-icon-button.minimize-button {
-            	width: 19px;
+                width: 19px;
                 height: 19px;
-				stroke: var(--paper-grey-100);
-				fill: var(--paper-grey-100);
+                stroke: var(--paper-grey-100);
+                fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
             }
             paper-icon-button.minimize-button:hover {
-				stroke: var(--paper-grey-300);
-				fill: var(--paper-grey-300);
+                stroke: var(--paper-grey-300);
+                fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
         </style>
@@ -94,10 +95,11 @@
             <div class="layout horizontal center" style="margin-left:10px">
                 <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext"></paper-icon-button>
             </div>
         </div>
-        <div hidden$=[[_minimised]] class="relative flex">
+        <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
@@ -105,6 +107,13 @@
 </dom-module>
 <script>
     (function () {
+        var findParentDialog = function (action) {
+            var parent = action;
+            while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                parent = parent.parentElement;
+            }
+            return parent;
+        }
         Polymer({
 
             is: "tg-custom-action-dialog",
@@ -116,9 +125,9 @@
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle'
             },
-            
+
             hostAttributes: {
-                'tabindex' : '0'
+                'tabindex': '0'
             },
 
             properties: {
@@ -139,8 +148,7 @@
                     value: ""
                 },
                 prefDim: {
-                    type: Object,
-                    observer: "_prefDimChanged"
+                    type: Object
                 },
 
                 _wasMoved: {
@@ -183,9 +191,21 @@
                 /** A master element that corresponds to the _lastAction. */
                 _lastElement: {
                     type: Object
+                },
+
+                /**The parent dialog tow wchich this dialog is a child.*/
+                _parentDialog: {
+                    type: Object
+                },
+
+                /**List of child dialogs*/
+                _childDialogs: {
+                    type: Array
                 }
             },
             
+            observers: ["_dialogMinimised(prefDim, _minimised)"],
+
             keyBindings: {
                 'alt+x': 'closeDialog',
                 'alt+m': 'minimizeDialog'
@@ -196,13 +216,16 @@
                 this.noCancelOnOutsideClick = true;
                 this.noCancelOnEscKey = true;
 
+                this._parentDialog = null;
+                this._childDialogs = [];
+
                 // Listen to mousedown or touchstart to be sure to be the first to capture
                 // clicks outside the overlay.
                 this._onCaptureClick = this._onCaptureClick.bind(this);
                 this._onCaptureFocus = this._onCaptureFocus.bind(this);
                 this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
-                
-                this._focusWhenOpenedthis = this._focusWhenOpened.bind(this);
+
+                this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
 
                 this._setIsRunning(false);
@@ -221,35 +244,41 @@
                 this.removeEventListener('focus', this._onCaptureFocus, true);
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
-            
-            _prefDimChanged: function (newValue, oldValue) {
-                if (newValue) {
-                    this.style.width = (typeof newValue.width === 'function' ? newValue.width() : newValue.width) + newValue.widthUnit;
-                    this.style.height = (typeof newValue.height === 'function' ? newValue.height() : newValue.height) + newValue.heightUnit;
-                } else {
-                    this.style.width = 'auto';
-                    this.style.height = 'auto';
-                }
-            },
 
             _onCaptureClick: function (event) {
                 if (this._manager.currentOverlay() !== this) {
                     console.log("select overlay");
-                    this._manager.addOverlay(this);
+                    this._bringToFront();
                 }
             },
 
             _onCaptureFocus: function (event) {
                 if (this._manager.currentOverlay() !== this) {
                     console.log("select overlay");
-                    this._manager.addOverlay(this);
+                    this._bringToFront();
                 }
             },
 
             _onCaptureKeyDown: function (event) {
                 if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab') && this._manager.currentOverlay() !== this) {
                     console.log("select overlay");
-                    this._manager.addOverlay(this);
+                    this._bringToFront();
+                }
+            },
+
+            _bringToFront: function () {
+                this._manager.addOverlay(this);
+                this._childDialogs.forEach(function (childDialog) {
+                    childDialog._bringToFront();
+                });
+            },
+            
+            _skipNext: function () {
+                if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
+                    this.closeDialog();
+                    if (!this.opened) {
+                        this._lastAction.skipNext();
+                    }
                 }
             },
 
@@ -259,16 +288,17 @@
                     this.focus();
                 }
                 this._minimised = !this._minimised;
-                this._dialogMinimised();
                 this.notifyResize();
                 if (!this._minimised) {
                     this.restoreActiveElement();
-                } 
+                }
             },
 
             closeDialog: function () {
                 var canClose = true;
-                if (this._lastElement.classList.contains('canLeave')) {
+                //Try to close children first.
+                canClose = this._closeChildren();
+                if (canClose && this._lastElement.classList.contains('canLeave')) {
                     var reason = this._lastElement.canLeave();
                     if (reason !== undefined) {
                         canClose = false;
@@ -280,6 +310,7 @@
                         this.$.toaster.hasMore = false;
                         this.$.toaster.msgText = "";
                         this.$.toaster.showProgress = false;
+                        this.$.toaster.isCritical = false;
                         this.$.toaster.show();
                     }
                 }
@@ -289,19 +320,36 @@
                 }
             },
 
-            _dialogMinimised: function () {
-                if (this._minimised) {
-                    this.style.width = "auto";
-                    this.style.height = "auto";
-                } else {
-                    if (this.prefDim) {
-                        this.style.width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
-                        this.style.height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
-                    } else {
-                        this.style.width = "auto";
-                        this.style.height = "auto";
+            _closeChildren: function () {
+                var canClose = true;
+
+                this._childDialogs.slice().forEach(function (dialog) {
+                    dialog.closeDialog();
+                    if (dialog.opened) {
+                        canClose = false
+                        if (dialog._childDialogs.length === 0) {
+                            dialog._focusDialogWithInput();
+                        }
                     }
+                });
+
+                return canClose;
+            },
+
+            _dialogMinimised: function (prefDim, minimised) {
+                var width = "";
+                var height = "";
+                if (!minimised && prefDim) {
+                    width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
                 }
+                this._setDialogBodyDimensions(width, height);
+            },
+
+            _setDialogBodyDimensions: function (width, height) {
+                this.style.width = width;
+                // +44px - height of the title bar please see styles for .title-bar selector.
+                this.style.height = height && "calc(" + height + " + 44px)";
             },
 
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
@@ -342,6 +390,13 @@
                 if (this._minimised) {
                     this.restoreActiveElement();
                 }
+                if (this._parentDialog) {
+                    var childIndex = this._parentDialog._childDialogs.indexOf(this);
+                    if (childIndex > -1) {
+                        this._parentDialog._childDialogs.splice(childIndex, 1);
+                    }
+                    this._parentDialog = null;
+                }
                 this.close();
             },
 
@@ -356,19 +411,19 @@
                 var self = this;
                 var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                 // disabled chache (temprarily?) to support polymorphic masters
-				/* if (self._cachedElements.hasOwnProperty(key)) { 
+                /* if (self._cachedElements.hasOwnProperty(key)) { 
                     console.log("Reusing cached element:", key);
                     var element = self._cachedElements[key];
                     self.$.elementLoader.insert(element);
                     return Promise.resolve(element);
                 } else { */
-                    self.$.elementLoader.import = customAction.componentUri;
-                    self.$.elementLoader.elementName = customAction.elementName;
-                    self.$.elementLoader.attrs = customAction.attrs;
-                    return self.$.elementLoader.reload();
+                self.$.elementLoader.import = customAction.componentUri;
+                self.$.elementLoader.elementName = customAction.elementName;
+                self.$.elementLoader.attrs = customAction.attrs;
+                return self.$.elementLoader.reload();
                 //}
             },
-
+            
             /*
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
@@ -378,8 +433,9 @@
                 if (this.opened === true) {
                     this.$.toaster.text = 'Please close the currently open dialog.';
                     this.$.toaster.hasMore = true;
-                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
+                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening any other dialog.';
                     this.$.toaster.showProgress = false;
+                    this.$.toaster.isCritical = false;
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
                     if (customAction) {
@@ -391,7 +447,7 @@
                         self._lastAction = customAction;
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
-                        this.dynamicTitle = null;
+                        self.dynamicTitle = null;
 
                         self._getElement(customAction)
                             .then(function (element) {
@@ -408,7 +464,7 @@
                                             }*/
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
-                                        .catch(function () {
+                                        .catch(function (error) {
                                             self._setIsRunning(false);
                                             if (self._lastAction) {
                                                 self._lastAction.restoreActiveElement();
@@ -419,7 +475,7 @@
                                         .then(function () {
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
-                                        .catch(function () {
+                                        .catch(function (error) {
                                             self._setIsRunning(false);
                                             if (self._lastAction) {
                                                 self._lastAction.restoreActiveElement();
@@ -433,6 +489,7 @@
                                 self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
 	                                                      <b>Error cause:</b><br>' + error.message;
                                 self.$.toaster.showProgress = false;
+                                self.$.toaster.isCritical = true;
                                 self.$.toaster.show();
                                 if (self._lastAction) {
                                     self._lastAction.restoreActiveElement();
@@ -460,33 +517,38 @@
                                 }));
                         }
                     }
-
                     this.updateStyles();
                     this.refit();
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
-                        this.addEventListener('binding-entity-appeared', this._focusWhenOpened);
+                        //Configuring the dialog hierarchy.
+                        var actionsDialog = findParentDialog(action);
+                        if (actionsDialog) {
+                            actionsDialog._childDialogs.push(this);
+                            this._parentDialog = actionsDialog;
+                        }
+                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         this._focusAndRefit(); // this is a legacy support
                         this.open();
                     }.bind(this), 200);
                 }
             },
-            
+
             /**
-             * Listener that listens binding entity appeared event and focuses first input. 
+             * Listener that listens binding entity appeared event and focuses first input.
              */
-            _focusWhenOpened: function (e) {
+            _focusDialogWithInput: function (e) {
                 if (this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
                 }
             },
-            
+
             /**
-             * Listener that listens binding entity appeared event and refits loaded master. 
+             * Listener that listens binding entity appeared event and refits loaded master.
              */
-            _fitWhenFirstTimeOpened : function (e) {
+            _fitWhenFirstTimeOpened: function (e) {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
@@ -529,7 +591,7 @@
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._minimised = false;
-                    
+
                     if (this._lastAction) {
                         this._lastAction.restoreActiveElement();
                     }

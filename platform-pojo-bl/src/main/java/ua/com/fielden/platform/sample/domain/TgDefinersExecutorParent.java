@@ -68,10 +68,6 @@ public class TgDefinersExecutorParent extends AbstractEntity<DynamicEntityKey> {
         return Collections.unmodifiableSet(collectionWithHandler);
     }
 
-//    public DriverImportRow() {
-//   TODO     setKey(new DynamicEntityKey(this));
-//    }
-
     @Observable
     public void setKeyMember1(final TgDefinersExecutorCompositeKeyMember keyMember1) {
         this.keyMember1 = keyMember1;

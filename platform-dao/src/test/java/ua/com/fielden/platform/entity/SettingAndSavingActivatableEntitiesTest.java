@@ -38,7 +38,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
         assertFalse(activeProperty.isValid());
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey();
-        assertEquals(format("Entity %s has active dependencies (%s).", entityTitle, 2), activeProperty.getFirstFailure().getMessage());
+        assertEquals(format("%s [%s] has active dependencies (%s).", entityTitle, cat1, 2), activeProperty.getFirstFailure().getMessage());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [parent] in entity Cat4@ua.com.fielden.platform.sample.domain.TgCategory references inactive entity Cat3@ua.com.fielden.platform.sample.domain.TgCategory.", 
+        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].", 
                 cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
@@ -64,7 +64,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
             fail("Should have failed");
         } catch (final EntityCompanionException ex) {
             final TgCategory cat4Full = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-            assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4Full, cat4Full.getParent(), cat4Full.getParent().getType()),
+            assertEquals(format("Tg Category [%s] has a reference to already inactive Tg Category [%s].", cat4Full, cat4Full.getParent()),
                     ex.getMessage());
         }
     }
@@ -204,10 +204,39 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
             save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
         } catch (final Result ex) {
-            assertEquals("Tg Category Cat7 exists, but is not active.", ex.getMessage());
+            assertEquals("Tg Category [Cat7] exists, but is not active.", ex.getMessage());
         }
     }
 
+    @Test
+    public void refCount_value_is_equal_to_number_of_references_from_entities_in_different_properties_rather_than_to_number_of_such_entities() {
+        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+        
+        // set properties one by one and assert refCount increasing
+        TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat));
+        
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        
+        sys = save(sys.setSecondCategory(cat));
+        
+        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        
+        // unset properties one by one and assert refCount decreasing
+        sys = save(sys.setFirstCategory(null));
+        
+        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        
+        sys = save(sys.setSecondCategory(null));
+        
+        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+
+        // set two properties at once and then deactive the entity to assert that refCount becomes zero
+        sys = save(sys.setFirstCategory(cat).setSecondCategory(cat));
+        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        sys = save(sys.setActive(false));
+        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

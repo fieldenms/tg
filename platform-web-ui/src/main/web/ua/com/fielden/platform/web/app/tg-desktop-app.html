@@ -5,158 +5,390 @@
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
+<link rel="import" href="/resources/master/tg-entity-master.html">
+<link rel="import" href="/resources/master/tg-entity-master-behavior.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-desktop-app">
-    <style>
-        :host {
-            overflow: hidden;
-        }
-    </style>
     <template>
+        <style>
+            :host {
+                overflow: hidden;
+            }
+        </style>
         <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
-        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
-            <template is="dom-repeat" items="[[menuConfig.items]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]">
+                <!--menu action dom-->
+            </tg-app-menu>
+            <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
             </template>
         </neon-animated-pages>
+        <tg-entity-master
+            id="masterDom"
+            entity-type="[[entityType]]"
+            entity-id="new"
+            hidden
+            _post-validated-default="[[_postValidatedDefault]]"
+            _post-validated-default-error="[[_postValidatedDefaultError]]"
+            _process-response="[[_processResponse]]"
+            _process-error="[[_processError]]"
+            _process-retriever-response="[[_processRetrieverResponse]]"
+            _process-retriever-error="[[_processRetrieverError]]"
+            _process-saver-response="[[_processSaverResponse]]"
+            _process-saver-error="[[_processSaverError]]"
+            _saver-loading="{{_saverLoading}}">
+            <tg-ui-action
+                id="menuSaveAction"
+                ui-role='ICON'
+                component-uri='/master_ui/ua.com.fielden.platform.menu.MenuSaveAction'
+                element-name='tg-MenuSaveAction-master'
+                show-dialog='[[_showDialog]]'
+                create-context-holder='[[_createContextHolder]]'
+                attrs='[[_attrs]]'
+                require-selection-criteria='false'
+                require-selected-entities='NONE'
+                require-master-entity='false'>
+            </tg-ui-action>
+        </tg-entity-master>
     </template>
-</dom-module>
 
-<script>
-    (function () {
-        var findModule = function (moduleName, menuConfig) {
-            var itemIndex;
-            for (itemIndex = 0; itemIndex < menuConfig.items.length; itemIndex++) {
-                if (menuConfig.items[itemIndex].title === moduleName) {
-                    return moduleName;
+
+    <script>
+        (function () {
+            var findModule = function (moduleName, menuConfig) {
+                var itemIndex;
+                for (itemIndex = 0; itemIndex < menuConfig.menu.length; itemIndex++) {
+                    if (menuConfig.menu[itemIndex].key === moduleName) {
+                        return moduleName;
+                    }
                 }
-            }
-            return "menu";
-        };
-        Polymer({
+                return "menu";
+            };
+            var addAllElements = function (elementsToAdd, addToArray, removeFromArray) {
+                addToArray = addToArray || [];
+                if (elementsToAdd) {
+                    elementsToAdd.forEach(function(element) {
+                        if (addToArray.indexOf(element) < 0) {
+                            var indexInInvisible = removeFromArray ? removeFromArray.indexOf(element) : -1;
+                            if (indexInInvisible >= 0) {
+                                removeFromArray.splice(indexInInvisible, 1);
+                            }
+                            addToArray.push(element);
+                        }
+                    });
+                }
+                return addToArray;
+            };
+            Polymer({
 
-            is: "tg-desktop-app",
+                is: "tg-desktop-app",
 
-            properties: {
-                _route: {
-                    type: Object,
-                    observer: "_routeChanged"
+                properties: {
+                    /**
+                     * The property which indicates whether entity master is 'UI-less'.
+                     */
+                    noUI: {
+                        type: Boolean,
+                        value: true
+                    },
+                    /**
+                     * This property governs master behavior upon its activation for the first time (i.e. when master element was instantiated and bound to an entity instance).
+                     * If saveOnActivation is true then entity saving occurs automatically just before the master UI gets displayed.
+                     * It most conveniently used for masters that represent functional entities (i.e. actions).
+                     **/
+                    saveOnActivation: {
+                        type: Boolean,
+                        value: true
+                    },
+                    
+                    keyEventTarget: {
+                        type: Object,
+                        value: function() {
+                            return document.body;
+                        }
+                    },
+                    
+                    entityType: String,
+                    
+                    _route: {
+                        type: Object,
+                        observer: "_routeChanged"
+                    },
+                    _routeData: Object,
+                    _subroute: Object,
+                    _selectedModule: String,
+                    _selectedSubmodule: {
+                        type: String,
+                        notify: true,
+                        observer: "_selectedSubmoduleChanged"
+                    },
+
+                    //action related properties.
+                    _attrs: Object,
+                    _saveIdentifier: Number,
+                    _visibleMenuItems: Array,
+                    _invisibleMenuItems: Array,
+                    _saveMenuVisibilityChanges: Function
                 },
-                _routeData: Object,
-                _subroute: Object
-            },
 
-            listeners: {
-                "main-menu": "_showMainMenu",
-                "menu-item-selected": "_showView"
-            },
+                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+                
+                keyBindings: {
+                    'f3': '_searchMenu'
+                },
 
-            _routeChanged: function (newValue, oldValue) {
-                this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
-            },
-
-            _showMainMenu: function (e) {
-                this._setSelected("menu");
-            },
-
-            _showView: function (e) {
-                var route = "/" + encodeURIComponent(e.detail),
-                    elementToSelect = this.$$("[name='" + e.detail + "']"),
-                    selectedSubPage = elementToSelect.getSelectedPage();
-                if (selectedSubPage) {
-                    route += "/" + encodeURIComponent(selectedSubPage);
-                }
-                if (this._route.path === route) {
-                    this._setSelected(e.detail);
-                } else {
-                    this.set("_route.path", route);
-                }
-            },
-
-            _modulesRendered: function (e) {
-                if (this.selectAfterRender) {
-                    this.async(function () {
-                        this._setSelected(this.selectAfterRender);
-                        delete this.selectAfterRender;
-                    });
-                }
-            },
-
-            _setSelected: function (selected) {
-                var currentlySelected, currentlySelectedElement, elementToSelect;
-                if (this.menuConfig) {
-                    currentlySelected = this.$.pages.selected;
-                    currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
-                    selected = findModule(selected, this.menuConfig)
-                    elementToSelect = selected && this.$$("[name='" + selected + "']");
-                    if (currentlySelectedElement) {
-                        currentlySelectedElement.configureExitAnimation(selected);
+                listeners: {
+                    "main-menu": "_showMainMenu",
+                    "menu-item-selected": "_showView",
+                    "menu-search-list-closed": "_restoreLastFocusedElement"
+                },
+                
+                _searchMenu: function (event) {
+                    var selectedElement = this.$$("[name='" + this.$.pages.selected + "']");
+                    if (selectedElement && selectedElement.searchMenu) {
+                        this.persistActiveElement();
+                        selectedElement.searchMenu();
+                        if (event.stopPropagation) event.stopPropagation();
+                        if (event.preventDefault) event.preventDefault();
+                        event.cancelBubble = true;
+                        event.returnValue = false;
                     }
-                    if (elementToSelect) {
-                        elementToSelect.configureEntryAnimation(currentlySelected);
-                        this.$.pages.selected = selected;
-                        return;
-                    }
-                }
-                this.selectAfterRender = selected;
-            },
+                },
+                
+                _restoreLastFocusedElement: function (event) {
+                    this.restoreActiveElement();
+                },
 
-            _checkWeatherCanLeave: function (e) {
-                var modules = this.querySelectorAll("tg-app-view");
-                var customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
-                var changedEntityCentres = [];
-                var master, itemIndex, viewToCheck;
-                for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
-                    viewToCheck = typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave();
-                    if (Array.isArray(viewToCheck)) {
-                        viewToCheck.forEach(function(element) {
-                            changedEntityCentres.push(element);    
+                _routeChanged: function (newValue, oldValue) {
+                    this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                },
+                
+                _selectedSubmoduleChanged: function (newValue, oldValue) {
+                    if (this._subroute.path !== newValue) {
+                        this.set("_subroute.path", newValue);
+                    }
+                },
+
+                _showMainMenu: function (e) {
+                    this._setSelected("menu");
+                },
+
+                _showView: function (e) {
+                    var menuPathItems = e.detail.split("/");
+                    var moduleName = decodeURIComponent(menuPathItems[0]);
+                    var route = "/" + menuPathItems[0];
+                    menuPathItems.splice(0,1);
+                    route += "/" + (menuPathItems.length > 0 ? menuPathItems.join("/") : "_");
+                    if (this._route.path === route) {
+                        this._setSelected(moduleName);
+                    } else {
+                        this.set("_route.path", route);
+                    }
+                },
+
+                _modulesRendered: function (e) {
+                    if (this.selectAfterRender) {
+                        this.async(function () {
+                            this._setSelected(this.selectAfterRender);
+                            delete this.selectAfterRender;
                         });
-                    } else if (viewToCheck) {
-                        changedEntityCentres.push(viewToCheck);
                     }
-                }
-                if (changedEntityCentres.length > 0) {
-                    e.returnValue = "The following menu items were changed:\n";
-                    changedEntityCentres.forEach(function(element) {
-                        e.returnValue += "\t * " + element + "\n";
-                    });
-                }
-                for (itemIndex = 0; itemIndex < customDialogs.length; itemIndex++) {
-                    if (customDialogs[itemIndex].style.display !== 'none') {
-                        master = customDialogs[itemIndex].querySelector(".canLeave");
-                        if (master && typeof master.canLeave === 'function' && master.canLeave()) {
-                            e.returnValue = "There are some unsaved entity masters.";
+                },
+
+                _setSelected: function (selected) {
+                    var currentlySelected, currentlySelectedElement, elementToSelect;
+                    if (this.menuConfig) {
+                        currentlySelected = this.$.pages.selected;
+                        currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
+                        if (currentlySelected === selected) {
+                            if (this._selectedSubmodule === this._subroute.path) {
+                                if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
+                                    currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+                                }
+                            } else {
+                                this._selectedSubmodule = this._subroute.path
+                            }
+                            return;
+                        }
+                        selected = findModule(selected, this.menuConfig)
+                        elementToSelect = selected && this.$$("[name='" + selected + "']");
+                        if (currentlySelectedElement) {
+                            currentlySelectedElement.configureExitAnimation(selected);
+                        }
+                        if (elementToSelect) {
+                            elementToSelect.configureEntryAnimation(currentlySelected);
+                            this.$.pages.selected = selected;
+                            return;
                         }
                     }
-                }
-            },
+                    this.selectAfterRender = selected;
+                },
 
-            ready: function () {
-                //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
-                this.$.location.$$("iron-location").dwellTime = 0;
-                //Binding to 'this' functions those are used outside the scope of this component.
-                this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
-            },
-
-            attached: function () {
-                var self = this;
-                this.menuConfig = @menuConfig;
-
-                this.async(function () {
-                    if (!this._route.path) {
-                        this.set("_route.path", "/menu");
+                _checkWeatherCanLeave: function (e) {
+                    var modules = this.querySelectorAll("tg-app-view");
+                    var customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
+                    var changedEntityCentres = [];
+                    var master, itemIndex, viewToCheck;
+                    for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
+                        viewToCheck = typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave();
+                        if (Array.isArray(viewToCheck)) {
+                            viewToCheck.forEach(function (element) {
+                                changedEntityCentres.push(element);
+                            });
+                        } else if (viewToCheck) {
+                            changedEntityCentres.push(viewToCheck);
+                        }
                     }
-                });
+                    if (changedEntityCentres.length > 0) {
+                        e.returnValue = "The following menu items were changed:\n";
+                        changedEntityCentres.forEach(function (element) {
+                            e.returnValue += "\t * " + element + "\n";
+                        });
+                    }
+                    for (itemIndex = 0; itemIndex < customDialogs.length; itemIndex++) {
+                        if (customDialogs[itemIndex].style.display !== 'none') {
+                            master = customDialogs[itemIndex].querySelector(".canLeave");
+                            if (master && typeof master.canLeave === 'function' && master.canLeave()) {
+                                e.returnValue = "There are some unsaved entity masters.";
+                            }
+                        }
+                    }
+                },
+                
+                _animationFinished: function (e, detail, source) {
+                    var target = e.target || e.srcElement;
+                    var currentlySelectedElement
+                    if (target === this.$.pages){
+                        this._selectedModule = this._routeData.moduleName;
+                        if (this._selectedSubmodule === this._subroute.path) {
+                            if (detail.toPage.selectSubroute) {
+                                detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+                            }
+                        } else {
+                            this._selectedSubmodule = this._subroute.path;
+                        }
+                    }
+                 },
 
-                window.addEventListener("beforeunload", this._checkWeatherCanLeave);
-            },
+                //Entity master related functions
 
-            detached: function () {
-                window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
-            }
-        });
-    })();
-</script>
+                _masterDom: function () {
+                    return this.$.masterDom;
+                },
+
+                /**
+                 * The core-ajax component for entity retrieval.
+                 */
+                _ajaxRetriever: function () {
+                    return this._masterDom()._ajaxRetriever();
+                },
+
+                /**
+                 * The core-ajax component for entity saving.
+                 */
+                _ajaxSaver: function () {
+                    return this._masterDom()._ajaxSaver();
+                },
+
+                /**
+                 * The validator component.
+                 */
+                _validator: function () {
+                    return this._masterDom()._validator();
+                },
+
+                /**
+                 * The component for entity serialisation.
+                 */
+                _serialiser: function () {
+                    return this._masterDom()._serialiser();
+                },
+
+                /**
+                 * The reflector component.
+                 */
+                _reflector: function () {
+                    return this._masterDom()._reflector();
+                },
+
+                /**
+                 * The toast component.
+                 */
+                _toastGreeting: function () {
+                    return this._masterDom()._toastGreeting();
+                },
+
+                ready: function () {
+                    //setting the uuid for this master.
+                    this.uuid = this.is + '/' + this._reflector().generateUUID();
+                    this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
+                    //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
+                    this.$.location.$$("iron-location").dwellTime = 0;
+                    //Binding to 'this' functions those are used outside the scope of this component.
+                    this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
+                    this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
+                        if (this._saveIdentifier) {
+                            this.cancelAsync(this._saveIdentifier);
+                            this._saveIdentifier = null;
+                        }
+                        this._visibleMenuItems = addAllElements(visibleItems, this._visibleMenuItems, this._invisibleMenuItems);
+                        this._invisibleMenuItems = addAllElements(invisibleItems, this._invisibleMenuItems, this._visibleMenuItems);
+                        this._saveIdentifier = this.async(function () {
+                            this.$.menuSaveAction._run();
+                        }, 500);
+                    }.bind(this);
+                    //Init master realted properties
+                    this.entityType = "ua.com.fielden.platform.menu.Menu";
+                    //Init master related functions.
+                    this.postRetrieved = function (entity, bindingEntity, customObject) {
+                        this.menuConfig = entity;
+                    }.bind(this);
+                    this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                    this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
+                    //Init action related functions
+                    this.$.menuSaveAction.modifyFunctionalEntity = function (bindingEntity, master) {
+                        if (this._visibleMenuItems && this._visibleMenuItems.length > 0) {
+                            this.$.menuSaveAction.modifyValue4Property("visibleMenuItems", bindingEntity, this._visibleMenuItems);
+                            this._visibleMenuItems = null;
+                        }
+                        if (this._invisibleMenuItems && this._invisibleMenuItems.length > 0) {
+                            this.$.menuSaveAction.modifyValue4Property("invisibleMenuItems", bindingEntity, this._invisibleMenuItems);
+                            this._invisibleMenuItems = null;
+                        }
+                    }.bind(this);
+                },
+
+                attached: function () {
+                    var self = this;
+                    this.async(function () {
+                        self.topLevelActions = [
+                            //actionsObject
+                        ];
+                        if (!this._route.path) {
+                            this.set("_route.path", "/menu");
+                        }
+                        this.retrieve();
+                        this._toastGreeting().text = "Loading menu...";
+                        this._toastGreeting().hasMore = false;
+                        this._toastGreeting().showProgress = true;
+                        this._toastGreeting().msgHeading = "Info";
+                        this._toastGreeting().isCritical = false;
+                        this._toastGreeting().show();
+                    });
+
+                    window.addEventListener("beforeunload", this._checkWeatherCanLeave);
+                },
+
+                detached: function () {
+                    window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
+                }
+            });
+        })();
+    </script>
+</dom-module>

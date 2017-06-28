@@ -1,23 +1,20 @@
 package ua.com.fielden.platform.entity.proxy;
 
 import static javassist.util.proxy.ProxyFactory.isProxyClass;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
@@ -46,6 +43,8 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
 
 public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
@@ -221,8 +220,101 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         assertNull(vehicle1.getReplacedBy());
     }
 
+    @Test
+    public void properties_with_id_only_proxy_values_can_be_updated_with_null_and_saved() {
+        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final TgVehicle vehicle = coVehicle.findByKey("CAR2");
+
+        assertFalse(Reflector.isPropertyProxied(vehicle, "station"));
+
+        assertNotNull(vehicle.getStation());
+        assertTrue(vehicle.getStation().isIdOnlyProxy());
+        assertFalse(vehicle.getProperty("station").isDirty());
+
+        vehicle.setStation(null);
+        assertTrue(vehicle.getProperty("station").isDirty());
+        assertNull(vehicle.getStation());
+
+        final TgVehicle savedVehicle = save(vehicle);
+        assertNull(savedVehicle.getStation());
+    }
+
+    @Test
+    public void properties_with_id_only_proxy_values_cannot_be_updated_with_non_null_values() {
+        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final TgVehicle vehicle = coVehicle.findByKey("CAR2");
+
+        assertFalse(Reflector.isPropertyProxied(vehicle, "station"));
+
+        assertNotNull(vehicle.getStation());
+        assertTrue(vehicle.getStation().isIdOnlyProxy());
+        assertFalse(vehicle.getProperty("station").isDirty());
+
+        final EntityResultQueryModel<TgOrgUnit5> query = select(TgOrgUnit5.class).where().prop("name").eq().val("orgunit5_1").model();
+        final TgOrgUnit5 station51 = co(TgOrgUnit5.class).uninstrumented().getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
+
+        final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(station51));
+        assertTrue(setStationResult instanceof Left);
+        final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
+        assertTrue(setError.value instanceof StrictProxyException);
+    }
+
+    @Test
+    public void properties_that_could_have_id_only_proxy_values_but_are_null_can_be_updated_with_non_null_values() {
+        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final TgVehicle vehicle = coVehicle.findByKey("CAR1");
+
+        assertFalse(Reflector.isPropertyProxied(vehicle, "station"));
+
+        assertNull(vehicle.getStation());
+        assertFalse(vehicle.getProperty("station").isDirty());
+
+        final EntityResultQueryModel<TgOrgUnit5> query = select(TgOrgUnit5.class).where().prop("name").eq().val("orgunit5_1").model();
+        final TgOrgUnit5 station51 = co(TgOrgUnit5.class).uninstrumented().getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
+
+        vehicle.setStation(station51);
+        assertTrue(vehicle.getProperty("station").isDirty());
+        assertEquals(station51, vehicle.getStation());
+
+        final TgVehicle savedVehicle = save(vehicle);
+        assertEquals(station51, savedVehicle.getStation());
+    }
+
+    @Test
+    public void explicitly_unfetched_properties_of_entity_type_can_neither_be_accessed_nor_mutated() {
+        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final fetch<TgVehicle> fetch = fetchKeyAndDescOnly(TgVehicle.class);
+        final TgVehicle vehicle = coVehicle.findByKeyAndFetch(fetch, "CAR2");
+
+        assertTrue(Reflector.isPropertyProxied(vehicle, "station"));
+
+        final Either<Exception, TgOrgUnit5> getStationResult = Try(() -> vehicle.getStation());
+        assertTrue(getStationResult instanceof Left);
+        final Left<Exception, TgOrgUnit5> getError = (Left<Exception, TgOrgUnit5>) getStationResult;
+        assertTrue(getError.value instanceof StrictProxyException);
+
+        final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(null));
+        assertTrue(setStationResult instanceof Left);
+        final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
+        assertTrue(setError.value instanceof StrictProxyException);
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
     @Override
     protected void populateDomain() {
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
+
         super.populateDomain();
         
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
@@ -231,7 +323,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
         final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-        final TgBogieLocation location = config.getEntityFactory().newEntity(TgBogieLocation.class);
+        final TgBogieLocation location = co(TgBogieLocation.class).new_();
         location.setWorkshop(workshop1);
         final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
@@ -262,6 +354,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
         final TgOrgUnit4 orgUnit4 = save(new_composite(TgOrgUnit4.class, orgUnit3, "orgunit4"));
         final TgOrgUnit5 orgUnit5 = save(new_composite(TgOrgUnit5.class, orgUnit4, "orgunit5"));
+        final TgOrgUnit5 orgUnit5_1 = save(new_composite(TgOrgUnit5.class, orgUnit4, "orgunit5_1"));
 
         final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
         final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));

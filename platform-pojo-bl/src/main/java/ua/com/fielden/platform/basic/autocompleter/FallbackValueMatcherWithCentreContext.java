@@ -5,6 +5,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -17,18 +18,12 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithCentreContext<T> {
 
-    public FallbackValueMatcherWithCentreContext(final IEntityDao<T> dao) {
-        super(dao);
-    }
-
-    @Override
-    public void setContext(final CentreContext<T, ?> context) {
-
-    }
-
-    @Override
-    public CentreContext<T, ?> getContext() {
-        return null;
+    private final Class<T> entityType;
+    
+    public FallbackValueMatcherWithCentreContext(final IEntityDao<T> co) {
+        super(co);
+        
+        entityType = co.getEntityType();
     }
 
     @Override
@@ -41,7 +36,11 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
             final CentreContext<T, ?> context,
             final String searchString,
             final ICompoundCondition0<T> incompleteEql) {
-        return incompleteEql.model();
+        if (EntityUtils.hasDescProperty(entityType)) {
+            return incompleteEql.or().upperCase().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model();
+        } else {
+            return incompleteEql.model();
+        }
     }
 
 }

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.devdb_support;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,6 +13,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -23,6 +26,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 
@@ -35,10 +39,11 @@ import ua.com.fielden.platform.types.Money;
  */
 public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
 
-    private final List<String> dataScript = new ArrayList<String>();
-    private final List<String> truncateScript = new ArrayList<String>();
+    private final List<String> dataScript = new ArrayList<>();
+    private final List<String> truncateScript = new ArrayList<>();
 
     public final IDomainDrivenTestCaseConfiguration config;
+    private final Properties props;
 
     private final ICompanionObjectFinder provider;
     private final EntityFactory factory;
@@ -46,8 +51,9 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
 
     private boolean domainPopulated = false;
 
-    protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config) {
+    protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
         try {
+            this.props = props;
             this.config = config;
             provider = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getEntityFactory();
@@ -75,7 +81,9 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     }
 
     public final void createAndPopulate() throws Exception {
-        createAndPopulate(true);
+        // generateSchemaScript is only supported for H2 - it uses H2-specific query "SCRIPT"
+        final boolean generateSchemaScript = config.getDomainMetadata().dbVersion == H2;
+        createAndPopulate(generateSchemaScript);
     }
     /**
      * The entry point to trigger creation of the database and its population.
@@ -105,7 +113,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
                 st.close();
 
                 // create truncate statements
-                for (final PersistedEntityMetadata entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
+                for (final PersistedEntityMetadata<?> entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
                     truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
             }
@@ -128,11 +136,11 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
         exec(truncateScript, conn);
     }
 
-    private static Connection createConnection() {
-        final String url = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.url");
-        final String jdbcDriver = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.driver_class");
-        final String user = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.username");
-        final String passwd = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.password");
+    private Connection createConnection() {
+        final String url = props.getProperty("hibernate.connection.url");
+        final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
+        final String user = props.getProperty("hibernate.connection.username");
+        final String passwd = props.getProperty("hibernate.connection.password");
 
         try {
             Class.forName(jdbcDriver);
@@ -186,7 +194,10 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
-        return factory.newEntity(entityClass, key, desc);
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        entity.setDesc(desc);
+        return entity;
     }
 
     /**
@@ -198,7 +209,9 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
-        return factory.newByKey(entityClass, key);
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        return entity;
     }
 
     /**
@@ -209,7 +222,8 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
-        return factory.newEntity(entityClass);
+        final IEntityDao<T> co = co(entityClass);
+        return co != null ? co.new_() : factory.newEntity(entityClass);
     }
 
     /**
@@ -222,6 +236,19 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public final <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
-        return factory.newByKey(entityClass, keys);
+        final T entity = new_(entityClass);
+        if (keys.length > 0) {
+            // setting composite key fields
+            final List<Field> fieldList = Finder.getKeyMembers(entityClass);
+            if (fieldList.size() != keys.length) {
+                throw new IllegalArgumentException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+            }
+            for (int index = 0; index < fieldList.size(); index++) {
+                final Field keyField = fieldList.get(index);
+                final Object keyValue = keys[index];
+                entity.set(keyField.getName(), keyValue);
+            }
+        }
+        return entity;
     }
 }

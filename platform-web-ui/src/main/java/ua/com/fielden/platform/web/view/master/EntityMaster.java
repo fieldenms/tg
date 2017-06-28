@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.view.master;
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.DefaultEntityProducerForCompoundMenuItem;
@@ -13,14 +15,17 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-
-import com.google.inject.Injector;
 
 /**
  * Represents entity master.
@@ -150,11 +155,21 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      * @param coFinder
      * @return
      */
-    public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+    public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(
+            final String propertyName, 
+            final Class<T> entityType, 
+            final ICompanionObjectFinder coFinder) {
+        
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : PropertyTypeDeterminator.determinePropertyType(entityType, propertyName));
         final IEntityDao<V> co = coFinder.find(propertyType);
-        return new FallbackValueMatcherWithContext<T, V>(co);
+
+        // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
+        final boolean activeOnly = 
+                ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
+                !Finder.findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
+        
+        return new FallbackValueMatcherWithContext<>(co, activeOnly);
     }
 
     @Override
@@ -201,7 +216,22 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.empty();
         }
-
+        
+        @Override
+        public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+            throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+        }
     }
-
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     * 
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        return masterConfig.actionConfig(actionKind, actionNumber);
+    }
+    
 }

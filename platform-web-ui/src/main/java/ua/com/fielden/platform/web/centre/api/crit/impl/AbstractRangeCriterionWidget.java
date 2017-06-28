@@ -18,8 +18,13 @@ public abstract class AbstractRangeCriterionWidget extends AbstractMultiCriterio
      * @param criteriaType
      * @param propertyName
      */
-    public AbstractRangeCriterionWidget(final String widgetPath, final String propertyName, final AbstractWidget... editors) {
-        super(widgetPath, propertyName, editors);
+    public AbstractRangeCriterionWidget(final Class<?> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+        super(root, widgetPath, propertyName, editors);
+    }
+
+    @Override
+    protected String getCriterionClass(final int editorIndex) {
+        return "range-criterion-editor-" + (editorIndex + 1);
     }
 
     @Override

@@ -35,30 +35,30 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  *
  */
 public class VulcanizingUtility {
-    private final static Logger logger = Logger.getLogger(VulcanizingUtility.class);
-    
+    private static final Logger LOGGER = Logger.getLogger(VulcanizingUtility.class);
+
     public static String[] unixCommands(final String prefix) {
         return new String[] {"/bin/bash", prefix + "-script.sh"};
     }
-    
+
     public static String[] windowsCommands(final String prefix) {
         // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
-        return new String[] {"CMD", "/c", "vulcanize", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", "^>", prefix + "-startup-resources-origin-vulcanized.html"};
+        return new String[] {"CMD", "/c", "vulcanize", "--strip-comments", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", "^>", prefix + "-startup-resources-origin-vulcanized.html"};
         // OTHER WAY: create three files login-script.bat, desktop-script.bat and mobile-script.bat and place them where similar *.sh scripts reside.
         // Contents of the login-script.bat file should be following (brackets should be removed): [vulcanize -p "vulcan/" /login-startup-resources-origin.html ^> login-startup-resources-origin-vulcanized.html].
-        // UNCOMMENT: return new String[] {"CMD", "/c", prefix + "-script.bat"};  
+        // UNCOMMENT: return new String[] {"CMD", "/c", prefix + "-script.bat"};
     }
-    
-    protected static Pair<Properties, String[]> processVmArguments(final String[] args) {
+
+    protected static Pair<Properties, String[]> processVmArguments(final String[] args) throws IOException {
         if (args.length < 1) {
             throw new IllegalArgumentException(""
                     + "One or two arguments are expected: \n"
                     + "\t1st is the path to the application properties file;\n"
                     + "\t2nd is the additional paths to be added to the PATH env. variable.\n");
         }
-        
+
         if (args.length > 2) {
-            logger.warn("There are more than 2 arguments. Only first two will be used, the rest will be ignored.");
+            LOGGER.warn("There are more than 2 arguments. Only first two will be used, the rest will be ignored.");
         }
         final String propertyFile;
         final String paths;
@@ -69,34 +69,29 @@ public class VulcanizingUtility {
             propertyFile = args[0];
             paths = args[1];
         }
-        
-        final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
-        final String[] additionalPaths = paths.split(File.pathSeparator);
-        return Pair.pair(props, additionalPaths);
+
+        try {
+            final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
+            final String[] additionalPaths = paths.split(File.pathSeparator);
+            return Pair.pair(props, additionalPaths);
+        } catch (final IOException ex) {
+            LOGGER.fatal(String.format("Application property file %s could not be located or its values are not recognised.", propertyFile), ex);
+            throw ex;
+        }
+
     }
 
     /**
      * Retrieves application properties from the specified file.
      *
      * @return
+     * @throws IOException
+     * @throws FileNotFoundException
      */
-    private static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) {
-        InputStream st = null;
-        Properties props = null;
-        try {
-            st = new FileInputStream(fileName);
-            props = new Properties();
+    private static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) throws IOException {
+        final Properties props = new Properties();
+        try (final InputStream st = new FileInputStream(fileName)){
             props.load(st);
-        } catch (final Exception e) {
-            System.out.println(String.format("Application property file %s could not be located or its values are not recognised.", fileName));
-            e.printStackTrace();
-            System.exit(1);
-        } finally {
-            try {
-                st.close();
-            } catch (final Exception e) {
-                e.printStackTrace(); // can be ignored
-            }
         }
 
         // needs to be overridden to start vulcanization in development mode (no need to calculate preloaded resources)
@@ -131,11 +126,11 @@ public class VulcanizingUtility {
             final String mobileAndDesktopAppSpecificPath,
             final Function<String, String[]> commandMaker,
             final String[] additionalPaths) {
-        if (logger == null) {
+        if (LOGGER == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
         }
 
-        logger.info("Vulcanizing...");
+        LOGGER.info("Vulcanizing...");
         final ISourceController sourceController = injector.getInstance(ISourceController.class);
 
         final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
@@ -144,44 +139,44 @@ public class VulcanizingUtility {
         final File dir = new File("vulcan");
         dir.mkdir();
 
-        copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, logger);
-        logger.info("\t------------------------------");
+        copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, LOGGER);
+        LOGGER.info("\t------------------------------");
 
-        logger.info("\tVulcanizing login resources...");
-        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("login"), additionalPaths, logger, dir);
-        logger.info("\tVulcanized login resources.");
+        LOGGER.info("\tVulcanizing login resources...");
+        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("login"), additionalPaths, LOGGER, dir);
+        LOGGER.info("\tVulcanized login resources.");
 
-        logger.info("\t------------------------------");
+        LOGGER.info("\t------------------------------");
 
-        downloadCommonGeneratedResources(webUiConfig, sourceController, logger);
-        logger.info("\t------------------------------");
+        downloadCommonGeneratedResources(webUiConfig, sourceController, LOGGER);
+        LOGGER.info("\t------------------------------");
 
-        logger.info("\tVulcanizing mobile resources...");
-        downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController, logger);
-        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), additionalPaths, logger, dir);
-        logger.info("\tVulcanized mobile resources.");
-        logger.info("\t------------------------------");
+        LOGGER.info("\tVulcanizing mobile resources...");
+        downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController, LOGGER);
+        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), additionalPaths, LOGGER, dir);
+        LOGGER.info("\tVulcanized mobile resources.");
+        LOGGER.info("\t------------------------------");
 
-        logger.info("\tVulcanizing desktop resources...");
-        downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController, logger);
-        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), additionalPaths, logger, dir);
-        logger.info("\tVulcanized desktop resources.");
-        logger.info("\t------------------------------");
+        LOGGER.info("\tVulcanizing desktop resources...");
+        downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController, LOGGER);
+        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), additionalPaths, LOGGER, dir);
+        LOGGER.info("\tVulcanized desktop resources.");
+        LOGGER.info("\t------------------------------");
 
         clearObsoleteResources(dir);
 
-        logger.info("Vulcanized.");
+        LOGGER.info("Vulcanized.");
     }
 
     private static void clearObsoleteResources(final File dir) {
-        logger.info("\tClear obsolete files...");
+        LOGGER.info("\tClear obsolete files...");
         try {
             FileUtils.deleteDirectory(dir);
         } catch (final IOException e) {
-            logger.error(e.getMessage(), e);
+            LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
         }
-        logger.info("\tCleared obsolete files.");
+        LOGGER.info("\tCleared obsolete files.");
     }
 
     private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController, final Logger logger) {
@@ -193,7 +188,7 @@ public class VulcanizingUtility {
         }
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
             downloadSource("centre_ui", centreMiType.getName(), sourceController, null, logger);
-            downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null, logger);
+            // downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null, logger);
         }
         for (final String viewName : webUiConfig.getCustomViews().keySet()) {
             downloadSource("custom_view", viewName, sourceController, null, logger);
@@ -255,10 +250,10 @@ public class VulcanizingUtility {
 
         } catch (final IOException | InterruptedException e) {
             logger.error(e.getMessage(), e);
-            
+
             // need to clear obsolete resources in case of vulcanization failure
             clearObsoleteResources(dir);
-            
+
             throw new IllegalStateException(e);
         }
         logger.info("\t\tVulcanized [" + prefix + "-startup-resources-origin.html].");
@@ -376,13 +371,13 @@ public class VulcanizingUtility {
      */
     private static String inlineScripts(final String source, final ISourceController sourceController, final DeviceProfile deviceProfile, final Logger logger) {
         // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged charset and src, double or single quotes etc.?)
-        final String searchString = "<script src=\"";
+        final String searchString = "<script src=\"/";
         final int indexOfScriptTag = source.indexOf(searchString);
         if (indexOfScriptTag > -1) {
             final String endSearchString = "\"></script>";
-            final int endIndex = source.indexOf(endSearchString, indexOfScriptTag + searchString.length()) + endSearchString.length();
+            final int endIndex = source.indexOf(endSearchString, indexOfScriptTag + searchString.length() - 1) + endSearchString.length();
             final String scriptTag = source.substring(indexOfScriptTag, endIndex);
-            final String uri = scriptTag.substring(searchString.length(), scriptTag.length() - endSearchString.length());
+            final String uri = scriptTag.substring(searchString.length() - 1, scriptTag.length() - endSearchString.length());
             logger.info("\t\t\tInlining script [" + uri + "]...");
             return inlineScripts(source.replace(scriptTag, "<script>" + sourceController.loadSource(uri, deviceProfile).replace("//# sourceMappingURL", "//") + "\n</script>"), sourceController, deviceProfile, logger);
         } else {

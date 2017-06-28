@@ -64,7 +64,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
         this.addedIds.clear();
         this.addedIds.addAll(addedIds);
         return this;
@@ -75,7 +75,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
         this.removedIds.clear();
         this.removedIds.addAll(removedIds);
         return this;
@@ -117,7 +117,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
         }
     }
     
-    public void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
+    void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
         // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
         this.refetchedMasterEntity = refetchedMasterEntity;
     }

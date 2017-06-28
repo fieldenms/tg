@@ -12,6 +12,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -34,10 +38,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
 
 /**
  *
@@ -281,18 +281,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
      */
-    private final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType;
+    private final Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType;
 
     /**
      * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
      */
-    private final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType;
+    private final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType;
 
-    ////////////////////////////////////////////////
-    ///////// QUERY ENHANCER AND FETCH /////////////
-    ////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////
+    ///////// QUERY ENHANCER, GENERATOR and FETCH /////////////
+    ///////////////////////////////////////////////////////////
 
     private final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig;
+    private final Pair<Class<?>, Class<?>> generatorTypes;
     private final IFetchProvider<T> fetchProvider;
 
     ///////////////////////////////////
@@ -355,9 +356,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
             final EntityActionConfig resultSetPrimaryEntityAction,
             final List<EntityActionConfig> resultSetSecondaryEntityActions,
-            final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType,
-            final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
+            final Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType,
+            final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
+            final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -418,6 +420,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultSetRenderingCustomiserType = resultSetRenderingCustomiserType;
         this.resultSetCustomPropAssignmentHandlerType = resultSetCustomPropAssignmentHandlerType;
         this.queryEnhancerConfig = queryEnhancerConfig;
+        this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
     }
 
@@ -467,6 +470,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(queryEnhancerConfig);
     }
 
+    public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
+        return Optional.ofNullable(generatorTypes);
+    }
+
     public Optional<IFetchProvider<T>> getFetchProvider() {
         return Optional.ofNullable(fetchProvider);
     }
@@ -504,12 +511,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public List<Pair<String, Boolean>> getAdditionalPropsForAutocompleter(final String critName) {
-        List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
-        if (props == null) {
-            props = new ArrayList<>();
-            props.add(Pair.pair(AbstractEntity.DESC, false));
-        }
-        return props;
+        final List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
+        return props != null ? props : new ArrayList<>();
     }
 
     public Optional<List<String>> getSelectionCriteria() {
@@ -673,7 +676,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForDateSelectionCriteria));
     }
 
-    public Optional<Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>>> getResultSetRenderingCustomiserType() {
+    public Optional<Class<? extends IRenderingCustomiser<?>>> getResultSetRenderingCustomiserType() {
         return Optional.ofNullable(resultSetRenderingCustomiserType);
     }
 
@@ -684,7 +687,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(resultSetOrdering));
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
     }
 
@@ -720,6 +723,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .map(resultSetProp -> resultSetProp.propAction.get())
                     .collect(Collectors.toList())
                     .get(actionNumber);
+        } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
+            if (!getInsertionPointActions().isPresent()) {
+                throw new IllegalArgumentException("No insertion point exists.");
+            }
+            return getInsertionPointActions().get().get(actionNumber);
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }

@@ -30,7 +30,6 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     private Optional<EntityActionConfig> action = Optional.empty();
     private boolean skipValidation = false;
     private boolean debug = false;
-    private boolean criterionEditor = false;
 
     /**
      * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -85,15 +84,14 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
             attrs.put("debug", "true");
         }
         attrs.put("id", "editor_4_"+ this.propertyName);
-        attrs.put("entity", "[[_currBindingEntity]]");
+        attrs.put("entity", "{{_currBindingEntity}}");
+        attrs.put("original-entity", "{{_originalBindingEntity}}");
+        attrs.put("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]");
         attrs.put("property-name", this.propertyName);
         attrs.put("validation-callback", this.skipValidation ? "[[doNotValidate]]" : "[[validate]]");
         attrs.put("prop-title", this.title);
         attrs.put("prop-desc", this.desc);
         attrs.put("current-state", "[[currentState]]");
-        if (criterionEditor) {
-            attrs.put("class", "criterion-editors");
-        }
         return attrs;
     }
 
@@ -152,10 +150,5 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
 
     public void setDebug(final boolean debug) {
         this.debug = debug;
-    }
-
-    public AbstractWidget markAsCriterionEditor() {
-        this.criterionEditor = true;
-        return this;
     }
 }

@@ -5,11 +5,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Spliterator;
+import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-import ua.com.fielden.platform.dao.streaming.SequentialPageSpliterator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -96,6 +94,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findById(final Long id, final fetch<T> fetchModel);
+    
+    default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
+        return Optional.ofNullable(findById(id, fetchModel)); 
+    }
 
     /**
      * Finds entity by its surrogate id.
@@ -107,6 +109,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findById(final Long id);
+    
+    default Optional<T> findByIdOptional(final Long id) {
+        return Optional.ofNullable(findById(id));
+    }
 
     /**
      * Finds entity by its business key. If the key is composite then values of the key components should be passed in the same order as defined in the entity class using
@@ -116,6 +122,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findByKey(final Object... keyValues);
+    
+    default Optional<T> findByKeyOptional(final Object... keyValues) {
+        return Optional.ofNullable(findByKey(keyValues));
+    }
 
     /**
      * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
@@ -125,6 +135,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
+    
+    default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
+        return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
+    }
 
     /**
      * Finds entity by its instance and enhances it according to provided fetch model.
@@ -134,6 +148,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
+    
+    default Optional<T> findByEntityAndFetchOptional(final fetch<T> fetchModel, final T entity) {
+        return Optional.ofNullable(findByEntityAndFetch(fetchModel, entity));
+    }
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances.
@@ -205,6 +223,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      */
     T getEntity(final QueryExecutionModel<T, ?> model);
 
+    default Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
+        return Optional.ofNullable(getEntity(model));
+    }
+    
     /**
      * Returns all entities produced by the provided query.
      *
@@ -223,25 +245,22 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
 
     /**
      * Returns a non-parallel stream with the data based on the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      * 
      * @param qem -- EQL model
-     * @param pageCapacity -- a batch size for retrieve the next lot of data to feed the stream
+     * @param fetchSize -- a batch size for retrieve the next lot of data to feed the stream
      * @return
      */
-    default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
-        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, !instrumented() ? qem.lightweight() : qem, pageCapacity);
-        return StreamSupport.stream(spliterator, false);
-    }
+    Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize);
     
     /**
-     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default page capacity. 
+     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default fetch size. 
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      * 
      * @param qem
      * @return
      */
-    default Stream<T> stream(final QueryExecutionModel<T, ?> qem) {
-        return stream(qem, DEFAULT_PAGE_CAPACITY);
-    }
+    Stream<T> stream(final QueryExecutionModel<T, ?> qem);
     
     /**
      * Persists (saves/updates) the entity and returns the updated entity back.
@@ -347,7 +366,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param propEntities
      * @return
      */
-    default int batchDeleteByPropertyValues(final String propName, final List<T> propEntities){
+    default <E extends AbstractEntity<?>> int batchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         throw new UnsupportedOperationException("By default batch deletion is not supported.");
     }
 
@@ -412,5 +431,12 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     IFetchProvider<T> getFetchProvider();
-    
+ 
+    /**
+     * Instantiates an new entity of the type for which this object is a companion.
+     *
+     * @return
+     */
+    T new_();
+
 }

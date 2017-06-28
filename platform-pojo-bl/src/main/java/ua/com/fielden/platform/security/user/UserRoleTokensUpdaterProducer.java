@@ -10,10 +10,10 @@ import java.util.stream.Collectors;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -30,14 +30,14 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<UserRole, UserRoleTokensUpdater> implements IEntityProducer<UserRoleTokensUpdater> {
-    private final IUserRoleDao coUserRole;
+    private final IUserRole coUserRole;
     private final SecurityTokenProvider securityTokenProvider;
     
     @Inject
     public UserRoleTokensUpdaterProducer(
             final EntityFactory factory, 
             final ICompanionObjectFinder companionFinder, 
-            final IUserRoleDao coUserRole, 
+            final IUserRole coUserRole, 
             final IApplicationSettings applicationSettings) throws Exception {
         super(factory, UserRoleTokensUpdater.class, companionFinder);
         this.coUserRole = coUserRole;
@@ -51,8 +51,8 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
         final Set<SecurityTokenInfo> linearisedTokens = lineariseTokens(topLevelTokens, factory());
         entity.setTokens(linearisedTokens);
         
-        final Set<String> chosenRoleIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
-        entity.setChosenIds(chosenRoleIds);
+        final Set<String> chosenIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
+        entity.setChosenIds(chosenIds);
         return entity;
     }
     

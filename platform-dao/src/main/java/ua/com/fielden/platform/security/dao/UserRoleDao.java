@@ -12,7 +12,7 @@ import java.util.List;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -26,13 +26,13 @@ import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
- * Db driven implementation of the {@link IUserRoleDao}.
+ * Db driven implementation of the {@link IUserRole}.
  * 
  * @author TG Team
  * 
  */
 @EntityType(UserRole.class)
-public class UserRoleDao extends CommonEntityDao<UserRole> implements IUserRoleDao {
+public class UserRoleDao extends CommonEntityDao<UserRole> implements IUserRole {
 
     @Inject
     protected UserRoleDao(final IFilter filter) {

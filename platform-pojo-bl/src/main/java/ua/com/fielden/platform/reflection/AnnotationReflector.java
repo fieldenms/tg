@@ -79,7 +79,7 @@ public final class AnnotationReflector {
             for (final Annotation ann : method.getAnnotations()) {
                 newCached.put(ann.annotationType(), ann);
             }
-            annotations.put(methodKey, newCached);
+            annotations.putIfAbsent(methodKey, newCached);
         }
         return annotations.get(methodKey).values();
         //	return Arrays.asList(method.getAnnotations()); // make some caching
@@ -287,7 +287,7 @@ public final class AnnotationReflector {
      * @param type
      * @return
      */
-    public static Class<? extends Comparable> getKeyType(final Class<?> type) {
+    public static Class<? extends Comparable<?>> getKeyType(final Class<?> type) {
         final KeyType keyType = getAnnotationForClass(KeyType.class, type);
         return keyType != null ? keyType.value() : null;
     }

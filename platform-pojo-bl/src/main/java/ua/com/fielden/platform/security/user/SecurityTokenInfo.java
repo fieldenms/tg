@@ -35,4 +35,10 @@ public class SecurityTokenInfo extends AbstractEntity<String> {
     public String getTitle() {
         return title;
     }
+    
+    @Override
+    @Observable
+    public SecurityTokenInfo setKey(final String key) {
+        return (SecurityTokenInfo) super.setKey(key);
+    }
 }

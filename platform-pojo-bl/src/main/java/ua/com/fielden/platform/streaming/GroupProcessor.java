@@ -61,9 +61,11 @@ public class GroupProcessor<T> implements Consumer<T> {
      * Such situation occurs for every stream after consuming its last element that may belong to the current group or be a subject for a separate group.
      */
     public void completeProcessing() {
-        // do processing of the current and last group 
-        processor.accept(groupToProcess);
-        groupToProcess.clear();
+        // do processing of the current and last group
+        if (!groupToProcess.isEmpty()) {
+            processor.accept(groupToProcess);
+            groupToProcess.clear();
+        }
     }
 
 }

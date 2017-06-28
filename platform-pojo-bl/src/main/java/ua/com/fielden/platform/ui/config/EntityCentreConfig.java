@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 
@@ -42,7 +41,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 @CompanionObject(IEntityCentreConfig.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)
@@ -67,16 +65,11 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @MapTo("IS_PRINCIPAL")
     private boolean principal = false;
 
-    protected EntityCentreConfig() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public MainMenuItem getMenuItem() {
         return menuItem;
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
     public EntityCentreConfig setMenuItem(final MainMenuItem menuItem) {
         this.menuItem = menuItem;
         return this;
@@ -97,7 +90,6 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @EntityExists(User.class)
     public EntityCentreConfig setOwner(final User owner) {
         this.owner = owner;
         return this;

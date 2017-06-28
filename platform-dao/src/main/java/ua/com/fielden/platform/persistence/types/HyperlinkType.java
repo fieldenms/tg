@@ -13,7 +13,6 @@ import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
-import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
@@ -46,7 +45,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
         try {
             return new Hyperlink((String) argument);
         } catch (final Exception e) {
-            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Colour.class.getName(), argument, e.getMessage()), e);
+            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Hyperlink.class.getName(), argument, e.getMessage()), e);
         }
 	}
 

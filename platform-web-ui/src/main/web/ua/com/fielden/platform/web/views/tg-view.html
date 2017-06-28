@@ -24,7 +24,7 @@
             height: 44px;
             font-size: 18px;
             color: white;
-            background-color: #0288D1
+            background-color: var(--paper-light-blue-700);
         }
         .view {
             background-color: white;
@@ -32,10 +32,10 @@
     </style>
     <template>
         <div id="toolbar" class="tool-bar layout horizontal center">
-            <div class="flex">[[menuItem.title]]</div>
+            <div class="flex">[[menuItem.key]]</div>
         </div>
         <div id="viewContainer">
-            <tg-menu-item-view id="menuItemView" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-menu-item-view>
+            <tg-menu-item-view id="menuItemView" auto-load="[[autoLoad]]" menu-item="[[menuItem]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"  submodule-id="" submodule="[[submodule]]"></tg-menu-item-view>
         </div>
         <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
     </template>
@@ -49,6 +49,10 @@
             properties: {
                 menuItem: Object,
                 selectedModule: String,
+                submodule: {
+                    type: Object,
+                    notify: true
+                },
                 autoLoad: {
                     type: Boolean,
                     value: false,
@@ -96,22 +100,12 @@
             hostAttributes: {
                 "class": "layout vertical"
             },
-            
-            observers: [
-                "_moduleChanged(menuItem, selectedModule)"
-            ],
-
-            _moduleChanged: function (menuItem, selectedModule) {
-                if (menuItem.title === decodeURIComponent(selectedModule)) {
-                    this.$.menuItemView.loadAfterInit();
-                }
-            },
 
             _showMenu: function (e, detail, source) {
                 this.fire("main-menu");
             },
-            
-            canLeave: function() {
+
+            canLeave: function () {
                 return this.$.menuItemView.canLeave();
             },
         });

@@ -2,20 +2,16 @@ package ua.com.fielden.platform.web.test.server;
 
 import java.util.Properties;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-
-import com.google.inject.Injector;
-import com.google.inject.name.Named;
-
-import fielden.config.ApplicationDomain;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration} to be used for creation and population of the target development database
@@ -32,10 +28,9 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     /**
      * Default constructor is required for dynamic instantiation by {@link DbDrivenTestCase}.
      */
-    public DataPopulationConfig() {
+    public DataPopulationConfig(final Properties props) {
         // instantiate all the factories and Hibernate utility
         try {
-            final Properties props = hbc;
             // application properties
             props.setProperty("app.name", "TG Test App");
             props.setProperty("reports.path", "");
@@ -48,7 +43,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("email.fromAddress", "tg@fielden.com.au");
 
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
+            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserNotifierMockBindingModule()).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {
@@ -62,16 +57,6 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     }
 
     @Override
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return module.getDomainMetaPropertyConfig();
-    }
-
-    @Override
-    public DomainValidationConfig getDomainValidationConfig() {
-        return module.getDomainValidationConfig();
-    }
-
-    @Override
     public <T> T getInstance(final Class<T> type) {
         return injector.getInstance(type);
     }
@@ -80,7 +65,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     public DomainMetadata getDomainMetadata() {
         return module.getDomainMetadata();
     }
-    
+
     @Override
     public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
         return module.getIdOnlyProxiedEntityTypeCache();

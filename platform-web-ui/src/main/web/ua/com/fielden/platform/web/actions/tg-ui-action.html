@@ -114,6 +114,30 @@
             return _findSelectedEntitiesIn(centreContextHolder.masterEntity.centreContextHolder);
         }
     };
+    
+    var removeStyles = function (element, styles) {
+        if (styles && styles.length > 0) {
+            styles.split(";").map(function (style) {
+                return style.trim().split(":");
+            }).forEach(function (style) {
+                if (style.length === 2) {
+                    delete element.style[style[0]];
+                }
+            });
+        }
+    };
+    
+    var addStyles =  function (element, styles) {
+        if (styles && styles.length > 0) {
+            styles.split(";").map(function (style) {
+                return style.trim().split(":");
+            }).forEach(function (style) {
+                if (style.length === 2) {
+                    element.style[style[0]] = style[1];
+                }
+            });
+        }
+    };
 
     Polymer({
     	is: 'tg-ui-action',
@@ -245,6 +269,14 @@
             	type: String
             },
             
+            /**
+             * Icon styles for icon button.
+             */
+            iconStyle: {
+                type: String,
+                observer: "_iconStyleChanged"
+            },
+            
             /** 
              * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
              * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
@@ -323,7 +355,8 @@
              * This 'master' reference is strictly for testing purposes.
              */
             _masterReferenceForTesting: {
-                type: Object
+                type: Object,
+                observer: '_masterReferenceForTestingChanged'
             },
             
             ////////////////////////////////////////////////////////////
@@ -372,7 +405,7 @@
         ready: function () {
             var self = this;
             
-            self._run = (function () {
+            self._run = (function (event) {
                 console.log(this.shortDesc + ": execute");
                 
                 self.persistActiveElement();
@@ -389,6 +422,16 @@
                     });
                 } else {
                 	this.showDialog(this);
+                }
+                if (event) {
+                    if (event.stopPropagation) {
+                        event.stopPropagation();
+                    }
+                    if (event.preventDefault) {
+                        event.preventDefault();
+                    }
+                    event.cancelBubble = true;
+                    event.returnValue = false;
                 }
             }).bind(self);
             
@@ -444,7 +487,7 @@
                         }
                     });
                     
-                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                     	if (self.postActionSuccess) {
 	                        self.postActionSuccess(potentiallySavedOrNewEntity);
                     	}
@@ -474,7 +517,7 @@
                 	}
                 };
                 
-                master.entityId = master.savingContext.id === null ? "new" : (+(master.savingContext.id));
+                master.entityId = master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id')));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
                 return master.retrieve(master.savingContext)
                 .then(function(value) {
@@ -510,6 +553,15 @@
             }
             bindingEntity[propNameToBeAssigned] = value;
         },
+
+        /**
+         * Listener that listens the changes for icon style property.
+         */
+        _iconStyleChanged: function (newValue, oldValue) {
+            var icon = this.$.iActionButton.$.icon;
+            removeStyles(icon, oldValue);
+            addStyles(icon, newValue);
+        },
         
         _createContextHolderForAction: function () {
         	var self = this;
@@ -521,7 +573,7 @@
             }
             // enhances it with information of what 'property' was chosen (property result-set actions)
             if (self.chosenProperty !== null) {
-            	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+                self._enhanceContextWithChosenProperty(context, self.chosenProperty);
             }
 			return context;
         },

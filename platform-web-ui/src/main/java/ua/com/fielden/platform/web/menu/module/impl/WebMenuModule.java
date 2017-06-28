@@ -1,11 +1,17 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
 public class WebMenuModule implements IExecutable {
 
-    private final String title;
+    public final String title;
+
     private String description;
     private String bgColor;
     private String captionBgColor;
@@ -13,6 +19,7 @@ public class WebMenuModule implements IExecutable {
     private String detailIcon;
     private WebMenu menu;
     private WebView view;
+    private List<EntityActionConfig> actions = new ArrayList<>();
 
     public WebMenuModule(final String title) {
         this.title = title;
@@ -53,6 +60,15 @@ public class WebMenuModule implements IExecutable {
         return this;
     }
 
+    public WebMenuModule addAction(final EntityActionConfig action) {
+        this.actions.add(action);
+        return this;
+    }
+
+    public List<EntityActionConfig> getActions() {
+        return actions;
+    }
+
     @Override
     public JsCode code() {
         final String code = "{ title: \"" + this.title + "\", " +
@@ -70,5 +86,20 @@ public class WebMenuModule implements IExecutable {
     @Override
     public String toString() {
         return code().toString();
+    }
+
+    public Module getModule() {
+        final Module module = new Module().
+                setBgColor(bgColor).
+                setCaptionBgColor(captionBgColor).
+                setIcon(icon).
+                setDetailIcon(detailIcon).
+                setKey(title).
+                setDesc(description);
+        //TODO module menu can not be null. Right now platform supports modules with view. This case should be covered with separate issue.
+        if (this.menu != null) {
+            module.setMenu(menu.getMenu());
+        }
+        return module;
     }
 }

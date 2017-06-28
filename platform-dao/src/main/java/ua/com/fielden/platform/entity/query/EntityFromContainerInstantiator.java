@@ -31,11 +31,11 @@ public class EntityFromContainerInstantiator {
     public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer) {
         if (entContainer.getProxiedResultType() == null) {
             return entContainer.isInstrumented() ? entFactory.newEntity(entContainer.getResultType(), entContainer.getId())
-                    : entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId());
+                    : EntityFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId());
         }
 
         return entContainer.isInstrumented() ? entFactory.newEntity(entContainer.getProxiedResultType(), entContainer.getId())
-                : entFactory.newPlainEntity(entContainer.getProxiedResultType(), entContainer.getId());
+                : EntityFactory.newPlainEntity(entContainer.getProxiedResultType(), entContainer.getId());
     }
 
     public <R extends AbstractEntity<?>> R instantiateFully(final EntityContainer<R> entityContainer, final R justAddedEntity) {

@@ -18,7 +18,7 @@ public class DefaultValueAssignerForMultiString implements IValueAssigner<MultiC
 
     @Override
     public Optional<MultiCritStringValueMnemonic> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 

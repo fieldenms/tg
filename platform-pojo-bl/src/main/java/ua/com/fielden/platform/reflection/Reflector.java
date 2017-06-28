@@ -37,7 +37,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
-    private final static Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
+    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
@@ -575,7 +575,7 @@ public final class Reflector {
                       field.isAnnotationPresent(Calculated.class) ||
                       (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
                       (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
-                      (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class)) ||
+                      (name.equals(AbstractEntity.DESC) && AnnotationReflector.isAnnotationPresent(entity.getType(), DescTitle.class)) ||
                       (Finder.isOne2One_association(entity.getType(), name))
                   );
     }

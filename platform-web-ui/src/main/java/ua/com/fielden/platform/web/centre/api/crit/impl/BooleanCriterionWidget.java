@@ -17,7 +17,7 @@ public class BooleanCriterionWidget extends AbstractMultiCriterionWidget {
      * @param propertyName
      */
     public BooleanCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/multi/tg-boolean-criterion", propertyName,
+        super(root, "centre/criterion/multi/tg-boolean-criterion", propertyName,
                 new CheckboxWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey()
@@ -26,5 +26,10 @@ public class BooleanCriterionWidget extends AbstractMultiCriterionWidget {
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getValue(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue()
                 ));
+    }
+
+    @Override
+    protected String getCriterionClass(final int editorIndex) {
+        return "range-criterion-editor-" + (editorIndex + 1);
     }
 }

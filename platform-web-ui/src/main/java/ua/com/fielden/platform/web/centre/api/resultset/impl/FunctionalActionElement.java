@@ -113,6 +113,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("shortcut", conf().shortcut.get());
         }
         attrs.put("icon", getIcon());
+        attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
@@ -166,6 +167,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit";
     }
 
+    public String getIconStyle() {
+        return conf().iconStyle.orElse("");
+    }
+
     public String getShortDesc() {
         return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED";
     }
@@ -216,7 +221,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         final StringBuilder attrs = new StringBuilder("{\n");
 
         attrs.append("preAction: function (action) {\n");
-        attrs.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
+        attrs.append("    console.log('preAction: " + conf().shortDesc.orElse("noname") + "');\n");
         if (conf().preAction.isPresent()) {
             attrs.append(conf().preAction.get().build().toString());
         } else {
@@ -225,7 +230,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("},\n");
 
         attrs.append("postActionSuccess: function (functionalEntity) {\n");
-        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "', functionalEntity);\n");
+        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().successPostAction.isPresent()) {
             attrs.append(conf().successPostAction.get().build().toString());
         }
@@ -242,7 +247,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("},\n");
 
         attrs.append("postActionError: function (functionalEntity) {\n");
-        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "', functionalEntity);\n");
+        attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().errorPostAction.isPresent()) {
             attrs.append(conf().errorPostAction.get().build().toString());
         }

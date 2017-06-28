@@ -19,7 +19,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
  * @author TG Team
  * 
  */
-public abstract class Group<T extends AbstractEntity> implements IGroup<T> {
+public abstract class Group<T extends AbstractEntity<?>> implements IGroup<T> {
     private final IProperty property;
     private final Object value;
     private final LifecycleModel<T> parent;

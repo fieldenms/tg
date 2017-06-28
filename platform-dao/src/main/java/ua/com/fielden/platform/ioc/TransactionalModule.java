@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
@@ -103,6 +104,7 @@ public abstract class TransactionalModule extends EntityModule {
 
         if (idOnlyProxiedEntityTypeCache != null) {
             bind(IdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
+            bind(IIdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
         }
         
         // hibernate util

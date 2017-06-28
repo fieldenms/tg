@@ -21,18 +21,9 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final fetch<T> fetchModel;
     private final Map<String, Object> paramValues;
     private final boolean lightweight;
-    transient private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
+    private static final Logger logger = Logger.getLogger(QueryExecutionModel.class);
 
-    /**
-     * A convenient copy method.
-     * 
-     * @return
-     */
-    public QueryExecutionModel<T, Q> copy() {
-        return new QueryExecutionModel<T, Q>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, this.lightweight);
-    }
-    
     protected QueryExecutionModel() {
         queryModel = null;
         orderModel = null;
@@ -45,7 +36,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         this.queryModel = queryModel;
         this.orderModel = orderModel;
         this.fetchModel = fetchModel;
-        this.paramValues = new HashMap<String, Object>();
+        this.paramValues = new HashMap<>();
         this.paramValues.putAll(paramValues);
         this.lightweight = lightweight;
     }
@@ -59,21 +50,30 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         logger.debug(this);
     }
 
+    /**
+     * A convenient copy method.
+     * 
+     * @return
+     */
+    public QueryExecutionModel<T, Q> copy() {
+        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, this.lightweight);
+    }
+
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("\nQEM");
-        sb.append("\n  fetch:" + (fetchModel != null ? fetchModel : ""));
-        sb.append("\n  query:" + queryModel);
-        sb.append("\n  order:" + (orderModel != null ? orderModel : ""));
-        sb.append("\n  param:" + (paramValues.size() > 0 ? paramValues : ""));
-        sb.append("\n  light: " + lightweight);
-        sb.append("\n");
-        return sb.toString();
+        return new StringBuilder()
+        .append("\nQEM")
+        .append("\n  fetch:").append(fetchModel != null ? fetchModel : "")
+        .append("\n  query:").append(queryModel)
+        .append("\n  order:").append(orderModel != null ? orderModel : "")
+        .append("\n  param:").append(paramValues.size() > 0 ? paramValues : "")
+        .append("\n  light: ").append(lightweight)
+        .append("\n")
+        .toString();
     }
 
     private Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
-        final Map<String, Object> result = new HashMap<String, Object>();
+        final Map<String, Object> result = new HashMap<>();
         for (final Map.Entry<String, Object> entry : paramValues.entrySet()) {
             result.put(entry.getKey(), valuePreprocessor.apply(entry.getValue()));
         }
@@ -101,27 +101,23 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     }
 
     public static <E extends AbstractEntity<?>> Builder<E, EntityResultQueryModel<E>> from(final EntityResultQueryModel<E> queryModel) {
-        return new Builder<E, EntityResultQueryModel<E>>(queryModel);
+        return new Builder<>(queryModel);
     }
 
     public static Builder<EntityAggregates, AggregatedResultQueryModel> from(final AggregatedResultQueryModel queryModel) {
-        return new Builder<EntityAggregates, AggregatedResultQueryModel>(queryModel);
+        return new Builder<>(queryModel);
     }
 
     public QueryExecutionModel<T, Q> lightweight() {
-        return new QueryExecutionModel<T, Q>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, true);
+        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, true);
     }
     
     public static class Builder<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
         private Q queryModel;
         private OrderingModel orderModel;
         private fetch<T> fetchModel;
-        private Map<String, Object> paramValues = new HashMap<String, Object>();
+        private Map<String, Object> paramValues = new HashMap<>();
         private boolean lightweight = false;
-
-        public QueryExecutionModel<T, Q> model() {
-            return new QueryExecutionModel<T, Q>(this);
-        }
 
         private Builder(final EntityResultQueryModel<T> queryModel) {
             this.queryModel = (Q) queryModel;
@@ -129,6 +125,10 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 
         private Builder(final AggregatedResultQueryModel queryModel) {
             this.queryModel = (Q) queryModel;
+        }
+
+        public QueryExecutionModel<T, Q> model() {
+            return new QueryExecutionModel<>(this);
         }
 
         public Builder<T, Q> with(final OrderingModel val) {

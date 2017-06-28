@@ -30,10 +30,6 @@ import com.google.inject.Provider;
 public class EntityFactory {
     private Injector injector;
 
-    public void setModule(final Module module, final Module... modules) {
-        injector = Guice.createInjector(aggregate(module, modules));
-    }
-
     /**
      * Setting of a different injector instead of the one created upon class instantiation might be required usually in cases where an injector with more modules is needed to
      * entity instantiation.
@@ -89,7 +85,7 @@ public class EntityFactory {
      * @return
      * @throws RuntimeException
      */
-    public synchronized <T extends AbstractEntity<?>> T newPlainEntity(final Class<T> entityClass, final Long id) {
+    public static <T extends AbstractEntity<?>> T newPlainEntity(final Class<T> entityClass, final Long id) {
         try {
             final Constructor<T> constructor = entityClass.getDeclaredConstructor();
             constructor.setAccessible(true);
@@ -97,6 +93,8 @@ public class EntityFactory {
             constructor.setAccessible(false);
             setId(entityClass, id, entity);
             return entity;
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -117,6 +115,8 @@ public class EntityFactory {
             setReferenceToThis(entity);
             setId(entityClass, id, entity);
             return entity;
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -139,7 +139,7 @@ public class EntityFactory {
      * @param entity
      * @throws RuntimeException
      */
-    private void setReferenceToThis(final AbstractEntity entity) {
+    private void setReferenceToThis(final AbstractEntity<?> entity) {
         try {
             final Method method = Reflector.getMethod(entity.getType(), "setEntityFactory", EntityFactory.class);
             method.setAccessible(true);
@@ -176,6 +176,8 @@ public class EntityFactory {
             setKey(entityClass, key, entity);
             entity.setDesc(desc);
             return entity;
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -237,7 +239,7 @@ public class EntityFactory {
     /**
      * Convenience method for setting entity id value.
      */
-    private <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws Exception {
+    private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws Exception {
         final Field idField = Finder.getFieldByName(entityClass, AbstractEntity.ID);
         final boolean accessible = idField.isAccessible();
         idField.setAccessible(true);

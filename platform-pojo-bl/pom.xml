@@ -160,7 +160,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
-			<version>3.9</version>
+			<version>3.16</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
@@ -223,6 +223,16 @@
 						<!-- J>-Xss10M</J -->
 						<!-- processor>br.com.sonner.infra.seguranca.SegurancaAnnotationProcessor</processor -->
 					</compilerArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19.1</version>
+				<configuration>
+					<forkCount>4</forkCount>
+					<reuseForks>true</reuseForks>
+					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
 				</configuration>
 			</plugin>
 		</plugins>

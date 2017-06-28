@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.persistence.types;
 
-import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
 import ua.com.fielden.platform.dao.EntityWithAutoAssignablePropertiesDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -23,7 +22,6 @@ import ua.com.fielden.platform.types.Money;
 @MapEntityTo
 @CompanionObject(EntityWithAutoAssignablePropertiesDao.class)
 public class EntityWithAutoAssignableProperties extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
     
     @IsProperty(assignBeforeSave = true)
     @MapTo

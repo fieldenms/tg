@@ -23,16 +23,16 @@
         <template is="dom-if" if="[[menuItem.view]]" restamp>
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
-                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                 </paper-material>
             </template>
             <template is="dom-if" if="[[_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
-                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
             </template>
         </template>
         <template is="dom-if" if="[[!menuItem.view]]" on-dom-change="_viewWasDefined" restamp>
             <div class="view">
-                Please specify view for <span>[[menuItem.title]]</span>.
+                Please specify view for <span>[[menuItem.key]]</span>.
             </div>
         </template>
     </template>
@@ -63,8 +63,8 @@
                         value: false,
                         reflectToAttribute: true
                     },
-                    uuid: String,
-                    moduleId: String
+                    moduleId: String,
+                    submoduleId: String
                 },
 
                 behaviors: [Polymer.IronResizableBehavior],
@@ -77,32 +77,36 @@
                     var self = this;
                     self.async(function () {
                         if (isPropertyDefined(self, "menuItem.view.attrs")) {
-                            self.menuItem.view.attrs.uuid = self.uuid;
+                            self.menuItem.view.attrs.uuid = self.moduleId + (self.submoduleId ? '/' + self.submoduleId : '');
                             self.menuItem.view.attrs.moduleId = self.moduleId;
                         }
                     }, 1);
                 },
-
-                _getMenuItemAttributes: function () {
-                    return this.menuItem.view.attrs;
+                
+                focusLoadedView: function () {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.focusView === 'function') {
+                        elementToLoad.loadedElement.focusView();
+                    }
                 },
 
                 _isCentre: function (menuItem) {
-                    return menuItem.view.type === 'centre';
+                    return menuItem.view.viewType === 'centre';
                 },
 
                 _afterLoadListener: function (e, detail, view) {
                     var self = this;
                     if (e.target === this.$$("#elementToLoad")) {
-                        if (this.menuItem.view.type === 'centre') {
+                        if (this.menuItem.view.viewType === 'centre') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                                if (detail.autoRun) {
+                                detail._setQueryParams();
+                                if (detail.autoRun || detail.queryPart) {
                                     detail.run();
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
                             detail.retrieve();
-                        } else if (this.menuItem.view.type === 'master') {
+                        } else if (this.menuItem.view.viewType === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
@@ -131,26 +135,16 @@
                     }
                 },
 
-                /**
-                 * This function lets one to indicate whether this view should be loaded after the dom will be initialised. It is not the same as auto = true
-                 */
-                loadAfterInit: function () {
-                    var elementToLoad;
-                    if (!this.auto && this.menuItem.view) {
-                        elementToLoad = this.$$("#elementToLoad");
-                        if (elementToLoad) {
-                            if (!elementToLoad.wasLoaded) {
-                                elementToLoad.load();
-                            }
-                        } else {
-                            this._afterInitLoading = true;
-                        }
+                _setQueryIfPossible: function (queryPart) {
+                    if (this.menuItem.view.viewType === "centre" && queryPart) {
+                        this.menuItem.view.attrs.queryPart = queryPart;
                     }
                 },
 
-                load: function () {
+                load: function (queryPart) {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && !elementToLoad.wasLoaded) {
+                        this._setQueryIfPossible(queryPart);
                         elementToLoad.load();
                     }
                 },
@@ -162,8 +156,8 @@
                     }
                     return true;
                 },
-                
-                canLeave: function() {
+
+                canLeave: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
                         return elementToLoad.loadedElement.canLeave();

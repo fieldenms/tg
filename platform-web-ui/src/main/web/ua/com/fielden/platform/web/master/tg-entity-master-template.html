@@ -1,43 +1,11 @@
 <!--@imports-->
-<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
-
-<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-
-<link rel="import" href="/resources/master/tg-entity-master.html">
-<link rel="import" href="/resources/master/tg-entity-master-behavior.html">
+<link rel="import" href="/resources/master/tg-entity-master-template-behavior.html">
 
 <!-- TODO this import should be generated <link rel="import" href="/resources/master/actions/tg-action.html"> -->
 
 <dom-module id="tg-@entity_type-master"> <!-- TODO layout vertical -->
     <template>
-    	<style>
-            tg-entity-master[with-dimensions]::shadow #masterContainer{
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                right: 0;
-                left: 0;
-            }
-    		.property-action-icon {
-            	--tg-ui-action-width: 1.9rem;
-                --tg-ui-action-height: 1.9rem;
-                --tg-ui-action-top: -0.3rem;
-                --tg-ui-action-left: -0.3rem;
-                --tg-ui-action-icon-height: 1.3rem;
-                --tg-ui-action-icon-width: 1.3rem;
-                --tg-ui-action-icon-button-height: 1.3rem;
-                --tg-ui-action-icon-button-width: 1.3rem;
-                --tg-ui-action-icon-button-padding: 0;
-                --tg-ui-action-spinner-width: 1.5em; 
-	            --tg-ui-action-spinner-height: 1.5em; 
-	            --tg-ui-action-spinner-min-width: 1em; 
-	            --tg-ui-action-spinner-min-height: 1em; 
-	            --tg-ui-action-spinner-max-width: 2em; 
-	            --tg-ui-action-spinner-max-height: 2em; 
-	            --tg-ui-action-spinner-padding: 2px;
-	            --tg-ui-action-spinner-margin-left: 0;
-    		}
-    	</style>
+    	<style include="tg-entity-master-styles"></style>
     	<tg-entity-master
     		id="masterDom"
     		entity-type="[[entityType]]" 
@@ -63,66 +31,27 @@
         Polymer({
         	is: 'tg-@entity_type-master',
         	
-        	behaviors: [ 	Polymer.IronA11yKeysBehavior,
-        					Polymer.TgBehaviors.TgEntityMasterBehavior ],
+        	behaviors: [Polymer.TgBehaviors.TgEntityMasterTemplateBehavior],
             
-            hostAttributes: {
-                'tabindex': '0'
-            },
-        	
-        	properties: {
-                /**
-                 * Preferred dimensions.
-                 */
-                prefDim: {
-                    type: Object,
-                    value: @prefDim
-                },
-                
-        		/**
-        		 * The property which indicates whether entity master is 'UI-less'.
-        		 */
-	            noUI: {
-	                type: Boolean,
-	                value: @noUiValue
-	            },
-	            
-	            /** 
-	             * This property governs master behavior upon its activation for the first time (i.e. when master element was instantiated and bound to an entity instance).
-	             * If saveOnActivation is true then entity saving occurs automatically just before the master UI gets displayed.
-	             * It most conveniently used for masters that represent functional entities (i.e. actions).
-	             * */
-	            saveOnActivation: {
-	                type: Boolean,
-	                value: @saveOnActivationValue
-	            }
-        	},
-
             /**
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
                 var self = this;
-                self.isMasterTemplate = true;
-                self._registrationListener = self._registrationListener.bind(self);
-                self.classList.add("canLeave");
+                self.prefDim = @prefDim;
+                self.noUI = @noUiValue;
+                self.saveOnActivation = @saveOnActivationValue;
                 
-                // the value for property uuid needs to be assign only if this has not been done yet
-                if (self.uuid === undefined) {
-                	self.uuid = self.is + '/'+ self._reflector().generateUUID();
-                }
                 //START OF GENERATED JS LOGIC
                 //@ready-callback
                 //END OF GENERATED JS LOGIC
+                
+                //@master-is-ready-custom-code
+                
             },// end of ready
             
             attached: function () {
                 var self = this;
-                if (self.prefDim) {
-                    self._masterDom().setAttribute('with-dimensions', 'true');
-                } else {
-                    self._masterDom().removeAttribute('with-dimensions');
-                }
                 self.async(function() {
                     self.keyEventTarget = self._getKeyEventTarget();
                     if (self._shouldOverridePrefDim()) {
@@ -137,128 +66,11 @@
                         //generatedPropActions
                     ];
                 }, 1);
-            	
-            	//@attached-callback
-            },
-            
-            addOwnKeyBindings: function () {
-                var ownKeyBindings = this._ownKeyBindings;
-                if (this.$.loader) {
-                    if (this.$.loader.wasLoaded) {
-                        if (typeof this.$.loader.loadedElement.addOwnKeyBindings === 'function') {
-                            this.$.loader.loadedElement.addOwnKeyBindings();
-                            return;
-                        }
-                    } else {
-                        this.$.loader.addEventListener('after-load', this._registrationListener);
-                        return;
-                    }
-                }
-                for (var shortcuts in ownKeyBindings) {
-                    this.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
-                }
-            },
-            
-            removeOwnKeyBindings: function () {
-                if (this.$.loader) {
-                    if (this.$.loader.wasLoaded) {
-                        if (typeof this.$.loader.loadedElement.removeOwnKeyBindings === 'function') {
-                            this.$.loader.loadedElement.removeOwnKeyBindings();
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
-                }
-                Polymer.IronA11yKeysBehavior.removeOwnKeyBindings.call(this);
-            },
-            
-            _shouldOverridePrefDim: function () {
-                var parent = this.parentElement;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-                    if (parent.isMasterTemplate && parent.prefDim) {
-                        return false;
-                    }
-                    parent = parent.parentElement;
-                }
-                return true;
-            },
-            
-            _registrationListener: function (e) {
-                var target = e.target || e.srcElement;
                 
-                if (target === this.$.loader) {
-                    if (e.detail && typeof e.detail.addOwnKeyBindings === 'function'){
-                        e.detail.addOwnKeyBindings();
-                    }
+                //@attached-callback
                 
-                    this.$.loader.removeEventListener('after-load', this._registrationListener);
-                }
-            },
-            
-            /**
-             * Returns the key event target it might be a dialog or this element if the master is not in dialog.
-             * Also it configures key bindings if the master is not a part of compound master.
-             */
-            _getKeyEventTarget: function () {
-                var parent = this;
-                var automaticAddKeyBindings = true;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-                    if (parent.tagName === 'TG-MASTER-MENU-ITEM-SECTION') {
-                        automaticAddKeyBindings = false;
-                    }
-                    parent = parent.parentElement;
-                }
-                if (automaticAddKeyBindings) {
-                    this.addOwnKeyBindings();
-                }
-                return parent || this;
-            },
-            
-            _masterDom: function () {
-            	return this.$.masterDom;
-            },
-            
-            /**
-             * The core-ajax component for entity retrieval.
-             */
-            _ajaxRetriever: function () {
-                return this._masterDom()._ajaxRetriever();
-            },
-            
-            /**
-             * The core-ajax component for entity saving.
-             */
-            _ajaxSaver: function () {
-                return this._masterDom()._ajaxSaver();
-            },
-            
-            /**
-             * The validator component.
-             */
-            _validator: function () {
-                return this._masterDom()._validator();
-            },
-            
-            /**
-             * The component for entity serialisation.
-             */
-            _serialiser: function () {
-            	return this._masterDom()._serialiser();
-            },
-            
-            /**
-             * The reflector component.
-             */
-            _reflector: function () {
-            	return this._masterDom()._reflector();
-            },
-            
-            /**
-             * The toast component.
-             */
-            _toastGreeting: function () {
-            	return this._masterDom()._toastGreeting();
+                //@master-has-been-attached-custom-code
+                
             },
             
             /**
@@ -268,40 +80,6 @@
                 '@SHORTCUTS': '_shortcutPressed'
             },
             
-            _shortcutPressed: function (e) {
-                var shortcut = e.detail.combo;
-                console.debug('Master shortcut', shortcut, 'processing...');
-                
-                var action = this.$$('tg-action[shortcut="' + shortcut + '"]');
-                if (action) {
-                    // Respect nodes that are disabled in the UI.
-                    if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                        action.$.actionButton.focus();
-                        action._asyncRun();
-                    }
-                } else {
-                    var uiAction = this.$$('tg-ui-action[shortcut="' + shortcut + '"]');
-                    if (uiAction) {
-                        // Respect nodes that are disabled in the UI.
-                        if (!uiAction.isActionInProgress) {
-                            if (uiAction.isIconButton) {
-                                uiAction.$.iActionButton.focus();
-                            } else {
-                                uiAction.$.bActionButton.focus();
-                            }
-                            uiAction._run();
-                        }
-                    } else {
-                        console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
-                    }
-                }
-
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
-                console.debug('Master shortcut', shortcut, 'processing... done');
-            }
         });
     })();
 </script>

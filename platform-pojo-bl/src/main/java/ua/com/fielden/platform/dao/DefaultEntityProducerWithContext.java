@@ -11,8 +11,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -68,12 +66,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
-            final T entity = factory.newEntity(entityType);
-            final IEntityDao<T> companion = co(this.entityType);
-            
-            if (companion != null) {
-                provideProxies(entity, companion.getFetchProvider());
-            }
+            final T entity = new_();
             
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
@@ -103,6 +96,20 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return producedEntity;
     }
     
+    /**
+     * A helper function to instantiate a new entity using either companion if available or entity factory otherwise.
+     *
+     * @return
+     */
+    private T new_() {
+        final IEntityDao<T> companion = co(this.entityType);
+        if (companion != null) {
+            return companion.new_();
+        } else {
+            return factory.newEntity(this.entityType);
+        }
+    }
+
     /**
      * In rare cases where there is a need not to reset meta-state of the property -- this property needs to be listed in this method.
      * 
@@ -135,19 +142,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected T provideDefaultValuesForStandardNew(final T entity, final EntityNewAction masterEntity) {
         return entity;
     };
-    
-    /**
-     * Provides <code>entity</code>'s proxies for the properties which do not take part in <code>fetchStrategy</code>.
-     *
-     * @param entity
-     * @param fetchStrategy
-     */
-    private T provideProxies(final T entity, final IFetchProvider<T> fetchStrategy) {
-        // TODO implement automatic "proxying" for the properties, which do not take part in fetchStrategy --
-        // -- it provides consistency between newly created entities and fetched entities and also reduces the
-        // size of the JSON data transmitting from server to the client
-        return entity;
-    }
 
     /**
      * Override this method to provide domain-driven <code>entity</code>'s default values for the properties.

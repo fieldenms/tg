@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.joda.time.DateTime;
 
@@ -26,6 +27,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
@@ -37,6 +39,7 @@ import ua.com.fielden.platform.entity.validation.MaxValueValidator;
 import ua.com.fielden.platform.entity.validation.RangePropertyValidator;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
@@ -60,16 +63,17 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String INJECTOR_IS_MISSING = "Meta-property factory is not fully initialised -- injector is missing";
     public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
 
-    protected final FinalValidator finalValidator = new FinalValidator();
-    protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = Collections.synchronizedMap(new HashMap<>());
-    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = Collections.synchronizedMap(new HashMap<Integer, GreaterOrEqualValidator>());
-    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = Collections.synchronizedMap(new HashMap<Integer, MaxLengthValidator>());
-    protected final Map<Integer, MaxValueValidator> maxValueValidators = Collections.synchronizedMap(new HashMap<Integer, MaxValueValidator>());
-    protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
-    protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
+    protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true)};
+    protected final FinalValidator[] notPersistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(false)};
+    protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = new ConcurrentHashMap<>();
     // type, property, array of handlers
-    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = Collections.synchronizedMap(new HashMap<>());
-    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = Collections.synchronizedMap(new HashMap<>());
+    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new ConcurrentHashMap<>();
 
     private Injector injector;
 
@@ -100,14 +104,14 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
         // check whether it can be recognised as a valid annotation permitted for validation purpose
         if (value == null) {
-            throw new IllegalArgumentException(UNRECOGNISED_VALIDATION_ANNOTATION);
+            throw new EntityDefinitionException(UNRECOGNISED_VALIDATION_ANNOTATION);
         }
         // try to instantiate validator
         switch (value) {
         case ENTITY_EXISTS:
             return new IBeforeChangeEventHandler[] { createEntityExists((EntityExists) annotation) };
         case FINAL:
-            return new IBeforeChangeEventHandler[] { finalValidator };
+            return createFinalValidator(entity, propertyName, (Final) annotation);
         case GREATER_OR_EQUAL:
             return new IBeforeChangeEventHandler[] { createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
         case LE_PROPETY:
@@ -128,8 +132,15 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         case UNIQUE:
             return new IBeforeChangeEventHandler[] { injector.getInstance(UniqueValidator.class) };
         default:
-            throw new IllegalArgumentException(UNSUPPORTED_VALIDATION_ANNOTATION);
+            throw new EntityDefinitionException(UNSUPPORTED_VALIDATION_ANNOTATION);
         }
+    }
+
+    protected IBeforeChangeEventHandler<?>[] createFinalValidator(final AbstractEntity<?> entity, final String propertyName, final Final annotation) {
+        if (!entity.isPersistent() && annotation.persistentOnly()) {
+            throw new EntityDefinitionException(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", entity.getType().getSimpleName(), propertyName));
+        }
+        return annotation.persistentOnly() ? persistedOnlyFinalValidator : notPersistedOnlyFinalValidator;
     }
 
     /**
@@ -152,7 +163,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         // 2. For each event handler do
         //    2.1 Instantiate a handler using injector for property <code>value</code>, which contains handler's class declaration
         //    2.2 For each value in arrays <code>non_ordinary</code>, <code>integer</code>, <code>str</code>, <code>dbl</code>, <code>date</code>, <code>date_time</code>, <code>money</code>
-        //	  initialise handler's parameters.
+        //    initialise handler's parameters.
         final IBeforeChangeEventHandler<?>[] handlers = new IBeforeChangeEventHandler[handlerDeclarations.length];
         for (int index = 0; index < handlerDeclarations.length; index++) {
             final Handler hd = handlerDeclarations[index];

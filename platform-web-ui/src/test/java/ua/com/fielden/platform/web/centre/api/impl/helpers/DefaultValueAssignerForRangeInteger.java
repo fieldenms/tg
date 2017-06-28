@@ -18,7 +18,7 @@ public class DefaultValueAssignerForRangeInteger implements IValueAssigner<Range
 
     @Override
     public Optional<RangeCritOtherValueMnemonic<Integer>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 }

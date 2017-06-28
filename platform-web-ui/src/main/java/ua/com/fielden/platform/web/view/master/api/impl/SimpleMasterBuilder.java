@@ -19,11 +19,13 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -55,7 +57,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private Optional<PrefDim> prefDim = Optional.empty();
     private boolean saveOnActivation = false;
 
-
+    private Optional<JsCode> customCode = Optional.empty();
+    private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
     @Override
     public IPropertySelector<T> forEntity(final Class<T> type) {
@@ -197,7 +200,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render().clazz("property-editors");
+        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currEntity]]");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
@@ -275,6 +278,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                       + propertyActionsStr.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
+                .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
+                .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
                 .replace("@SHORTCUTS", shortcuts)
                 .replace("@prefDim", dimensionsString)
                 .replace("@noUiValue", "false")
@@ -331,6 +336,46 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
+        /**
+         * Returns action configuration for concrete action kind and its number in that kind's space.
+         * <p>
+         * This method implementation is tightly coupled with SimpleMasterBuilder.done() method, where the numbering of actions during their generation appears.
+         *
+         * @param actionKind
+         * @param actionNumber
+         * @return
+         */
+        @Override
+        public  ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+            if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+                int funcActionSeq = 0; // used for both entity and property level functional actions
+                for (final WidgetSelector<T> widget : widgets) {
+                    if (widget.widget().action().isPresent()) {
+                        final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
+                        if (!config.isNoAction()) {
+                            if (actionNumber == funcActionSeq) {
+                                return config;
+                            }
+                            funcActionSeq++;
+                        }
+                    }
+                }
+                // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
+                for (final Object action: entityActions) {
+                    if (!(action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig)) {
+                        final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
+                        if (!config.isNoAction()) {
+                            if (actionNumber == funcActionSeq) {
+                                return config;
+                            }
+                            funcActionSeq++;
+                        }
+                    }
+                }
+                throw new IllegalStateException("No master action has been found.");
+            } // TODO implement other types
+            throw new UnsupportedOperationException(actionKind + " is not supported yet.");
+        }
     }
 
     @Override
@@ -339,6 +384,34 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
         actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
+    }
+
+    public List<Object> getEntityActions() {
+        return entityActions;
+    }
+
+    /**
+     * Injects custom JavaScript code into respective master implementation. This code will be executed after
+     * master component creation.
+     *
+     * @param customCode
+     * @return
+     */
+    public SimpleMasterBuilder<T> injectCustomCode(final JsCode customCode) {
+        this.customCode = Optional.of(customCode);
+        return this;
+    }
+
+    /**
+     * Injects custom JavaScript code into respective master implementation. This code will be executed every time
+     * master component is attached to client application's DOM.
+     *
+     * @param customCode
+     * @return
+     */
+    public SimpleMasterBuilder<T> injectCustomCodeOnAttach(final JsCode customCode) {
+        this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
 }

@@ -131,6 +131,43 @@
                 _currBindingEntity: {
                 	type: Object
                 },
+                
+                /**
+                 * This modif holder is needed for lazy value conversion in concrete editors.
+                 */
+                _previousModifiedPropertiesHolder: {
+                    type: Object
+                },
+                
+                /**
+                 * Returns true in case where binding entity has modified properties, false otherwise.
+                 * 
+                 * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
+                 *
+                 * Also, invalid entity value will be 'modified', even though the entities from server arrive with valid value only (+invalid validation result). 
+                 * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder, prevCurrBindingEntity).
+                 * 
+                 * This property can not be used in tg-selection-criteria-behavior due to the fact that it will be isModified from previous, not from original version of centre.
+                 * Currently _centreChanged property is used (see tg-entity-centre-behavior and tg-selection-criteria-behavior).
+                 */
+                _bindingEntityModified: {
+                    type: Boolean,
+                    observer: '_bindingEntityModifiedChanged'
+                },
+                
+                /**
+                 * Returns indication whether SAVE button should be enabled for the entity (AND canClose should be false). Returns true in following cases:
+                 *
+                 * 1) the entity is not persistent (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
+                 * 2) the entity is persistent but is not persisted yet (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
+                 * 3) the entity is persistent, is persisted but and it is modified (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons).
+                 *
+                 * Please, note that this property (analogously to _bindingEntityModified) recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
+                 */
+                _bindingEntityNotPersistentOrNotPersistedOrModified: {
+                    type: Boolean,
+                    observer: '_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged'
+                },
 
                 /**
                  * '_createModifiedPropertiesHolder' function, that is designated for binding.
@@ -262,10 +299,33 @@
                 _validationPromise: {
                     type: Object,
                     observer: '_validationPromiseChanged'
+                },
+                
+                /**
+                 * Returns true in case where there exist some properties which were edited (but not yet committed) by tg-editor-behavior.
+                 */
+                _editedPropsExist: {
+                    type: Boolean
                 }
     		},
     		
+    		observers: [
+    		    '_editedPropsChanged(_currBindingEntity.@editedProps)',
+    		    '_modificationsChanged(_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist)'
+    		],
+    		
     		_validationPromiseChanged: function (newValidationPromise, oldValidationPromise) {
+    		},
+    		_bindingEntityModifiedChanged: function (new_bindingEntityModified, old_bindingEntityModified) {
+    		},
+    		_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged: function (newValue, oldValue) {
+    		},
+    		_modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
+    		},
+    		
+    		_editedPropsChanged: function (editedProps) {
+    		    this._editedPropsExist = typeof editedProps === 'undefined' ? false : Object.keys(editedProps).length !== 0;
+    		    // console.debug('_bindingEntity (_editedPropsChanged) self = ', this.is, 'this.$._saveAction = ', (this.$._saveAction ? this.$._saveAction.is : 'undefined'), 'editedProps', editedProps, 'this._editedPropsExist', this._editedPropsExist);
     		},
     		
     		/**
@@ -283,6 +343,9 @@
             ready: function () {
                 var self = this;
                 
+                self._bindingEntityModified = false;
+                self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
+                self._editedPropsExist = false;
                 self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
@@ -290,11 +353,11 @@
                     return this._reset(mph);
                 }).bind(self);
                 
-                self._provideExceptionOccured = function (entity, exceptionOccured) {
+                self._provideExceptionOccured = (function (entity, exceptionOccured) {
                     if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
                         entity._setExceptionOccured(exceptionOccured);
                     }
-                };
+                }).bind(self);
                 
                 self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
@@ -318,7 +381,7 @@
                     	
                     	if (this._reflector().isWarning(deserialisedResult)) {
                     		console.warn(this._toastMsgForError(deserialisedResult));
-                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
+                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult), false);
                     	} else {
                     		// continue with normal handling of the result's instance
                     		var deserialisedInstance = deserialisedResult.instance;
@@ -327,7 +390,8 @@
                     		//   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
                     		// Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                     	    if (this._reflector().isError(deserialisedResult)) {
-                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
+                    	        console.log('deserialisedResult: ', deserialisedResult);
+                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), !this._reflector().isContinuationError(deserialisedResult));
                         	}
     	                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     	    if (this._reflector().isError(deserialisedResult)) {
@@ -338,15 +402,16 @@
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;
                     		    if (typeof deserialisedInstance.id !== 'undefined') {
-                    		    	e.detail.entityId = deserialisedInstance.id;
+                    		    	e.detail.entityId = deserialisedInstance.get('id');
                     		    	e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
+                    		    	e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
                     		    }
                     		}
                     	}
                     } else { // other codes
                     	var error = 'Request could not be dispatched.';
                         console.warn(error);
-                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.', true);
                         // this is equivalent to server side error
                         // threfore, this._postRetrievedDefaultError should be invoked
                         this._postRetrievedDefaultError(error);
@@ -362,7 +427,7 @@
                         if (this._reflector().isError(deserialisedResult)) {
                             // throw the toast message about the server-side error
                             var msg = this._toastMsgForError(deserialisedResult);
-                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
+                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg, true);
                             // continue with custom error handling of the error result
                             customErrorHandlerFor(deserialisedResult);
                         } else {
@@ -371,7 +436,7 @@
                         }
                     } else if (xhr.status === 403) { // forbidden!
                         // TODO should prompt for login in place...
-                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.");
+                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.", true);
                         customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
@@ -400,7 +465,7 @@
                 	    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
                     	slf._validator().abortValidationIfAny();
 
-        	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+        	            // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
             	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     	slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
                 	}, 50);
@@ -505,12 +570,14 @@
                 this._toastGreeting().hasMore = hasMoreInfo;
                 this._toastGreeting().msgText = moreInfo;
                 this._toastGreeting().showProgress = showProgress;
+                this._toastGreeting().isCritical = false;
                 if (hasMoreInfo) {
                     if (!entity.isValid()) {
                     	// TODO is it still relevant? msgHeading
               			// TODO is it still relevant? msgHeading
       					// TODO is it still relevant? msgHeading
                         this._toastGreeting().msgHeading = "Error";
+                        this._toastGreeting().isCritical = true;
                     } else if (entity.isValidWithWarning()) {
                         this._toastGreeting().msgHeading = "Warning";
                     } else {
@@ -528,6 +595,7 @@
                 this._toastGreeting().hasMore = hasMoreInfo;
                 this._toastGreeting().msgText = moreInfo;
                 this._toastGreeting().showProgress = showProgress;
+                this._toastGreeting().isCritical = false;
                 if (hasMoreInfo) {
                     this._toastGreeting().msgHeading = "Info";
                 }
@@ -544,7 +612,9 @@
             /**
              * Opens the toast with some error message including full 'moreInfo' message.
              */
-            _openToastForError: function (toastMsg, moreInfo) {
+            _openToastForError: function (toastMsg, moreInfo, isCritical) {
+                console.log('this._toastGreeting().isCritical = ', isCritical);
+                this._toastGreeting().isCritical = isCritical;
                 this._toastGreeting().text = toastMsg;
                 if (moreInfo) {
                     this._toastGreeting().hasMore = true;
@@ -555,6 +625,7 @@
       			// TODO is it still relevant? msgHeading
 				// TODO is it still relevant? msgHeading
              	this._toastGreeting().msgHeading = "Error";
+                console.log('about to show ... this._toastGreeting().isCritical = ', isCritical);
                 this._toastGreeting().show();
             },
             
@@ -634,7 +705,7 @@
                 };
                 var self = this;
                 if (self._reflector().isEntity(bindingEntity)) {
-                    modPropHolder["id"] = bindingEntity["id"];
+                    modPropHolder["id"] = bindingEntity.get('id');
                     modPropHolder["version"] = bindingEntity["version"];
                     modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
 
@@ -656,7 +727,9 @@
                                 "val": value,
                                 "origVal": originalValue
                             };
-                            modPropHolder["@modified"] = true;
+                            if (propertyName !== 'surrogateVersion') { // need to skip collectional editor surrogate property not to affect @modified
+                                modPropHolder["@modified"] = true;
+                            }
                             if (typeof valId !== 'undefined') {
                                 modPropHolder[propertyName]['valId'] = valId;
                             }
@@ -678,6 +751,15 @@
             _idConvert: function (id) {
                 return id === null ? "new" : ("" + id);
             },
+            
+            /**
+             * Returns 'true' if the entity has been modified from original, 'false' otherwise.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _hasModified: function (modifiedPropertiesHolder) {
+                return modifiedPropertiesHolder["@modified"];
+            },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             /**
@@ -693,8 +775,8 @@
                     self._resetState();
                 }
                 // After the entity has received, potentially its id has been updated:
-                if (self._idConvert(entity.id) !== self.entityId) {
-                    self.entityId = self._idConvert(entity.id);
+                if (self._idConvert(entity.get('id')) !== self.entityId) {
+                    self.entityId = self._idConvert(entity.get('id'));
                 }
                 // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
                 var previousModifiedPropertiesHolder = null;
@@ -702,18 +784,73 @@
                     previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                 	self._reset(previousModifiedPropertiesHolder);
                 }
+                const previousEntity = self._currEntity;
+                // Determine whether the entity is stale in sense of stale property conflicts (errors).
+                const isEntityStale = self._hasStaleConflicts(entity);
+                if (isEntityStale) {
+                    // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
+                    entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version, self._originalBindingEntity);
+                }
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                 var oldCurrBindingEntity = self._currBindingEntity;
+                self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
-                self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
+                self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
+                
+                self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
+                // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
+                self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() || 
+                                                                           !self._currBindingEntity.isPersisted()         ||
+                                                                           self._bindingEntityModified;
+                // console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;
+            },
+            
+            /**
+             * Returns 'true' in case where the entity has at least one stale conflict, 'false' otherwise.
+             *
+             * Please, note that in sense of versions the entity could be stale, but this method still returns 'false' if no stale conflicts exist,
+             * and thus the entity will be treated as NOT 'stale'.
+             * That means that fully resolvable staleness will not be appearing to the user -- this is the case where behind the scenes 
+             * the entity has been saved one or more times (by other user) but saving did not actually change the entity to the level of conflicts appearance.
+             * However, warnings 'The property has been recently changed by another user.' could exist in this case.
+             */
+            _hasStaleConflicts: function (entity) {
+                const self = this;
+                var hasStaleConflicts = false;
+                entity.traverseProperties(function (propertyName) {
+                    const validationResult = entity.prop(propertyName).validationResult();
+                    if (self._reflector().isError(validationResult) && (validationResult['@resultType'] === 'ua.com.fielden.platform.web.utils.PropertyConflict')) {
+                        hasStaleConflicts = true;
+                    }
+                });
+                return hasStaleConflicts;
+            },
+            
+            /**
+             * Extracts the version of previous entity for the case where new entity is stale.
+             *
+             * This method validates existence of previous entity / originalBindingEntity and the fact that the version has been increased.
+             * These validations are required because new entity should not be stale otherwise.
+             */
+            _extractPreviousEntityVersion: function (previousEntity, currentEntityVersion, _originalBindingEntity) {
+                if (previousEntity == null) {
+                    throw 'Previous version of entity does not exist, but somehow the stale entity has arrived from the server.';
+                }
+                if (currentEntityVersion <= previousEntity.version) {
+                    throw 'Previous version of entity has [' + previousEntity.version + '] version, that is not lower than the version of stale new entity (' + currentEntityVersion + ').';
+                }
+                if (_originalBindingEntity === null) {
+                    throw 'Previous version of _originalBindingEntity does not exist, but somehow the stale entity has arrived from the server.';
+                }
+                return previousEntity.version;
             },
 
             /**
@@ -726,7 +863,7 @@
             _extractBindingView: function (entity, previousModifiedPropertiesHolder, prevCurrBindingEntity) {
                 var self = this;
                 var bindingView = self._reflector().newEntity(entity.type().fullClassName());
-                bindingView["id"] = entity["id"];
+                bindingView["id"] = entity.get('id');
                 bindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
@@ -734,80 +871,67 @@
                 bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], counts: [] };
 
                 entity.traverseProperties(function (propertyName) {
+                    // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
+                    // conversion for other properties performs in corresponding editors (tg-editor-behavior).
+                    if (self._isNecessaryForConversion(propertyName)) {
+                        self._reflector().convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
+                    }
+                    
+                    // meta-state is provided for all properties, not only specialised
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
-                            // bind the received from server property value
-                            var fullValue = entity.get(propertyName);
-                            bindingView[propertyName] = self._reflector().convert(fullValue);
-                            if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                                bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                            }
-                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
-                            if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                                //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
-                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                                if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
-                                    bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
-                                }
-                            } else {
-                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
-                                if (typeof previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
-                                    bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].valId;
-                                }
-                            }
-                        }
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
-                        var fullValue = entity.get(propertyName);
-                    	bindingView[propertyName] = self._reflector().convert(fullValue);
-                        if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                            bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                        }
-
-                        var value = entity.get(propertyName);
-                        if (self._reflector().isEntity(value)) {
-                            bindingView["@" + propertyName + "_desc"] = self._reflector().convert(value.get("desc"));
-                        }
-
                         if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
                             bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
                         }
-                        if (entity.prop(propertyName).isRequired()) {
-                            bindingView["@" + propertyName + "_required"] = true;
-                        } else {
-                            bindingView["@" + propertyName + "_required"] = false;
-                        }
+                        bindingView["@" + propertyName + "_required"] = entity.prop(propertyName).isRequired();
                     }
                     // the following logic is required in both cases: property with error and without error
                     if (entity.type().prop(propertyName).isUpperCase()) {
                         bindingView["@" + propertyName + "_uppercase"] = true;
                     }
                     bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
-
-                    if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
-                        throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
-                    }
                 });
 
                 // console.log("       entity + bindingView", entity, bindingView);
                 return bindingView;
             },
-
-            _extractOriginalBindingView: function (entity) {
+            
+            /**
+             * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
+             */
+            _isNecessaryForConversion: function (propertyName) {
+                return ['entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
+                        'forNew', 'menuTitle', 'sectionTitle', // compound master opening actions
+                        'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
+                        'surrogateVersion', 'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
+                        'visibleMenuItems', 'invisibleMenuItems', // menu visibility action (MenuSaveAction)
+                        'skipUi' // specialised property to control functional entity master appearance
+                       ].indexOf(propertyName) !== -1;
+            },
+            
+            /**
+             * Extracts binding view from 'entity' for its original values taking into account that entity could be 'stale'.
+             *
+             * In case of stale entity (previousEntity has been passed into this method), original values should be taken from the previous version of the entity to be able to mimic restoration of stale instance.
+             */
+            _extractOriginalBindingView: function (entity, previousOriginalBindingEntity) {
+                var stale = previousOriginalBindingEntity !== null;
                 var self = this;
                 var originalBindingView = self._reflector().newEntityEmpty();
 
                 originalBindingView["_type"] = entity["_type"];
-                originalBindingView["id"] = entity["id"];
+                originalBindingView["id"] = entity.get('id');
                 originalBindingView["version"] = entity["version"];
+                // this property of the bindingView will hold the reference to fully-fledged entity, 
+                //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
+                originalBindingView["@@origin"] = (stale === true ? previousOriginalBindingEntity['@@origin'] : entity);
 
                 entity.traverseProperties(function (propertyName) {
-                    var fullValue = entity.getOriginal(propertyName);
-                    originalBindingView[propertyName] = self._reflector().convert(fullValue);
-                    if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                        originalBindingView['@' + propertyName + '_id'] = fullValue['id'];
+                    // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
+                    // conversion for other properties performs in corresponding editors (tg-editor-behavior).
+                    if (self._isNecessaryForConversion(propertyName)) {
+                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, originalBindingView["@@origin"]);
                     }
                 });
 

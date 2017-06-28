@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domaintree.testing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -22,9 +23,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(DynamicEntityKey.class)
@@ -156,6 +157,9 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// A collection //////////
     @IsProperty(EvenSlaverEntity.class)
     private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+
+    @IsProperty(ShortEvenSlaverEntity.class)
+    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty
@@ -362,6 +366,17 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     @Observable
     public void setResultOnlyProp(final EvenSlaverEntity resultOnlyProp) {
         this.resultOnlyProp = resultOnlyProp;
+    }
+
+    public List<ShortEvenSlaverEntity> getShortCollection() {
+        return Collections.unmodifiableList(shortCollection);
+    }
+
+    @Observable
+    public EvenSlaverEntity setShortCollection(final List<ShortEvenSlaverEntity> shortCollection) {
+        this.shortCollection.clear();
+        this.shortCollection.addAll(shortCollection);
+        return this;
     }
 
     public List<EvenSlaverEntity> getCollection() {

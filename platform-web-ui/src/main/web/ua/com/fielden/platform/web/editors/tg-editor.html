@@ -88,7 +88,7 @@
         paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
         	border-bottom: 1px dashed;
       		background: transparent;
-      		opacity: 0.6;
+      		opacity: 1;
         	border-color: #03A9F4;
         }
         
@@ -100,7 +100,7 @@
         paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
         	border-bottom: 1px dashed;
       		background: transparent;
-      		opacity: 0.6;
+      		opacity: 1;
         	border-color: #FFA000;
         }
         
@@ -113,7 +113,7 @@
         paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
         	border-bottom: 1px dashed;
       		background: transparent;
-      		opacity: 0.6;
+      		opacity: 1;
         	border-color: var(--google-red-500);
         }
         
@@ -126,13 +126,13 @@
         paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
         	border-bottom: 1px dashed;
       		background: transparent;
-      		opacity: 0.6;
+      		opacity: 1;
         	border-color: var(--secondary-text-color);
         }
         
         /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
         paper-input-container.decorator-disabled::shadow .add-on-content ::content {
-      		opacity: 0.6;
+      		opacity: 1;
         }
     </style>
 
@@ -211,6 +211,10 @@
             }).bind(this), 1);
         },
         
+        isInWarning: function () {
+            return this.$.decorator.classList.contains("warning");
+        },
+        
         _isMultilineText: function (editorKind) {
             return 'MULTILINE_TEXT' === editorKind;
         },
@@ -224,7 +228,7 @@
                 style += "visibility: hidden;"
             }
             if (_disabled === true) {
-                style += "opacity: 0.6;"
+                style += "opacity: 1;"
             }
             return style;
         },
@@ -235,7 +239,7 @@
         _calcDecoratorPartStyle: function (_disabled) {
             var style = "min-width: 0px;";
             if (_disabled === true) {
-                style += "opacity: 0.6;"
+                style += "opacity: 1;"
             }
             return style;
         },

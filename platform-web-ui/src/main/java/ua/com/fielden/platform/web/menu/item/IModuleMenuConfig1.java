@@ -5,7 +5,9 @@ import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 
 public interface IModuleMenuConfig1 {
 
-    IModuleMenuConfig2 centre(EntityCentre<?> centre);
+    IModuleMenuConfigWithView centre(EntityCentre<?> centre);
 
-    IModuleMenuConfig2 view(final AbstractCustomView view);
+    IModuleMenuConfigWithView view(final AbstractCustomView view);
+
+    IModuleMenuConfig3 addMenuItem(String title);
 }

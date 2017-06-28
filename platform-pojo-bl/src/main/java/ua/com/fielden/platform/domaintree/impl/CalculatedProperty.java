@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
@@ -62,7 +63,6 @@ import ua.com.fielden.platform.utils.ClassComparator;
 @EntityTitle(value = "Calculated property", desc = "<i>Calculated property</i> entity")
 @DescTitle(value = "Description", desc = "Calculated property description")
 public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKey> implements ICalculatedProperty {
-    private static final long serialVersionUID = -8413970385471726648L;
 
     // Required and immutable stuff
     @IsProperty
@@ -74,6 +74,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     @IsProperty
     @CompositeKeyMember(2)
+    @Optional
     @Title(value = "Context path", desc = "A path to the calculated property context")
     @Readonly
     @Invisible
@@ -101,6 +102,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     // Required contextually and mutable stuff
     @IsProperty
     @CompositeKeyMember(5)
+    @Optional
     @Title(value = "Attribute", desc = "Calculated property attribute (ALL or ANY for collectional expressions)")
     @Dependent("title")
     // revalidates "title" to ensure that title / name of property is unique in potentially another parentType (after "attribute" has been changed)
@@ -110,6 +112,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     @IsProperty
     @CompositeKeyMember(6)
+    @Optional
     @Title(value = "Origination property", desc = "A property from which this calculated property has been originated.")
     @BeforeChange(@Handler(BceOriginationPropertyValidation.class))
     private String originationProperty; // required only for AGGREGATED_EXPRESSIONs which represent Totals and should be assigned to some "original" property
@@ -420,7 +423,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     private void validateAndThrow(final String property) {
-        if (!getProperty(property).isValidWithRequiredCheck()) {
+        if (!getProperty(property).isValidWithRequiredCheck(false)) {
             throw getProperty(property).getFirstFailure();
         }
     }

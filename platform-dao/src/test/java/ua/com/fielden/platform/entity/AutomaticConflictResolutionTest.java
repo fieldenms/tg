@@ -4,14 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
@@ -50,7 +47,7 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
             save(cat1_v2.setDesc("other desc"));
             fail("Saving should have failed");
         } catch (final EntityCompanionException ex) {
-            assertEquals("Could not resolve conflicting changes. Entity Cat1 (Tg Category) could not be saved.", ex.getMessage());
+            assertEquals("Could not resolve conflicting changes. Tg Category [Cat1] could not be saved.", ex.getMessage());
         }
 
     }

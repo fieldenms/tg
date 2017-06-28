@@ -2,7 +2,7 @@ package ua.com.fielden.platform.continuation;
 
 import static java.lang.String.format;
 
-import ua.com.fielden.platform.entity.ContinuationData;
+import ua.com.fielden.platform.entity.IContinuationData;
 
 /**
  * The exception type that is used as part of the continuation handling implementation.
@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.ContinuationData;
 public class NeedMoreDataException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     
+    public final Class<? extends IContinuationData> continuationType;
     public final String continuationTypeStr;
     public final String continuationProperty;
 
@@ -24,8 +25,9 @@ public class NeedMoreDataException extends RuntimeException {
      * @param continuationType -- functional entity type that represents continuation
      * @param continuationProperty -- the property on companion object into which continuation will arrive
      */
-    NeedMoreDataException(final String customMessage, final Class<? extends ContinuationData<?>> continuationType, final String continuationProperty) {
+    NeedMoreDataException(final String customMessage, final Class<? extends IContinuationData> continuationType, final String continuationProperty) {
         super(customMessage);
+        this.continuationType = continuationType;
         this.continuationTypeStr = continuationType.getName();
         this.continuationProperty = continuationProperty;
     }
@@ -36,7 +38,7 @@ public class NeedMoreDataException extends RuntimeException {
      * @param continuationType -- functional entity type that represents continuation
      * @param continuationProperty -- the property on companion object into which continuation will arrive
      */
-    NeedMoreDataException(final Class<? extends ContinuationData<?>> continuationType, final String continuationProperty) {
+    NeedMoreDataException(final Class<? extends IContinuationData> continuationType, final String continuationProperty) {
         this(format("Continuation for [%s] entity and property [%s].", continuationType.getSimpleName(), continuationProperty), continuationType, continuationProperty);
     }
 }

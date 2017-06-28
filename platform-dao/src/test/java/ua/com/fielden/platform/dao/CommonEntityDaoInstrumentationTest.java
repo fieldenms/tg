@@ -352,8 +352,9 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).stream(qem, 1);
-        assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        try (final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).stream(qem)) {
+            assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        }
     }
 
     @Test
@@ -363,8 +364,9 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem, 1);
-        assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        try (final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem, 1)) {
+            assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        }
     }
 
     @Test
@@ -374,8 +376,9 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem, 1);
-        assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        try (final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem, 1)) {
+            assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        }
     }
 
     @Override

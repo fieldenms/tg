@@ -1,8 +1,14 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,11 +17,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.poi.hssf.record.chart.BeginRecord;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -31,8 +40,10 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -66,8 +77,10 @@ public class DynamicQueryBuilder {
      *
      */
     public static class QueryProperty {
-        private Object value = null, value2 = null;
-        private Boolean exclusive = null, exclusive2 = null;
+        private Object value = null;
+        private Object value2 = null;
+        private Boolean exclusive = null;
+        private Boolean exclusive2 = null;
         private DateRangePrefixEnum datePrefix = null;
         private MnemonicEnum dateMnemonic = null;
         private Boolean andBefore = null;
@@ -75,12 +88,17 @@ public class DynamicQueryBuilder {
         private Boolean not = null;
 
         private final Class<?> entityClass;
-        private final String propertyName, conditionBuildingName;
-        private final boolean critOnly, single;
+        private final String propertyName;
+        private final String conditionBuildingName;
+        private final boolean critOnly;
+        private final boolean single;
+        private final boolean aECritOnlyChild;
         private final Class<?> type;
         /** The type of collection which contain this property. If this property is not in collection hierarchy it should be null. */
-        private final Class<? extends AbstractEntity<?>> collectionContainerType, collectionContainerParentType;
-        private final String propertyNameOfCollectionParent, collectionNameInItsParentTypeContext;
+        private final Class<? extends AbstractEntity<?>> collectionContainerType;
+        private final Class<? extends AbstractEntity<?>> collectionContainerParentType;
+        private final String propertyNameOfCollectionParent;
+        private final String collectionNameInItsParentTypeContext;
         /** Union entity related properties */
         private final boolean inUnionHierarchy;
         private final String unionParent;
@@ -134,6 +152,10 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
+
+            final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
+            final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
+            this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotNotation(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
@@ -248,7 +270,7 @@ public class DynamicQueryBuilder {
          * @return
          */
         public boolean shouldBeIgnored() {
-            return isCritOnly() || isEmpty() && !TRUE.equals(orNull);
+            return isCritOnly() || isAECritOnlyChild() || isEmpty() && !TRUE.equals(orNull);
         }
 
         /**
@@ -350,6 +372,15 @@ public class DynamicQueryBuilder {
          */
         public boolean isCritOnly() {
             return critOnly;
+        }
+        
+        /**
+         * Returns <code>true</code> if property is a child of crit-only AE property (dot-notated), <code>false</code> otherwise.
+         *
+         * @return
+         */
+        public boolean isAECritOnlyChild() {
+            return aECritOnlyChild;
         }
 
         /**
@@ -487,7 +518,7 @@ public class DynamicQueryBuilder {
         IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
 
         // create empty map consisting of [collectionType => (ANY properties, ALL properties)] entries, which forms exactly one entry for one collectional hierarchy
-        final Map<Class<? extends AbstractEntity<?>>, CollectionProperties> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity<?>>, CollectionProperties>();
+        final Map<Class<? extends AbstractEntity<?>>, CollectionProperties> collectionalProperties = new LinkedHashMap<>();
         // map for union properties.
         final Map<String, Map<String, List<QueryProperty>>> unionProperties = new LinkedHashMap<>();
         // traverse all properties to enhance resulting query
@@ -796,8 +827,8 @@ public class DynamicQueryBuilder {
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property) {
         final String propertyName = property.getConditionBuildingName();
 
-        if (EntityUtils.isRangeType(property.getType())) {
-            if (EntityUtils.isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
+        if (isRangeType(property.getType())) {
+            if (isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
                 // left boundary should be inclusive and right -- exclusive!
                 final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore());
                 return cond().prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).model();
@@ -810,14 +841,30 @@ public class DynamicQueryBuilder {
                 /*      */scag2.lt().iVal(property.getValue2()).model() // exclusive
                 : scag2.le().iVal(property.getValue2()).model(); // inclusive
             }
-        } else if (EntityUtils.isBoolean(property.getType())) {
+        } else if (isBoolean(property.getType())) {
             final boolean is = (Boolean) property.getValue();
             final boolean isNot = (Boolean) property.getValue2();
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
-        } else if (EntityUtils.isString(property.getType())) {
+        } else if (isString(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepare((String) property.getValue())).model();
-        } else if (EntityUtils.isEntityType(property.getType())) {
-            return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepare((List<String>) property.getValue())).model();
+        } else if (isEntityType(property.getType())) {
+            final Map<Boolean, List<String>> searchValues = ((List<String>) property.getValue()).stream().collect(Collectors.groupingBy(str -> str.contains("*")));
+            
+            final ConditionModel condition;
+            final String propertyNameWithoutKey = propertyName.substring(0, propertyName.length() - 4);
+            final Class<? extends AbstractEntity<?>> propType = baseEntityType((Class<AbstractEntity<?>>) property.getType());
+            if (searchValues.containsKey(false) && searchValues.containsKey(true)) {
+                condition = cond()
+                        .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model())
+                        .or().prop(propertyName).iLike().anyOfValues(prepare(searchValues.get(true))).model();
+            } else if (searchValues.containsKey(false) && !searchValues.containsKey(true)) {
+                condition = cond()
+                        .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model()).model();
+            } else {
+                condition = cond().prop(propertyName).iLike().anyOfValues(prepare(searchValues.get(true))).model();
+            }
+            
+            return condition;
         } else {
             throw new UnsupportedTypeException(property.getType());
         }

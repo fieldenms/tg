@@ -27,6 +27,24 @@ mark element with tooltip-text attribute.
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgTooltipBehavior = {
             properties: {
+                triggerManual: {
+                    type: String,
+                    observer: "_triggerManualChanged"
+                },
+
+                /**
+                 * The element that will be observed for mouse move events. This element or it's children should have tooltip-text attribute set in order the tooltip to be shown.
+                 */
+                triggerElement: {
+                    type: Object,
+                    observer: "_triggerElementChanged"
+                },
+
+                /**
+                 * Saved mouse positions.
+                 */
+                _mousePosX: Number,
+                _mousePosY: Number,
                 /**
                  * The handle for tooltip timer can be used to cancel tooltip timer. (Tooltip timer - the timer for tooltip to be shown).
                  */
@@ -42,25 +60,87 @@ mark element with tooltip-text attribute.
             },
 
             ready: function () {
+                this._handleMouseMove = this._handleMouseMove.bind(this);
                 this._handleTooltipAtMousePos = this._handleTooltipAtMousePos.bind(this);
                 this._hideTooltip = this._hideTooltip.bind(this);
+                this.triggerElement = this;
+                //Set the default values for properties.
+                this.triggerManual = false;
             },
 
-            attached: function () {
-                this.addEventListener('mousemove', this._handleTooltipAtMousePos);
-                this.addEventListener('mouseleave', this._hideTooltip);
+            /**
+             * Displayes the tooltip with specified text at current mouse position.
+             */
+            showTooltip: function (tooltipText) {
+                Polymer.dom(toolTipElement).innerHTML = tooltipText;
+                toolTipElement.showAt(this._mousePosX, this._mousePosY);
             },
 
-            detached: function () {
-                this.removeEventListener('mousemove', this._handleTooltipAtMousePos);
-                this.removeEventListener('mouseleave', this._hideTooltip);
+            /**
+             * Hides the tooltip.
+             */
+            hideTooltip: function () {
+                if (toolTipElement._showing) {
+                    toolTipElement.hide();
+                }
+            },
+
+            /**
+             * Observer for trigger element changes.
+             */
+            _triggerElementChanged: function (newElement, oldElement) {
+                this._setMouseEvents(newElement, oldElement, this.triggerManual);
+            },
+
+            /**
+             * Observer for _triggerManual property.
+             */
+            _triggerManualChanged: function (newValue, oldValue) {
+                this._setMouseEvents(this.triggerElement, this.triggerElement, newValue);
+            },
+
+            /**
+             * Set the appropriate mouse event handlers for trigger element according to trigger policy.
+             */
+            _setMouseEvents: function (newTrigger, oldTrigger, manual) {
+                if (oldTrigger) {
+                    //Unregister mouse move listener for old trigger element.
+                    oldTrigger.removeEventListener('mousemove', this._handleMouseMove);
+                    if (!manual) {
+                        //Unregister mouse move event for old trigger element when tooltips were trigered automatically.
+                        //If tooltips were triggerd manually then don't remove anything.
+                        oldTrigger.removeEventListener('mousemove', this._handleTooltipAtMousePos);
+                        oldTrigger.removeEventListener('mouseleave', this._hideTooltip);
+                    }
+                }
+                if (newTrigger) {
+                    //Register mouse listeners for new trigger element.     
+                    newTrigger.addEventListener('mousemove', this._handleMouseMove);
+                    if (!manual) {
+                        //Register mouse listener for new trigger element in order to trigger tooltips automatically
+                        newTrigger.addEventListener('mousemove', this._handleTooltipAtMousePos);
+                        newTrigger.addEventListener('mouseleave', this._hideTooltip);
+                    } else {
+                        //Unregister mouse listeners for new trigger element in order to trigger tooltips manually.
+                        newTrigger.removeEventListener('mousemove', this._handleTooltipAtMousePos);
+                        newTrigger.removeEventListener('mouseleave', this._hideTooltip);
+                    }
+                }
+            },
+            
+            /**
+             * Saves the mouse position in _mousePosX and _mousePosY properties.
+             */
+            _handleMouseMove: function (event) {
+                this._mousePosX = event.pageX;
+                this._mousePosY = event.pageY;
             },
 
             /**
              * Handler that determines when to show tooltip on mouse move event amd when to hide it.
              */
             _handleTooltipAtMousePos: function (event) {
-                var currentActiveElement = extractActiveElement(event.target, this);
+                var currentActiveElement = extractActiveElement(event.target, this.triggerElement);
 
                 if (currentActiveElement !== this._activeComponent) {
                     this._hideTooltip();
@@ -73,19 +153,16 @@ mark element with tooltip-text attribute.
                         this._tooltipTimer = null;
                     }
                     this._tooltipTimer = this.async(function () {
-                        Polymer.dom(toolTipElement).innerHTML = tooltipText;
-                        toolTipElement.showAt(event.pageX, event.pageY);
+                        this.showTooltip(tooltipText);
                     }, 1000);
                 }
             },
 
             /**
-             * Hides the tooltip.
+             * Hides the tooltip. Used as a mouse handler for mouse leave event.
              */
             _hideTooltip: function () {
-                if (toolTipElement._showing) {
-                    toolTipElement.hide();
-                }
+                this.hideTooltip();
                 if (this._tooltipTimer) {
                     this.cancelAsync(this._tooltipTimer);
                     this._tooltipTimer = null;

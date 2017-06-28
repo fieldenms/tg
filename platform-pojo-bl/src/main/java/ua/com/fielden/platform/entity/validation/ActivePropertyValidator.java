@@ -36,7 +36,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Boolean oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
         final ActivatableAbstractEntity<?> entity = (ActivatableAbstractEntity<?>) property.getEntity();
         if (!entity.isPersisted()) { // a brand new entity is being created
             return Result.successful(newValue);
@@ -57,7 +57,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                 return Result.successful(newValue);
             } else {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
-                return Result.failure(count, format("Entity %s has active dependencies (%s).", entityTitle, count));
+                return Result.failure(count, format("%s [%s] has active dependencies (%s).", entityTitle, entity, count));
             }
         } else { // entity is being activated, but could be referencing inactive activatables
             // we could not rely on the fact that all activatable are fetched
@@ -70,7 +70,10 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableProps) {
                 final ActivatableAbstractEntity<?> value = prop.getValue();
                 if (!value.isActive()) {
-                    return Result.failure(format("Property [%s] in entity %s@%s references inactive entity %s@%s.", prop.getName(), entity, entity.getType().getName(), value, prop.getType().getName()));
+                    final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
+                    final String propTitle = TitlesDescsGetter.getTitleAndDesc(prop.getName(), entity.getType()).getKey();
+                    final String valueEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc(value.getType()).getKey();
+                    return Result.failure(format("Property [%s] in %s [%s] references inactive %s [%s].", propTitle, entityTitle, entity, valueEntityTitle, value));
                 }
             }
 

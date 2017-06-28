@@ -39,12 +39,7 @@ public class WagonSlot extends RotableLocation<DynamicEntityKey> {
         this.bogie = bogie;
     }
 
-    protected WagonSlot() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public WagonSlot(final Wagon wagon, final Integer position) {
-        this();
         setWagon(wagon);
         setPosition(position);
     }

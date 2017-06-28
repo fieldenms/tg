@@ -224,7 +224,7 @@ public final class EntitySerialiser extends Serializer {
             final AbstractEntity<?> entity;
 
             if (DynamicEntityClassLoader.isGenerated(type)) {
-                entity = factory.newPlainEntity(type, id);
+                entity = EntityFactory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
                 entity = factory.newEntity(type, id);
