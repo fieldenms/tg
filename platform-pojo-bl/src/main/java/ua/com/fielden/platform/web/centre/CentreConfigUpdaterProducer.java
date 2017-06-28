@@ -59,7 +59,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         logger.error("Sorted: [" + freshSortedProperties + "]");
         final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
         
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(freshCheckedProperties, freshUsedProperties, freshSortedProperties, freshManagedType, factory());
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshUsedProperties, freshSortedProperties, freshManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
         final Set<String> sortingVals = customisableColumns.stream()
@@ -74,10 +74,16 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         entity.setSortingVals(new ArrayList<>(sortingVals));
         return entity;
     }
+    
+    public static List<String> checkedPropertiesWithoutSummaries(final List<String> checkedProperties, final Class<?> managedType) {
+        return checkedProperties.stream()
+            .filter(checkedProperty -> "".equals(checkedProperty) || !AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProperty, CalculatedPropertyCategory.AGGREGATED_EXPRESSION))
+            .collect(Collectors.toList());
+    }
 
-    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedProperties, final List<String> usedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
+    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedPropertiesWithoutSummaries, final List<String> usedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
         final List<String> resultantProperties = new ArrayList<>(usedProperties);
-        for (final String checkedProp: checkedProperties) {
+        for (final String checkedProp: checkedPropertiesWithoutSummaries) {
             if (!usedProperties.contains(checkedProp)) {
                 resultantProperties.add(checkedProp);
             }
@@ -86,8 +92,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
         for (final String checkedProp: resultantProperties) {
             if ("".equals(checkedProp) || 
-                    (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
-                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && 
+                    (!AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && 
                     !isShortCollection(managedType, checkedProp))
             ) {
                 final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
@@ -101,9 +106,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
                     customisableColumn.setSortingNumber(orderingAndNumber.getValue());
                 }
                 result.add(customisableColumn);
-            } else if (
-                !AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)
-            ) {
+            } else {
                 final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
                 final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, checkedProp, titleAndDesc.getValue());
                 customisableColumn.setSortable(false);

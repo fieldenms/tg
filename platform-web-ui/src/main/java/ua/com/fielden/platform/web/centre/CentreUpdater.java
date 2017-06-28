@@ -424,34 +424,29 @@ public class CentreUpdater {
         
         // Diff centre contains full information of checkedProperties and usedProperties.
         // Such information should be carefully merged with potentially updated targetCentre.
-        final List<String> targetCheckedProperties = targetCentre.getSecondTick().checkedProperties(root);
-        logger.error("targetCheckedProperties: [" + targetCheckedProperties + "]");
-        final List<String> diffCheckedProperties = differencesCentre.getSecondTick().checkedProperties(root);
-        logger.error("diffCheckedProperties: [" + diffCheckedProperties + "]");
-        // determine properties that were added into targetCentre (default config) comparing to differencesCentre (currently saved config)
-        final List<String> addedIntoTarget = minus(targetCheckedProperties, diffCheckedProperties);
-        logger.error("Added into default config: [" + addedIntoTarget + "]");
-        // determine properties that were removed from targetCentre (default config) comparing to differencesCentre (currently saved config)
-        final List<String> removedFromTarget = minus(diffCheckedProperties, targetCheckedProperties);
-        logger.error("Removed from default config: [" + removedFromTarget + "]");
-        
+        final List<String> diffCheckedPropertiesWithoutSummaries = CentreConfigUpdaterProducer.checkedPropertiesWithoutSummaries(differencesCentre.getSecondTick().checkedProperties(root), differencesCentre.getEnhancer().getManagedType(root));
         final List<String> diffUsedProperties = differencesCentre.getSecondTick().usedProperties(root);
-        // remove the properties that was removed in default configuration
-        final List<String> diffUsedPropertiesWithoutDissapearedProps = minus(diffUsedProperties, removedFromTarget);
-        // apply resultant properties on top
-        // un-'use' all old properties
-        final List<String> currUsedProperties = targetCentre.getSecondTick().usedProperties(root);
-        logger.error("Curr used (default, target, config): [" + currUsedProperties + "]");
-        for (final String currUsedProperty: currUsedProperties) {
-            targetCentre.getSecondTick().use(root, currUsedProperty, false);
+        if (!EntityUtils.equalsEx(diffCheckedPropertiesWithoutSummaries, diffUsedProperties)) {
+            final List<String> targetCheckedPropertiesWithoutSummaries = CentreConfigUpdaterProducer.checkedPropertiesWithoutSummaries(targetCentre.getSecondTick().checkedProperties(root), targetCentre.getEnhancer().getManagedType(root));
+            
+            // determine properties that were added into targetCentre (default config) comparing to differencesCentre (currently saved config)
+            // final List<String> addedIntoTarget = minus(targetCheckedPropertiesWithoutSummaries, diffCheckedPropertiesWithoutSummaries);
+            
+            // determine properties that were removed from targetCentre (default config) comparing to differencesCentre (currently saved config)
+            final List<String> removedFromTarget = minus(diffCheckedPropertiesWithoutSummaries, targetCheckedPropertiesWithoutSummaries);
+            
+            // remove removedFromTarget properties custom configuration (custom column order / visibility); this custom configuration was explicitly changed by the user, because it's different from diffCheckedProperties
+            final List<String> diffUsedPropertiesWithoutRemovedProps = minus(diffUsedProperties, removedFromTarget);
+            // apply resultant properties on top of targetCentre (default config)
+            final List<String> targetUsedProperties = targetCentre.getSecondTick().usedProperties(root);
+            for (final String targetUsedProperty: targetUsedProperties) { // remove (un-use) all previous props
+                targetCentre.getSecondTick().use(root, targetUsedProperty, false);
+            }
+            for (final String newUsedProperty : diffUsedPropertiesWithoutRemovedProps) { // apply (use) all new props
+                targetCentre.getSecondTick().use(root, newUsedProperty, true);
+            }
         }
         
-        // 'use' all new properties
-        for (final String chosenId : diffUsedPropertiesWithoutDissapearedProps) {
-            targetCentre.getSecondTick().use(root, chosenId, true);
-        }
-        logger.error("New used (default, target, config): [" + targetCentre.getSecondTick().usedProperties(root) + "]");
-
         // apply widths and grow factor that were marked as changed
         for (final String property : differencesCentre.getSecondTick().checkedProperties(root)) {
             if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.WIDTH, root, property)) {
@@ -495,12 +490,19 @@ public class CentreUpdater {
 
         return targetCentre;
     }
-
-    private static List<String> minus(final List<String> targetCheckedProperties, final List<String> diffCheckedProperties) {
+    
+    /**
+     * Computes a list of items that contain in <code>from</code> list and do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
+     * 
+     * @param from
+     * @param what
+     * @return
+     */
+    private static List<String> minus(final List<String> from, final List<String> what) {
         final List<String> result = new ArrayList<>();
-        for (final String targetCheckedProperty: targetCheckedProperties) {
-            if (!diffCheckedProperties.contains(targetCheckedProperty)) {
-                result.add(targetCheckedProperty);
+        for (final String fromItem: from) {
+            if (!what.contains(fromItem)) {
+                result.add(fromItem);
             }
         }
         return result;

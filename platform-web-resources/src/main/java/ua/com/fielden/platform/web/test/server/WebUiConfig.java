@@ -1473,6 +1473,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortDesc("Edit entity").
                         longDesc("Opens master for editing this entity").
                         build())
+//                .also()
+//                .addProp("entityProp.entityProp")
+//                .also()
+//                .addProp("entityProp.entityProp.entityProp")
+//                .also()
+//                .addProp("entityProp.entityProp.entityProp.entityProp")
                 .also()
                 .addProp("desc").
                         order(1).asc().
