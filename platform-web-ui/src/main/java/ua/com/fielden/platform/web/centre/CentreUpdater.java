@@ -425,7 +425,9 @@ public class CentreUpdater {
         // Diff centre contains full information of checkedProperties and usedProperties.
         // Such information should be carefully merged with potentially updated targetCentre.
         final List<String> targetCheckedProperties = targetCentre.getSecondTick().checkedProperties(root);
+        logger.error("targetCheckedProperties: [" + targetCheckedProperties + "]");
         final List<String> diffCheckedProperties = differencesCentre.getSecondTick().checkedProperties(root);
+        logger.error("diffCheckedProperties: [" + diffCheckedProperties + "]");
         // determine properties that were added into targetCentre (default config) comparing to differencesCentre (currently saved config)
         final List<String> addedIntoTarget = minus(targetCheckedProperties, diffCheckedProperties);
         logger.error("Added into default config: [" + addedIntoTarget + "]");

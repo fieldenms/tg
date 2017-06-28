@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
@@ -198,20 +199,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final ResultSetProp property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
                 cdtmae.getSecondTick().check(entityType, propertyName, true);
-                if (propertyName.startsWith("d")) { // TODO remove this later, only for testing
-                    cdtmae.getSecondTick().use(entityType, propertyName, true);
-                }
+                cdtmae.getSecondTick().use(entityType, propertyName, true);
                 cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                 if (growFactors.containsKey(propertyName)) {
                     cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
                 }
-                if (property.tooltipProp.isPresent()) {
-                    cdtmae.getSecondTick().check(entityType, treeName(property.tooltipProp.get()), true);
-                }
             }
         }
-        cdtmae.getSecondTick().use(entityType, "desc", false); // TODO remove this later, only for testing
-        cdtmae.getSecondTick().use(entityType, "desc", true); // TODO remove this later, only for testing
         if (summaryExpressions.isPresent()) {
             for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
@@ -1344,6 +1338,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     public Optional<IFetchProvider<T>> getAdditionalFetchProvider() {
         return dslDefaultConfig.getFetchProvider();
+    }
+    
+    public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
+        final Set<String> tooltipProps = new LinkedHashSet<>();
+        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        if (resultSetProps.isPresent()) {
+            for (final ResultSetProp property : resultSetProps.get()) {
+                if (property.tooltipProp.isPresent()) {
+                    tooltipProps.add(property.tooltipProp.get());
+                }
+            }
+        }
+        return tooltipProps.isEmpty() ? Optional.empty() : Optional.of(EntityUtils.fetchNotInstrumented(entityType).with(tooltipProps));
     }
 
     public Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

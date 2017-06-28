@@ -437,6 +437,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                         adhocParams,
                         appliedCriteriaEntity,
                         centre.getAdditionalFetchProvider(),
+                        centre.getAdditionalFetchProviderForTooltipProperties(),
                         CriteriaResource.createQueryEnhancerAndContext(
                                 webUiConfig,
                                 companionFinder,

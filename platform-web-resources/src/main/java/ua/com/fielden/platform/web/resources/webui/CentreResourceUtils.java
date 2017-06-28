@@ -153,6 +153,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
+     * @param additionalFetchProviderForTooltipProperties
      * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
@@ -160,6 +161,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Map<String, Object> customObject,
             final M criteriaEntity,
             final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
@@ -167,6 +169,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (additionalFetchProviderForTooltipProperties.isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
         }
         if (queryEnhancerAndContext.isPresent()) {
             final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
@@ -217,6 +222,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param adhocParams
      * @param criteriaEntity
      * @param additionalFetchProvider
+     * @param additionalFetchProviderForTooltipProperties
      * @param queryEnhancerAndContext
      * @param createdByUserConstraint
      * @return
@@ -224,13 +230,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
             final Map<String, Object> adhocParams,
             final M criteriaEntity, 
-            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
         
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (additionalFetchProviderForTooltipProperties.isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
         }
         if (queryEnhancerAndContext.isPresent()) {
             final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
