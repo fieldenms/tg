@@ -52,6 +52,21 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .noselect {
+            -webkit-touch-callout: none;
+            /* iOS Safari */
+            -webkit-user-select: none;
+            /* Safari */
+            -khtml-user-select: none;
+            /* Konqueror HTML */
+            -moz-user-select: none;
+            /* Firefox */
+            -ms-user-select: none;
+            /* Internet Explorer/Edge */
+            user-select: none;
+            /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+        }
         .resizing-box {
             position: absolute;
             top: 0;
@@ -59,7 +74,7 @@
             right: 0;
             width: 10px;
         }
-        .table-cell:hover >.resizing-box,
+        .resizing-column > .resizing-box,
         .resizing-action {
             cursor: col-resize;
             border-right: 4px solid var(--paper-light-blue-100);
@@ -227,9 +242,9 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                     <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
-                                    <div class="resizing-box" on-track="_changeColumnSize"></div>
+                                    <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -252,7 +267,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                         <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                             <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                             <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
@@ -289,7 +304,7 @@
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                         <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
+                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
                                                     <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
                                                     <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
@@ -298,7 +313,7 @@
                                             </div>
                                         </template>
                                         <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
-                                            <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, columnIndex, numOfFixedCols)]]">
+                                            <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                             </div>
                                         </template>
                                     </template>
@@ -326,9 +341,9 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                            <div class="resizing-box" on-track="_changeColumnSize"></div>
+                                            <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -344,7 +359,7 @@
                                             </div>
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column">
-                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                 <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                 <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
@@ -368,14 +383,14 @@
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
                                                     <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
                                                             <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
                                                             <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
                                                             <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
                                                         </div>
                                                     </template>
                                                     <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, columnIndex, numOfFixedCols)]]"></div>
+                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]"></div>
                                                     </template>
                                                 </template>
                                             </template>
@@ -432,9 +447,9 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
@@ -459,14 +474,14 @@
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
                                                     <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
                                                             <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
                                                             <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
                                                             <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
                                                         </div>
                                                     </template>
                                                     <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, columnIndex, numOfFixedCols)]]">
+                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                         </div>
                                                     </template>
                                                 </template>
@@ -492,9 +507,9 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                     </div>
                                 </template>
                             </div>
@@ -519,14 +534,14 @@
                                         <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                             <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
                                                 <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
+                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
                                                         <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
                                                         <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
                                                         <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
                                                     </div>
                                                 </template>
                                                 <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
-                                                    <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, columnIndex, numOfFixedCols)]]">
+                                                    <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                     </div>
                                                 </template>
                                             </template>
@@ -623,34 +638,24 @@
         const calculateTotalColumnWidth = function (columns) {
             return columns.reduce((accum, curr) => accum += curr.width, 0);
         };
-        const calculateFixedColumnWidthExcept = function (egi, columnIndex, columnElements) {
-            let fixedColumnWidth = 0;
-            const indexCorrection = (+!!egi.primaryAction) /*if primary action exists then correct index for 1 to exlcude it when calculating the fixed column width*/ + 1 // 1 for checkbox element cause it's always in the dom and must be excluded when calculated the width of fixed columns;
-            if (egi.checkboxVisible) {
-                fixedColumnWidth += columnElements[0].offsetWidth;
+        const calculateColumnWidthExcept = function (egi, columnIndex, columnElements, columnLength, checkboxes, primaryActions, secondaryActions) {
+            let columnWidth = 0;
+            const indexCorrection = 1 + (+!!egi.primaryAction);
+            if (egi.checkboxVisible && checkboxes()) {
+                columnWidth += columnElements[0].offsetWidth;
             }
-            if (egi.primaryAction) {
-                fixedColumnWidth += columnElements[1].offsetWidth;
+            if (egi.primaryAction && primaryActions()) {
+                columnWidth += columnElements[1].offsetWidth;
             }
-            for (let i = 0; i < egi.numOfFixedCols; i++) {
+            for (let i = 0; i < columnLength; i++) {
                 if (columnIndex !== i) {
-                    fixedColumnWidth += columnElements[i + indexCorrection].offsetWidth;
+                    columnWidth += columnElements[i + indexCorrection].offsetWidth;
                 }
             }
-            if (egi.secondaryActionsFixed && egi.secondaryActions.length > 0) {
-                fixedColumnWidth += columnElements[columnElements.length - 1].offsetWidth;
+            if (egi.secondaryActions.length > 0 && secondaryActions()) {
+                columnWidth += columnElements[columnElements.length - 1].offsetWidth;
             }
-            return fixedColumnWidth;
-        };
-        const calculateFixedCheckboxsAndActionsWidth = function (egi, columnElements) {
-            let fixedColumnWidth = 0;
-            if (egi.checkboxVisible) {
-                fixedColumnWidth += columnElements[0].offsetWidth;
-            }
-            if (egi.primaryAction) {
-                fixedColumnWidth += columnElements[1].offsetWidth;
-            }
-            return fixedColumnWidth;
+            return columnWidth;
         };
         const sign = (value) => value < 0 ? -1 : 1;
         Polymer({
@@ -1394,8 +1399,8 @@
                 return this._getValue(totals, summary.property, summary.type);
             },
 
-            _calcSummaryColumnStyle: function (column, columnWidth, summaryRow, columnIndex, numOfFixedCols) {
-                return this._calcColumnStyle(summaryRow[columnIndex], columnWidth, columnIndex, numOfFixedCols);
+            _calcSummaryColumnStyle: function (column, columnWidth, columnGrowFactor, summaryRow, columnIndex, numOfFixedCols) {
+                return this._calcColumnStyle(summaryRow[columnIndex], columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
             },
 
             /**
@@ -1589,12 +1594,12 @@
             /**
              * Calculates the column's header style.
              */
-            _calcColumnHeaderStyle: function (item, itemWidth, index, numOfFixedCols) {
+            _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, index, numOfFixedCols) {
                 var colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
-                if (item.growFactor === 0 || index < numOfFixedCols) {
+                if (columnGrowFactor === 0 || index < numOfFixedCols) {
                     colStyle += "flex-grow: 0;flex-shrink:0;";
                 } else {
-                    colStyle += "flex-grow: " + item.growFactor + ";";
+                    colStyle += "flex-grow: " + columnGrowFactor, +";";
                 }
                 if (itemWidth === 0) {
                     colStyle += "display: none;";
@@ -1608,8 +1613,8 @@
             /**
              * Calculates the column's style.
              */
-            _calcColumnStyle: function (item, itemWidth, index, numOfFixedCols) {
-                return this._calcColumnHeaderStyle(item, itemWidth, index, numOfFixedCols);
+            _calcColumnStyle: function (item, itemWidth, columnGrowFactor, index, numOfFixedCols) {
+                return this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, index, numOfFixedCols);
             },
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
@@ -1659,8 +1664,8 @@
             /**
              * Calculates the style for empty total's cell.
              */
-            _calcEmptyTotalStyle: function (column, columnWidth, columnIndex, numOfFixedCols) {
-                return this._calcColumnHeaderStyle(column, columnWidth, columnIndex, numOfFixedCols);
+            _calcEmptyTotalStyle: function (column, columnWidth, columnGrowFactor, columnIndex, numOfFixedCols) {
+                return this._calcColumnHeaderStyle(column, columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
             },
 
             /**
@@ -1932,13 +1937,14 @@
                 //Change the style to visualise column resizing.
                 document.body.style.cursor = "col-resize";
                 e.target.classList.toggle("resizing-action", true);
+                this.$.baseContainer.classList.toggle("noselect", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
                 const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
                 let containerLeft = 0;
                 if (this._leftLockPanel && this._leftLockPanel.offsetParent !== null) {
                     if (e.model.index < this.numOfFixedCols) {
-                        containerLeft = calculateFixedCheckboxsAndActionsWidth(this, columnElements);
+                        containerLeft = calculateColumnWidthExcept(this, 0, columnElements, 0, () => true, () => true, () => false);
                     } else {
                         containerLeft = this._leftLockPanel.offsetWidth;
                     }
@@ -1949,10 +1955,14 @@
                 const self = this;
                 this._columnResizingObject = {
                     oldColumnWidth: e.model.item.width,
+                    oldColumnGrowFactor: e.model.item.growFactor,
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
-                    otherFixedColumnWidth: e.model.index < self.numOfFixedCols ? calculateFixedColumnWidthExcept(this, e.model.index, columnElements) : undefined,
-                    widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth
+                    otherFixedColumnWidth: e.model.index < self.numOfFixedCols ?
+                        calculateColumnWidthExcept(this, e.model.index, columnElements, this.numOfFixedCols, () => this._isCheckboxesFixed(this.checkboxesFixed, this.checkboxesWithPrimaryActionsFixed, this.numOfFixedCols), () => this._isPrimaryActionsFixed(this.checkboxesWithPrimaryActionsFixed, this.numOfFixedCols), () => this._isSecondaryActionsFixed(this.secondaryActionsFixed)) : undefined,
+                    otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length, () => true, () => true, () => true),
+                    widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth,
+                    hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
 
@@ -1971,13 +1981,31 @@
                     if (newWidth < e.model.item.minWidth) {
                         newWidth = e.model.item.minWidth;
                     }
+                    //Correct new width if resizing fixed column and this new width are greater than container's width.
                     if (typeof this._columnResizingObject.otherFixedColumnWidth !== 'undefined' && this._columnResizingObject.otherFixedColumnWidth + newWidth + this._columnResizingObject.widthCorrection > this.$.lockContainer.offsetWidth) {
                         newWidth = this.$.lockContainer.offsetWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
+                    }
+                    //Correct new width when dragging last column or other column and overall width is less then width of container.
+                    if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.lockContainer.offsetWidth) {
+                        if (e.model.index === this.columns.length - 1) {
+                            newWidth = this.$.lockContainer.offsetWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
+                        } else {
+                            if (!this._columnResizingObject.hasAnyFlex) {
+                                this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+                                this._columnResizingObject.hasAnyFlex = true;
+                                const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
+                                columnParameters[this.columns[this.columns.length - 1].property] = {growFactor: 1};
+                                this._columnResizingObject.columnParameters = columnParameters;
+                            }
+                        }
                     }
                     //Change the column width if it is needed
                     if (columnWidth !== newWidth) {
                         if (e.model.item.growFactor !== 0) {
                             this.set("columns." + e.model.index + ".growFactor", 0);
+                            const columnParameters = this._columnResizingObject.columnParameters || {};
+                            columnParameters[e.model.item.property] = {growFactor: 1};
+                            this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
                         this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
@@ -1994,14 +2022,39 @@
             _endColumnResizing: function (e) {
                 document.body.style.cursor = "default";
                 e.target.classList.toggle("resizing-action", false);
-                if (this._columnResizingObject && this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
-                    this.fire("tg-egi-column-change", {
-                        propName: e.model.item.property,
-                        newWidth: e.model.item.width,
-                        newGrowFactor: e.model.item.growFactor
-                    });
+                this.$.baseContainer.classList.toggle("noselect", false);
+                if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
+                    const columnParameters = this._columnResizingObject.columnParameters || {};
+                    const columnParameter = columnParameters[e.model.item.property] || {};
+                    if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
+                        columnParameter.width = e.model.item.width;
+                    } 
+                    if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
+                        columnParameter.growFactor = e.model.item.growFactor;
+                    }
+                    columnParameters[e.model.item.property] = columnParameter;
+                    this._columnResizingObject.columnParameters = columnParameters;
+                    this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
                 delete this._columnResizingObject;
+            },
+
+            _makeEgiUnselectable: function (e) {
+                this.$.baseContainer.classList.toggle("noselect", true);
+            },
+
+            _makeEgiSelectable: function (e) {
+                this.$.baseContainer.classList.toggle("noselect", false);
+            },
+
+            _showResizingCue: function (e) {
+                if (!e.buttons) {
+                    e.currentTarget.classList.toggle("resizing-column", true);
+                }
+            },
+
+            _hideResizingCue: function (e) {
+                e.currentTarget.classList.toggle("resizing-column", false);
             }
         })
     })()

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import java.util.Map;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.utils.Pair;
 /**
  * This class is the base class to enhance with criteria and resultant properties.
  *
@@ -28,7 +27,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
-    private BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster;
+    private Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster;
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
     
     /**
@@ -51,11 +50,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreAdjuster;
     }
 
-    public void setColumnWidthAdjuster(final BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster) {
+    public void setColumnWidthAdjuster(final Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster) {
         this.columnWidthAdjuster = columnWidthAdjuster;
     }
 
-    public BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster() {
+    public Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster() {
         return columnWidthAdjuster;
     }
 
