@@ -38,8 +38,8 @@
             var old_postRun = centre._postRun;
             var firstTime = false;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
             	
             	if (firstTime === false) {
                     assert.strictEqual(resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');

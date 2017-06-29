@@ -38,8 +38,8 @@
                 var old_postRun = centre._postRun;
                 var deleteAction, newAction, testingPhase, keyEditor, descEditor;
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
 
                     if (testingPhase === 'zero') {
                         testingPhase = 'first';
