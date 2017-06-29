@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain.stream_processors;
 
+import static ua.com.fielden.platform.error.Result.failure;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,7 +34,7 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
     public DumpCsvTxtProcessor save(final DumpCsvTxtProcessor entity) {
         
         if (entity.getInputStream() == null) {
-            throw Result.failure("Input stream was not provided.");
+            throw failure("Input stream was not provided.");
         }
         
         // lets read the data from file line by line
