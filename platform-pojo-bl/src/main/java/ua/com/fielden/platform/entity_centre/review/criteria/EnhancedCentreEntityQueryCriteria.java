@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import com.google.inject.Inject;
 
 import com.google.inject.Inject;
 
@@ -31,7 +29,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster;
-
+    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
+    
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
      *
@@ -42,6 +41,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     @Inject
     protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
         super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
+    }
+    
+    public void setCentreAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster) {
+        this.centreAdjuster = centreAdjuster;
+    }
+
+    public Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster() {
+        return centreAdjuster;
     }
 
     public void setColumnWidthAdjuster(final BiConsumer<String, Pair<Integer, Integer>> columnWidthAdjuster) {

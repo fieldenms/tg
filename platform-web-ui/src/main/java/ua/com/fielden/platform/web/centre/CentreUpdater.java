@@ -446,6 +446,10 @@ public class CentreUpdater {
                 targetCentre.getSecondTick().use(root, newUsedProperty, true);
             }
         }
+        // TODO consider that some property was removed from default configuration (targetCentre).
+        // TODO this can be done at the model level, or in 'checkedProperties' list.
+        // TODO it is necessary to handle such situation for: widths / growFactors, sorting info.
+        
         
         // apply widths and grow factor that were marked as changed
         for (final String property : differencesCentre.getSecondTick().checkedProperties(root)) {

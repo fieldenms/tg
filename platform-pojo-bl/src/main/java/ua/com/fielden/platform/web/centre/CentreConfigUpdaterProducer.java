@@ -52,11 +52,8 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final ICentreDomainTreeManagerAndEnhancer freshCentre = masterEntity.freshCentreSupplier().get();
         
         final List<String> freshCheckedProperties = freshCentre.getSecondTick().checkedProperties(root);
-        logger.error("Checked: [" + freshCheckedProperties + "]");
         final List<String> freshUsedProperties = freshCentre.getSecondTick().usedProperties(root);
-        logger.error("Used: [" + freshUsedProperties + "]");
         final List<Pair<String, Ordering>> freshSortedProperties = freshCentre.getSecondTick().orderedProperties(root);
-        logger.error("Sorted: [" + freshSortedProperties + "]");
         final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
         
         final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshUsedProperties, freshSortedProperties, freshManagedType, factory());
@@ -82,6 +79,10 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     }
 
     private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedPropertiesWithoutSummaries, final List<String> usedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
+        logger.error("CheckedWithoutSummaries: [" + checkedPropertiesWithoutSummaries + "]");
+        logger.error("Used: [" + usedProperties + "]");
+        logger.error("Sorted: [" + sortedProperties + "]");
+        
         final List<String> resultantProperties = new ArrayList<>(usedProperties);
         for (final String checkedProp: checkedPropertiesWithoutSummaries) {
             if (!usedProperties.contains(checkedProp)) {

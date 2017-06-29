@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.log4j.Logger;
+import java.util.function.Consumer;
 
 import com.google.inject.Inject;
 
@@ -25,7 +25,6 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @EntityType(CentreConfigUpdater.class)
 public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements ICentreConfigUpdater {
-    private final Logger logger = Logger.getLogger(getClass());
     private final EntityFactory factory;
     
     @Inject
@@ -42,37 +41,40 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         
         // after all validations have passed -- the association changes could be saved:
         final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = (EnhancedCentreEntityQueryCriteria) action.refetchedMasterEntity();
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = (ICentreDomainTreeManagerAndEnhancer) criteriaEntityBeingUpdated.freshCentreSupplier().get();
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
-        for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
-            if (Ordering.ASCENDING == orderedProperty.getValue()) {
+        final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster = criteriaEntityBeingUpdated.centreAdjuster();
+        
+        centreAdjuster.accept(cdtmae -> {
+            // remove sorting information
+            final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
+            for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
+                if (Ordering.ASCENDING == orderedProperty.getValue()) {
+                    cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+                }
                 cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
             }
-            cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-        }
-        
-        // un-'use' all old properties
-        final List<String> currUsedProperties = cdtmae.getSecondTick().usedProperties(root);
-        logger.error("Curr used: [" + currUsedProperties + "]");
-        for (final String currUsedProperty: currUsedProperties) {
-            cdtmae.getSecondTick().use(root, currUsedProperty, false);
-        }
-        
-        // 'use' all new properties
-        for (final String chosenId : action.getChosenIds()) {
-            cdtmae.getSecondTick().use(root, chosenId, true);
-        }
-        logger.error("New used: [" + cdtmae.getSecondTick().usedProperties(root) + "]");
-        
-        for (final String sortingVal: action.getSortingVals()) {
-            final String[] splitted = sortingVal.split(":");
-            final String name = splitted[0].equals("this") ? "" : splitted[0];
-            cdtmae.getSecondTick().toggleOrdering(root, name);
-            if ("desc".equals(splitted[1])) {
-                cdtmae.getSecondTick().toggleOrdering(root, name);
+            
+            // remove usage information
+            final List<String> currUsedProperties = cdtmae.getSecondTick().usedProperties(root);
+            for (final String currUsedProperty: currUsedProperties) {
+                cdtmae.getSecondTick().use(root, currUsedProperty, false);
             }
-        }
+            
+            // apply usage information
+            for (final String chosenId : action.getChosenIds()) {
+                cdtmae.getSecondTick().use(root, chosenId, true);
+            }
+            
+            // apply sorting information
+            for (final String sortingVal: action.getSortingVals()) {
+                final String[] splitted = sortingVal.split(":");
+                final String name = splitted[0].equals("this") ? "" : splitted[0];
+                cdtmae.getSecondTick().toggleOrdering(root, name);
+                if ("desc".equals(splitted[1])) {
+                    cdtmae.getSecondTick().toggleOrdering(root, name);
+                }
+            }
+        });
         
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);
