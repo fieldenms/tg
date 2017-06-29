@@ -45,6 +45,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.ColumnParameter;
 import ua.com.fielden.platform.web.centre.SortingProperty;
 
 /**
@@ -203,6 +204,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(CentreConfigUpdater.class);
         types.add(SortingProperty.class);
         types.add(CentreColumnWidthConfigUpdater.class);
+        types.add(ColumnParameter.class);
         types.add(PropertyDescriptor.class);
         types.add(AcknowledgeWarnings.class);
         types.add(PropertyWarning.class);

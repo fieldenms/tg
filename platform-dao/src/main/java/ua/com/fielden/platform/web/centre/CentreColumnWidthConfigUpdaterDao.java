@@ -25,7 +25,8 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
     @Override
     @SessionRequired
     public CentreColumnWidthConfigUpdater save(final CentreColumnWidthConfigUpdater action) {
-        action.getContext().getSelectionCrit().columnWidthAdjuster().accept(action.getPropWidths(), action.getPropGrows());
+        action.getContext().getSelectionCrit().columnWidthAdjuster().accept(action.getColumnParameters());
+        action.setColumnParameters(null);
         return super.save(action);
     }
 }

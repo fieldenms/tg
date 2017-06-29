@@ -1955,6 +1955,7 @@
                 const self = this;
                 this._columnResizingObject = {
                     oldColumnWidth: e.model.item.width,
+                    oldColumnGrowFactor: e.model.item.growFactor,
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
                     otherFixedColumnWidth: e.model.index < self.numOfFixedCols ?
@@ -1992,7 +1993,9 @@
                             if (!this._columnResizingObject.hasAnyFlex) {
                                 this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
                                 this._columnResizingObject.hasAnyFlex = true;
-                                this._columnResizingObject.shouldChangeGrowFactorForLastColumn = true;
+                                const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
+                                columnParameters[this.columns[this.columns.length - 1].property] = {growFactor: 1};
+                                this._columnResizingObject.columnParameters = columnParameters;
                             }
                         }
                     }
@@ -2000,6 +2003,9 @@
                     if (columnWidth !== newWidth) {
                         if (e.model.item.growFactor !== 0) {
                             this.set("columns." + e.model.index + ".growFactor", 0);
+                            const columnParameters = this._columnResizingObject.columnParameters || {};
+                            columnParameters[e.model.item.property] = {growFactor: 1};
+                            this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
                         this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
@@ -2017,18 +2023,18 @@
                 document.body.style.cursor = "default";
                 e.target.classList.toggle("resizing-action", false);
                 this.$.baseContainer.classList.toggle("noselect", false);
-                if (this._columnResizingObject && this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
-                    const propWidths = {};
-                    propWidths[e.model.item.property] = e.model.item.width;
-                    const propGrows = {};
-                    propGrows[e.model.item.property] = e.model.item.growFactor;
-                    if (this._columnResizingObject.shouldChangeGrowFactorForLastColumn) {
-                        propGrows[this.columns[this.columns.length - 1].property] = this.columns[this.columns.length - 1].growFactor;
+                if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
+                    const columnParameters = this._columnResizingObject.columnParameters || {};
+                    const columnParameter = columnParameters[e.model.item.property] || {};
+                    if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
+                        columnParameter.width = e.model.item.width;
+                    } 
+                    if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
+                        columnParameter.growFactor = e.model.item.growFactor;
                     }
-                    //                    this.fire("tg-egi-column-change", {
-                    //                        propWidths: propWidths,
-                    //                        propGrows: propGrows
-                    //                    });
+                    columnParameters[e.model.item.property] = columnParameter;
+                    this._columnResizingObject.columnParameters = columnParameters;
+                    this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
                 delete this._columnResizingObject;
             },

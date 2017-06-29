@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.centre;
 
-import java.util.Collections;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -21,32 +20,16 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWithCentreContext<String> {
 
     @IsProperty(Object.class)
-    @Title(value = "Column widths", desc = "Column widths")
-    private Map<String, Integer> propWidths;
-
-    @IsProperty(Object.class)
-    @Title(value = "Column grow factors", desc = "Column grow factors")
-    private Map<String, Integer> propGrows;
+    @Title("column Parameters")
+    private Map<String, Map<String, Integer>> columnParameters = null;
 
     @Observable
-    public CentreColumnWidthConfigUpdater setPropWidths(final Map<String, Integer> propWidths) {
-        this.propWidths.clear();
-        this.propWidths.putAll(propWidths);
+    protected CentreColumnWidthConfigUpdater setColumnParameters(final Map<String, Map<String, Integer>> columnParameters) {
+        this.columnParameters = columnParameters;
         return this;
     }
 
-    public Map<String, Integer> getPropWidths() {
-        return Collections.unmodifiableMap(this.propWidths);
-    }
-
-    @Observable
-    public CentreColumnWidthConfigUpdater setPropGrows(final Map<String, Integer> propGrows) {
-        this.propGrows.clear();
-        this.propGrows.putAll(propGrows);
-        return this;
-    }
-
-    public Map<String, Integer> getPropGrows() {
-        return Collections.unmodifiableMap(this.propGrows);
+    public Map<String, Map<String, Integer>> getColumnParameters() {
+        return columnParameters;
     }
 }
