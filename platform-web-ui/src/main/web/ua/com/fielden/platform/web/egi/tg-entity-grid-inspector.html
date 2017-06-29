@@ -74,7 +74,7 @@
             right: 0;
             width: 10px;
         }
-        .table-cell:hover >.resizing-box,
+        .resizing-column > .resizing-box,
         .resizing-action {
             cursor: col-resize;
             border-right: 4px solid var(--paper-light-blue-100);
@@ -242,7 +242,7 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                     <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
                                     <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                 </div>
@@ -341,7 +341,7 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                             <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                         </div>
@@ -447,7 +447,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                         <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                     </div>
@@ -507,7 +507,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                         <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
                                     </div>
@@ -1599,7 +1599,7 @@
                 if (columnGrowFactor === 0 || index < numOfFixedCols) {
                     colStyle += "flex-grow: 0;flex-shrink:0;";
                 } else {
-                    colStyle += "flex-grow: " + columnGrowFactor, + ";";
+                    colStyle += "flex-grow: " + columnGrowFactor, +";";
                 }
                 if (itemWidth === 0) {
                     colStyle += "display: none;";
@@ -2025,10 +2025,10 @@
                     if (this._columnResizingObject.shouldChangeGrowFactorForLastColumn) {
                         propGrows[this.columns[this.columns.length - 1].property] = this.columns[this.columns.length - 1].growFactor;
                     }
-                    this.fire("tg-egi-column-change", {
-                        propWidths: propWidths,
-                        propGrows: propGrows
-                    });
+                    //                    this.fire("tg-egi-column-change", {
+                    //                        propWidths: propWidths,
+                    //                        propGrows: propGrows
+                    //                    });
                 }
                 delete this._columnResizingObject;
             },
@@ -2039,6 +2039,16 @@
 
             _makeEgiSelectable: function (e) {
                 this.$.baseContainer.classList.toggle("noselect", false);
+            },
+
+            _showResizingCue: function (e) {
+                if (!e.buttons) {
+                    e.currentTarget.classList.toggle("resizing-column", true);
+                }
+            },
+
+            _hideResizingCue: function (e) {
+                e.currentTarget.classList.toggle("resizing-column", false);
             }
         })
     })()
