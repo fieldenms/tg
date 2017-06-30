@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.String.format;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +13,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -85,6 +86,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
+import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -252,7 +254,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
                 return treeName(customPropName);
             } else {
-                throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                throw new PropertyDefinitionException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
             }
         }
     }
@@ -657,10 +659,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return createRenderableRepresentation(getAssociatedEntityCentreManager());
     }
 
-//    public IRenderable buildEgi() {
-//        return createRenderableEgiRepresentaton(getAssociatedEntityCentreManager());
-//    }
-
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
@@ -668,101 +666,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         } else {
             return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, CentreUpdater.FRESH_CENTRE_NAME);
         }
-    }
-
-    private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
-        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
-                +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
-                +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
-                +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
-                +
-                "<div class='truncate relative' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", false)]]'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>"
-                + "</div>" +
-                "</div>";
-
-        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
-                +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
-                +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
-                +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
-                +
-                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", true)]]'></iron-icon>"
-                + "</div>" +
-                "</div>";
-        final DomContainer domContainer = new DomContainer();
-        final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();
-        final Class<?> managedType = centre.getEnhancer().getManagedType(getEntityType());
-        if (resultProps.isPresent()) {
-            for (int columnIndex = 0; columnIndex < resultProps.get().size(); columnIndex++) {
-                final ResultSetProp resultProp = resultProps.get().get(columnIndex);
-                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
-                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
-                final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
-                final String typeTemplate = EntityUtils.isBoolean(propertyType) ? booleanValueString : simpleValueString;
-                final Pair<String, String> columnTitileAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName);
-                domContainer.add(
-                        new InnerTextElement(typeTemplate
-                                .replaceAll("@calc-property-name", propertyName)
-                                .replaceAll("@property-name", resultPropName)
-                                .replace("@column-title", columnTitileAndDesc.getKey())
-                                .replace("@column-desc", columnTitileAndDesc.getValue())
-                                .replaceAll("@column-index", Integer.toString(columnIndex))
-                                .replaceAll("@property-type", Matcher.quoteReplacement(
-                                        egiRepresentationFor(
-                                                propertyType,
-                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
-                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName)
-                                                        : null))
-                                        ))));
-            }
-        }
-
-        logger.debug("Initiating top-level actions' shortcuts...");
-        final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
-        final StringBuilder shortcuts = new StringBuilder();
-
-        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
-            shortcuts.append(shortcut + " ");
-        }
-
-        if (topLevelActions.isPresent()) {
-
-            for (int i = 0; i < topLevelActions.get().size(); i++) {
-                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
-                final EntityActionConfig config = topLevelAction.getKey();
-                if (config.shortcut.isPresent()) {
-                    shortcuts.append(config.shortcut.get() + " ");
-                }
-            }
-        }
-
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
-        final String egiStr = text.
-                replace("@SHORTCUTS", shortcuts).
-                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
-                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
-                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
-                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
-                replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
-                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
-                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
-                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
-                replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
-                replaceAll("@miType", getMenuItemType().getSimpleName()).
-                replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
-
-        return new IRenderable() {
-
-            @Override
-            public DomElement render() {
-                return new InnerTextElement(egiStr);
-            }
-        };
     }
 
     private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {

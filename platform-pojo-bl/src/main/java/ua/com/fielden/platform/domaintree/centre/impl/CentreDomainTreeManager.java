@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.event.EventListenerList;
@@ -1048,32 +1049,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
-                return true;
-            if (!super.equals(obj))
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final AddToResultTickManager other = (AddToResultTickManager) obj;
-            if (propertiesGrowFactors == null) {
-                if (other.propertiesGrowFactors != null) {
-                    return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final AddToResultTickManager other = (AddToResultTickManager) obj;
+                    return Objects.equals(propertiesGrowFactors, other.propertiesGrowFactors) &&
+                            Objects.equals(propertiesWidths, other.propertiesWidths) &&
+                            Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings);
                 }
-            } else if (!propertiesGrowFactors.equals(other.propertiesGrowFactors)) {
-                return false;
-            }
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null) {
-                    return false;
-                }
-            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
-                return false;
-            }
-            if (rootsListsOfOrderings == null) {
-                if (other.rootsListsOfOrderings != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
                 return false;
             }
             return true;
