@@ -37,8 +37,8 @@
 	    test('running does not occur for invalid criteria', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
             	
             	assert.strictEqual(centre.$.selection_criteria._centreChanged, false, '_centreChanged flag should defined and should equal false.');
             	assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
@@ -66,8 +66,8 @@
 	    test('run action works for custom fetch provider', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
             	
             	var entity = resultEntities[0];
             	
