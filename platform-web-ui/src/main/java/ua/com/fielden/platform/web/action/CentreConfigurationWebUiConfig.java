@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -30,9 +31,11 @@ public class CentreConfigurationWebUiConfig {
     private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
+    public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
+        centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
     }
 
     /**
@@ -59,6 +62,15 @@ public class CentreConfigurationWebUiConfig {
                 CentreConfigUpdaterProducer.class,
                 masterConfig,
                 injector);
+    }
+
+    /**
+     * Creates no-ui entity master for {@link CentreColumWidthConfigUpdater}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreColumnWidthConfigUpdater> createCentreColumnWidthConfigUpdater(final Injector injector) {
+        return new EntityMaster<CentreColumnWidthConfigUpdater>(CentreColumnWidthConfigUpdater.class, null, injector);
     }
 
     public enum CentreConfigActions {
