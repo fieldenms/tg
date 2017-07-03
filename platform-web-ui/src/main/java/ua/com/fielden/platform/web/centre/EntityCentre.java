@@ -1,6 +1,13 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -101,60 +108,47 @@ import ua.com.fielden.snappy.DateRangeConditionEnum;
  */
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
-    private enum EntityCentreTemplateParts {
+    private final String IMPORTS = "<!--@imports-->";
+    private final String FULL_ENTITY_TYPE = "@full_entity_type";
+    private final String FULL_MI_TYPE = "@full_mi_type";
+    private final String MI_TYPE = "@mi_type";
+    //egi related properties
+    private final String EGI_LAYOUT = "@gridLayout";
+    private final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
+    private final String EGI_SHORTCUTS = "@customShortcuts";
+    private final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
+    private final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
+    private final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
+    private final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
+    private final String EGI_NUM_OF_FIXED_COLUMNS = "@numOfFixedCols";
+    private final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
+    private final String EGI_HEADER_FIXED = "@headerFixed";
+    private final String EGI_SUMMARY_FIXED = "@summaryFixed";
+    private final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
+    private final String EGI_PAGE_CAPACITY = "@pageCapacity";
+    private final String EGI_ACTIONS = "//generatedActionObjects";
+    private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
+    private final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
+    private final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
+    private final String EGI_DOM = "<!--@egi_columns-->";
+    private final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
+    private final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
+    private final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    //Toolbar related
+    private final String TOOLBAR_DOM = "<!--@toolbar-->";
+    private final String TOOLBAR_JS = "//toolbarGeneratedFunction";
+    private final String TOOLBAR_STYLES = "/*toolbarStyles*/";
+    //Selection criteria related
+    private final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
+    private final String CRITERIA_DOM = "<!--@criteria_editors-->";
+    private final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
+    //Insertion points
+    private final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
+    private final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
+    private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
+    private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
+    private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
 
-        IMPORTS("<!--@imports-->"),
-        FULL_ENTITY_TYPE("@full_entity_type"),
-        FULL_MI_TYPE("@full_mi_type"),
-        MI_TYPE("@mi_type"),
-        //egi related properties
-        EGI_LAYOUT("@gridLayout"),
-        EGI_LAYOUT_CONFIG("//gridLayoutConfig"),
-        EGI_SHORTCUTS("@customShortcuts"),
-        EGI_TOOLBAR_VISIBLE("@toolbarVisible"),
-        EGI_CHECKBOX_VISIBILITY("@checkboxVisible"),
-        EGI_CHECKBOX_FIXED("@checkboxesFixed"),
-        EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED("@checkboxesWithPrimaryActionsFixed"),
-        EGI_NUM_OF_FIXED_COLUMNS("@numOfFixedCols"),
-        EGI_SECONDARY_ACTION_FIXED("@secondaryActionsFixed"),
-        EGI_HEADER_FIXED("@headerFixed"),
-        EGI_SUMMARY_FIXED("@summaryFixed"),
-        EGI_VISIBLE_ROW_COUNT("@visibleRowCount"),
-        EGI_PAGE_CAPACITY("@pageCapacity"),
-        EGI_ACTIONS("//generatedActionObjects"),
-        EGI_PRIMARY_ACTION("//generatedPrimaryAction"),
-        EGI_SECONDARY_ACTIONS("//generatedSecondaryActions"),
-        EGI_PROPERTY_ACTIONS("//generatedPropActions"),
-        EGI_DOM("<!--@egi_columns-->"),
-        EGI_FUNCTIONAL_ACTION_DOM("<!--@functional_actions-->"),
-        EGI_PRIMARY_ACTION_DOM("<!--@primary_action-->"),
-        EGI_SECONDARY_ACTIONS_DOM("<!--@secondary_actions-->"),
-        //Toolbar related
-        TOOLBAR_DOM("<!--@toolbar-->"),
-        TOOLBAR_JS("//toolbarGeneratedFunction"),
-        TOOLBAR_STYLES("/*toolbarStyles*/"),
-        //Selection criteria related
-        QUERY_ENHANCER_CONFIG("@queryEnhancerContextConfig"),
-        CRITERIA_DOM("<!--@criteria_editors-->"),
-        SELECTION_CRITERIA_LAYOUT_CONFIG("//@layoutConfig"),
-        //Insertion points
-        INSERTION_POINT_ACTIONS("//generatedInsertionPointActions"),
-        INSERTION_POINT_ACTIONS_DOM("<!--@insertion_point_actions-->"),
-        LEFT_INSERTION_POINT_DOM("<!--@left_insertion_points-->"),
-        RIGHT_INSERTION_POINT_DOM("<!--@right_insertion_points-->"),
-        BOTTOM_INSERTION_POINT_DOM("<!--@bottom_insertion_points-->");
-
-        private final String centreReplacementTemplate;
-
-        private EntityCentreTemplateParts (final String centreReplacementTemplate) {
-            this.centreReplacementTemplate = centreReplacementTemplate;
-        }
-
-        @Override
-        public String toString() {
-            return centreReplacementTemplate;
-        }
-    }
 
     private final Logger logger = Logger.getLogger(getClass());
     private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
@@ -968,49 +962,48 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
-                replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
+                replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
                 //TODO It looks like that is not needed any longer.
                 //replace("@entity_type", entityType.getSimpleName()).
-                replace("@gridLayout", gridLayoutConfig.getKey()).
-                replace("@full_entity_type", entityType.getName()).
-                replace("@mi_type", miType.getSimpleName()).
+                replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
+                replace(FULL_ENTITY_TYPE, entityType.getName()).
+                replace(MI_TYPE, miType.getSimpleName()).
                 //egi related properties
-                replace("@customShortcuts", shortcuts).
-                replace("@toolbarVisible", dslDefaultConfig.shouldHideToolbar() ? "": "toolbar-visible").
-                replace("@checkboxVisible", dslDefaultConfig.shouldHideCheckboxes() ? "": "checkbox-visible").
-                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() ? "checkboxes-fixed" : "").
-                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() ? "checkboxes-with-primary-actions-fixed" : "").
-                replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
-                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() ? "secondary-actions-fixed" : "").
-                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() ? "header-fixed" : "").
-                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() ? "summary-fixed": "").
-                replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
+                replace(EGI_SHORTCUTS, shortcuts).
+                replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).
+                replace(EGI_CHECKBOX_VISIBILITY, CHECKBOX_VISIBLE.eval(!dslDefaultConfig.shouldHideCheckboxes())).
+                replace(EGI_CHECKBOX_FIXED, CHECKBOX_FIXED.eval(dslDefaultConfig.getScrollConfig().isCheckboxesFixed())).replace(EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED, CHECKBOX_WITH_PRIMARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed())).
+                replace(EGI_NUM_OF_FIXED_COLUMNS, Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
+                replace(EGI_SECONDARY_ACTION_FIXED, SECONDARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed())).
+                replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
+                replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
+                replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
                 ///////////////////////
-                replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
-                replace("//toolbarGeneratedFunction", dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
-                replace("/*toolbarStyles*/", dslDefaultConfig.getToolbarConfig().styles().toString()).
-                replace("@full_mi_type", miType.getName()).
-                replace("@pageCapacity", Integer.toString(dslDefaultConfig.getPageCapacity())).
-                replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
-                replace("<!--@criteria_editors-->", editorContainer.toString()).
-                replace("<!--@egi_columns-->", egiColumns.toString()).
-                replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
-                replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
-                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
+                replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
+                replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
+                replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
+                replace(FULL_MI_TYPE, miType.getName()).
+                replace(EGI_PAGE_CAPACITY, Integer.toString(dslDefaultConfig.getPageCapacity())).
+                replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
+                replace(CRITERIA_DOM, editorContainer.toString()).
+                replace(EGI_DOM, egiColumns.toString()).
+                replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
+                replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
+                replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
                         : insertionPointActionsString).
-                replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
+                replace(EGI_PRIMARY_ACTION, primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
                         : primaryActionObjectString).
-                replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
+                replace(EGI_PROPERTY_ACTIONS, propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
                         : propActionsString).
-                replace("//@layoutConfig", layout.code().toString()).
-                replace("//gridLayoutConfig", gridLayoutConfig.getValue()).
-                replace("<!--@functional_actions-->", functionalActionsDom.toString()).
-                replace("<!--@primary_action-->", primaryActionDom.toString()).
-                replace("<!--@secondary_actions-->", secondaryActionsDom.toString()).
-                replace("<!--@insertion_point_actions-->", insertionPointActionsDom.toString()).
-                replace("<!--@left_insertion_points-->", leftInsertionPointsDom.toString()).
-                replace("<!--@right_insertion_points-->", rightInsertionPointsDom.toString()).
-                replace("<!--@bottom_insertion_points-->", bottomInsertionPointsDom.toString());
+                replace(SELECTION_CRITERIA_LAYOUT_CONFIG, layout.code().toString()).
+                replace(EGI_LAYOUT_CONFIG, gridLayoutConfig.getValue()).
+                replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString()).
+                replace(EGI_PRIMARY_ACTION_DOM, primaryActionDom.toString()).
+                replace(EGI_SECONDARY_ACTIONS_DOM, secondaryActionsDom.toString()).
+                replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
+                replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
+                replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
+                replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString());
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override
