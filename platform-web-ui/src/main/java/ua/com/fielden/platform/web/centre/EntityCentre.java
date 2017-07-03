@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -1204,26 +1206,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private String createActionObject(final FunctionalActionElement element) {
         return element.createActionObject();
-    }
-
-    /**
-     * Return DSL representation for property name.
-     *
-     * @param name
-     * @return
-     */
-    private static String dslName(final String name) {
-        return name.equals("") ? "this" : name;
-    }
-
-    /**
-     * Return domain tree representation for property name.
-     *
-     * @param name
-     * @return
-     */
-    private static String treeName(final String name) {
-        return name.equals("this") ? "" : name;
     }
 
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {

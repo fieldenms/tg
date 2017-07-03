@@ -326,8 +326,7 @@
          * Returns identifier of the entity. If it is persisted -- such identifier is represented by id, otherwise -- by key.
          */
         idOrKey: function (entity) {
-            const thisOrIdOrKey = entity.get('id') === null ? entity.get('key') : entity.get('id');
-            return 'this' === thisOrIdOrKey ? '' : thisOrIdOrKey;
+            return entity.get('id') === null ? entity.get('key') : entity.get('id');
         },
         
         _find: function (entities, idOrKey) {

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -62,13 +64,13 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
             
             // apply usage information
             for (final String chosenId : action.getChosenIds()) {
-                cdtmae.getSecondTick().use(root, chosenId, true);
+                cdtmae.getSecondTick().use(root, treeName(chosenId), true);
             }
             
             // apply sorting information
             for (final String sortingVal: action.getSortingVals()) {
                 final String[] splitted = sortingVal.split(":");
-                final String name = splitted[0].equals("this") ? "" : splitted[0];
+                final String name = treeName(splitted[0]);
                 cdtmae.getSecondTick().toggleOrdering(root, name);
                 if ("desc".equals(splitted[1])) {
                     cdtmae.getSecondTick().toggleOrdering(root, name);

@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -59,16 +59,19 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshUsedProperties, freshSortedProperties, freshManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
-        final Set<String> sortingVals = customisableColumns.stream()
-            .filter(sp -> sp.getSortingNumber() >= 0) // consider only 'sorted' properties
+        entity.setChosenIds(
+            freshUsedProperties.stream()
+            .map(usedProperty -> dslName(usedProperty))
+            .collect(Collectors.toCollection(LinkedHashSet::new))
+        );
+        
+        entity.setSortingVals(new ArrayList<>(
+            customisableColumns.stream()
+            .filter(customisableColumn -> customisableColumn.getSortingNumber() >= 0) // consider only 'sorted' properties
             .sorted((o1, o2) -> o1.getSortingNumber().compareTo(o2.getSortingNumber()))
-            .map(sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))
-            .collect(Collectors.toCollection(LinkedHashSet::new));
-        
-        final Set<String> chosenIds = new LinkedHashSet<>(freshUsedProperties);
-        entity.setChosenIds(chosenIds);
-        
-        entity.setSortingVals(new ArrayList<>(sortingVals));
+            .map(customisableColumn -> customisableColumn.getKey() + ':' + (Boolean.TRUE.equals(customisableColumn.getSorting()) ? "asc" : "desc"))
+            .collect(Collectors.toCollection(LinkedHashSet::new))
+        ));
         return entity;
     }
     
@@ -92,28 +95,21 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         
         final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
         for (final String checkedProp: resultantProperties) {
+            final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
+            final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, dslName(checkedProp), titleAndDesc.getValue());
+            customisableColumn.setTitle(titleAndDesc.getKey());
             if ("".equals(checkedProp) || 
                     (!AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && 
                     !isShortCollection(managedType, checkedProp))
             ) {
-                final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
-                final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
                 customisableColumn.setSortable(true);
-                customisableColumn.setTitle(titleAndDesc.getKey());
-
                 final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(sortedProperties, checkedProp);
                 if (orderingAndNumber != null) {
                     customisableColumn.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist
                     customisableColumn.setSortingNumber(orderingAndNumber.getValue());
                 }
-                result.add(customisableColumn);
-            } else {
-                final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
-                final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, checkedProp, titleAndDesc.getValue());
-                customisableColumn.setSortable(false);
-                customisableColumn.setTitle(titleAndDesc.getKey());
-                result.add(customisableColumn);
             }
+            result.add(customisableColumn);
         }
         return result;
     }
