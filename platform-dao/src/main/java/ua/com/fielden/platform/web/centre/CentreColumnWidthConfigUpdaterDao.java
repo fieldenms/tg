@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.HashMap;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -26,7 +28,7 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
     @SessionRequired
     public CentreColumnWidthConfigUpdater save(final CentreColumnWidthConfigUpdater action) {
         action.getContext().getSelectionCrit().columnWidthAdjuster().accept(action.getColumnParameters());
-        action.setColumnParameters(null);
+        action.setColumnParameters(new HashMap<>());
         return super.save(action);
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.ioc;
 
+import static java.lang.String.format;
+
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -451,7 +453,7 @@ public class SourceControllerImpl implements ISourceController {
     private static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
         final EntityMaster<? extends AbstractEntity<?>> master = ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig);
         if (master == null) {
-            throw new MissingMasterConfigurationException("The entity master configuration for " + entityTypeString + " entity is missing");
+            throw new MissingMasterConfigurationException(format("The entity master configuration for %s entity is missing", entityTypeString));
         }
         return master.render().toString();
     }
@@ -459,7 +461,7 @@ public class SourceControllerImpl implements ISourceController {
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
         final EntityCentre<? extends AbstractEntity<?>> centre = ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig);
         if (centre == null) {
-            throw new MissingCentreConfigurationException("The entity centre configuration for " + mitypeString + " menu item is missing");
+            throw new MissingCentreConfigurationException(format("The entity centre configuration for %s menu item is missing", mitypeString));
         }
         return centre.build().render().toString();
     }
@@ -467,7 +469,7 @@ public class SourceControllerImpl implements ISourceController {
     private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {
         final AbstractCustomView view = ResourceFactoryUtils.getCustomView(viewName, webUiConfig);
         if (view == null) {
-            throw new MissingCustomViewConfigurationException("The " + viewName + " custom view is missing");
+            throw new MissingCustomViewConfigurationException(format("The %s custom view is missing", viewName));
         }
         return view.build().render().toString();
     }
@@ -488,7 +490,7 @@ public class SourceControllerImpl implements ISourceController {
     private static String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
         final String filePath = FileResource.generateFileName(resourcePaths, originalPath);
         if (StringUtils.isEmpty(filePath)) {
-            logger.error("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
+            logger.error(format("The requested resource (%s + %s) wasn't found.", originalPath, extension));
             return null;
         } else {
             return getFileSource(filePath);
