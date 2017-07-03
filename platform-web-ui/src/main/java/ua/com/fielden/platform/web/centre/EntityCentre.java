@@ -963,8 +963,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
                 replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
-                //TODO It looks like that is not needed any longer.
-                //replace("@entity_type", entityType.getSimpleName()).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
                 replace(MI_TYPE, miType.getSimpleName()).
