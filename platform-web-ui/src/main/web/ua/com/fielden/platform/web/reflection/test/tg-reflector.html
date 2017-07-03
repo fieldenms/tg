@@ -39,6 +39,19 @@
             // However client-side code is not restricted to that.
             
             /////////////////////// entity.get('key') tests ///////////////////////
+            test('test empty object convertion should be fine', function (done) {
+                assert.deepEqual(reflector.convert({}), {});
+                done();
+            });
+            
+            test('test object with arbitrary properties convertion should not be acceptable', function (done) {
+                try {
+                    reflector.convert({testProp: "testProp"});
+                } catch (ex) {
+                    done();
+                }
+            });
+            
             test('simple entity: key access is forbidden if not fetched', function (done) {
                 const e1 = reflector.newEntity(typeName1);
                 try {
@@ -355,6 +368,7 @@
                     done();
                 }
             });
+            
             /////////////////////// entity.get('key') tests [END] /////////////////
             
             test('equalsEx method works for regular values', function (done) {
