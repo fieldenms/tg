@@ -2034,6 +2034,8 @@
                     }
                     columnParameters[e.model.item.property] = columnParameter;
                     this._columnResizingObject.columnParameters = columnParameters;
+                }
+                if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
                     this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
                 delete this._columnResizingObject;
