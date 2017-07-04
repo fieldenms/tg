@@ -1361,10 +1361,10 @@
             if (value !== null) {
                 const definedScale = typeof scale !== 'undefined' ? scale : 2;
                 const options = {
-                    maximumFractionDigits: definedScale;
+                    maximumFractionDigits: definedScale
                 };
-                if (trailingZeros === false) {
-                    options[minimumFractionDigits] = definedScale;
+                if (trailingZeros !== false) {
+                    options.minimumFractionDigits = definedScale;
                 }
                 return value.toLocaleString(locale, options);
             }
