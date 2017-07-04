@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -28,13 +29,15 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  */
 public class CentreConfigurationWebUiConfig {
     private static final String actionButton = "'margin: 10px', 'width: 110px'";
-    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s], [%s]]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
+    public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
+        centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
     }
 
@@ -48,23 +51,34 @@ public class CentreConfigurationWebUiConfig {
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
                 .also()
-//                .addAction( // TODO
-//                        action(TgExportFunctionalEntity.class)
-//                        .withContext(context().withMasterEntity().build())
-//                        .postActionSuccess(new PostActionSuccess(""
-//                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
-//                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
-//                                )) // self.retrieve()
-//                        .postActionError(new PostActionError(""))
-//                        .icon("trending-up")
-//                        .shortDesc("Export")
-//                        .longDesc("Export action")
-//                        .shortcut("ctrl+shift+e")
-//                        .build())
+                .addAction(
+                        action(CentreConfigUpdaterDefaultAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(
+                            new IPostAction() {
+                                @Override
+                                public JsCode build() {
+                                    return new JsCode(""
+                                        + ""
+                                        + ""
+                                        + "const editor = self.$.masterDom.querySelector('[id=editor_4_customisableColumns]');\n"
+                                        + "editor._originalChosenIds = null; // this should trigger full refresh \n"
+                                        + "editor.entity.setAndRegisterPropertyTouch('chosenIds', ['dR', 'iS']);\n" // TODO functionalEntity.get('chosenIds')
+                                        + "editor.validationCallback();\n"
+                                        + ""
+                                    );
+                                }
+                            })
+                        // .postActionError(new PostActionError(""))
+                        .icon("trending-up")
+                        .shortDesc("Default")
+                        .longDesc("Load default configuration")
+                        .shortcut("ctrl+shift+e") // TODO
+                        .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("CUSTOMISE").longDesc("Customise columns action")
 
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:500px', "
                         + format("['flex', ['flex']]")
@@ -75,6 +89,15 @@ public class CentreConfigurationWebUiConfig {
                 CentreConfigUpdaterProducer.class,
                 masterConfig,
                 injector);
+    }
+    
+    /**
+     * Creates no-ui entity master for {@link CentreConfigUpdaterDefaultAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigUpdaterDefaultAction> createCentreConfigUpdaterDefaultAction(final Injector injector) {
+        return new EntityMaster<CentreConfigUpdaterDefaultAction>(CentreConfigUpdaterDefaultAction.class, null, injector);
     }
 
     /**
