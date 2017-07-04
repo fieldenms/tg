@@ -44,6 +44,7 @@ import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClass
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.SortingProperty;
 
@@ -86,6 +87,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(SecurityTokenInfo.class);
             domainTypes.add(CentreConfigUpdater.class);
             domainTypes.add(SortingProperty.class);
+            domainTypes.add(CentreColumnWidthConfigUpdater.class);
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);

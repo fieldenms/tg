@@ -52,7 +52,7 @@
 
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-        <iron-pages id="views" selected="[[_selectedView]]" on-scroll="_handleScroll" on-iron-select="_pageSelectionChanged">
+        <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
             <div class="fit">
                 <paper-material>
                     <tg-selection-view id="selectionView">
@@ -112,7 +112,6 @@
             _processSaverError: Function,
             _processDiscarderResponse: Function,
             _processDiscarderError: Function,
-            _handleScroll: Function,
             _saverDisabled: Boolean,
             _discarderDisabled: Boolean,
             _runnerDisabled: Boolean,

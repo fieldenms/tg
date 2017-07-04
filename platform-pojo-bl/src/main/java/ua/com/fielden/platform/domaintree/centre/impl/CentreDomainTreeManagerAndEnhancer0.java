@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
@@ -55,8 +57,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * WARNING: this is an OLD version!
@@ -866,6 +866,19 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         public IWidthManager setWidth(final Class<?> root, final String property, final int width) {
             // inject an enhanced type into method implementation
             base().setWidth(enhancer().getManagedType(root), property, width);
+            return this;
+        }
+
+        @Override
+        public int getGrowFactor(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getGrowFactor(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            // inject an enhanced type into method implementation
+            base().setGrowFactor(enhancer().getManagedType(root), property, growFactor);
             return this;
         }
 

@@ -208,19 +208,20 @@
                 
                 self._processRunnerResponse = function (e) {
                     self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
-                        var criteriaEntity = entityAndCustomObject[0];
+                        const criteriaEntity = entityAndCustomObject[0];
                         self._provideExceptionOccured(criteriaEntity, exceptionOccured);
-                        var customObject = self._reflector().customObject(entityAndCustomObject);
-                        var resultEntities = customObject.resultEntities || [];
-                        var pageCount = customObject.pageCount;
-                        var pageNumber = customObject.pageNumber;
-                        var metaValues = customObject.metaValues;
-                        var centreChanged = customObject.isCentreChanged;
-                        var renderingHints = customObject.renderingHints || [];
-                        var summary = customObject.summary;
-                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        const customObject = self._reflector().customObject(entityAndCustomObject);
+                        const resultEntities = customObject.resultEntities || [];
+                        const pageCount = customObject.pageCount;
+                        const pageNumber = customObject.pageNumber;
+                        const metaValues = customObject.metaValues;
+                        const centreChanged = customObject.isCentreChanged;
+                        const renderingHints = customObject.renderingHints || [];
+                        const summary = customObject.summary;
+                        const staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        const columnWidths = customObject.columnWidths;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths);
                     });
                 };
 
@@ -231,7 +232,7 @@
                 };
 
                 // calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths) {
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
@@ -247,7 +248,7 @@
                         var msg = "Running completed successfully.";
                         this._openToastWithoutEntity(msg, false, msg, false);
 
-                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary);
+                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary, columnWidths);
                     } else {
                         this._setPropertyModel(metaValues);
                         this._centreChanged = centreChanged;
@@ -256,7 +257,7 @@
                         this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                         var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
                     }
                 }).bind(self);
 

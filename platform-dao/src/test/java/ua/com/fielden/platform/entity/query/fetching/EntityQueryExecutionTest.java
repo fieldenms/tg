@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
@@ -120,6 +122,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
     private final ITgEntityWithComplexSummaries coEntityWithComplexSummaries = getInstance(ITgEntityWithComplexSummaries.class);
+    private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
 
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
@@ -187,6 +190,51 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         isNotNull().model();
     }
 
+    /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
+
+    @Test
+    public void count_seconds_function_works_correctly_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().seconds().between().val(date("2007-01-01 00:01:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
+        assertEquals("Incorrect duration in seconds", BigInteger.valueOf(60l), result.get("result"));
+    }
+    
+    @Test
+    public void count_minutes_function_works_correctly_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().minutes().between().val(date("2007-01-01 01:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
+        assertEquals("Incorrect duration in minutes", BigInteger.valueOf(60l), result.get("result"));
+    }
+
+    @Test
+    public void count_hours_function_works_correctly_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().hours().between().val(date("2007-01-01 23:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
+        assertEquals("Incorrect duration in hours", BigInteger.valueOf(23l), result.get("result"));
+    }
+
+    @Test
+    public void count_days_function_works_correctly_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().days().between().val(date("2007-01-10 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
+        assertEquals("Incorrect duration in days", BigInteger.valueOf(9l), result.get("result"));
+    }
+    
+    @Test
+    public void count_months_function_works_correctly_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().months().between().val(date("2007-10-01 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
+        assertEquals("Incorrect duration in months", BigInteger.valueOf(9l), result.get("result"));
+    }
+    
+    @Test
+    public void count_years_function_works_correctly_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().years().between().val(date("2008-01-01 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
+        assertEquals("Incorrect duration in years", BigInteger.valueOf(1l), result.get("result"));
+    }
+    
+    
     /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
 
     @Test
