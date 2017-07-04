@@ -74,7 +74,8 @@
             right: 0;
             width: 10px;
         }
-        .resizing-column > .resizing-box,
+        .table-cell:hover > .resizing-box,
+        .resizing-box:hover,
         .resizing-action {
             cursor: col-resize;
             border-right: 4px solid var(--paper-light-blue-100);
@@ -1935,9 +1936,8 @@
 
             _startColumnResize: function (e) {
                 //Change the style to visualise column resizing.
-                document.body.style.cursor = "col-resize";
+                //this.style.cursor = "col-resize";
                 e.target.classList.toggle("resizing-action", true);
-                this.$.baseContainer.classList.toggle("noselect", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
                 const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
@@ -2020,9 +2020,8 @@
             },
 
             _endColumnResizing: function (e) {
-                document.body.style.cursor = "default";
+                //this.style.cursor = "default";
                 e.target.classList.toggle("resizing-action", false);
-                this.$.baseContainer.classList.toggle("noselect", false);
                 if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
@@ -2034,6 +2033,8 @@
                     }
                     columnParameters[e.model.item.property] = columnParameter;
                     this._columnResizingObject.columnParameters = columnParameters;
+                }
+                if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
                     this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
                 delete this._columnResizingObject;
