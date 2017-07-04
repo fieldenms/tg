@@ -5,6 +5,11 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -30,6 +35,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.ITgMeterReading;
+import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
@@ -38,6 +44,7 @@ import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
 import ua.com.fielden.platform.sample.domain.TgMeterReadingDao;
+import ua.com.fielden.platform.sample.domain.TgPublishedYearlyDao;
 import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
@@ -85,11 +92,6 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
  *
@@ -136,6 +138,8 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IMainMenuItem.class).to(MainMenuItemDao.class);
 
         bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
+
+        bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
 
         bind(ITgTimesheet.class).to(TgTimesheetDao.class);
         bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
