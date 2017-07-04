@@ -559,7 +559,8 @@
 	                            throw 'Cannot add ' + self.idOrKey(added) + ' which is chosen already (chosenIds = ' + chosenIds + ').';
 	                        }
                             
-                            chosenIds.push(self.idOrKey(added));
+                            const indexToInsert = self.findPlaceToInsert(added, self._entities, chosenIds);
+                            chosenIds.splice(indexToInsert, 0, self.idOrKey(added)); // insert 'added' key into 'indexToInsert' place in 'chosenIds'
                             self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
@@ -575,6 +576,23 @@
 	                }
 	            }, self);
             }
+        },
+        
+        /**
+         * Finds an index in 'chosenIds' where 'added' entity key should be inserted. This takes into account the order of '_entities'.
+         */
+        findPlaceToInsert: function (added, _entities, chosenIds) {
+            let indexToInsert = 0;
+            for (let index = 0; index < _entities.length; index++) {
+                const entity = _entities[index];
+                if (added === entity) {
+                    return indexToInsert;
+                }
+                if (chosenIds.indexOf(this.idOrKey(entity)) > -1) {
+                    indexToInsert += 1;
+                }
+            }
+            throw 'Recently checked item with key [' + this.idOrKey(added) + '] could not be found in _entities [' + _entities + '] list.';
         },
         
         provideSorting: function (sortingVals, customisableColumns) {
