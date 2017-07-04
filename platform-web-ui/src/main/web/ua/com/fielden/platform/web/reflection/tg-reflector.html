@@ -1355,9 +1355,16 @@
         /**
          * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
          */
-        formatDecimal: function (value, locale) {
+        formatDecimal: function (value, locale, scale, trailingZeros) {
             if (value !== null) {
-                return value.toLocaleString(locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
+                const definedScale = typeof scale !== 'undefined' ? scale : 2;
+                const options = {
+                    maximumFractionDigits: definedScale;
+                };
+                if (trailingZeros === false) {
+                    options[minimumFractionDigits] = definedScale;
+                }
+                return value.toLocaleString(locale, options);
             }
             return '';
         },
@@ -1365,9 +1372,9 @@
         /**
          * Format money numbers in to string based on locales. If the value is null then returns empty string.
          */
-        formatMoney: function (value, locale) {
+        formatMoney: function (value, locale, scale, trailingZeros) {
             if (value !== null) {
-                return '$' + this.formatDecimal(value.amount, locale);
+                return '$' + this.formatDecimal(value.amount, locale, scale, trailingZeros);
             }
             return '';
         },
