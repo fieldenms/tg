@@ -48,6 +48,19 @@ public class CentreConfigurationWebUiConfig {
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
                 .also()
+//                .addAction( // TODO
+//                        action(TgExportFunctionalEntity.class)
+//                        .withContext(context().withMasterEntity().build())
+//                        .postActionSuccess(new PostActionSuccess(""
+//                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
+//                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
+//                                )) // self.retrieve()
+//                        .postActionError(new PostActionError(""))
+//                        .icon("trending-up")
+//                        .shortDesc("Export")
+//                        .longDesc("Export action")
+//                        .shortcut("ctrl+shift+e")
+//                        .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("CUSTOMISE").longDesc("Customise columns action")
 

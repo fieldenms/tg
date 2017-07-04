@@ -287,7 +287,10 @@
                         }
                     }
                     
-                    this._entities = this._placeSelectedOnTop(arrivedEntities, chosenIds);
+                    const isCentreConfigEntity = typeof this.entity.sortingVals !== 'undefined';
+                    this._entities = isCentreConfigEntity 
+                        ? this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds) // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
+                        : this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
                     
                     this._disableSelectionListeners = true;
                     this.$.input.clearSelection();
@@ -305,16 +308,27 @@
         },
         
         /**
+         * Creates a new array of entities placing 'selEntities' on top and preserving the original order as in 'arrivedEntities' in unselected group.
+         */
+        _placeSelectedOnTop: function (arrivedEntities, selEntities, chosenIds) {
+            return this._fillEntitiesAndConcat(selEntities, [], arrivedEntities, chosenIds, true);
+        },
+        
+        /**
          * Creates a new array of entities placing chosen ones on top and preserving the same order as in 'arrivedEntities' in each groups.
          */
-        _placeSelectedOnTop: function (arrivedEntities, chosenIds) {
-            const selectedEntities = [];
-            const unselectedEntities = [];
+        _placeSelectedOnTopPreservingOriginalOrder: function (arrivedEntities, chosenIds) {
+            return this._fillEntitiesAndConcat([], [], arrivedEntities, chosenIds, false);
+        },
+        
+        _fillEntitiesAndConcat: function (selectedEntities, unselectedEntities, arrivedEntities, chosenIds, onlyUnselected) {
             for (let index = 0; index < arrivedEntities.length; index++) {
                 const currEntity = arrivedEntities[index];
                 const chosenIdsIndex = chosenIds.indexOf(this.idOrKey(currEntity));
                 if (chosenIdsIndex > -1) { // current entity is selected
-                    selectedEntities.push(currEntity);
+                    if (!onlyUnselected) {
+                        selectedEntities.push(currEntity);
+                    }
                 } else { // current entity is unselected
                     unselectedEntities.push(currEntity);
                 }

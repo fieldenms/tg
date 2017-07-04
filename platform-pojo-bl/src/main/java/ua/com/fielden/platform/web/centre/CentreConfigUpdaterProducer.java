@@ -56,7 +56,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final List<Pair<String, Ordering>> freshSortedProperties = freshCentre.getSecondTick().orderedProperties(root);
         final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
         
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshUsedProperties, freshSortedProperties, freshManagedType, factory());
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshSortedProperties, freshManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
         entity.setChosenIds(
@@ -81,20 +81,12 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
             .collect(Collectors.toList());
     }
 
-    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedPropertiesWithoutSummaries, final List<String> usedProperties, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
+    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedPropertiesWithoutSummaries, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
         logger.error("CheckedWithoutSummaries: [" + checkedPropertiesWithoutSummaries + "]");
-        logger.error("Used: [" + usedProperties + "]");
         logger.error("Sorted: [" + sortedProperties + "]");
         
-        final List<String> resultantProperties = new ArrayList<>(usedProperties);
-        for (final String checkedProp: checkedPropertiesWithoutSummaries) {
-            if (!usedProperties.contains(checkedProp)) {
-                resultantProperties.add(checkedProp);
-            }
-        }
-        
         final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
-        for (final String checkedProp: resultantProperties) {
+        for (final String checkedProp: checkedPropertiesWithoutSummaries) {
             final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
             final CustomisableColumn customisableColumn = factory.newEntity(CustomisableColumn.class, null, dslName(checkedProp), titleAndDesc.getValue());
             customisableColumn.setTitle(titleAndDesc.getKey());
