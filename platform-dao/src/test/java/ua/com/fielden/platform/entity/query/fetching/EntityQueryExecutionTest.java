@@ -63,6 +63,7 @@ import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
+import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
@@ -70,6 +71,7 @@ import ua.com.fielden.platform.sample.domain.ITgWagon;
 import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.ITgWorkshop;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
@@ -83,6 +85,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
@@ -123,6 +126,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
     private final ITgEntityWithComplexSummaries coEntityWithComplexSummaries = getInstance(ITgEntityWithComplexSummaries.class);
     private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
+    private final ITgPublishedYearly coPublishedYearly = getInstance(ITgPublishedYearly.class);
 
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
@@ -459,7 +463,15 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     ////////////////////////////////////////////////////////////////   SYNTHETIC ENTITIES ////////////////////////////////////////////////////////////
-
+    @Test
+    public void synthetic_entity_with_first_query_source_having_null_value_in_place_of_entity_type_correctly_identifies_the_resultant_query_type() {
+        final EntityResultQueryModel<TgPublishedYearly> qry = select(TgPublishedYearly.class).where().prop("author").isNull().model();
+        final TgPublishedYearly summaryEntity = coPublishedYearly.getEntity(from(qry). //
+        with(fetchAll(TgPublishedYearly.class)).model());
+        assertNull(summaryEntity.getAuthor());
+        assertEquals("Incorrect key", 4l, summaryEntity.getQty().longValue());
+    }
+    
     @Test
     public void test_retrieval_of_synthetic_entity6() {
         final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
@@ -1782,10 +1794,15 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
 
         final TgPersonName chris = save(new_(TgPersonName.class, "Chris", "Chris"));
-        save(new_composite(TgAuthor.class, chris, "Date", null));
+        final TgAuthor chrisDate = save(new_composite(TgAuthor.class, chris, "Date", null));
 
         final TgPersonName yurij = save(new_(TgPersonName.class, "Yurij", "Yurij"));
-        save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
+        final TgAuthor yurijShcherbyna = save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
+
+        save(new_composite(TgAuthorship.class, chrisDate, "An Introduction to Database Systems").setYear(2003));
+        save(new_composite(TgAuthorship.class, chrisDate, "Database Design and Relational Theory").setYear(2012));
+        save(new_composite(TgAuthorship.class, chrisDate, "SQL and Relational Theory").setYear(2015));
+        save(new_composite(TgAuthorship.class, yurijShcherbyna, "Дискретна математика").setYear(2007));
 
         save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
