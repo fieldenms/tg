@@ -63,6 +63,7 @@ public class CentreConfigurationWebUiConfig {
                                         + "const editor = self.$.masterDom.querySelector('[id=editor_4_customisableColumns]');\n"
                                         + "editor._originalChosenIds = null; // this should trigger full refresh \n"
                                         + "editor.entity.setAndRegisterPropertyTouch('chosenIds', functionalEntity.get('defaultVisibleProperties'));\n"
+                                        + "editor.entity.sortingVals = functionalEntity.get('defaultSortingVals');\n"
                                         + "editor._invokeValidation.bind(editor)();\n"
                                     );
                                 }

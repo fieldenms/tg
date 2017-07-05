@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -25,6 +27,21 @@ public class CentreConfigUpdaterDefaultAction extends AbstractFunctionalEntityWi
     @Title(value = "Default Visible Properties", desc = "Ordered set of visible properties from default centre configuration")
     private Set<String> defaultVisibleProperties = new LinkedHashSet<>();
     
+    @IsProperty(String.class) 
+    @Title(value = "Default Sorting Values", desc = "Ordered set of pairs between property name and its 'asc' or 'desc' sorting value separated by colon")
+    private List<String> defaultSortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
+    
+    @Observable
+    public CentreConfigUpdaterDefaultAction setDefaultSortingVals(final List<String> defaultSortingVals) {
+        this.defaultSortingVals.clear();
+        this.defaultSortingVals.addAll(defaultSortingVals);
+        return this;
+    }
+    
+    public List<String> getDefaultSortingVals() {
+        return Collections.unmodifiableList(defaultSortingVals);
+    }
+    
     @Observable
     public CentreConfigUpdaterDefaultAction setDefaultVisibleProperties(final Set<String> defaultVisibleProperties) {
         this.defaultVisibleProperties.clear();
@@ -36,21 +53,4 @@ public class CentreConfigUpdaterDefaultAction extends AbstractFunctionalEntityWi
         return Collections.unmodifiableSet(defaultVisibleProperties);
     }
     
-// TODO    
-//    /**
-//     * Override to ignore link property requiredness for collectional properties 
-//     * <code>chosenIds</code>, <code>addedIds</code>, <code>removedIds</code>.
-//     *  
-//     * @param entityType
-//     * @param propertyName
-//     * @return
-//     */
-//    @Override
-//    protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
-//        if (!isCollectionOfIds(propertyName)) {
-//            return super.isLinkPropertyRequiredButMissing(propertyName);
-//        } else {
-//            return false;
-//        }
-//    }
 }

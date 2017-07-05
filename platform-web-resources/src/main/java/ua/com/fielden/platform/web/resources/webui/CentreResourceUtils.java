@@ -398,6 +398,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
+        validationPrototype.setDefaultCentreSupplier(() -> CentreUpdater.getDefaultCentre(gdtm, miType));
         validationPrototype.setColumnWidthAdjuster((columnParameters) -> {
             columnParameters.entrySet().forEach(entry -> {
                 if (entry.getValue().containsKey("width")) {

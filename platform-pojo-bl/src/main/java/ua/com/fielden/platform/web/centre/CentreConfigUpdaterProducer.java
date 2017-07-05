@@ -36,7 +36,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final static Logger LOGGER = Logger.getLogger(CentreConfigUpdaterProducer.class);
     
     @Inject
     public CentreConfigUpdaterProducer(
@@ -56,34 +56,38 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final List<Pair<String, Ordering>> freshSortedProperties = freshCentre.getSecondTick().orderedProperties(root);
         final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
         
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshSortedProperties, freshManagedType, factory());
-        entity.setCustomisableColumns(customisableColumns);
-        
         entity.setChosenIds(
             freshUsedProperties.stream()
             .map(usedProperty -> dslName(usedProperty))
             .collect(Collectors.toCollection(LinkedHashSet::new))
         );
         
-        entity.setSortingVals(new ArrayList<>(
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshSortedProperties, freshManagedType, factory());
+        entity.setCustomisableColumns(customisableColumns);
+        
+        entity.setSortingVals(createSortingVals(customisableColumns));
+        return entity;
+    }
+    
+    public static List<String> createSortingVals(final LinkedHashSet<CustomisableColumn> customisableColumns) {
+        return new ArrayList<>(
             customisableColumns.stream()
             .filter(customisableColumn -> customisableColumn.getSortingNumber() >= 0) // consider only 'sorted' properties
             .sorted((o1, o2) -> o1.getSortingNumber().compareTo(o2.getSortingNumber()))
             .map(customisableColumn -> customisableColumn.getKey() + ':' + (Boolean.TRUE.equals(customisableColumn.getSorting()) ? "asc" : "desc"))
             .collect(Collectors.toCollection(LinkedHashSet::new))
-        ));
-        return entity;
+        );
     }
-    
+
     public static List<String> checkedPropertiesWithoutSummaries(final List<String> checkedProperties, final Class<?> managedType) {
         return checkedProperties.stream()
             .filter(checkedProperty -> "".equals(checkedProperty) || !AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProperty, CalculatedPropertyCategory.AGGREGATED_EXPRESSION))
             .collect(Collectors.toList());
     }
 
-    private LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedPropertiesWithoutSummaries, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
-        logger.error("CheckedWithoutSummaries: [" + checkedPropertiesWithoutSummaries + "]");
-        logger.error("Sorted: [" + sortedProperties + "]");
+    public static LinkedHashSet<CustomisableColumn> createCustomisableColumns(final List<String> checkedPropertiesWithoutSummaries, final List<Pair<String, Ordering>> sortedProperties, final Class<?> managedType, final EntityFactory factory) {
+        LOGGER.error("CheckedWithoutSummaries: [" + checkedPropertiesWithoutSummaries + "]");
+        LOGGER.error("Sorted: [" + sortedProperties + "]");
         
         final LinkedHashSet<CustomisableColumn> result = new LinkedHashSet<>();
         for (final String checkedProp: checkedPropertiesWithoutSummaries) {
@@ -106,7 +110,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         return result;
     }
 
-    private Pair<Ordering, Integer> getOrderingAndNumber(final List<Pair<String, Ordering>> orderedProperties, final String prop) {
+    private static Pair<Ordering, Integer> getOrderingAndNumber(final List<Pair<String, Ordering>> orderedProperties, final String prop) {
         for (final Pair<String, Ordering> orderedProperty : orderedProperties) {
             if (orderedProperty.getKey().equals(prop)) {
                 return Pair.pair(orderedProperty.getValue(), orderedProperties.indexOf(orderedProperty));

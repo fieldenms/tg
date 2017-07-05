@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -26,6 +25,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster;
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
@@ -64,6 +64,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier() {
         return freshCentreSupplier;
+    }
+
+    public void setDefaultCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {
+        this.defaultCentreSupplier = defaultCentreSupplier;
+    }
+
+    public Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier() {
+        return defaultCentreSupplier;
     }
 
     public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {
