@@ -1121,7 +1121,7 @@
                 const lastDotIndex = dotNotatedProp.lastIndexOf(".");
                 const rest = lastDotIndex > -1 ? dotNotatedProp.slice(lastDotIndex + 1) : dotNotatedProp;
                 const firstVal = lastDotIndex > -1 ? entity.get(dotNotatedProp.slice(0, lastDotIndex)) : entity;
-                return firstVal && rest.length > 0 ? firstVal.type().prop(rest) : undefined;
+                return firstVal && rest.length > 0 ? firstVal.type().prop(rest) || undefined : undefined;
 
             },
 
@@ -1389,7 +1389,7 @@
              */
             formatDecimal: function (value, locale, scale, trailingZeros) {
                 if (value !== null) {
-                    const definedScale = typeof scale === 'undefined' || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/? DEFAULT_SCALE : scale;
+                    const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/? DEFAULT_SCALE : scale;
                     const options = {
                         maximumFractionDigits: definedScale
                     };
