@@ -54,7 +54,7 @@ public class TgGeneratedEntityWebUiConfig {
         final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgGeneratedEntity.class);
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgGeneratedEntity.class);
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgGeneratedEntity.class);
-        final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
+        final EntityActionConfig standardSortAction = CentreConfigActions.SORT_ACTION.mkAction();
 
         final EntityCentreConfig<TgGeneratedEntity> ecc = EntityCentreBuilder.centreFor(TgGeneratedEntity.class)
                 .addTopAction(standardNewAction).also()
