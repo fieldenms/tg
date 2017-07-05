@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -299,6 +300,16 @@ public class DefaultValueContract {
     }
 
     /**
+     * Returns the value that indicates whether trailingZeros has default value or not.
+     *
+     * @param trailingZeros
+     * @return
+     */
+    public static boolean isTrailingZerosDefault(final boolean trailingZeros) {
+        return trailingZeros == IsProperty.DEFAULT_TRAILING_ZEROS;
+    }
+
+    /**
      * Returns <code>true</code> if the value of <code>ignore</code> property is default, <code>false</code> otherwise.
      *
      * @return
@@ -313,7 +324,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isLengthDefault(final Long length) {
-        return EntityUtils.equalsEx(length, 0L);
+        return EntityUtils.equalsEx(length, IsProperty.DEFAULT_LENGTH);
     }
 
     /**
@@ -322,7 +333,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isPrecisionDefault(final Long precision) {
-        return EntityUtils.equalsEx(precision, -1L);
+        return EntityUtils.equalsEx(precision, IsProperty.DEFAULT_PRECISION);
     }
 
     /**
@@ -331,7 +342,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isScaleDefault(final Long scale) {
-        return EntityUtils.equalsEx(scale, -1L);
+        return EntityUtils.equalsEx(scale, IsProperty.DEFAULT_SCALE);
     }
 
     /**
