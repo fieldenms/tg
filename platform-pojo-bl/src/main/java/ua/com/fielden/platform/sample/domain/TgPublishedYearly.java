@@ -29,7 +29,7 @@ import ua.com.fielden.platform.sample.domain.validators.TgPublishedYearly_Author
 @EntityTitle("Published Yearly")
 @CompanionObject(ITgPublishedYearly.class)
 public class TgPublishedYearly extends AbstractEntity<DynamicEntityKey> {
-    private static final EntityResultQueryModel<TgPublishedYearly> model_ = model();
+    protected static final EntityResultQueryModel<TgPublishedYearly> model_ = model();
 
     @IsProperty
     @Title("Author")

@@ -416,7 +416,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     ////////////////////////////////////////////////////////////////   SYNTHETIC ENTITIES ////////////////////////////////////////////////////////////
     @Test
-    public void synthetic_entity_with_first_query_source_having_null_value_in_place_of_entity_type_works() {
+    public void synthetic_entity_with_first_query_source_having_null_value_in_place_of_entity_type_correctly_identifies_the_resultant_query_type() {
         final EntityResultQueryModel<TgPublishedYearly> qry = select(TgPublishedYearly.class).where().prop("author").isNull().model();
         final TgPublishedYearly summaryEntity = coPublishedYearly.getEntity(from(qry). //
         with(fetchAll(TgPublishedYearly.class)).model());
