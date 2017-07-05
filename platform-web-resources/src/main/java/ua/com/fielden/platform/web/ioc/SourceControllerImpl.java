@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.ioc;
 
+import static java.lang.String.format;
+
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -25,9 +27,15 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingCentreConfigurationException;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfigurationException;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingMasterConfigurationException;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * {@link ISourceController} implementation.
@@ -63,7 +71,7 @@ public class SourceControllerImpl implements ISourceController {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
-        
+
         final Workflows workflow = this.webUiConfig.workflow();
 
         this.deploymentMode = Workflows.deployment.equals(workflow);
@@ -355,13 +363,13 @@ public class SourceControllerImpl implements ISourceController {
 
         return originalSource.replace("@typeTable", typeTableRepresentation);
     }
-    
+
     private static String getDesktopApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
         final String source = getFileSource("/resources/desktop-application-startup-resources.html", webUiConfig.resourcePaths());
-        
+
         if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
             final String sourceWithMastersAndCentres = appendMastersAndCentresImportURIs(source, webUiConfig);
-            
+
             logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES =============================================");
             logger.debug(sourceWithMastersAndCentres);
             logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES [END] =============================================");
@@ -376,7 +384,7 @@ public class SourceControllerImpl implements ISourceController {
 
     /**
      * Appends the import URIs for all masters / centres, registered in WebUiConfig, that were not already included in <code>source</code>.
-     * 
+     *
      * @param source
      * @param webUiConfig
      * @return
@@ -401,7 +409,7 @@ public class SourceControllerImpl implements ISourceController {
 
     /**
      * Checks whether the master or centre, associated with type <code>name</code>, was already included in 'desktop-application-startup-resources' file with <code>source</code>.
-     * 
+     *
      * @param name
      * @param source
      * @return
@@ -443,15 +451,27 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).render().toString();
+        final EntityMaster<? extends AbstractEntity<?>> master = ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig);
+        if (master == null) {
+            throw new MissingMasterConfigurationException(format("The entity master configuration for %s entity is missing", entityTypeString));
+        }
+        return master.render().toString();
     }
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).build().render().toString();
+        final EntityCentre<? extends AbstractEntity<?>> centre = ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig);
+        if (centre == null) {
+            throw new MissingCentreConfigurationException(format("The entity centre configuration for %s menu item is missing", mitypeString));
+        }
+        return centre.build().render().toString();
     }
 
     private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getCustomView(viewName, webUiConfig).build().render().toString();
+        final AbstractCustomView view = ResourceFactoryUtils.getCustomView(viewName, webUiConfig);
+        if (view == null) {
+            throw new MissingCustomViewConfigurationException(format("The %s custom view is missing", viewName));
+        }
+        return view.build().render().toString();
     }
 //
 //    private String getCentreEgiSource(final String mitypeString, final IWebUiConfig webUiConfig) {
@@ -470,7 +490,7 @@ public class SourceControllerImpl implements ISourceController {
     private static String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
         final String filePath = FileResource.generateFileName(resourcePaths, originalPath);
         if (StringUtils.isEmpty(filePath)) {
-            System.out.println("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
+            logger.error(format("The requested resource (%s + %s) wasn't found.", originalPath, extension));
             return null;
         } else {
             return getFileSource(filePath);

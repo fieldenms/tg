@@ -7,9 +7,12 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.event.EventListenerList;
+
+import com.esotericsoftware.kryo.Kryo;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
@@ -33,8 +36,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Criteria (entity centre) domain tree manager. Includes support for checking (from base {@link AbstractDomainTreeManager}). <br>
@@ -917,6 +918,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      */
     public static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
         private final EnhancementPropertiesMap<Integer> propertiesWidths;
+        private final EnhancementPropertiesMap<Integer> propertiesGrowFactors;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 
         /**
@@ -926,6 +928,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         public AddToResultTickManager() {
             super();
             propertiesWidths = createPropertiesMap();
+            propertiesGrowFactors = createPropertiesMap();
             rootsListsOfOrderings = createRootsMap();
         }
 
@@ -1020,9 +1023,25 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
+        public int getGrowFactor(final Class<?> root, final String property) {
+            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'grow factor' for 'unchecked' property [" + property + "] in type ["
+                    + root.getSimpleName() + "].");
+            return (propertiesGrowFactors.containsKey(key(root, property))) ? propertiesGrowFactors.get(key(root, property)) : 0;
+        }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int width) {
+            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'grow factor' for 'unchecked' property [" + property + "] in type ["
+                    + root.getSimpleName() + "].");
+            propertiesGrowFactors.put(key(root, property), width);
+            return this;
+        }
+
+        @Override
         public int hashCode() {
             final int prime = 31;
             int result = super.hashCode();
+            result = prime * result + ((propertiesGrowFactors == null) ? 0 : propertiesGrowFactors.hashCode());
             result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
             result = prime * result + ((rootsListsOfOrderings == null) ? 0 : rootsListsOfOrderings.hashCode());
             return result;
@@ -1030,28 +1049,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (!super.equals(obj)) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final AddToResultTickManager other = (AddToResultTickManager) obj;
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null) {
-                    return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final AddToResultTickManager other = (AddToResultTickManager) obj;
+                    return Objects.equals(propertiesGrowFactors, other.propertiesGrowFactors) &&
+                            Objects.equals(propertiesWidths, other.propertiesWidths) &&
+                            Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings);
                 }
-            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
-                return false;
-            }
-            if (rootsListsOfOrderings == null) {
-                if (other.rootsListsOfOrderings != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
                 return false;
             }
             return true;

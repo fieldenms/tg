@@ -51,7 +51,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -295,7 +294,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 validateAnd(() -> {
-                    enforceSet(shouldApplyOriginalValue, name, entity, valueToBeApplied);
+                    entity.getProperty(name).setValue(valueToBeApplied, shouldApplyOriginalValue);
                 }, () -> {
                     return valueToBeApplied;
                 }, () -> {
@@ -307,18 +306,18 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             validateAnd(() -> {
                 // do nothing
             }, () -> {
-                return shouldApplyOriginalValue 
-                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder) 
+                return shouldApplyOriginalValue
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder)
                                 : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
             }, () -> {
                 return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
         }
     }
-    
+
     /**
-     * Validates the property on subject of conflicts and <code>perform[s]Action</code>. 
-     * 
+     * Validates the property on subject of conflicts and <code>perform[s]Action</code>.
+     *
      * @param performAction -- the action to be performed in case of successful validation
      * @param calculateStaleNewValue -- function to lazily calculate 'staleNewValue' (heavy operation)
      * @param calculateStaleOriginalValue -- function to lazily calculate 'staleOriginalValue' (heavy operation)
@@ -337,7 +336,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Object freshValue = entity.get(name);
             final Object staleNewValue = calculateStaleNewValue.get();
             if (EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
-                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction) 
+                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
                     logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
@@ -395,10 +394,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
         processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
-    
+
     /**
      * Validates the unmodified (untouched) property value for 'changed by other user' warning.
-     * 
+     *
      * @param type
      * @param name
      * @param valAndOrigVal
@@ -408,29 +407,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-    }
-
-    /**
-     * Sets the value for the entity property.
-     *
-     * @param enforce - indicates whether to use 'enforced mutation'
-     * @param name
-     * @param entity
-     * @param newValue
-     */
-    private static <M extends AbstractEntity<?>> void enforceSet(final boolean enforce, final String name, final M entity, final Object newValue) {
-        if (enforce) {
-            final MetaProperty<Object> metaProperty = entity.getProperty(name);
-            final boolean currEnforceMutator = metaProperty.isEnforceMutator();
-            metaProperty.setEnforceMutator(true);
-            try {
-                entity.set(name, newValue);
-            } finally {
-                metaProperty.setEnforceMutator(currEnforceMutator);
-            }
-        } else {
-            entity.set(name, newValue);
-        }
     }
 
     /**
@@ -602,6 +578,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     isStringElem ? item.toString() : extractLongValueFrom(item)
             );
             return stream.collect(Collectors.toCollection(isSet ? LinkedHashSet::new : ArrayList::new));
+        } else if (PropertyTypeDeterminator.isMap(type, propertyName)) {
+            return reflectedValue;
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {

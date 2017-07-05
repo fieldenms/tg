@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.app;
+package ua.com.fielden.platform.web.resources.webui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,14 +15,22 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityDeleteAction;
+import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
@@ -73,6 +81,29 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<String>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
+    }
+
+    @Override
+    public void initConfiguration() {
+        final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
+        final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
+        final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, injector());
+        final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
+        final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
+
+        AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
+
+        configApp()
+        // register generic actions
+        .addMaster(genericEntityNewActionMaster)
+        .addMaster(genericEntityEditActionMaster)
+        .addMaster(genericEntityDeleteActionMaster)
+        .addMaster(genericEntityExportActionMaster)
+        .addMaster(genericMenuSaveMaster)
+        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig).master)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
+        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater);// centre configuration management
     }
 
     @Override

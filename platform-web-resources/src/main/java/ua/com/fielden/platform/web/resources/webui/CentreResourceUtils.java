@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -132,7 +134,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static boolean isRunning(final Map<String, Object> customObject) {
         return RunActions.RUN.toString().equals(customObject.get("@@action"));
     }
-    
+
     /**
      * Returns <code>true</code> if 'Sorting' action is performed, otherwise <code>false</code>.
      *
@@ -156,13 +158,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
-            final Map<String, Object> customObject, 
-            final M criteriaEntity, 
-            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final Map<String, Object> customObject,
+            final M criteriaEntity,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-        
+
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
@@ -203,6 +205,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             data = new ArrayList<>();
         }
         resultantCustomObject.put("resultEntities", data);
+        resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
@@ -210,8 +213,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of returning a list of entities,
-     * it returns a stream. 
-     * 
+     * it returns a stream.
+     *
      * @param adhocParams
      * @param criteriaEntity
      * @param additionalFetchProvider
@@ -221,11 +224,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
             final Map<String, Object> adhocParams,
-            final M criteriaEntity, 
-            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final M criteriaEntity,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
-        
+
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
@@ -237,13 +240,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (createdByUserConstraint.isPresent()) {
             criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
         }
-        
+
         final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100;
         final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
         return criteriaEntity.streamEntities(fetchSize, ids);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
+
+    @SuppressWarnings("serial")
+    private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
+        final Map<String, Map<String, Integer>> columnWidths = secondTick.checkedProperties(root).stream()
+        .map(property -> new Pair<String, Map<String, Integer>>(property, new HashMap<String, Integer>() {{
+                            put("newWidth", secondTick.getWidth(root, property));
+                            put("newGrowFactor", secondTick.getGrowFactor(root, property));
+                        }}))
+        .collect(Collectors.toMap(pair -> pair.getKey(), pair -> pair.getValue()));
+        return columnWidths;
+    }
 
     /**
      * Generates annotation with mi type.
@@ -374,7 +388,26 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IGlobalDomainTreeManager gdtm) {
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
-        validationPrototype.setFreshCentreSupplier( () -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME) );
+        validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
+        validationPrototype.setColumnWidthAdjuster((columnParameters) -> {
+            columnParameters.entrySet().forEach(entry -> {
+                if (entry.getValue().containsKey("width")) {
+                    final Integer width = entry.getValue().get("width");
+                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
+                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
+                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
+                }
+                if (entry.getValue().containsKey("growFactor")) {
+                    final Integer growFactor = entry.getValue().get("growFactor");
+                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
+                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
+                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
+                }
+            });
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+        });
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
         final boolean idAccessible = idField.isAccessible();
@@ -529,8 +562,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
      * 'requireMasterEntity').
-     * 
-     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to 
+     *
+     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to
      *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
      * @param centreContextHolder
      *
