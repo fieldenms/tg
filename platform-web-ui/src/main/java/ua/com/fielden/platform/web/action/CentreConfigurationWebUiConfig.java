@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -59,13 +60,10 @@ public class CentreConfigurationWebUiConfig {
                                 @Override
                                 public JsCode build() {
                                     return new JsCode(""
-                                        + ""
-                                        + ""
                                         + "const editor = self.$.masterDom.querySelector('[id=editor_4_customisableColumns]');\n"
                                         + "editor._originalChosenIds = null; // this should trigger full refresh \n"
-                                        + "editor.entity.setAndRegisterPropertyTouch('chosenIds', ['dR', 'iS']);\n" // TODO functionalEntity.get('chosenIds')
-                                        + "editor.validationCallback();\n"
-                                        + ""
+                                        + "editor.entity.setAndRegisterPropertyTouch('chosenIds', functionalEntity.get('defaultVisibleProperties'));\n"
+                                        + "editor._invokeValidation.bind(editor)();\n"
                                     );
                                 }
                             })
@@ -97,7 +95,7 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreConfigUpdaterDefaultAction> createCentreConfigUpdaterDefaultAction(final Injector injector) {
-        return new EntityMaster<CentreConfigUpdaterDefaultAction>(CentreConfigUpdaterDefaultAction.class, null, injector);
+        return new EntityMaster<CentreConfigUpdaterDefaultAction>(CentreConfigUpdaterDefaultAction.class, CentreConfigUpdaterDefaultActionProducer.class, null, injector);
     }
 
     /**

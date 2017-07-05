@@ -424,7 +424,6 @@
         },
         
         _toggleOrdering: function (item, index) {
-            var self = this;
             if (item.sorting === true) {
                 this.set("_entities." + index + ".sorting", false);
             } else if (item.sorting === false) {
@@ -436,10 +435,14 @@
             }
             this.provideSorting(this.entity.sortingVals, this._entities);
             // invoke validation after user has toggled ordering of some property
-            if (self._shouldInvokeValidation()) {
-                self.validationCallback();
+            this._invokeValidation();
+        },
+        
+        _invokeValidation: function () {
+            if (this._shouldInvokeValidation()) {
+                this.validationCallback();
             } else {
-                self._skipValidationAction();
+                this._skipValidationAction();
             }
         },
         
@@ -554,11 +557,7 @@
                             }
                             
                             // invoke validation after user has removed some item from collection
-                            if (self._shouldInvokeValidation()) {
-                                self.validationCallback();
-                            } else {
-                                self._skipValidationAction();
-                            }
+                            self._invokeValidation.bind(self)();
                         }
                     });
                     
@@ -590,11 +589,7 @@
                                 }
                             }
                             // invoke validation after user has added some item to collection
-                            if (self._shouldInvokeValidation()) {
-                                self.validationCallback();
-                            } else {
-                                self._skipValidationAction();
-                            }
+                            self._invokeValidation.bind(self)();
                         }
                     }
                 }, self);
