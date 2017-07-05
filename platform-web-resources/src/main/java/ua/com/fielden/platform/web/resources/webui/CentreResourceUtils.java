@@ -75,7 +75,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
     private CentreResourceUtils() { }
-
+    
     private enum RunActions {
         RUN("run"),
         REFRESH("refresh"),

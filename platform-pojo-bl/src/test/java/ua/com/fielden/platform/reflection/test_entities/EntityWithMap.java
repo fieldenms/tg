@@ -24,7 +24,7 @@ public class EntityWithMap extends AbstractEntity<String> {
     @Observable
     public EntityWithMap setMapProperty(final Map<String, Object> mapProperty) {
         this.mapProperty.clear();
-        this.mapProperty = mapProperty;
+        this.mapProperty.putAll(mapProperty);
         return this;
     }
 

@@ -55,6 +55,7 @@ import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.ITgOriginator;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
+import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.ITgSubSystem;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
@@ -95,6 +96,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5Dao;
 import ua.com.fielden.platform.sample.domain.TgOriginatorDao;
 import ua.com.fielden.platform.sample.domain.TgPersonDao;
 import ua.com.fielden.platform.sample.domain.TgPersonNameDao;
+import ua.com.fielden.platform.sample.domain.TgPublishedYearlyDao;
 import ua.com.fielden.platform.sample.domain.TgSubSystemDao;
 import ua.com.fielden.platform.sample.domain.TgSystemDao;
 import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
@@ -217,6 +219,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);
         bind(ITgEntityWithLoopedCalcProps.class).to(TgEntityWithLoopedCalcPropsDao.class);
+        bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
+        
 
         bind(ICompositeEntity.class).to(CompositeEntityDao.class);
         bind(ICompositeEntityKey.class).to(CompositeEntityKeyDao.class);

@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWithCentreContext<String> {
 
     @IsProperty(Object.class)
-    @Title("column Parameters")
+    @Title("Column Parameters")
     private Map<String, Map<String, Integer>> columnParameters = new HashMap<>();
 
     @Observable
