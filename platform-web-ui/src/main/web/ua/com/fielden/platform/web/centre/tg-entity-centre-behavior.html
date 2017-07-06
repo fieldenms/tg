@@ -431,13 +431,15 @@
                 self._selectedView = 0;
                 self._showProgress = false;
 
-                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
+                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
                     if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
                         this.retrievedEntities = resultEntities;
                         this.$.egi.renderingHints = renderingHints;
+                        // TODO does it matter whether to perform column adjustments after or before EGI data population?
+                        this.$.egi._adjustColumns(visibleColumnsWithOrder);
                         this.$.egi._adjustColumnWidths(columnWidths);
                         if (this._triggerRun && this._selectedView === 0) {
                             this.async(function () {

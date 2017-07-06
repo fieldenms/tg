@@ -211,6 +211,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
+        resultantCustomObject.put("visibleColumnsWithOrder", createVisibleColumnsWithOrder(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
@@ -266,6 +267,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         }}))
         .collect(Collectors.toMap(pair -> pair.getKey(), pair -> pair.getValue()));
         return columnWidths;
+    }
+    
+    private static List<String> createVisibleColumnsWithOrder(final IAddToResultTickManager secondTick, final Class<?> root) {
+        return secondTick.usedProperties(root);
     }
 
     /**

@@ -122,7 +122,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "    console.debug('CUSTOMISE: funcEntity = ', functionalEntity);\n"
                                     + "    console.debug('CUSTOMISE: funcEntity.chosenIds = ', functionalEntity.chosenIds);\n"
                                     + "    console.debug('CUSTOMISE: self.$.egi = ', self.$.egi);\n"
-                                    + "    self.$.egi._adjustColumns(functionalEntity.chosenIds);\n"
+                                    + "    // self.$.egi._adjustColumns(functionalEntity.chosenIds);\n"
                                     + "    return self.retrieve().then(function () { self.run(true); });\n"
                                     + ""); // TODO invoke run only when sorting has changed
                             }
