@@ -31,6 +31,20 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @AfterChange(CentreConfigUpdaterSortingValsDefiner.class)
     private List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
     
+    @IsProperty
+    @Title(value = "Sorting Changed", desc = "Indicates whether successful saving of this entity actually changed centre sorting")
+    private boolean sortingChanged;
+
+    @Observable
+    public CentreConfigUpdater setSortingChanged(final boolean sortingChanged) {
+        this.sortingChanged = sortingChanged;
+        return this;
+    }
+
+    public boolean isSortingChanged() {
+        return sortingChanged;
+    }
+
     @Observable
     public CentreConfigUpdater setSortingVals(final List<String> sortingVals) {
         this.sortingVals.clear();

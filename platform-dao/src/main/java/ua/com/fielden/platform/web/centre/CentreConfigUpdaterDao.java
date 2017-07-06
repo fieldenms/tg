@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /** 
@@ -48,7 +50,9 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         
         centreAdjuster.accept(cdtmae -> {
             // remove sorting information
-            final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
+            final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root).stream()
+                    .map(pair -> Pair.pair(pair.getKey(), pair.getValue())) // pair copying should be performed to overcome mutability (needed for equality comparison of 'orderedProperties' and 'newOrderedProperties')
+                    .collect(Collectors.toList());
             for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
                 if (Ordering.ASCENDING == orderedProperty.getValue()) {
                     cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
@@ -76,6 +80,8 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
                     cdtmae.getSecondTick().toggleOrdering(root, name);
                 }
             }
+            final List<Pair<String, Ordering>> newOrderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
+            actionToSave.setSortingChanged(!EntityUtils.equalsEx(newOrderedProperties, orderedProperties));
         });
         
         // after the association changes were successfully saved, the action should also be saved:

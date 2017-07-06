@@ -119,12 +119,12 @@ public class CentreConfigurationWebUiConfig {
                             public JsCode build() {
                                 // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
                                 return new JsCode(""
-                                    + "    console.debug('CUSTOMISE: funcEntity = ', functionalEntity);\n"
-                                    + "    console.debug('CUSTOMISE: funcEntity.chosenIds = ', functionalEntity.chosenIds);\n"
-                                    + "    console.debug('CUSTOMISE: self.$.egi = ', self.$.egi);\n"
-                                    + "    // self.$.egi._adjustColumns(functionalEntity.chosenIds);\n"
-                                    + "    return self.retrieve().then(function () { self.run(true); });\n"
-                                    + ""); // TODO invoke run only when sorting has changed
+                                    + "    if (functionalEntity.get('sortingChanged') === true) {\n"
+                                    + "        return self.retrieve().then(function () { self.run(true); });\n"
+                                    + "    } else {\n"
+                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds'));\n"
+                                    + "    }\n"
+                                    + "");
                             }
                         })
                         .icon("av:sort-by-alpha")
