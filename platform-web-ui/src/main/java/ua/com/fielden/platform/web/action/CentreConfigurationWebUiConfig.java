@@ -68,7 +68,7 @@ public class CentreConfigurationWebUiConfig {
                                     );
                                 }
                             })
-                        // .postActionError(new PostActionError(""))
+                        // .postActionError(new PostActionError("")) TODO
                         .icon("trending-up")
                         .shortDesc("Default")
                         .longDesc("Load default configuration")
@@ -118,7 +118,13 @@ public class CentreConfigurationWebUiConfig {
                             @Override
                             public JsCode build() {
                                 // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
-                                return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n"); // TODO invoke run only when sorting has changed
+                                return new JsCode(""
+                                    + "    console.debug('CUSTOMISE: funcEntity = ', functionalEntity);\n"
+                                    + "    console.debug('CUSTOMISE: funcEntity.chosenIds = ', functionalEntity.chosenIds);\n"
+                                    + "    console.debug('CUSTOMISE: self.$.egi = ', self.$.egi);\n"
+                                    + "    self.$.egi._adjustColumns(functionalEntity.chosenIds);\n"
+                                    + "    return self.retrieve().then(function () { self.run(true); });\n"
+                                    + ""); // TODO invoke run only when sorting has changed
                             }
                         })
                         .icon("av:sort-by-alpha")

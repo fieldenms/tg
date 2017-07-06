@@ -883,11 +883,9 @@
                 this.openedEntities = [];
 
                 //Initialising columns (property column mappings)
-                tempColumns = [];
-                Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
-                    tempColumns.push(item);
-                });
-                this.columns = tempColumns;
+                this.allColumns = [];
+                Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
+                this.columns = this.allColumns;
 
                 this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
 
@@ -1660,6 +1658,22 @@
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
                 this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+            },
+            
+            /**
+             * Adjusts columns visibility and order.
+             */
+            _adjustColumns: function (newColumns) {
+                const resultantColumns = [];
+                newColumns.forEach(columnName => {
+                    const column = this.allColumns.find(item => item.property === (columnName === "this" ? "" : columnName));
+                    if (column) {
+                        resultantColumns.push(column);
+                    }
+                });
+                if (!this.$.reflector.equalsEx(this.columns, resultantColumns)) {
+                    this.columns = resultantColumns;
+                }
             },
 
             /**
