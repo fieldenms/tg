@@ -1735,12 +1735,14 @@
                     return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
+                        const metaProp = this.$.reflector.getEntityTypeProp(entity, property);
+                        return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                     } else {
                         return this.$.reflector.formatNumber(entity.get(property), this.$.appConfig.locale);
                     }
                 } else if (type === 'Money') {
-                    return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);
+                    const metaProp = this.$.reflector.getEntityTypeProp(entity, property);
+                    return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 } else if (type === 'Colour') {
                     return '#' + entity.get(property)['hashlessUppercasedColourValue'];
                 } else if (type === 'Hyperlink') {

@@ -3,6 +3,23 @@
 <script>
 (function() {
     /**
+     * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
+     */
+    const DEFAULT_SCALE = 2;
+    /**
+     * If the precion for entity type property wasn't defined then the default one should be used.
+     */
+    const DEFAULT_PRECISION = 18;
+    /**
+     * If the string property length wasn't defined then the default one should be used.
+     */
+    const DEFAULT_LENGTH = 0;
+    /**
+     * Used for decimal nad money formatting. If trailing Zeros property wasn't defined
+     */
+    const DEFAULT_TRAILING_ZEROS = true;
+    
+    /**
      * Determines whether the result represents the error.
      */
     var _isError0 = function (result) {
@@ -128,21 +145,28 @@
          * Returns entity type prop length.
          */
         EntityTypeProp.prototype.length = function () {
-            return typeof this._length === 'undefined' ? 0 : this._length;
+            return typeof this._length === 'undefined' ? DEFAULT_LENGTH : this._length;
         }
 
         /** 
          * Returns entity type prop precision.
          */
         EntityTypeProp.prototype.precision = function () {
-            return typeof this._precision === 'undefined' ? -1 : this._precision;
+            return typeof this._precision === 'undefined' ? DEFAULT_PRECISION : this._precision;
         }
 
         /** 
          * Returns entity type prop scale.
          */
         EntityTypeProp.prototype.scale = function () {
-            return typeof this._scale === 'undefined' ? -1 : this._scale;
+            return typeof this._scale === 'undefined' ? DEFAULT_SCALE : this._scale;
+        }
+
+        /** 
+         * Returns entity type prop trailingZeros value.
+         */
+        EntityTypeProp.prototype.trailingZeros = function () {
+            return typeof this._trailingZeros === 'undefined' ? DEFAULT_TRAILING_ZEROS : this._trailingZeros;
         }
 		
 		return EntityTypeProp;
@@ -1094,6 +1118,16 @@
             console.log("Registering new entity type with identifier ", registeredType.identifier(), registeredType);
             return registeredType;
         },
+            
+        /**
+         * Returns the entity type property instance for specified entity and dot notation property name.
+         */
+         getEntityTypeProp: function (entity, dotNotatedProp) {
+            const lastDotIndex = dotNotatedProp.lastIndexOf(".");
+            const rest = lastDotIndex > -1 ? dotNotatedProp.slice(lastDotIndex + 1) : dotNotatedProp;
+            const firstVal = lastDotIndex > -1 ? entity.get(dotNotatedProp.slice(0, lastDotIndex)) : entity;
+            return firstVal && rest.length > 0 ? firstVal.type().prop(rest) || undefined : undefined;
+         },
 
         /**
          * Finds the entity type by its full class name. Returns 'null' if no registered entity type for such 'typeName' exists.
@@ -1357,19 +1391,24 @@
         /**
          * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
          */
-        formatDecimal: function (value, locale) {
+        formatDecimal: function (value, locale, scale, trailingZeros) {
             if (value !== null) {
-                return value.toLocaleString(locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
+                const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/? DEFAULT_SCALE : scale;
+                const options = { maximumFractionDigits: definedScale };
+                if (trailingZeros !== false) {
+                    options.minimumFractionDigits = definedScale;
+                }
+                return value.toLocaleString(locale, options);
             }
             return '';
         },
-            
+
         /**
          * Format money numbers in to string based on locales. If the value is null then returns empty string.
          */
-        formatMoney: function (value, locale) {
+        formatMoney: function (value, locale, scale, trailingZeros) {
             if (value !== null) {
-                return '$' + this.formatDecimal(value.amount, locale);
+                return '$' + this.formatDecimal(value.amount, locale, scale, trailingZeros);
             }
             return '';
         },

@@ -94,7 +94,8 @@
             _formatText: function(valueToFormat) {
                 var value = this.convertFromString(valueToFormat);
                 if (value !== null) {
-                    return this.reflector().formatMoney(value, this.$.appConfig.locale);
+                    const metaProp = this.reflector().getEntityTypeProp(this.entity, this.propertyName);
+                    return this.reflector().formatMoney(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 }
                 return '';
             },
