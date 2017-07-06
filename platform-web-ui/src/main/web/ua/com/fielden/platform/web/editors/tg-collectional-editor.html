@@ -113,7 +113,7 @@
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview)]]">
-                          <div class="resizing-box"></div>
+                          <div class="resizing-box" on-track="_changeItemOrder"></div>
                           <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                           <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
@@ -640,6 +640,36 @@
                     }
                 } 
             }
-        }
+        }, 
+        
+        _changeItemOrder: function (e) {
+           switch (e.detail.state) {
+               case 'start':
+                   this._startItemReordering(e);
+                   break;
+                case 'track':
+                   this._trackItemOrder(e);
+                   break;
+                case 'end':
+                   this._endItemReordering(e);
+                   break;
+           }
+           if (e.stopPropagation) e.stopPropagation();
+           if (e.preventDefault) e.preventDefault();
+           e.cancelBubble = true;
+           e.returnValue = false;
+        },
+        
+        _startItemReordering: function (e) {
+            
+        },
+
+        _trackColumnSize: function (e) {
+            
+        },
+
+        _endColumnResizing: function (e) {
+            
+        },
     });
 </script>
