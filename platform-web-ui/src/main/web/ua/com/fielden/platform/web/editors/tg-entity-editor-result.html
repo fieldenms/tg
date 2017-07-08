@@ -349,8 +349,8 @@
 			 ****************** SELECTION HANDLERS *******************
 			 *********************************************************/
 			_itemSelected : function(event) {
-			    this._keyBoardNavigationReady = true;
-			    this._selectedIndex = this._unmakeId(event.detail.item.id);
+				this._keyBoardNavigationReady = true;
+				this._selectedIndex = this._unmakeId(event.detail.item.id);
 
 				const value = event.detail.item.getAttribute("value");
 				this.selectedValues[value] = _.find(this._values, function (obj) {
@@ -359,9 +359,9 @@
 			},
 
 			_itemDeselected : function(event) {
-			    this._keyBoardNavigationReady = true;
-			    this._selectedIndex = this._unmakeId(event.detail.item.id);
-			    
+				this._keyBoardNavigationReady = true;
+				this._selectedIndex = this._unmakeId(event.detail.item.id);
+
 				const value = event.detail.item.getAttribute("value");
 				delete this.selectedValues[value];
 			},
@@ -372,7 +372,7 @@
 			 */
 			focusItemWithIndex: function(index) {
 			    this._selectedIndex = index;
-		        const id = this._makeId(index);
+				const id = this._makeId(index);
 				const paperItem = Polymer.dom(this.root).querySelector("#" + id);
 				if (paperItem) {
 					paperItem.focus();
@@ -387,23 +387,23 @@
 			},
 			
 			selectNext: function () {
-			    if (this._keyBoardNavigationReady === false) {
-			        this._keyBoardNavigationReady = true;
-                    if (this.multi === true) {
-                    	this.focusItemWithIndex(0);
-                    } else {
-			        	this.selectFirst();
-                    }
-                } else {
-                    const length = this._values.length;
-                    if (this.multi === true) {
-                        const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
-                        this.focusItemWithIndex(index);
-                    } else {
-                        this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
-                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
-                    }
-                }
+				if (this._keyBoardNavigationReady === false) {
+					this._keyBoardNavigationReady = true;
+					if (this.multi === true) {
+						this.focusItemWithIndex(0);
+					} else {
+						this.selectFirst();
+					}
+				} else {
+					const length = this._values.length;
+					if (this.multi === true) {
+						const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+						this.focusItemWithIndex(index);
+					} else {
+						this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+						this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+					}
+				}
                 this._scrollToSelected();
             },
             

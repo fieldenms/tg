@@ -68,8 +68,8 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result"
-        						 tabindex="-1" 
+        <tg-entity-editor-result id="result" 
+                                 tabindex="-1" 
                                  no-auto-focus 
                                  on-iron-overlay-opened="_resultOpened" 
                                  on-iron-overlay-closed="_resultClosed" 
@@ -287,7 +287,7 @@
                     value: function () {
                         return (function (event) {
                             if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
-                            	this._done();
+                                this._done();
                             } else if (event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) { // up/down arrow keys
                                 // By devault up/down arrow keys work like home/end for and input field
                                 // That's why this event should be suppressed.
