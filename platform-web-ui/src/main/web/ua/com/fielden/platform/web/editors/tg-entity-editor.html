@@ -68,7 +68,15 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" on-iron-overlay-canceled="_resultCanceled" retrieve-container-sizes="[[_retrieveContainerSizes]]" on-tap="_entitySelected"></tg-entity-editor-result>
+        <tg-entity-editor-result id="result" 
+                                 tabindex="-1" 
+                                 no-auto-focus 
+                                 on-iron-overlay-opened="_resultOpened" 
+                                 on-iron-overlay-closed="_resultClosed" 
+                                 on-iron-overlay-canceled="_resultCanceled" 
+                                 retrieve-container-sizes="[[_retrieveContainerSizes]]" 
+                                 on-tap="_entitySelected"
+                                 on-keydown="_onKeydown"></tg-entity-editor-result>
 
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -269,9 +277,10 @@
                 },
 
                 /**
-                 * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
+                 * OVERRIDDEN FROM TgEditorBehavior: this specific <input> event is invoked after some key has been pressed.
                  *
-                 * Designated to be bound to child elements.
+                 * This keydown handler implements navigation over the list of matching values, selection of multiple values with Space (this is automatic) and acceptance of selected value with Enter.
+                 * This is also the keydown event handler for the resul list.
                  */
                 _onKeydown: {
                     type: Function,
@@ -279,7 +288,7 @@
                         return (function (event) {
                             if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                                 this._done();
-                            } else if (event.keyCode === 38 || event.keyCode === 40) { // up/down arrow keys
+                            } else if (event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) { // up/down arrow keys
                                 // By devault up/down arrow keys work like home/end for and input field
                                 // That's why this event should be suppressed.
                                 event.stopPropagation();
