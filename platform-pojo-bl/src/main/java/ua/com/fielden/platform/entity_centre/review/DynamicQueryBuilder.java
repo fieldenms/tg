@@ -645,7 +645,8 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing * to %.
+     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing wildcards <code>*</code> to SQL wildcards <code>%</code>.
+     * Values that do not have any wildcards get them automatically injected at the beginning and end to ensure the match-anywhere strategy.
      *
      * @param criteria
      * @return
@@ -655,13 +656,16 @@ public class DynamicQueryBuilder {
             return new String[] {};
         }
 
-        final List<String> result = new ArrayList<>();
-        for (final String crit : criteria.split(",")) {
-            result.add(PojoValueMatcher.prepare(crit));
+        final String[] crits = criteria.split(",");
+        for (int index = 0; index < crits.length; index++) {
+            if (!crits[index].contains("*")) {
+                crits[index] = "*" + crits[index] + "*";
+            }
+            crits[index] = PojoValueMatcher.prepare(crits[index]);
         }
-        return result.toArray(new String[] {});
+        return crits;
     }
-
+    
     /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
      *
