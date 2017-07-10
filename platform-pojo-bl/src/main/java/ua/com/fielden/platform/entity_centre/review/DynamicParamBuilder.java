@@ -15,7 +15,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepare;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForEntityTypedProp;
 
 /**
  * The utility class that is a responsible for creating the map between property names and it's values.
@@ -32,7 +32,7 @@ public class DynamicParamBuilder {
      * @param propertyNames
      */
     public static <T extends AbstractEntity<?>> Map<String, Object> buildParametersMap(final Class<T> managedType, final Map<String, Pair<Object, Object>> propValues) {
-        final Map<String, Object> params = new HashMap<String, Object>();
+        final Map<String, Object> params = new HashMap<>();
         for (final Entry<String, Pair<Object, Object>> propValEntry : propValues.entrySet()) {
             final QueryProperty qp = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, propValEntry.getKey());
             params.putAll(getPropertyValues(qp, propValEntry));
@@ -59,7 +59,7 @@ public class DynamicParamBuilder {
                 pairVals.put(is(propValEntry.getKey()), propValEntry.getValue().getKey());
                 pairVals.put(not(propValEntry.getKey()), propValEntry.getValue().getValue());
             } else if (!qp.isSingle() && EntityUtils.isEntityType(qp.getType())) { // It is assumed that not SINGLE means RANGE
-                pairVals.put(propValEntry.getKey(), prepare((List<String>) propValEntry.getValue().getKey()));
+                pairVals.put(propValEntry.getKey(), prepCritValuesForEntityTypedProp((List<String>) propValEntry.getValue().getKey()));
             }
         }
         return pairVals;
