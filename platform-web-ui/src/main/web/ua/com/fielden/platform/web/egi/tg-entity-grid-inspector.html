@@ -1793,7 +1793,11 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                return "icons:" + (this._get(entity, property) ? "check" : "clear");
+                if (this._get(entity, property) === true) { 
+                    return "icons:check";
+                } else {
+                    return "noicon";
+                }
             },
 
             /** Identifies if there is a column action for the specified entity and column. */
