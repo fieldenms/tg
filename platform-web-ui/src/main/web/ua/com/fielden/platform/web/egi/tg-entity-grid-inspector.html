@@ -304,16 +304,16 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
-                                        <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex)]]" restamp>
-                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
+                                        <template is="dom-if" if="[[_summaryExists(summaryRow, columnIndex)]]" restamp>
+                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
-                                                    <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
-                                                    <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
+                                                    <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex)]]"></iron-icon>
+                                                    <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</a>
+                                                    <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</div>
                                                 </template>
                                             </div>
                                         </template>
-                                        <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
+                                        <template is="dom-if" if="[[!_summaryExists(summaryRow, columnIndex)]]" restamp>
                                             <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                             </div>
                                         </template>
@@ -383,14 +383,14 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex)]]" restamp>
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
-                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
-                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
-                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
+                                                    <template is="dom-if" if="[[_summaryExists(summaryRow, columnIndex)]]" restamp>
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
+                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</div>
                                                         </div>
                                                     </template>
-                                                    <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
+                                                    <template is="dom-if" if="[[!_summaryExists(summaryRow, columnIndex)]]" restamp>
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]"></div>
                                                     </template>
                                                 </template>
@@ -474,14 +474,14 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex, columnIndex)]]" restamp>
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
-                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
-                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
-                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
+                                                    <template is="dom-if" if="[[_summaryExists(summaryRow, columnIndex)]]" restamp>
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
+                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</div>
                                                         </div>
                                                     </template>
-                                                    <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
+                                                    <template is="dom-if" if="[[!_summaryExists(summaryRow, columnIndex)]]" restamp>
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                         </div>
                                                     </template>
@@ -534,14 +534,14 @@
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                             <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex)]]" restamp>
-                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
-                                                        <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
-                                                        <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
-                                                        <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
+                                                <template is="dom-if" if="[[_summaryExists(summaryRow, columnIndex)]]" restamp>
+                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
+                                                        <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex)]]"></iron-icon>
+                                                        <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</a>
+                                                        <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex)]]</div>
                                                     </div>
                                                 </template>
-                                                <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
+                                                <template is="dom-if" if="[[!_summaryExists(summaryRow, columnIndex)]]" restamp>
                                                     <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                     </div>
                                                 </template>
@@ -1333,41 +1333,41 @@
                     "</div>"
             },
 
-            _getTotalTooltip: function (column, summaryIndex) {
-                const summary = column.summary[summaryIndex];
+            _getTotalTooltip: function (columnIndex, summaryIndex) {
+                const summary = this.columns[columnIndex].summary[summaryIndex];
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
                 return tooltip;
             },
             //End of Tooltip related functions
 
-            _isSummaryExists: function (column, summaryIndex) {
-                return !!(column.summary && column.summary[summaryIndex]);
+            _summaryExists: function (summaryRow, columnIndex) {
+                return summaryRow[columnIndex];
             },
 
-            _isSummaryBooleanProp: function (totals, column, summaryIndex) {
-                return this._isBooleanProp(totals, column.summary[summaryIndex]);
+            _isSummaryBooleanProp: function (totals, columnIndex, summaryIndex) {
+                return this._isBooleanProp(totals, this.columns[columnIndex].summary[summaryIndex]);
             },
 
-            _isSummaryHyperlinkProp: function (totals, column, summaryIndex) {
-                return this._isHyperlinkProp(totals, column.summary[summaryIndex]);
+            _isSummaryHyperlinkProp: function (totals, columnIndex, summaryIndex) {
+                return this._isHyperlinkProp(totals, this.columns[columnIndex].summary[summaryIndex]);
             },
 
-            _isSummaryNotBooleanOrHyperlinkProp: function (totals, column, summaryIndex) {
-                return this._isNotBooleanOrHyperlinkProp(totals, column.summary[summaryIndex]);
+            _isSummaryNotBooleanOrHyperlinkProp: function (totals, columnIndex, summaryIndex) {
+                return this._isNotBooleanOrHyperlinkProp(totals, this.columns[columnIndex].summary[summaryIndex]);
             },
 
-            _getSummaryBooleanIcon: function (totals, column, summaryIndex) {
-                return this._getBooleanIcon(totals, column.summary[summaryIndex].property);
+            _getSummaryBooleanIcon: function (totals, columnIndex, summaryIndex) {
+                return this._getBooleanIcon(totals, this.columns[columnIndex].summary[summaryIndex].property);
             },
 
-            _getSummaryValue: function (totals, column, summaryIndex) {
-                const summary = column.summary[summaryIndex];
+            _getSummaryValue: function (totals, columnIndex, summaryIndex) {
+                const summary = this.columns[columnIndex].summary[summaryIndex];
                 return this._getValue(totals, summary.property, summary.type);
             },
 
             _calcSummaryColumnStyle: function (column, columnWidth, columnGrowFactor, summaryIndex, columnIndex, numOfFixedCols) {
-                return this._calcColumnStyle(column.summary[summaryIndex], columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
+                return this._calcColumnStyle(column, columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
             },
 
             /**
@@ -1503,7 +1503,7 @@
                                 totalsRow.push(false);
                             }
                         });
-                        gridSummary.push(summaryRowCounter);
+                        gridSummary.push(totalsRow);
                     }
                 }
                 //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
