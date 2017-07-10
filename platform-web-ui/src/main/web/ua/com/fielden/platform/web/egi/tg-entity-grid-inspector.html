@@ -293,8 +293,8 @@
                         </template>
                         <!-- Table footer -->
                         <template is="dom-if" if="[[totals]]">
-                            <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
-                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed)]]">
+                            <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
+                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex)]]">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                         <!-- checkbox stub for table footer -->
                                     </div>
@@ -304,16 +304,16 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
-                                        <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
+                                        <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex)]]" restamp>
+                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                    <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                    <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                    <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
+                                                    <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
+                                                    <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
                                                 </template>
                                             </div>
                                         </template>
-                                        <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                        <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
                                             <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                             </div>
                                         </template>
@@ -371,7 +371,7 @@
                                 </template>
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                    <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                                 <!-- checkbox stub for table footer -->
@@ -383,14 +383,14 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
-                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                    <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex)]]" restamp>
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
+                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
                                                         </div>
                                                     </template>
-                                                    <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                                    <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]"></div>
                                                     </template>
                                                 </template>
@@ -424,7 +424,7 @@
                                 </template>
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                    <template is="dom-repeat" items="[[_totalsRows]]">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Secondary actions header goes here-->
@@ -463,7 +463,7 @@
                         <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
                             <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth)]]">
                                 <div class="layout vertical flex" style="background-color:white;">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                    <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                             </div>
@@ -474,14 +474,14 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
-                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                    <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex, columnIndex)]]" restamp>
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
+                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
                                                         </div>
                                                     </template>
-                                                    <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                                    <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                         </div>
                                                     </template>
@@ -522,7 +522,7 @@
                         </template>
                         <template is="dom-if" if="[[_isBottomLeftPanelVisible(totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                             <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;left:0">
-                                <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                     <div class="layout horizontal table-footer-row">
                                         <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                             <!-- checkbox stub for table footer -->
@@ -534,14 +534,14 @@
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                             <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
-                                                        <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                        <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                        <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                <template is="dom-if" if="[[_isSummaryExists(column, summaryIndex)]]" restamp>
+                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryIndex, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(column, summaryIndex)]]">
+                                                        <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, column, summaryIndex)]]" icon="[[_getSummaryBooleanIcon(totals, column, summaryIndex)]]"></iron-icon>
+                                                        <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, column, summaryIndex)]]" href$="[[_getSummaryValue(totals, column, summaryIndex)]]">[[_getSummaryValue(totals, column, summaryIndex)]]</a>
+                                                        <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, column, summaryIndex)]]" style="width:100%">[[_getSummaryValue(totals, column, summaryIndex)]]</div>
                                                     </div>
                                                 </template>
-                                                <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                                <template is="dom-if" if="[[!_isSummaryExists(column, summaryIndex)]]" restamp>
                                                     <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                     </div>
                                                 </template>
@@ -553,7 +553,7 @@
                         </template>
                         <template is="dom-if" if="[[_isBottomRightPanelVisible(totals, summaryFixed, secondaryActions, secondaryActionsFixed)]]">
                             <div id="bottomRightLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;right:0">
-                                <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
+                                <template is="dom-repeat" items="[[_totalsRows]]">
                                     <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                         <div class="table-footer-row action-cell">
                                             <!--Secondary actions header goes here-->
@@ -668,6 +668,10 @@
                     observer: "_entitiesChanged"
                 },
                 totals: Object,
+                columns: {
+                    type: Array,
+                    observer: "_columnsChanged"
+                },
                 /**
                  * Last updated entity selection.
                  */
@@ -882,26 +886,6 @@
                 this.selectedEntities = [];
                 this.openedEntities = [];
 
-                //Initialising columns (property column mappings)
-                this.allColumns = [];
-                Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
-                this.columns = this.allColumns;
-
-                this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
-
-                this.columnPropertiesMapper = (function (entity) {
-                    const result = [];
-                    for (let index = 0; index < this.columns.length; index++) {
-                        const column = this.columns[index];
-                        const entry = {
-                            dotNotation: column.property,
-                            value: this._getValue(entity, column.property, column.type)
-                        };
-                        result.push(entry);
-                    }
-                    return result;
-                }).bind(this);
-
                 //Initialising the primary action.
                 this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
@@ -914,6 +898,8 @@
 
                 //Initialising event listeners.
                 this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+                console.log("EGI_INIT: EGI");
             },
 
             attached: function () {
@@ -924,7 +910,27 @@
                     this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
                 }
                 this.async(function () {
-                    self.keyEventTarget = self._getKeyEventTarget();
+                    this.keyEventTarget = this._getKeyEventTarget();
+                    console.log("EGI_INIT_ATTACHED: EGI");
+                    //Initialising columns (property column mappings)
+                    this.allColumns = [];
+                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
+                    this.columns = this.allColumns;
+
+                    this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+
+                    this.columnPropertiesMapper = (function (entity) {
+                        const result = [];
+                        for (let index = 0; index < this.columns.length; index++) {
+                            const column = this.columns[index];
+                            const entry = {
+                                dotNotation: column.property,
+                                value: this._getValue(entity, column.property, column.type)
+                            };
+                            result.push(entry);
+                        }
+                        return result;
+                    }).bind(this);
                 }, 1)
             },
 
@@ -1298,7 +1304,7 @@
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
                 try {
-                    if (Array.isArray(this._get(entity, column.property))) {
+                    if (Array.isArray(this._getValueFromEntity(entity, column.property))) {
                         desc = generateShortCollection(entity, column.property, this.$.reflector.findTypeByName(column.type))
                             .map(function (subEntity) {
                                 return subEntity.get("desc");
@@ -1327,79 +1333,41 @@
                     "</div>"
             },
 
-            _getTotalTooltip: function (summaryRow, columnIndex) {
-                const summary = summaryRow[columnIndex];
+            _getTotalTooltip: function (column, summaryIndex) {
+                const summary = column.summary[summaryIndex];
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
                 return tooltip;
             },
             //End of Tooltip related functions
 
-            /**
-             * Calcualtes the summary for grid.
-             */
-            _calcGridSummary: function (columns) {
-                var summaryRowsCount, summaryRowCounter, totalsRow, gridSummary;
-
-                if (this._totalsRows) {
-                    return this._totalsRows;
-                } else {
-                    summaryRowsCount = 0;
-                    columns.forEach(function (item) {
-                        if (item.summary && item.summary.length > summaryRowsCount) {
-                            summaryRowsCount = item.summary.length;
-                        }
-                    });
-
-                    //Initialising totals.
-                    if (summaryRowsCount > 0) {
-                        gridSummary = [];
-                        for (summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
-                            totalsRow = [];
-                            columns.forEach(function (item) {
-                                if (item.summary && item.summary[summaryRowCounter]) {
-                                    totalsRow.push(item.summary[summaryRowCounter]);
-                                } else {
-                                    totalsRow.push(null);
-                                }
-                            });
-                            gridSummary.push(totalsRow);
-                        }
-                    }
-                    //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
-                    this._totalsRowCount = summaryRowsCount;
-                    this._totalsRows = gridSummary;
-                    return gridSummary;
-                }
+            _isSummaryExists: function (column, summaryIndex) {
+                return !!(column.summary && column.summary[summaryIndex]);
             },
 
-            _isSummaryExists: function (summaryRow, columnIndex) {
-                return !!summaryRow[columnIndex];
+            _isSummaryBooleanProp: function (totals, column, summaryIndex) {
+                return this._isBooleanProp(totals, column.summary[summaryIndex]);
             },
 
-            _isSummaryBooleanProp: function (totals, summaryRow, columnIndex) {
-                return this._isBooleanProp(totals, summaryRow[columnIndex]);
+            _isSummaryHyperlinkProp: function (totals, column, summaryIndex) {
+                return this._isHyperlinkProp(totals, column.summary[summaryIndex]);
             },
 
-            _isSummaryHyperlinkProp: function (totals, summaryRow, columnIndex) {
-                return this._isHyperlinkProp(totals, summaryRow[columnIndex]);
+            _isSummaryNotBooleanOrHyperlinkProp: function (totals, column, summaryIndex) {
+                return this._isNotBooleanOrHyperlinkProp(totals, column.summary[summaryIndex]);
             },
 
-            _isSummaryNotBooleanOrHyperlinkProp: function (totals, summaryRow, columnIndex) {
-                return this._isNotBooleanOrHyperlinkProp(totals, summaryRow[columnIndex]);
+            _getSummaryBooleanIcon: function (totals, column, summaryIndex) {
+                return this._getBooleanIcon(totals, column.summary[summaryIndex].property);
             },
 
-            _getSummaryBooleanIcon: function (totals, summaryRow, columnIndex) {
-                return this._getBooleanIcon(totals, summaryRow[columnIndex].property);
-            },
-
-            _getSummaryValue: function (totals, summaryRow, columnIndex) {
-                const summary = summaryRow[columnIndex];
+            _getSummaryValue: function (totals, column, summaryIndex) {
+                const summary = column.summary[summaryIndex];
                 return this._getValue(totals, summary.property, summary.type);
             },
 
-            _calcSummaryColumnStyle: function (column, columnWidth, columnGrowFactor, summaryRow, columnIndex, numOfFixedCols) {
-                return this._calcColumnStyle(summaryRow[columnIndex], columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
+            _calcSummaryColumnStyle: function (column, columnWidth, columnGrowFactor, summaryIndex, columnIndex, numOfFixedCols) {
+                return this._calcColumnStyle(column.summary[summaryIndex], columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
             },
 
             /**
@@ -1514,6 +1482,42 @@
                 this._updateTableSizeAsync();
             },
 
+            _columnsChanged: function (columns, oldColumns) {
+                let summaryRowsCount = 0;
+                columns.forEach(function (item) {
+                    if (item.summary && item.summary.length > summaryRowsCount) {
+                        summaryRowsCount = item.summary.length;
+                    }
+                });
+
+                //Initialising totals.
+                const gridSummary = [];
+                if (summaryRowsCount > 0) {
+                    for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
+                        const totalsRow = [];
+                        columns.forEach(function (item) {
+                            if (item.summary && item.summary[summaryRowCounter]) {
+                                const total = item.summary[summaryRowCounter]
+                                totalsRow.push(true);
+                            } else {
+                                totalsRow.push(false);
+                            }
+                        });
+                        gridSummary.push(summaryRowCounter);
+                    }
+                }
+                //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
+                this._totalsRowCount = summaryRowsCount;
+                //                if (typeof oldColumns !== 'undefined') {
+                //                    this._totalsRows = [];
+                //                } else {
+                this._totalsRows = gridSummary;
+                //                }
+                //this.push("_totalsRows", ...gridSummary);
+                //this._totalsRows = gridSummary;
+                this._resizeEventListener();
+            },
+
             _updateTableSizeAsync: function () {
                 this.async(function () {
                     this._resizeEventListener();
@@ -1618,7 +1622,7 @@
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
              */
-            _calcFooterRowStyle: function (summaryFixed) {
+            _calcFooterRowStyle: function (summaryFixed, summaryIndex) {
                 return summaryFixed ? "visibility:hidden" : "";
             },
             /**
@@ -1659,7 +1663,7 @@
                 });
                 this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
             },
-            
+
             /**
              * Adjusts columns visibility and order.
              */
@@ -1729,17 +1733,17 @@
             /**
              * Returns the property value of the specified entity.
              */
-            _get: function (entity, property) {
+            _getValueFromEntity: function (entity, property) {
                 return entity && entity.get(property);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
              */
             _getValue: function (entity, property, type) {
-                if (entity === null || property === null || type === null || this._get(entity, property) === null) {
+                if (entity === null || property === null || type === null || this._getValueFromEntity(entity, property) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(type)) {
-                    var propertyValue = this._get(entity, property);
+                    var propertyValue = this._getValueFromEntity(entity, property);
                     if (Array.isArray(propertyValue)) {
                         propertyValue = generateShortCollection(entity, property, this.$.reflector.findTypeByName(type));
                     }
@@ -1781,13 +1785,13 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && this._get(entity, column.property) !== null
+                return column.type === 'Boolean' && this._getValueFromEntity(entity, column.property) !== null
             },
             /**
              * Determines whether property is Hypelink or not.
              */
             _isHyperlinkProp: function (entity, column) {
-                return column.type === 'Hyperlink' && this._get(entity, column.property) !== null
+                return column.type === 'Hyperlink' && this._getValueFromEntity(entity, column.property) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -1805,7 +1809,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                return "icons:" + (this._get(entity, property) ? "check" : "clear");
+                return "icons:" + (this._getValueFromEntity(entity, property) ? "check" : "clear");
             },
 
             /** Identifies if there is a column action for the specified entity and column. */
@@ -2008,7 +2012,9 @@
                                 this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
                                 this._columnResizingObject.hasAnyFlex = true;
                                 const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
-                                columnParameters[this.columns[this.columns.length - 1].property] = {growFactor: 1};
+                                columnParameters[this.columns[this.columns.length - 1].property] = {
+                                    growFactor: 1
+                                };
                                 this._columnResizingObject.columnParameters = columnParameters;
                             }
                         }
@@ -2018,7 +2024,9 @@
                         if (e.model.item.growFactor !== 0) {
                             this.set("columns." + e.model.index + ".growFactor", 0);
                             const columnParameters = this._columnResizingObject.columnParameters || {};
-                            columnParameters[e.model.item.property] = {growFactor: 1};
+                            columnParameters[e.model.item.property] = {
+                                growFactor: 1
+                            };
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
@@ -2041,7 +2049,7 @@
                     const columnParameter = columnParameters[e.model.item.property] || {};
                     if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
                         columnParameter.width = e.model.item.width;
-                    } 
+                    }
                     if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
                         columnParameter.growFactor = e.model.item.growFactor;
                     }
