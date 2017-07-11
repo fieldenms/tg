@@ -439,8 +439,8 @@
                         this.retrievedEntities = resultEntities;
                         this.$.egi.renderingHints = renderingHints;
                         // TODO does it matter whether to perform column adjustments after or before EGI data population?
-                        this.$.egi._adjustColumns(visibleColumnsWithOrder);
                         this.$.egi._adjustColumnWidths(columnWidths);
+                        this.$.egi._adjustColumns(visibleColumnsWithOrder);
                         if (this._triggerRun && this._selectedView === 0) {
                             this.async(function () {
                                 this._selectedView = 1;

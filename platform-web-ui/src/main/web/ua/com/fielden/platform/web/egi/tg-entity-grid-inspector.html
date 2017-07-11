@@ -1669,6 +1669,17 @@
                 });
                 if (!this.$.reflector.equalsEx(this.columns, resultantColumns)) {
                     this.columns = resultantColumns;
+                    const columnWithGrowFactor = this.columns.find((item, index) => index >= this.numOfFixedCols && item.growFactor > 0);
+                    if (!columnWithGrowFactor && this.columns.length > 0 && this.columns.length >= this.numOfFixedCols) {
+                        this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+                        const column = this.columns[this.columns.length - 1];
+                        const parameters = {};
+                        parameters[column.property] = {
+                            growFactor: 1
+                        }
+                        this.fire("tg-egi-column-change", parameters);
+                    }
+                    
                 }
                 this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
                 this._updateTableSizeAsync();
