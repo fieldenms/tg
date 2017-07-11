@@ -111,7 +111,7 @@
             <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                 <template>
-                    <div class$="[[_computedItemClass(_disabled)]]">
+                    <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview)]]">
                           <div class="resizing-box" on-track="_changeItemOrder"></div>
                           <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
@@ -281,7 +281,6 @@
                 if (this._originalChosenIds === null) {
                     const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
                     
-                    const selEntities = [];
                     const chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
                     if (typeof this.entity.chosenIds === 'undefined') {
                         this._forReview = true;
@@ -295,30 +294,37 @@
                             this._originalChosenIds.push(originalChosenIds[index]);
                         }
                     }
-                    for (let index = 0; index < chosenIds.length; index++) {
-                        const foundEntity = this._find(arrivedEntities, chosenIds[index]);
-                        if (foundEntity !== null) {
-                            selEntities.push(foundEntity);
-                        }
-                    }
-                    
-                    this._entities = this._isCentreConfigEntity(this.entity)
-                        ? this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds) // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
-                        : this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
-                    
-                    this._disableSelectionListeners = true;
-                    this.$.input.clearSelection();
-                    
-                    for (let index = 0; index < selEntities.length; index++) {
-                        this.$.input.selectItem(selEntities[index]);
-                    }
-                    this._disableSelectionListeners = false;
-                    
+                    this._updateEntitiesAndSelection(chosenIds, this.entity, arrivedEntities);
                     this.scrollToFirstFoundElement();
                 }
                 
                 this.provideSorting(this.entity.sortingVals, this._entities);
             }
+        },
+        
+        /**
+         * Updates iron-list '_entities' based on updated 'chosenIds'; updates selection of that items.
+         */
+        _updateEntitiesAndSelection: function (chosenIds, entity, arrivedEntities) {
+            const selEntities = [];
+            for (let index = 0; index < chosenIds.length; index++) {
+                const foundEntity = this._find(arrivedEntities, chosenIds[index]);
+                if (foundEntity !== null) {
+                    selEntities.push(foundEntity);
+                }
+            }
+
+            this._entities = this._isCentreConfigEntity(entity)
+                ? this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds) // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
+                : this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
+
+            this._disableSelectionListeners = true;
+            this.$.input.clearSelection();
+
+            for (let index = 0; index < selEntities.length; index++) {
+                this.$.input.selectItem(selEntities[index]);
+            }
+            this._disableSelectionListeners = false;
         },
         
         _isCentreConfigEntity: function (entity) {
@@ -642,6 +648,24 @@
             }
         }, 
         
+        moveItem: function (fromIndex, toIndex) {
+            const chosenIds = this.entity.get("chosenIds");
+            this._disableSelectionListeners = true;
+            const removedItems = this.splice("_entities", fromIndex, 1);
+            if (removedItems.length > 0) {
+                this.splice("_entities", toIndex, 0, removedItems[0]);
+                this.$.input.selectItem(removedItems[0]);
+            }
+            this.entity.set("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
+            this._disableSelectionListeners = false;
+            
+            
+            
+            
+            // const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
+            // this._updateEntitiesAndSelection(chosenIds, this.entity, arrivedEntities);
+        },
+        
         _changeItemOrder: function (e) {
            switch (e.detail.state) {
                case 'start':
@@ -661,15 +685,32 @@
         },
         
         _startItemReordering: function (e) {
-            
+            if (e.model.selected) {
+                this.dragIndexFrom = e.model.index;
+            }
         },
 
-        _trackColumnSize: function (e) {
-            
+        _trackItemOrder: function (e) {
+            if (typeof this.dragIndexFrom !== 'undefined')  {
+                const currentElementIndex = this._getIndexForElement(e.detail.hover());
+                if (currentElementIndex >= 0 &&this.dragIndexFrom !== currentElementIndex) {
+                    console.log(this.dragIndexFrom, currentElementIndex, this.entity.get("chosenIds"));
+                    this.moveItem(this.dragIndexFrom, currentElementIndex);
+                    this.dragIndexFrom = currentElementIndex;
+                }
+            }
         },
 
-        _endColumnResizing: function (e) {
-            
+        _endItemReordering: function (e) {
+            delete this.dragIndexFrom;
         },
+        
+        _getIndexForElement: function (element) {
+            let currentElement = element;
+            while (currentElement && !currentElement.hasAttribute("collectional-index")) {
+                currentElement = currentElement.parentElement;
+            }
+            return currentElement ? +currentElement.getAttribute("collectional-index") : -1;
+        }
     });
 </script>
