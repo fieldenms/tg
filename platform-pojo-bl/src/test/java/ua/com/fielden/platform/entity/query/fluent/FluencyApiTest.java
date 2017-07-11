@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +11,6 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class FluencyApiTest extends TestCase {
 
@@ -54,6 +55,7 @@ public class FluencyApiTest extends TestCase {
     private static String where = "where";
     private static String groupBy = "groupBy";
     private static String yield = "yield";
+    private static String yieldAll = "yieldAll";
     private static String leftJoin = "leftJoin";
 
     private static Set<String> getMethods(final Class<?> type) {
@@ -103,20 +105,20 @@ public class FluencyApiTest extends TestCase {
     public void test_IFromAlias() {
         checkFluency( //
         select(TgVehicle.class), //
-                array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, as, join, leftJoin));
+                array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, yieldAll, as, join, leftJoin));
     }
 
     @SuppressWarnings("unchecked")
     public void test_IFromAlias2() {
         checkFluency( //
         select(select(TgVehicle.class).model()), //
-                array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, as, join, leftJoin));
+                array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, yieldAll, as, join, leftJoin));
     }
 
     public void test_IFromAlias3() {
         checkFluency( //
         select(select(TgVehicle.class).yield().countAll().as("count").modelAsAggregate()), //
-                array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, as, join, leftJoin));
+                array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, yieldAll, as, join, leftJoin));
     }
 
     public void test_IWhere0() {

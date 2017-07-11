@@ -26,15 +26,17 @@ import ua.com.fielden.platform.utils.Pair;
 final class Tokens {
     private final List<Pair<TokenCategory, Object>> values = new ArrayList<Pair<TokenCategory, Object>>();
     private Class<? extends AbstractEntity<?>> mainSourceType;
+    private boolean yieldAll;
     private final ValuePreprocessor valuePreprocessor;
 
     public Tokens() {
         valuePreprocessor = new ValuePreprocessor();
     }
 
-    private Tokens(final ValuePreprocessor valuePreprocessor, final Class<? extends AbstractEntity<?>> mainSourceType) {
+    private Tokens(final ValuePreprocessor valuePreprocessor, final Class<? extends AbstractEntity<?>> mainSourceType, final boolean yieldAll) {
         this.valuePreprocessor = valuePreprocessor;
         this.mainSourceType = mainSourceType;
+        this.yieldAll = yieldAll;
     }
 
     @Override
@@ -42,16 +44,20 @@ final class Tokens {
         return values.toString();
     }
 
-    private Tokens add(final TokenCategory cat, final Object value) {
-        final Tokens result = new Tokens(valuePreprocessor, mainSourceType);
+    private Tokens cloneTokens() {
+        final Tokens result = new Tokens(valuePreprocessor, mainSourceType, yieldAll);
         result.values.addAll(values);
+        return result;
+    }
+    
+    private Tokens add(final TokenCategory cat, final Object value) {
+        final Tokens result = cloneTokens();
         result.values.add(new Pair<TokenCategory, Object>(cat, value));
         return result;
     }
 
     private Tokens add(final TokenCategory cat1, final Object value1, final TokenCategory cat2, final Object value2) {
-        final Tokens result = new Tokens(valuePreprocessor, mainSourceType);
-        result.values.addAll(values);
+        final Tokens result = cloneTokens();
         result.values.add(new Pair<TokenCategory, Object>(cat1, value1));
         result.values.add(new Pair<TokenCategory, Object>(cat2, value2));
         return result;
@@ -464,6 +470,12 @@ final class Tokens {
     public Tokens yield() {
         return add(TokenCategory.QUERY_TOKEN, QueryTokens.YIELD);
     }
+    
+    public Tokens yieldAll() {
+        final Tokens result = cloneTokens();
+        result.yieldAll = true;
+        return result;
+    }
 
     public Tokens groupBy() {
         return add(TokenCategory.QUERY_TOKEN, QueryTokens.GROUP_BY);
@@ -549,5 +561,9 @@ final class Tokens {
 
     public Class<? extends AbstractEntity<?>> getMainSourceType() {
         return mainSourceType;
+    }
+
+    public boolean isYieldAll() {
+        return yieldAll;
     }
 }

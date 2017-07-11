@@ -15,16 +15,21 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<
 
     @Override
     public EntityResultQueryModel<ET> model() {
-        return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType());
+        return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(), false);
     }
 
     @Override
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType);
+        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
     }
 
     @Override
     public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
         return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(getTokens().yield(), new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>(getTokens(), new SubsequentCompletedAndYielded<ET>(getTokens())));
+    }
+
+    @Override
+    public ISubsequentCompletedAndYielded<ET> yieldAll() {
+        return new SubsequentCompletedAndYielded<ET>(getTokens().yieldAll());
     }
 }

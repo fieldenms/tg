@@ -50,6 +50,7 @@ public class EntQuery implements ISingleOperand {
     private final QueryCategory category;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
+    private final boolean yieldAll;
 
     private EntQuery master;
 
@@ -112,7 +113,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean onlyOneYieldAndWithoutAlias() {
-        return yields.size() == 1 && yields.getFirstYield().getAlias().equals("");
+        return yields.size() == 1 && !yieldAll && yields.getFirstYield().getAlias().equals("");
     }
 
     private boolean idAliasEnhancementRequired() {
@@ -120,12 +121,12 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return yields.size() == 0 && !isSubQuery() &&
+        return (yields.size() == 0 || yieldAll) && !isSubQuery() &&
                 ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        return yields.size() == 0 && persistedType && isSubQuery();
+        return yields.size() == 0 && !yieldAll && persistedType && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -260,11 +261,11 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, Yield yield) {
-        boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
+    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, final Yield yield) {
+        final boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
         final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
         // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
-        boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
+        final boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
         return allFetchedPropsAreAggregatedExpressions ? (!presentInFetchModel || isHeaderOfMoneyType) : !presentInFetchModel;
     }
 
@@ -436,6 +437,7 @@ public class EntQuery implements ISingleOperand {
         this.sources = queryBlocks.getSources();
         this.conditions = filterable ? enhanceConditions(queryBlocks.getConditions(), filter, username, sources.getMain(), generator, paramValues) : queryBlocks.getConditions();
         this.yields = queryBlocks.getYields();
+        this.yieldAll = queryBlocks.isYieldAll();
         this.groups = queryBlocks.getGroups();
         this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;// != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);

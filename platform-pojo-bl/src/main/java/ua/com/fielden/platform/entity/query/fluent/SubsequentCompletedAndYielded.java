@@ -15,7 +15,7 @@ class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends Comple
 
     @Override
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType);
+        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
     }
 
     @Override
@@ -25,6 +25,6 @@ class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends Comple
 
     @Override
     public AggregatedResultQueryModel modelAsAggregate() {
-        return new AggregatedResultQueryModel(getTokens().getValues());
+        return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
     }
 }
