@@ -211,7 +211,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
-        resultantCustomObject.put("visibleColumnsWithOrder", createVisibleColumnsWithOrder(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
+        resultantCustomObject.put("visibleColumnsWithOrder", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(criteriaEntity.getEntityClass()));
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
@@ -269,10 +269,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return columnWidths;
     }
     
-    private static List<String> createVisibleColumnsWithOrder(final IAddToResultTickManager secondTick, final Class<?> root) {
-        return secondTick.usedProperties(root);
-    }
-
     /**
      * Generates annotation with mi type.
      *
@@ -404,26 +400,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
         validationPrototype.setDefaultCentreSupplier(() -> CentreUpdater.getDefaultCentre(gdtm, miType));
-        validationPrototype.setColumnWidthAdjuster((columnParameters) -> {
-            columnParameters.entrySet().forEach(entry -> {
-                if (entry.getValue().containsKey("width")) {
-                    final Integer width = entry.getValue().get("width");
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                }
-                if (entry.getValue().containsKey("growFactor")) {
-                    final Integer growFactor = entry.getValue().get("growFactor");
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                }
-            });
-            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
-            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
-            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
-        });
-        validationPrototype.setCentreAdjuster((centreConsumer) -> { // TODO reuse CentreAdjuster for column width adjustments above
+        validationPrototype.setCentreAdjuster((centreConsumer) -> {
             centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
 

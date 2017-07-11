@@ -902,8 +902,6 @@
 
                 //Initialising event listeners.
                 this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-
-                console.log("EGI_INIT: EGI");
             },
 
             attached: function () {
@@ -915,7 +913,6 @@
                 }
                 this.async(function () {
                     this.keyEventTarget = this._getKeyEventTarget();
-                    console.log("EGI_INIT_ATTACHED: EGI");
                     //Initialising columns (property column mappings)
                     this.allColumns = [];
                     Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));

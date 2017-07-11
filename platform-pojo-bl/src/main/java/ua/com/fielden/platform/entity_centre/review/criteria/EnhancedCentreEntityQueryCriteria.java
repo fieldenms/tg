@@ -27,7 +27,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
-    private Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster;
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
     
     /**
@@ -48,14 +47,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster() {
         return centreAdjuster;
-    }
-
-    public void setColumnWidthAdjuster(final Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster) {
-        this.columnWidthAdjuster = columnWidthAdjuster;
-    }
-
-    public Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster() {
-        return columnWidthAdjuster;
     }
 
     public void setFreshCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier) {

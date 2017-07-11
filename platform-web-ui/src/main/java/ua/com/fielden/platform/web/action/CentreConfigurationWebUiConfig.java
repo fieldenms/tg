@@ -68,11 +68,9 @@ public class CentreConfigurationWebUiConfig {
                                     );
                                 }
                             })
-                        // .postActionError(new PostActionError("")) TODO
-                        .icon("trending-up")
                         .shortDesc("Default")
                         .longDesc("Load default configuration")
-                        .shortcut("ctrl+shift+e") // TODO
+                        .shortcut("ctrl+d")
                         .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("CUSTOMISE").longDesc("Customise columns action")

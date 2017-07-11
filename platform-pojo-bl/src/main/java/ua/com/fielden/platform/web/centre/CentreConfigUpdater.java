@@ -14,9 +14,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 
 /** 
- * Master entity object.
+ * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 @CompanionObject(ICentreConfigUpdater.class)

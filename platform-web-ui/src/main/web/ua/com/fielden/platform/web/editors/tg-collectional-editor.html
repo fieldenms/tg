@@ -328,7 +328,7 @@
         },
         
         _isCentreConfigEntity: function (entity) {
-            return typeof entity.sortingVals !== 'undefined'; // TODO provide better approach using entity type?
+            return typeof entity.type()._simpleClassName() === 'CentreConfigUpdater';
         },
         
         /**
@@ -418,7 +418,7 @@
         },
         
         _sortingIconHidden: function (_forReview, item) {
-            return _forReview || (typeof item.sorting === 'undefined') || !item.sortable; // TODO placeholder is needed instead of sorting icon 'hiding'
+            return _forReview || (typeof item.sorting === 'undefined') || !item.sortable; // TODO placeholder is needed instead of sorting icon 'hiding'?
         },
         
         _isSelectionEnabled: function (_forReview) {
@@ -658,12 +658,6 @@
             }
             this.entity.set("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
             this._disableSelectionListeners = false;
-            
-            
-            
-            
-            // const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
-            // this._updateEntitiesAndSelection(chosenIds, this.entity, arrivedEntities);
         },
         
         _changeItemOrder: function (e) {

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.LinkedHashSet;
@@ -37,15 +40,23 @@ public class CentreConfigUpdaterDefaultActionProducer extends DefaultEntityProdu
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = criteriaEntity.defaultCentreSupplier().get();
             final Class<?> defaultManagedType = defaultCentre.getEnhancer().getManagedType(root);
             
-            final List<String> defaultCheckedPropertiesWithoutSummaries = CentreConfigUpdaterProducer.checkedPropertiesWithoutSummaries(defaultCentre.getSecondTick().checkedProperties(root), defaultManagedType);
+            // provide default visible properties into the action
+            final List<String> defaultCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(defaultCentre.getSecondTick().checkedProperties(root), defaultManagedType);
             entity.setDefaultVisibleProperties(
                 defaultCheckedPropertiesWithoutSummaries.stream()
                 .map(checkedProperty -> dslName(checkedProperty))
                 .collect(Collectors.toCollection(LinkedHashSet::new))
             );
             
-            final LinkedHashSet<CustomisableColumn> customisableColumns = CentreConfigUpdaterProducer.createCustomisableColumns(defaultCheckedPropertiesWithoutSummaries, defaultCentre.getSecondTick().orderedProperties(root), defaultManagedType, factory());
-            entity.setDefaultSortingVals(CentreConfigUpdaterProducer.createSortingVals(customisableColumns));
+            // provide default sorting values into the action
+            entity.setDefaultSortingVals(createSortingVals(
+                createCustomisableColumns(
+                    defaultCheckedPropertiesWithoutSummaries,
+                    defaultCentre.getSecondTick().orderedProperties(root),
+                    defaultManagedType,
+                    factory()
+                )
+            ));
         }
         return entity;
     }

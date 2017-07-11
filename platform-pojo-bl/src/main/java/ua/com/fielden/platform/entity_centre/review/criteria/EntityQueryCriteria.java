@@ -524,11 +524,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public Pair<String[], String[]> generatePropTitlesToExport() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
         final List<String> propertyNames = new ArrayList<String>();
         final List<String> propertyTitles = new ArrayList<String>();
-        for (final String propertyName : separatedFetch.getKey()) {
+        for (final String propertyName : tickManager.usedProperties(root)) {
             if (tickManager.getWidth(root, propertyName) > 0) {
                 propertyNames.add(propertyName);
                 propertyTitles.add(CriteriaReflector.getCriteriaTitleAndDesc(getManagedType(), propertyName).getKey());

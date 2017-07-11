@@ -2,13 +2,13 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+
 /**
- * This interface defines how domain tree can be managed for <b>analyses</b> specific (a piece of logic). <br>
+ * This interface defines how domain tree tick {@link ITickManager} can be managed in aspect of 'used properties'.<br>
+ * <br> 
+ * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances.<br>
  * <br>
- * 
- * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br>
- * <br>
- * 
  * The major aspects of tree management (context-specific) are following: <br>
  * 1. used properties (a subset in checked properties)<br>
  * 
@@ -38,7 +38,8 @@ public interface IUsageManager {
     boolean isUsed(final Class<?> root, final String property);
 
     /**
-     * Marks a concrete property's tick to be <b>mutably</b> checked (used) in domain tree manager. <br>
+     * Marks a concrete property's tick to be <b>mutably</b> checked (used) in domain tree manager.<br>
+     * If the property becomes 'used', it places into the end of {@link #usedProperties(Class)} list.
      * <br>
      * 
      * The action should not conflict with "checked properties" contract. The conflict will produce an {@link IllegalArgumentException}.

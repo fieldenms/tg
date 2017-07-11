@@ -1273,6 +1273,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getFetchProvider();
     }
     
+    /**
+     * Returns fetch provider consisting only of 'tooltip properties': properties that are used as tooltips for other properties.
+     * 
+     * @return
+     */
     public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
         final Set<String> tooltipProps = new LinkedHashSet<>();
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
