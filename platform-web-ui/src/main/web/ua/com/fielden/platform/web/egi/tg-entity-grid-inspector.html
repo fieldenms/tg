@@ -401,7 +401,7 @@
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                            <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _totalColumnWidth)]]"></div>
+                            <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
                         </template>
                         <template is="dom-if" on-dom-change="_rightLockPanelRendered" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                             <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed, columns)]]">
@@ -435,10 +435,10 @@
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
-                            <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow, _totalColumnWidth)]]"></div>
+                            <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
                         </template>
                         <template is="dom-if" on-dom-change="_topLockPanelRendered" if="[[_isHeaderFixed(headerFixed)]]">
-                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth)]]">
+                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
@@ -461,7 +461,7 @@
                             </div>
                         </template>
                         <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                            <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth)]]">
+                            <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
                                 <div class="layout vertical flex" style="background-color:white;">
                                     <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                         <div class="layout horizontal table-footer-row">
@@ -636,9 +636,12 @@
             }
             return newPos;
         };
-        const calculateTotalColumnWidth = function (columns) {
-            return columns.reduce((accum, curr) => accum += curr.width, 0);
+        const calculateFixedColumnWidth = function(columns, numOfFixedColumns) {
+            return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
+        const calculateScrollableColumnWidth = function(columns, numOfFixedColumns) {
+            return columns.reduce((accum, curr, index) => accum += (index >= numOfFixedColumns ? curr.width : 0), 0);
+        }
         const calculateColumnWidthExcept = function (egi, columnIndex, columnElements, columnLength, checkboxes, primaryActions, secondaryActions) {
             let columnWidth = 0;
             const indexCorrection = 1 + (+!!egi.primaryAction);
@@ -767,7 +770,8 @@
                 _scrollLeft: Number,
                 _scrollTop: Number,
                 //Need when resizing column to recalculate styles.
-                _totalColumnWidth: Number,
+                _fixedColumnWidth: Number,
+                _scrollableColumnWidth: Number,
                 //miscelenia private variables
                 _actionWidth: {
                     type: String,
@@ -917,7 +921,8 @@
                     Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
                     this.columns = this.allColumns;
 
-                    this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+                    this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
+                    this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
 
                     this.columnPropertiesMapper = (function (entity) {
                         const result = [];
@@ -1653,7 +1658,8 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+                this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
+                this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
             },
 
             /**
@@ -1681,7 +1687,8 @@
                     }
                     
                 }
-                this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+                this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
+                this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
                 this._updateTableSizeAsync();
             },
 
@@ -1703,11 +1710,11 @@
                 return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
             },
 
-            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth) {
+            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
                 return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
-            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth) {
+            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
                 return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
@@ -1915,7 +1922,7 @@
                 return shadowStyle;
             },
 
-            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _totalColumnWidth) {
+            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
                     shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
@@ -1923,7 +1930,7 @@
                 return shadowStyle;
             },
 
-            _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _totalColumnWidth) {
+            _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
                 if (_showRightShadow) {
                     shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
@@ -2035,7 +2042,8 @@
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+                        this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
+                        this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
                         this._resizeEventListener();
                         //scroll if needed.
                         if (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft) {
