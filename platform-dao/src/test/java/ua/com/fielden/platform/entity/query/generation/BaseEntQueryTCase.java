@@ -50,6 +50,7 @@ import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -82,6 +83,7 @@ public class BaseEntQueryTCase {
     protected static final Class<TgPersonName> PERSON_NAME = TgPersonName.class;
     protected static final Class<TgAuthor> AUTHOR = TgAuthor.class;
     protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;
+    protected static final Class<TgAverageFuelUsage> AVERAGE_FUEL_USAGE = TgAverageFuelUsage.class;
     protected static final Class<TgOrgUnit5> ORG5 = TgOrgUnit5.class;
     protected static final Class<TgOrgUnit4> ORG4 = TgOrgUnit4.class;
     protected static final Class<TgOrgUnit3> ORG3 = TgOrgUnit3.class;
