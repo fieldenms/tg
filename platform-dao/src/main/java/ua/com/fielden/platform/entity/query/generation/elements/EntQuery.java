@@ -121,8 +121,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return (yields.size() == 0 || yieldAll) && !isSubQuery() &&
-                ((mainSourceIsTypeBased() && resultTypeIsPersistedType) || mainSourceIsQueryBased());
+        return !isSubQuery() && (yieldAll || (yields.size() == 0));
     }
 
     private boolean idPropYieldEnhancementRequired() {
@@ -150,7 +149,8 @@ public class EntQuery implements ISingleOperand {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             LOGGER.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
-                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
+                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
                     //                    if (ppi.isSynthetic()) {
                     //                        throw new IllegalStateException(ppi.toString());
                     //                    }
@@ -173,8 +173,11 @@ public class EntQuery implements ISingleOperand {
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
-                if (resultType != EntityAggregates.class) {
-                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                
+                final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
+                
+                if (mainSourceType != EntityAggregates.class) {
+                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
                         final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
                         if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
                             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -419,7 +422,7 @@ public class EntQuery implements ISingleOperand {
                 return originalConditions;
             }
             LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-            final List<CompoundCondition> others = new ArrayList();
+            final List<CompoundCondition> others = new ArrayList<CompoundCondition>();
             others.add(new CompoundCondition(LogicalOperator.AND, new GroupedConditions(false, originalConditions)));
             return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel())
                     : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
