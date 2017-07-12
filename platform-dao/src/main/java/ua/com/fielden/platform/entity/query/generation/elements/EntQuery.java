@@ -40,7 +40,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
 
-    private final boolean persistedType;
+    private final boolean resultTypeIsPersistedType;
     private final Sources sources;
     private final Conditions conditions;
     private final Yields yields;
@@ -117,16 +117,16 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean idAliasEnhancementRequired() {
-        return onlyOneYieldAndWithoutAlias() && persistedType;
+        return onlyOneYieldAndWithoutAlias() && resultTypeIsPersistedType;
     }
 
     private boolean allPropsYieldEnhancementRequired() {
         return (yields.size() == 0 || yieldAll) && !isSubQuery() &&
-                ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
+                ((mainSourceIsTypeBased() && resultTypeIsPersistedType) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        return yields.size() == 0 && !yieldAll && persistedType && isSubQuery();
+        return yields.size() == 0 && !yieldAll && resultTypeIsPersistedType && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -368,7 +368,7 @@ public class EntQuery implements ISingleOperand {
 
     private Class determineYieldJavaType(final Yield yield) {
 
-        if (!persistedType && !isUnionEntityType(resultType)) {
+        if (!resultTypeIsPersistedType && !isUnionEntityType(resultType)) {
             return yield.getOperand().type();
         }
 
@@ -376,7 +376,7 @@ public class EntQuery implements ISingleOperand {
         final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, yield.getAlias());
         final Class rtYt = finalPropInfo.getJavaType();
 
-        if (persistedType) {
+        if (resultTypeIsPersistedType) {
             if (qsYt != null && !qsYt.equals(rtYt)) {
                 if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) &&
                         !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) &&
@@ -445,7 +445,7 @@ public class EntQuery implements ISingleOperand {
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!\n Query: " + queryBlocks);
         }
 
-        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false
+        resultTypeIsPersistedType = (resultType == null || resultType == EntityAggregates.class) ? false
                 : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
@@ -805,9 +805,5 @@ public class EntQuery implements ISingleOperand {
             return false;
         }
         return true;
-    }
-
-    public boolean isPersistedType() {
-        return persistedType;
     }
 }
