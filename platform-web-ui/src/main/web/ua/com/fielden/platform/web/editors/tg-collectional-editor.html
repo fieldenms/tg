@@ -698,23 +698,41 @@
         
         _startItemReordering: function (e) {
             if (e.model.selected) {
-                this.dragIndexFrom = e.model.index;
+                this._reorderingObject = {
+                    from: e.model.index,
+                    x: e.detail.x,
+                    elementHeight: e.target.parentElement.parentElement.offsetHeight
+                }
             }
         },
 
         _trackItemOrder: function (e) {
-            if (typeof this.dragIndexFrom !== 'undefined')  {
-                const currentElementIndex = this._getIndexForElement(e.detail.hover());
-                if (currentElementIndex >= 0 &&this.dragIndexFrom !== currentElementIndex) {
-                    console.log(this.dragIndexFrom, currentElementIndex, this.entity.get("chosenIds"));
-                    this.moveItem(this.dragIndexFrom, currentElementIndex);
-                    this.dragIndexFrom = currentElementIndex;
+            if (this._reorderingObject)  {
+                const list = this.$.input;
+                let currentElementIndex = this._getIndexForElement(e.detail.hover());
+                if (currentElementIndex < 0) {
+                    const listBoundingRect = list.getBoundingClientRect();
+                    if (listBoundingRect.top > e.detail.y && e.detail.ddy < 0) {
+                        list.scrollTop -= listBoundingRect.top - e.detail.y;
+                        currentElementIndex = Math.floor((list.scrollTop - listBoundingRect.top + e.detail.y) / this._reorderingObject.elementHeight);
+                        console.log ("moving up", currentElementIndex, list.scrollTop, listBoundingRect.top, e.detail.y);
+                    } else if (listBoundingRect.bottom < e.detail.y && e.detail.ddy > 0) {
+                        list.scrollTop += e.detail.y - listBoundingRect.bottom;
+                        currentElementIndex = Math.floor((list.scrollTop + list.clientHeight + e.detail.y - listBoundingRect.bottom) / this._reorderingObject.elementHeight);
+                        console.log ("moving down", currentElementIndex, (list.scrollTop + list.clientHeight + e.detail.y - listBoundingRect.botom) / this._reorderingObject.elementHeight);
+                    } else {
+                        currentElementIndex = this._getIndexForElement(document.elementFromPoint(this._reorderingObject.x, e.detail.y)); 
+                    }
+                }
+                if (currentElementIndex >= 0 && currentElementIndex < this._entities.length && this._reorderingObject.from !== currentElementIndex) {
+                    this.moveItem(this._reorderingObject.from, currentElementIndex);
+                    this._reorderingObject.from = currentElementIndex;
                 }
             }
         },
 
         _endItemReordering: function (e) {
-            delete this.dragIndexFrom;
+            delete this._reorderingObject;
         },
         
         _getIndexForElement: function (element) {
