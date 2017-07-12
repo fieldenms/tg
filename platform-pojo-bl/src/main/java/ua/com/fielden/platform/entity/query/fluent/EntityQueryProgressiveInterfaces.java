@@ -385,6 +385,7 @@ public interface EntityQueryProgressiveInterfaces {
     public interface ICompletedAndYielded<ET extends AbstractEntity<?>> //
     extends ICompletedCommon<ET> {
         IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
+        ISubsequentCompletedAndYielded<ET> yieldAll();
 
         //////////////////// RETURN /////////////////////////
         EntityResultQueryModel<ET> model();
@@ -694,6 +695,7 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFunctionYieldedLastArgument<T, ET extends AbstractEntity<?>> //
     extends IYieldExprOperand<T, IYieldExprItem0<T, ET>, ET> {
+        //ISubsequentCompletedAndYielded<ET> all();
     }
 
     interface IConcatFunctionArgument<T, ET extends AbstractEntity<?>> //

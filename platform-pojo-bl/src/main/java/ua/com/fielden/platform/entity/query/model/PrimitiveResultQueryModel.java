@@ -11,6 +11,6 @@ public class PrimitiveResultQueryModel extends SingleResultQueryModel {
     }
 
     public PrimitiveResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
-        super(tokens, null);
+        super(tokens, null, false);
     }
 }
