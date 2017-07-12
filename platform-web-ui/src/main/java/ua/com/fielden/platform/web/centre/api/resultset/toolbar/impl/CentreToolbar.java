@@ -15,7 +15,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     protected final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
     protected final DomElement configButton = new DomElement("paper-icon-button").attr("shortcut", "ctrl+e").attr("class$", "[[computeConfigButtonClasses(staleCriteriaMessage)]]").
-            attr("icon", "icons:settings").attr("on-tap", "_activateSelectionCriteriaView").attr("disabled$", "[[isRunning]]").
+            attr("icon", "icons:filter-list").attr("on-tap", "_activateSelectionCriteriaView").attr("disabled$", "[[isRunning]]").
             attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
     protected final DomElement pagination = new DomContainer().
             add(new DomElement("paper-icon-button").clazz("revers", "standart-action").attr("shortcut", "ctrl+up").attr("icon", "hardware:keyboard-tab").

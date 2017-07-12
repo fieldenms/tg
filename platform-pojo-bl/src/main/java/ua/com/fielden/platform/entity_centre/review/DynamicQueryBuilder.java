@@ -645,30 +645,34 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing * to %.
+     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing wildcards <code>*</code> to SQL wildcards <code>%</code>.
+     * Values that do not have any wildcards get them automatically injected at the beginning and end to ensure the match-anywhere strategy.
      *
      * @param criteria
      * @return
      */
-    public static String[] prepare(final String criteria) {
+    public static String[] prepCritValuesForStringTypedProp(final String criteria) {
         if (StringUtils.isEmpty(criteria)) {
             return new String[] {};
         }
 
-        final List<String> result = new ArrayList<String>();
-        for (final String crit : criteria.split(",")) {
-            result.add(PojoValueMatcher.prepare(crit));
+        final String[] crits = criteria.split(",");
+        for (int index = 0; index < crits.length; index++) {
+            if (!crits[index].contains("*")) {
+                crits[index] = "*" + crits[index] + "*";
+            }
+            crits[index] = PojoValueMatcher.prepare(crits[index]);
         }
-        return result.toArray(new String[] {});
+        return crits;
     }
-
+    
     /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
      *
      * @param criteria
      * @return
      */
-    public static String[] prepare(final List<String> criteria) {
+    public static String[] prepCritValuesForEntityTypedProp(final List<String> criteria) {
         return MiscUtilities.prepare(criteria);
     }
 
@@ -846,7 +850,7 @@ public class DynamicQueryBuilder {
             final boolean isNot = (Boolean) property.getValue2();
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
         } else if (isString(property.getType())) {
-            return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepare((String) property.getValue())).model();
+            return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
             final Map<Boolean, List<String>> searchValues = ((List<String>) property.getValue()).stream().collect(Collectors.groupingBy(str -> str.contains("*")));
             
@@ -856,12 +860,12 @@ public class DynamicQueryBuilder {
             if (searchValues.containsKey(false) && searchValues.containsKey(true)) {
                 condition = cond()
                         .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model())
-                        .or().prop(propertyName).iLike().anyOfValues(prepare(searchValues.get(true))).model();
+                        .or().prop(propertyName).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchValues.get(true))).model();
             } else if (searchValues.containsKey(false) && !searchValues.containsKey(true)) {
                 condition = cond()
                         .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model()).model();
             } else {
-                condition = cond().prop(propertyName).iLike().anyOfValues(prepare(searchValues.get(true))).model();
+                condition = cond().prop(propertyName).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchValues.get(true))).model();
             }
             
             return condition;

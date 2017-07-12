@@ -196,6 +196,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                     if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
                     }
+                    final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
+                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                        entityTypeProp.set_trailingZeros(trailingZeros);
+                    }
                 }
                 final String timeZone = getTimeZone(type, name);
                 if (timeZone != null) {

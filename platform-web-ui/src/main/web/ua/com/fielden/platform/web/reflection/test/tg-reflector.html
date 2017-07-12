@@ -605,6 +605,125 @@
                 
                 done();
             });
+            
+            test('foramtting: formatting 123.3 decimal with scale and trailing zeros should return 123.3000', function (done) {
+                assert.equal(reflector.formatDecimal(123.3, 'en-AU', 4, true), "123.3000");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 decimal with scale and trailing zeros should return 123.3121', function (done) {
+                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', 4, true), "123.3121");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 decimal with scale and without trailing zeros should return 123.3', function (done) {
+                assert.equal(reflector.formatDecimal(123.3, 'en-AU', 4, false), "123.3");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 decimal with scale and without trailing zeros should return 123.3121', function (done) {
+                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', 4, false), "123.3121");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 money with scale and trailing zeros should return $123.3000', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', 4, true), "$123.3000");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 money with scale and trailing zeros should return $123.3121', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', 4, true), "$123.3121");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 money with scale and without trailing zeros should return $123.3', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', 4, false), "$123.3");
+                done();
+            });
+            
+             test('foramtting: formatting 123.3121 decimal with scale and without trailing zeros should return $123.3121', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', 4, false), "$123.3121");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 decimal with default scale and trailing zeros should return 123.30', function (done) {
+                assert.equal(reflector.formatDecimal(123.3, 'en-AU', undefined, true), "123.30");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 decimal with default scale and trailing zeros should return 123.31', function (done) {
+                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', undefined, true), "123.31");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 decimal with default scale and without trailing zeros should return 123.30', function (done) {
+                assert.equal(reflector.formatDecimal(123.3, 'en-AU'), "123.30");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 decimal with default scale and without trailing zeros should return 123.31', function (done) {
+                assert.equal(reflector.formatDecimal(123.3121, 'en-AU'), "123.31");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 money with default scale and trailing zeros should return $123.30', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', undefined, true), "$123.30");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 money with default scale and trailing zeros should return $123.31', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', undefined, true), "$123.31");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3 money with default scale and without trailing zeros should return $123.30', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU'), "$123.30");
+                done();
+            });
+            
+            test('foramtting: formatting 123.3121 money with default scale and without trailing zeros should return $123.31', function (done) {
+                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU'), "$123.31");
+                done();
+            });
+            
+            test('prop retrieving: retrieveing of second level property should work fine', function (done) {
+                const entity = reflector.newEntity(typeName1); 
+                entity.key = 'DEMO01';
+                const compositeEntity = reflector.newEntity(typeName2);
+                compositeEntity.key1 = entity;
+                compositeEntity.key2 = 7;
+                const metaProp = reflector.getEntityTypeProp(compositeEntity, "key1.bigDecimalProp");
+                assert.equal(metaProp.precision(), 18);
+                assert.equal(metaProp.scale(), 5);
+                assert.equal(metaProp.trailingZeros(), true);
+                done();
+            });
+            
+            test('prop retrieving: retrieveing of first level property should work fine', function (done) {
+                const entity = reflector.newEntity(typeName1); 
+                entity.key = 'DEMO01';
+                const metaProp = reflector.getEntityTypeProp(entity, "bigDecimalProp");
+                assert.equal(metaProp.precision(), 18);
+                assert.equal(metaProp.scale(), 5);
+                assert.equal(metaProp.trailingZeros(), true);
+                done();
+            });
+            
+            test('prop retrieving: retrieveing of empty property should return undefined', function (done) {
+                const entity = reflector.newEntity(typeName1); 
+                entity.key = 'DEMO01';
+                const metaProp = reflector.getEntityTypeProp(entity, "");
+                assert.equal(typeof metaProp, 'undefined');
+                done();
+            });
+            
+            test('prop retrieving: retrieveing of non exisiting property should return undefined', function (done) {
+                const entity = reflector.newEntity(typeName1); 
+                entity.key = 'DEMO01';
+                const metaProp = reflector.getEntityTypeProp(entity, "nonExisting");
+                assert.equal(typeof metaProp, 'undefined');
+                done();
+            });
         });
     </script>
 </body>

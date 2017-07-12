@@ -102,12 +102,12 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
      * @param valuePattern
      * @return
      */
-    public static boolean valueMatchesPattern(final String value, String valuePattern) {
-        valuePattern = valuePattern.contains("*") ? valuePattern.replaceAll("\\*", "%") : valuePattern + "%";
+    public static boolean valueMatchesPattern(final String value, final String valuePattern) {
+        final String adjustedValuePattern = valuePattern.contains("*") ? valuePattern.replaceAll("\\*", "%") : valuePattern + "%";
 
-        final String prefex = valuePattern.startsWith("%") ? "" : "^";
-        final String postfix = valuePattern.endsWith("%") ? "" : "$";
-        final String strPattern = prefex + valuePattern.replaceAll("\\%", ".*") + postfix;
+        final String prefex = adjustedValuePattern.startsWith("%") ? "" : "^";
+        final String postfix = adjustedValuePattern.endsWith("%") ? "" : "$";
+        final String strPattern = prefex + adjustedValuePattern.replaceAll("\\%", ".*") + postfix;
 
         return Pattern.compile(strPattern).matcher(value).find();
     }
