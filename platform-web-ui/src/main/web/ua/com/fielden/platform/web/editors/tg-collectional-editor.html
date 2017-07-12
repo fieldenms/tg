@@ -38,7 +38,15 @@
             visibility: visible;
         }
         .resizing-box:hover {
-            cursor: move;
+            cursor: move; /* fallback if grab cursor is unsupported */
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+        }
+        .resizing-box:active { 
+            cursor: grabbing;
+            cursor: -moz-grabbing;
+            cursor: -webkit-grabbing;
         }
         .resizing-box {
             visibility: hidden;
@@ -112,8 +120,8 @@
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview)]]">
-                          <div class="resizing-box" on-track="_changeItemOrder"></div>
+                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview, canReorderItems)]]">
+                          <div class="resizing-box" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]"></div>
                           <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                           <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
@@ -157,6 +165,14 @@
              */
             descriptionPropertyName: {
                 type: String
+            },
+            
+            /**
+             * Indicates whether items can be rordered.
+             */
+            canReorderItems: {
+                type: Boolean,
+                value: false
             },
             
             /**
@@ -431,8 +447,10 @@
             return style;
         },
         
-        _calculateItemStyle: function (_forReview) {
-            return !_forReview ? 'cursor: pointer;' : 'cursor: default;';
+        _calculateItemStyle: function (_forReview, canReorderItems) {
+            let style = !_forReview ? 'cursor: pointer;' : 'cursor: default;';
+            style += canReorderItems ? "" : "padding-left: 22px;";
+            return style;
         },
         
         _calculateOrder: function (sortingNumber) {

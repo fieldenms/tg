@@ -50,7 +50,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector) {
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
-                .addProp("customisableColumns").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
+                .addProp("customisableColumns").asCollectionalEditor().reorderable().maxVisibleRows(5).withHeader("title")
                 .also()
                 .addAction(
                         action(CentreConfigUpdaterDefaultAction.class)
@@ -87,7 +87,7 @@ public class CentreConfigurationWebUiConfig {
                 masterConfig,
                 injector);
     }
-    
+
     /**
      * Creates no-ui entity master for {@link CentreConfigUpdaterDefaultAction}.
      *
