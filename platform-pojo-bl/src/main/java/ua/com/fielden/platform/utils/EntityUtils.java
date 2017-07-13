@@ -620,7 +620,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isEntityType(final Class<?> type) {
-        return AbstractEntity.class.isAssignableFrom(type);
+        return type == null ? false : AbstractEntity.class.isAssignableFrom(type);
     }
     
     
@@ -657,15 +657,6 @@ public class EntityUtils {
     }
 
     /**
-     * Indicates that given entity type is mapped to a database.
-     *
-     * @return
-     */
-    public static boolean isPersistedEntityType(final Class<?> type) {
-        return type != null && isEntityType(type) && !isQueryBasedEntityType((Class<? extends AbstractEntity<?>>) type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
-    }
-    
-    /**
      * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
      * 
      * @param entityType
@@ -673,7 +664,7 @@ public class EntityUtils {
      */
     public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
-        if (AbstractEntity.class.isAssignableFrom(keyType)) {
+        if (isEntityType(keyType)) {
             return isPersistedEntityType((Class<? extends AbstractEntity<?>>) keyType);
         } else {
             return false;
@@ -697,11 +688,23 @@ public class EntityUtils {
     }
 
     /**
-     * Indicates that given entity type is based on query model.
+     * Determines whether the provided entity type represents a persistent entity that can be stored in a database.
      *
      * @return
      */
-    public static boolean isQueryBasedEntityType(final Class<? extends AbstractEntity<?>> type) {
+    public static boolean isPersistedEntityType(final Class<?> type) {
+        return isEntityType(type) 
+            && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type) 
+            && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+    }
+    
+    /**
+     * Determines whether the provided entity type is of synthetic nature, which means that is based on an EQL model.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
         return type != null && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
     }
 

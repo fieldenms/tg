@@ -339,23 +339,13 @@ public final class Reflector {
     }
 
     /**
-     * Indicates whether specified class is synthetic entity or not.
-     *
-     * @param clazz
-     * @return
-     */
-    public static boolean isSynthetic(final Class<?> clazz) {
-        return EntityUtils.isQueryBasedEntityType((Class<? extends AbstractEntity<?>>) clazz);
-    }
-
-    /**
      * Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
      *
      * @param annotationType
      * @return
      */
     public static List<String> annotataionParams(final Class<? extends Annotation> annotationType) {
-        final List<String> names = new ArrayList<String>();
+        final List<String> names = new ArrayList<>();
         for (final Method param : annotationType.getDeclaredMethods()) {
             names.add(param.getName());
         }
