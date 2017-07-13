@@ -227,6 +227,7 @@
 
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
+                this._openOnce = this._openOnce.bind(this);
 
                 this._setIsRunning(false);
             },
@@ -531,11 +532,20 @@
                         this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         this._focusAndRefit(); // this is a legacy support
-                        this.open();
+                        if (element.masterWithMaster) {
+                            this.addEventListener('binding-entity-appeared', this._openOnce);
+                        } else {
+                            this.open();
+                        }
                     }.bind(this), 200);
                 }
             },
-
+            
+            _openOnce: function (e) {
+                this.open();
+                this.removeEventListener('binding-entity-appeared', this._openOnce);
+            },
+            
             /**
              * Listener that listens binding entity appeared event and focuses first input.
              */
