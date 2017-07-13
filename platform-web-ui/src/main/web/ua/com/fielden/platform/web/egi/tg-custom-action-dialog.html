@@ -227,7 +227,6 @@
 
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
-                this._openOnce = this._openOnce.bind(this);
 
                 this._setIsRunning(false);
             },
@@ -502,48 +501,65 @@
 
             _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
                 this._lastElement = element;
+                const self = this;
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    var self = this;
-                    // if there would be a master UI then need to subscribe for this dialog closing messages
-                    if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
-                        self._subscriptions = [];
-                        for (var index = 0; index < closeEventTopics.length; index++) {
-                            self._subscriptions.push(
-                                postal.subscribe({
-                                    channel: closeEventChannel,
-                                    topic: closeEventTopics[index],
-                                    callback: self._handleCloseEvent.bind(self)
-                                }));
-                        }
+                    this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
+                    this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
+                    
+                    if (element.masterWithMaster) {
+                        this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action);
+                        this.addEventListener('binding-entity-appeared', this._openOnceConcrete);
+                        // TODO need to somehow identify the situation where binding entity will never appear; in this case we need to remove conrete event listener and make the dialog not 'isRunning'
+                        this.async(function () {
+                            if (this.isRunning === true) {
+                                this._setIsRunning(false);
+                            }
+                            if (this._openOnceConcrete) {
+                                this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
+                                this._openOnceConcrete = null;
+                            }
+                        }.bind(this), 6000);
+                        // TODO end of ugly block
+                    } else {
+                        this._openOnce(closeEventChannel, closeEventTopics, action);
                     }
-                    this.updateStyles();
-                    this.refit();
-                    // let's open the dialog with magical async...
-                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
-                    this.async(function () {
-                        //Configuring the dialog hierarchy.
-                        var actionsDialog = findParentDialog(action);
-                        if (actionsDialog) {
-                            actionsDialog._childDialogs.push(this);
-                            this._parentDialog = actionsDialog;
-                        }
-                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
-                        this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
-                        this._focusAndRefit(); // this is a legacy support
-                        if (element.masterWithMaster) {
-                            this.addEventListener('binding-entity-appeared', this._openOnce);
-                        } else {
-                            this.open();
-                        }
-                    }.bind(this), 200);
                 }
             },
             
-            _openOnce: function (e) {
-                this.open();
-                this.removeEventListener('binding-entity-appeared', this._openOnce);
+            _openOnce: function (closeEventChannel, closeEventTopics, action) {
+                const self = this;
+                // if there would be a master UI then need to subscribe for this dialog closing messages
+                if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
+                    self._subscriptions = [];
+                    for (var index = 0; index < closeEventTopics.length; index++) {
+                        self._subscriptions.push(
+                            postal.subscribe({
+                                channel: closeEventChannel,
+                                topic: closeEventTopics[index],
+                                callback: self._handleCloseEvent.bind(self)
+                            }));
+                    }
+                }
+                this.updateStyles();
+                this.refit();
+                // let's open the dialog with magical async...
+                // this ensures that the dialog is opened after its relocation to body and after all layouting is done
+                this.async(function () {
+                    //Configuring the dialog hierarchy.
+                    var actionsDialog = findParentDialog(action);
+                    if (actionsDialog) {
+                        actionsDialog._childDialogs.push(this);
+                        this._parentDialog = actionsDialog;
+                    }
+                    this._focusAndRefit(); // this is a legacy support
+                    this.open();
+                }.bind(this), 200);
+                if (this._openOnceConcrete) {
+                    this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
+                    this._openOnceConcrete = null;
+                }
             },
             
             /**
