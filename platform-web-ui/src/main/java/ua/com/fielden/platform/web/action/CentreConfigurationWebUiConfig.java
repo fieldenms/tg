@@ -73,7 +73,7 @@ public class CentreConfigurationWebUiConfig {
                         .shortcut("ctrl+d")
                         .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE).shortDesc("CUSTOMISE").longDesc("Customise columns action")
+                .addAction(MasterActions.SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (

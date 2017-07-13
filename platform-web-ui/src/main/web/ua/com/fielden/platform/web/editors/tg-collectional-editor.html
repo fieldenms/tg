@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
@@ -66,12 +67,10 @@
         }
         .resizing-box {
             visibility: hidden;
-            border-width: 4px;
-            margin: 0 8px;
-            width: 4px;
-            border-style: none dotted none dotted;
-            border-color: var(--paper-light-blue-100);
-            @apply(--layout-self-stretch);
+            margin: 0 2px;
+            color: var(--paper-light-blue-100);
+            --iron-icon-width: 32px;
+            --iron-icon-height: 32px;
         }
         .dummy-box {
             background-color: transparent;
@@ -148,7 +147,7 @@
                     <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                         <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
                         <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_calculateItemStyle(_forReview, canReorderItems)]]">
-                            <div class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]"></div>
+                            <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:octoDots"></iron-icon>
                             <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                             <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                                 <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
