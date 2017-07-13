@@ -1726,7 +1726,7 @@
             _calculateFixedColsWidth: function (numOfFixedCols) {
                 var colIndex, fixedColsWidth = 0,
                     numOfFixedPaddings = 0;
-                for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {
+                for (colIndex = 0; colIndex < numOfFixedCols && colIndex < this.columns.length; colIndex++) {
                     if (this.columns[colIndex].width > 0) {
                         fixedColsWidth += this.columns[colIndex].width;
                         numOfFixedPaddings++;
