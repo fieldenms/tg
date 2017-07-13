@@ -49,12 +49,13 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 
 public class EntityUtils {
-    private final static Logger logger = Logger.getLogger(EntityUtils.class);
+    private static final Logger logger = Logger.getLogger(EntityUtils.class);
 
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
@@ -656,12 +657,12 @@ public class EntityUtils {
     }
 
     /**
-     * Indicates that given entity type is mapped to database.
+     * Indicates that given entity type is mapped to a database.
      *
      * @return
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
-        return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+        return type != null && isEntityType(type) && !isQueryBasedEntityType((Class<? extends AbstractEntity<?>>) type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
     }
     
     /**
@@ -671,7 +672,12 @@ public class EntityUtils {
      * @return
      */
     public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
-        return isPersistedEntityType(getKeyType(entityType));
+        final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
+        if (AbstractEntity.class.isAssignableFrom(keyType)) {
+            return isPersistedEntityType((Class<? extends AbstractEntity<?>>) keyType);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -695,8 +701,8 @@ public class EntityUtils {
      *
      * @return
      */
-    public static <ET extends AbstractEntity<?>> boolean isQueryBasedEntityType(final Class<ET> type) {
-        return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(type, MapEntityTo.class) == null && getEntityModelsOfQueryBasedEntityType(type).size() > 0;
+    public static boolean isQueryBasedEntityType(final Class<? extends AbstractEntity<?>> type) {
+        return type != null && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
     }
 
     /**
@@ -705,22 +711,37 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> getEntityModelsOfQueryBasedEntityType(final Class<ET> entityType) {
-        final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
+    public static <T extends AbstractEntity<?>> List<EntityResultQueryModel<T>> getEntityModelsOfQueryBasedEntityType(final Class<T> entityType) {
+        final List<EntityResultQueryModel<T>> result = new ArrayList<>();
         try {
             final Field exprField = entityType.getDeclaredField("model_");
             exprField.setAccessible(true);
-            result.add((EntityResultQueryModel<ET>) exprField.get(null));
-            return result;
-        } catch (final Exception e) {
+            final Object value = exprField.get(null);
+            if (value instanceof EntityResultQueryModel) {
+                result.add((EntityResultQueryModel<T>) value);
+                return result;
+            } else {
+                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].", 
+                                                     entityType.getSimpleName(), exprField.getType().getSimpleName()));
+            }
+        } catch (final NoSuchFieldException | IllegalAccessException ex) {
+            logger.debug(ex);
         }
+        
         try {
             final Field exprField = entityType.getDeclaredField("models_");
             exprField.setAccessible(true);
-            result.addAll((List<EntityResultQueryModel<ET>>) exprField.get(null));
-            return result;
-        } catch (final Exception e) {
+            final Object value = exprField.get(null);
+            if (value instanceof List<?>) { // this is a bit weak type checking due to the absence of generics reification
+                result.addAll((List<EntityResultQueryModel<T>>) exprField.get(null));
+                return result;
+            } else {            
+                throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
+            }
+        } catch (final NoSuchFieldException | IllegalAccessException ex) {
+            logger.debug(ex);
         }
+
         return result;
     }
 
