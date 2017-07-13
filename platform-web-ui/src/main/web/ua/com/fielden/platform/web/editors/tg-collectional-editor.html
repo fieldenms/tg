@@ -8,6 +8,7 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
+<link rel="import" href="/resources/polymer/paper-styles/shadow.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
 <dom-module id="tg-collectional-editor">
@@ -56,6 +57,13 @@
             border-style: none dotted none dotted;
             border-color: var(--paper-light-blue-100);
             @apply(--layout-self-stretch);
+        }
+        .dummy-box {
+            background-color: transparent;
+            border: 4px solid var(--paper-light-blue-100);
+        }
+        .dragging-item > .resizing-box{
+            visibility: visible;
         }
         paper-checkbox {
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
@@ -120,17 +128,18 @@
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(_forReview, canReorderItems)]]">
-                          <div class="resizing-box" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]"></div>
-                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
-                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
-                              <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
-                              <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
-                          </div>
-                          <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
-                              <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                              <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                          </div>
+                        <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
+                        <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_calculateItemStyle(_forReview, canReorderItems)]]">
+                            <div class="resizing-box" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]"></div>
+                            <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
+                            <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
+                                <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
+                                <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
+                            </div>
+                            <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
+                                <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                                <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                            </div>
                       </div>
                       <div class="border"></div>
                     </div>
@@ -173,6 +182,13 @@
             canReorderItems: {
                 type: Boolean,
                 value: false
+            },
+            
+            /**
+             * Indicates the item that is currently dragging. It might be null if there is no dragging item.
+             */
+            _draggingItem: {
+                type: Object
             },
             
             /**
@@ -243,6 +259,7 @@
         ],
         
         ready: function () {
+            this._draggingItem = null;
             this._eventHandler = (function(e) {
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
@@ -397,18 +414,25 @@
          */
         convertFromString: function (strValue) {
             return 'IRRELEVANT';
-        }, 
+        },
         
-        _computedClass: function (isSelected) {
+        _isDummyBoxVisisble: function (item, _draggingItem) {
+            return item === _draggingItem;
+        },
+        
+        _computedClass: function (isSelected, item, _draggingItem) {
             var classes = 'item';
             if (isSelected) {
               classes += ' selected';
+            }
+            if (item === _draggingItem) {
+                classes += ' dragging-item'
             }
             return classes;
         },
         
         _computedItemClass: function (isDisabled) {
-            var classes = '';
+            var classes = 'relative';
             if (isDisabled) {
               classes += ' item-disabled';
             }
@@ -702,6 +726,7 @@
                     from: e.model.index,
                     x: e.detail.x
                 }
+                this._draggingItem = e.model.item;
             }
         },
 
@@ -730,6 +755,7 @@
 
         _endItemReordering: function (e) {
             delete this._reorderingObject;
+            this._draggingItem = null;
         },
         
         _getIndexForElement: function (element) {
