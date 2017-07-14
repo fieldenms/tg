@@ -20,15 +20,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.security.user.User;
 
 public class BaseInfoForDomainMetadata {
-    private final MapEntityTo userMapTo;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo<?>> map = new ConcurrentHashMap<>();
-
-    public BaseInfoForDomainMetadata() {
-        this.userMapTo = AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
-    }
 
     public <ET extends AbstractEntity<?>> String getTableClause(final Class<ET> entityType) {
         final EntityTypeInfo<ET> entityTypeInfo = getEntityTypeInfo(entityType);
@@ -105,7 +99,7 @@ public class BaseInfoForDomainMetadata {
 
         public EntityTypeInfo(final Class<ET> entityType) {
             this.entityType = entityType;
-            mapEntityToAnnotation = User.class == entityType ? userMapTo : AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
+            mapEntityToAnnotation = AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
             entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
             unionEntityModels = produceUnionEntityModels(entityType);
             if (mapEntityToAnnotation != null && (entityModels.size() + unionEntityModels.size() == 0)) {
