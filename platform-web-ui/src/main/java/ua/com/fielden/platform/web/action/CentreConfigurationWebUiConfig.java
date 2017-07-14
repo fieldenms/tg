@@ -111,7 +111,7 @@ public class CentreConfigurationWebUiConfig {
     }
 
     public enum CentreConfigActions {
-        SORT_ACTION { // TODO change name to CUSTOMISE_COLUMNS_ACTION
+        CUSTOMISE_COLUMNS_ACTION {
             @Override
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
