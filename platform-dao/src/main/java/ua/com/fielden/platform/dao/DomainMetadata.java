@@ -82,6 +82,8 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
@@ -128,10 +130,9 @@ public class DomainMetadata {
             final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
-            final MapEntityTo userMapTo, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-        this.userMapTo = userMapTo;
+        this.userMapTo = AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());

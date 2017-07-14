@@ -24,7 +24,7 @@ import ua.com.fielden.platform.security.user.User;
 
 public class BaseInfoForDomainMetadata {
     private final MapEntityTo userMapTo;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo> map = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo<?>> map = new ConcurrentHashMap<>();
 
     public BaseInfoForDomainMetadata(final MapEntityTo userMapTo) {
         this.userMapTo = userMapTo;
@@ -54,11 +54,11 @@ public class BaseInfoForDomainMetadata {
     }
 
     private <ET extends AbstractEntity<?>> EntityTypeInfo<ET> getEntityTypeInfo(final Class<ET> entityType) {
-        final EntityTypeInfo<ET> existing = map.get(entityType);
+        final EntityTypeInfo<ET> existing = (EntityTypeInfo<ET>) map.get(entityType);
         if (existing != null) {
             return existing;
         } else {
-            final EntityTypeInfo<ET> created = new EntityTypeInfo<ET>(entityType);
+            final EntityTypeInfo<ET> created = new EntityTypeInfo<>(entityType);
             map.put(entityType, created);
             return created;
         }
@@ -69,7 +69,7 @@ public class BaseInfoForDomainMetadata {
     }
 
     private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {
-        final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
+        final List<EntityResultQueryModel<ET>> result = new ArrayList<>();
         if (!isUnionEntityType(entityType)) {
             return result;
         }
