@@ -69,8 +69,8 @@
             visibility: hidden;
             margin: 0 2px;
             color: var(--paper-light-blue-100);
-            --iron-icon-width: 32px;
-            --iron-icon-height: 32px;
+            min-width: 32px;
+            min-height: 32px;
         }
         .dummy-box {
             background-color: transparent;
@@ -95,13 +95,13 @@
         }
         
         .pad {
-            @apply(--layout-vertical);
             padding-left: 14px;
-            width: calc(100% - 40px);
+            overflow: hidden;
+            @apply(--layout-vertical);
         }
         .without-pad {
+            overflow: hidden;
             @apply(--layout-vertical);
-            width: calc(100% - 40px);
         }
         .primary {
             font-size: 10pt;
