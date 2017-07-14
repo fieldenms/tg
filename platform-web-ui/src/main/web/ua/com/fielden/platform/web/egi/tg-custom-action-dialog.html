@@ -228,6 +228,7 @@
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
                 this._doNotOpen = this._doNotOpen.bind(this);
+                this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
 
                 this._setIsRunning(false);
             },
@@ -466,10 +467,7 @@
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
                                         .catch(function (error) {
-                                            self._setIsRunning(false);
-                                            if (self._lastAction) {
-                                                self._lastAction.restoreActiveElement();
-                                            }
+                                            self._finishErroneousOpening(error);
                                         });
                                 } else {
                                     return Promise.resolve()
@@ -477,10 +475,7 @@
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
                                         .catch(function (error) {
-                                            self._setIsRunning(false);
-                                            if (self._lastAction) {
-                                                self._lastAction.restoreActiveElement();
-                                            }
+                                            self._finishErroneousOpening(error);
                                         });
                                 }
                             })
@@ -519,10 +514,16 @@
                 }
             },
             
-            _doNotOpen: function () {
+            _doNotOpen: function (error) {
                 this._clearOpeningListeners();
-                if (this.isRunning === true) {
-                    this._setIsRunning(false);
+                this._finishErroneousOpening(error);
+            },
+            
+            _finishErroneousOpening: function (error) {
+                console.error('_finishErroneousOpening:', error);
+                this._setIsRunning(false);
+                if (this._lastAction) {
+                    this._lastAction.restoreActiveElement();
                 }
             },
             
