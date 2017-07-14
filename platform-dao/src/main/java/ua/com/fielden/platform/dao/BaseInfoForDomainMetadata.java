@@ -2,6 +2,8 @@ package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class BaseInfoForDomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo<?>> map = new ConcurrentHashMap<>();
@@ -102,11 +105,11 @@ public class BaseInfoForDomainMetadata {
             mapEntityToAnnotation = AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
             entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
             unionEntityModels = produceUnionEntityModels(entityType);
-            if (mapEntityToAnnotation != null && (entityModels.size() + unionEntityModels.size() == 0)) {
+            if (isPersistedEntityType(entityType)) {
                 category = EntityCategory.PERSISTED;
-            } else if (mapEntityToAnnotation == null && entityModels.size() > 0 && unionEntityModels.size() == 0) {
+            } else if (isSyntheticEntityType(entityType)) {
                 category = EntityCategory.QUERY_BASED;
-            } else if (mapEntityToAnnotation == null && entityModels.size() == 0 && unionEntityModels.size() > 0) {
+            } else if (isUnionEntityType(entityType)) {
                 category = EntityCategory.UNION;
             } else if (mapEntityToAnnotation == null && (entityModels.size() + unionEntityModels.size() == 0)) {
                 category = EntityCategory.PURE;

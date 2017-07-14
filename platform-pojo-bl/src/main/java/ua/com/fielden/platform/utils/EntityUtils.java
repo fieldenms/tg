@@ -693,7 +693,8 @@ public class EntityUtils {
      * @return
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
-        return isEntityType(type) 
+        return isEntityType(type)
+            && !isUnionEntityType(type)
             && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type) 
             && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
     }
@@ -705,7 +706,18 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
-        return type != null && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
+        return type != null
+            && !isUnionEntityType(type)
+            && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
+    }
+    
+    /**
+     * Determines whether the provided entity type models a union-type.
+     *
+     * @return
+     */
+    public static boolean isUnionEntityType(final Class<?> type) {
+        return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
 
     /**
@@ -764,15 +776,6 @@ public class EntityUtils {
      */
     public static boolean isPropertyDescriptor(final Class<?> type) {
         return PropertyDescriptor.class.isAssignableFrom(type);
-    }
-
-    /**
-     * Indicates whether type represents {@link AbstractUnionEntity}-typed values.
-     *
-     * @return
-     */
-    public static boolean isUnionEntityType(final Class<?> type) {
-        return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
 
     /**
