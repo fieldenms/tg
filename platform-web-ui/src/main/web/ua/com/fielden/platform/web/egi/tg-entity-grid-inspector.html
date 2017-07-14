@@ -1991,8 +1991,6 @@
                     oldColumnGrowFactor: e.model.item.growFactor,
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
-                    otherFixedColumnWidth: e.model.index < self.numOfFixedCols ?
-                        calculateColumnWidthExcept(this, e.model.index, columnElements, this.numOfFixedCols, () => this._isCheckboxesFixed(this.checkboxesFixed, this.checkboxesWithPrimaryActionsFixed, this.numOfFixedCols), () => this._isPrimaryActionsFixed(this.checkboxesWithPrimaryActionsFixed, this.numOfFixedCols), () => this._isSecondaryActionsFixed(this.secondaryActionsFixed)) : undefined,
                     otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length, () => true, () => true, () => true),
                     widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth,
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
@@ -2005,21 +2003,17 @@
                     let newWidth = columnWidth + e.detail.ddx;
                     //Correct size for mouse out of EGI.
                     const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
-                    if (mousePos.x > this._columnResizingObject.containerWidth) {
-                        newWidth += 10; //10 is increment in case if mouse goes out of the border of EGI
-                    } else if (mousePos.x < this._columnResizingObject.containerLeft) {
-                        newWidth += -10; //-10 is increment in case if mouse goes out of the border of EGI
+                    if (mousePos.x > this._columnResizingObject.containerWidth && e.model.index >= this.numOfFixedCols) {
+                        newWidth += mousePos.x - this._columnResizingObject.containerWidth;
+                    } else if (mousePos.x < this._columnResizingObject.containerLeft && e.model.index >= this.numOfFixedCols) {
+                        newWidth -= this._columnResizingObject.containerLeft - mousePos.x;
                     }
                     //Correct size if EGI is less then min width.
                     if (newWidth < e.model.item.minWidth) {
                         newWidth = e.model.item.minWidth;
                     }
-                    //Correct new width if resizing fixed column and this new width are greater than container's width.
-                    if (typeof this._columnResizingObject.otherFixedColumnWidth !== 'undefined' && this._columnResizingObject.otherFixedColumnWidth + newWidth + this._columnResizingObject.widthCorrection > this.$.lockContainer.offsetWidth) {
-                        newWidth = this.$.lockContainer.offsetWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
-                    }
                     //Correct new width when dragging last column or other column and overall width is less then width of container.
-                    if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.lockContainer.offsetWidth) {
+                    if ((e.model.index >= this.numOfFixedCols) && (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.lockContainer.offsetWidth)) {
                         if (e.model.index === this.columns.length - 1) {
                             newWidth = this.$.lockContainer.offsetWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
                         } else {
@@ -2049,7 +2043,7 @@
                         this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
                         this._resizeEventListener();
                         //scroll if needed.
-                        if (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft) {
+                        if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;
                         }
                     }
