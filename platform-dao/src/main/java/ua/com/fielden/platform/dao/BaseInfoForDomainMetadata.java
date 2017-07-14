@@ -26,8 +26,8 @@ public class BaseInfoForDomainMetadata {
     private final MapEntityTo userMapTo;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo<?>> map = new ConcurrentHashMap<>();
 
-    public BaseInfoForDomainMetadata(final MapEntityTo userMapTo) {
-        this.userMapTo = userMapTo;
+    public BaseInfoForDomainMetadata() {
+        this.userMapTo = AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
     }
 
     public <ET extends AbstractEntity<?>> String getTableClause(final Class<ET> entityType) {

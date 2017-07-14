@@ -72,7 +72,6 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -82,8 +81,6 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
@@ -120,19 +117,12 @@ public class DomainMetadata {
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
-    private final MapEntityTo userMapTo;
-
-    public MapEntityTo getUserMapTo() {
-        return userMapTo;
-    }
-
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-        this.userMapTo = AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
@@ -154,7 +144,7 @@ public class DomainMetadata {
         idPropertyInOne2One = new PropertyMetadata.Builder(ID, Long.class, false).column(id).hibType(H_LONG).type(ONE2ONE_ID).build();
         versionProperty = new PropertyMetadata.Builder(VERSION, Long.class, false).column(version).hibType(H_LONG).type(PRIMITIVE).build();
 
-        final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(userMapTo);
+        final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
 
         // carry on with other stuff
         if (hibTypesDefaults != null) {
