@@ -514,27 +514,6 @@
                 }
             },
             
-            _doNotOpen: function (error) {
-                this._clearOpeningListeners();
-                this._finishErroneousOpening(error);
-            },
-            
-            _finishErroneousOpening: function (error) {
-                console.error('_finishErroneousOpening:', error);
-                this._setIsRunning(false);
-                if (this._lastAction) {
-                    this._lastAction.restoreActiveElement();
-                }
-            },
-            
-            _clearOpeningListeners: function () {
-                if (this._openOnceConcrete) {
-                    this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
-                    this.removeEventListener('binding-entity-did-not-appear', this._doNotOpen);
-                    this._openOnceConcrete = null;
-                }
-            },
-            
             _openOnce: function (closeEventChannel, closeEventTopics, action) {
                 this._clearOpeningListeners();
                 const self = this;
@@ -564,6 +543,26 @@
                     this._focusAndRefit(); // this is a legacy support
                     this.open();
                 }.bind(this), 200);
+            },
+            
+            _doNotOpen: function (error) {
+                this._clearOpeningListeners();
+                this._finishErroneousOpening(error);
+            },
+            
+            _finishErroneousOpening: function (error) {
+                this._setIsRunning(false);
+                if (this._lastAction) {
+                    this._lastAction.restoreActiveElement();
+                }
+            },
+            
+            _clearOpeningListeners: function () {
+                if (this._openOnceConcrete) {
+                    this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
+                    this.removeEventListener('binding-entity-did-not-appear', this._doNotOpen);
+                    this._openOnceConcrete = null;
+                }
             },
             
             /**

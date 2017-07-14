@@ -515,21 +515,20 @@
                 }).bind(self);
                 
                 self._postRetrievedDefaultError = (function (errorResult) {
-                    // This function will be invoked after server-side error appear.
-                    // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
-                    console.warn("SERVER ERROR: ", errorResult);
-                    
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                	
                     const oldCurrBindingEntity = this._currBindingEntity;
                     if (oldCurrBindingEntity == null) {
-                        console.error('binding-entity-did-not-appear: ', errorResult);
                         this.fire('binding-entity-did-not-appear', errorResult);
                     }
-                    
-                    // custom external action
-                    if (this.postRetrievedError) {
-                        this.postRetrievedError(errorResult);
+                	
+                	// custom external action
+                	if (this.postRetrievedError) {
+	                    this.postRetrievedError(errorResult);
                     }
-                    this.enableView();
+                	this.enableView();
                 }).bind(self);
              	// 				validation:
                 self._postValidatedDefault = (function (entityAndCustomObject) {
@@ -804,7 +803,6 @@
                 self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
-                    console.error('binding-entity-appeared: ', self._currBindingEntity.type()._simpleClassName(), self._currBindingEntity);
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
