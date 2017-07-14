@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.action;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
 import java.util.Optional;
 
@@ -15,6 +17,8 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProduc
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.layout.api.impl.ContainerConfig;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -29,9 +33,6 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  *
  */
 public class CentreConfigurationWebUiConfig {
-    private static final String actionButton = "'margin: 10px', 'width: 110px'";
-    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s], [%s]]";
-
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
@@ -48,6 +49,9 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector) {
+        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "20px").horizontal().justified().end();
+        final FlexLayoutConfig buttonStyle = layout().withStyle("width", "110px").end();
+        final ContainerConfig layout = cell(cell(buttonStyle).cell(cell().cell().layoutForEach(buttonStyle).withGapBetweenCells(20)).withGapBetweenCells(20), horizontal);
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().maxVisibleRows(5).withHeader("title")
@@ -75,7 +79,7 @@ public class CentreConfigurationWebUiConfig {
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
 
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton, actionButton))
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), layout.toString())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:500px', "
                         + format("['flex', ['flex']]")
