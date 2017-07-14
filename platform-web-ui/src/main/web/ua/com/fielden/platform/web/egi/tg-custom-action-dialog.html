@@ -227,6 +227,7 @@
 
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
+                this._doNotOpen = this._doNotOpen.bind(this);
 
                 this._setIsRunning(false);
             },
@@ -508,27 +509,33 @@
                     this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                     this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                     
-                    if (element.masterWithMaster) {
+                    if (element.masterWithMaster) { // defer opening of master-with-master's dialog until binding entity of embedded master appears
                         this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action);
                         this.addEventListener('binding-entity-appeared', this._openOnceConcrete);
-                        // TODO need to somehow identify the situation where binding entity will never appear; in this case we need to remove conrete event listener and make the dialog not 'isRunning'
-                        this.async(function () {
-                            if (this.isRunning === true) {
-                                this._setIsRunning(false);
-                            }
-                            if (this._openOnceConcrete) {
-                                this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
-                                this._openOnceConcrete = null;
-                            }
-                        }.bind(this), 6000);
-                        // TODO end of ugly block
+                        this.addEventListener('binding-entity-did-not-appear', this._doNotOpen);
                     } else {
                         this._openOnce(closeEventChannel, closeEventTopics, action);
                     }
                 }
             },
             
+            _doNotOpen: function () {
+                this._clearOpeningListeners();
+                if (this.isRunning === true) {
+                    this._setIsRunning(false);
+                }
+            },
+            
+            _clearOpeningListeners: function () {
+                if (this._openOnceConcrete) {
+                    this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
+                    this.removeEventListener('binding-entity-did-not-appear', this._doNotOpen);
+                    this._openOnceConcrete = null;
+                }
+            },
+            
             _openOnce: function (closeEventChannel, closeEventTopics, action) {
+                this._clearOpeningListeners();
                 const self = this;
                 // if there would be a master UI then need to subscribe for this dialog closing messages
                 if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
@@ -556,10 +563,6 @@
                     this._focusAndRefit(); // this is a legacy support
                     this.open();
                 }.bind(this), 200);
-                if (this._openOnceConcrete) {
-                    this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
-                    this._openOnceConcrete = null;
-                }
             },
             
             /**
