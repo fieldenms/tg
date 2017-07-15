@@ -917,10 +917,7 @@
                     this.allColumns = [];
                     Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
                     this.columns = this.allColumns;
-
-                    this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
-                    this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-
+                    this._updateColumnsWidthProperties(false);
                     this.columnPropertiesMapper = (function (entity) {
                         const result = [];
                         for (let index = 0; index < this.columns.length; index++) {
@@ -1511,6 +1508,14 @@
                 this._totalsRowCount = summaryRowsCount;
                 this._totalsRows = gridSummary;
             },
+            
+            _updateColumnsWidthProperties: function (triggerResize) {
+                this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
+                this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
+                if (triggerResize) {
+                    this._updateTableSizeAsync();
+                }
+            },
 
             _updateTableSizeAsync: function () {
                 this.async(function () {
@@ -1655,8 +1660,7 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
-                this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
+                this._updateColumnsWidthProperties(true);
             },
 
             /**
@@ -1684,9 +1688,7 @@
                     }
                     
                 }
-                this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
-                this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-                this._updateTableSizeAsync();
+                this._updateColumnsWidthProperties(true);
             },
 
             /**
@@ -2039,9 +2041,7 @@
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
-                        this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-                        this._resizeEventListener();
+                        this._updateColumnsWidthProperties(true);
                         //scroll if needed.
                         if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;

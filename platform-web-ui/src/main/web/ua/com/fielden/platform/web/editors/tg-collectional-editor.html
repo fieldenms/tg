@@ -146,11 +146,11 @@
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                         <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
-                        <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_calculateItemStyle(_forReview, canReorderItems)]]">
-                            <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:octoDots"></iron-icon>
+                        <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, canReorderItems)]]">
+                            <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:octoDots" style$="[[_computeStyleForResizingBox(selected)]]"></iron-icon>
                             <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                             <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
-                                <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
+                                <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                                 <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                             </div>
                             <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
@@ -486,16 +486,20 @@
             return !_forReview;
         },
         
-        _caclulateSortingIconStyle: function (sorting)  {
+        _computeSortingIconStyle: function (sorting)  {
             var style = sorting !== null ? 'color: black;' : 'color: grey;';
             style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
             return style;
         },
         
-        _calculateItemStyle: function (_forReview, canReorderItems) {
+        _computeItemStyle: function (_forReview, canReorderItems) {
             let style = !_forReview ? 'cursor: pointer;' : 'cursor: default;';
             style += canReorderItems ? "" : "padding-left: 22px;";
             return style;
+        },
+        
+        _computeStyleForResizingBox : function (selected) {
+            return !selected ? "visibility: hidden;" : ""; 
         },
         
         _calculateOrder: function (sortingNumber) {
