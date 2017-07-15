@@ -374,61 +374,58 @@ public class CentreUpdater {
     private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
         final Class<?> diffManagedType = managedType(root, differencesCentre);
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
-            if (!AbstractDomainTree.isPlaceholder(property)) {
-                if (!propertyRemovedFromDomainType(diffManagedType, property)) {
-                    if (AbstractDomainTree.isDoubleCriterion(diffManagedType, property)) {
-                        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE, root, property)) {
-                            targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
-                        }
-                        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property)) {
-                            targetCentre.getFirstTick().setExclusive2(root, property, differencesCentre.getFirstTick().getExclusive2(root, property));
-                        }
+            if (!AbstractDomainTree.isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
+                if (AbstractDomainTree.isDoubleCriterion(diffManagedType, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE, root, property)) {
+                        targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
                     }
-                    final Class<?> propertyType = StringUtils.isEmpty(property) ? diffManagedType : PropertyTypeDeterminator.determinePropertyType(diffManagedType, property);
-                    if (EntityUtils.isDate(propertyType)) {
-                        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_PREFIX, root, property)) {
-                            targetCentre.getFirstTick().setDatePrefix(root, property, differencesCentre.getFirstTick().getDatePrefix(root, property));
-                        }
-                        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property)) {
-                            targetCentre.getFirstTick().setDateMnemonic(root, property, differencesCentre.getFirstTick().getDateMnemonic(root, property));
-                        }
-                        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.AND_BEFORE, root, property)) {
-                            targetCentre.getFirstTick().setAndBefore(root, property, differencesCentre.getFirstTick().getAndBefore(root, property));
-                        }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property)) {
+                        targetCentre.getFirstTick().setExclusive2(root, property, differencesCentre.getFirstTick().getExclusive2(root, property));
                     }
-    
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.OR_NULL, root, property)) {
-                        targetCentre.getFirstTick().setOrNull(root, property, differencesCentre.getFirstTick().getOrNull(root, property));
+                }
+                final Class<?> propertyType = StringUtils.isEmpty(property) ? diffManagedType : PropertyTypeDeterminator.determinePropertyType(diffManagedType, property);
+                if (EntityUtils.isDate(propertyType)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_PREFIX, root, property)) {
+                        targetCentre.getFirstTick().setDatePrefix(root, property, differencesCentre.getFirstTick().getDatePrefix(root, property));
                     }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.NOT, root, property)) {
-                        targetCentre.getFirstTick().setNot(root, property, differencesCentre.getFirstTick().getNot(root, property));
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property)) {
+                        targetCentre.getFirstTick().setDateMnemonic(root, property, differencesCentre.getFirstTick().getDateMnemonic(root, property));
                     }
-    
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE, root, property)) {
-                        targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.AND_BEFORE, root, property)) {
+                        targetCentre.getFirstTick().setAndBefore(root, property, differencesCentre.getFirstTick().getAndBefore(root, property));
                     }
-                    if (AbstractDomainTree.isDoubleCriterionOrBoolean(diffManagedType, property)) {
-                        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE2, root, property)) {
-                            targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
-                        }
-                    }
+                }
+
+                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.OR_NULL, root, property)) {
+                    targetCentre.getFirstTick().setOrNull(root, property, differencesCentre.getFirstTick().getOrNull(root, property));
+                }
+                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.NOT, root, property)) {
+                    targetCentre.getFirstTick().setNot(root, property, differencesCentre.getFirstTick().getNot(root, property));
+                }
+
+                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE, root, property)) {
+                    targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
+                }
+                if (AbstractDomainTree.isDoubleCriterionOrBoolean(diffManagedType, property)
+                        && differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE2, root, property)) {
+                    targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
                 }
             }
         }
-        
+
         // Diff centre contains full information of checkedProperties and usedProperties.
         // Such information should be carefully merged with potentially updated targetCentre.
         final List<String> diffCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(differencesCentre.getSecondTick().checkedProperties(root), differencesCentre.getEnhancer().getManagedType(root));
         final List<String> diffUsedProperties = differencesCentre.getSecondTick().usedProperties(root);
-        
+
         final List<String> targetCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(targetCentre.getSecondTick().checkedProperties(root), targetCentre.getEnhancer().getManagedType(root));
-        
+
         // determine properties that were added into targetCentre (default config) comparing to differencesCentre (currently saved config)
         // final List<String> addedIntoTarget = minus(targetCheckedPropertiesWithoutSummaries, diffCheckedPropertiesWithoutSummaries);
-        
+
         // determine properties that were removed from targetCentre (default config) comparing to differencesCentre (currently saved config)
         final List<String> removedFromTarget = minus(diffCheckedPropertiesWithoutSummaries, targetCheckedPropertiesWithoutSummaries);
-        
+
         if (!EntityUtils.equalsEx(diffCheckedPropertiesWithoutSummaries, diffUsedProperties)) {
             // remove removedFromTarget properties custom configuration (custom column order / visibility); this custom configuration was explicitly changed by the user, because it's different from diffCheckedProperties
             final List<String> diffUsedPropertiesWithoutRemovedProps = minus(diffUsedProperties, removedFromTarget);
@@ -441,7 +438,7 @@ public class CentreUpdater {
                 targetCentre.getSecondTick().use(root, newUsedProperty, true);
             }
         }
-        
+
         // apply widths and grow factor that were marked as changed
         final List<String> diffCheckedPropertiesWithoutRemovedProps = minus(diffCheckedPropertiesWithoutSummaries, removedFromTarget);
         for (final String property : diffCheckedPropertiesWithoutRemovedProps) {
@@ -497,10 +494,10 @@ public class CentreUpdater {
             return false;
         }
     }
-    
+
     /**
      * Computes a list of items that contain in <code>from</code> list and do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
-     * 
+     *
      * @param from
      * @param to
      * @return
@@ -508,10 +505,10 @@ public class CentreUpdater {
     private static List<String> minus(final List<String> from, final List<String> to) {
         return minus(from, to, Function.identity());
     }
-    
+
     /**
      * Computes a list of items that contain in <code>from</code> list and their keys do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
-     * 
+     *
      * @param from
      * @param to
      * @param keyRetriever -- mapping function to retrieve the key of the item
