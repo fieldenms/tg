@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -28,9 +29,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A domain tree manager for lifecycle analyses.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManager implements ILifecycleDomainTreeManager {
     private Date from, to;
@@ -38,7 +39,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      */
@@ -48,7 +49,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param dtr
      * @param firstTick
@@ -160,7 +161,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
         /**
          * Removes 'checking' and 'usage' of all properties for this tick. This action includes unchecking of 'lifecycle' property and all of its category markers and the
          * destroying of all category markers.
-         * 
+         *
          * @param root
          */
         protected void removeCheckingAndUsageAndDestroyCategories(final Class<?> root, final String exceptProperty) {
@@ -236,9 +237,9 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * A specific Kryo serialiser for {@link LifecycleDomainTreeManager}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class LifecycleDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<LifecycleDomainTreeManager> {
         public LifecycleDomainTreeManagerSerialiser(final ISerialiser serialiser) {
@@ -282,7 +283,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * Determines whether a property represents 'lifecycle' property.
-     * 
+     *
      * @param root
      * @param checkedProperty
      * @return
@@ -293,7 +294,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * Returns a categorizer associated with this property (if it is not @Monitoring at all -- returns <code>null</code>).
-     * 
+     *
      * @param root
      * @param checkedProperty
      * @return
@@ -371,35 +372,11 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final LifecycleDomainTreeManager other = (LifecycleDomainTreeManager) obj;
-        if (from == null) {
-            if (other.from != null) {
-                return false;
+        if (this != obj) {
+            if (super.equals(obj) && getClass() == obj.getClass()) {
+                final LifecycleDomainTreeManager other = (LifecycleDomainTreeManager) obj;
+                return Objects.equals(from, other.from) && Objects.equals(to, other.to) && Objects.equals(total, other.total);
             }
-        } else if (!from.equals(other.from)) {
-            return false;
-        }
-        if (to == null) {
-            if (other.to != null) {
-                return false;
-            }
-        } else if (!to.equals(other.to)) {
-            return false;
-        }
-        if (total == null) {
-            if (other.total != null) {
-                return false;
-            }
-        } else if (!total.equals(other.total)) {
             return false;
         }
         return true;
@@ -407,7 +384,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * Returns a category for a category marker.
-     * 
+     *
      * @param root
      * @param categoryMarker
      * @return
@@ -424,7 +401,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
     /**
      * Returns a {@link GroupingPeriods} for a period marker.
-     * 
+     *
      * @param root
      * @param periodMarker
      * @return

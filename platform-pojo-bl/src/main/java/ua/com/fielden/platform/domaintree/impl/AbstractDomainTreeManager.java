@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.swing.event.EventListenerList;
 
@@ -25,14 +26,14 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 /**
  * Abstract domain tree manager for all TG trees. Includes support for checking and functions managing. <br>
  * <br>
- * 
+ *
  * Includes implementation of "mutable checking" logic, that contain: <br>
  * a) default mutable state management; <br>
  * a) manual state management; <br>
  * b) resolution of conflicts with excluded, disabled etc. properties; <br>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractDomainTreeManager extends AbstractDomainTree implements IDomainTreeManager {
     private final AbstractDomainTreeRepresentation dtr;
@@ -42,7 +43,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param dtr
      * @param firstTick
@@ -97,9 +98,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     /**
      * This interface is just a wrapper for {@link ITickManager} with accessor to mutable "checked properties".
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public interface ITickManagerWithMutability extends ITickManager {
         /**
@@ -107,7 +108,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
          * <p>
          * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted. After deserialisation
          * lazy mechanism can simply load missing stuff well.
-         * 
+         *
          * @param root
          * @return
          */
@@ -115,7 +116,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * TODO
-         * 
+         *
          * @param root
          * @param property
          * @return
@@ -124,7 +125,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * TODO
-         * 
+         *
          * @param root
          * @param property
          * @return
@@ -134,14 +135,14 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     /**
      * This interface is just a wrapper for {@link ITickManager} with accessor to mutable "checked properties".
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public interface ITickRepresentationWithMutability extends ITickRepresentation {
         /**
          * Getter of mutable "disabled manually properties" cache for internal purposes.
-         * 
+         *
          * @param root
          * @return
          */
@@ -149,7 +150,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * TODO
-         * 
+         *
          * @return
          */
         boolean isDisabledImmutablyLightweight(final Class<?> root, final String property);
@@ -157,9 +158,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     /**
      * The "structure changed" listener that takes care about synchronisation of "included properties" with "checked / disabled properties" for both ticks.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyListener {
         private final TickManager firstTickManager, secondTickManager;
@@ -173,7 +174,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * A constructor that requires two ticks and two tick representations for synchronisation.
-         * 
+         *
          * @param firstTick
          * @param secondTick
          */
@@ -239,9 +240,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     /**
      * The weak wrapper for {@link IPropertyCheckingListener} instance.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private static class WeakPropertyCheckingListener implements IPropertyCheckingListener {
 
@@ -251,7 +252,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         /**
          * Creates weak wrapper for {@link IPropertyCheckingListener} instance and tick manager. (Please note that tickManager doesn't registers specified listener. It must be done
          * manually!).
-         * 
+         *
          * @param listener
          * @param tickManager
          */
@@ -271,7 +272,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * Returns the weak reference of {@link IPropertyCheckingListener} on which this instance is referenced to.
-         * 
+         *
          * @return
          */
         public IPropertyCheckingListener getRef() {
@@ -282,19 +283,19 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     /**
      * A tick manager with all sufficient logic. <br>
      * <br>
-     * 
+     *
      * Includes implementation of "checking" logic, that contain: <br>
      * a) default mutable state management; <br>
      * a) manual state management; <br>
      * b) resolution of conflicts with excluded etc. properties; <br>
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class TickManager implements ITickManagerWithMutability {
         private final EnhancementRootsMap<List<String>> checkedProperties;
         private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
-        
+
         private final transient AbstractDomainTreeRepresentation dtr;
         private final transient ITickRepresentation tr;
 
@@ -313,7 +314,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         protected TickManager(final Map<Class<?>, List<String>> checkedProperties) {
             this.checkedProperties = createRootsMap();
             this.checkedProperties.putAll(checkedProperties);
-            
+
             rootsListsOfUsedProperties = createRootsMap();
 
             this.propertyCheckingListeners = new EventListenerList();
@@ -324,7 +325,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * This method is designed to be overridden in descendants to provide custom "mutable checking" logic.
-         * 
+         *
          * @param root
          * @param property
          * @return
@@ -370,7 +371,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         /**
          * Loads parent property to ensure that working with this property is safe.
-         * 
+         *
          * @param root
          * @param property
          */
@@ -529,7 +530,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             props.add(what);
             return this;
         }
-        
+
         protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
             illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type ["
                     + root.getSimpleName() + "].");
@@ -589,28 +590,12 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final TickManager other = (TickManager) obj;
-            if (checkedProperties == null) {
-                if (other.checkedProperties != null) {
-                    return false;
+            if (this != obj) {
+                if (getClass() == obj.getClass()) {
+                    final TickManager other = (TickManager) obj;
+                    return Objects.equals(checkedProperties, other.checkedProperties) &&
+                            Objects.equals(rootsListsOfUsedProperties, other.rootsListsOfUsedProperties);
                 }
-            } else if (!checkedProperties.equals(other.checkedProperties)) {
-                return false;
-            }
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
                 return false;
             }
             return true;
@@ -634,9 +619,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     /**
      * A specific Kryo serialiser for {@link AbstractDomainTreeManager}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected abstract static class AbstractDomainTreeManagerSerialiser<T extends AbstractDomainTreeManager> extends AbstractDomainTreeSerialiser<T> {
         public AbstractDomainTreeManagerSerialiser(final ISerialiser serialiser) {
@@ -663,38 +648,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final AbstractDomainTreeManager other = (AbstractDomainTreeManager) obj;
-        if (dtr == null) {
-            if (other.dtr != null) {
-                return false;
+        if (this != obj) {
+            if (getClass() == obj.getClass()) {
+                final AbstractDomainTreeManager other = (AbstractDomainTreeManager) obj;
+                return Objects.equals(dtr, other.dtr) && Objects.equals(firstTick, other.firstTick) && Objects.equals(secondTick, other.secondTick);
             }
-        } else if (!dtr.equals(other.dtr)) {
-            return false;
         }
-        if (firstTick == null) {
-            if (other.firstTick != null) {
-                return false;
-            }
-        } else if (!firstTick.equals(other.firstTick)) {
-            return false;
-        }
-        if (secondTick == null) {
-            if (other.secondTick != null) {
-                return false;
-            }
-        } else if (!secondTick.equals(other.secondTick)) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     public AbstractDomainTreeRepresentation getDtr() {

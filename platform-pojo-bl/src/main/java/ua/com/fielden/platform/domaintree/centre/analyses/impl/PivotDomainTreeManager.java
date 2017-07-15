@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IUsageManager;
@@ -18,14 +19,14 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
  * A domain tree manager for pivot analyses.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager implements IPivotDomainTreeManager {
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      */
@@ -35,7 +36,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param dtr
      * @param firstTick
@@ -125,28 +126,12 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (!super.equals(obj)) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final PivotAddToDistributionTickManager other = (PivotAddToDistributionTickManager) obj;
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null) {
-                    return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final PivotAddToDistributionTickManager other = (PivotAddToDistributionTickManager) obj;
+                    return Objects.equals(propertiesWidths, other.propertiesWidths) &&
+                            Objects.equals(rootsListsOfUsedProperties, other.rootsListsOfUsedProperties);
                 }
-            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
-                return false;
-            }
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
                 return false;
             }
             return true;
@@ -273,22 +258,11 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (!super.equals(obj)) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final PivotAddToAggregationTickManager other = (PivotAddToAggregationTickManager) obj;
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null) {
-                    return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final PivotAddToAggregationTickManager other = (PivotAddToAggregationTickManager) obj;
+                    return Objects.equals(propertiesWidths, other.propertiesWidths);
                 }
-            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
-                return false;
             }
             return true;
         }
@@ -296,9 +270,9 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
     /**
      * A specific Kryo serialiser for {@link PivotDomainTreeManager}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class PivotDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<PivotDomainTreeManager> {
         public PivotDomainTreeManagerSerialiser(final ISerialiser serialiser) {
