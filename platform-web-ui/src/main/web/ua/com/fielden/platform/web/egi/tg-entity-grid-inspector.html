@@ -2074,10 +2074,12 @@
 
             _makeEgiUnselectable: function (e) {
                 this.$.baseContainer.classList.toggle("noselect", true);
+                document.body.style["cursor"] = "col-resize";
             },
 
             _makeEgiSelectable: function (e) {
                 this.$.baseContainer.classList.toggle("noselect", false);
+                document.body.style["cursor"] = "";
             },
 
             _showResizingCue: function (e) {
