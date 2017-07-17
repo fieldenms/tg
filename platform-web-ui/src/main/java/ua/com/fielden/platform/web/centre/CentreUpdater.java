@@ -36,7 +36,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CentreUpdater {
-    private final static Logger logger = Logger.getLogger(CentreUpdater.class);
+    private static final Logger logger = Logger.getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
 
     public static final String FRESH_CENTRE_NAME = "__________FRESH";

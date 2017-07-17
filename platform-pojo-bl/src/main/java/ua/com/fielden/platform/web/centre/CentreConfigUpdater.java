@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
     @IsProperty(CustomisableColumn.class)
     @Title("Customisable Columns")
-    private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<CustomisableColumn>();
+    private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
     
     @IsProperty(value = String.class) 
     @Title(value = "Sorting values", desc = "Values of sorting properties -- 'asc', 'desc' or 'none' (the order is important and should be strictly the same as in 'sortingIds' property)")
