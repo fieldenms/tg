@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCalculatedAndOfTypes;
+
 import java.util.List;
 import java.util.stream.Collectors;
-
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 
 /**
  * Utilities for Web API (centre, master) and its implementation.
@@ -13,6 +13,10 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
  *
  */
 public class WebApiUtils {
+    
+    /** Private default constructor to prevent instantiation. */
+    private WebApiUtils() {
+    }
     
     /**
      * Return DSL representation for property name.
@@ -43,7 +47,7 @@ public class WebApiUtils {
      */
     public static List<String> checkedPropertiesWithoutSummaries(final List<String> checkedProperties, final Class<?> managedType) {
         return checkedProperties.stream()
-            .filter(checkedProperty -> "".equals(checkedProperty) || !AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProperty, CalculatedPropertyCategory.AGGREGATED_EXPRESSION))
+            .filter(checkedProperty -> "".equals(checkedProperty) || !isCalculatedAndOfTypes(managedType, checkedProperty, AGGREGATED_EXPRESSION))
             .collect(Collectors.toList());
     }
     

@@ -74,7 +74,9 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
-    private CentreResourceUtils() { }
+    /** Private default constructor to prevent instantiation. */
+    private CentreResourceUtils() {
+    }
     
     private enum RunActions {
         RUN("run"),

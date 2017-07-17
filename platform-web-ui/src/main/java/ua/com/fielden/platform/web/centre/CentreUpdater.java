@@ -1,30 +1,48 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_MNEMONIC;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_PREFIX;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.EXCLUSIVE;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.EXCLUSIVE2;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.GROW_FACTOR;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.NOT;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.OR_NULL;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.WIDTH;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterionOrBoolean;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -42,7 +60,11 @@ public class CentreUpdater {
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
-
+    
+    /** Protected default constructor to prevent instantiation. */
+    protected CentreUpdater() {
+    }
+    
     /**
      * Returns user-specific version of surrogate centre name.
      *
@@ -114,7 +136,7 @@ public class CentreUpdater {
     }
     private static ICentreDomainTreeManagerAndEnhancer commitCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName) {
         synchronized (gdtm) {
-            logger.debug(String.format("%s '%s' centre for miType [%s] for user %s...", "Committing", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Committing", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
             final DateTime start = new DateTime();
             // gets the centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'centre')
             final ICentreDomainTreeManagerAndEnhancer centre = centre0(gdtm, miType, userSpecificName);
@@ -128,7 +150,7 @@ public class CentreUpdater {
 
             final DateTime end = new DateTime();
             final Period pd = new Period(start, end);
-            logger.debug(String.format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return centre;
         }
     }
@@ -144,7 +166,7 @@ public class CentreUpdater {
     public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
         synchronized (gdtm) {
             final String userSpecificName = userSpecificName(name, gdtm);
-            logger.debug(String.format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
             final DateTime start = new DateTime();
 
             // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g.
@@ -157,7 +179,7 @@ public class CentreUpdater {
 
             final DateTime end = new DateTime();
             final Period pd = new Period(start, end);
-            logger.debug(String.format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return copiedInstance;
         }
     }
@@ -172,7 +194,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer updateOrLoadCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName, final boolean update) {
-        logger.debug(String.format("%s '%s' centre for miType [%s] %sfor user %s...", update ? "Updating of stale" : "Initialising", userSpecificName, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser()));
+        logger.debug(format("%s '%s' centre for miType [%s] %sfor user %s...", update ? "Updating of stale" : "Initialising", userSpecificName, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
         final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, userSpecificName);
@@ -181,7 +203,7 @@ public class CentreUpdater {
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(String.format("%s the '%s' centre for miType [%s] %sfor user %s... done in [%s].", update ? "Updated stale" : "Initialised", userSpecificName, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("%s the '%s' centre for miType [%s] %sfor user %s... done in [%s].", update ? "Updated stale" : "Initialised", userSpecificName, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return centre0(gdtm, miType, userSpecificName);
     }
 
@@ -213,7 +235,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName, final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre) {
-        logger.debug(String.format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
         // TODO consider not copying of default centre for performance reasons:
@@ -226,13 +248,13 @@ public class CentreUpdater {
         // Please note that copyCentre method in GlobalDomainTreeManager performs copying of all defined annotations to provide freshCentre's derivatives
         //  with such additional information too.
         for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
-            if (DynamicEntityClassLoader.isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
+            if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
                 loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType));
             }
         }
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "loadCentreFromDefaultAndDiff", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "loadCentreFromDefaultAndDiff", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return loadedCentre;
     }
 
@@ -249,7 +271,7 @@ public class CentreUpdater {
      * @return
      */
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        logger.debug(String.format("\t\t%s centre for miType [%s] for user %s...", "getDefaultCentre", miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+        logger.debug(format("\t\t%s centre for miType [%s] for user %s...", "getDefaultCentre", miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
         if (gdtm.getEntityCentreManager(miType, null) == null) {
@@ -266,7 +288,7 @@ public class CentreUpdater {
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(String.format("\t\t%s the centre for miType [%s] for user %s... done in [%s].", "getDefaultCentre", miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t\t%s the centre for miType [%s] for user %s... done in [%s].", "getDefaultCentre", miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
 
         return gdtm.getEntityCentreManager(miType, null);
     }
@@ -305,7 +327,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName) {
-        logger.debug(String.format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), globalManager.getUserProvider().getUser()));
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), globalManager.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
         // the name consists of 'userSpecificName' and 'DIFFERENCES_SUFFIX'
@@ -331,7 +353,7 @@ public class CentreUpdater {
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), globalManager.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), globalManager.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return differencesCentre;
     }
 
@@ -374,40 +396,40 @@ public class CentreUpdater {
     private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
         final Class<?> diffManagedType = managedType(root, differencesCentre);
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
-            if (!AbstractDomainTree.isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
-                if (AbstractDomainTree.isDoubleCriterion(diffManagedType, property)) {
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE, root, property)) {
+            if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
+                if (isDoubleCriterion(diffManagedType, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
                         targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
                     }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE2, root, property)) {
                         targetCentre.getFirstTick().setExclusive2(root, property, differencesCentre.getFirstTick().getExclusive2(root, property));
                     }
                 }
-                final Class<?> propertyType = StringUtils.isEmpty(property) ? diffManagedType : PropertyTypeDeterminator.determinePropertyType(diffManagedType, property);
-                if (EntityUtils.isDate(propertyType)) {
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_PREFIX, root, property)) {
+                final Class<?> propertyType = isEmpty(property) ? diffManagedType : determinePropertyType(diffManagedType, property);
+                if (isDate(propertyType)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_PREFIX, root, property)) {
                         targetCentre.getFirstTick().setDatePrefix(root, property, differencesCentre.getFirstTick().getDatePrefix(root, property));
                     }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_MNEMONIC, root, property)) {
                         targetCentre.getFirstTick().setDateMnemonic(root, property, differencesCentre.getFirstTick().getDateMnemonic(root, property));
                     }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.AND_BEFORE, root, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(AND_BEFORE, root, property)) {
                         targetCentre.getFirstTick().setAndBefore(root, property, differencesCentre.getFirstTick().getAndBefore(root, property));
                     }
                 }
 
-                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.OR_NULL, root, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(OR_NULL, root, property)) {
                     targetCentre.getFirstTick().setOrNull(root, property, differencesCentre.getFirstTick().getOrNull(root, property));
                 }
-                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.NOT, root, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(NOT, root, property)) {
                     targetCentre.getFirstTick().setNot(root, property, differencesCentre.getFirstTick().getNot(root, property));
                 }
 
-                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE, root, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
                     targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
                 }
-                if (AbstractDomainTree.isDoubleCriterionOrBoolean(diffManagedType, property)
-                        && differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE2, root, property)) {
+                if (isDoubleCriterionOrBoolean(diffManagedType, property)
+                        && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
                     targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
                 }
             }
@@ -426,7 +448,7 @@ public class CentreUpdater {
         // determine properties that were removed from targetCentre (default config) comparing to differencesCentre (currently saved config)
         final List<String> removedFromTarget = minus(diffCheckedPropertiesWithoutSummaries, targetCheckedPropertiesWithoutSummaries);
 
-        if (!EntityUtils.equalsEx(diffCheckedPropertiesWithoutSummaries, diffUsedProperties)) {
+        if (!equalsEx(diffCheckedPropertiesWithoutSummaries, diffUsedProperties)) {
             // remove removedFromTarget properties custom configuration (custom column order / visibility); this custom configuration was explicitly changed by the user, because it's different from diffCheckedProperties
             final List<String> diffUsedPropertiesWithoutRemovedProps = minus(diffUsedProperties, removedFromTarget);
             // apply resultant properties on top of targetCentre (default config)
@@ -443,16 +465,16 @@ public class CentreUpdater {
         final List<String> diffCheckedPropertiesWithoutRemovedProps = minus(diffCheckedPropertiesWithoutSummaries, removedFromTarget);
         for (final String property : diffCheckedPropertiesWithoutRemovedProps) {
             if (!propertyRemovedFromDomainType(diffManagedType, property)) {
-                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.WIDTH, root, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(WIDTH, root, property)) {
                     targetCentre.getSecondTick().setWidth(root, property, differencesCentre.getSecondTick().getWidth(root, property));
                 }
-                if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.GROW_FACTOR, root, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(GROW_FACTOR, root, property)) {
                     targetCentre.getSecondTick().setGrowFactor(root, property, differencesCentre.getSecondTick().getGrowFactor(root, property));
                 }
             }
         }
 
-        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.ALL_ORDERING, root, "")) {
+        if (differencesCentre.getFirstTick().isMetaValuePresent(ALL_ORDERING, root, "")) {
             // need to clear all previous orderings:
             final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
             for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
@@ -484,10 +506,10 @@ public class CentreUpdater {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         if (!isEntityItself) {
             try {
-                PropertyTypeDeterminator.determinePropertyType(diffManagedType, property);
+                determinePropertyType(diffManagedType, property);
                 return false;
             } catch (final Exception ex) {
-                logger.warn(String.format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()), ex);
+                logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()), ex);
                 return true;
             }
         } else {
@@ -533,46 +555,46 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer createDifferencesCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer originalCentre, final Class<AbstractEntity<?>> root, final IGlobalDomainTreeManager gdtm) {
-        logger.debug(String.format("\t%s centre for user %s...", "createDifferencesCentre", gdtm.getUserProvider().getUser()));
+        logger.debug(format("\t%s centre for user %s...", "createDifferencesCentre", gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
         final ICentreDomainTreeManagerAndEnhancer differencesCentre = copyCentre(centre, gdtm);
 
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
-            if (!AbstractDomainTree.isPlaceholder(property)) {
-                if (AbstractDomainTree.isDoubleCriterion(managedType(root, differencesCentre), property)) {
-                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getExclusive(root, property), originalCentre.getFirstTick().getExclusive(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.EXCLUSIVE, root, property);
+            if (!isPlaceholder(property)) {
+                if (isDoubleCriterion(managedType(root, differencesCentre), property)) {
+                    if (!equalsEx(differencesCentre.getFirstTick().getExclusive(root, property), originalCentre.getFirstTick().getExclusive(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(EXCLUSIVE, root, property);
                     }
-                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getExclusive2(root, property), originalCentre.getFirstTick().getExclusive2(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property);
-                    }
-                }
-                final Class<?> propertyType = StringUtils.isEmpty(property) ? managedType(root, differencesCentre) : PropertyTypeDeterminator.determinePropertyType(managedType(root, differencesCentre), property);
-                if (EntityUtils.isDate(propertyType)) {
-                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getDatePrefix(root, property), originalCentre.getFirstTick().getDatePrefix(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.DATE_PREFIX, root, property);
-                    }
-                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getDateMnemonic(root, property), originalCentre.getFirstTick().getDateMnemonic(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property);
-                    }
-                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getAndBefore(root, property), originalCentre.getFirstTick().getAndBefore(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.AND_BEFORE, root, property);
+                    if (!equalsEx(differencesCentre.getFirstTick().getExclusive2(root, property), originalCentre.getFirstTick().getExclusive2(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(EXCLUSIVE2, root, property);
                     }
                 }
-
-                if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getOrNull(root, property), originalCentre.getFirstTick().getOrNull(root, property))) {
-                    differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.OR_NULL, root, property);
-                }
-                if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getNot(root, property), originalCentre.getFirstTick().getNot(root, property))) {
-                    differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.NOT, root, property);
+                final Class<?> propertyType = isEmpty(property) ? managedType(root, differencesCentre) : determinePropertyType(managedType(root, differencesCentre), property);
+                if (isDate(propertyType)) {
+                    if (!equalsEx(differencesCentre.getFirstTick().getDatePrefix(root, property), originalCentre.getFirstTick().getDatePrefix(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(DATE_PREFIX, root, property);
+                    }
+                    if (!equalsEx(differencesCentre.getFirstTick().getDateMnemonic(root, property), originalCentre.getFirstTick().getDateMnemonic(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(DATE_MNEMONIC, root, property);
+                    }
+                    if (!equalsEx(differencesCentre.getFirstTick().getAndBefore(root, property), originalCentre.getFirstTick().getAndBefore(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(AND_BEFORE, root, property);
+                    }
                 }
 
-                if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getValue(root, property), originalCentre.getFirstTick().getValue(root, property))) {
-                    differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE, root, property);
+                if (!equalsEx(differencesCentre.getFirstTick().getOrNull(root, property), originalCentre.getFirstTick().getOrNull(root, property))) {
+                    differencesCentre.getFirstTick().markMetaValuePresent(OR_NULL, root, property);
                 }
-                if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType(root, differencesCentre), property)) {
-                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getValue2(root, property), originalCentre.getFirstTick().getValue2(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE2, root, property);
+                if (!equalsEx(differencesCentre.getFirstTick().getNot(root, property), originalCentre.getFirstTick().getNot(root, property))) {
+                    differencesCentre.getFirstTick().markMetaValuePresent(NOT, root, property);
+                }
+
+                if (!equalsEx(differencesCentre.getFirstTick().getValue(root, property), originalCentre.getFirstTick().getValue(root, property))) {
+                    differencesCentre.getFirstTick().markMetaValuePresent(VALUE, root, property);
+                }
+                if (isDoubleCriterionOrBoolean(managedType(root, differencesCentre), property)) {
+                    if (!equalsEx(differencesCentre.getFirstTick().getValue2(root, property), originalCentre.getFirstTick().getValue2(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(VALUE2, root, property);
                     }
                 }
             }
@@ -580,22 +602,22 @@ public class CentreUpdater {
 
         // extract widths that are changed and mark them
         for (final String property : differencesCentre.getSecondTick().checkedProperties(root)) {
-            if (!EntityUtils.equalsEx(differencesCentre.getSecondTick().getWidth(root, property), originalCentre.getSecondTick().getWidth(root, property))) {
-                differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.WIDTH, root, property);
+            if (!equalsEx(differencesCentre.getSecondTick().getWidth(root, property), originalCentre.getSecondTick().getWidth(root, property))) {
+                differencesCentre.getFirstTick().markMetaValuePresent(WIDTH, root, property);
             }
-            if (!EntityUtils.equalsEx(differencesCentre.getSecondTick().getGrowFactor(root, property), originalCentre.getSecondTick().getGrowFactor(root, property))) {
-                differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.GROW_FACTOR, root, property);
+            if (!equalsEx(differencesCentre.getSecondTick().getGrowFactor(root, property), originalCentre.getSecondTick().getGrowFactor(root, property))) {
+                differencesCentre.getFirstTick().markMetaValuePresent(GROW_FACTOR, root, property);
             }
         }
 
         // need to determine whether orderedProperties have been changed (as a whole) and mark diff centre if true:
-        if (!EntityUtils.equalsEx(differencesCentre.getSecondTick().orderedProperties(root), originalCentre.getSecondTick().orderedProperties(root))) {
-            differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.ALL_ORDERING, root, "");
+        if (!equalsEx(differencesCentre.getSecondTick().orderedProperties(root), originalCentre.getSecondTick().orderedProperties(root))) {
+            differencesCentre.getFirstTick().markMetaValuePresent(ALL_ORDERING, root, "");
         }
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(String.format("\t%s centre for user %s... done in [%s].", "createDifferencesCentre", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s centre for user %s... done in [%s].", "createDifferencesCentre", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return differencesCentre;
     }
 
@@ -612,12 +634,12 @@ public class CentreUpdater {
      */
     private static ICentreDomainTreeManagerAndEnhancer applyWebUIDefaultValues(final ICentreDomainTreeManagerAndEnhancer centre, final Class<AbstractEntity<?>> root) {
         for (final String includedProperty : centre.getRepresentation().includedProperties(root)) {
-            if (!AbstractDomainTree.isDummyMarker(includedProperty)) {
-                final String property = AbstractDomainTree.reflectionProperty(includedProperty);
+            if (!isDummyMarker(includedProperty)) {
+                final String property = reflectionProperty(includedProperty);
                 final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? managedType(root, centre) : PropertyTypeDeterminator.determinePropertyType(managedType(root, centre), property);
+                final Class<?> propertyType = isEntityItself ? managedType(root, centre) : determinePropertyType(managedType(root, centre), property);
 
-                if (EntityUtils.isString(propertyType)) {
+                if (isString(propertyType)) {
                     centre.getRepresentation().getFirstTick().setValueByDefault(root, includedProperty, null);
                 }
             }
@@ -647,7 +669,7 @@ public class CentreUpdater {
      * @return
      */
     private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName, final ICentreDomainTreeManagerAndEnhancer newDiffCentre) {
-        logger.debug(String.format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
         // the name consists of 'userSpecificName' and 'DIFFERENCES_SUFFIX'
@@ -656,7 +678,7 @@ public class CentreUpdater {
         // In case where diff centre was not ever initialised from persistent storage -- it should be initialised for the first time.
         // It guarantees that at the point of diff centre saving, the empty diff was already saved. See method 'updateDifferencesCentre' for more details.
         final ICentreDomainTreeManagerAndEnhancer staleDiffCentre = updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, userSpecificName);
-        final boolean diffChanged = !EntityUtils.equalsEx(staleDiffCentre, newDiffCentre);
+        final boolean diffChanged = !equalsEx(staleDiffCentre, newDiffCentre);
 
         if (diffChanged) {
             initCentre(gdtm, miType, userSpecificDiffName, newDiffCentre);
@@ -665,7 +687,7 @@ public class CentreUpdater {
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
 
     /**

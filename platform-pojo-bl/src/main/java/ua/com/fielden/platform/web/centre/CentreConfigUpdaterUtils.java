@@ -23,6 +23,10 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CentreConfigUpdaterUtils {
     
+    /** Private default constructor to prevent instantiation. */
+    private CentreConfigUpdaterUtils() {
+    }
+    
     /**
      * Creates ordered set of {@link CustomisableColumn} entities to be rendered in {@link CentreConfigUpdater} master.
      * 

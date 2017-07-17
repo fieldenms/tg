@@ -5,12 +5,14 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 
 /**
- * This interface defines how domain tree tick {@link ITickManager} can be managed in aspect of 'used properties'.<br>
- * <br> 
- * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances.<br>
- * <br>
- * The major aspects of tree management (context-specific) are following: <br>
- * 1. used properties (a subset in checked properties)<br>
+ * This interface defines how domain tree tick {@link ITickManager} can be managed in aspect of 'used properties'.
+ * <p> 
+ * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances.
+ * <p>
+ * Used properties include all properties that were 'used' from already checked properties (subset in checked properties).
+ * If the property becomes 'used' explicitly by {@link #use(Class, String, boolean)} method, it places into the end of {@link #usedProperties(Class)} list.
+ * The order of {@link #usedProperties(Class)} is important; custom order could be achieved by {@link #use(Class, String, boolean)} method with custom order
+ * of invocation.
  * 
  * @author TG Team
  * 
