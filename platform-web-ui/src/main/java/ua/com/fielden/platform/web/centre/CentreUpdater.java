@@ -38,6 +38,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
@@ -337,7 +338,7 @@ public class CentreUpdater {
         try {
             // init (or update) diff centre from persistent storage if exists
             globalManager.initEntityCentreManager(miType, userSpecificDiffName);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
             if (e.getMessage().startsWith("Unable to initialise a non-existent entity-centre instance for type")) {
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                 //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --

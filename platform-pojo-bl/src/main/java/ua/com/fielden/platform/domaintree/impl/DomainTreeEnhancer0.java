@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -87,7 +88,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         for (final Entry<Class<?>, Map<String, ByteArray>> entry : originalTypesAndEnhancedArrays.entrySet()) {
             final Map<String, ByteArray> arrays = Collections.unmodifiableMap(entry.getValue());
             if (arrays.isEmpty()) {
-                throw new IllegalArgumentException("Enhanced arrays should not be empty for type [" + entry.getKey() + "].");
+                throw new DomainTreeException("Enhanced arrays should not be empty for type [" + entry.getKey() + "].");
             }
             for (final Entry<String, ByteArray> pathAndArray : arrays.entrySet()) {
                 final Class<?> defineClass = classLoader.defineClass(pathAndArray.getValue().getArray());
@@ -241,7 +242,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
         final Class<?> managedType = getManagedType(root);
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
-            throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
+            throw new DomainTreeException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
         // logger.debug(String.format("Started to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -269,7 +270,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
         final Class<?> managedType = getManagedType(root);
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
-            throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
+            throw new DomainTreeException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
         }
         // logger.debug(String.format("Started to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         if (additionalAnnotations.length == 0) {
@@ -540,7 +541,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             }
         }
         if (existsInOtherExpressionsAsOriginationProperty) {
-            throw new IllegalArgumentException("Cannot remove a property that exists in other expressions as 'origination' property. See property [" + containingExpression + "].");
+            throw new DomainTreeException("Cannot remove a property that exists in other expressions as 'origination' property. See property [" + containingExpression + "].");
         }
         /////////////////
 

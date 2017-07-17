@@ -38,6 +38,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTre
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager0.AddToCriteriaTickManager0;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer.DomainTreeEnhancerWithPropertiesPopulation;
@@ -260,7 +261,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
         }
         if (getAnalysisManager(name) != null) {
-            throw new IllegalArgumentException("The analysis with name [" + name + "] already exists.");
+            throw new DomainTreeException("The analysis with name [" + name + "] already exists.");
         }
         // create a new instance and put to "current" map
         if (AnalysisType.PIVOT.equals(analysisType)) {
@@ -391,7 +392,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
         final IAbstractAnalysisDomainTreeManager mgr = getAnalysisManager(name);
         if (mgr == null) {
-            throw new IllegalArgumentException("The unknown analysis with name [" + name + "] can not be removed.");
+            throw new DomainTreeException("The unknown analysis with name [" + name + "] can not be removed.");
         }
         currentAnalyses.remove(name);
         acceptAnalysisManager(name);
@@ -462,13 +463,13 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     }
 
     /**
-     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     * Logs and throws an {@link DomainTreeException} error with specified message.
      *
      * @param message
      */
     private void error(final String message) {
         logger.error(message);
-        throw new IllegalArgumentException(message);
+        throw new DomainTreeException(message);
     }
 
     @Override

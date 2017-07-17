@@ -16,7 +16,7 @@ public interface IWidthManager {
      * <br>
      * 
      * This contract should not conflict with "checked properties" (or with "used properties" -- more accurately) contract. The conflict will produce an
-     * {@link IllegalArgumentException}.<br>
+     * {@link DomainTreeException}.<br>
      * <br>
      * 
      * @param root
@@ -32,7 +32,7 @@ public interface IWidthManager {
      * <br>
      * 
      * This action should not conflict with "checked properties" (or with "used properties" -- more accurately) contract. The conflict will produce an
-     * {@link IllegalArgumentException}.<br>
+     * {@link DomainTreeException}.<br>
      * <br>
      * 
      * @param root

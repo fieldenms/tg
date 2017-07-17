@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree;
 import java.util.List;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 
 /**
  * This interface defines how domain tree tick {@link ITickManager} can be managed in aspect of 'used properties'.
@@ -23,7 +24,7 @@ public interface IUsageManager {
      * "used".<br>
      * <br>
      * 
-     * This contract should not conflict with "checked properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This contract should not conflict with "checked properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * The method should be mainly concentrated on the "classes" of property's ticks that should be used (based on i.e. types, nature, parents, annotations assigned). If you
@@ -44,7 +45,7 @@ public interface IUsageManager {
      * If the property becomes 'used', it places into the end of {@link #usedProperties(Class)} list.
      * <br>
      * 
-     * The action should not conflict with "checked properties" contract. The conflict will produce an {@link IllegalArgumentException}.
+     * The action should not conflict with "checked properties" contract. The conflict will produce an {@link DomainTreeException}.
      * 
      * @param root
      *            -- a root type that contains property.

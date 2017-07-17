@@ -83,7 +83,7 @@ public interface IDomainTreeManager {
          * Defines a contract which ticks for which properties should be <b>mutably</b> checked in domain tree representation. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded / disabled properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded / disabled properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on the "classes" of property's ticks that should be checked (based on i.e. types, nature, parents, annotations assigned). If you
@@ -103,7 +103,7 @@ public interface IDomainTreeManager {
          * Marks a concrete property's tick to be <b>mutably</b> checked in domain tree representation. <br>
          * <br>
          * 
-         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link IllegalArgumentException}.
+         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link DomainTreeException}.
          * 
          * @param root
          *            -- a root type that contains property.

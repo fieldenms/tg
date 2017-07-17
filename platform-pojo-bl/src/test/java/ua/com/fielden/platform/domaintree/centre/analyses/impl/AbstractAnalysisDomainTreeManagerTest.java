@@ -19,6 +19,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrder
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -186,12 +187,12 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
                 try {
                     dtm().getFirstTick().isUsed(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().use(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "uncheckedDateExprProp");
@@ -203,18 +204,18 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
                 try {
                     dtm().getSecondTick().isUsed(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().use(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 // ordering
                 try {
                     dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "uncheckedAggExprProp1", "uncheckedAggExprProp2", "uncheckedAggExprProp3");
@@ -231,7 +232,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
                 try {
                     dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "intAggExprProp", "bigDecimalAggExprProp", "moneyAggExprProp");

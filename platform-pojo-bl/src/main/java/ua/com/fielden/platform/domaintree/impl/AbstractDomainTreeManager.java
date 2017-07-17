@@ -18,6 +18,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.IUsageManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -189,7 +190,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         @Override
         public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenAdded, final Boolean oldState) {
             if (hasBeenAdded == null) {
-                throw new IllegalArgumentException("'hasBeenAdded' cannot be 'null'.");
+                throw new DomainTreeException("'hasBeenAdded' cannot be 'null'.");
             }
             if (hasBeenAdded) { // property has been ADDED
                 if (!isDummyMarker(property)) {
@@ -384,7 +385,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not [un]check already 'excluded' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             if (tr.isDisabledImmutably(root, property)) {
-                throw new IllegalArgumentException("Could not [un]check 'disabled' property [" + property + "] in type [" + root.getSimpleName() + "].");
+                throw new DomainTreeException("Could not [un]check 'disabled' property [" + property + "] in type [" + root.getSimpleName() + "].");
             }
             checkSimply(root, property, check);
             return this;
@@ -494,7 +495,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         private void checkPropertyExistence(final List<String> props, final String property, final String message) {
             if (!props.contains(property)) {
-                throw new IllegalArgumentException(message);
+                throw new DomainTreeException(message);
             }
         }
 

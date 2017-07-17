@@ -19,6 +19,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
@@ -65,6 +66,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         manageTestingDTM_for_AbstractDomainTreeTest(dtmae.getRepresentation());
 
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtmae.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
                 dtmae.getEnhancer().apply();
@@ -233,6 +235,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.EXPRESSION based on date property.
         final String m = "Available functions are incorrect.";
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
                 dtm().getEnhancer().apply();
@@ -242,6 +245,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION based on date property.
         allLevelsWithCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
                 dtm().getEnhancer().apply();
@@ -269,6 +273,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 
         /////////////////////////////////////////////////// There are no count distinct //////////////////////////////////////////////
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
                 dtm().getEnhancer().apply();
@@ -277,6 +282,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         }, ""); // calculatedIntegerProp
 
         allLevelsWithCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
                 dtm().getEnhancer().apply();
@@ -359,7 +365,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             @Override
             public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
                 if (wasAddedOrRemoved == null) {
-                    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be null.");
+                    throw new DomainTreeException("'wasAddedOrRemoved' cannot be null.");
                 }
                 if (wasAddedOrRemoved) {
                     i++;
@@ -405,7 +411,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             @Override
             public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
                 if (wasAddedOrRemoved == null) {
-                    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be null.");
+                    throw new DomainTreeException("'wasAddedOrRemoved' cannot be null.");
                 }
                 if (wasAddedOrRemoved) {
                     i++;
@@ -445,7 +451,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             @Override
             public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
                 if (hasBeenDisabled == null) {
-                    throw new IllegalArgumentException("'hasBeenDisabled' cannot be null.");
+                    throw new DomainTreeException("'hasBeenDisabled' cannot be null.");
                 }
                 if (hasBeenDisabled) {
                     i++;
@@ -481,7 +487,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             @Override
             public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
                 if (hasBeenDisabled == null) {
-                    throw new IllegalArgumentException("'hasBeenDisabled' cannot be null.");
+                    throw new DomainTreeException("'hasBeenDisabled' cannot be null.");
                 }
                 if (hasBeenDisabled) {
                     i++;

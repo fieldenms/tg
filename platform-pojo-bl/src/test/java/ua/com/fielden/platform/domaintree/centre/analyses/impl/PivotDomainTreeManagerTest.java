@@ -13,6 +13,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
@@ -82,12 +83,12 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
                 try {
                     dtm().getFirstTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
                 try {
                     dtm().getFirstTick().setWidth(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
             }
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
@@ -99,12 +100,12 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
                 try {
                     dtm().getSecondTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
                 try {
                     dtm().getSecondTick().setWidth(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
             }
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");

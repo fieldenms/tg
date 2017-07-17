@@ -16,6 +16,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeMa
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToDistributionTickRepresentation;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -395,7 +396,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
                 return cat;
             }
         }
-        throw new IllegalArgumentException("Trying to determine a category from a property, which is not 'category marker' -- " + categoryMarker + ", from type "
+        throw new DomainTreeException("Trying to determine a category from a property, which is not 'category marker' -- " + categoryMarker + ", from type "
                 + managedType.getSimpleName() + ".");
     }
 

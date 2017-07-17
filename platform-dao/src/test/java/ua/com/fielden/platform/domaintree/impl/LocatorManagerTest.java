@@ -25,6 +25,7 @@ import ua.com.fielden.platform.domaintree.ILocatorManager.Type;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree;
@@ -119,25 +120,25 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
         try {
             /* */lm.acceptLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state0();
         try {
             /* */lm.discardLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state0();
         try {
             /* */lm.saveLocatorManagerGlobally(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state0();
         try {
             /* */lm.freezeLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state0();
     }
@@ -183,14 +184,14 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
         try {
             /* */lm.refreshLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state1();
         assert_synchronised_with_GlobalRepresentation();
         try {
             /* */lm.resetLocatorManagerToDefault(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state1();
         assert_synchronised_with_GlobalRepresentation();
@@ -284,25 +285,25 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
         try {
             lm.acceptLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state2();
         try {
             /* */lm.discardLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state2();
         try {
             /* */lm.saveLocatorManagerGlobally(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state2();
         try {
             /* */lm.freezeLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state2();
     }
@@ -350,13 +351,13 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
         try {
             /* */lm.refreshLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state3();
         try {
             /* */lm.resetLocatorManagerToDefault(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state3();
     }
@@ -488,25 +489,25 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
         try {
             /* */lm.refreshLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state4();
         try {
             /* */lm.saveLocatorManagerGlobally(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state4();
         try {
             /* */lm.freezeLocatorManager(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state4();
         try {
             /* */lm.resetLocatorManagerToDefault(root, property);
             fail("Should not be applicable.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         state4();
     }
