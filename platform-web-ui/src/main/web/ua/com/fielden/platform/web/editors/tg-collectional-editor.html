@@ -813,7 +813,7 @@
         
         _makeListSelectable: function () {
             this.$.input.classList.toggle("noselect", false);
-            delete document.body.style["cursor"];
+            document.body.style["cursor"] = '';
         }
     });
 </script>
