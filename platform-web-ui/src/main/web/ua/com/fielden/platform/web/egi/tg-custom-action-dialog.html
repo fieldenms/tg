@@ -501,10 +501,10 @@
 
             _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
                 this._lastElement = element;
+                const self = this;
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    var self = this;
                     // if there would be a master UI then need to subscribe for this dialog closing messages
                     if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
                         self._subscriptions = [];

@@ -40,7 +40,7 @@ public interface IOrderingRepresentation {
      * Defines a contract which properties (columns) should be <b>immutably</b> disabled for <b>ordering</b> in domain tree representation. <br>
      * <br>
      * 
-     * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * The method should be mainly concentrated on the "classes" of properties that should be disabled for <b>ordering</b> (based on i.e. types, nature, parents, annotations
@@ -62,7 +62,7 @@ public interface IOrderingRepresentation {
      * Marks a concrete property to be <b>immutably</b> disabled for <b>ordering</b> in domain tree representation. <br>
      * <br>
      * 
-     * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * The method should be mainly concentrated on "concrete" properties that should be disabled. If you want to define which "classes" of property's ticks should be disabled
@@ -82,7 +82,7 @@ public interface IOrderingRepresentation {
     /**
      * Returns a list of <b>ordered</b> properties (columns) for concrete <code>root</code> type.
      * 
-     * This action should not conflict with "excluded properties" contract ([root + ""] should not be excluded). The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This action should not conflict with "excluded properties" contract ([root + ""] should not be excluded). The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * @param root
@@ -94,7 +94,7 @@ public interface IOrderingRepresentation {
     /**
      * Sets a list of <b>ordered</b> properties (columns) for concrete <code>root</code> type.
      * 
-     * This action should not conflict with "excluded properties" contract ([root + ""] should not be excluded). The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This action should not conflict with "excluded properties" contract ([root + ""] should not be excluded). The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * @param root

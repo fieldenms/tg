@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
@@ -399,12 +400,12 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().disableImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");
@@ -415,7 +416,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
@@ -470,12 +471,12 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().disableImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");
@@ -486,7 +487,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
@@ -550,7 +551,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");
@@ -561,7 +562,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getFirstTick().isCheckedImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
@@ -628,7 +629,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");
@@ -639,7 +640,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().getSecondTick().isCheckedImmutably(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
@@ -746,7 +747,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().availableFunctions(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");
@@ -758,7 +759,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
                 try {
                     dtm().availableFunctions(MasterEntity.class, name);
                     fail("Excluded property should cause illegal argument exception.");
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //

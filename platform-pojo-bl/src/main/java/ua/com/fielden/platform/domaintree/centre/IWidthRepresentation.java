@@ -19,7 +19,7 @@ public interface IWidthRepresentation {
      * Defines a contract which properties (columns) have what <b>default</b> <i>widths</i>. <br>
      * <br>
      * 
-     * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * @param root
@@ -34,7 +34,7 @@ public interface IWidthRepresentation {
      * Marks a concrete property (column) to have specified <b>default</b> <i>width</i>. <br>
      * <br>
      * 
-     * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+     * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
      * <br>
      * 
      * @param root

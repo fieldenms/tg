@@ -30,12 +30,13 @@
             },
 
             ready: function () {
+                const tempSummary = [];
                 Array.prototype.forEach.call(Polymer.dom(this.$.summary_selection).getDistributedNodes(), function (item) {
-                    if (!this.summary) {
-                        this.summary = [];
-                    }
-                    this.summary.push(item);
-                }.bind(this));
+                    tempSummary.push(item);
+                });
+                if (tempSummary.length > 0) {
+                    this.summary = tempSummary;
+                }
                 this.customAction = Polymer.dom(this.$.action_selector).getDistributedNodes().length > 0 ? Polymer.dom(this.$.action_selector).getDistributedNodes()[0] : null;
             },
 

@@ -61,10 +61,10 @@ public interface IGlobalDomainTreeManager {
      * <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -86,10 +86,10 @@ public interface IGlobalDomainTreeManager {
      * non-principle entity-centre or <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -111,10 +111,10 @@ public interface IGlobalDomainTreeManager {
      * represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -137,13 +137,13 @@ public interface IGlobalDomainTreeManager {
      * actions trigger automatic unfreezing after that). The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-centre was not initialised.<br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -164,10 +164,10 @@ public interface IGlobalDomainTreeManager {
      * non-principle entity-centre or <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -189,13 +189,13 @@ public interface IGlobalDomainTreeManager {
      * principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-centre was not initialised.<br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -217,13 +217,13 @@ public interface IGlobalDomainTreeManager {
      * entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-centre was not initialised.<br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -244,13 +244,13 @@ public interface IGlobalDomainTreeManager {
      * saves a manager copy. The <b>originalName</b> and <b>newName</b> should represent a names of non-principle entity-centres or <code>null</code> for principle entity-centres. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-centre was not initialised.<br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -264,7 +264,7 @@ public interface IGlobalDomainTreeManager {
      * @param originalName
      *            -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre, which should be copied.
      * @param newName
-     *            -- should represent a not empty (if empty -- throws {@link IllegalArgumentException}) name of new entity-centre.
+     *            -- should represent a not empty (if empty -- throws {@link DomainTreeException}) name of new entity-centre.
      */
     IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName);
 
@@ -274,13 +274,13 @@ public interface IGlobalDomainTreeManager {
      * entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-centre was not initialised.<br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -306,18 +306,18 @@ public interface IGlobalDomainTreeManager {
     void copyDefaults(final Class<?> menuItemType, final String name);
 
     /**
-     * Removes the <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>. Throws {@link IllegalArgumentException} when manager does not
+     * Removes the <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>. Throws {@link DomainTreeException} when manager does not
      * exist. The manager to be removed can be persisted or not (but should exist - at least locally). The <b>name</b> should represent a name of non-principle entity-centre or
      * <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-centre was not initialised.<br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -337,10 +337,10 @@ public interface IGlobalDomainTreeManager {
      * Returns distinct names of persisted in the cloud <b>entity-centre managers</b> (NON-PRINCIPLE), that are ordered by ascending, for menu item type <b>menuItemType</b>.<br>
      * <br>
      * 
-     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}). Non-base users
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link DomainTreeException}). Non-base users
      * can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but
-     * cannot save/remove base user's reports (throws {@link IllegalArgumentException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
-     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br>
+     * cannot save/remove base user's reports (throws {@link DomainTreeException}). Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that
+     * are visible to him (its own reports including principle), but cannot remove principle report (throws {@link DomainTreeException}). <br>
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
@@ -398,7 +398,7 @@ public interface IGlobalDomainTreeManager {
      * {@link #isChangedEntityMasterManager(Class)}).<br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-master was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-master was not initialised.<br>
      * <br>
      * 
      * @param root
@@ -416,7 +416,7 @@ public interface IGlobalDomainTreeManager {
      * {@link #isChangedEntityMasterManager(Class)}).<br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when entity-master was not initialised.<br>
+     * Throws {@link DomainTreeException} when entity-master was not initialised.<br>
      * <br>
      * 
      * @param root

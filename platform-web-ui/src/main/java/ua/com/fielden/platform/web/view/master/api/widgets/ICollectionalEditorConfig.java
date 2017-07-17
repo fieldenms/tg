@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.helpers.ISkipValidation;
-import ua.com.fielden.platform.web.view.master.api.widgets.collectional.ICollectionalEditorConfig0;
+import ua.com.fielden.platform.web.view.master.api.widgets.collectional.ICollectionalEditorWithReordering;
 
 /**
  *
@@ -14,5 +14,5 @@ import ua.com.fielden.platform.web.view.master.api.widgets.collectional.ICollect
  *
  * @param <T>
  */
-public interface ICollectionalEditorConfig<T extends AbstractEntity<?>> extends ICollectionalEditorConfig0<T>, ISkipValidation<ICollectionalEditorConfig0<T>> {
+public interface ICollectionalEditorConfig<T extends AbstractEntity<?>> extends ICollectionalEditorWithReordering<T>, ISkipValidation<ICollectionalEditorWithReordering<T>> {
 }

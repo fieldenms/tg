@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree;
 
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 
@@ -21,7 +22,7 @@ public interface IGlobalDomainTreeRepresentation {
      * use {@link #excludeImmutably(Class, String)} method. <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
+     * Throws {@link DomainTreeException} when the property is not of {@link AbstractEntity} type.
      * 
      * @param propertyType
      *            -- a property type for which a default locator manager instance is asked.
@@ -37,7 +38,7 @@ public interface IGlobalDomainTreeRepresentation {
      * {@link #getLocatorManagerByDefault(Class)} method. <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type. Throws {@link Result} when non-base user is trying to set default locator
+     * Throws {@link DomainTreeException} when the property is not of {@link AbstractEntity} type. Throws {@link Result} when non-base user is trying to set default locator
      * (see {@link IGlobalDomainTreeManager#getUserProvider()}).
      * 
      * @param propertyType
