@@ -146,7 +146,7 @@
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                         <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
-                        <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, canReorderItems)]]">
+                        <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
                             <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:octoDots" style$="[[_computeStyleForResizingBox(selected)]]"></iron-icon>
                             <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                             <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
@@ -507,8 +507,8 @@
             return style;
         },
         
-        _computeItemStyle: function (_forReview, canReorderItems) {
-            let style = !_forReview ? 'cursor: pointer;' : 'cursor: default;';
+        _computeItemStyle: function (_forReview, _draggingItem, canReorderItems) {
+            let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
             style += canReorderItems ? "" : "padding-left: 22px;";
             return style;
         },
@@ -767,7 +767,6 @@
                     x: e.detail.x
                 }
                 this._draggingItem = e.model.item;
-                document.body.style.cursor = "move";
             }
         },
 
@@ -797,7 +796,6 @@
         _endItemReordering: function (e) {
             delete this._reorderingObject;
             this._draggingItem = null;
-            document.body.style.cursor = "auto";
         },
         
         _getIndexForElement: function (element) {
@@ -810,10 +808,12 @@
         
         _makeListUnselectable: function () {
             this.$.input.classList.toggle("noselect", true);
+            document.body.style["cursor"] = "-webkit-grabbing";
         },
         
         _makeListSelectable: function () {
             this.$.input.classList.toggle("noselect", false);
+            delete document.body.style["cursor"];
         }
     });
 </script>
