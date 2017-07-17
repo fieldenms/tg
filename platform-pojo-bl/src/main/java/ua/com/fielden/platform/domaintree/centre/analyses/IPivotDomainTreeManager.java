@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.analyses;
 
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 
 /**
@@ -13,10 +14,13 @@ import ua.com.fielden.platform.domaintree.centre.IWidthManager;
  * 
  */
 public interface IPivotDomainTreeManager extends IAbstractAnalysisDomainTreeManager {
+    @Override
     IPivotAddToDistributionTickManager getFirstTick();
 
+    @Override
     IPivotAddToAggregationTickManager getSecondTick();
 
+    @Override
     IPivotDomainTreeRepresentation getRepresentation();
 
     /**

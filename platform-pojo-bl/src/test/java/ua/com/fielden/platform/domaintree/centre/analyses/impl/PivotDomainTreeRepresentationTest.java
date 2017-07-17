@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 /**
@@ -110,28 +111,29 @@ public class PivotDomainTreeRepresentationTest extends AbstractAnalysisDomainTre
         super.test_that_excluded_properties_actions_for_second_ticks_cause_exceptions_for_all_specific_logic();
         final String message = "Excluded property should cause IllegalArgument exception.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set width by default
                 try {
                     dtm().getSecondTick().getWidthByDefault(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().setWidthByDefault(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 // get/set width by default
                 try {
                     dtm().getFirstTick().getWidthByDefault(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setWidthByDefault(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");

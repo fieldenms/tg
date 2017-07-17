@@ -46,7 +46,8 @@ import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.SortingProperty;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
+import ua.com.fielden.platform.web.centre.CustomisableColumn;
 
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
@@ -86,7 +87,8 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(UserRoleTokensUpdater.class);
             domainTypes.add(SecurityTokenInfo.class);
             domainTypes.add(CentreConfigUpdater.class);
-            domainTypes.add(SortingProperty.class);
+            domainTypes.add(CentreConfigUpdaterDefaultAction.class);
+            domainTypes.add(CustomisableColumn.class);
             domainTypes.add(CentreColumnWidthConfigUpdater.class);
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);

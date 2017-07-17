@@ -5,6 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.utils.Pair;
  * Current locator can be accessed using method <b>get</b>. At the very beginning of locator history it will be <code>null</code>. After first <b>refresh</b> locator will be
  * initialised from Global Representation. <b>Refresh</b> method also will override everytime it by fresh instance from Global Representation until it will become <i>LOCAL</i>.
  * <p>
- * Any action will throw {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
+ * Any action will throw {@link DomainTreeException} when the property is not of {@link AbstractEntity} type.
  * 
  * @author TG Team
  * 

@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -250,12 +253,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final ResultSetProp property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
                 cdtmae.getSecondTick().check(entityType, propertyName, true);
+                cdtmae.getSecondTick().use(entityType, propertyName, true);
                 cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                 if (growFactors.containsKey(propertyName)) {
                     cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
-                }
-                if (property.tooltipProp.isPresent()) {
-                    cdtmae.getSecondTick().check(entityType, treeName(property.tooltipProp.get()), true);
                 }
             }
         }
@@ -1208,26 +1209,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return element.createActionObject();
     }
 
-    /**
-     * Return DSL representation for property name.
-     *
-     * @param name
-     * @return
-     */
-    private static String dslName(final String name) {
-        return name.equals("") ? "this" : name;
-    }
-
-    /**
-     * Return domain tree representation for property name.
-     *
-     * @param name
-     * @return
-     */
-    private static String treeName(final String name) {
-        return name.equals("this") ? "" : name;
-    }
-
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {
         final String dslProp = dslName(critProp);
         return dslDefaultConfig.getValueMatchersForSelectionCriteria().isPresent()
@@ -1290,6 +1271,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     public Optional<IFetchProvider<T>> getAdditionalFetchProvider() {
         return dslDefaultConfig.getFetchProvider();
+    }
+
+    /**
+     * Returns fetch provider consisting only of 'tooltip properties': properties that are used as tooltips for other properties.
+     *
+     * @return
+     */
+    public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
+        final Set<String> tooltipProps = new LinkedHashSet<>();
+        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        resultSetProps.ifPresent(resultProps -> {
+            resultProps.stream().forEach(property -> {
+                if (property.tooltipProp.isPresent()) {
+                    tooltipProps.add(property.tooltipProp.get());
+                }
+            });
+        });
+        return tooltipProps.isEmpty() ? Optional.empty() : Optional.of(EntityUtils.fetchNotInstrumented(entityType).with(tooltipProps));
     }
 
     public Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

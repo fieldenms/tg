@@ -260,7 +260,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
-                        .addTopAction(CentreConfigActions.SORT_ACTION.mkAction()).also()
+                        .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
                         .addTopAction(StandardActions.EXPORT_ACTION.mkAction(TgFetchProviderTestEntity.class))
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).also()
                         .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
@@ -1279,7 +1279,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortcut("alt+d").
                         build())
                 .also()
-                .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
+                .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction())
                 .also()
                 .addTopAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality

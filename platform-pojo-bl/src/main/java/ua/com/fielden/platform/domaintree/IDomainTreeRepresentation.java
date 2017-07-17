@@ -154,7 +154,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * Defines a contract for what properties have which functions available. If no functions are available -- the calculated properties could not be created.<br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} if this contract conflicts with excluded properties contract.
+     * Throws {@link DomainTreeException} if this contract conflicts with excluded properties contract.
      * 
      * @param root
      *            -- a root type that contains property.
@@ -188,7 +188,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * Defines a contract which ticks for which properties should be <b>immutably</b> disabled in domain tree representation. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on the "classes" of property's ticks that should be disabled (based on i.e. types, nature, parents, annotations assigned). If
@@ -210,7 +210,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * Marks a concrete property's tick to be <b>immutably</b> disabled in domain tree representation. <br>
          * <br>
          * 
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on "concrete" property's ticks that should be disabled. If you want to define which "classes" of property's ticks should be
@@ -269,7 +269,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * Defines a contract which ticks for which properties should be <b>immutably</b> checked (and automatically disabled!) in domain tree representation. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on the "classes" of property's ticks that should be checked (based on i.e. types, nature, parents, annotations assigned). If you

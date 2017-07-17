@@ -52,7 +52,7 @@ public class TgEntityWithTimeZoneDatesWebUiConfig {
         final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgEntityWithTimeZoneDates.class);
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgEntityWithTimeZoneDates.class);
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgEntityWithTimeZoneDates.class);
-        final EntityActionConfig standardSortAction = CentreConfigActions.SORT_ACTION.mkAction();
+        final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
         final EntityCentreConfig<TgEntityWithTimeZoneDates> ecc = EntityCentreBuilder.centreFor(TgEntityWithTimeZoneDates.class)
                 .addTopAction(standardNewAction).also()

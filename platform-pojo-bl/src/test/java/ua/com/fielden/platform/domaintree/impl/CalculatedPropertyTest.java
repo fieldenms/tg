@@ -27,6 +27,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
@@ -989,7 +990,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
         try {
             dtm().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
             fail("Should be failed.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -1019,7 +1020,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
         try {
             dtm().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
             fail("Should be failed.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 

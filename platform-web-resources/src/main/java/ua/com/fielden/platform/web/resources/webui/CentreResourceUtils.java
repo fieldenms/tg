@@ -74,7 +74,9 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
-    private CentreResourceUtils() { }
+    /** Private default constructor to prevent instantiation. */
+    private CentreResourceUtils() {
+    }
     
     private enum RunActions {
         RUN("run"),
@@ -154,6 +156,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
+     * @param additionalFetchProviderForTooltipProperties
      * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
@@ -161,6 +164,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Map<String, Object> customObject,
             final M criteriaEntity,
             final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
@@ -168,6 +172,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (additionalFetchProviderForTooltipProperties.isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
         }
         if (queryEnhancerAndContext.isPresent()) {
             final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
@@ -206,6 +213,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
+        resultantCustomObject.put("visibleColumnsWithOrder", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(criteriaEntity.getEntityClass()));
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
@@ -218,6 +226,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param adhocParams
      * @param criteriaEntity
      * @param additionalFetchProvider
+     * @param additionalFetchProviderForTooltipProperties
      * @param queryEnhancerAndContext
      * @param createdByUserConstraint
      * @return
@@ -226,12 +235,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Map<String, Object> adhocParams,
             final M criteriaEntity,
             final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
-
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (additionalFetchProviderForTooltipProperties.isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
         }
         if (queryEnhancerAndContext.isPresent()) {
             final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
@@ -258,7 +270,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         .collect(Collectors.toMap(pair -> pair.getKey(), pair -> pair.getValue()));
         return columnWidths;
     }
-
+    
     /**
      * Generates annotation with mi type.
      *
@@ -389,23 +401,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
-        validationPrototype.setColumnWidthAdjuster((columnParameters) -> {
-            columnParameters.entrySet().forEach(entry -> {
-                if (entry.getValue().containsKey("width")) {
-                    final Integer width = entry.getValue().get("width");
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                }
-                if (entry.getValue().containsKey("growFactor")) {
-                    final Integer growFactor = entry.getValue().get("growFactor");
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                }
-            });
+        validationPrototype.setDefaultCentreSupplier(() -> CentreUpdater.getDefaultCentre(gdtm, miType));
+        validationPrototype.setCentreAdjuster((centreConsumer) -> {
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
+
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
         });
 

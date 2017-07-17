@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree;
@@ -74,7 +75,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
             fail("The save operation should be performed for fully accepted instance of entity-centre manager.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         locatorManager.acceptLocatorManager(ROOT, property);
         // save a box with locators
@@ -99,7 +100,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             managerForNonBaseUser.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
             fail("The save operation should be performed for fully accepted instance of entity-centre manager.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         locatorManager.acceptLocatorManager(ROOT, property);
         // save a box with locators
@@ -229,7 +230,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
             fail("Should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -239,7 +240,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "NON_PRINCIPLE_CENTRE_THAT_DOES_NOT_EXIST");
             fail("Should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -249,7 +250,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "NON_PRINCIPLE_CENTRE_THAT_DOES_NOT_EXIST");
             fail("Should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -469,27 +470,27 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             newNonBaseMgr.discardEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             newNonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "REPORT", "NEW-REPORT");
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             newNonBaseMgr.isChangedEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             newNonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -547,22 +548,22 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.freezeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "REPORT", "NEW_REPORT_TITLE");
             fail("Saving As is not permitted while report is freezed. Please do you job -- save/discard and SaveAs if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
             fail("Removing is not permitted while report is freezed. Please do you job -- save/discard and remove it if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         // change smth.
@@ -738,7 +739,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, null);
             fail("Removing of not own reports should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -759,7 +760,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, null);
             fail("Removing of not own reports should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -777,7 +778,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             baseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, null);
             fail("Removing of principle reports should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -798,12 +799,12 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
             fail("It is not own report. Should not be able to save.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE");
             fail("It is not own report. Should not be able to save.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE-DERIVED");
     }
@@ -943,17 +944,17 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         try {
             nonBaseMgr.discardMasterDomainTreeManager(MENU_ITEM_TYPE);
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             nonBaseMgr.saveMasterDomainTreeManager(MENU_ITEM_TYPE);
             fail("Should be initialised before.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         //	try {
         //	    nonBaseMgr.isChangedEntityMasterManager(MasterEntity.class);
         //	    fail("Should be initialised before.");
-        //	} catch (final IllegalArgumentException e) {
+        //	} catch (final DomainTreeException e) {
         //	}
     }
 
