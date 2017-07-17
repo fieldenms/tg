@@ -94,7 +94,7 @@
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
-            <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
+            <input id="searchInput" is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-down="_onDown" on-blur="_eventHandler" prevent-invalid-input>
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview, _entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
@@ -186,6 +186,21 @@
             
             _eventHandler: {
             	type: Function
+            },
+            
+            /**
+             * The mouse down event listener that selectes the text inside input when first time clicked.
+             */
+            _onDown: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        if (document.activeElement !== this.$.searchInput) {
+                            this.$.searchInput.select();
+                            this._preventEventBubbling(event);
+                        }
+                    }).bind(this);
+                }
             },
             
             _onInput: {
