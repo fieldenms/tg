@@ -521,7 +521,6 @@
                 	
                     const oldCurrBindingEntity = this._currBindingEntity;
                     if (oldCurrBindingEntity == null) {
-                        console.debug('binding-entity-did-not-appear: ', errorResult);
                         this.fire('binding-entity-did-not-appear', errorResult);
                     }
                 	
@@ -804,7 +803,6 @@
                 self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
-                    console.debug('binding-entity-appeared: ', self._currBindingEntity.type()._simpleClassName(), self._currBindingEntity);
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);

@@ -504,7 +504,7 @@
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    if (element.masterWithMaster || element.masterWithCentre) { // defer opening of master-with-master/centre's dialog until binding entity of embedded master/centre appears
+                    if (element.masterWithMaster || element.masterWithCentre) { // defer opening of master-with-master's / master-with-centre's dialog until binding-entity / egi-entities of embedded master / centre appear
                         const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
                         const resultsAppearedEvent = resultsName + '-appeared';
                         const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
