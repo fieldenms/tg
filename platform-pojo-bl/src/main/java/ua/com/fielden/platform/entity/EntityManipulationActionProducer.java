@@ -1,14 +1,18 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+
+import com.google.inject.Inject;
+
+import net.sf.jasperreports.olap.mapping.TuplePosition;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
-
-import com.google.inject.Inject;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
 
@@ -21,19 +25,24 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     protected T provideDefaultValues(final T entity) {
         if (entity.getContext() != null) {
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) entity.getContext();
-            final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
+            final AbstractEntity<?> currEntity = context.getSelectedEntities().isEmpty() ? null : context.getCurrEntity();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
-            final Class<AbstractEntity<?>> entityType;
-            if (context.getComputation().isPresent()) {
-                final Object computed = context.getComputation().get().apply(entity);
-                if (computed instanceof Class) { // it is assumed that computation function returns custom entity type of tg-entity-master to be displayed.
-                    entityType = (Class<AbstractEntity<?>>) computed;
-                } else {
-                    entityType = determineEntityType(currEntity, selCrit);
-                }
-            } else {
-                entityType = determineEntityType(currEntity, selCrit);
-            }
+            final Class<AbstractEntity<?>> entityType =                     
+                context.getComputation().map( computation -> {
+                        final Object computed = computation.apply(entity);
+                        // it is by convention that a computational context may return custom entity type of tg-entity-master to be displayed
+                        // if the type of the result if either Class or T2 representing a tuple of Type (Class) and ID (Long)
+                        if (computed instanceof Class) {
+                            return (Class<AbstractEntity<?>>) computed;
+                        } else if (computed instanceof T2) {
+                            final T2<Class<AbstractEntity<?>>, Long> typeAndId = (T2<Class<AbstractEntity<?>>, Long>) computed; 
+                            return typeAndId._1;
+                        } else {
+                            return determineEntityType(currEntity, selCrit);
+                        }
+                    })
+                .orElse(determineEntityType(currEntity, selCrit));
+            
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
@@ -54,6 +63,6 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
      */
     private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit) {
         return selCrit != null ? selCrit.getEntityClass() :
-               currEntity != null ? DynamicEntityClassLoader.getOriginalType(currEntity.getType()) : null;
+               currEntity != null ? getOriginalType(currEntity.getType()) : null;
     }
 }
