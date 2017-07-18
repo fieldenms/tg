@@ -234,6 +234,8 @@
 
                 // calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder) {
+                    this.fire('egi-entities-appeared', resultEntities);
+                    
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
@@ -263,6 +265,8 @@
                 }).bind(self);
 
                 self._postRunDefaultError = (function (errorResult) {
+                    this.fire('egi-entities-did-not-appear', errorResult);
+                    
                     // This function will be invoked after server-side error appear.
                     // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
                     console.warn("SERVER ERROR: ", errorResult);
