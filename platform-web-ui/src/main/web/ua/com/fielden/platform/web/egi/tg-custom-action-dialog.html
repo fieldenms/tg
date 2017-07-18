@@ -455,7 +455,7 @@
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                     return promise
-                                        .then(function (ironRequest) { // TODO can be something other than ironRequest?
+                                        .then(function (ironRequest) {
                                             /*var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
@@ -463,8 +463,11 @@
                                                     self._cachedElements[key] = element;
                                                 }
                                             }*/
-                                            // TODO what about ironRequest.successful === false case?
-                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                            if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
+                                                return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
+                                            } else {
+                                                return Promise.reject('Retrieval / saving promise was not successful.');
+                                            }
                                         })
                                         .catch(function (error) {
                                             self._finishErroneousOpening(error);
@@ -472,7 +475,7 @@
                                 } else {
                                     return Promise.resolve()
                                         .then(function () {
-                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                            return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
                                         })
                                         .catch(function (error) {
                                             self._finishErroneousOpening(error);
