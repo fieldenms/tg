@@ -470,7 +470,7 @@
                                             }
                                         })
                                         .catch(function (error) {
-                                            self._finishErroneousOpening(error);
+                                            self._finishErroneousOpening();
                                         });
                                 } else {
                                     return Promise.resolve()
@@ -478,7 +478,7 @@
                                             return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
                                         })
                                         .catch(function (error) {
-                                            self._finishErroneousOpening(error);
+                                            self._finishErroneousOpening();
                                         });
                                 }
                             })
@@ -525,6 +525,9 @@
                 }
             },
             
+            /**
+             * Starts actual opening of the dialog: adds 'closing' subscriptions, performs refitting and invokes this.open().
+             */
             _openOnce: function (closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent) {
                 this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
                 const self = this;
@@ -556,18 +559,27 @@
                 }.bind(this), 200);
             },
             
+            /**
+             * Performes cleaning tasks in case where dialog opening should not occur.
+             */
             _doNotOpen: function (resultsAppearedEvent, resultsDidNotAppearEvent) {
                 this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
-                this._finishErroneousOpening('error');
+                this._finishErroneousOpening();
             },
             
-            _finishErroneousOpening: function (error) {
+            /**
+             * Performs tasks after erroneus completion of dialog's action execution.
+             */
+            _finishErroneousOpening: function () {
                 this._setIsRunning(false);
                 if (this._lastAction) {
                     this._lastAction.restoreActiveElement();
                 }
             },
             
+            /**
+             * Removes listeners that open dialog for master-with-master and master-with-centre cases.
+             */
             _clearOpeningListeners: function (resultsAppearedEvent, resultsDidNotAppearEvent) {
                 if (this._openOnceConcrete && resultsAppearedEvent) {
                     this.removeEventListener(resultsAppearedEvent, this._openOnceConcrete);
