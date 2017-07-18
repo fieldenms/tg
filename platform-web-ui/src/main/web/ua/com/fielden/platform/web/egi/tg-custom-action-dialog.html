@@ -227,7 +227,6 @@
 
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
-                this._doNotOpen = this._doNotOpen.bind(this);
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
 
                 this._setIsRunning(false);
@@ -456,7 +455,7 @@
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                     return promise
-                                        .then(function () {
+                                        .then(function (ironRequest) { // TODO can be something other than ironRequest?
                                             /*var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
@@ -464,6 +463,7 @@
                                                     self._cachedElements[key] = element;
                                                 }
                                             }*/
+                                            // TODO what about ironRequest.successful === false case?
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
                                         .catch(function (error) {
@@ -501,21 +501,29 @@
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
-                    this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
-                    
-                    if (element.masterWithMaster) { // defer opening of master-with-master's dialog until binding entity of embedded master appears
-                        this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action);
-                        this.addEventListener('binding-entity-appeared', this._openOnceConcrete);
-                        this.addEventListener('binding-entity-did-not-appear', this._doNotOpen);
+                    if (element.masterWithMaster || element.masterWithCentre) { // defer opening of master-with-master/centre's dialog until binding entity of embedded master/centre appears
+                        const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
+                        const resultsAppearedEvent = resultsName + '-appeared';
+                        const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
+                        
+                        this.addEventListener(resultsAppearedEvent, this._focusDialogWithInput);
+                        this.addEventListener(resultsAppearedEvent, this._fitWhenFirstTimeOpened);
+                        
+                        this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent);
+                        this.addEventListener(resultsAppearedEvent, this._openOnceConcrete);
+                        this._doNotOpenConcrete = this._doNotOpen.bind(this, resultsAppearedEvent, resultsDidNotAppearEvent);
+                        this.addEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
                     } else {
-                        this._openOnce(closeEventChannel, closeEventTopics, action);
+                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
+                        this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
+                        
+                        this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
                     }
                 }
             },
             
-            _openOnce: function (closeEventChannel, closeEventTopics, action) {
-                this._clearOpeningListeners();
+            _openOnce: function (closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent) {
+                this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
                 const self = this;
                 // if there would be a master UI then need to subscribe for this dialog closing messages
                 if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
@@ -545,9 +553,9 @@
                 }.bind(this), 200);
             },
             
-            _doNotOpen: function (error) {
-                this._clearOpeningListeners();
-                this._finishErroneousOpening(error);
+            _doNotOpen: function (resultsAppearedEvent, resultsDidNotAppearEvent) {
+                this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
+                this._finishErroneousOpening('error');
             },
             
             _finishErroneousOpening: function (error) {
@@ -557,11 +565,14 @@
                 }
             },
             
-            _clearOpeningListeners: function () {
-                if (this._openOnceConcrete) {
-                    this.removeEventListener('binding-entity-appeared', this._openOnceConcrete);
-                    this.removeEventListener('binding-entity-did-not-appear', this._doNotOpen);
+            _clearOpeningListeners: function (resultsAppearedEvent, resultsDidNotAppearEvent) {
+                if (this._openOnceConcrete && resultsAppearedEvent) {
+                    this.removeEventListener(resultsAppearedEvent, this._openOnceConcrete);
                     this._openOnceConcrete = null;
+                }
+                if (this._doNotOpenConcrete && resultsDidNotAppearEvent) {
+                    this.removeEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
+                    this._doNotOpenConcrete = null;
                 }
             },
             
