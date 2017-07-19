@@ -625,13 +625,27 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
 
         final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm).setCentreContextHolder(centreContextHolder);
-        criteriaEntity.setExportQueryRunner((final Map<String, Object> customObject) -> {
-            return runExportQuery(webUiConfig, serverGdtm, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject);
-        });
+        criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, serverGdtm, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject));
         return criteriaEntity;
     }
-    
-    private static <T extends AbstractEntity<?>> List<AbstractEntity<?>> runExportQuery(
+
+    /**
+     * A method to stream entities based on the centre query, including various transformations such as custom properties etc.
+     * It is used as part of initialisation for an export query runner.
+     * 
+     * @param webUiConfig
+     * @param serverGdtm
+     * @param userProvider
+     * @param companionFinder
+     * @param critGenerator
+     * @param centreContextHolder
+     * @param criteriaEntity
+     * @param adhocParams
+     * @param utils
+     * 
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> Stream<AbstractEntity<?>> stream(
         final IWebUiConfig webUiConfig, 
         final IServerGlobalDomainTreeManager serverGdtm, 
         final IUserProvider userProvider, 
@@ -641,22 +655,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         
         final CentreContextHolder centreContextHolder, 
         final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
-        final Map<String, Object> customObject
+        final Map<String, Object> adhocParams
     ) {
         final Class<? extends MiWithConfigurationSupport<?>> miType = EntityResourceUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
-        customObject.putAll(centreContextHolder.getCustomObject());
+        adhocParams.putAll(centreContextHolder.getCustomObject());
         // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
         // if the export() invocation occurs on the centre that warrants data generation
         // then for an entity centre configuration check if a generator was provided
         final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
 
-        final Pair<Map<String, Object>, List<?>> pair =
-                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
-                        customObject,
+        final Stream<AbstractEntity<?>> stream =
+                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithStream(
+                        adhocParams,
                         appliedCriteriaEntity,
                         centre.getAdditionalFetchProvider(),
+                        centre.getAdditionalFetchProviderForTooltipProperties(),
                         CriteriaResource.createQueryEnhancerAndContext(
                                 webUiConfig,
                                 companionFinder,
@@ -674,14 +689,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
                         createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(EntityResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
 
-        if (pair.getValue() == null) {
-            return new ArrayList<AbstractEntity<?>>();
-        } else {
-            CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
-            return (List<AbstractEntity<?>>) pair.getValue();
-        }
+        return CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(
+                centre, 
+                centre.getCustomPropertiesDefinitions(), 
+                centre.getCustomPropertiesAsignmentHandler(), 
+                stream);
     }
-    
+
     /**
      * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
      *

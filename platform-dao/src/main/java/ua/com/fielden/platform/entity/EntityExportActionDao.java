@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.entity;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -69,7 +65,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         } else {
             final Set<Long> selectedEntityIds = entity.getSelectedEntityIds();
             if (selectedEntityIds.isEmpty()) {
-            final Long[] ids = entity.getContext().getSelectedEntities().stream().map(ent -> ent.getId()).toArray(size -> new Long[size]);
+                throw Result.failure("Please select at least one entry to export.");
+            }
+            final Long[] ids = selectedEntityIds.stream().toArray(size -> new Long[size]);
             adhocParams.put("ids", ids);
             entities = selectionCrit.exportQueryRunner().apply(adhocParams);
         }

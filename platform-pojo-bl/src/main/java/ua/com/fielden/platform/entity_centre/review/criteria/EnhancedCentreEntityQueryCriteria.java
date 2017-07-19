@@ -8,8 +8,6 @@ import java.util.stream.Stream;
 
 import com.google.inject.Inject;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -29,12 +27,12 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
-    private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
-    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
      */
+    private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
+    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
     private CentreContextHolder centreContextHolder;
     
     /**
