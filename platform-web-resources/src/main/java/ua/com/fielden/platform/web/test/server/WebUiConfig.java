@@ -27,7 +27,6 @@ import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
@@ -1340,7 +1339,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addTopAction(
                         action(EntityExportAction.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().withMasterEntity().build())
+                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
