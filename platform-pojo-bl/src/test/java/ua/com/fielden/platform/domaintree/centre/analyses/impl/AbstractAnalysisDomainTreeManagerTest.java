@@ -18,8 +18,8 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -152,6 +152,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         // checked properties, mutated_by_Check_method
         final String message = "Checked property, defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, name)) {
                     dtm().getFirstTick().check(MasterEntity.class, name, false);
@@ -179,40 +180,42 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Unchecked property should cause IllegalArgument exception.";
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 // FIRST TICK
                 // usage manager
                 try {
                     dtm().getFirstTick().isUsed(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().use(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "uncheckedDateExprProp");
         oneLevel(new IAction() {
+            @Override
             public void action(final String name) {
                 // SECOND TICK
                 //usage manager
                 try {
                     dtm().getSecondTick().isUsed(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().use(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 // ordering
                 try {
                     dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "uncheckedAggExprProp1", "uncheckedAggExprProp2", "uncheckedAggExprProp3");
@@ -222,13 +225,14 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     public void test_that_unused_properties_ToggleOrdering_action_for_second_tick_cause_exception() {
         final String message = "Unused property should cause IllegalArgument exception.";
         oneLevel(new IAction() {
+            @Override
             public void action(final String name) {
                 // SECOND TICK
                 // ordering
                 try {
                     dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "intAggExprProp", "bigDecimalAggExprProp", "moneyAggExprProp");
@@ -305,13 +309,13 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("value is incorrect.", Arrays.asList("booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
         dtm().getFirstTick().use(MasterEntity.class, "dateExprProp", true);
         assertTrue("The property should be used", dtm().getFirstTick().isUsed(MasterEntity.class, "dateExprProp"));
-        assertEquals("value is incorrect.", Arrays.asList("dateExprProp", "booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
+        assertEquals("value is incorrect.", Arrays.asList("booleanProp", "dateExprProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
         dtm().getFirstTick().use(MasterEntity.class, "simpleEntityProp", true);
         assertTrue("The property should be used", dtm().getFirstTick().isUsed(MasterEntity.class, "simpleEntityProp"));
-        assertEquals("value is incorrect.", Arrays.asList("dateExprProp", "simpleEntityProp", "booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
+        assertEquals("value is incorrect.", Arrays.asList("booleanProp", "dateExprProp", "simpleEntityProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
         dtm().getFirstTick().use(MasterEntity.class, "dateExprProp", false);
         assertFalse("The property shouldn't be used", dtm().getFirstTick().isUsed(MasterEntity.class, "dateExprProp"));
-        assertEquals("value is incorrect.", Arrays.asList("simpleEntityProp", "booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
+        assertEquals("value is incorrect.", Arrays.asList("booleanProp", "simpleEntityProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
         dtm().getFirstTick().use(MasterEntity.class, "booleanProp", false);
         assertFalse("The property shouldn't be used", dtm().getFirstTick().isUsed(MasterEntity.class, "booleanProp"));
         assertEquals("value is incorrect.", Arrays.asList("simpleEntityProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
@@ -331,13 +335,13 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("value is incorrect.", Arrays.asList("moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
         assertTrue("The property should be used", dtm().getSecondTick().isUsed(MasterEntity.class, "intAggExprProp"));
-        assertEquals("value is incorrect.", Arrays.asList("intAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+        assertEquals("value is incorrect.", Arrays.asList("moneyAggExprProp", "intAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", true);
         assertTrue("The property should be used", dtm().getSecondTick().isUsed(MasterEntity.class, "bigDecimalAggExprProp"));
-        assertEquals("value is incorrect.", Arrays.asList("intAggExprProp", "bigDecimalAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+        assertEquals("value is incorrect.", Arrays.asList("moneyAggExprProp", "intAggExprProp", "bigDecimalAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
         assertFalse("The property shouldn't be used", dtm().getSecondTick().isUsed(MasterEntity.class, "intAggExprProp"));
-        assertEquals("value is incorrect.", Arrays.asList("bigDecimalAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+        assertEquals("value is incorrect.", Arrays.asList("moneyAggExprProp", "bigDecimalAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", false);
         assertFalse("The property shouldn't be used", dtm().getSecondTick().isUsed(MasterEntity.class, "moneyAggExprProp"));
         assertEquals("value is incorrect.", Arrays.asList("bigDecimalAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
@@ -364,79 +368,6 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
     @Override
     public void test_that_WeakPropertyCheckingListeners_work() {
-    }
-
-    @Test
-    public void test_that_PropertyUsageListeners_work() {
-        i = 0;
-        j = 0;
-        final IPropertyUsageListener listener = new IPropertyUsageListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-                if (hasBeenUsed == null) {
-                    throw new IllegalArgumentException("'hasBeenUsed' cannot be null.");
-                }
-                if (hasBeenUsed) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().getFirstTick().addPropertyUsageListener(listener);
-
-        assertEquals("Incorrect value 'i'.", 0, i);
-        assertEquals("Incorrect value 'j'.", 0, j);
-
-        final String property = "booleanProp";
-        dtm().getFirstTick().check(MasterEntity.class, property, true);
-        dtm().getFirstTick().use(MasterEntity.class, property, true);
-        assertEquals("Incorrect value 'i'.", 1, i);
-        assertEquals("Incorrect value 'j'.", 0, j);
-
-        dtm().getFirstTick().use(MasterEntity.class, property, false);
-        assertEquals("Incorrect value 'i'.", 1, i);
-        assertEquals("Incorrect value 'j'.", 1, j);
-
-        dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
-        assertEquals("Incorrect value 'i'.", 1, i);
-        assertEquals("Incorrect value 'j'.", 1, j);
-    }
-
-    @Test
-    public void test_that_WeakPropertyUsageListeners_work() {
-        i = 0;
-        j = 0;
-        IPropertyUsageListener listener = new IPropertyUsageListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-                if (hasBeenUsed == null) {
-                    throw new IllegalArgumentException("'hasBeenUsed' cannot be null.");
-                }
-                if (hasBeenUsed) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().getFirstTick().addWeakPropertyUsageListener(listener);
-
-        assertEquals("Incorrect value 'i'.", 0, i);
-        assertEquals("Incorrect value 'j'.", 0, j);
-
-        final String property = "booleanProp";
-        dtm().getFirstTick().check(MasterEntity.class, property, true);
-        dtm().getFirstTick().use(MasterEntity.class, property, true);
-        assertEquals("Incorrect value 'i'.", 1, i);
-        assertEquals("Incorrect value 'j'.", 0, j);
-
-        listener = null;
-        System.gc();
-
-        dtm().getFirstTick().use(MasterEntity.class, property, false);
-        assertEquals("Incorrect value 'i'.", 1, i);
-        assertEquals("Incorrect value 'j'.", 0, j);
     }
 
     @Test

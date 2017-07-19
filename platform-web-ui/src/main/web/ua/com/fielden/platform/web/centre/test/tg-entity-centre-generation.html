@@ -64,13 +64,13 @@
         test('generation occurs during simple run', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                 
                 assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     
                     assert.strictEqual(resultEntities.length, 10, 'The count of resultant entities for the centre should be 10 (DEMO single criterion). Page capacity is 30 for this centre.');
                     
@@ -95,13 +95,13 @@
         test('generation does not occur during sorting run', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                 
                 assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     
                     assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after sorting. Page capacity is 30 for this centre.');
                     
@@ -126,13 +126,13 @@
         test('generation does not occur during page refresh', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                 
                 assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     
                     assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after page refresh. Page capacity is 30 for this centre.');
                     
@@ -157,14 +157,14 @@
         test('generation does not occur during next page', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                 
                 assert.strictEqual(resultEntities.length, 30, 'The count of resultant entities for the centre should be 30 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
                 assert.strictEqual(centre.retrievedTotals.get('total_count_'), 45, 'The count of all entities for the centre should be 45 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     
                     assert.strictEqual(resultEntities.length, 15, 'The count of resultant entities for the centre should be 15 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
                     assert.strictEqual(centre.retrievedTotals.get('total_count_'), 45, 'The count of all entities for the centre should be 45 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
@@ -190,8 +190,8 @@
         test('first run generation does not occur in case of generator exception', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                 
                 assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                 assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
@@ -219,16 +219,16 @@
         test('consequent generation exceptions does not alter previous centre results and ability to interact with them', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                 
                 assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25 after generation.');
                 
                 // go to selection criteria
                 centre._activateSelectionCriteriaView();
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
 
                     assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                     assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
@@ -243,8 +243,8 @@
                         
                         var firstTime = false;
                         
-                        centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-                            old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                        centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                            old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                             
                             assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should remain 25 after page refresh.');
                             

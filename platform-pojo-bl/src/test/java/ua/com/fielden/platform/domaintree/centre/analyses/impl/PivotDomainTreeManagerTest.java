@@ -13,6 +13,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
@@ -76,33 +77,35 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         final String message = "Unused property should cause IllegalArgument exception.";
 
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set width
                 try {
                     dtm().getFirstTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
                 try {
                     dtm().getFirstTick().setWidth(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
             }
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
 
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set width
                 try {
                     dtm().getSecondTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
                 try {
                     dtm().getSecondTick().setWidth(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException | ReflectionException e) {
+                } catch (final DomainTreeException | ReflectionException e) {
                 }
             }
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
@@ -115,6 +118,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         final String property3 = "entityProp.entityProp.booleanProp";
 
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getFirstTick().check(MasterEntity.class, name, true);
                 dtm().getFirstTick().use(MasterEntity.class, name, true);
@@ -159,6 +163,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         final String property = "intAggExprProp";
 
         oneLevel(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getSecondTick().check(MasterEntity.class, name, true);
                 dtm().getSecondTick().use(MasterEntity.class, name, true);
@@ -205,7 +210,7 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
         assertEquals("The list of used properties for second tick is incorrect.", Arrays.asList("moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
-        assertEquals("The list of used properties for second tick is incorrect.", Arrays.asList("intAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+        assertEquals("The list of used properties for second tick is incorrect.", Arrays.asList("moneyAggExprProp", "intAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
         assertEquals("The ordering list of used properties for the second tick is incorrect", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
@@ -226,20 +231,12 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
         dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", true);
-        assertEquals("List of used properties for the second tick is incorrect.", Arrays.asList("intAggExprProp", "moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
+        assertEquals("List of used properties for the second tick is incorrect.", Arrays.asList("moneyAggExprProp", "intAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
         assertEquals("List of used properties for the first tick and second usage manager is incorrect.", Arrays.asList("dateExprProp"), dtm().getFirstTick().getSecondUsageManager().usedProperties(MasterEntity.class));
         dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", false);
         dtm().getFirstTick().getSecondUsageManager().use(MasterEntity.class, "dateExprProp", false);
         assertEquals("List of used properties for the first tick and second usage manager is incorrect.", Arrays.asList(), dtm().getFirstTick().getSecondUsageManager().usedProperties(MasterEntity.class));
-    }
-
-    @Override
-    public void test_that_PropertyUsageListeners_work() {
-    }
-
-    @Override
-    public void test_that_WeakPropertyUsageListeners_work() {
     }
 
     @Override

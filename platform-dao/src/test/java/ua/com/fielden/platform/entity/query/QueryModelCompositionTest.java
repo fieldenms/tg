@@ -55,6 +55,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -397,6 +398,89 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         assertEquals("models are different", exp, entSubQry(qry).getYields());
     }
 
+
+    //////////////////////////////////////////////////////// Yielding All ////////////////////////////////////////////////////////////////
+
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_without_alias() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).yieldAll().modelAsEntity(MODEL);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("make"), "make"));
+        exp.addYield(new Yield(new EntProp("id"), "id"));
+        exp.addYield(new Yield(new EntProp("key"), "key"));
+        exp.addYield(new Yield(new EntProp("desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("version"), "version"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+
+    @Test
+    public void yield_all_works_for_synthetic_entity_type_based_source_without_alias() {
+        final EntityResultQueryModel<TgAverageFuelUsage> qry = select(AVERAGE_FUEL_USAGE).yieldAll().modelAsEntity(AVERAGE_FUEL_USAGE);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("key"), "key"));
+        exp.addYield(new Yield(new EntProp("qty"), "qty"));
+        exp.addYield(new Yield(new EntProp("id"), "id"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_with_alias() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).as("m").yieldAll().modelAsEntity(MODEL);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("m.make"), "make"));
+        exp.addYield(new Yield(new EntProp("m.id"), "id"));
+        exp.addYield(new Yield(new EntProp("m.key"), "key"));
+        exp.addYield(new Yield(new EntProp("m.desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("m.version"), "version"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_synthetic_entity_type_based_source_with_alias() {
+        final EntityResultQueryModel<TgAverageFuelUsage> qry = select(AVERAGE_FUEL_USAGE).as("afu").yieldAll().modelAsEntity(AVERAGE_FUEL_USAGE);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("afu.key"), "key"));
+        exp.addYield(new Yield(new EntProp("afu.qty"), "qty"));
+        exp.addYield(new Yield(new EntProp("afu.id"), "id"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_with_subsequent_yields() {
+        final AggregatedResultQueryModel qry = select(MODEL).as("m").yieldAll().yield().val(100).as("hundred").modelAsAggregate();
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("m.make"), "make"));
+        exp.addYield(new Yield(new EntProp("m.id"), "id"));
+        exp.addYield(new Yield(new EntProp("m.key"), "key"));
+        exp.addYield(new Yield(new EntProp("m.desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("m.version"), "version"));
+        exp.addYield(new Yield(new EntValue(100), "hundred"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_without_subsequent_yields_and_aggregate_result() {
+        final AggregatedResultQueryModel qry = select(MODEL).as("m").yieldAll().modelAsAggregate();
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("m.make"), "make"));
+        exp.addYield(new Yield(new EntProp("m.id"), "id"));
+        exp.addYield(new Yield(new EntProp("m.key"), "key"));
+        exp.addYield(new Yield(new EntProp("m.desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("m.version"), "version"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_synthetic_entity_type_based_source_with_subsequent_yields() {
+        final AggregatedResultQueryModel qry = select(AVERAGE_FUEL_USAGE).yieldAll().yield().val(100).as("hundred").modelAsAggregate();
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("key"), "key"));
+        exp.addYield(new Yield(new EntProp("qty"), "qty"));
+        exp.addYield(new Yield(new EntProp("id"), "id"));
+        exp.addYield(new Yield(new EntValue(100), "hundred"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
     @Test
     @Ignore
     public void test_validation_of_yielded_tree_with_broken_hierarchy() {

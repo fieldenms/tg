@@ -20,6 +20,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -160,7 +161,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         try {
             dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp");
             fail("Excluded property should cause illegal argument exception.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -241,7 +242,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         try {
             dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "critOnlyProp");
             fail("Excluded property should cause illegal argument exception.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -328,24 +329,24 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
                 try {
                     dtm().getSecondTick().isOrderingDisabledImmutably(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
 
                 // get/set Ordering by default
                 try {
                     dtm().getSecondTick().orderedPropertiesByDefault(EvenSlaverEntity.class);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().setOrderedPropertiesByDefault(EvenSlaverEntity.class, new ArrayList<Pair<String, Ordering>>());
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");

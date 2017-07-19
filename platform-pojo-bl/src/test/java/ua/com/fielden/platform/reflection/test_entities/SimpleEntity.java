@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 @KeyTitle(value = "Key")
 @DescTitle(value = "Description")
 public class SimpleEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

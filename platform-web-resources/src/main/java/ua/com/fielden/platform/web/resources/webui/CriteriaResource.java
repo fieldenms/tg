@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -294,6 +295,7 @@ public class CriteriaResource extends ServerResource {
                             customObject,
                             previouslyRunCriteriaEntity,
                             centre.getAdditionalFetchProvider(),
+                            centre.getAdditionalFetchProviderForTooltipProperties(),
                             queryEnhancerAndContext,
                             // There could be cases where the generated data and the queried data would have different types.
                             // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
@@ -315,18 +317,22 @@ public class CriteriaResource extends ServerResource {
                 }
                 pair.getKey().put("renderingHints", renderingHints);
             } else {
-                pair.getKey().put("renderingHints", new ArrayList<Object>());
+                pair.getKey().put("renderingHints", new ArrayList<>());
             }
 
-            enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
+            final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+                    centre, 
+                    centre.getCustomPropertiesDefinitions(), 
+                    centre.getCustomPropertiesAsignmentHandler(), 
+                    ((List<AbstractEntity<?>>) pair.getValue()).stream());
 
-            final ArrayList<Object> list = new ArrayList<Object>();
+            final ArrayList<Object> list = new ArrayList<>();
             list.add(isRunning ? previouslyRunCriteriaEntity : null);
             list.add(pair.getKey());
 
             // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
             // FIXME Need to investigate why this is the case.
-            list.addAll(pair.getValue());
+            processedEntities.forEach(entity -> list.add(entity));
 
             // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria running.");
@@ -398,37 +404,32 @@ public class CriteriaResource extends ServerResource {
      * @param customPropertiesAsignmentHandler
      * @param entities
      */
-    public static void enhanceResultEntitiesWithCustomPropertyValues(
+    public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithCustomPropertyValues(
             final EntityCentre<AbstractEntity<?>> centre, 
             final Optional<List<ResultSetProp>> propertiesDefinitions, 
             final Optional<Class<? extends ICustomPropsAssignmentHandler>> customPropertiesAsignmentHandler, 
-            final List<AbstractEntity<?>> entities) {
-        if (customPropertiesAsignmentHandler.isPresent()) {
-            setCustomValues(entities, centre.createAssignmentHandlerInstance(customPropertiesAsignmentHandler.get()));
-        }
+            final Stream<AbstractEntity<?>> entities) {
+        
+        final Optional<Stream<AbstractEntity<?>>> assignedEntitiesOp = customPropertiesAsignmentHandler
+                .map(handlerType -> centre.createAssignmentHandlerInstance(handlerType))
+                .map(handler -> entities.map(entity -> {handler.assignValues(entity); return entity;}));
+        
+        final Stream<AbstractEntity<?>> assignedEntities = assignedEntitiesOp.orElse(entities);
 
-        if (propertiesDefinitions.isPresent()) {
-            for (final ResultSetProp resultSetProp : propertiesDefinitions.get()) {
-                if (resultSetProp.propDef.isPresent()) {
-                    final PropDef<?> propDef = resultSetProp.propDef.get();
+        final Optional<Stream<AbstractEntity<?>>> completedEntitiesOp = propertiesDefinitions.map(customProps -> assignedEntities.map(entity -> {
+            for (final ResultSetProp customProp : customProps) {
+                if (customProp.propDef.isPresent()) {
+                    final PropDef<?> propDef = customProp.propDef.get();
                     final String propertyName = CalculatedProperty.generateNameFrom(propDef.title);
                     if (propDef.value.isPresent()) {
-                        setCustomValue(entities, propertyName, propDef.value.get());
+                        entity.set(propertyName, propDef.value.get());
                     }
                 }
             }
-        }
+            return entity;
+        }));
+        
+        return completedEntitiesOp.orElse(assignedEntities);
     }
 
-    private static void setCustomValue(final List<AbstractEntity<?>> entities, final String propertyName, final Object value) {
-        for (final AbstractEntity<?> entity : entities) {
-            entity.set(propertyName, value);
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void setCustomValues(final List<AbstractEntity<?>> entities, final ICustomPropsAssignmentHandler assignmentHandler) {
-        for (final AbstractEntity<?> entity : entities) {
-            assignmentHandler.assignValues(entity);
-        }
-    }
 }

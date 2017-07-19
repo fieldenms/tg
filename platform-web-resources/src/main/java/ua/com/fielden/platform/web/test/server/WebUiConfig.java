@@ -36,7 +36,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -103,11 +102,8 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
-import ua.com.fielden.platform.web.action.pre.ExportPreAction;
-import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -128,11 +124,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
-import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.resources.webui.AcknowledgeWarningsWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.MenuWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -212,6 +206,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
      */
     @Override
     public void initConfiguration() {
+        super.initConfiguration();
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
 
@@ -255,7 +250,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 + format("['justified', [%s]]", outer)
                 + "]");
         final String actionBarLayout = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle);
-        @SuppressWarnings("unchecked")
         final IMaster<TgDeletionTestEntity> deletionMaster = masterBuilder.forEntity(TgDeletionTestEntity.class)
             .addProp("key").asSinglelineText().also()//
             .addProp("desc").asSinglelineText().also()
@@ -265,13 +259,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
 
-        AcknowledgeWarningsWebUiConfig.register(injector(), configApp());
         TgEntityWithTimeZoneDatesWebUiConfig.register(injector(), configApp());
         TgGeneratedEntityWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
-                        .addTopAction(CentreConfigActions.SORT_ACTION.mkAction()).also()
+                        .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
                         .addTopAction(StandardActions.EXPORT_ACTION.mkAction(TgFetchProviderTestEntity.class))
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).also()
                         .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
@@ -383,7 +376,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
 
-        final MenuWebUiConfig menuWebUiConfig = new MenuWebUiConfig(injector(), desktopMainMenuConfig);
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
@@ -769,22 +761,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 injector());
 
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
-        final EntityMaster<EntityNewAction> entityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
-        final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
-        final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
-        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
-        final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
-
-        final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
         configApp().
-            addMaster(entityNewActionMaster).
-            addMaster(entityEditActionMaster).
-            addMaster(entityDeleteActionMaster).
-            addMaster(entityExportActionMaster).
-            addMaster(genericMenuSaveMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).
@@ -799,13 +779,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
                     injector())).
-            addMaster(menuWebUiConfig.master).
             addMaster(userWebUiConfig.master).
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
             addMaster(userRoleWebUiConfig.tokensUpdater).
-            // Centre configuration management
-            addMaster(centreConfigurationWebUiConfig.centreConfigUpdater).
             addMaster(clourMaster).//
 
                 addMaster(new EntityMaster<TgFunctionalEntityWithCentreContext>(
@@ -1277,6 +1254,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortcut("alt+n").
                                 build())
                 .also()
+                .addTopAction(StandardActions.SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                .also()
                 .addTopAction(action(EntityDeleteAction.class).
                         withContext(context().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {
@@ -1292,7 +1271,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortcut("alt+d").
                         build())
                 .also()
-                .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
+                .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction())
                 .also()
                 .addTopAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
@@ -1362,7 +1341,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addTopAction(
                         action(EntityExportAction.class)
                                 .withContext(context().withSelectionCrit().withSelectedEntities().withMasterEntity().build())
-                                .preAction(new ExportPreAction())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
@@ -1466,12 +1444,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 //.hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(2).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this")
                     .order(2).asc()
-                    .minWidth(60);
+                    .width(60);
 
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {
@@ -1551,7 +1529,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("bigDecimalProp")
                     .minWidth(68);
 
-                    final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
+        final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
                             beforeSummaryConfForBigDecimalProp
                                 .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
@@ -1598,7 +1576,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
                                 + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
                                 + "[['flex', 'select:property=stringProp']]"
-                                + "]")
+                                        + "]")
                 //                .also()
                 //                .addProp("status")
 
@@ -1607,14 +1585,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(action(EntityEditAction.class).
-                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
-                        icon("editor:mode-edit").
-                        withStyle("color: green").
-                        shortDesc("Edit entity").
-                        longDesc("Opens master for editing this entity").
+                        .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
+                                .icon("editor:mode-edit")
+                                .withStyle("color: green")
+                                .shortDesc("Edit entity")
+                                .longDesc("Opens master for editing this entity").build()).
                         // withNoParentCentreRefresh().
-                        build())
+                                //build());
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1626,7 +1603,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                build()
 
                 //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
-                .also()
+                        also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/

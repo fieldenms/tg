@@ -19,6 +19,9 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  *
  */
 public class PropertyColumnElement implements IRenderable, IImportable {
+    //The minimal column width. It is used only when specified width is greater than minimal.
+    private final int MIN_COLUMN_WIDTH = 48;
+
     private final String propertyName;
     private final Optional<String> underlyingPropertyName;
     private final Optional<String> tooltipProp;
@@ -29,7 +32,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final Optional<FunctionalActionElement> action;
     private final List<SummaryElement> summary;
     private boolean debug = false;
-    private int growFactor = 0;
+    private final int growFactor;
 
     public final int width;
     public final boolean isFlexible;
@@ -40,13 +43,14 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final String underlyingPropertyName, final int width, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final String underlyingPropertyName, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
         this.underlyingPropertyName = Optional.ofNullable(underlyingPropertyName);
         this.tooltipProp = Optional.ofNullable(tooltipProp);
         this.width = width;
+        this.growFactor = growFactor;
         this.isFlexible = isFlexible;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
@@ -62,7 +66,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param titleDesc
      */
     public void addSummary(final String propertyName, final Class<?> propertyType, final Pair<String, String> titleDesc) {
-        summary.add(new SummaryElement(propertyName, width, propertyType, titleDesc));
+        summary.add(new SummaryElement(propertyName, propertyType, titleDesc));
     }
 
     /**
@@ -124,6 +128,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
         attrs.put("width", width);
+        attrs.put("min-width", MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
         attrs.put("grow-factor", isFlexible ? growFactor : 0);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
@@ -144,11 +149,6 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     public Optional<FunctionalActionElement> getAction() {
         return action;
-    }
-
-    public void setGrowFactor(final int growFactor) {
-        this.growFactor = growFactor;
-        summary.forEach(element -> element.setGrowFactor(growFactor));
     }
 
     @Override

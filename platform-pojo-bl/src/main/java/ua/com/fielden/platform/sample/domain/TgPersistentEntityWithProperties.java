@@ -55,8 +55,8 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @BeforeChange(@Handler(EntityValidator.class))
     private TgPersistentEntityWithProperties entityProp;
 
-    @IsProperty
-    @MapTo(precision = 18, scale = 5)
+    @IsProperty(precision = 18, scale = 5)
+    @MapTo
     @Title(value = "BigDecimal prop", desc = "BigDecimal prop desc")
     private BigDecimal bigDecimalProp;
 

@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -94,7 +95,8 @@
             <div class="layout horizontal center" style="margin-left:10px">
                 <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext"></paper-icon-button>
             </div>
         </div>
         <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
@@ -225,6 +227,7 @@
 
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
+                this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
 
                 this._setIsRunning(false);
             },
@@ -269,6 +272,15 @@
                 this._childDialogs.forEach(function (childDialog) {
                     childDialog._bringToFront();
                 });
+            },
+            
+            _skipNext: function () {
+                if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
+                    this.closeDialog();
+                    if (!this.opened) {
+                        this._lastAction.skipNext();
+                    }
+                }
             },
 
             minimizeDialog: function () {
@@ -412,7 +424,7 @@
                 return self.$.elementLoader.reload();
                 //}
             },
-
+            
             /*
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
@@ -422,7 +434,7 @@
                 if (this.opened === true) {
                     this.$.toaster.text = 'Please close the currently open dialog.';
                     this.$.toaster.hasMore = true;
-                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
+                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening any other dialog.';
                     this.$.toaster.showProgress = false;
                     this.$.toaster.isCritical = false;
                     this.$.toaster.show();
@@ -436,14 +448,14 @@
                         self._lastAction = customAction;
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
-                        this.dynamicTitle = null;
+                        self.dynamicTitle = null;
 
                         self._getElement(customAction)
                             .then(function (element) {
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                     return promise
-                                        .then(function () {
+                                        .then(function (ironRequest) {
                                             /*var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
@@ -451,24 +463,22 @@
                                                     self._cachedElements[key] = element;
                                                 }
                                             }*/
-                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                            if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
+                                                return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
+                                            } else {
+                                                return Promise.reject('Retrieval / saving promise was not successful.');
+                                            }
                                         })
                                         .catch(function (error) {
-                                            self._setIsRunning(false);
-                                            if (self._lastAction) {
-                                                self._lastAction.restoreActiveElement();
-                                            }
+                                            self._finishErroneousOpening();
                                         });
                                 } else {
                                     return Promise.resolve()
                                         .then(function () {
-                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                            return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
                                         })
                                         .catch(function (error) {
-                                            self._setIsRunning(false);
-                                            if (self._lastAction) {
-                                                self._lastAction.restoreActiveElement();
-                                            }
+                                            self._finishErroneousOpening();
                                         });
                                 }
                             })
@@ -490,41 +500,97 @@
 
             _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
                 this._lastElement = element;
+                const self = this;
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    var self = this;
-                    // if there would be a master UI then need to subscribe for this dialog closing messages
-                    if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
-                        self._subscriptions = [];
-                        for (var index = 0; index < closeEventTopics.length; index++) {
-                            self._subscriptions.push(
-                                postal.subscribe({
-                                    channel: closeEventChannel,
-                                    topic: closeEventTopics[index],
-                                    callback: self._handleCloseEvent.bind(self)
-                                }));
-                        }
-                    }
-                    this.updateStyles();
-                    this.refit();
-                    // let's open the dialog with magical async...
-                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
-                    this.async(function () {
-                        //Configuring the dialog hierarchy.
-                        var actionsDialog = findParentDialog(action);
-                        if (actionsDialog) {
-                            actionsDialog._childDialogs.push(this);
-                            this._parentDialog = actionsDialog;
-                        }
+                    if (element.masterWithMaster || element.masterWithCentre) { // defer opening of master-with-master's / master-with-centre's dialog until binding-entity / egi-entities of embedded master / centre appear
+                        const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
+                        const resultsAppearedEvent = resultsName + '-appeared';
+                        const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
+                        
+                        this.addEventListener(resultsAppearedEvent, this._focusDialogWithInput);
+                        this.addEventListener(resultsAppearedEvent, this._fitWhenFirstTimeOpened);
+                        
+                        this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent);
+                        this.addEventListener(resultsAppearedEvent, this._openOnceConcrete);
+                        this._doNotOpenConcrete = this._doNotOpen.bind(this, resultsAppearedEvent, resultsDidNotAppearEvent);
+                        this.addEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
+                    } else {
                         this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
-                        this._focusAndRefit(); // this is a legacy support
-                        this.open();
-                    }.bind(this), 200);
+                        
+                        this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
+                    }
                 }
             },
-
+            
+            /**
+             * Starts actual opening of the dialog: adds 'closing' subscriptions, performs refitting and invokes this.open().
+             */
+            _openOnce: function (closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent) {
+                this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
+                const self = this;
+                // if there would be a master UI then need to subscribe for this dialog closing messages
+                if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
+                    self._subscriptions = [];
+                    for (var index = 0; index < closeEventTopics.length; index++) {
+                        self._subscriptions.push(
+                            postal.subscribe({
+                                channel: closeEventChannel,
+                                topic: closeEventTopics[index],
+                                callback: self._handleCloseEvent.bind(self)
+                            }));
+                    }
+                }
+                this.updateStyles();
+                this.refit();
+                // let's open the dialog with magical async...
+                // this ensures that the dialog is opened after its relocation to body and after all layouting is done
+                this.async(function () {
+                    //Configuring the dialog hierarchy.
+                    var actionsDialog = findParentDialog(action);
+                    if (actionsDialog) {
+                        actionsDialog._childDialogs.push(this);
+                        this._parentDialog = actionsDialog;
+                    }
+                    this._focusAndRefit(); // this is a legacy support
+                    this.open();
+                }.bind(this), 200);
+            },
+            
+            /**
+             * Performes cleaning tasks in case where dialog opening should not occur.
+             */
+            _doNotOpen: function (resultsAppearedEvent, resultsDidNotAppearEvent) {
+                this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
+                this._finishErroneousOpening();
+            },
+            
+            /**
+             * Performs tasks after erroneus completion of dialog's action execution.
+             */
+            _finishErroneousOpening: function () {
+                this._setIsRunning(false);
+                if (this._lastAction) {
+                    this._lastAction.restoreActiveElement();
+                }
+            },
+            
+            /**
+             * Removes listeners that open dialog for master-with-master and master-with-centre cases.
+             */
+            _clearOpeningListeners: function (resultsAppearedEvent, resultsDidNotAppearEvent) {
+                if (this._openOnceConcrete && resultsAppearedEvent) {
+                    this.removeEventListener(resultsAppearedEvent, this._openOnceConcrete);
+                    this._openOnceConcrete = null;
+                }
+                if (this._doNotOpenConcrete && resultsDidNotAppearEvent) {
+                    this.removeEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
+                    this._doNotOpenConcrete = null;
+                }
+            },
+            
             /**
              * Listener that listens binding entity appeared event and focuses first input.
              */

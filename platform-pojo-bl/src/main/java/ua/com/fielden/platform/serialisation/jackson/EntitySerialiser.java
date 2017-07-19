@@ -22,6 +22,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.esotericsoftware.kryo.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -30,7 +33,7 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
-import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -47,9 +50,6 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.esotericsoftware.kryo.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -182,19 +182,23 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
                     entityTypeProp.set_time(Boolean.TRUE);
                 }
-                final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
-                if (mapTo != null) {
-                    final Long length = Long.valueOf(mapTo.length());
+                final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
+                if (isPropertyAnnotation != null) {
+                    final Long length = Long.valueOf(isPropertyAnnotation.length());
                     if (!isLengthDefault(length)) {
                         entityTypeProp.set_length(length);
                     }
-                    final Long precision = Long.valueOf(mapTo.precision());
+                    final Long precision = Long.valueOf(isPropertyAnnotation.precision());
                     if (!isPrecisionDefault(precision)) {
                         entityTypeProp.set_precision(precision);
                     }
-                    final Long scale = Long.valueOf(mapTo.scale());
+                    final Long scale = Long.valueOf(isPropertyAnnotation.scale());
                     if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
+                    }
+                    final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
+                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                        entityTypeProp.set_trailingZeros(trailingZeros);
                     }
                 }
                 final String timeZone = getTimeZone(type, name);

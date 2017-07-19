@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
@@ -36,6 +38,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTre
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager0.AddToCriteriaTickManager0;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer.DomainTreeEnhancerWithPropertiesPopulation;
@@ -55,8 +58,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * WARNING: this is an OLD version!
@@ -260,7 +261,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
         }
         if (getAnalysisManager(name) != null) {
-            throw new IllegalArgumentException("The analysis with name [" + name + "] already exists.");
+            throw new DomainTreeException("The analysis with name [" + name + "] already exists.");
         }
         // create a new instance and put to "current" map
         if (AnalysisType.PIVOT.equals(analysisType)) {
@@ -391,7 +392,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
         final IAbstractAnalysisDomainTreeManager mgr = getAnalysisManager(name);
         if (mgr == null) {
-            throw new IllegalArgumentException("The unknown analysis with name [" + name + "] can not be removed.");
+            throw new DomainTreeException("The unknown analysis with name [" + name + "] can not be removed.");
         }
         currentAnalyses.remove(name);
         acceptAnalysisManager(name);
@@ -462,13 +463,13 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     }
 
     /**
-     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     * Logs and throws an {@link DomainTreeException} error with specified message.
      *
      * @param message
      */
     private void error(final String message) {
         logger.error(message);
-        throw new IllegalArgumentException(message);
+        throw new DomainTreeException(message);
     }
 
     @Override
@@ -866,6 +867,19 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         public IWidthManager setWidth(final Class<?> root, final String property, final int width) {
             // inject an enhanced type into method implementation
             base().setWidth(enhancer().getManagedType(root), property, width);
+            return this;
+        }
+
+        @Override
+        public int getGrowFactor(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getGrowFactor(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            // inject an enhanced type into method implementation
+            base().setGrowFactor(enhancer().getManagedType(root), property, growFactor);
             return this;
         }
 

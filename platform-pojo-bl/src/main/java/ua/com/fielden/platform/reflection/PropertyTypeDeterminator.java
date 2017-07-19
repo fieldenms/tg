@@ -2,6 +2,8 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
+import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -10,6 +12,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -254,11 +257,11 @@ public class PropertyTypeDeterminator {
         }
         return clazz;
     }
-    
+
     /**
      * A convenient function to identify the closest real type (i.e. not dynamically generated) that is the bases for the specified entity type.
-     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name. 
-     * 
+     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name.
+     *
      * @param type
      * @return
      */
@@ -268,14 +271,14 @@ public class PropertyTypeDeterminator {
             final String typeName = strippedType.getName();
             try {
                 return (Class<? extends AbstractEntity<?>>) Class.forName(typeName.substring(0, typeName.indexOf(APPENDIX)));
-            } catch (ClassNotFoundException e) {
+            } catch (final ClassNotFoundException e) {
                 throw new ReflectionException(format("Could not identify a base type for entity type [%s].", typeName), e);
             }
         } else {
             return strippedType;
         }
     }
-    
+
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
         return clazz.getName().contains("$$_javassist");
     }
@@ -289,11 +292,11 @@ public class PropertyTypeDeterminator {
     public static boolean isProxied(final Class<?> clazz) {
         return clazz.getName().contains("$ByteBuddy$");
     }
-    
+
     /**
      * Returns <code>true</code> if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
      * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors etc.).
-     * 
+     *
      * @param klass
      * @return
      */
@@ -354,6 +357,40 @@ public class PropertyTypeDeterminator {
     }
 
     /**
+     * Identifies whether property <code>doNotationExp</code> in type <code>entityType</code> is map.
+     *
+     * @param entityType
+     * @param doNotationExp
+     * @return
+     */
+    public static boolean isMap(final Class<?> entityType, final String doNotationExp) {
+        final Field field = Finder.findFieldByName(entityType, doNotationExp);
+        return Map.class.isAssignableFrom(field.getType());
+    }
+
+    /**
+     * Identifies whether property <code>doNotationExp</code> has a type, which is recognized as representing a numeric value such as decimal, money, long or integer.
+     *
+     * @param entityType
+     * @param doNotationExp
+     * @return
+     */
+    public static boolean isNumeric(final Class<?> entityType, final String doNotationExp) {
+        final Field field = Finder.findFieldByName(entityType, doNotationExp);
+        return isNumeric(field.getType());
+    }
+
+    /**
+     * Identifies whether the specified property type represents a number, which could be an integer or a decimal, including money.
+     *
+     * @param propType
+     * @return
+     */
+    public static boolean isNumeric(final Class<?> propType) {
+        return isDecimal(propType) || isInteger(propType);
+    }
+
+    /**
      * Identifies whether property with a given name in the given entity type is required by definition.
      *
      * @param propName
@@ -366,7 +403,7 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Identifies whether property, which is represented by a field is required by definition. 
+     * Identifies whether property, which is represented by a field is required by definition.
      * The value of <code>entityType</code> is the type where the property that is represented by <code>propField</code>, belongs (this is not necessarily the type where the field is declared).
      *
      * @param propField

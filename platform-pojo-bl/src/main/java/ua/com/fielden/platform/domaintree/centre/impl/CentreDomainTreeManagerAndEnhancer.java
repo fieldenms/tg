@@ -38,6 +38,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTre
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
@@ -71,12 +72,12 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
     private final transient List<IAnalysisListener> analysisListeners;
     /**
-     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
      */
     private transient Long savedEntityId;
     /**
-     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
      */
     private transient Long savedEntityVersion;
@@ -104,7 +105,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
         this.freezedAnalyses.putAll(freezedAnalyses);
 
-        this.analysisListeners = new ArrayList<IAnalysisListener>();
+        this.analysisListeners = new ArrayList<>();
 
         for (final IAbstractAnalysisDomainTreeManager analysisManager : this.persistentAnalyses.values()) {
             initAnalysisManagerReferencesOn(analysisManager, this);
@@ -267,7 +268,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
         }
         if (getAnalysisManager(name) != null) {
-            throw new IllegalArgumentException("The analysis with name [" + name + "] already exists.");
+            throw new DomainTreeException("The analysis with name [" + name + "] already exists.");
         }
         // create a new instance and put to "current" map
         if (AnalysisType.PIVOT.equals(analysisType)) {
@@ -398,7 +399,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
         final IAbstractAnalysisDomainTreeManager mgr = getAnalysisManager(name);
         if (mgr == null) {
-            throw new IllegalArgumentException("The unknown analysis with name [" + name + "] can not be removed.");
+            throw new DomainTreeException("The unknown analysis with name [" + name + "] can not be removed.");
         }
         currentAnalyses.remove(name);
         acceptAnalysisManager(name);
@@ -469,13 +470,13 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     /**
-     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     * Logs and throws an {@link DomainTreeException} error with specified message.
      *
      * @param message
      */
     private void error(final String message) {
         logger.error(message);
-        throw new IllegalArgumentException(message);
+        throw new DomainTreeException(message);
     }
 
     @Override
@@ -878,6 +879,19 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public int getGrowFactor(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getGrowFactor(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            // inject an enhanced type into method implementation
+            base().setGrowFactor(enhancer().getManagedType(root), property, growFactor);
+            return this;
+        }
+
+        @Override
         public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
             throw new UnsupportedOperationException("Weak IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
         }
@@ -1151,41 +1165,41 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
         return true;
     }
-    
+
     /**
-     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @return
      */
     public Long getSavedEntityId() {
         return savedEntityId;
     }
-    
+
     /**
-     * Sets ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Sets ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @param savedEntityId
      */
     public void setSavedEntityId(final Long savedEntityId) {
         this.savedEntityId = savedEntityId;
     }
-    
+
     /**
-     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @return
      */
     public Long getSavedEntityVersion() {
         return savedEntityVersion;
     }
-    
+
     /**
-     * Sets version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * Sets version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
      * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     * 
+     *
      * @param savedEntityVersion
      */
     public void setSavedEntityVersion(final Long savedEntityVersion) {

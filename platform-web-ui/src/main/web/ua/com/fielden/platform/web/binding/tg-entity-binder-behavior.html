@@ -523,6 +523,11 @@
                 	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
                 	
+                    const oldCurrBindingEntity = this._currBindingEntity;
+                    if (oldCurrBindingEntity == null) {
+                        this.fire('binding-entity-did-not-appear', errorResult);
+                    }
+                	
                 	// custom external action
                 	if (this.postRetrievedError) {
 	                    this.postRetrievedError(errorResult);
@@ -905,7 +910,8 @@
              * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
              */
             _isNecessaryForConversion: function (propertyName) {
-                return ['entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
+                return ['columnParameters',// adjust column width action
+                        'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
                         'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
                         'surrogateVersion', 'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
                         'visibleMenuItems', 'invisibleMenuItems', // menu visibility action (MenuSaveAction)

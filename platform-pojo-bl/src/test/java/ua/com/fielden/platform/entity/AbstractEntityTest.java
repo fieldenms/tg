@@ -7,6 +7,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.beans.PropertyChangeEvent;
@@ -41,6 +45,15 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidIntegerProp;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithLength;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithPrecision;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithScale;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidStringPropWithPrecision;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidStringPropWithScale;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidStringPropWithTrailingZeros;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
@@ -1082,7 +1095,7 @@ public class AbstractEntityTest {
         try {
             factory.newEntity(MasterEntity1.class, "key", "description");
             fail("Should be failed.");
-        } catch (final IllegalStateException e) {
+        } catch (final Exception e) {
         }
     }
 
@@ -1091,7 +1104,7 @@ public class AbstractEntityTest {
         try {
             factory.newEntity(MasterEntity2.class, "key", "description");
             fail("Should be failed.");
-        } catch (final IllegalStateException e) {
+        } catch (final Exception e) {
         }
     }
 
@@ -1100,7 +1113,7 @@ public class AbstractEntityTest {
         try {
             factory.newEntity(MasterEntity3.class, "key", "description");
             fail("Should be failed.");
-        } catch (final IllegalStateException e) {
+        } catch (final Exception e) {
         }
     }
 
@@ -1115,7 +1128,7 @@ public class AbstractEntityTest {
         try {
             factory.newEntity(MasterEntity6.class, "key", "description");
             fail("Should be failed.");
-        } catch (final IllegalStateException e) {
+        } catch (final Exception e) {
         }
     }
 
@@ -1267,6 +1280,96 @@ public class AbstractEntityTest {
         entity.setIntProp(20);
         assertFalse(entity.hasWarnings());
         assertEquals(0, entity.warnings().size());
+    }
+
+    @Test
+    public void numeric_props_with_precision_but_without_scale_are_invalid() {
+        final Either<Exception, EntityWithInvalidMoneyPropWithPrecision> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithPrecision.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidMoneyPropWithPrecision> left = (Left<Exception, EntityWithInvalidMoneyPropWithPrecision>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPrecision.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void numeric_props_with_scale_but_without_precision_are_invalid() {
+        final Either<Exception, EntityWithInvalidMoneyPropWithScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithScale.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidMoneyPropWithScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithScale>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithScale.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void numeric_props_with_negative_precision_are_invalid() {
+        final Either<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void numeric_props_with_negative_scale_are_invalid() {
+        final Either<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void numeric_props_with_lendth_are_invalid() {
+        final Either<Exception, EntityWithInvalidMoneyPropWithLength> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithLength.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidMoneyPropWithLength> left = (Left<Exception, EntityWithInvalidMoneyPropWithLength>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_OF_PARAM_LENGTH_MSG, "numericMoney", EntityWithInvalidMoneyPropWithLength.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void numeric_props_with_precision_less_than_scale_are_invalid() {
+        final Either<Exception, EntityWithInvalidIntegerProp> result = Try(() -> factory.newByKey(EntityWithInvalidIntegerProp.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidIntegerProp> left = (Left<Exception, EntityWithInvalidIntegerProp>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, "numericInteger", EntityWithInvalidIntegerProp.class.getName()), ex.getMessage());
+    }
+    
+    @Test
+    public void non_numeric_props_with_traliningZeros_but_without_precision_and_scale_are_invalid() {
+        final Either<Exception, EntityWithInvalidStringPropWithTrailingZeros> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithTrailingZeros.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidStringPropWithTrailingZeros> left = (Left<Exception, EntityWithInvalidStringPropWithTrailingZeros>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithTrailingZeros.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void non_numeric_props_with_precision_are_invalid() {
+        final Either<Exception, EntityWithInvalidStringPropWithPrecision> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithPrecision.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidStringPropWithPrecision> left = (Left<Exception, EntityWithInvalidStringPropWithPrecision>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithPrecision.class.getName()), ex.getMessage());
+    }
+
+    @Test
+    public void non_numeric_props_with_scale_are_invalid() {
+        final Either<Exception, EntityWithInvalidStringPropWithScale> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithScale.class, "some key"));
+        assertTrue(result instanceof Left);
+        final Left<Exception, EntityWithInvalidStringPropWithScale> left = (Left<Exception, EntityWithInvalidStringPropWithScale>) result;
+        final Throwable ex = left.value.getCause().getCause();
+        assertTrue(ex instanceof EntityDefinitionException);
+        assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithScale.class.getName()), ex.getMessage());
     }
 
 }

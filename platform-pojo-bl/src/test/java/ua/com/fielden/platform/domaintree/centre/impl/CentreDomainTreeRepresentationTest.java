@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
@@ -245,73 +246,74 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     public void test_that_excluded_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Excluded property should cause IllegalArgument exception.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set for value1/2 by default
                 try {
                     dtm().getFirstTick().getValueByDefault(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getEmptyValueFor(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setValueByDefault(MasterEntity.class, name, "a value");
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getValue2ByDefault(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().get2EmptyValueFor(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setValue2ByDefault(MasterEntity.class, name, "a value");
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
 
                 // isOrderingDisabled/disableOrdering
                 try {
                     dtm().getSecondTick().isOrderingDisabledImmutably(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
 
                 // get/set Ordering by default
                 try {
                     dtm().getSecondTick().orderedPropertiesByDefault(EvenSlaverEntity.class);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().setOrderedPropertiesByDefault(EvenSlaverEntity.class, new ArrayList<Pair<String, Ordering>>());
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
 
                 // get/set width by default
                 try {
                     dtm().getSecondTick().getWidthByDefault(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().setWidthByDefault(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "excludedManuallyProp");
@@ -321,22 +323,23 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     public void test_that_non_DoubleEditor_and_non_Boolean_properties_Value2_action_for_first_tick_cause_exceptions() {
         final String message = "Non Double Editor (and non boolean) property should cause IllegalArgument exception.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set for value2 by default
                 try {
                     dtm().getFirstTick().getValue2ByDefault(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().get2EmptyValueFor(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setValue2ByDefault(MasterEntity.class, name, "a value");
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "mutablyCheckedProp", "stringProp", "entityProp");
@@ -439,6 +442,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 
         // Alter DEFAULT and check //
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
             }

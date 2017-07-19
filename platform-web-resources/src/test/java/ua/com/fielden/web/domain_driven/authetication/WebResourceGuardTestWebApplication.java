@@ -9,7 +9,6 @@ import org.restlet.routing.Router;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
@@ -23,13 +22,11 @@ import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 class WebResourceGuardTestWebApplication extends Application {
 
     private final Injector injector;
-    private final EntityFactory entityFactory;
     private User currentUser;
 
     @Inject
-    WebResourceGuardTestWebApplication(final Injector injector, final EntityFactory entityFactory) {
+    WebResourceGuardTestWebApplication(final Injector injector) {
         this.injector = injector;
-        this.entityFactory = entityFactory;
     }
 
     public void setCurrUser(final User user) {

@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  */
 @KeyType(String.class)
 public class CollectionalEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(value = String.class, linkProperty = "--stub to pass tests--")
     private List<String> strCollectionalProperty1;
