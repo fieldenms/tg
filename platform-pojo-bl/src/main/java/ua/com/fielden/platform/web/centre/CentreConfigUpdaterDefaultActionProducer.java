@@ -32,9 +32,8 @@ public class CentreConfigUpdaterDefaultActionProducer extends DefaultEntityProdu
     
     @Override
     protected CentreConfigUpdaterDefaultAction provideDefaultValues(final CentreConfigUpdaterDefaultAction entity) {
-        if (getMasterEntity() != null) {
-            final CentreConfigUpdater masterEntity = (CentreConfigUpdater) getMasterEntity();
-            final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = masterEntity.getContext().getSelectionCrit();
+        if (selectionCritOfMasterEntityNotEmpty()) {
+            final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = selectionCritOfMasterEntity();
             
             final Class<?> root = criteriaEntity.getEntityClass();
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = criteriaEntity.defaultCentreSupplier().get();

@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -240,6 +241,23 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             }
         }
         return false;
+    }
+    
+    protected boolean selectionCritOfMasterEntityNotEmpty() {
+        if (masterEntityNotEmpty()) {
+            final AbstractEntity<?> masterEntity = masterEntity();
+            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
+                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+                return masterFuncEntity.context() != null && masterFuncEntity.context().getSelectionCrit() != null;
+            }
+        }
+        return false;
+    }
+    
+    protected EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntity() {
+        final AbstractEntity<?> masterEntity = masterEntity();
+        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+        return masterFuncEntity.context().getSelectionCrit();
     }
     
     protected <M extends AbstractEntity<?>> M masterEntityKey(final Class<M> type) {
