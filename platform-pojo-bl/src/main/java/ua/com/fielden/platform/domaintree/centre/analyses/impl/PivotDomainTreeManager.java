@@ -3,10 +3,10 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import javax.swing.event.EventListenerList;
-
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
@@ -19,14 +19,14 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
  * A domain tree manager for pivot analyses.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager implements IPivotDomainTreeManager {
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      */
@@ -36,7 +36,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param dtr
      * @param firstTick
@@ -89,7 +89,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
             } else if (!check) {
                 listOfUsedProperties.remove(property);
             }
-            usedPropertiesChanged(root, property, check);
             return this;
         }
 
@@ -127,23 +126,12 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
-                return true;
-            if (!super.equals(obj))
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final PivotAddToDistributionTickManager other = (PivotAddToDistributionTickManager) obj;
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null)
-                    return false;
-            } else if (!propertiesWidths.equals(other.propertiesWidths))
-                return false;
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final PivotAddToDistributionTickManager other = (PivotAddToDistributionTickManager) obj;
+                    return Objects.equals(propertiesWidths, other.propertiesWidths) &&
+                            Objects.equals(rootsListsOfUsedProperties, other.rootsListsOfUsedProperties);
                 }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
                 return false;
             }
             return true;
@@ -155,11 +143,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
         }
 
         private class ColumnUsageManager implements IUsageManager {
-
-            private final transient EventListenerList propertyUsageListeners;
-
             public ColumnUsageManager() {
-                propertyUsageListeners = new EventListenerList();
             }
 
             private List<String> getAndInitSecondUsedProperties(final Class<?> root, final String property) {
@@ -194,9 +178,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                 } else if (!check) {
                     listOfUsedProperties.remove(property);
                 }
-                for (final IPropertyUsageListener listener : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                    listener.propertyStateChanged(managedType, property, check, null);
-                }
                 return this;
             }
 
@@ -213,43 +194,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                     }
                 }
                 return usedProperties;
-            }
-
-            @Override
-            public IUsageManager addPropertyUsageListener(final IPropertyUsageListener listener) {
-                removeEmptyPropertyUsageListeners();
-                propertyUsageListeners.add(IPropertyUsageListener.class, listener);
-                return this;
-            }
-
-            @Override
-            public IUsageManager addWeakPropertyUsageListener(final IPropertyUsageListener listener) {
-                removeEmptyPropertyUsageListeners();
-                propertyUsageListeners.add(IPropertyUsageListener.class, new WeakPropertyUsageListener(this, listener));
-                return this;
-            }
-
-            @Override
-            public IUsageManager removePropertyUsageListener(final IPropertyUsageListener listener) {
-                for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                    if (listener == obj) {
-                        propertyUsageListeners.remove(IPropertyUsageListener.class, listener);
-                    } else if (obj instanceof WeakPropertyUsageListener) {
-                        final IPropertyUsageListener weakRef = ((WeakPropertyUsageListener) obj).getRef();
-                        if (weakRef == listener || weakRef == null) {
-                            propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                        }
-                    }
-                }
-                return this;
-            }
-
-            private void removeEmptyPropertyUsageListeners() {
-                for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                    if (obj instanceof WeakPropertyUsageListener && ((WeakPropertyUsageListener) obj).getRef() == null) {
-                        propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                    }
-                }
             }
         }
     }
@@ -301,7 +245,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                 // perform actual removal
                 listOfUsedProperties.remove(property);
             }
-            usedPropertiesChanged(root, property, check);
             return this;
         }
 
@@ -315,27 +258,21 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
-                return true;
-            if (!super.equals(obj))
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final PivotAddToAggregationTickManager other = (PivotAddToAggregationTickManager) obj;
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null)
-                    return false;
-            } else if (!propertiesWidths.equals(other.propertiesWidths))
-                return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final PivotAddToAggregationTickManager other = (PivotAddToAggregationTickManager) obj;
+                    return Objects.equals(propertiesWidths, other.propertiesWidths);
+                }
+            }
             return true;
         }
     }
 
     /**
      * A specific Kryo serialiser for {@link PivotDomainTreeManager}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class PivotDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<PivotDomainTreeManager> {
         public PivotDomainTreeManagerSerialiser(final ISerialiser serialiser) {

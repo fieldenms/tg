@@ -25,9 +25,10 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
-    private Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster;
-
+    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
+    
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
      *
@@ -39,13 +40,13 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
         super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
     }
-
-    public void setColumnWidthAdjuster(final Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster) {
-        this.columnWidthAdjuster = columnWidthAdjuster;
+    
+    public void setCentreAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster) {
+        this.centreAdjuster = centreAdjuster;
     }
 
-    public Consumer<Map<String, Map<String, Integer>>> columnWidthAdjuster() {
-        return columnWidthAdjuster;
+    public Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster() {
+        return centreAdjuster;
     }
 
     public void setFreshCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier) {
@@ -54,6 +55,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier() {
         return freshCentreSupplier;
+    }
+
+    public void setDefaultCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {
+        this.defaultCentreSupplier = defaultCentreSupplier;
+    }
+
+    public Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier() {
+        return defaultCentreSupplier;
     }
 
     public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {

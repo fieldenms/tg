@@ -38,10 +38,16 @@
                 var old_postRun = centre._postRun;
                 var deleteAction, newAction, testingPhase, keyEditor, descEditor;
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder); 
 
                     if (testingPhase === 'zero') {
+                        //First clear previous result for testing purposes
+                        if (resultEntities.length > 0) {
+                            centre.$.egi.egiModel.forEach(entity => entity.selected = true);
+                            deleteAction._run();
+                            return;
+                        }
                         testingPhase = 'first';
                         newAction._run();
                     } else if (testingPhase === 'second') {
@@ -65,12 +71,8 @@
 
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     newAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[0];
-                    newAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
-
-                        var outerMaster = newAction._masterReferenceForTesting;
-
-                        outerMaster.addEventListener('after-load', function (event) {
+                    newAction._masterReferenceForTestingChanged = function (newValue) {
+                        newValue.addEventListener('after-load', function (event) {
                             var embeddedMaster = event.detail;
 
                             embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {};

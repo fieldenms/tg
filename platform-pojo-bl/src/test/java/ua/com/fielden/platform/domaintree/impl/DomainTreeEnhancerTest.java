@@ -24,6 +24,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -838,7 +839,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         try {
             dtm().adjustManagedTypeName(EnhancingMasterEntity.class, "grwe7w64329y4e3289dfh293h");
             fail("Adjusting of a name for ungenerated type should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
     
@@ -868,7 +869,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         try {
             dtm().adjustManagedTypeAnnotations(EnhancingMasterEntity.class);
             fail("Adjusting of a annotations for ungenerated type should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
     

@@ -43,6 +43,7 @@ public class CollectionalEditorWidget extends AbstractWidget {
     private int maxVisibleRows = 3;
     private String headerPropertyName = AbstractEntity.KEY;
     private String descriptionPropertyName = AbstractEntity.DESC;
+    private boolean reorderable = false;
 
     public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
@@ -51,13 +52,20 @@ public class CollectionalEditorWidget extends AbstractWidget {
     public void setMaxVisibleRows(final int maxVisibleRows) {
         this.maxVisibleRows = maxVisibleRows;
     }
-    
+
     public void setHeaderPropertyName(final String headerPropertyName) {
         this.headerPropertyName = headerPropertyName;
     }
-    
+
     public void setDescriptionPropertyName(final String descriptionPropertyName) {
         this.descriptionPropertyName = descriptionPropertyName;
+    }
+
+    /**
+     * Makes the collectioanl editor reorderable.
+     */
+    public void makeReorderable() {
+        this.reorderable = true;
     }
 
     @Override
@@ -66,6 +74,7 @@ public class CollectionalEditorWidget extends AbstractWidget {
         customAttr.put("max-visible-items", maxVisibleRows);
         customAttr.put("header-property-name", headerPropertyName);
         customAttr.put("description-property-name", descriptionPropertyName);
+        customAttr.put("can-reorder-items", reorderable);
         return customAttr;
     }
 }

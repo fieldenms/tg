@@ -47,6 +47,8 @@
             });
             
             test('does not alter the order if there are no selected entities', function (done) {
+                const _masterType = reflector.newEntity('ua.com.fielden.platform.security.user.User').type();
+                
                 // create objects that closely resemble collectional editor entities
                 const one = _new(1);
                 const two = _new(2);
@@ -55,12 +57,12 @@
                 
                 // create an object that closely resembles binding entity
                 const entity = reflector.newEntityEmpty();
-                entity._type = { isUnionEntity: function () { return false; } };
+                entity._type = _masterType;
                 entity["@@origin"] = entity;
                 entity.roles = [one, two, three, four];
                 entity.chosenIds = [];
                 const originalEntity = reflector.newEntityEmpty();
-                originalEntity._type = { isUnionEntity: function () { return false; } };
+                originalEntity._type = _masterType;
                 originalEntity["@@origin"] = originalEntity;
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];
@@ -75,6 +77,8 @@
             });
             
             test('places selected entities on top and unselected at the bottom and preserves the order in each group', function (done) {
+                const _masterType = reflector.newEntity('ua.com.fielden.platform.security.user.User').type();
+                
                 // create objects that closely resemble collectional editor entities
                 const one = _new(1);
                 const two = _new(2);
@@ -83,12 +87,12 @@
                 
                 // create an object that closely resembles binding entity
                 const entity = reflector.newEntityEmpty();
-                entity._type = { isUnionEntity: function () { return false; } };
+                entity._type = _masterType;
                 entity["@@origin"] = entity;
                 entity.roles = [one, two, three, four];
                 entity.chosenIds = [2, 4];
                 const originalEntity = reflector.newEntityEmpty();
-                originalEntity._type = { isUnionEntity: function () { return false; } };
+                originalEntity._type = _masterType;
                 originalEntity["@@origin"] = originalEntity;
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];

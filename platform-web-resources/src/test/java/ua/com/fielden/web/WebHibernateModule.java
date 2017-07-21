@@ -65,10 +65,12 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
+import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.ISortingProperty;
-import ua.com.fielden.platform.web.centre.SortingPropertyDao;
+import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
+import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -106,7 +108,8 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
-        bind(ISortingProperty.class).to(SortingPropertyDao.class);
+        bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
+        bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);

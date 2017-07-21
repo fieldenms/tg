@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.IAnalysisListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -163,7 +164,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         try {
             dtm().removeAnalysisManager(name);
             fail("The removal of non-existent analysis should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         // initialise a brand new instance of analysis (e.g. pivot)
@@ -171,7 +172,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         try {
             dtm().initAnalysisManagerByDefault(name, AnalysisType.SIMPLE);
             fail("The creation of analysis with same name should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
 
@@ -240,7 +241,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
             @Override
             public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenInitialised, final Boolean oldState) {
                 if (hasBeenInitialised == null) {
-                    throw new IllegalArgumentException("'hasBeenInitialised' cannot be null.");
+                    throw new DomainTreeException("'hasBeenInitialised' cannot be null.");
                 }
                 if (hasBeenInitialised) {
                     i++;
@@ -332,17 +333,17 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         try {
             dtm().freezeAnalysisManager(name2);
             fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             dtm().initAnalysisManagerByDefault(name2, analysisType);
             fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             dtm().removeAnalysisManager(name2);
             fail("Removing is not permitted while report is freezed. Please do you job -- save/discard and remove it if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         // change smth.

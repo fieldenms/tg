@@ -51,9 +51,10 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
-                on-focus="_onFocus"
-                on-blur="_outFocus"
-                tooltip-text$="[[_getTooltip(_editingValue)]]"
+    			on-down="_onDown"
+    			on-focus="_onFocus"
+    			on-blur="_outFocus"
+    			tooltip-text$="[[_getTooltip(_editingValue)]]"
     			disabled$="[[_disabled]]"/>
             <div class="input-layer">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>

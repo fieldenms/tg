@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
@@ -86,11 +87,13 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         dtm.getSecondTick().checkedProperties(MasterEntity.class);
 
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm.getFirstTick().check(MasterEntity.class, name, true);
             }
         }, "stringProp", "booleanProp", "dateProp", "integerProp", "moneyProp", "mutablyCheckedProp");
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm.getSecondTick().check(MasterEntity.class, name, true);
             }
@@ -122,6 +125,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         dtm().getFirstTick().setColumnsNumber(3);
         // checked properties, defined in isChecked() contract
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 final String message = "Checked property [" + name
                         + "], defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
@@ -157,6 +161,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Unchecked property should cause IllegalArgument exception.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 illegalAllLocatorActions(dtm().getFirstTick(), message, name);
 
@@ -164,105 +169,105 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                 try {
                     dtm().getFirstTick().getValue(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().isValueEmpty(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setValue(MasterEntity.class, name, "a value");
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getValue2(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().is2ValueEmpty(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setValue2(MasterEntity.class, name, "a value");
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 // get / set Exclusive 1 / 2
                 try {
                     dtm().getFirstTick().getExclusive(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setExclusive(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getExclusive2(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setExclusive2(MasterEntity.class, name, false);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 // get / set date Prefix/Mnemonic/AndBefore
                 try {
                     dtm().getFirstTick().getDatePrefix(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setDatePrefix(MasterEntity.class, name, DateRangePrefixEnum.CURR);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getDateMnemonic(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setDateMnemonic(MasterEntity.class, name, MnemonicEnum.DAY);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getAndBefore(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setAndBefore(MasterEntity.class, name, false);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 // orNull / Not
                 try {
                     dtm().getFirstTick().getOrNull(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setOrNull(MasterEntity.class, name, false);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getNot(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setNot(MasterEntity.class, name, false);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
 
                 // SECOND TICK
@@ -271,27 +276,27 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                 try {
                     dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().setWidth(MasterEntity.class, name, 87);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().getGrowFactor(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getSecondTick().setGrowFactor(MasterEntity.class, name, 2);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "uncheckedProp");
@@ -301,6 +306,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_locator_actions_cause_exceptions_for_NON_ENTITY_types_of_properties() {
         final String message = "Non-AE property should cause IllegalArgument exception for locator-related logic.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 illegalAllLocatorActions(dtm().getFirstTick(), message, name);
             }
@@ -311,28 +317,29 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_Exclusive_actions_cause_exceptions_for_non_DoubleEditor_types_of_properties() {
         final String message = "Non-RANGE property should cause IllegalArgument exception for Exclusive-related logic.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // FIRST TICK
                 // locators
                 try {
                     dtm().getFirstTick().getExclusive(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setExclusive(MasterEntity.class, name, false);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getExclusive2(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setExclusive2(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "booleanProp", "mutablyCheckedProp", "stringProp", "entityProp", "simpleEntityProp");
@@ -342,22 +349,23 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_non_DoubleEditor_and_non_Boolean_properties_Value2_action_for_first_tick_cause_exceptions() {
         final String message = "Non Double Editor (and non boolean) property should cause IllegalArgument exception.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // get/set for value2 by default
                 try {
                     dtm().getFirstTick().getValue2(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().is2ValueEmpty(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setValue2(MasterEntity.class, name, "a value");
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "mutablyCheckedProp", "stringProp", "entityProp", "simpleEntityProp");
@@ -367,38 +375,39 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_Date_related_actions_cause_exceptions_for_NON_DATE_types_of_properties() {
         final String message = "Non-DATE property should cause IllegalArgument exception for Date-related logic.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // FIRST TICK
                 // locators
                 try {
                     dtm().getFirstTick().getDatePrefix(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setDatePrefix(MasterEntity.class, name, DateRangePrefixEnum.CURR);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getDateMnemonic(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setDateMnemonic(MasterEntity.class, name, MnemonicEnum.DAY);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().getAndBefore(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
                 try {
                     dtm().getFirstTick().setAndBefore(MasterEntity.class, name, true);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final DomainTreeException e) {
                 }
             }
         }, "booleanProp", "stringProp", "simpleEntityProp", "bigDecimalProp");
@@ -407,6 +416,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Test
     public void test_that_values_1_and_2_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getFirstTick().check(MasterEntity.class, name, true);
             }
@@ -696,12 +706,12 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         try {
             dtm().getFirstTick().setColumnsNumber(0);
             fail("Should be failed.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             dtm().getFirstTick().setColumnsNumber(-1);
             fail("Should be failed.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         // Alter and check //
@@ -1014,12 +1024,12 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         try {
             dtm().getFirstTick().swap(rootForCheckedPropsTesting, "unknown-prop", "integerProp");
             fail("Non-existent properties operation should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             dtm().getFirstTick().swap(rootForCheckedPropsTesting, "integerProp", "bigDecimalProp"); // both are unchecked
             fail("Non-checked properties operation should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         try {

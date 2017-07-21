@@ -294,6 +294,7 @@ public class CriteriaResource extends ServerResource {
                             customObject,
                             previouslyRunCriteriaEntity,
                             centre.getAdditionalFetchProvider(),
+                            centre.getAdditionalFetchProviderForTooltipProperties(),
                             queryEnhancerAndContext,
                             // There could be cases where the generated data and the queried data would have different types.
                             // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
@@ -318,7 +319,7 @@ public class CriteriaResource extends ServerResource {
                 pair.getKey().put("renderingHints", new ArrayList<>());
             }
 
-            Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+            final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                     centre, 
                     centre.getCustomPropertiesDefinitions(), 
                     centre.getCustomPropertiesAsignmentHandler(), 

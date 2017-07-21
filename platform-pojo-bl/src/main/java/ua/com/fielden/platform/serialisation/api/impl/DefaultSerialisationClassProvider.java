@@ -45,7 +45,8 @@ import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.SortingProperty;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
+import ua.com.fielden.platform.web.centre.CustomisableColumn;
 
 /**
  * Default implementation of {@link ISerialisationClassProvider}, which relies on the application settings to provide the location of classes to be used in serialisation.
@@ -201,7 +202,8 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
         types.add(CentreConfigUpdater.class);
-        types.add(SortingProperty.class);
+        types.add(CentreConfigUpdaterDefaultAction.class);
+        types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
         types.add(PropertyDescriptor.class);
         types.add(AcknowledgeWarnings.class);

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import ua.com.fielden.platform.domaintree.IProperty;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -49,7 +50,7 @@ public class CustomProperty implements IProperty {
         if (!"".equals(contextPath)) {
             try {
                 PropertyTypeDeterminator.determinePropertyType(managedType, contextPath);
-            } catch (final IllegalArgumentException e) {
+            } catch (final DomainTreeException e) {
                 return Result.failure(e);
             }
         }

@@ -72,7 +72,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
             final Injector injector) {
-        return new EntityMaster<T>(entityType, entityProducerType, null, injector);
+        return new EntityMaster<>(entityType, entityProducerType, null, injector);
     }
 
     /**
@@ -87,11 +87,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
             final Class<T> entityType,
             final Injector injector) {
-        return new EntityMaster<T>(entityType, null, null, injector);
+        return new EntityMaster<>(entityType, null, null, injector);
     }
 
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
-        return new NoUiMaster<T>(entityType);
+        return new NoUiMaster<>(entityType);
     }
 
     /**

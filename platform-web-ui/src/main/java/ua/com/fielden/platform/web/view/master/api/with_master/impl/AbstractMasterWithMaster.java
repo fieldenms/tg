@@ -27,7 +27,9 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"
                         + "    >"
                         + "</tg-element-loader>")
-                .replace("//@ready-callback", "this._calcAttrs = (function(_currBindingEntity){\n" +
+                .replace("//@ready-callback", 
+                        "this.masterWithMaster = true;\n" +
+                        "this._calcAttrs = (function(_currBindingEntity){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
                         "   };\n" +
