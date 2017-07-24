@@ -61,7 +61,7 @@ public class EntityUtils {
     private static final Logger logger = Logger.getLogger(EntityUtils.class);
     
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
-    private static final Cache<Class<?>, Boolean> synseticTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
+    private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
     
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
@@ -726,10 +726,10 @@ public class EntityUtils {
         if (type == null) {
             return false;
         } else {
-            final Boolean value  = synseticTypes.getIfPresent(type);
+            final Boolean value  = syntheticTypes.getIfPresent(type);
             if (value == null) {
                 final boolean result = !isUnionEntityType(type) && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
-                synseticTypes.put(type, result);
+                syntheticTypes.put(type, result);
                 return result;
             } else {
                 return value;
