@@ -22,15 +22,16 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -58,7 +59,10 @@ import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 
 public class EntityUtils {
     private static final Logger logger = Logger.getLogger(EntityUtils.class);
-
+    
+    private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
+    private static final Cache<Class<?>, Boolean> synseticTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
+    
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
     }
@@ -689,10 +693,6 @@ public class EntityUtils {
         }
     }
 
-    
-    private static final Map<Class<?>, Boolean> persistentTypes = new ConcurrentHashMap<>();
-    private static final Map<Class<?>, Boolean> synseticTypes = new ConcurrentHashMap<>();
-    
     /**
      * Determines whether the provided entity type represents a persistent entity that can be stored in a database.
      *
@@ -701,15 +701,19 @@ public class EntityUtils {
     public static boolean isPersistedEntityType(final Class<?> type) {
         if (type == null) {
             return false;
-        } else if (!persistentTypes.containsKey(type)) {
-            final boolean result = isEntityType(type)
+        } else { 
+            final Boolean value = persistentTypes.getIfPresent(type);
+            if (value == null) {
+                final boolean result = isEntityType(type)
                     && !isUnionEntityType(type)
                     && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type) 
                     && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
-            persistentTypes.put(type, result);
+                persistentTypes.put(type, result);
+                return result;
+            } else {
+                return value;
+            }
         }
-        
-        return persistentTypes.get(type);
     }
     
     /**
@@ -721,11 +725,16 @@ public class EntityUtils {
     public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
         if (type == null) {
             return false;
-        } else if (!synseticTypes.containsKey(type)) {
-            final boolean result = !isUnionEntityType(type) && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
-            synseticTypes.put(type, result);
+        } else {
+            final Boolean value  = synseticTypes.getIfPresent(type);
+            if (value == null) {
+                final boolean result = !isUnionEntityType(type) && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
+                synseticTypes.put(type, result);
+                return result;
+            } else {
+                return value;
+            }
         }
-        return synseticTypes.get(type);
     }
     
     /**

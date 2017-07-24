@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.beans.PropertyChangeListener;
@@ -362,7 +363,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
-        actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
+        actualEntityType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(getClass());
 
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
