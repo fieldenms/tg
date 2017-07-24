@@ -22,9 +22,11 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -687,16 +689,27 @@ public class EntityUtils {
         }
     }
 
+    
+    private static final Map<Class<?>, Boolean> persistentTypes = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Boolean> synseticTypes = new ConcurrentHashMap<>();
+    
     /**
      * Determines whether the provided entity type represents a persistent entity that can be stored in a database.
      *
      * @return
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
-        return isEntityType(type)
-            && !isUnionEntityType(type)
-            && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type) 
-            && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+        if (type == null) {
+            return false;
+        } else if (!persistentTypes.containsKey(type)) {
+            final boolean result = isEntityType(type)
+                    && !isUnionEntityType(type)
+                    && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type) 
+                    && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+            persistentTypes.put(type, result);
+        }
+        
+        return persistentTypes.get(type);
     }
     
     /**
@@ -706,9 +719,13 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
-        return type != null
-            && !isUnionEntityType(type)
-            && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
+        if (type == null) {
+            return false;
+        } else if (!synseticTypes.containsKey(type)) {
+            final boolean result = !isUnionEntityType(type) && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
+            synseticTypes.put(type, result);
+        }
+        return synseticTypes.get(type);
     }
     
     /**
