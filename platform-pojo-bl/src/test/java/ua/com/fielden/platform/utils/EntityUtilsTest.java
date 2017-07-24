@@ -1,12 +1,16 @@
 package ua.com.fielden.platform.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
 
 import java.lang.reflect.Field;
@@ -21,6 +25,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -168,5 +176,40 @@ public class EntityUtilsTest {
         assertEquals(entity1.compareTo(entity2), EntityUtils.compare(entity1, entity2));
         assertEquals(entity2.compareTo(entity1), EntityUtils.compare(entity2, entity1));
         assertEquals(entity1.compareTo(entity1), EntityUtils.compare(entity1, entity1));
+    }
+    
+    @Test
+    public void non_persistent_and_non_synthetic_and_non_union_entities_are_recognised_as_such() {
+        assertFalse(isPersistedEntityType(Entity.class));
+        assertFalse(isSyntheticEntityType(Entity.class));
+        assertFalse(isUnionEntityType(Entity.class));
+    }
+    
+    @Test 
+    public void union_entity_is_recognised_as_such() {
+        assertFalse(isPersistedEntityType(UnionEntity.class));
+        assertFalse(isSyntheticEntityType(Entity.class));
+        assertTrue(isUnionEntityType(UnionEntity.class));
+    }
+    
+    @Test 
+    public void persistent_entity_is_recognised_as_such() {
+        assertTrue(isPersistedEntityType(TgAuthor.class));
+        assertFalse(isSyntheticEntityType(TgAuthor.class));
+        assertFalse(isUnionEntityType(TgAuthor.class));
+    }
+
+    @Test 
+    public void synthetic_entity_is_recognised_as_such() {
+        assertFalse(isPersistedEntityType(TgAverageFuelUsage.class));
+        assertTrue(isSyntheticEntityType(TgAverageFuelUsage.class));
+        assertFalse(isUnionEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test 
+    public void synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic() {
+        assertFalse(isPersistedEntityType(TgReVehicleModel.class));
+        assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
+        assertFalse(isUnionEntityType(TgReVehicleModel.class));
     }
 }
