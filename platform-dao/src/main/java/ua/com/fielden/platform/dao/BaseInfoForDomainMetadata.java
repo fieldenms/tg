@@ -2,6 +2,8 @@ package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -20,15 +22,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.security.user.User;
 
 public class BaseInfoForDomainMetadata {
-    private final MapEntityTo userMapTo;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo> map = new ConcurrentHashMap<>();
-
-    public BaseInfoForDomainMetadata(final MapEntityTo userMapTo) {
-        this.userMapTo = userMapTo;
-    }
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityTypeInfo<?>> map = new ConcurrentHashMap<>();
 
     public <ET extends AbstractEntity<?>> String getTableClause(final Class<ET> entityType) {
         final EntityTypeInfo<ET> entityTypeInfo = getEntityTypeInfo(entityType);
@@ -54,11 +50,11 @@ public class BaseInfoForDomainMetadata {
     }
 
     private <ET extends AbstractEntity<?>> EntityTypeInfo<ET> getEntityTypeInfo(final Class<ET> entityType) {
-        final EntityTypeInfo<ET> existing = map.get(entityType);
+        final EntityTypeInfo<ET> existing = (EntityTypeInfo<ET>) map.get(entityType);
         if (existing != null) {
             return existing;
         } else {
-            final EntityTypeInfo<ET> created = new EntityTypeInfo<ET>(entityType);
+            final EntityTypeInfo<ET> created = new EntityTypeInfo<>(entityType);
             map.put(entityType, created);
             return created;
         }
@@ -69,7 +65,7 @@ public class BaseInfoForDomainMetadata {
     }
 
     private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {
-        final List<EntityResultQueryModel<ET>> result = new ArrayList<EntityResultQueryModel<ET>>();
+        final List<EntityResultQueryModel<ET>> result = new ArrayList<>();
         if (!isUnionEntityType(entityType)) {
             return result;
         }
@@ -105,14 +101,14 @@ public class BaseInfoForDomainMetadata {
 
         public EntityTypeInfo(final Class<ET> entityType) {
             this.entityType = entityType;
-            mapEntityToAnnotation = User.class == entityType ? userMapTo : AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
+            mapEntityToAnnotation = AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
             entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
             unionEntityModels = produceUnionEntityModels(entityType);
-            if (mapEntityToAnnotation != null && (entityModels.size() + unionEntityModels.size() == 0)) {
+            if (isPersistedEntityType(entityType)) {
                 category = EntityCategory.PERSISTED;
-            } else if (mapEntityToAnnotation == null && entityModels.size() > 0 && unionEntityModels.size() == 0) {
+            } else if (isSyntheticEntityType(entityType)) {
                 category = EntityCategory.QUERY_BASED;
-            } else if (mapEntityToAnnotation == null && entityModels.size() == 0 && unionEntityModels.size() > 0) {
+            } else if (isUnionEntityType(entityType)) {
                 category = EntityCategory.UNION;
             } else if (mapEntityToAnnotation == null && (entityModels.size() + unionEntityModels.size() == 0)) {
                 category = EntityCategory.PURE;

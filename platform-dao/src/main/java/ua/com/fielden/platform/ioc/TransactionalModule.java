@@ -52,14 +52,15 @@ public abstract class TransactionalModule extends EntityModule {
      * @param mappingExtractor
      * @throws Exception
      */
-    public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-            throws Exception {
+    public TransactionalModule(
+            final Properties props, 
+            final Map<Class, Class> defaultHibernateTypes, 
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
 
         final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
                 props, //
                 defaultHibernateTypes, //
-                applicationEntityTypes,//
-                getUserMapTo());
+                applicationEntityTypes);
         
         final Configuration cfg = hcf.build();
 
@@ -75,13 +76,6 @@ public abstract class TransactionalModule extends EntityModule {
 
     protected void initHibernateConfig(final EntityFactory factory) {
         interceptor.setFactory(factory);
-    }
-
-    /**
-     * Method that can be overridden in order to provide an alternative to the default table mapping for type {@link User}.
-     */
-    protected MapEntityTo getUserMapTo() {
-        return AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
     }
 
     public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
