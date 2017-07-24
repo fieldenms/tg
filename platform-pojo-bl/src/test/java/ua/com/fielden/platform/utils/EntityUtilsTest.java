@@ -188,7 +188,7 @@ public class EntityUtilsTest {
     @Test 
     public void union_entity_is_recognised_as_such() {
         assertFalse(isPersistedEntityType(UnionEntity.class));
-        assertFalse(isSyntheticEntityType(Entity.class));
+        assertFalse(isSyntheticEntityType(UnionEntity.class));
         assertTrue(isUnionEntityType(UnionEntity.class));
     }
     
