@@ -250,7 +250,7 @@ public class EntQuery implements ISingleOperand {
             LOGGER.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
             LOGGER.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
-            final Set<Yield> toBeRemoved = new HashSet<Yield>();
+            final Set<Yield> toBeRemoved = new HashSet<>();
 
             for (final Yield yield : yields.getYields()) {
                 if (shouldYieldBeRemoved(fetchModel, yield)) {
@@ -505,7 +505,7 @@ public class EntQuery implements ISingleOperand {
             final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
             associateSubqueriesWithMasterQuery(immediateSubqueries);
 
-            final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
+            final List<EntProp> propsToBeResolved = new ArrayList<>();
             propsToBeResolved.addAll(getPropsByStage(getImmediateProps(), EntPropStage.UNPROCESSED));
             propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
 
