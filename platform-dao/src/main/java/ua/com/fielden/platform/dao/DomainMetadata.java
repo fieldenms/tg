@@ -318,8 +318,8 @@ public class DomainMetadata {
         case QUERY_BASED:
             if (isEntityType(getKeyType(entityType))) {
                 return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(expr().prop("key").model()).type(EXPRESSION).build();
-            } else {
-                return null;
+            } else { // FIXME need a check for yieldAll situation.... and extends.. or just extends...
+                return null; // idProperty;
             }
         case UNION:
             return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
@@ -368,7 +368,7 @@ public class DomainMetadata {
      */
     private SortedMap<String, PropertyMetadata> generatePropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory)
             throws Exception {
-        final SortedMap<String, PropertyMetadata> result = new TreeMap<String, PropertyMetadata>();
+        final SortedMap<String, PropertyMetadata> result = new TreeMap<>();
 
         safeMapAdd(result, generateIdPropertyMetadata(entityType, entityCategory));
         safeMapAdd(result, generateVersionPropertyMetadata(entityType, entityCategory));
