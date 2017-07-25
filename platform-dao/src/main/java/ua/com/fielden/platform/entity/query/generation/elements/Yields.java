@@ -10,10 +10,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class Yields implements IPropertyCollector {
-    private final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-
-    public Yields() {
-    }
+    private final SortedMap<String, Yield> yields = new TreeMap<>();
 
     public void addYield(final Yield yield) {
         if (yields.containsKey(yield.getAlias())) {
@@ -45,6 +42,10 @@ public class Yields implements IPropertyCollector {
 
     public int size() {
         return yields.size();
+    }
+    
+    public boolean isEmpty() {
+        return yields.isEmpty();
     }
 
     public Collection<Yield> getYields() {

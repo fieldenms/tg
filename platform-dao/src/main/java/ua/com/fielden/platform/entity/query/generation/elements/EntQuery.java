@@ -121,7 +121,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return !isSubQuery() && (yieldAll || (yields.size() == 0));
+        return !isSubQuery() && (yieldAll || yields.isEmpty());
     }
 
     private boolean idPropYieldEnhancementRequired() {
