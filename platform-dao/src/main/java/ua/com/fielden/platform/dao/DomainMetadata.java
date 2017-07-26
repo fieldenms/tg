@@ -359,6 +359,9 @@ public class DomainMetadata {
             case PERSISTED:
                 return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
             case QUERY_BASED:
+                if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+                    return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
+                }
                 return null; //FIXME
             case UNION:
                 return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
