@@ -738,6 +738,18 @@ public class EntityUtils {
     }
     
     /**
+     * Determines whether the provided entity type is of synthetic nature that at the same time is based on a persistent type.
+     * This kind of entities most typically should have a model with <code>yieldAll</code> clause.
+     * 
+     * @param type
+     * @return
+     */
+    public static boolean isSyntheticBasedOnPersistentEntityType(final Class<? extends AbstractEntity<?>> type) {
+        return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
+    }
+
+    
+    /**
      * Determines whether the provided entity type models a union-type.
      *
      * @return

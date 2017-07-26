@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
@@ -35,6 +36,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -76,11 +78,13 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
@@ -316,7 +320,12 @@ public class DomainMetadata {
         case PERSISTED:
             return isOneToOne(entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
         case QUERY_BASED:
-            if (isEntityType(getKeyType(entityType))) {
+            if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+                if (isEntityType(getKeyType(entityType))) {
+                    throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persystent type with an entity-typed key. This is not supported.", entityType.getName()));
+                }
+                return idProperty;
+            } else if (isEntityType(getKeyType(entityType))) {
                 return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(expr().prop("key").model()).type(EXPRESSION).build();
             } else {
                 return null;
@@ -350,6 +359,9 @@ public class DomainMetadata {
             case PERSISTED:
                 return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
             case QUERY_BASED:
+                if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+                    return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).type(PRIMITIVE).build();
+                }
                 return null; //FIXME
             case UNION:
                 return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
@@ -368,7 +380,7 @@ public class DomainMetadata {
      */
     private SortedMap<String, PropertyMetadata> generatePropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory)
             throws Exception {
-        final SortedMap<String, PropertyMetadata> result = new TreeMap<String, PropertyMetadata>();
+        final SortedMap<String, PropertyMetadata> result = new TreeMap<>();
 
         safeMapAdd(result, generateIdPropertyMetadata(entityType, entityCategory));
         safeMapAdd(result, generateVersionPropertyMetadata(entityType, entityCategory));
