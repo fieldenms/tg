@@ -218,4 +218,13 @@ public class EntityUtilsTest {
         assertTrue(isSyntheticBasedOnPersistentEntityType(TgReVehicleModel.class));
         assertFalse(isUnionEntityType(TgReVehicleModel.class));
     }
+    
+    @Test 
+    public void null_does_not_belong_to_any_of_entity_type_classiciations() {
+        assertFalse(isPersistedEntityType(null));
+        assertFalse(isSyntheticEntityType(null));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(null));
+        assertFalse(isUnionEntityType(null));
+    }
+
 }

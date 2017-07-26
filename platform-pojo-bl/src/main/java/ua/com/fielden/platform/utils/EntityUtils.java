@@ -745,11 +745,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticBasedOnPersistentEntityType(final Class<? extends AbstractEntity<?>> type) {
-        if (type == null) {
-            return false;
-        } else {
-            return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
-        }
+        return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
     }
 
     
