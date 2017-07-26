@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.security.provider;
 
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.mapById;
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
+
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -7,13 +10,12 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
@@ -21,6 +23,8 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
+import ua.com.fielden.platform.security.user.UserRolesUpdaterController;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /** 
  * DAO implementation for companion object {@link IUserRolesUpdater}.
@@ -30,13 +34,11 @@ import ua.com.fielden.platform.security.user.UserRolesUpdater;
  */
 @EntityType(UserRolesUpdater.class)
 public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> implements IUserRolesUpdater {
-    private final IUserAndRoleAssociationBatchAction coUserAndRoleAssociationBatchAction;
     private final EntityFactory factory;
     
     @Inject
-    public UserRolesUpdaterDao(final IFilter filter, final IUserAndRoleAssociationBatchAction coUserAndRoleAssociationBatchAction, final EntityFactory factory) {
+    public UserRolesUpdaterDao(final IFilter filter, final EntityFactory factory) {
         super(filter);
-        this.coUserAndRoleAssociationBatchAction = coUserAndRoleAssociationBatchAction;
         this.factory = factory;
     }
     
@@ -44,30 +46,26 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     @SessionRequired
     @Authorise(UserSaveToken.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
-        final UserRolesUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getRoles(), this, factory, Long.class);
-        
-        // after all validations have passed -- the association changes could be saved:
-        final User userBeingUpdated = (User) action.refetchedMasterEntity();
-        final Map<Object, UserRole> availableRoles = AbstractFunctionalEntityForCollectionModificationProducer.mapById(action.getRoles(), Long.class);
+        // TODO removed from db entities are not properly validated in validateAction() method, please investigate
+        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, a -> a.getRoles(), this, factory, Long.class, new UserRolesUpdaterController(co(User.class), co(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
+        final Map<Object, UserRole> availableRoles = mapById(action.getRoles(), Long.class);
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final Long addedId : action.getAddedIds()) {
-            final UserAndRoleAssociation assoc = factory.newByKey(UserAndRoleAssociation.class, userBeingUpdated, availableRoles.get(addedId));
-            addedAssociations.add(assoc);
+            addedAssociations.add(co(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(addedId)));
         }
 
         final Set<UserAndRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final Long removedId : action.getRemovedIds()) {
-            final UserAndRoleAssociation assoc = factory.newByKey(UserAndRoleAssociation.class, userBeingUpdated, availableRoles.get(removedId));
-            removedAssociations.add(assoc);
+            removedAssociations.add(co(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(removedId)));
         }
 
         final UserAndRoleAssociationBatchAction batchAction = new UserAndRoleAssociationBatchAction();
         batchAction.setSaveEntities(addedAssociations);
         batchAction.setRemoveEntities(removedAssociations);
-        coUserAndRoleAssociationBatchAction.save(batchAction);
+        co(UserAndRoleAssociationBatchAction.class).save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
-        return super.save(actionToSave);
+        return super.save(actionAndUserBeingUpdated._1);
     }
 }

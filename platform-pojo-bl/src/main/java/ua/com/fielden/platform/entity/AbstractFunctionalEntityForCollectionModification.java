@@ -9,13 +9,14 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 
 /**
  * A base class for functional entities that are intended to modify entity (master entity) collectional association properties. The master entity, whose collection modifies,
  * needs to have persistent nature.
  * <p>
- * Implementors should implement producer that is descendant of {@link AbstractFunctionalEntityProducerForCollectionModification} -- this producer will assign the key for this functional entity and will do other preparation job.
+ * Implementors should implement producer that is descendant of {@link AbstractFunctionalEntityForCollectionModificationProducer} -- this producer will assign the key for this functional entity and will do other preparation job.
  * <p>
  * Concrete implementors need to be persistent (do not forget to annotate with @MapEntityTo annotation).
  * <p>
@@ -29,10 +30,10 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  */
 @KeyType(Long.class)
 public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<Long> {
-    /**
-     * This is to be used for internal validation for versioning -- this is not needed to be send to the client application, that is why it was made as non-property (no {@link IsProperty} annotation).
-     */
-    private AbstractEntity<?> refetchedMasterEntity;
+//    /**
+//     * This is to be used for internal validation for versioning -- this is not needed to be send to the client application, that is why it was made as non-property (no {@link IsProperty} annotation).
+//     */
+//    private AbstractEntity<?> refetchedMasterEntity;
     
     @IsProperty(value = Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
@@ -50,6 +51,34 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     @MapTo
     @Title(value = "Surrogate Version", desc = "Surrogate Version (used also as the property to mark this entity as dirty for saving purposes)")
     private Long surrogateVersion;
+    
+    @IsProperty
+    @Title("Master Entity Holder")
+    private CentreContextHolder masterEntityHolder;
+    
+    @IsProperty
+    @Title("Master entity")
+    private AbstractEntity<?> masterEntity;
+
+    @Observable
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setMasterEntity(final AbstractEntity<?> masterEntity) {
+        this.masterEntity = masterEntity;
+        return this;
+    }
+
+    public AbstractEntity<?> getMasterEntity() {
+        return masterEntity;
+    }
+    
+    @Observable
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setMasterEntityHolder(final CentreContextHolder masterEntityHolder) {
+        this.masterEntityHolder = masterEntityHolder;
+        return this;
+    }
+
+    public CentreContextHolder getMasterEntityHolder() {
+        return masterEntityHolder;
+    }
 
     @Observable
     public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setSurrogateVersion(final Long surrogateVersion) {
@@ -115,12 +144,12 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
         }
     }
     
-    void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
-        // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
-        this.refetchedMasterEntity = refetchedMasterEntity;
-    }
-    
-    public AbstractEntity<?> refetchedMasterEntity() {
-        return refetchedMasterEntity;
-    }
+//    void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
+//        // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
+//        this.refetchedMasterEntity = refetchedMasterEntity;
+//    }
+//    
+//    public AbstractEntity<?> refetchedMasterEntity() {
+//        return refetchedMasterEntity;
+//    }
 }
