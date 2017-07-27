@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,14 +39,11 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
     @Authorise(UserReviewToken.class)
     protected UserRolesUpdater provideCurrentlyAssociatedValues(final UserRolesUpdater entity, final User masterEntity) {
         entity.setRoles(loadAvailableRoles(this.<IUserRole, UserRole>co(UserRole.class)));
-        
-        final Set<Long> chosenIds = new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList()));
-        entity.setChosenIds(chosenIds);
+        entity.setChosenIds(new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList())));
         return entity;
     }
     
     public static Set<UserRole> loadAvailableRoles(final IUserRole coUserRole) {
-        final List<UserRole> allAvailableRoles = coUserRole.findAll();
-        return new LinkedHashSet<>(allAvailableRoles);
+        return new LinkedHashSet<>(coUserRole.findAll());
     }
 }

@@ -39,7 +39,9 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
             .with(fetchAndInstrument(UserRolesUpdater.class).with(AbstractEntity.KEY)/*.with("roles")*/)
             .model()
         );
-        refetchedAction.setRoles(UserRolesUpdaterProducer.loadAvailableRoles(coUserRole));
+        if (refetchedAction != null) {
+            refetchedAction.setRoles(UserRolesUpdaterProducer.loadAvailableRoles(coUserRole));
+        }
         return refetchedAction;
     }
 }
