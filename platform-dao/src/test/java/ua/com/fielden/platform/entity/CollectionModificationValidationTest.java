@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
@@ -152,7 +150,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater originalUpdater = createUpdater(user);
-        final Set<Long> removedIds = setOf(role2.getId());
+        final LinkedHashSet<Long> removedIds = linkedSetOf(role2.getId());
         originalUpdater.setRemovedIds(removedIds);
         
         // removal of available entity
@@ -182,7 +180,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater originalUpdater = createUpdater(user);
-        final Set<Long> addedIds = setOf(role1.getId());
+        final LinkedHashSet<Long> addedIds = linkedSetOf(role1.getId());
         originalUpdater.setAddedIds(addedIds);
         
         // removal of available entity
@@ -212,7 +210,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater originalUpdater = createUpdater(user);
-        final Set<Long> addedIds = setOf(role1.getId());
+        final LinkedHashSet<Long> addedIds = linkedSetOf(role1.getId());
         originalUpdater.setAddedIds(addedIds);
         
         // simultaneous collection modification
@@ -240,8 +238,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater updater = createUpdater(user);
-        updater.setAddedIds(setOf(role1.getId()));
-        updater.setRemovedIds(setOf(role2.getId()));
+        updater.setAddedIds(linkedSetOf(role1.getId()));
+        updater.setRemovedIds(linkedSetOf(role2.getId()));
         save(updater);
         
         final UserRolesUpdater newUpdater = createUpdater(user);
@@ -262,8 +260,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRolesUpdater updater = createUpdater(user);
         assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(updater.getRoles()));
         
-        updater.setAddedIds(setOf(role1.getId()));
-        updater.setRemovedIds(setOf(role2.getId()));
+        updater.setAddedIds(linkedSetOf(role1.getId()));
+        updater.setRemovedIds(linkedSetOf(role2.getId()));
         assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(updater.getRoles()));
         
         save(updater);
@@ -291,7 +289,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             userRoleReview, userRoleDelete, userRoleSave
         ), new ArrayList<>(updater.getTokens()));
         
-        updater.setAddedIds(setOf(userDelete.getKey(), userRoleSave.getKey()));
+        updater.setAddedIds(linkedSetOf(userDelete.getKey(), userRoleSave.getKey()));
         assertEquals(listOf(
             alwaysAccessible,
             userReview, userDelete, userSave,

@@ -39,11 +39,7 @@ public class CentreConfigUpdaterController implements ICollectionModificationCon
      */
     @Override
     public AbstractEntity<?> getMasterEntityFromAction(final CentreConfigUpdater action) {
-        if (action.getMasterEntityHolder() != null) {
-            return criteriaEntityRestorer.restoreCriteriaEntity(action.getMasterEntityHolder());
-        } else {
-            return action.getMasterEntity();
-        }
+        return criteriaEntityRestorer.restoreCriteriaEntity(action.getMasterEntityHolder());
     }
 
 }

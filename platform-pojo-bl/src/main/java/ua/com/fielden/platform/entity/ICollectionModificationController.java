@@ -32,12 +32,7 @@ public interface ICollectionModificationController<MASTER_TYPE extends AbstractE
      * @return
      */
     default AbstractEntity<?> getMasterEntityFromAction(final T action) {
-        // TODO remove
-//        if (action.getMasterEntityHolder() != null) {
-//            return criteriaEntityRestorer.restoreCriteriaEntity(action.getMasterEntityHolder());
-//        } else {
-            return action.getMasterEntity();
-//        }
+        return action.getMasterEntity();
     }
     
 //    default fetch<MASTER_TYPE> fetchModelForMasterEntity() {

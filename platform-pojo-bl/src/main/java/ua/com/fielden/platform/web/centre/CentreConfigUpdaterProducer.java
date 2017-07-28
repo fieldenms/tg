@@ -22,7 +22,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -34,9 +33,9 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> controller;
     
     @Inject
-    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, CentreConfigUpdater.class, companionFinder);
-        this.controller = new CentreConfigUpdaterController(criteriaEntityRestorer);
+        this.controller = new CentreConfigUpdaterController(null);
     }
     
     @Override

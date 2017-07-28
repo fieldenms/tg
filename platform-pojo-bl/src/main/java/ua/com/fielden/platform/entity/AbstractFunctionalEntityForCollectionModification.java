@@ -37,15 +37,15 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     
     @IsProperty(value = Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
-    private Set<ID_TYPE> chosenIds = new LinkedHashSet<>();
+    private LinkedHashSet<ID_TYPE> chosenIds = new LinkedHashSet<>();
     
     @IsProperty(value = Long.class)
     @Title(value = "Added ids", desc = "IDs of added entities")
-    private Set<ID_TYPE> addedIds = new LinkedHashSet<>();
+    private LinkedHashSet<ID_TYPE> addedIds = new LinkedHashSet<>();
     
     @IsProperty(value = Long.class)
     @Title(value = "Removed ids", desc = "IDs of removed entities")
-    private Set<ID_TYPE> removedIds = new LinkedHashSet<>();
+    private LinkedHashSet<ID_TYPE> removedIds = new LinkedHashSet<>();
     
     @IsProperty
     @MapTo
@@ -91,7 +91,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final LinkedHashSet<ID_TYPE> addedIds) {
         this.addedIds.clear();
         this.addedIds.addAll(addedIds);
         return this;
@@ -102,7 +102,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final LinkedHashSet<ID_TYPE> removedIds) {
         this.removedIds.clear();
         this.removedIds.addAll(removedIds);
         return this;
@@ -113,7 +113,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setChosenIds(final Set<ID_TYPE> chosenIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setChosenIds(final LinkedHashSet<ID_TYPE> chosenIds) {
         this.chosenIds.clear();
         this.chosenIds.addAll(chosenIds);
         return this;
