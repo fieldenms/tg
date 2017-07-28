@@ -233,6 +233,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param quert
      * @return
      */
+    @Deprecated
     List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
