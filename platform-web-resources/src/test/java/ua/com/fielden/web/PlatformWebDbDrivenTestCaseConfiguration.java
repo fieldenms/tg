@@ -15,7 +15,6 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
@@ -29,7 +28,6 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.MoneyUserType;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -97,7 +95,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(AcknowledgeWarnings.class);
             domainTypes.add(PropertyWarning.class);
             domainTypes.add(Attachment.class);
-            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
             cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
 

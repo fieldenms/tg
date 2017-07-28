@@ -49,16 +49,13 @@ public class HibernateConfigurationFactory {
     public HibernateConfigurationFactory(//
             final Properties props, //
             final Map<Class, Class> defaultHibernateTypes, //
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
-            final MapEntityTo userMapTo)
-            throws Exception {
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         this.props = props;
 
         domainMetadata = new DomainMetadata(//
                 defaultHibernateTypes,//
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationEntityTypes, //
-                userMapTo, //
                 determineDbVersion(props));
         
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);

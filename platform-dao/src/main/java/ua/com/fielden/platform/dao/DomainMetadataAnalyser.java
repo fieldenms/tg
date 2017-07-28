@@ -21,7 +21,7 @@ public class DomainMetadataAnalyser {
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
         super();
         this.domainMetadata = domainMetadata;
-        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(domainMetadata.getUserMapTo());
+        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());

@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @Ignore
 @CompanionObject(ITgVehicleModel.class)
 public class TgVehicleModel extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Required

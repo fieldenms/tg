@@ -872,6 +872,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     @SessionRequired
+    @Deprecated
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
         return getEntitiesOnPage(qem, null, null);

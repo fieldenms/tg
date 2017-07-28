@@ -201,7 +201,13 @@
                 /**List of child dialogs*/
                 _childDialogs: {
                     type: Array
-                }
+                },
+                
+                /**
+                 * Needed to prevent user from dragging dialog out of the window rectangle. Caches window width and height.
+                 */
+                _windowWidth: Number,
+                _windowHeight: Number,
             },
             
             observers: ["_dialogMinimised(prefDim, _minimised)"],
@@ -367,11 +373,19 @@
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';
+                        this._windowHeight = window.innerHeight;
+                        this._windowWidth = window.innerWidth;
                         break;
                     case 'track':
-                        this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
-                        this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
-                        this._wasMoved = true;
+                        const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
+                        if (_titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx  <= this._windowWidth - 44) {
+                            this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
+                            this._wasMoved = true;
+                        }
+                        if (_titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy  <= this._windowHeight) { 
+                            this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                            this._wasMoved = true;
+                        }
                         break;
                     case 'end':
                         this.$.titleBar.style.removeProperty('cursor');
