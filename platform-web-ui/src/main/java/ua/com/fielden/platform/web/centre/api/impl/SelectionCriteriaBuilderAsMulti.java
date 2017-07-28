@@ -38,7 +38,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
         final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get());
         if (!EntityUtils.isEntityType(propType)) {
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
-        } else if (type != propType) {
+        } else if (!type.isAssignableFrom(propType)) {
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
         }
 

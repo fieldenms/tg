@@ -12,11 +12,14 @@ import org.apache.log4j.xml.DOMConfigurator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -38,7 +41,6 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -51,16 +53,11 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
 import ua.com.fielden.platform.test.ioc.DaoTestHibernateModule;
 import ua.com.fielden.platform.types.Money;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
 
 /**
  * Provides platform specific implementation of {@link IDbDrivenTestCaseConfiguration}, which is mainly related to the use of {@link DaoTestHibernateModule}.
@@ -121,7 +118,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {
-            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
             final Configuration cfg = new Configuration();
             cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));

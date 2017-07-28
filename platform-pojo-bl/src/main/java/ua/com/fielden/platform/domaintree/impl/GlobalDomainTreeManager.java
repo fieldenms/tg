@@ -20,12 +20,15 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.AddToCriteriaTickManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractBatchAction;
@@ -52,8 +55,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * The global domain tree manager implementation.
@@ -148,7 +149,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 validateMenuItemType(mmiType);
                 validateMenuItemTypeRootType(mmiType);
                 return mmiType;
-            } catch (final IllegalArgumentException e) {
+            } catch (final DomainTreeException e) {
                 return null;
             }
         } catch (final ClassNotFoundException e) {
@@ -272,7 +273,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         } catch (final Throwable t) {
             t.printStackTrace();
             logger.error(t.getMessage());
-            throw new IllegalArgumentException(t.getMessage());
+            throw new DomainTreeException(t.getMessage());
         }
     }
 
@@ -458,13 +459,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     /**
-     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     * Logs and throws an {@link DomainTreeException} error with specified message.
      *
      * @param message
      */
     private static void error(final String message) {
         logger.error(message);
-        throw new IllegalArgumentException(message);
+        throw new DomainTreeException(message);
     }
 
     /**
@@ -517,11 +518,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
         if (id == null) {
             logger.error("ID should exist.");
-            throw new IllegalArgumentException("ID should exist.");
+            throw new DomainTreeException("ID should exist.");
         }
         if (version == null) {
             logger.error("Version should exist.");
-            throw new IllegalArgumentException("Version should exist.");
+            throw new DomainTreeException("Version should exist.");
         }
         // logger.debug(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: started...", id, version));
         final boolean stale = entityCentreConfigController.isStale(id, version);

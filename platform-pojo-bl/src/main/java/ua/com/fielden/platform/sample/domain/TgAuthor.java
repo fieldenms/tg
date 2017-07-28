@@ -32,7 +32,6 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 @MapEntityTo
 @CompanionObject(ITgAuthor.class)
 public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

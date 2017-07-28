@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -28,22 +29,19 @@ import ua.com.fielden.platform.sample.domain.validators.TgPublishedYearly_Author
 @EntityTitle("Published Yearly")
 @CompanionObject(ITgPublishedYearly.class)
 public class TgPublishedYearly extends AbstractEntity<DynamicEntityKey> {
-    private static final EntityResultQueryModel<TgPublishedYearly> model_ = model();
+    protected static final EntityResultQueryModel<TgPublishedYearly> model_ = model();
 
     @IsProperty
-    @Title(value = "Year", desc = "Year of publication")
+    @Title("Author")
+    @BeforeChange(@Handler(TgPublishedYearly_AuthorValidator.class))
     @CompositeKeyMember(1)
-    private Integer year;
-
+    @Optional
+    private TgAuthor author;
+    
     @IsProperty
-    @Title(value = "Count", desc = "Number of publication in given year")
-    @CompositeKeyMember(2)
+    @Title(value = "Count", desc = "Number of publications of given author")
     private Integer qty;
 
-    @IsProperty
-    @Title(value = "Most productive author", desc = "Desc")
-    @BeforeChange(@Handler(TgPublishedYearly_AuthorValidator.class))
-    private TgAuthor author;
 
     @Observable
     public TgPublishedYearly setAuthor(final TgAuthor author) {
@@ -52,12 +50,18 @@ public class TgPublishedYearly extends AbstractEntity<DynamicEntityKey> {
     }
 
     private static EntityResultQueryModel<TgPublishedYearly> model() {
-        return select(TgAuthorship.class). //
-        groupBy().prop("year"). //
-        yield().prop("year").as("year"). //
-        yield().countAll().as("qty"). //
-        yield().model(select(TgAuthor.class).where().prop("surname").eq().val("GRIES").model()).as("author"). //
-        modelAsEntity(TgPublishedYearly.class);
+        final EntityResultQueryModel<TgPublishedYearly> authorsModel = select(TgAuthorship.class). //
+                groupBy().prop("author"). //
+                yield().countAll().as("qty"). //
+                yield().prop("author").as("author"). //
+                modelAsEntity(TgPublishedYearly.class);
+
+        final EntityResultQueryModel<TgPublishedYearly> summaryModel = select(TgAuthorship.class). //
+                yield().countAll().asRequired("qty"). //
+                yield().val(null).as("author"). //
+                modelAsEntity(TgPublishedYearly.class);
+
+        return select(summaryModel, authorsModel).model();
     }
 
     public TgAuthor getAuthor() {
@@ -74,13 +78,13 @@ public class TgPublishedYearly extends AbstractEntity<DynamicEntityKey> {
         return qty;
     }
 
-    @Observable
-    public TgPublishedYearly setYear(final Integer year) {
-        this.year = year;
-        return this;
-    }
-
-    public Integer getYear() {
-        return year;
-    }
+//    @Observable
+//    public TgPublishedYearly setYear(final Integer year) {
+//        this.year = year;
+//        return this;
+//    }
+//
+//    public Integer getYear() {
+//        return year;
+//    }
 }

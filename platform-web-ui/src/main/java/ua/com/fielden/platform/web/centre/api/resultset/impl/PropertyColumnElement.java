@@ -19,6 +19,9 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  *
  */
 public class PropertyColumnElement implements IRenderable, IImportable {
+    //The minimal column width. It is used only when specified width is greater than minimal.
+    private final int MIN_COLUMN_WIDTH = 48;
+
     private final String propertyName;
     private final Optional<String> underlyingPropertyName;
     private final Optional<String> tooltipProp;
@@ -125,7 +128,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
         attrs.put("width", width);
-        attrs.put("min-width", 48 > width ? width : 48);
+        attrs.put("min-width", MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
         attrs.put("grow-factor", isFlexible ? growFactor : 0);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());

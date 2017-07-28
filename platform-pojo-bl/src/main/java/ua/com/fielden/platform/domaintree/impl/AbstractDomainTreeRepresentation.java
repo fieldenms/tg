@@ -285,7 +285,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static String parentCollection(final Class<?> root, final String property) {
         if (!isCollectionOrInCollectionHierarchy(root, property)) {
-            throw new IllegalArgumentException("The property [" + property + "] is not in collection hierarchy.");
+            throw new DomainTreeException("The property [" + property + "] is not in collection hierarchy.");
         }
         return isCollection(root, property) ? property : parentCollection(root, PropertyTypeDeterminator.penultAndLast(property).getKey());
     }
@@ -546,7 +546,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         @Override
         public boolean add(final String property) {
             if (property == null) {
-                throw new IllegalArgumentException("'null' properties can not be added into properties set (implemented as natural ordered list).");
+                throw new DomainTreeException("'null' properties can not be added into properties set (implemented as natural ordered list).");
             } else if (!EntityUtils.equalsEx(getElem(size() - 1), property)) { // when last property is equal to attempted (addition) property -- ignore addition
                 final boolean added = super.add(property);
                 if (added) {
@@ -560,7 +560,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         @Override
         public void add(final int index, final String property) {
             if (property == null) {
-                throw new IllegalArgumentException("'null' properties can not be added into properties set (implemented as natural ordered list).");
+                throw new DomainTreeException("'null' properties can not be added into properties set (implemented as natural ordered list).");
             } else if (!EntityUtils.equalsEx(getElem(index - 1), property)) { // when last property is equal to attempted (addition) property -- ignore addition
                 super.add(index, property);
                 fireProperty(root, property, true);
@@ -622,7 +622,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
                 includedProps.add("");
                 if (!EntityUtils.isEntityType(root)) {
-                    throw new IllegalArgumentException("Can not add children properties to non-entity type [" + root.getSimpleName() + "] in path [" + root.getSimpleName() + "=>"
+                    throw new DomainTreeException("Can not add children properties to non-entity type [" + root.getSimpleName() + "] in path [" + root.getSimpleName() + "=>"
                             + "" + "].");
                 }
                 // logger().info("Started constructKeysAndProperties for [" + managedType.getSimpleName() + "].");
@@ -745,7 +745,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 return shouldBeLoaded;
             }
         } else {
-            throw new IllegalArgumentException("The property [" + fromPath + "] in root [" + managedType.getSimpleName() + "] should be already loaded into 'included properties'.");
+            throw new DomainTreeException("The property [" + fromPath + "] in root [" + managedType.getSimpleName() + "] should be already loaded into 'included properties'.");
         }
     }
 
@@ -762,7 +762,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     /**
-     * Throws an {@link IllegalArgumentException} if the property is excluded.
+     * Throws an {@link DomainTreeException} if the property is excluded.
      *
      * @param dtr
      * @param root
@@ -772,7 +772,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     protected static void illegalExcludedProperties(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final String message) {
         /* TODO HUGE PERFORMACE BOTTLENECK!! */
         if (dtr.isExcludedImmutably(root, property)) {
-            throw new IllegalArgumentException(message);
+            throw new DomainTreeException(message);
         }
     }
 

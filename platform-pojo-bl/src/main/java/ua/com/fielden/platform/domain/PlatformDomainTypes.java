@@ -42,7 +42,8 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.SortingProperty;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
+import ua.com.fielden.platform.web.centre.CustomisableColumn;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
@@ -56,7 +57,8 @@ public class PlatformDomainTypes {
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
         types.add(CentreConfigUpdater.class);
-        types.add(SortingProperty.class);
+        types.add(CentreConfigUpdaterDefaultAction.class);
+        types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);

@@ -4,8 +4,11 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager;
+import ua.com.fielden.platform.domaintree.IUsageManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -18,8 +21,6 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * A base class for representations and managers with useful utility methods.
@@ -88,13 +89,13 @@ public abstract class AbstractDomainTree {
      */
     public static void validateRootType(final Class<?> klass) {
         if (klass == null) {
-            throw new IllegalArgumentException("Root type [" + klass + "] should be NOT NULL.");
+            throw new DomainTreeException("Root type [" + klass + "] should be NOT NULL.");
         }
         if (!EntityUtils.isEntityType(klass)) {
-            throw new IllegalArgumentException("Root type [" + klass + "] should be entity-typed.");
+            throw new DomainTreeException("Root type [" + klass + "] should be entity-typed.");
         }
         if (DynamicEntityClassLoader.isGenerated(klass)) {
-            throw new IllegalArgumentException("Root type [" + klass + "] should be NOT ENHANCED type.");
+            throw new DomainTreeException("Root type [" + klass + "] should be NOT ENHANCED type.");
         }
     }
 
@@ -160,7 +161,7 @@ public abstract class AbstractDomainTree {
     }
 
     /**
-     * Throws an {@link IllegalArgumentException} if the property is unchecked.
+     * Throws an {@link DomainTreeException} if the property is unchecked.
      *
      * @param tm
      * @param root
@@ -169,12 +170,12 @@ public abstract class AbstractDomainTree {
      */
     protected static void illegalUncheckedProperties(final ITickManager tm, final Class<?> root, final String property, final String message) {
         if (!tm.isChecked(root, property)) {
-            throw new IllegalArgumentException(message);
+            throw new DomainTreeException(message);
         }
     }
 
     /**
-     * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
+     * Throws an {@link DomainTreeException} if the property can not represent a "double criterion".
      *
      * @param root
      * @param property
@@ -182,12 +183,12 @@ public abstract class AbstractDomainTree {
      */
     protected static void illegalNonDoubleEditorProperties(final Class<?> root, final String property, final String message) {
         if (!isDoubleCriterion(root, property)) {
-            throw new IllegalArgumentException(message);
+            throw new DomainTreeException(message);
         }
     }
 
     /**
-     * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
+     * Throws an {@link DomainTreeException} if the property can not represent a "double criterion".
      *
      * @param root
      * @param property
@@ -195,12 +196,12 @@ public abstract class AbstractDomainTree {
      */
     protected static void illegalNonDoubleEditorAndNonBooleanProperties(final Class<?> root, final String property, final String message) {
         if (!isDoubleCriterionOrBoolean(root, property)) {
-            throw new IllegalArgumentException(message);
+            throw new DomainTreeException(message);
         }
     }
 
     /**
-     * Throws an {@link IllegalArgumentException} if the property is unused.
+     * Throws an {@link DomainTreeException} if the property is unused.
      *
      * @param tm
      * @param root
@@ -209,12 +210,12 @@ public abstract class AbstractDomainTree {
      */
     protected static void illegalUnusedProperties(final IUsageManager um, final Class<?> root, final String property, final String message) {
         if (!um.isUsed(root, property)) {
-            throw new IllegalArgumentException(message);
+            throw new DomainTreeException(message);
         }
     }
 
     /**
-     * Throws an {@link IllegalArgumentException} if the property type is not legal.
+     * Throws an {@link DomainTreeException} if the property type is not legal.
      *
      * @param root
      * @param property
@@ -228,7 +229,7 @@ public abstract class AbstractDomainTree {
                 return;
             }
         }
-        throw new IllegalArgumentException(message);
+        throw new DomainTreeException(message);
     }
 
     protected static String generateKey(final Class<?> forType) {

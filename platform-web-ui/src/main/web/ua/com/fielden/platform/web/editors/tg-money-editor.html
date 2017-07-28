@@ -50,8 +50,9 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
-                on-focus="_onFocus"
-                on-blur="_outFocus"
+    			on-down="_onDown"
+    			on-focus="_onFocus"
+    			on-blur="_outFocus"
     			disabled$="[[_disabled}}"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <div class="input-layer">[[_formatText(_editingValue)]]</div>
@@ -94,7 +95,8 @@
             _formatText: function(valueToFormat) {
                 var value = this.convertFromString(valueToFormat);
                 if (value !== null) {
-                    return this.reflector().formatMoney(value, this.$.appConfig.locale);
+                    const metaProp = this.reflector().getEntityTypeProp(this.reflector()._getValueFor(this.entity, ''), this.propertyName);
+                    return this.reflector().formatMoney(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 }
                 return '';
             },

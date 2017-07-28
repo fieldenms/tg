@@ -25,7 +25,6 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
@@ -48,8 +47,8 @@ import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.HyperlinkType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -64,7 +63,6 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -82,6 +80,7 @@ public class BaseEntQueryTCase {
     protected static final Class<TgPersonName> PERSON_NAME = TgPersonName.class;
     protected static final Class<TgAuthor> AUTHOR = TgAuthor.class;
     protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;
+    protected static final Class<TgAverageFuelUsage> AVERAGE_FUEL_USAGE = TgAverageFuelUsage.class;
     protected static final Class<TgOrgUnit5> ORG5 = TgOrgUnit5.class;
     protected static final Class<TgOrgUnit4> ORG4 = TgOrgUnit4.class;
     protected static final Class<TgOrgUnit3> ORG3 = TgOrgUnit3.class;
@@ -113,7 +112,7 @@ public class BaseEntQueryTCase {
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
     }
 
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()), PlatformTestDomainTypes.entityTypes, DbVersion.H2);
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 

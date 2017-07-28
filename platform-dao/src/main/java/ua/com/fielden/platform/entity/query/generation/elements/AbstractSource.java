@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
@@ -23,7 +22,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 public abstract class AbstractSource implements ISource {
 
-    protected final boolean persistedType;
     public final DbVersion dbVersion;
 
     /**
@@ -63,9 +61,8 @@ public abstract class AbstractSource implements ISource {
         this.sqlAlias = sqlAlias;
     }
 
-    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean persistedType) {
+    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.alias = alias;
-        this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.dbVersion = domainMetadataAnalyser.getDbVersion();
     }

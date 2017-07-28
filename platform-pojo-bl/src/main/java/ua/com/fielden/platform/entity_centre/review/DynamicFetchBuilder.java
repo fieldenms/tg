@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDAT
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isQueryBasedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 
 import java.util.Set;
 
@@ -18,6 +18,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 public class DynamicFetchBuilder {
+    
+    private DynamicFetchBuilder() {}
 
     /**
      * Creates "fetch property" model for entity query criteria.
@@ -44,7 +46,7 @@ public class DynamicFetchBuilder {
      */
     public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
         final fetch<T> result = fetch(managedType, fetchProperties, true);
-        return isQueryBasedEntityType(managedType) ? result : withoutLowLevelProps(managedType, result);
+        return isSyntheticEntityType(managedType) ? result : withoutLowLevelProps(managedType, result);
     }
 
     /**

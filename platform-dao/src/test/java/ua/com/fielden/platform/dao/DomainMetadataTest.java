@@ -16,7 +16,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 
 public class DomainMetadataTest extends BaseEntQueryTCase {
-    private final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(DOMAIN_METADATA.getUserMapTo());
+    private final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
 
     @Test
     public void test_one_to_one_property_metadata() throws Exception {

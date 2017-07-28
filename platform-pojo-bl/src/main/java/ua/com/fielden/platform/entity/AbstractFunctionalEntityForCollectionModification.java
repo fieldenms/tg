@@ -29,8 +29,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  */
 @KeyType(Long.class)
 public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<Long> {
-    private static final long serialVersionUID = 1L;
-    
     /**
      * This is to be used for internal validation for versioning -- this is not needed to be send to the client application, that is why it was made as non-property (no {@link IsProperty} annotation).
      */

@@ -74,7 +74,8 @@
             right: 0;
             width: 10px;
         }
-        .resizing-column > .resizing-box,
+        .table-cell:hover > .resizing-box,
+        .resizing-box:hover,
         .resizing-action {
             cursor: col-resize;
             border-right: 4px solid var(--paper-light-blue-100);
@@ -292,8 +293,8 @@
                         </template>
                         <!-- Table footer -->
                         <template is="dom-if" if="[[totals]]">
-                            <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
-                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed)]]">
+                            <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
+                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex)]]">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                         <!-- checkbox stub for table footer -->
                                     </div>
@@ -303,16 +304,16 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
-                                        <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
+                                        <template is="dom-if" if="[[_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
+                                            <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                    <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                    <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                    <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex, columns)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex, column)]]"></iron-icon>
+                                                    <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</a>
+                                                    <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</div>
                                                 </template>
                                             </div>
                                         </template>
-                                        <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                        <template is="dom-if" if="[[!_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
                                             <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                             </div>
                                         </template>
@@ -370,7 +371,7 @@
                                 </template>
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                    <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                                 <!-- checkbox stub for table footer -->
@@ -382,14 +383,14 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
-                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                    <template is="dom-if" if="[[_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
+                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex, column)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex, column)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</div>
                                                         </div>
                                                     </template>
-                                                    <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                                    <template is="dom-if" if="[[!_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]"></div>
                                                     </template>
                                                 </template>
@@ -400,10 +401,10 @@
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                            <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _totalColumnWidth)]]"></div>
+                            <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
                         </template>
                         <template is="dom-if" on-dom-change="_rightLockPanelRendered" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
-                            <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
+                            <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed, columns)]]">
                                 <!--header-->
                                 <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
                                     <div class="action-cell layout horizontal center no-flexible">
@@ -423,7 +424,7 @@
                                 </template>
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                    <template is="dom-repeat" items="[[_totalsRows]]">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Secondary actions header goes here-->
@@ -434,10 +435,10 @@
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
-                            <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow, _totalColumnWidth)]]"></div>
+                            <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
                         </template>
                         <template is="dom-if" on-dom-change="_topLockPanelRendered" if="[[_isHeaderFixed(headerFixed)]]">
-                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth)]]">
+                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
@@ -460,9 +461,9 @@
                             </div>
                         </template>
                         <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                            <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth)]]">
+                            <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
                                 <div class="layout vertical flex" style="background-color:white;">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                    <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                             </div>
@@ -473,14 +474,14 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                                 <template is="dom-if" if="[[!_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
-                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                    <template is="dom-if" if="[[_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
+                                                            <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex, column)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex, column)]]"></iron-icon>
+                                                            <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</a>
+                                                            <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</div>
                                                         </div>
                                                     </template>
-                                                    <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                                    <template is="dom-if" if="[[!_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                         </div>
                                                     </template>
@@ -521,7 +522,7 @@
                         </template>
                         <template is="dom-if" if="[[_isBottomLeftPanelVisible(totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                             <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;left:0">
-                                <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow">
+                                <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                     <div class="layout horizontal table-footer-row">
                                         <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                             <!-- checkbox stub for table footer -->
@@ -533,14 +534,14 @@
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column" index-as="columnIndex">
                                             <template is="dom-if" if="[[_isColumnFixed(columnIndex, numOfFixedCols)]]">
-                                                <template is="dom-if" if="[[_isSummaryExists(summaryRow, columnIndex)]]">
-                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, summaryRow, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summaryRow, columnIndex)]]">
-                                                        <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, summaryRow, columnIndex)]]" icon="[[_getSummaryBooleanIcon(totals, summaryRow, columnIndex)]]"></iron-icon>
-                                                        <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, summaryRow, columnIndex)]]" href$="[[_getSummaryValue(totals, summaryRow, columnIndex)]]">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</a>
-                                                        <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, summaryRow, columnIndex)]]" style="width:100%">[[_getSummaryValue(totals, summaryRow, columnIndex)]]</div>
+                                                <template is="dom-if" if="[[_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
+                                                    <div class="table-cell layout horizontal center" style$="[[_calcSummaryColumnStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(columnIndex, summaryIndex)]]">
+                                                        <iron-icon class="table-icon" hidden$="[[!_isSummaryBooleanProp(totals, columnIndex, summaryIndex, column)]]" icon="[[_getSummaryBooleanIcon(totals, columnIndex, summaryIndex, column)]]"></iron-icon>
+                                                        <a class="truncate" hidden$="[[!_isSummaryHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" href$="[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</a>
+                                                        <div class="truncate relative" hidden$="[[!_isSummaryNotBooleanOrHyperlinkProp(totals, columnIndex, summaryIndex, column)]]" style="width:100%">[[_getSummaryValue(totals, columnIndex, summaryIndex, column)]]</div>
                                                     </div>
                                                 </template>
-                                                <template is="dom-if" if="[[!_isSummaryExists(summaryRow, columnIndex)]]">
+                                                <template is="dom-if" if="[[!_summaryExists(column, summaryIndex, columnIndex)]]" restamp>
                                                     <div class="table-cell" style$="[[_calcEmptyTotalStyle(column, column.width, column.growFactor, columnIndex, numOfFixedCols)]]">
                                                     </div>
                                                 </template>
@@ -552,7 +553,7 @@
                         </template>
                         <template is="dom-if" if="[[_isBottomRightPanelVisible(totals, summaryFixed, secondaryActions, secondaryActionsFixed)]]">
                             <div id="bottomRightLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;right:0">
-                                <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
+                                <template is="dom-repeat" items="[[_totalsRows]]">
                                     <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                         <div class="table-footer-row action-cell">
                                             <!--Secondary actions header goes here-->
@@ -635,9 +636,12 @@
             }
             return newPos;
         };
-        const calculateTotalColumnWidth = function (columns) {
-            return columns.reduce((accum, curr) => accum += curr.width, 0);
+        const calculateFixedColumnWidth = function(columns, numOfFixedColumns) {
+            return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
+        const calculateScrollableColumnWidth = function(columns, numOfFixedColumns) {
+            return columns.reduce((accum, curr, index) => accum += (index >= numOfFixedColumns ? curr.width : 0), 0);
+        }
         const calculateColumnWidthExcept = function (egi, columnIndex, columnElements, columnLength, checkboxes, primaryActions, secondaryActions) {
             let columnWidth = 0;
             const indexCorrection = 1 + (+!!egi.primaryAction);
@@ -667,6 +671,10 @@
                     observer: "_entitiesChanged"
                 },
                 totals: Object,
+                columns: {
+                    type: Array,
+                    observer: "_columnsChanged"
+                },
                 /**
                  * Last updated entity selection.
                  */
@@ -762,7 +770,8 @@
                 _scrollLeft: Number,
                 _scrollTop: Number,
                 //Need when resizing column to recalculate styles.
-                _totalColumnWidth: Number,
+                _fixedColumnWidth: Number,
+                _scrollableColumnWidth: Number,
                 //miscelenia private variables
                 _actionWidth: {
                     type: String,
@@ -881,28 +890,6 @@
                 this.selectedEntities = [];
                 this.openedEntities = [];
 
-                //Initialising columns (property column mappings)
-                tempColumns = [];
-                Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
-                    tempColumns.push(item);
-                });
-                this.columns = tempColumns;
-
-                this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
-
-                this.columnPropertiesMapper = (function (entity) {
-                    const result = [];
-                    for (let index = 0; index < this.columns.length; index++) {
-                        const column = this.columns[index];
-                        const entry = {
-                            dotNotation: column.property,
-                            value: this._getValue(entity, column.property, column.type)
-                        };
-                        result.push(entry);
-                    }
-                    return result;
-                }).bind(this);
-
                 //Initialising the primary action.
                 this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
@@ -925,7 +912,24 @@
                     this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
                 }
                 this.async(function () {
-                    self.keyEventTarget = self._getKeyEventTarget();
+                    this.keyEventTarget = this._getKeyEventTarget();
+                    //Initialising columns (property column mappings)
+                    this.allColumns = [];
+                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
+                    this.columns = this.allColumns;
+                    this._updateColumnsWidthProperties(false);
+                    this.columnPropertiesMapper = (function (entity) {
+                        const result = [];
+                        for (let index = 0; index < this.columns.length; index++) {
+                            const column = this.columns[index];
+                            const entry = {
+                                dotNotation: column.property,
+                                value: this._getValue(entity, column.property, column.type)
+                            };
+                            result.push(entry);
+                        }
+                        return result;
+                    }).bind(this);
                 }, 1)
             },
 
@@ -1299,7 +1303,7 @@
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
                 try {
-                    if (Array.isArray(this._get(entity, column.property))) {
+                    if (Array.isArray(this._getValueFromEntity(entity, column.property))) {
                         desc = generateShortCollection(entity, column.property, this.$.reflector.findTypeByName(column.type))
                             .map(function (subEntity) {
                                 return subEntity.get("desc");
@@ -1328,79 +1332,41 @@
                     "</div>"
             },
 
-            _getTotalTooltip: function (summaryRow, columnIndex) {
-                const summary = summaryRow[columnIndex];
+            _getTotalTooltip: function (columnIndex, summaryIndex) {
+                const summary = this.columns[columnIndex].summary[summaryIndex];
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
                 return tooltip;
             },
             //End of Tooltip related functions
 
-            /**
-             * Calcualtes the summary for grid.
-             */
-            _calcGridSummary: function (columns) {
-                var summaryRowsCount, summaryRowCounter, totalsRow, gridSummary;
-
-                if (this._totalsRows) {
-                    return this._totalsRows;
-                } else {
-                    summaryRowsCount = 0;
-                    columns.forEach(function (item) {
-                        if (item.summary && item.summary.length > summaryRowsCount) {
-                            summaryRowsCount = item.summary.length;
-                        }
-                    });
-
-                    //Initialising totals.
-                    if (summaryRowsCount > 0) {
-                        gridSummary = [];
-                        for (summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
-                            totalsRow = [];
-                            columns.forEach(function (item) {
-                                if (item.summary && item.summary[summaryRowCounter]) {
-                                    totalsRow.push(item.summary[summaryRowCounter]);
-                                } else {
-                                    totalsRow.push(null);
-                                }
-                            });
-                            gridSummary.push(totalsRow);
-                        }
-                    }
-                    //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
-                    this._totalsRowCount = summaryRowsCount;
-                    this._totalsRows = gridSummary;
-                    return gridSummary;
-                }
+            _summaryExists: function (column, summaryIndex, columnIndex) {
+                return !!(column.summary && column.summary[summaryIndex]);
             },
 
-            _isSummaryExists: function (summaryRow, columnIndex) {
-                return !!summaryRow[columnIndex];
+            _isSummaryBooleanProp: function (totals, columnIndex, summaryIndex, column) {
+                return column.summary && column.summary[summaryIndex] && this._isBooleanProp(totals, column.summary[summaryIndex]);
             },
 
-            _isSummaryBooleanProp: function (totals, summaryRow, columnIndex) {
-                return this._isBooleanProp(totals, summaryRow[columnIndex]);
+            _isSummaryHyperlinkProp: function (totals, columnIndex, summaryIndex, column) {
+                return column.summary && column.summary[summaryIndex] && this._isHyperlinkProp(totals, column.summary[summaryIndex]);
             },
 
-            _isSummaryHyperlinkProp: function (totals, summaryRow, columnIndex) {
-                return this._isHyperlinkProp(totals, summaryRow[columnIndex]);
+            _isSummaryNotBooleanOrHyperlinkProp: function (totals, columnIndex, summaryIndex, column) {
+                return column.summary && column.summary[summaryIndex] && this._isNotBooleanOrHyperlinkProp(totals, column.summary[summaryIndex]);
             },
 
-            _isSummaryNotBooleanOrHyperlinkProp: function (totals, summaryRow, columnIndex) {
-                return this._isNotBooleanOrHyperlinkProp(totals, summaryRow[columnIndex]);
+            _getSummaryBooleanIcon: function (totals, columnIndex, summaryIndex, column) {
+                return column.summary && column.summary[summaryIndex] && this._getBooleanIcon(totals, column.summary[summaryIndex].property);
             },
 
-            _getSummaryBooleanIcon: function (totals, summaryRow, columnIndex) {
-                return this._getBooleanIcon(totals, summaryRow[columnIndex].property);
+            _getSummaryValue: function (totals, columnIndex, summaryIndex, column) {
+                const summary = column.summary && column.summary[summaryIndex];
+                return summary && this._getValue(totals, summary.property, summary.type);
             },
 
-            _getSummaryValue: function (totals, summaryRow, columnIndex) {
-                const summary = summaryRow[columnIndex];
-                return this._getValue(totals, summary.property, summary.type);
-            },
-
-            _calcSummaryColumnStyle: function (column, columnWidth, columnGrowFactor, summaryRow, columnIndex, numOfFixedCols) {
-                return this._calcColumnStyle(summaryRow[columnIndex], columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
+            _calcSummaryColumnStyle: function (column, columnWidth, columnGrowFactor, summaryIndex, columnIndex, numOfFixedCols) {
+                return this._calcColumnStyle(column, columnWidth, columnGrowFactor, columnIndex, numOfFixedCols);
             },
 
             /**
@@ -1515,6 +1481,42 @@
                 this._updateTableSizeAsync();
             },
 
+            _columnsChanged: function (columns, oldColumns) {
+                let summaryRowsCount = 0;
+                columns.forEach(function (item) {
+                    if (item.summary && item.summary.length > summaryRowsCount) {
+                        summaryRowsCount = item.summary.length;
+                    }
+                });
+                //Initialising totals.
+                const gridSummary = [];
+                if (summaryRowsCount > 0) {
+                    for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
+                        const totalsRow = [];
+                        columns.forEach(function (item) {
+                            if (item.summary && item.summary[summaryRowCounter]) {
+                                const total = item.summary[summaryRowCounter]
+                                totalsRow.push(true);
+                            } else {
+                                totalsRow.push(false);
+                            }
+                        });
+                        gridSummary.push(totalsRow);
+                    }
+                }
+                //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
+                this._totalsRowCount = summaryRowsCount;
+                this._totalsRows = gridSummary;
+            },
+            
+            _updateColumnsWidthProperties: function (triggerResize) {
+                this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
+                this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
+                if (triggerResize) {
+                    this._updateTableSizeAsync();
+                }
+            },
+
             _updateTableSizeAsync: function () {
                 this.async(function () {
                     this._resizeEventListener();
@@ -1599,7 +1601,7 @@
                 if (columnGrowFactor === 0 || index < numOfFixedCols) {
                     colStyle += "flex-grow: 0;flex-shrink:0;";
                 } else {
-                    colStyle += "flex-grow: " + columnGrowFactor, +";";
+                    colStyle += "flex-grow: " + columnGrowFactor +";";
                 }
                 if (itemWidth === 0) {
                     colStyle += "display: none;";
@@ -1619,7 +1621,7 @@
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
              */
-            _calcFooterRowStyle: function (summaryFixed) {
+            _calcFooterRowStyle: function (summaryFixed, summaryIndex) {
                 return summaryFixed ? "visibility:hidden" : "";
             },
             /**
@@ -1658,7 +1660,35 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
+                this._updateColumnsWidthProperties(true);
+            },
+
+            /**
+             * Adjusts columns visibility and order.
+             */
+            _adjustColumns: function (newColumns) {
+                const resultantColumns = [];
+                newColumns.forEach(columnName => {
+                    const column = this.allColumns.find(item => item.property === (columnName === "this" ? "" : columnName));
+                    if (column) {
+                        resultantColumns.push(column);
+                    }
+                });
+                if (!this.$.reflector.equalsEx(this.columns, resultantColumns)) {
+                    this.columns = resultantColumns;
+                    const columnWithGrowFactor = this.columns.find((item, index) => index >= this.numOfFixedCols && item.growFactor > 0);
+                    if (!columnWithGrowFactor && this.columns.length > 0 && this.columns.length >= this.numOfFixedCols) {
+                        this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+                        const column = this.columns[this.columns.length - 1];
+                        const parameters = {};
+                        parameters[column.property] = {
+                            growFactor: 1
+                        }
+                        this.fire("tg-egi-column-change", parameters);
+                    }
+                    
+                }
+                this._updateColumnsWidthProperties(true);
             },
 
             /**
@@ -1679,11 +1709,11 @@
                 return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
             },
 
-            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth) {
+            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
                 return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
-            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _totalColumnWidth) {
+            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
                 return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
@@ -1698,7 +1728,7 @@
             _calculateFixedColsWidth: function (numOfFixedCols) {
                 var colIndex, fixedColsWidth = 0,
                     numOfFixedPaddings = 0;
-                for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {
+                for (colIndex = 0; colIndex < numOfFixedCols && colIndex < this.columns.length; colIndex++) {
                     if (this.columns[colIndex].width > 0) {
                         fixedColsWidth += this.columns[colIndex].width;
                         numOfFixedPaddings++;
@@ -1714,17 +1744,17 @@
             /**
              * Returns the property value of the specified entity.
              */
-            _get: function (entity, property) {
+            _getValueFromEntity: function (entity, property) {
                 return entity && entity.get(property);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
              */
             _getValue: function (entity, property, type) {
-                if (entity === null || property === null || type === null || this._get(entity, property) === null) {
+                if (entity === null || property === null || type === null || this._getValueFromEntity(entity, property) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(type)) {
-                    var propertyValue = this._get(entity, property);
+                    var propertyValue = this._getValueFromEntity(entity, property);
                     if (Array.isArray(propertyValue)) {
                         propertyValue = generateShortCollection(entity, property, this.$.reflector.findTypeByName(type));
                     }
@@ -1734,12 +1764,14 @@
                     return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
+                        const metaProp = this.$.reflector.getEntityTypeProp(entity, property);
+                        return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                     } else {
                         return this.$.reflector.formatNumber(entity.get(property), this.$.appConfig.locale);
                     }
                 } else if (type === 'Money') {
-                    return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);
+                    const metaProp = this.$.reflector.getEntityTypeProp(entity, property);
+                    return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 } else if (type === 'Colour') {
                     return '#' + entity.get(property)['hashlessUppercasedColourValue'];
                 } else if (type === 'Hyperlink') {
@@ -1766,13 +1798,13 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && this._get(entity, column.property) !== null
+                return column.type === 'Boolean' && this._getValueFromEntity(entity, column.property) !== null
             },
             /**
              * Determines whether property is Hypelink or not.
              */
             _isHyperlinkProp: function (entity, column) {
-                return column.type === 'Hyperlink' && this._get(entity, column.property) !== null
+                return column.type === 'Hyperlink' && this._getValueFromEntity(entity, column.property) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -1790,7 +1822,11 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                return "icons:" + (this._get(entity, property) ? "check" : "clear");
+                if (this._getValueFromEntity(entity, property) === true) { 
+                    return "icons:check";
+                } else {
+                    return "noicon";
+                }
             },
 
             /** Identifies if there is a column action for the specified entity and column. */
@@ -1891,7 +1927,7 @@
                 return shadowStyle;
             },
 
-            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _totalColumnWidth) {
+            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
                     shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
@@ -1899,7 +1935,7 @@
                 return shadowStyle;
             },
 
-            _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _totalColumnWidth) {
+            _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
                 if (_showRightShadow) {
                     shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
@@ -1935,9 +1971,8 @@
 
             _startColumnResize: function (e) {
                 //Change the style to visualise column resizing.
-                document.body.style.cursor = "col-resize";
+                //this.style.cursor = "col-resize";
                 e.target.classList.toggle("resizing-action", true);
-                this.$.baseContainer.classList.toggle("noselect", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
                 const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
@@ -1958,8 +1993,6 @@
                     oldColumnGrowFactor: e.model.item.growFactor,
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
-                    otherFixedColumnWidth: e.model.index < self.numOfFixedCols ?
-                        calculateColumnWidthExcept(this, e.model.index, columnElements, this.numOfFixedCols, () => this._isCheckboxesFixed(this.checkboxesFixed, this.checkboxesWithPrimaryActionsFixed, this.numOfFixedCols), () => this._isPrimaryActionsFixed(this.checkboxesWithPrimaryActionsFixed, this.numOfFixedCols), () => this._isSecondaryActionsFixed(this.secondaryActionsFixed)) : undefined,
                     otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length, () => true, () => true, () => true),
                     widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth,
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
@@ -1972,21 +2005,17 @@
                     let newWidth = columnWidth + e.detail.ddx;
                     //Correct size for mouse out of EGI.
                     const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
-                    if (mousePos.x > this._columnResizingObject.containerWidth) {
-                        newWidth += 10; //10 is increment in case if mouse goes out of the border of EGI
-                    } else if (mousePos.x < this._columnResizingObject.containerLeft) {
-                        newWidth += -10; //-10 is increment in case if mouse goes out of the border of EGI
+                    if (mousePos.x > this._columnResizingObject.containerWidth && e.model.index >= this.numOfFixedCols) {
+                        newWidth += mousePos.x - this._columnResizingObject.containerWidth;
+                    } else if (mousePos.x < this._columnResizingObject.containerLeft && e.model.index >= this.numOfFixedCols) {
+                        newWidth -= this._columnResizingObject.containerLeft - mousePos.x;
                     }
                     //Correct size if EGI is less then min width.
                     if (newWidth < e.model.item.minWidth) {
                         newWidth = e.model.item.minWidth;
                     }
-                    //Correct new width if resizing fixed column and this new width are greater than container's width.
-                    if (typeof this._columnResizingObject.otherFixedColumnWidth !== 'undefined' && this._columnResizingObject.otherFixedColumnWidth + newWidth + this._columnResizingObject.widthCorrection > this.$.lockContainer.offsetWidth) {
-                        newWidth = this.$.lockContainer.offsetWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
-                    }
                     //Correct new width when dragging last column or other column and overall width is less then width of container.
-                    if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.lockContainer.offsetWidth) {
+                    if ((e.model.index >= this.numOfFixedCols) && (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.lockContainer.offsetWidth)) {
                         if (e.model.index === this.columns.length - 1) {
                             newWidth = this.$.lockContainer.offsetWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
                         } else {
@@ -1994,7 +2023,9 @@
                                 this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
                                 this._columnResizingObject.hasAnyFlex = true;
                                 const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
-                                columnParameters[this.columns[this.columns.length - 1].property] = {growFactor: 1};
+                                columnParameters[this.columns[this.columns.length - 1].property] = {
+                                    growFactor: 1
+                                };
                                 this._columnResizingObject.columnParameters = columnParameters;
                             }
                         }
@@ -2004,14 +2035,15 @@
                         if (e.model.item.growFactor !== 0) {
                             this.set("columns." + e.model.index + ".growFactor", 0);
                             const columnParameters = this._columnResizingObject.columnParameters || {};
-                            columnParameters[e.model.item.property] = {growFactor: 1};
+                            columnParameters[e.model.item.property] = {
+                                growFactor: 1
+                            };
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._totalColumnWidth = calculateTotalColumnWidth(this.columns);
-                        this._resizeEventListener();
+                        this._updateColumnsWidthProperties(true);
                         //scroll if needed.
-                        if (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft) {
+                        if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;
                         }
                     }
@@ -2020,20 +2052,21 @@
             },
 
             _endColumnResizing: function (e) {
-                document.body.style.cursor = "default";
+                //this.style.cursor = "default";
                 e.target.classList.toggle("resizing-action", false);
-                this.$.baseContainer.classList.toggle("noselect", false);
                 if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
                     if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
                         columnParameter.width = e.model.item.width;
-                    } 
+                    }
                     if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
                         columnParameter.growFactor = e.model.item.growFactor;
                     }
                     columnParameters[e.model.item.property] = columnParameter;
                     this._columnResizingObject.columnParameters = columnParameters;
+                }
+                if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
                     this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
                 delete this._columnResizingObject;
@@ -2041,10 +2074,12 @@
 
             _makeEgiUnselectable: function (e) {
                 this.$.baseContainer.classList.toggle("noselect", true);
+                document.body.style["cursor"] = "col-resize";
             },
 
             _makeEgiSelectable: function (e) {
                 this.$.baseContainer.classList.toggle("noselect", false);
+                document.body.style["cursor"] = "";
             },
 
             _showResizingCue: function (e) {

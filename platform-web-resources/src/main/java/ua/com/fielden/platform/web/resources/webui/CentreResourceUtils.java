@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -73,9 +74,10 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
 
+    /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
     }
-
+    
     private enum RunActions {
         RUN("run"),
         REFRESH("refresh"),
@@ -154,16 +156,25 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
-     * @param createdByUserConstraint
-     *            -- if exists then constraints the query by equality to the property 'createdBy'
+     * @param additionalFetchProviderForTooltipProperties
+     * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final M criteriaEntity, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext, final Optional<User> createdByUserConstraint) {
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
+            final Map<String, Object> customObject,
+            final M criteriaEntity,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
+            final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
 
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (additionalFetchProviderForTooltipProperties.isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
         }
         if (queryEnhancerAndContext.isPresent()) {
             final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
@@ -202,27 +213,37 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
-        resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */ : page.no());
-        resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */ : page.numberOfPages());
+        resultantCustomObject.put("visibleColumnsWithOrder", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(criteriaEntity.getEntityClass()));
+        resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
+        resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
     }
 
     /**
-     * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of
-     * returning a list of entities, it returns a stream.
+     * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of returning a list of entities,
+     * it returns a stream.
      *
      * @param adhocParams
      * @param criteriaEntity
      * @param additionalFetchProvider
+     * @param additionalFetchProviderForTooltipProperties
      * @param queryEnhancerAndContext
      * @param createdByUserConstraint
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(final Map<String, Object> adhocParams, final M criteriaEntity, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext, final Optional<User> createdByUserConstraint) {
-
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
+            final Map<String, Object> adhocParams,
+            final M criteriaEntity,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
+            final Optional<User> createdByUserConstraint) {
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
         if (additionalFetchProvider.isPresent()) {
             criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
+        }
+        if (additionalFetchProviderForTooltipProperties.isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
         }
         if (queryEnhancerAndContext.isPresent()) {
             final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
@@ -233,23 +254,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
 
         final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100;
-        final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[] {};
+        final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
         return criteriaEntity.streamEntities(fetchSize, ids);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
 
+    @SuppressWarnings("serial")
     private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
-        final Map<String, Map<String, Integer>> columnWidths = new LinkedHashMap<>();
-        for (final String property : secondTick.checkedProperties(root)) {
-            final Map<String, Integer> values = new HashMap<>();
-            values.put("newWidth", secondTick.getWidth(root, property));
-            values.put("newGrowFactor", secondTick.getGrowFactor(root, property));
-            columnWidths.put(property, values);
-        }
+        final Map<String, Map<String, Integer>> columnWidths = secondTick.checkedProperties(root).stream()
+        .map(property -> new Pair<String, Map<String, Integer>>(property, new HashMap<String, Integer>() {{
+                            put("newWidth", secondTick.getWidth(root, property));
+                            put("newGrowFactor", secondTick.getGrowFactor(root, property));
+                        }}))
+        .collect(Collectors.toMap(pair -> pair.getKey(), pair -> pair.getValue()));
         return columnWidths;
     }
-
+    
     /**
      * Generates annotation with mi type.
      *
@@ -371,31 +392,26 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param critGenerator
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final ICriteriaGenerator critGenerator, final Long previousVersion, final IGlobalDomainTreeManager gdtm) {
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final ICentreDomainTreeManagerAndEnhancer cdtmae,
+            final ICriteriaGenerator critGenerator,
+            final Long previousVersion,
+            final IGlobalDomainTreeManager gdtm) {
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
         validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
-        validationPrototype.setColumnWidthAdjuster((columnParameters) -> {
-            columnParameters.entrySet().forEach(entry -> {
-                if (entry.getValue().containsKey("width")) {
-                    final Integer width = entry.getValue().get("width");
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setWidth(entityType, entry.getKey(), width);
-                }
-                if (entry.getValue().containsKey("growFactor")) {
-                    final Integer growFactor = entry.getValue().get("growFactor");
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                    CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME).getSecondTick().setGrowFactor(entityType, entry.getKey(), growFactor);
-                }
-            });
+        validationPrototype.setDefaultCentreSupplier(() -> CentreUpdater.getDefaultCentre(gdtm, miType));
+        validationPrototype.setCentreAdjuster((centreConsumer) -> {
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
+
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
         });
-
-
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
         final boolean idAccessible = idField.isAccessible();
@@ -429,8 +445,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         //     the entity has been already applied the values from 'cdtmae' during CriteriaGenerator generation process.
         //     So, we potentially have the 'required' errors -- need to disregard all of them!
         //     (for e.g., in TridentFleet it fixes the errors if no DdsStationAssigner is specified)
-        return EntityResourceUtils.disregardUntouchedRequiredProperties(resetMetaStateForCriteriaValidationPrototype(validationPrototype, CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
-        ), new LinkedHashSet<>()//
+        return EntityResourceUtils.disregardUntouchedRequiredProperties(
+                resetMetaStateForCriteriaValidationPrototype(
+                        validationPrototype,
+                        CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
+                ), new LinkedHashSet<>()//
         );
     }
 
@@ -508,7 +527,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<CentreContext<T, ?>> createCentreContext(final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator, final EntityFactory entityFactory, final CentreContextHolder centreContextHolder, final M criteriaEntity, final Optional<CentreContextConfig> contextConfig) {
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<CentreContext<T, ?>> createCentreContext(
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final ICriteriaGenerator critGenerator,
+            final EntityFactory entityFactory,
+            final CentreContextHolder centreContextHolder,
+            final M criteriaEntity,
+            final Optional<CentreContextConfig> contextConfig) {
         if (contextConfig.isPresent()) {
             final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
             final CentreContextConfig config = contextConfig.get();
@@ -516,8 +544,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectionCrit(criteriaEntity);
             }
             if (config.withAllSelectedEntities || config.withCurrentEtity) {
-                context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities()
-                        : new ArrayList<>());
+                context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
                 context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
@@ -540,14 +567,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
      * 'requireMasterEntity').
      *
-     * @param actionConfig
-     *            - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to specify this parameter as
-     *            non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
+     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to
+     *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
      * @param centreContextHolder
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator, final EntityFactory entityFactory, final AbstractEntity<?> masterContext, final ArrayList<AbstractEntity<?>> selectedEntities, final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, final Optional<EntityActionConfig> config) {
+    public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final ICriteriaGenerator critGenerator,
+            final EntityFactory entityFactory,
+            final AbstractEntity<?> masterContext,
+            final ArrayList<AbstractEntity<?>> selectedEntities,
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
+            final Optional<EntityActionConfig> config) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
         context.setSelectedEntities((List<T>) selectedEntities);
@@ -569,8 +605,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
-        if (centreContextHolder.getCustomObject().get("@@miType") == null
-                || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
+        if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
             return null;
         }
         final Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -610,7 +645,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm);
-        final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae), companionFinder//
+        final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
+                modifiedPropertiesHolder,
+                validationPrototype,
+                CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
+                companionFinder//
         ).getKey();
 
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
@@ -641,7 +680,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<M, Map<String, Object>> constructCriteriaEntityAndResetMetaValues(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final Class<?> originalManagedType, final ICompanionObjectFinder companionFinder) {
-        return new Pair<>(resetMetaStateForCriteriaValidationPrototype(EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, companionFinder), originalManagedType), modifiedPropertiesHolder//
+        return new Pair<>(
+                resetMetaStateForCriteriaValidationPrototype(
+                        EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, companionFinder),
+                        originalManagedType
+                ),
+                modifiedPropertiesHolder//
         );
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -10,9 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Master entity object.
+ * Entity for updating widths and grow factors of entity centre EGI columns.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
@@ -20,16 +22,17 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWithCentreContext<String> {
 
     @IsProperty(Object.class)
-    @Title("column Parameters")
-    private Map<String, Map<String, Integer>> columnParameters = null;
+    @Title("Column Parameters")
+    private Map<String, Map<String, Integer>> columnParameters = new HashMap<>();
 
     @Observable
     protected CentreColumnWidthConfigUpdater setColumnParameters(final Map<String, Map<String, Integer>> columnParameters) {
-        this.columnParameters = columnParameters;
+        this.columnParameters.clear();
+        this.columnParameters.putAll(columnParameters);
         return this;
     }
 
     public Map<String, Map<String, Integer>> getColumnParameters() {
-        return columnParameters;
+        return Collections.unmodifiableMap(columnParameters);
     }
 }

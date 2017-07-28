@@ -11,7 +11,7 @@ public class AggregatedResultQueryModel extends QueryModel<EntityAggregates> {
     protected AggregatedResultQueryModel() {
     }
 
-    public AggregatedResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
-        super(tokens, EntityAggregates.class);
+    public AggregatedResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final boolean yieldAll) {
+        super(tokens, EntityAggregates.class, yieldAll);
     }
 }

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -20,10 +19,11 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public class CentreUtils<T extends AbstractEntity<?>> extends CentreUpdater {
     private final static Logger logger = Logger.getLogger(CentreUtils.class);
-
-    public CentreUtils() {
+    
+    /** Protected default constructor to prevent instantiation. */
+    protected CentreUtils() {
     }
-
+    
     /**
      * Returns <code>true</code> if the centre is changed (and thus can be saved / discarded) from client application perspective, <code>false</code> otherwise.
      *

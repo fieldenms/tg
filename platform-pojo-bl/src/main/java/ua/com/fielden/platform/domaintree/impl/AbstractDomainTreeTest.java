@@ -19,6 +19,8 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -32,6 +34,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickReprese
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
@@ -52,8 +55,6 @@ import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTe
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.EntityUtils;
-
-import com.google.inject.Injector;
 
 /**
  * A test for base TG domain tree representation.
@@ -576,7 +577,7 @@ public abstract class AbstractDomainTreeTest {
                 dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProperty);
                 dtm.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, calcProperty);
             }
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
             fail("The calculated property [" + calcProperty + "] should not be excluded. The path towards calculated property should be properly resolved.");
         }
     }
@@ -610,50 +611,50 @@ public abstract class AbstractDomainTreeTest {
         try {
             lm.refreshLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             lm.resetLocatorManagerToDefault(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         try {
             lm.acceptLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             lm.discardLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         try {
             lm.saveLocatorManagerGlobally(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             lm.freezeLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         try {
             lm.getLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             lm.phaseAndTypeOfLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             lm.isChangedLocatorManager(MasterEntity.class, name);
             fail(message);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 }

@@ -97,7 +97,8 @@ public class EntQueryGenerator {
         where.getModel(), //
         select.getModel(), //
         groupBy.getModel(), //
-        produceOrderBys(orderModel, paramValues));
+        produceOrderBys(orderModel, paramValues), //
+        qryModel.isYieldAll());
     }
 
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, //

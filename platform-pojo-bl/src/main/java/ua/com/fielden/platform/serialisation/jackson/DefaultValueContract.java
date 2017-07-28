@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -9,7 +15,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -51,7 +56,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
-        return EntityUtils.equalsEx(getEditable(metaProperty), getEditableDefault());
+        return equalsEx(getEditable(metaProperty), getEditableDefault());
     }
 
     /**
@@ -126,7 +131,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
-        return EntityUtils.equalsEx(isChangedFromOriginal(metaProperty), isChangedFromOriginalDefault());
+        return equalsEx(isChangedFromOriginal(metaProperty), isChangedFromOriginalDefault());
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
@@ -156,7 +161,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean isRequiredDefault(final MetaProperty<M> metaProperty) {
-        return EntityUtils.equalsEx(getRequired(metaProperty), getRequiredDefault());
+        return equalsEx(getRequired(metaProperty), getRequiredDefault());
     }
 
     ///////////////////////////////////////////////// VISIBLE /////////////////////////////////////////////////
@@ -186,7 +191,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean isVisibleDefault(final MetaProperty<M> metaProperty) {
-        return EntityUtils.equalsEx(getVisible(metaProperty), getVisibleDefault());
+        return equalsEx(getVisible(metaProperty), getVisibleDefault());
     }
 
     ///////////////////////////////////////////////// VALIDATION RESULT /////////////////////////////////////////////////
@@ -220,7 +225,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean isValidationResultDefault(final MetaProperty<M> metaProperty) {
-        return EntityUtils.equalsEx(getValidationResult(metaProperty), getValidationResultDefault());
+        return equalsEx(getValidationResult(metaProperty), getValidationResultDefault());
     }
 
     ///////////////////////////////////////////////// COMPOSITE KEY MEMBER SEPARATOR /////////////////////////////////////////////////
@@ -230,7 +235,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isCompositeKeySeparatorDefault(final String compositeKeySeparator) {
-        return EntityUtils.equalsEx(compositeKeySeparator, " ");
+        return equalsEx(compositeKeySeparator, " ");
     }
 
     ///////////////////////////////////////////////// ENTITY TITLE AND DESC /////////////////////////////////////////////////
@@ -240,7 +245,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEntityTitleDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityTitle) {
-        return EntityUtils.equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
+        return equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
     }
 
     /**
@@ -249,7 +254,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEntityDescDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityDesc) {
-        return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
+        return equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 
     /**
@@ -258,7 +263,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isDisplayDescDefault(final boolean shouldDisplayDesc) {
-        return EntityUtils.equalsEx(shouldDisplayDesc, false);
+        return equalsEx(shouldDisplayDesc, false);
     }
 
     ///////////////////////////////////////////////// ENTITY TYPE PROP props /////////////////////////////////////////////////
@@ -268,7 +273,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isSecreteDefault(final Boolean secrete) {
-        return EntityUtils.equalsEx(secrete, false);
+        return equalsEx(secrete, false);
     }
 
     /**
@@ -277,7 +282,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isUpperCaseDefault(final Boolean upperCase) {
-        return EntityUtils.equalsEx(upperCase, false);
+        return equalsEx(upperCase, false);
     }
 
     /**
@@ -286,7 +291,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isCritOnlyDefault(final Boolean critOnly) {
-        return EntityUtils.equalsEx(critOnly, false);
+        return equalsEx(critOnly, false);
     }
 
     /**
@@ -295,7 +300,17 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isResultOnlyDefault(final Boolean resultOnly) {
-        return EntityUtils.equalsEx(resultOnly, false);
+        return equalsEx(resultOnly, false);
+    }
+
+    /**
+     * Returns the value that indicates whether trailingZeros has default value or not.
+     *
+     * @param trailingZeros
+     * @return
+     */
+    public static boolean isTrailingZerosDefault(final boolean trailingZeros) {
+        return trailingZeros == DEFAULT_TRAILING_ZEROS;
     }
 
     /**
@@ -304,7 +319,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isIgnoreDefault(final Boolean ignore) {
-        return EntityUtils.equalsEx(ignore, false);
+        return equalsEx(ignore, false);
     }
 
     /**
@@ -313,7 +328,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isLengthDefault(final Long length) {
-        return EntityUtils.equalsEx(length, 0L);
+        return equalsEx(length, DEFAULT_LENGTH);
     }
 
     /**
@@ -322,7 +337,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isPrecisionDefault(final Long precision) {
-        return EntityUtils.equalsEx(precision, -1L);
+        return equalsEx(precision, DEFAULT_PRECISION);
     }
 
     /**
@@ -331,7 +346,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isScaleDefault(final Long scale) {
-        return EntityUtils.equalsEx(scale, -1L);
+        return equalsEx(scale, DEFAULT_SCALE);
     }
 
     /**
@@ -340,7 +355,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isMinDefault(final Integer min) {
-        return EntityUtils.equalsEx(min, null);
+        return equalsEx(min, null);
     }
 
     /**
@@ -349,7 +364,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isMaxDefault(final Integer max) {
-        return EntityUtils.equalsEx(max, null);
+        return equalsEx(max, null);
     }
 
     /**

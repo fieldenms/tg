@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.event.EventListenerList;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILoca
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -329,7 +331,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         @Override
         public IAddToCriteriaTickManager setColumnsNumber(final int columnsNumber) {
             if (columnsNumber <= 0) {
-                throw new IllegalArgumentException("Columns number cannot be <= 0. Please change columns number [" + columnsNumber + "] to some more appropriate value.");
+                throw new DomainTreeException("Columns number cannot be <= 0. Please change columns number [" + columnsNumber + "] to some more appropriate value.");
             }
             this.columnsNumber = Integer.valueOf(columnsNumber);
 
@@ -1048,32 +1050,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
-                return true;
-            if (!super.equals(obj))
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final AddToResultTickManager other = (AddToResultTickManager) obj;
-            if (propertiesGrowFactors == null) {
-                if (other.propertiesGrowFactors != null) {
-                    return false;
+            if (this != obj) {
+                if (super.equals(obj) && getClass() == obj.getClass()) {
+                    final AddToResultTickManager other = (AddToResultTickManager) obj;
+                    return Objects.equals(propertiesGrowFactors, other.propertiesGrowFactors) &&
+                            Objects.equals(propertiesWidths, other.propertiesWidths) &&
+                            Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings);
                 }
-            } else if (!propertiesGrowFactors.equals(other.propertiesGrowFactors)) {
-                return false;
-            }
-            if (propertiesWidths == null) {
-                if (other.propertiesWidths != null) {
-                    return false;
-                }
-            } else if (!propertiesWidths.equals(other.propertiesWidths)) {
-                return false;
-            }
-            if (rootsListsOfOrderings == null) {
-                if (other.rootsListsOfOrderings != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
                 return false;
             }
             return true;

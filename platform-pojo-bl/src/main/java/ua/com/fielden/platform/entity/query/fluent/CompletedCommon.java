@@ -11,11 +11,13 @@ class CompletedCommon<ET extends AbstractEntity<?>> extends AbstractQueryLink im
         super(queryTokens);
     }
 
+    @Override
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType);
+        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
     }
 
+    @Override
     public AggregatedResultQueryModel modelAsAggregate() {
-        return new AggregatedResultQueryModel(getTokens().getValues());
+        return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
     }
 }

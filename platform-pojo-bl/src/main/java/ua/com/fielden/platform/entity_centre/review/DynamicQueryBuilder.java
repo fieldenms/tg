@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity_centre.review;
 
-import static java.lang.Boolean.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static java.lang.Boolean.TRUE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -21,10 +21,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.poi.hssf.record.chart.BeginRecord;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -40,10 +38,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -645,30 +641,34 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing * to %.
+     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing wildcards <code>*</code> to SQL wildcards <code>%</code>.
+     * Values that do not have any wildcards get them automatically injected at the beginning and end to ensure the match-anywhere strategy.
      *
      * @param criteria
      * @return
      */
-    public static String[] prepare(final String criteria) {
+    public static String[] prepCritValuesForStringTypedProp(final String criteria) {
         if (StringUtils.isEmpty(criteria)) {
             return new String[] {};
         }
 
-        final List<String> result = new ArrayList<String>();
-        for (final String crit : criteria.split(",")) {
-            result.add(PojoValueMatcher.prepare(crit));
+        final String[] crits = criteria.split(",");
+        for (int index = 0; index < crits.length; index++) {
+            if (!crits[index].contains("*")) {
+                crits[index] = "*" + crits[index] + "*";
+            }
+            crits[index] = PojoValueMatcher.prepare(crits[index]);
         }
-        return result.toArray(new String[] {});
+        return crits;
     }
-
+    
     /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
      *
      * @param criteria
      * @return
      */
-    public static String[] prepare(final List<String> criteria) {
+    public static String[] prepCritValuesForEntityTypedProp(final List<String> criteria) {
         return MiscUtilities.prepare(criteria);
     }
 
@@ -846,7 +846,7 @@ public class DynamicQueryBuilder {
             final boolean isNot = (Boolean) property.getValue2();
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
         } else if (isString(property.getType())) {
-            return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepare((String) property.getValue())).model();
+            return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
             final Map<Boolean, List<String>> searchValues = ((List<String>) property.getValue()).stream().collect(Collectors.groupingBy(str -> str.contains("*")));
             
@@ -856,12 +856,12 @@ public class DynamicQueryBuilder {
             if (searchValues.containsKey(false) && searchValues.containsKey(true)) {
                 condition = cond()
                         .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model())
-                        .or().prop(propertyName).iLike().anyOfValues(prepare(searchValues.get(true))).model();
+                        .or().prop(propertyName).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchValues.get(true))).model();
             } else if (searchValues.containsKey(false) && !searchValues.containsKey(true)) {
                 condition = cond()
                         .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model()).model();
             } else {
-                condition = cond().prop(propertyName).iLike().anyOfValues(prepare(searchValues.get(true))).model();
+                condition = cond().prop(propertyName).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchValues.get(true))).model();
             }
             
             return condition;

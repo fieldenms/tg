@@ -62,7 +62,9 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         + "    element-name='tg-%s-centre'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))
-                .replace("//@ready-callback", "self.classList.remove('canLeave');")
+                .replace("//@ready-callback", 
+                        "self.masterWithCentre = true;\n" +
+                        "self.classList.remove('canLeave');")
                 .replace("//@attached-callback", format("this.$.loader.attrs = %s;\n", attributes))
                 .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
                 .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
