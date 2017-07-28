@@ -26,14 +26,14 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public abstract class AbstractFunctionalEntityForCollectionModificationProducer<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, ID_TYPE> extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
+public abstract class AbstractFunctionalEntityForCollectionModificationProducer<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, ID_TYPE, ITEM extends AbstractEntity<?>> extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
     
     @Inject
     public AbstractFunctionalEntityForCollectionModificationProducer(final EntityFactory factory, final Class<T> actionType, final ICompanionObjectFinder companionFinder) {
         super(factory, actionType, companionFinder);
     }
     
-    abstract protected ICollectionModificationController<MASTER_TYPE, T, ID_TYPE> controller();
+    abstract protected ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller();
     
     @Override
     protected final T provideDefaultValues(final T entity) {

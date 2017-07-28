@@ -29,8 +29,8 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> implements IEntityProducer<CentreConfigUpdater> {
-    private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> controller;
+public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> implements IEntityProducer<CentreConfigUpdater> {
+    private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> controller;
     
     @Inject
     public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -39,7 +39,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     }
     
     @Override
-    protected ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> controller() {
+    protected ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> controller() {
         return controller;
     }
     

@@ -26,9 +26,9 @@ import ua.com.fielden.platform.security.tokens.user.UserRoleReviewToken;
  * @author TG Team
  *
  */
-public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<UserRole, UserRoleTokensUpdater, String> implements IEntityProducer<UserRoleTokensUpdater> {
+public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<UserRole, UserRoleTokensUpdater, String, SecurityTokenInfo> implements IEntityProducer<UserRoleTokensUpdater> {
     private final SecurityTokenProvider securityTokenProvider;
-    private final ICollectionModificationController<UserRole, UserRoleTokensUpdater, String> controller;
+    private final ICollectionModificationController<UserRole, UserRoleTokensUpdater, String, SecurityTokenInfo> controller;
     
     @Inject
     public UserRoleTokensUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IApplicationSettings applicationSettings) {
@@ -38,7 +38,7 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
     }
     
     @Override
-    protected ICollectionModificationController<UserRole, UserRoleTokensUpdater, String> controller() {
+    protected ICollectionModificationController<UserRole, UserRoleTokensUpdater, String, SecurityTokenInfo> controller() {
         return controller;
     }
     

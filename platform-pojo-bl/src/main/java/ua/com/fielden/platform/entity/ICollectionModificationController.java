@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -11,7 +13,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public interface ICollectionModificationController<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, ID_TYPE> {
+public interface ICollectionModificationController<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, ID_TYPE, ITEM extends AbstractEntity<?>> {
     
     /**
      * Retrieves master entity from context. Need to implement this for concrete action. Most likely the master entity is <code>context.getCurrEntity()</code> or
@@ -41,7 +43,9 @@ public interface ICollectionModificationController<MASTER_TYPE extends AbstractE
     
     MASTER_TYPE refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext);
     
-    T refetchActionEntity(final Long masterEntityId);
+    default T2<T, Collection<ITEM>> refetchActionEntity(final Long masterEntityId) {
+        throw new CollectionModificationException("Unsupported.");
+    }
 //    {
 //        return companionFinder.find((Class<MASTER_TYPE>) masterEntityFromContext.getDerivedFromType()).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
 //    }

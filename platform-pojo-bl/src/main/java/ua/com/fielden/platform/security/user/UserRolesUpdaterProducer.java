@@ -21,8 +21,8 @@ import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
  * @author TG Team
  *
  */
-public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<User, UserRolesUpdater, Long> implements IEntityProducer<UserRolesUpdater> {
-    private final ICollectionModificationController<User, UserRolesUpdater, Long> controller;
+public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<User, UserRolesUpdater, Long, UserRole> implements IEntityProducer<UserRolesUpdater> {
+    private final ICollectionModificationController<User, UserRolesUpdater, Long, UserRole> controller;
     
     @Inject
     public UserRolesUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -31,7 +31,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
     }
     
     @Override
-    protected ICollectionModificationController<User, UserRolesUpdater, Long> controller() {
+    protected ICollectionModificationController<User, UserRolesUpdater, Long, UserRole> controller() {
         return controller;
     }
     

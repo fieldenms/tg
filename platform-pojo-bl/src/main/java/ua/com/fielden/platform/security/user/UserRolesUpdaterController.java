@@ -4,13 +4,17 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.Collection;
+import java.util.Set;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
-public class UserRolesUpdaterController implements ICollectionModificationController<User, UserRolesUpdater, Long> {
+public class UserRolesUpdaterController implements ICollectionModificationController<User, UserRolesUpdater, Long, UserRole> {
     private final IEntityDao<User> coUser;
     private final IEntityDao<UserRolesUpdater> coUserRolesUpdater;
     private final IUserRole coUserRole;
@@ -33,15 +37,16 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
     }
     
     @Override
-    public UserRolesUpdater refetchActionEntity(final Long masterEntityId) {
+    public T2<UserRolesUpdater, Collection<UserRole>> refetchActionEntity(final Long masterEntityId) {
         final UserRolesUpdater refetchedAction = coUserRolesUpdater.getEntity(
             from(select(UserRolesUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntityId).model())
             .with(fetchAndInstrument(UserRolesUpdater.class).with(AbstractEntity.KEY)/*.with("roles")*/)
             .model()
         );
+        final Set<UserRole> availableItems = UserRolesUpdaterProducer.loadAvailableRoles(coUserRole);
         if (refetchedAction != null) {
-            refetchedAction.setRoles(UserRolesUpdaterProducer.loadAvailableRoles(coUserRole));
+            refetchedAction.setRoles(availableItems);
         }
-        return refetchedAction;
+        return T2.t2(refetchedAction, availableItems);
     }
 }

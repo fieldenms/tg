@@ -47,7 +47,7 @@ public class CollectionModificationUtils {
         final IEntityDao<T> companion,
         final EntityFactory factory,
         final Class<ID_TYPE> idType,
-        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE> controller
+        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
     ) {
         final Result res = action.isValid();
         // throw validation result of the action if it is not successful:
@@ -57,10 +57,10 @@ public class CollectionModificationUtils {
 
         // TODO remove final MASTER_TYPE masterEntityBeingUpdated = (MASTER_TYPE) action.refetchedMasterEntity(); // existence of master entity is checked during "producing" of functional action
         final MASTER_TYPE masterEntityBeingUpdated = validateMasterEntityAndRefetch(controller.getMasterEntityFromAction(action), action, controller);
-        final Optional<T> persistedEntityOption = retrieveActionFor(masterEntityBeingUpdated, action.isPersistent(), controller);
+        final Optional<T2<T, Collection<ITEM>>> persistedEntityAndAvailableItemsOption = retrieveActionFor(masterEntityBeingUpdated, action.isPersistent(), controller);
         
-        final T persistedEntity = persistedEntityOption.map(persistedAction -> {
-            final Map<Object, ITEM> availableEntities = mapById(availableEntitiesGetter.apply(persistedAction), idType);
+        final T persistedEntity = persistedEntityAndAvailableItemsOption.map(persistedActionAndAvailableItems -> {
+            final Map<Object, ITEM> availableEntities = mapById(persistedActionAndAvailableItems._2, idType);
 
             for (final ID_TYPE addedId : action.getAddedIds()) {
                 if (!availableEntities.containsKey(addedId)) {
@@ -72,7 +72,7 @@ public class CollectionModificationUtils {
                     throw Result.failure("Another user has deleted the item, that you're trying to un-tick. " + TRY_AGAIN_MSG);
                 }
             }
-            return persistedAction;
+            return persistedActionAndAvailableItems._1;
         }).orElse(null);
         
         if (surrogateVersion(persistedEntity) > action.getSurrogateVersion()) {
@@ -116,7 +116,7 @@ public class CollectionModificationUtils {
     > MASTER_TYPE validateMasterEntityAndRefetch(
         final AbstractEntity<?> masterEntityFromContext, 
         final T entity,
-        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE> controller
+        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
     ) {
         if (masterEntityFromContext == null) {
             throw Result.failure("The master entity for collection modification is not provided in the context.");
@@ -139,7 +139,7 @@ public class CollectionModificationUtils {
     > T2<T, Optional<MASTER_TYPE>> initAction(
         final T entity,
         final CentreContext<MASTER_TYPE, AbstractEntity<?>> context,
-        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE> controller
+        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
     ) {
         if (context == null) {
             return T2.t2(entity, Optional.empty()); // this is used for Cancel button (no context is needed)
@@ -165,7 +165,7 @@ public class CollectionModificationUtils {
             entity.getProperty(AbstractEntity.KEY).setRequired(false);
         }
         
-        final T previouslyPersistedAction = retrieveActionFor(refetchedMasterEntity, entity.isPersistent(), controller).map(Function.identity()).orElse(null);
+        final T previouslyPersistedAction = retrieveActionFor(refetchedMasterEntity, entity.isPersistent(), controller).map(actionAndAvailableItems -> actionAndAvailableItems._1).orElse(null);
         entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
         return T2.t2(entity, Optional.of(refetchedMasterEntity));
     }
@@ -198,15 +198,15 @@ public class CollectionModificationUtils {
         ITEM extends AbstractEntity<?>, 
         T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, 
         ID_TYPE
-    > Optional<T> retrieveActionFor(
+    > Optional<T2<T, Collection<ITEM>>> retrieveActionFor(
         final MASTER_TYPE masterEntity,
         final boolean isActionEntityPersistent,
-        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE> controller
+        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
     ) {
         if (!isActionEntityPersistent || masterEntity.getId() == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(controller.refetchActionEntity(masterEntity.getId()));
+        return Optional.of(controller.refetchActionEntity(masterEntity.getId()));
     }
     
 }

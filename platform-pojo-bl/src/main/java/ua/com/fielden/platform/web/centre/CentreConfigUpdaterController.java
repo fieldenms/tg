@@ -2,12 +2,11 @@ package ua.com.fielden.platform.web.centre;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.CollectionModificationException;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
-public class CentreConfigUpdaterController implements ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> {
+public class CentreConfigUpdaterController implements ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
     public CentreConfigUpdaterController(final ICriteriaEntityRestorer criteriaEntityRestorer) {
@@ -22,11 +21,6 @@ public class CentreConfigUpdaterController implements ICollectionModificationCon
     @Override
     public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
         return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) masterEntityFromContext;
-    }
-    
-    @Override
-    public CentreConfigUpdater refetchActionEntity(final Long masterEntityId) {
-        throw new CollectionModificationException("Unsupported.");
     }
     
     /**

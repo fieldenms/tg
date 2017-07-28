@@ -149,17 +149,13 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserAndRoleAssociation userToRole2 = save(new_composite(UserAndRoleAssociation.class, user, role2));
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
-        final UserRolesUpdater originalUpdater = createUpdater(user);
+        final UserRolesUpdater updater = createUpdater(user);
         final LinkedHashSet<Long> removedIds = linkedSetOf(role2.getId());
-        originalUpdater.setRemovedIds(removedIds);
+        updater.setRemovedIds(removedIds);
         
         // removal of available entity
         this.<IUserAndRoleAssociation, UserAndRoleAssociation>co(UserAndRoleAssociation.class).removeAssociation(setOf(userToRole2));
         co(UserRole.class).batchDelete(listOf(role2.getId()));
-
-        // starting the process of saving: a) produce it first (should be successfull) b) save
-        final UserRolesUpdater updater = createUpdater(user);
-        updater.setRemovedIds(removedIds);
         
         try {
             save(updater);
@@ -179,16 +175,12 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role2));
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
-        final UserRolesUpdater originalUpdater = createUpdater(user);
+        final UserRolesUpdater updater = createUpdater(user);
         final LinkedHashSet<Long> addedIds = linkedSetOf(role1.getId());
-        originalUpdater.setAddedIds(addedIds);
+        updater.setAddedIds(addedIds);
         
         // removal of available entity
         co(UserRole.class).batchDelete(listOf(role1.getId()));
-
-        // starting the process of saving: a) produce it first (should be successfull) b) save
-        final UserRolesUpdater updater = createUpdater(user);
-        updater.setAddedIds(addedIds);
         
         try {
             save(updater);
