@@ -44,7 +44,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     @Override
     @SessionRequired
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
-        final T2<CentreConfigUpdater, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> actionAndCriteriaBeingUpdated = validateAction(action, a -> a.getCustomisableColumns(), this, factory, String.class, new CentreConfigUpdaterController(criteriaEntityRestorer));
+        final T2<CentreConfigUpdater, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> actionAndCriteriaBeingUpdated = validateAction(action, this, factory, String.class, new CentreConfigUpdaterController(criteriaEntityRestorer));
         final CentreConfigUpdater actionToSave = actionAndCriteriaBeingUpdated._1;
         actionToSave.getProperty("sortingVals").setOriginalValue(action.getProperty("sortingVals").getOriginalValue());
         

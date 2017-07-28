@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -31,7 +29,6 @@ public class CollectionModificationUtils {
      * collection for the same master entity. After the validation has
      * 
      * @param action
-     * @param availableEntitiesGetter
      * @param companion
      * @param factory
      * @return
@@ -43,7 +40,6 @@ public class CollectionModificationUtils {
         ID_TYPE
     > T2<T, MASTER_TYPE> validateAction(
         final T action,
-        final Function<T, Collection<ITEM>> availableEntitiesGetter,
         final IEntityDao<T> companion,
         final EntityFactory factory,
         final Class<ID_TYPE> idType,

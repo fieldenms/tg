@@ -50,7 +50,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     @SessionRequired
     @Authorise(UserRoleSaveToken.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
-        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, a -> a.getTokens(), this, factory, String.class, new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co(UserRoleTokensUpdater.class)));
+        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, factory, String.class, new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co(UserRoleTokensUpdater.class)));
         
         // after all validations have passed -- the association changes could be saved:
         final UserRole userRoleBeingUpdated = actionAndUserRoleBeingUpdated._2;
