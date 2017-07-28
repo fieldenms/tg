@@ -11,17 +11,18 @@ import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
+import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -29,14 +30,18 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
+public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> implements IEntityProducer<CentreConfigUpdater> {
+    private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> controller;
     
     @Inject
-    public CentreConfigUpdaterProducer(
-            final EntityFactory factory,
-            final ICompanionObjectFinder companionFinder,
-            final IApplicationSettings applicationSettings) throws Exception {
+    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(factory, CentreConfigUpdater.class, companionFinder);
+        this.controller = new CentreConfigUpdaterController(criteriaEntityRestorer);
+    }
+    
+    @Override
+    protected ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String> controller() {
+        return controller;
     }
     
     @Override
@@ -65,14 +70,4 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         return entity;
     }
     
-    @Override
-    protected AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context) {
-        // this producer is suitable for property actions on User Role master and for actions on User Role centre
-        return context.getSelectionCrit();
-    }
-
-    @Override
-    protected EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
-        return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) masterEntityFromContext;
-    }
 }
