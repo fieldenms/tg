@@ -250,11 +250,7 @@ public class SerialisationTestResource extends ServerResource {
             }
         } else {
             final String origPrefix = original ? "original " : "";
-            if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
-                if (value1 != null || !"okay_defined".equals(value2)) {
-                    return Result.failure(format("e1 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
-                }
-            } else if (!EntityUtils.equalsEx(value1, value2)) { // prop equality
+            if (!EntityUtils.equalsEx(value1, value2)) { // prop equality
                 return Result.failure(format("e1 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] does not equal to e2 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, toString(value1), e2, e2.getType().getSimpleName(), propName, toString(value2)));
             }
         }

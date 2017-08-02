@@ -659,7 +659,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_definer_should_be_restored_and_invoke_definer_afterwards() throws Exception {
+    public void entity_with_definer_should_be_restored_and_its_definer_should_not_be_invoked_afterwards() throws Exception {
         final EntityWithDefiner entity = factory.createEntityWithPropertyWithDefiner();
         assertNull("Entity should have uninitialised prop2.", entity.getProp2());
         final EntityWithDefiner restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDefiner.class);
@@ -667,7 +667,7 @@ public class EntitySerialisationWithJacksonTest {
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
-        assertEquals("Incorrect prop.", "okay_defined", restoredEntity.getProp2());
+        assertNull("Restored entity should have uninitialised prop2 even if definer exists that is triggered on prop to change prop2.", restoredEntity.getProp2());
     }
 
     @Test
