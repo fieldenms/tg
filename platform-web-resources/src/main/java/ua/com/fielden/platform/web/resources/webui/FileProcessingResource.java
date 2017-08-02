@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 import java.util.function.Function;
@@ -71,11 +72,13 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     }
 
     /**
-     * Receives a file
+     * Receives a file from a client.
+     *
+     * @throws IOException
      * 
      */
     @Put
-    public Representation receiveFile(final Representation entity) throws Exception {
+    public Representation receiveFile(final Representation entity) throws IOException {
         final Representation response;
         if (entity == null) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
@@ -97,6 +100,13 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         return response;
     }
 
+    /**
+     * Registers an event sourcing resource that sends file processing progress back to the client.
+     * Instantiates an entity that is responsible for file processing and executes it (call method <code>save</code>).
+     *
+     * @param stream -- a stream that represents a file to be processed.
+     * @return
+     */
     private Representation tryToProcess(final InputStream stream) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSrouce(subject));
