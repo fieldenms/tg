@@ -112,6 +112,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     .collect(Collectors.toList())
                     .toArray(new String[] {});
             final T entity;
+            // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
             if (uninstrumented) {
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
@@ -125,8 +126,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     entity = factory.newEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
             }
-            entity.beginInitialising();
-
             final JsonNode atIdNode = node.get("@id");
             // At this stage 'clientSideReference' has been already decoded using ISerialisationTypeEncoder, that is why concrete EntityJsonDeserialiser has been chosen for deserialisation
             // Method determineValue is doing the necessary type determination with the usage of TgJackson.extractConcreteType method.
@@ -301,7 +300,11 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 throw new EntityDeserialisationException(format("EntitySerialiser has got null 'required' inside meta property '@%s' when reading entity of type [%s].", propName, type.getName()));
             }
             if (metaProperty.isPresent()) {
+                // Important: generally there is no need to hold 'entity' in isInitialising state during deserialisation.
+                // However in specific case of requiredness setting the setter can be invoked, that's why validation should be avoided -- isInitialising == true helps with that.
+                metaProperty.get().getEntity().beginInitialising();
                 metaProperty.get().setRequired(requiredPropNode.asBoolean());
+                metaProperty.get().getEntity().endInitialising();
             }
         }
     }
@@ -328,7 +331,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     }
 
     //    /**
-    //     * Retrieves 'ValidationResult' value from entity JSON tree.
+    //     * TODO Implement. Retrieves 'ValidationResult' value from entity JSON tree.
     //     *
     //     * @param metaProperty
     //     * @param metaPropNode
