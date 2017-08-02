@@ -30,7 +30,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  * The process of finalising entity initialisation consists of:<br>
  * <ul>
  *  <li>Execution of ACE handlers.
- *  <li>(re)Setting of property original values (optional).
+ *  <li>(re)Setting of property original values.
  *  <li>Completion of the entity initialisation phase by invoking {@link AbstractEntity#endInitialising()}.
  * </ul>
  * 
@@ -45,13 +45,12 @@ public class DefinersExecutor {
      * The boundary of an object graph is outlined by <code>proxied</code> properties and <code>non-entity typed</code> properties.
      *
      * @param entity -- an instance to finalise the initialisation for.
-     * @param handleOriginalValues -- indicates the need to reset original values of properties
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> T execute(final T entity, final boolean handleOriginalValues) {
+    public static <T extends AbstractEntity<?>> T execute(final T entity) {
         if (entity != null) {
-            execute(Arrays.asList(entity), handleOriginalValues);
+            execute(Arrays.asList(entity));
         }
         return entity;
     }
@@ -60,11 +59,10 @@ public class DefinersExecutor {
      * The same as {@link #execute(AbstractEntity)}, but for a list of entities.
      * 
      * @param entities -- instances to finalise the initialisation for.
-     * @param handleOriginalValues -- indicates the need to reset original values of properties
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities, final boolean handleOriginalValues) {
+    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
         if (entities == null || entities.isEmpty()) {
             return entities;
         }
@@ -82,7 +80,7 @@ public class DefinersExecutor {
                     throw new DefinersExecutorException("After full exploration of previous top-level node entity (if any) 'frontier' is necessary to be empty.");
                 }
                 frontier.push(entity);
-                explore(frontier, explored, handleOriginalValues);
+                explore(frontier, explored);
             }
         }
         return entities;
@@ -93,13 +91,11 @@ public class DefinersExecutor {
      *
      * @param frontier
      * @param explored
-     * @param handleOriginalValues
      * @return
      */
     private static void explore(
             final Deque<AbstractEntity<?>> frontier, 
-            final Set<Integer> explored,
-            final boolean handleOriginalValues) {
+            final Set<Integer> explored) {
         
         if (frontier.isEmpty()) {
             throw new DefinersExecutorException("There is nothing to process.");
@@ -137,8 +133,8 @@ public class DefinersExecutor {
                 .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()))
                 .collect(Collectors.partitioningBy(field -> isValueProxied(entity, field)));
 
-        // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted and handleOriginalValues = true
-        if (handleOriginalValues && isInstrumented && isEntityPersisted) {
+        // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted
+        if (isInstrumented && isEntityPersisted) {
             final List<Field> idOnlyProxyPropFields = propFieldsToProcess.get(true);
             for (final Field propField : idOnlyProxyPropFields) {
                 final String propName = propField.getName();
@@ -165,7 +161,7 @@ public class DefinersExecutor {
                             if (item != null && item instanceof AbstractEntity) {
                                 final AbstractEntity<?> value = (AbstractEntity<?>) item;
                                 frontier.push(value);
-                                explore(frontier, explored, handleOriginalValues);
+                                explore(frontier, explored);
                             }
                         }
                     }
@@ -174,13 +170,13 @@ public class DefinersExecutor {
                         final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
                         // produce fetch
                         frontier.push(value);
-                        explore(frontier, explored, handleOriginalValues);
+                        explore(frontier, explored);
                     }
                 }
                 
                 // original values and execution of ACE handlers is relevant only for instrumented entities
                 if (isInstrumented) {
-                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted, handleOriginalValues);
+                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
                 }
             }
         }
@@ -202,20 +198,12 @@ public class DefinersExecutor {
         return value instanceof AbstractEntity ? ((AbstractEntity<?>) value).isIdOnlyProxy() : false;
     }
 
-    private static <T> void handleOriginalValueAndACE(final MetaProperty<T> metaProp, final T propertyValue, final boolean isEntityPersisted, final boolean handleOriginalValues) {
-        if (handleOriginalValues && isEntityPersisted) {
+    private static <T> void handleOriginalValueAndACE(final MetaProperty<T> metaProp, final T propertyValue, final boolean isEntityPersisted) {
+        if (isEntityPersisted) {
             // this is very important -- original values for non-persistent entities should be left unchanged
             metaProp.setOriginalValue(propertyValue);
         }
-        // TODO Consider removal of definers execution, very much like original values handling, after TgJackson deserialisation process.
-        // TODO Following lines adds ability to quick check how this works.
-        // TODO Please note that endInitialising still should occur for entities graph after deserialisation process (perhaps it could be embedded inside TgJackson logic).
-        // TODO There are some interesting examples that could be heavily affected by definers execution removal, - these include for example Parc import utilities, please check.
-        // TODO At the stage where definers are executed, there is a need to carefully implement them:
-        // TODO  for example, do not change the property from definer and then directly through setter, because direct change could be overridden afterwards using the same definer.
-        // if (handleOriginalValues) {
         metaProp.define(propertyValue);
-        // }
     }
 
 }

@@ -88,6 +88,6 @@ public class EntityFetcher {
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer));
         }
-        return DefinersExecutor.execute(result, true); // original values of properties should be handled here along with definers execution
+        return DefinersExecutor.execute(result);
     }
 }
