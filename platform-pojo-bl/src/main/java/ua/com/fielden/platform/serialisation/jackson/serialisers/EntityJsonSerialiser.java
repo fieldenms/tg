@@ -2,17 +2,23 @@ package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getLastInvalidValue;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getPrevValue;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCount;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isLastInvalidValueDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMaxDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMinDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isPrevValueDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
@@ -181,7 +187,17 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             if (!isMaxDefault(max)) {
                                 existingMetaProps.put("_max", max);
                             }
-
+                            if (!isPrevValueDefault(metaProperty)) {
+                                existingMetaProps.put("_prevValue", getPrevValue(metaProperty));
+                            }
+                            if (!isLastInvalidValueDefault(metaProperty)) {
+                                existingMetaProps.put("_lastInvalidValue", getLastInvalidValue(metaProperty));
+                            }
+                            if (!isValueChangeCountDefault(metaProperty)) {
+                                existingMetaProps.put("_valueChangeCount", getValueChangeCount(metaProperty));
+                            }
+                            existingMetaProps.put("_assigned", metaProperty.isAssigned());
+                            
                             // write actual meta-property
                             if (!existingMetaProps.isEmpty()) {
                                 generator.writeFieldName("@" + name);

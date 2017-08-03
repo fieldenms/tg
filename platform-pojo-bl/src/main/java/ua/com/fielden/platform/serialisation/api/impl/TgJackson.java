@@ -26,7 +26,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -95,9 +94,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
-        this.module.addDeserializer(Result.class, new ResultJsonDeserialiser<Result>(this));
-        this.module.addSerializer(Warning.class, new ResultJsonSerialiser(this));
-        this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
+        this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));
 
         this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, serialisationTypeEncoder));
         this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this, serialisationTypeEncoder));

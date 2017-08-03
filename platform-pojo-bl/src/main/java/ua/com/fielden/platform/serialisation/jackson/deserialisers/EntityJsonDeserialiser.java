@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -237,6 +238,25 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @return
      */
     private void provideOriginalValue(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode, final Field propField) throws IOException {
+        // deserialise validation result
+        if (metaPropNode != null && metaPropNode.isObject() && metaPropNode.size() > 0) {
+            if (!metaProperty.isPresent()) {
+                throw new EntityDeserialisationException(format("Meta property '@%s' is present when reading deserialisation envelope of type [%s], but actual meta-property, into which the values should be set, are missing.", propName, type.getName()));
+            }
+            final MetaProperty<Object> rawMetaProp = (MetaProperty<Object>) metaProperty.get(); // unknown type parameter for meta-property is not relevant here
+            
+            final JsonNode validationResultPropNode = metaPropNode.get("_validationResult");
+            if (validationResultPropNode != null) {
+                if (validationResultPropNode.isNull()) {
+                    throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + rawMetaProp.getName() + "' when reading entity of type [" + type.getName() + "].");
+                }
+                if (rawMetaProp != null) {
+                    rawMetaProp.setDomainValidationResult(validationResultPropNode.traverse(mapper).readValueAs(Result.class));
+                }
+            }
+        }
+        
+        // deserialise original value and dirtiness
         if (metaPropNode == null || metaPropNode.get("_cfo") == null) {
             // do nothing -- there is no node and that means that there is default value
             if (metaProperty.isPresent()) {
@@ -259,6 +279,36 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 } else {
                     metaProperty.get().resetState();
                 }
+            }
+        }
+        
+        // 'originalVal' setting triggers updating of 'prevValue', 'valueChangeCount' and 'assigned'.
+        // These three items (and 'lastInvalidValue' too) need to be properly assigned from deserialisation envelope.
+        // 'setOriginalValue' call resets these three items.
+        // Thats why custom assignments must be done AFTER 'setOriginalValue' call.
+        // Also these assignments must be done BEFORE any logic that uses them.
+        // One of examples is 'setRequired' call that uses 'getLastAttemptedValue' concept which is heavily based on validation results, 'assigned', value / originalValue and 'lastInvalidValue'.
+        if (metaPropNode != null && metaPropNode.isObject() && metaPropNode.size() > 0) {
+            if (!metaProperty.isPresent()) {
+                throw new EntityDeserialisationException(format("Meta property '@%s' is present when reading deserialisation envelope of type [%s], but actual meta-property, into which the values should be set, are missing.", propName, type.getName()));
+            }
+            final MetaProperty<Object> rawMetaProp = (MetaProperty<Object>) metaProperty.get(); // unknown type parameter for meta-property is not relevant here
+            
+            final JsonNode prevValueNode = metaPropNode.get("_prevValue");
+            if (prevValueNode != null) {
+                rawMetaProp.setPrevValue(determineValue(prevValueNode, propField));
+            }
+            final JsonNode lastInvalidValueNode = metaPropNode.get("_lastInvalidValue");
+            if (lastInvalidValueNode != null) {
+                rawMetaProp.setLastInvalidValue(determineValue(lastInvalidValueNode, propField));
+            }
+            final JsonNode valueChangeCountNode = metaPropNode.get("_valueChangeCount");
+            if (valueChangeCountNode != null) {
+                rawMetaProp.setValueChangeCount(valueChangeCountNode.intValue());
+            }
+            final JsonNode assignedNode = metaPropNode.get("_assigned");
+            if (assignedNode != null) {
+                rawMetaProp.setAssigned(assignedNode.asBoolean());
             }
         }
     }
@@ -329,28 +379,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             }
         }
     }
-
-    //    /**
-    //     * TODO Implement. Retrieves 'ValidationResult' value from entity JSON tree.
-    //     *
-    //     * @param metaProperty
-    //     * @param metaPropNode
-    //     * @return
-    //     */
-    //    private void provideValidationResult(final MetaProperty metaProperty, final JsonNode metaPropNode) throws IOException, JsonProcessingException {
-    //        final JsonNode validationResultPropNode = metaPropNode.get("_validationResult");
-    //        if (validationResultPropNode == null) {
-    //            // do nothing -- there is no node and that means that there is default value
-    //        } else {
-    //            if (validationResultPropNode.isNull()) {
-    //                throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
-    //            }
-    //            if (metaProperty != null) {
-    //                final JsonParser jsonParser = validationResultPropNode.traverse(mapper);
-    //                metaProperty.setRequiredValidationResult(jsonParser.readValueAs(Result.class)); // TODO how can it be done for Warning.class??
-    //            }
-    //        }
-    //    }
 
     private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = AbstractEntity.KEY.equals(propertyField.getName()) ? AnnotationReflector.getKeyType(type) : PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());

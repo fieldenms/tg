@@ -28,6 +28,69 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class DefaultValueContract {
     private DefaultValueContract() {
     }
+    
+    ///////////////////////////////////////////////// prevValue /////////////////////////////////////////////////
+    /**
+     * Returns the value of <code>prevValue</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static Object getPrevValue(final MetaProperty<Object> metaProperty) {
+        return metaProperty.getPrevValue();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>prevValue</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static boolean isPrevValueDefault(final MetaProperty<Object> metaProperty) {
+        return equalsEx(getPrevValue(metaProperty), getOriginalValue(metaProperty));
+    }
+
+    ///////////////////////////////////////////////// lastInvalidValue /////////////////////////////////////////////////
+    /**
+     * Returns the value of <code>lastInvalidValue</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static Object getLastInvalidValue(final MetaProperty<Object> metaProperty) {
+        return metaProperty.getLastInvalidValue();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>lastInvalidValue</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static boolean isLastInvalidValueDefault(final MetaProperty<Object> metaProperty) {
+        return equalsEx(getLastInvalidValue(metaProperty), null);
+    }
+
+    ///////////////////////////////////////////////// valueChangeCount /////////////////////////////////////////////////
+    /**
+     * Returns the value of <code>valueChangeCount</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static int getValueChangeCount(final MetaProperty<Object> metaProperty) {
+        return metaProperty.getValueChangeCount();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>valueChangeCount</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static boolean isValueChangeCountDefault(final MetaProperty<Object> metaProperty) {
+        return equalsEx(getValueChangeCount(metaProperty), 0);
+    }
 
     ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
     /**

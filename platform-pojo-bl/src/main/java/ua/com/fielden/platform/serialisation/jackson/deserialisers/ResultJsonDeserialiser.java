@@ -2,9 +2,7 @@ package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import java.io.IOException;
 
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
+import org.apache.poi.ss.formula.functions.T;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,7 +11,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
-public class ResultJsonDeserialiser<T extends Result> extends StdDeserializer<T> {
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.web.utils.PropertyConflict;
+
+public class ResultJsonDeserialiser extends StdDeserializer<Result> {
     private final ObjectMapper mapper;
 
     public ResultJsonDeserialiser(final ObjectMapper mapper) {
@@ -22,7 +25,7 @@ public class ResultJsonDeserialiser<T extends Result> extends StdDeserializer<T>
     }
 
     @Override
-    public T deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Result deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final JsonNode node = jp.readValueAsTree();
 
         final Class<T> resultType = (Class<T>) ClassesRetriever.findClass(node.get("@resultType").asText());
@@ -46,9 +49,9 @@ public class ResultJsonDeserialiser<T extends Result> extends StdDeserializer<T>
 
         // instantiate the result; warning type checking is required only when instance and message are not null
         if (ex != null) {
-            return (T) new Result(instance, ex);
+            return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex);
         } else {
-            return Warning.class.equals(resultType) ? (T) new Warning(instance, message) : (T) new Result(instance, message);
+            return Warning.class.equals(resultType) ? new Warning(instance, message) : new Result(instance, message);
         }
     }
 }
