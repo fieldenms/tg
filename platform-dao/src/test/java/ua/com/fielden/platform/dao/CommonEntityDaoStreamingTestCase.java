@@ -10,6 +10,9 @@ import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -106,6 +109,50 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             assertTrue("Session should still be open.", co.getSession().isOpen());
         }
+        assertFalse("Session should already be closed", co.getSession().isOpen());
+    }
+
+    @Test
+    public void closing_of_derived_streams_closes_the_base_stream_and_session() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());
+        final Stream<Money> moneyStream = dataStream.map(e -> e.getMoney());
+        
+        assertTrue("Session should still be open.", co.getSession().isOpen());
+        
+        moneyStream.close();
+        
+        assertFalse("Session should already be closed", co.getSession().isOpen());
+    }
+
+    @Test
+    public void counting_data_in_stream_does_not_close_it() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());
+        
+        assertTrue("Session should still be open.", co.getSession().isOpen());
+        dataStream.count();
+        assertTrue("Session should still be open.", co.getSession().isOpen());
+        
+        dataStream.close();
+        
+        assertFalse("Session should already be closed", co.getSession().isOpen());
+    }
+
+    @Test
+    public void collecting_data_from_stream_does_not_close_it() {
+        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        
+        final Map<Boolean, List<EntityWithMoney>> partition;
+        try (final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());) {
+            partition = dataStream.collect(Collectors.partitioningBy(e -> e.getMoney().getAmount().doubleValue() >= 30));
+            assertTrue("Session should still be open.", co.getSession().isOpen());
+        }
+        
+        assertEquals(2, partition.size());
+        assertEquals(3, partition.get(true).size());
+        assertEquals(1, partition.get(false).size());
+        
         assertFalse("Session should already be closed", co.getSession().isOpen());
     }
 
