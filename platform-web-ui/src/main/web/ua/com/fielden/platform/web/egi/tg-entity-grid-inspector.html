@@ -932,7 +932,19 @@
                     }).bind(this);
                 }, 1)
             },
-
+            
+            /**
+             * Updates entity when some of the properties were changed.
+             */
+            updateEntity: function (entity) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0) {
+                    const path = "egiModel." + entityIndex + ".entity";
+                    this.set(path, {get: () => null});
+                    this.set(path, entity);
+                }
+            },
+            
             _getKeyEventTarget: function () {
                 var parent = this;
                 while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {

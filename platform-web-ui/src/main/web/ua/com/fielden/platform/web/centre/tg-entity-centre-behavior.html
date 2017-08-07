@@ -594,6 +594,13 @@
                 self.updateProgress = (function (percentage, clazz, isVisible) {
                     this.$.egi.updateProgress(percentage, clazz, isVisible);
                 }).bind(self);
+                
+                /**
+                 * Adds event listener that will update egi when some entity was changed
+                 */
+                self.addEventListener("tg-entity-changed", function(e) {
+                    this.$.egi.updateEntity(e.detail);
+                }.bind(self));
 
                 this._columnAction = createColumnAction(self);
 
