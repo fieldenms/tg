@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
@@ -28,6 +27,7 @@ import com.google.inject.Module;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -53,6 +53,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicAEProp;
@@ -99,6 +100,7 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithBigDecimal.class,
                 EntityWithInteger.class,
                 EntityWithString.class,
+                EntityWithMetaProperty.class,
                 EntityWithBoolean.class,
                 EntityWithDate.class,
                 EntityWithOtherEntity.class,
@@ -440,6 +442,154 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
         assertTrue("Incorrect prop requiredness.", restoredEntity.getProperty("prop").isRequired());
+    }
+    
+    /**
+     * Asserts meta-prop values.
+     * 
+     * @param metaProp
+     * @param valResultType
+     * @param valResultMessage
+     * @param value
+     * @param originalValue
+     * @param prevValue
+     * @param lastInvalidValue
+     * @param lastAttemptedValue
+     * @param dirty
+     * @param valueChangeCount
+     * @param assigned
+     * @param editable
+     * @param required
+     * @param visible
+     */
+    private static void checkMetaValues(
+        final MetaProperty<Object> metaProp,
+        final Class<? extends Result> valResultType, // PropertyConflict, Result, 'null' if successful without warning, or Warning if successful with warning
+        final String valResultMessage,
+        final Object value,
+        final Object originalValue,
+        final Object prevValue,
+        final Object lastInvalidValue,
+        final Object lastAttemptedValue,
+        final boolean dirty,
+        final int valueChangeCount,
+        final boolean assigned,
+        final boolean editable,
+        final boolean required,
+        final boolean visible
+    ) {
+        final Result actualValResult = metaProp.isValid() ? metaProp.getFirstWarning() : metaProp.getFirstFailure();
+        if (valResultType == null) {
+            assertNull(actualValResult);
+        } else {
+            assertNotNull(actualValResult);
+            assertEquals(valResultType, actualValResult.getClass());
+            assertEquals(valResultMessage, actualValResult.getMessage());
+        }
+        assertEquals(value, metaProp.getValue());
+        assertEquals(originalValue, metaProp.getOriginalValue());
+        assertEquals(prevValue, metaProp.getPrevValue());
+        assertEquals(lastInvalidValue, metaProp.getLastInvalidValue());
+        assertEquals(lastAttemptedValue, metaProp.getLastAttemptedValue());
+        
+        if (value == originalValue) {
+            assertTrue(metaProp.getValue() == metaProp.getOriginalValue());
+        }
+        if (value == prevValue) {
+            assertTrue(metaProp.getValue() == metaProp.getPrevValue());
+        }
+        if (originalValue == prevValue) {
+            assertTrue(metaProp.getOriginalValue() == metaProp.getPrevValue());
+        }
+        
+        assertEquals(dirty, metaProp.isDirty());
+        assertEquals(valueChangeCount, metaProp.getValueChangeCount());
+        assertEquals(assigned, metaProp.isAssigned());
+        assertEquals(editable, metaProp.isEditable());
+        assertEquals(required, metaProp.isRequired());
+        assertEquals(visible, metaProp.isVisible());
+    }
+    
+    @Test
+    public void meta_property_for_new_entity_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropForNewEntity();
+        final String value = null;
+        final String originalValue = null;
+        checkMetaValues(entity.getProperty("prop"), null, null, value, originalValue, originalValue, null, originalValue, true, 0, false, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, originalValue, null, originalValue, true, 0, false, true, false, true);
+    }
+    
+    @Test
+    public void meta_property_failure_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithFailure();
+        final String value = "Ok";
+        final String invalidValue = "Not Ok";
+        checkMetaValues(entity.getProperty("prop"), Result.class, "Custom failure.", value, value, value, invalidValue, invalidValue, false, 0, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), Result.class, "Custom failure.", value, value, value, invalidValue, invalidValue, false, 0, true, true, false, true);
+    }
+    
+    @Test
+    public void meta_property_without_failure_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithoutFailure();
+        final String value = "Ok Ok";
+        final String originalValue = "Ok";
+        checkMetaValues(entity.getProperty("prop"), null, null, value, originalValue, originalValue, null, value, true, 1, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, originalValue, null, value, true, 1, true, true, false, true);
+    }
+    
+    @Test
+    public void meta_property_warning_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithWarning();
+        final String value = "Ok Ok Warn";
+        final String originalValue = "Ok";
+        final String prevValue = "Ok Ok";
+        checkMetaValues(entity.getProperty("prop"), Warning.class, "Custom warning.", value, originalValue, prevValue, null, value, true, 2, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), Warning.class, "Custom warning.", value, originalValue, prevValue, null, value, true, 2, true, true, false, true);
+    }
+    
+    @Test
+    public void meta_property_that_became_required_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithWarningAndBecameRequired();
+        final String value = "Ok Ok Warn";
+        final String originalValue = "Ok";
+        final String prevValue = "Ok Ok";
+        checkMetaValues(entity.getProperty("prop"), Warning.class, "Custom warning.", value, originalValue, prevValue, null, value, true, 2, true, true, true, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), Warning.class, "Custom warning.", value, originalValue, prevValue, null, value, true, 2, true, true, true, true);
+    }
+    
+    @Test
+    public void meta_property_that_became_required_and_was_made_empty_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropThatBecameRequiredAndWasMadeEmpty();
+        final String value = "Ok Ok Warn";
+        final String originalValue = "Ok";
+        final String prevValue = "Ok Ok";
+        final String reqValidationMessage = "Required property [Prop] is not specified for entity [Entity With Meta Property].";
+        checkMetaValues(entity.getProperty("prop"), Result.class, reqValidationMessage, value, originalValue, prevValue, null, null, true, 2, true, true, true, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), Result.class, reqValidationMessage, value, originalValue, prevValue, null, null, true, 2, true, true, true, true);
+    }
+    
+    @Test
+    public void revalidated_meta_property_that_became_non_required_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropThatBecameNonRequiredAgain();
+        final String value = null;
+        final String originalValue = "Ok";
+        final String prevValue = "Ok Ok Warn";
+        checkMetaValues(entity.getProperty("prop"), null, null, value, originalValue, prevValue, null, null, true, 3, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, prevValue, null, null, true, 3, true, true, false, true);
     }
     /////////////////////////////// MetaProperty restoration [END] ///////////////////////////////
 

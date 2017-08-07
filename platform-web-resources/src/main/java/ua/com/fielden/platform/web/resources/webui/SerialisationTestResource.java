@@ -215,7 +215,7 @@ public class SerialisationTestResource extends ServerResource {
                                 // check property value equality
                                 final Object value1 = e1.get(propName);
                                 final Object value2 = e2.get(propName);
-                                final Result propValsEqual = deepEqualsForTestingForPropValues(e1, e2, setOfCheckedEntities, value1, value2, prop.getPropertyType(), propName, false);
+                                final Result propValsEqual = deepEqualsForTestingForPropValues(e1, e2, setOfCheckedEntities, value1, value2, prop.getPropertyType(), propName, "");
                                 if (!propValsEqual.isSuccessful()) {
                                     return propValsEqual;
                                 }
@@ -236,7 +236,7 @@ public class SerialisationTestResource extends ServerResource {
         final Object value2, 
         final Class<?> propType,
         final String propName,
-        final boolean original
+        final String valuePrefix
     ) {
         if (EntityUtils.isEntityType(propType)) {
             final Result eq = deepEqualsForTesting((AbstractEntity<?>) value1, (AbstractEntity<?>) value2, setOfCheckedEntities);
@@ -244,9 +244,8 @@ public class SerialisationTestResource extends ServerResource {
                 return eq;
             }
         } else {
-            final String origPrefix = original ? "original " : "";
             if (!EntityUtils.equalsEx(value1, value2)) { // prop equality
-                return Result.failure(format("e1 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s] does not equal to e2 [%s] (type = %s) " + origPrefix + "prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, toString(value1), e2, e2.getType().getSimpleName(), propName, toString(value2)));
+                return Result.failure(format("e1 [%s] (type = %s) " + valuePrefix + "prop [%s] value [%s] does not equal to e2 [%s] (type = %s) " + valuePrefix + "prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, toString(value1), e2, e2.getType().getSimpleName(), propName, toString(value2)));
             }
         }
         return Result.successful("Ok");
@@ -292,10 +291,36 @@ public class SerialisationTestResource extends ServerResource {
             // check property original value equality
             final Object originalValue1 = metaProp1.getOriginalValue();
             final Object originalValue2 = metaProp2.getOriginalValue();
-            final Result propValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, originalValue1, originalValue2, propType, metaProp1.getName(), true);
+            final Result propValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, originalValue1, originalValue2, propType, metaProp1.getName(), "original");
             if (!propValsEqual.isSuccessful()) {
                 return propValsEqual;
             }
+            
+            // check property prev value equality
+            final Object prevValue1 = metaProp1.getPrevValue();
+            final Object prevValue2 = metaProp2.getPrevValue();
+            final Result prevPropValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, prevValue1, prevValue2, propType, metaProp1.getName(), "previous");
+            if (!prevPropValsEqual.isSuccessful()) {
+                return prevPropValsEqual;
+            }
+            
+//            TODO Investigate why tests on invalidValue fail:
+//            // check property lastInvalid value equality
+//            final Object lastInvalidValue1 = metaProp1.getLastInvalidValue();
+//            final Object lastInvalidValue2 = metaProp2.getLastInvalidValue();
+//            final Result lastInvalidPropValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, lastInvalidValue1, lastInvalidValue2, propType, metaProp1.getName(), "lastInvalid");
+//            if (!lastInvalidPropValsEqual.isSuccessful()) {
+//                return lastInvalidPropValsEqual;
+//            }
+            // valueChangeCount equality
+            if (!EntityUtils.equalsEx(metaProp1.getValueChangeCount(), metaProp2.getValueChangeCount())) {
+                return Result.failure(format("e1 [%s] valueChangeCount [%s] does not equal to e2 [%s] valueChangeCount [%s].", metaProp1.getEntity(), metaProp1.getValueChangeCount(), metaProp2.getEntity(), metaProp2.getValueChangeCount()));
+            }
+            // 'assigned' equality
+            if (!EntityUtils.equalsEx(metaProp1.isAssigned(), metaProp2.isAssigned())) {
+                return Result.failure(format("e1 [%s] assigned [%s] does not equal to e2 [%s] assigned [%s].", metaProp1.getEntity(), metaProp1.isAssigned(), metaProp2.getEntity(), metaProp2.isAssigned()));
+            }
+            
             //        } else {
             //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
             //        }
@@ -366,6 +391,13 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithStringNonEditable(),
                 factory.createEntityWithStringRequired(),
                 factory.createEntityWithStringNonVisible(),
+                factory.createEntityMetaPropForNewEntity(),
+                factory.createEntityMetaPropWithFailure(),
+                factory.createEntityMetaPropWithoutFailure(),
+                factory.createEntityMetaPropWithWarning(),
+                factory.createEntityMetaPropWithWarningAndBecameRequired(),
+                factory.createEntityMetaPropThatBecameRequiredAndWasMadeEmpty(),
+                factory.createEntityMetaPropThatBecameNonRequiredAgain(),
                 factory.createEntityWithStringAndFailure(),
                 factory.createEntityWithStringAndPropertyConflict(),
                 factory.createEntityWithStringAndWarning(),

@@ -30,6 +30,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 /**
@@ -189,7 +190,44 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithString() {
         return finalise(createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay"));
     }
-
+    
+    public EntityWithMetaProperty createEntityMetaPropForNewEntity() {
+        return factory.newEntity(EntityWithMetaProperty.class, null);
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithFailure() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.setProp("Ok");
+        DefinersExecutor.execute(entity);
+        
+        return entity.setProp("Not Ok");
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithoutFailure() {
+        return createEntityMetaPropWithFailure().setProp("Ok Ok");
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithWarning() {
+        return createEntityMetaPropWithoutFailure().setProp("Ok Ok Warn");
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithWarningAndBecameRequired() {
+        final EntityWithMetaProperty entity = createEntityMetaPropWithWarning();
+        entity.getProperty("prop").setRequired(true);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropThatBecameRequiredAndWasMadeEmpty() {
+        return createEntityMetaPropWithWarningAndBecameRequired().setProp(null);
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropThatBecameNonRequiredAgain() {
+        final EntityWithMetaProperty entity = createEntityMetaPropThatBecameRequiredAndWasMadeEmpty();
+        entity.getProperty("prop").setRequired(false);
+        return entity;
+    }
+    
     public EntityWithString createEntityWithStringNonEditable() {
         final EntityWithString ent = createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay");
         ent.getProperty("prop").setEditable(false);
