@@ -31,36 +31,16 @@ public class DefaultValueContract {
     
     ///////////////////////////////////////////////// prevValue /////////////////////////////////////////////////
     /**
-     * Returns the value of <code>prevValue</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static Object getPrevValue(final MetaProperty<Object> metaProperty) {
-        return metaProperty.getPrevValue();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>prevValue</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static boolean isPrevValueDefault(final MetaProperty<Object> metaProperty) {
-        return equalsEx(getPrevValue(metaProperty), getOriginalValue(metaProperty));
+        return equalsEx(metaProperty.getPrevValue(), metaProperty.getOriginalValue());
     }
 
     ///////////////////////////////////////////////// lastInvalidValue /////////////////////////////////////////////////
-    /**
-     * Returns the value of <code>lastInvalidValue</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static Object getLastInvalidValue(final MetaProperty<Object> metaProperty) {
-        return metaProperty.getLastInvalidValue();
-    }
-
     /**
      * Returns <code>true</code> if the value of <code>lastInvalidValue</code> property is default, <code>false</code> otherwise.
      *
@@ -68,20 +48,10 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isLastInvalidValueDefault(final MetaProperty<Object> metaProperty) {
-        return equalsEx(getLastInvalidValue(metaProperty), null);
+        return equalsEx(metaProperty.getLastInvalidValue(), null);
     }
 
     ///////////////////////////////////////////////// valueChangeCount /////////////////////////////////////////////////
-    /**
-     * Returns the value of <code>valueChangeCount</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static int getValueChangeCount(final MetaProperty<Object> metaProperty) {
-        return metaProperty.getValueChangeCount();
-    }
-
     /**
      * Returns <code>true</code> if the value of <code>valueChangeCount</code> property is default, <code>false</code> otherwise.
      *
@@ -89,7 +59,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isValueChangeCountDefault(final MetaProperty<Object> metaProperty) {
-        return equalsEx(getValueChangeCount(metaProperty), 0);
+        return equalsEx(metaProperty.getValueChangeCount(), 0);
     }
 
     ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
@@ -103,23 +73,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>editable</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean getEditable(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getEditableDefault() : metaProperty.isEditable();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>editable</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
-        return equalsEx(getEditable(metaProperty), getEditableDefault());
+        return equalsEx(metaProperty.isEditable(), getEditableDefault());
     }
 
     /**
@@ -165,36 +125,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>isChangedFromOriginal</code> meta-property attribute, defaulting to {@link #isChangedFromOriginalDefault()} if <code>metaProperty</code> is null.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean isChangedFromOriginal(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? isChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
-    }
-
-    /**
-     * Returns the value of <code>originalValue</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> M getOriginalValue(final MetaProperty<M> metaProperty) {
-        if (metaProperty == null) {
-            throw new IllegalStateException("If the meta property does not exist -- original value population is unsupported.");
-        }
-        return metaProperty.getOriginalValue();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>changedFromOriginal</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(isChangedFromOriginal(metaProperty), isChangedFromOriginalDefault());
+        return equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault());
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
@@ -208,23 +145,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>required</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean getRequired(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getRequiredDefault() : metaProperty.isRequired();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>required</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static <M> boolean isRequiredDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(getRequired(metaProperty), getRequiredDefault());
+        return equalsEx(metaProperty.isRequired(), getRequiredDefault());
     }
 
     ///////////////////////////////////////////////// VISIBLE /////////////////////////////////////////////////
@@ -238,23 +165,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>visible</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean getVisible(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getVisibleDefault() : metaProperty.isVisible();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>visible</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static <M> boolean isVisibleDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(getVisible(metaProperty), getVisibleDefault());
+        return equalsEx(metaProperty.isVisible(), getVisibleDefault());
     }
 
     ///////////////////////////////////////////////// VALIDATION RESULT /////////////////////////////////////////////////
@@ -274,10 +191,6 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> Result getValidationResult(final MetaProperty<M> metaProperty) {
-        return validationResult(metaProperty);
-    }
-
-    private static <M> Result validationResult(final MetaProperty<M> metaProperty) {
         return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstWarning();
     }
 

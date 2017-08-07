@@ -1,15 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getLastInvalidValue;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getPrevValue;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCount;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isLastInvalidValueDefault;
@@ -163,17 +155,17 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             }
                             final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
                             if (!isEditableDefault(metaProperty)) {
-                                existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
+                                existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, metaProperty.isEditable());
                             }
                             if (!isChangedFromOriginalDefault(metaProperty)) {
-                                existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
-                                existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
+                                existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
+                                existingMetaProps.put("_originalVal", metaProperty.getOriginalValue());
                             }
                             if (!isRequiredDefault(metaProperty)) {
-                                existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, getRequired(metaProperty));
+                                existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());
                             }
                             if (!isVisibleDefault(metaProperty)) {
-                                existingMetaProps.put("_visible", getVisible(metaProperty));
+                                existingMetaProps.put("_visible", metaProperty.isVisible());
                             }
                             if (!isValidationResultDefault(metaProperty)) {
                                 existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
@@ -188,13 +180,13 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_max", max);
                             }
                             if (!isPrevValueDefault(metaProperty)) {
-                                existingMetaProps.put("_prevValue", getPrevValue(metaProperty));
+                                existingMetaProps.put("_prevValue", metaProperty.getPrevValue());
                             }
                             if (!isLastInvalidValueDefault(metaProperty)) {
-                                existingMetaProps.put("_lastInvalidValue", getLastInvalidValue(metaProperty));
+                                existingMetaProps.put("_lastInvalidValue", metaProperty.getLastInvalidValue());
                             }
                             if (!isValueChangeCountDefault(metaProperty)) {
-                                existingMetaProps.put("_valueChangeCount", getValueChangeCount(metaProperty));
+                                existingMetaProps.put("_valueChangeCount", metaProperty.getValueChangeCount());
                             }
                             existingMetaProps.put("_assigned", metaProperty.isAssigned());
                             

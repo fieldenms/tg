@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -286,7 +281,7 @@ public class SerialisationTestResource extends ServerResource {
             // dirty equality
             //        if (!metaProp1.isCollectional()) {
             
-            if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), isChangedFromOriginal(metaProp2))) {
+            if (!EntityUtils.equalsEx(metaProp1.isChangedFromOriginal(), metaProp2.isChangedFromOriginal())) {
                 return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
             }
             // please refer to provideOriginalValue method in EntityJsonDeserialiser for more details on 'dirtiness'
@@ -305,15 +300,15 @@ public class SerialisationTestResource extends ServerResource {
             //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
             //        }
             // editable equality
-            if (!EntityUtils.equalsEx(getEditable(metaProp1), getEditable(metaProp2))) {
+            if (!EntityUtils.equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
                 return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
             }
             // required equality
-            if (!EntityUtils.equalsEx(getRequired(metaProp1), getRequired(metaProp2))) {
+            if (!EntityUtils.equalsEx(metaProp1.isRequired(), metaProp2.isRequired())) {
                 return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
             }
             // visible equality
-            if (!EntityUtils.equalsEx(getVisible(metaProp1), getVisible(metaProp2))) {
+            if (!EntityUtils.equalsEx(metaProp1.isVisible(), metaProp2.isVisible())) {
                 return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
             }
             // validationResult equality
