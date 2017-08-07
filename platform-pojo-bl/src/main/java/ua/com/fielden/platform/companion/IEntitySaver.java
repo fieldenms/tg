@@ -27,20 +27,4 @@ public interface IEntitySaver<T extends AbstractEntity<?>> {
      * @return
      */
     T save(final T entity);
-
-    
-    /**
-     * Similar to method {@link #save(AbstractEntity)}, but applicable only to persistent entities. 
-     * It returns an <code>id</code> of the saved entity.
-     * The implication is that this method should execute faster by skipping the steps required to re-fetch the resultant entity.
-     * <p>
-     * This method is relevant only for simple case, method <code>save</code> is not overridden to provide an application specific logic.
-     * 
-     * @param entity
-     * @return
-     */
-    default long quickSave(final T entity) {
-        throw new UnsupportedOperationException(); 
-    }
-
 }
