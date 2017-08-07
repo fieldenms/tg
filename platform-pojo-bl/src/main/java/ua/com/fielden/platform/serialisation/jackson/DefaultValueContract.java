@@ -274,7 +274,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> Result getValidationResult(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getValidationResultDefault() : validationResult(metaProperty);
+        return validationResult(metaProperty);
     }
 
     private static <M> Result validationResult(final MetaProperty<M> metaProperty) {

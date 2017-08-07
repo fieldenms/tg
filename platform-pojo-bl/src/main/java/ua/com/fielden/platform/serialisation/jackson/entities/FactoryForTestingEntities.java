@@ -2,6 +2,8 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.error.Result.warning;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
+import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -246,10 +249,31 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
 
-    public EntityWithString createEntityWithStringAndResult() {
+    public EntityWithString createEntityWithStringAndFailure() {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
         entity.getProperty("prop").setRequiredValidationResult(new Result(entity, new Exception("Exception.")));
+        return finalise(entity);
+    }
+
+    public EntityWithString createEntityWithStringAndPropertyConflict() {
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setDomainValidationResult(new PropertyConflict(entity, "Exception."));
+        return finalise(entity);
+    }
+
+    public EntityWithString createEntityWithStringAndWarning() {
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setDomainValidationResult(warning(entity, "Warning."));
+        return finalise(entity);
+    }
+
+    public EntityWithString createEntityWithStringAndSuccessfulResult() {
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setDomainValidationResult(successful(entity));
         return finalise(entity);
     }
 

@@ -286,23 +286,20 @@ public class SerialisationTestResource extends ServerResource {
             // dirty equality
             //        if (!metaProp1.isCollectional()) {
             
-            if (!metaProp1.getEntity().getType().getSimpleName().equals("EntityWithDefiner") || !metaProp1.getName().equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
-                if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), isChangedFromOriginal(metaProp2))) {
-                    return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
-                }
-                // please refer to provideOriginalValue method in EntityJsonDeserialiser for more details on 'dirtiness'
+            if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), isChangedFromOriginal(metaProp2))) {
+                return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
+            }
+            // please refer to provideOriginalValue method in EntityJsonDeserialiser for more details on 'dirtiness'
 //                if (!EntityUtils.equalsEx(metaProp1.isDirty(), metaProp2.isDirty())) {
 //                    return Result.failure(format("e1 [%s] prop's [%s] dirtiness [%s] does not equal to e2 [%s] prop's [%s] dirtiness [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isDirty(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isDirty()));
 //                }
-                
-                // check property original value equality
-                final Object originalValue1 = metaProp1.getOriginalValue();
-                final Object originalValue2 = metaProp2.getOriginalValue();
-                final Result propValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, originalValue1, originalValue2, propType, metaProp1.getName(), true);
-                if (!propValsEqual.isSuccessful()) {
-                    return propValsEqual;
-                }
-
+            
+            // check property original value equality
+            final Object originalValue1 = metaProp1.getOriginalValue();
+            final Object originalValue2 = metaProp2.getOriginalValue();
+            final Result propValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, originalValue1, originalValue2, propType, metaProp1.getName(), true);
+            if (!propValsEqual.isSuccessful()) {
+                return propValsEqual;
             }
             //        } else {
             //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
@@ -328,32 +325,30 @@ public class SerialisationTestResource extends ServerResource {
     }
 
     private static boolean resultsAreExpected(final Result validationResult, final Result validationResult2) {
-        if (validationResult2 != null) { // validation result should disappear after deserialisation
-            return false;
+        if (validationResult == null) {
+            return validationResult2 == null;
+        } else {
+            if (validationResult2 == null) {
+                return false;
+            } else {
+                if (!EntityUtils.equalsEx(validationResult.getClass(), validationResult2.getClass())) {
+                    return false;
+                }
+                if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
+                    return false;
+                }
+                if (validationResult.getEx() == null) {
+                    return validationResult2.getEx() == null;
+                }
+                if (!EntityUtils.equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
+                    return false;
+                }
+                if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
+                    return false;
+                }
+                return true;
+            }
         }
-        return true;
-        //        if (validationResult == null) {
-        //            if (validationResult2 == null) {
-        //                return true;
-        //            } else {
-        //                return false;
-        //            }
-        //        } else {
-        //            if (validationResult2 == null) {
-        //                return false;
-        //            } else {
-        //                if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
-        //                    return false;
-        //                }
-        //                if (!EntityUtils.equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
-        //                    return false;
-        //                }
-        //                if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
-        //                    return false;
-        //                }
-        //                return true;
-        //            }
-        //        }
     }
 
     private static void markAsChecked(final AbstractEntity<?> e1, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {
@@ -376,7 +371,10 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithStringNonEditable(),
                 factory.createEntityWithStringRequired(),
                 factory.createEntityWithStringNonVisible(),
-                factory.createEntityWithStringAndResult(),
+                factory.createEntityWithStringAndFailure(),
+                factory.createEntityWithStringAndPropertyConflict(),
+                factory.createEntityWithStringAndWarning(),
+                factory.createEntityWithStringAndSuccessfulResult(),
                 factory.createEntityWithPropertyWithDefiner(),
                 factory.createEntityWithBoolean(),
                 factory.createEntityWithDate(),

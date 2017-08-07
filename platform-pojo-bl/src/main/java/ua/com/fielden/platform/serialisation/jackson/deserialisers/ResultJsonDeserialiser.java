@@ -16,7 +16,16 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
+/**
+ * Deserialiser for {@link Result} type.
+ * <p>
+ * Deserialises into {@link Result} instance of concrete subtype defined in '@resultType'; deserialises message, exception and 'instance' using its type information in '@instanceType'.
+ * 
+ * @author TG Team
+ *
+ */
 public class ResultJsonDeserialiser extends StdDeserializer<Result> {
+    private static final long serialVersionUID = 1L;
     private final ObjectMapper mapper;
 
     public ResultJsonDeserialiser(final ObjectMapper mapper) {

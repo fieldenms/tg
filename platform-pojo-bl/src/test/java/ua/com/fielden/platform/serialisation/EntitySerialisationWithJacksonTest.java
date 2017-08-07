@@ -68,6 +68,7 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
+import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 /**
  * Unit tests to ensure correct {@link AbstractEntity} descendants serialisation / deserialisation using JACKSON engine.
@@ -648,14 +649,87 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_prop_with_result_should_be_restored() throws Exception {
-        final EntityWithString entity = factory.createEntityWithStringAndResult();
+    public void entity_with_prop_with_failure_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringAndFailure();
+        assertNull("Entity's first warning is empty.", entity.getProperty("prop").getFirstWarning());
+        final Result firstFailure = entity.getProperty("prop").getFirstFailure();
+        assertNotNull("Entity's first failure is not empty.", firstFailure);
+        assertEquals("Entity's first failure type is Result.", firstFailure.getClass(), Result.class);
+        assertEquals("Entity's first failure message is 'Exception.'.", firstFailure.getMessage(), "Exception.");
+        assertTrue("Entity's first failure instance equals to holding entity by reference.", firstFailure.getInstance() == entity);
+        
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
-        assertNull("The validation result should be null after deserialisation.", restoredEntity.getProperty("prop").getFirstFailure());
+        assertNull("Restored entity's first warning is empty.", restoredEntity.getProperty("prop").getFirstWarning());
+        final Result restoredFirstFailure = restoredEntity.getProperty("prop").getFirstFailure();
+        assertNotNull("Restored entity's first failure is not empty.", restoredFirstFailure);
+        assertEquals("Restored entity's first failure type is Result.", restoredFirstFailure.getClass(), Result.class);
+        assertEquals("Restored entity's first failure message is 'Exception.'.", restoredFirstFailure.getMessage(), "Exception.");
+        assertTrue("Restored entity's first failure instance equals to holding restored entity by reference.", restoredFirstFailure.getInstance() == restoredEntity);
+    }
+
+    @Test
+    public void entity_with_prop_with_propertyConflict_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringAndPropertyConflict();
+        assertNull("Entity's first warning is empty.", entity.getProperty("prop").getFirstWarning());
+        final Result firstFailure = entity.getProperty("prop").getFirstFailure();
+        assertNotNull("Entity's first failure is not empty.", firstFailure);
+        assertEquals("Entity's first failure type is PropertyConflict.", firstFailure.getClass(), PropertyConflict.class);
+        assertEquals("Entity's first failure message is 'Exception.'.", firstFailure.getMessage(), "Exception.");
+        assertTrue("Entity's first failure instance equals to holding entity by reference.", firstFailure.getInstance() == entity);
+        
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertNull("Restored entity's first warning is empty.", restoredEntity.getProperty("prop").getFirstWarning());
+        final Result restoredFirstFailure = restoredEntity.getProperty("prop").getFirstFailure();
+        assertNotNull("Restored entity's first failure is not empty.", restoredFirstFailure);
+        assertEquals("Restored entity's first failure type is PropertyConflict.", restoredFirstFailure.getClass(), PropertyConflict.class);
+        assertEquals("Restored entity's first failure message is 'Exception.'.", restoredFirstFailure.getMessage(), "Exception.");
+        assertTrue("Restored entity's first failure instance equals to holding restored entity by reference.", restoredFirstFailure.getInstance() == restoredEntity);
+    }
+
+    @Test
+    public void entity_with_prop_with_warning_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringAndWarning();
+        assertNull("Entity's first failure is empty.", entity.getProperty("prop").getFirstFailure());
+        final Result firstWarning = entity.getProperty("prop").getFirstWarning();
+        assertNotNull("Entity's first warning is not empty.", firstWarning);
+        assertEquals("Entity's first warning type is Warning.", firstWarning.getClass(), Warning.class);
+        assertEquals("Entity's first warning message is 'Warning.'.", firstWarning.getMessage(), "Warning.");
+        assertTrue("Entity's first warning instance equals to holding entity by reference.", firstWarning.getInstance() == entity);
+        
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertNull("Restored entity's first failure is empty.", restoredEntity.getProperty("prop").getFirstFailure());
+        final Result restoredFirstWarning = restoredEntity.getProperty("prop").getFirstWarning();
+        assertNotNull("Restored entity's first warning is not empty.", restoredFirstWarning);
+        assertEquals("Restored entity's first warning type is Warning.", restoredFirstWarning.getClass(), Warning.class);
+        assertEquals("Restored entity's first warning message is 'Warning.'.", restoredFirstWarning.getMessage(), "Warning.");
+        assertTrue("Restored entity's first warning instance equals to holding restored entity by reference.", restoredFirstWarning.getInstance() == restoredEntity);
+    }
+
+    @Test
+    public void entity_with_prop_with_successful_result_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringAndSuccessfulResult();
+        assertNull("Entity's first failure is empty.", entity.getProperty("prop").getFirstFailure());
+        assertNull("Entity's first warning is empty.", entity.getProperty("prop").getFirstWarning());
+        
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertNull("Restored entity's first failure is empty.", restoredEntity.getProperty("prop").getFirstFailure());
+        assertNull("Restored entity's first warning is empty.", restoredEntity.getProperty("prop").getFirstWarning());
     }
 
     @Test
@@ -927,7 +1001,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Warning warning = new Warning(entity, "warning message");
-        final Warning restoredWarning = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(warning), Warning.class);
+        final Result restoredWarning = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(warning), Result.class);
 
         assertNotNull("Restored warning could not be null", restoredWarning);
         assertTrue("Restored warning could not be null", restoredWarning.isWarning());
