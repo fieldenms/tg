@@ -3,13 +3,13 @@ package ua.com.fielden.platform.companion;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * A part of the mutator contract that provides method <code>save</code> for saving of persistent entities or actuating functional entities.
+ * A contract to actuate (save/execute) entities.
  * 
  * @author TG Team
  *
  * @param <T>
  */
-public interface IEntitySaver<T extends AbstractEntity<?>> {
+public interface IEntityActuator<T extends AbstractEntity<?>> {
 
     /**
      * This method is an actuator, which triggers the entity <code>execution</code>.
@@ -27,4 +27,5 @@ public interface IEntitySaver<T extends AbstractEntity<?>> {
      * @return
      */
     T save(final T entity);
+    
 }

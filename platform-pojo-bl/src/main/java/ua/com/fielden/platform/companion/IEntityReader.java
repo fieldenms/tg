@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**
- * The reader contract for entity companion objects, which should be implemented by companions of persistent entities.
+ * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
  * It provides various methods to read entities from a persistent data store.
  * 
  * @author TG Team

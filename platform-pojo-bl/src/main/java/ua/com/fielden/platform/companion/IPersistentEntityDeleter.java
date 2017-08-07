@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
  *
  * @param <T>
  */
-public interface IEntityDeleter<T extends AbstractEntity<?>> {
+public interface IPersistentEntityDeleter<T extends AbstractEntity<?>> {
 
     /**
      * Deletes entity instance by its id. Currently, in most cases it is not supported since deletion is not a trivial operation.

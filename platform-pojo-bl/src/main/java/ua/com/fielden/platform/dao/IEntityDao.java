@@ -2,19 +2,20 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 
-import ua.com.fielden.platform.companion.IEntityMutator;
+import ua.com.fielden.platform.companion.IPersistentEntityMutator;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.security.user.User;
 
 /**
- * The contract for any Entity Companion object to implement. It extends both {@link IEntityReader} and {@link IEntityMutator} contracts.
+ * The contract for any Entity Companion object to implement. It extends both {@link IEntityReader} and {@link IPersistentEntityMutator} contracts.
  * 
  * @author TG Team
  *
  */
-public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T>, IEntityMutator<T>, IComputationMonitor {
+public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T>, IPersistentEntityMutator<T>, IEntityInstantiator<T>, IComputationMonitor {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
     /**
@@ -91,12 +92,4 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      * @return
      */
     IFetchProvider<T> getFetchProvider();
- 
-    /**
-     * Instantiates an new entity of the type for which this object is a companion.
-     *
-     * @return
-     */
-    T new_();
-
 }

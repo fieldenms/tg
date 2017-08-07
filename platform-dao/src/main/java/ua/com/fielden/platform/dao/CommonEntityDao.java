@@ -193,6 +193,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
                 return true;
             }
         } catch (NoSuchMethodException | SecurityException e) {
+            logger.debug(e);
         }
         
         return false;
