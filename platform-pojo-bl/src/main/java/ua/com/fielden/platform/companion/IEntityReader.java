@@ -10,7 +10,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
@@ -21,26 +23,6 @@ import ua.com.fielden.platform.pagination.IPage;
  * @param <T>
  */
 public interface IEntityReader<T extends AbstractEntity<?>> {
-
-    /**
-     * Returns all entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     * @deprecated Streaming API must be used instead.
-     */
-    @Deprecated
-    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
-
-    /**
-     * Returns first entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     * @deprecated Streaming API must be used instead.
-     */
-    @Deprecated
-    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
 
     /**
      * Should return true if entity with provided id and version value is stale, i.e. its version is older then the latest persisted entity with the same id.
@@ -151,6 +133,16 @@ public interface IEntityReader<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Evaluates the number of pages of the given capacity to hold all entities matching the provided EQL model.
+     * 
+     * @param model
+     * @param paramValues
+     * @param pageCapacity
+     * @return
+     */
+    Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity);
+    
+    /**
      * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
      *
      * @param Equery
@@ -181,6 +173,16 @@ public interface IEntityReader<T extends AbstractEntity<?>> {
      */
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
+    /**
+     * Retrieves entities that belong to the specified page according to the provided EQL model.
+     * 
+     * @param queryModel
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     */
+    List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity);
+    
     /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
      * found then a null value is returned.

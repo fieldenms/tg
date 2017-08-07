@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
+import java.util.List;
 
 import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.companion.IEntityInstantiator;
@@ -92,4 +93,25 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      * @return
      */
     IFetchProvider<T> getFetchProvider();
+    
+    /**
+     * Returns all entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     * @deprecated Streaming API must be used instead.
+     */
+    @Deprecated
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
+
+    /**
+     * Returns first entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     * @deprecated Streaming API must be used instead.
+     */
+    @Deprecated
+    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
+
 }

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.companion.KeyConditionHelper.createQueryByKey;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
@@ -36,6 +38,9 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.companion.EntityReader;
+import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.companion.KeyConditionHelper;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -103,15 +108,16 @@ import ua.com.fielden.platform.utils.Validators;
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T>, ISessionEnabled {
 
-    private static final String ERR_MSG_NO_QUERY_PROVIDED = "There was no query provided to retrieve the data.";
-    
     private final Logger logger = Logger.getLogger(this.getClass());
 
+    
+    private final EntityReader<T> entityReader;
+    
+    
     private Session session;
     private String transactionGuid;
 
     private DomainMetadata domainMetadata;
-    
     private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     @Inject
@@ -162,6 +168,20 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
         this.filter = filter;
         this.hasSaveOverridden = isSaveOverridden();
         this.deleteOps = new CommonEntityCompanionDeleteOperations<>(this);
+        
+        this.entityReader = new EntityReader<>(
+                getEntityType(), 
+                getKeyType(), 
+                getFilterable(), 
+                () -> instrumented(),
+                () -> getSession(),
+                () -> getEntityFactory(),
+                () -> getCoFinder(),
+                () -> domainMetadata,
+                () -> filter,
+                () -> getUsername(),
+                () -> universalConstants,
+                () -> idOnlyProxiedEntityTypeCache);
     }
 
     protected boolean getFilterable() {
@@ -246,32 +266,27 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     }
 
     @Override
+    @SessionRequired
     public T findById(final Long id) {
-        return findById(id, null);
+        return entityReader.findById(id);
     }
 
     @Override
     @SessionRequired
     public T findById(final Long id, final fetch<T> fetchModel) {
-        return fetchOneEntityInstance(id, fetchModel);
+        return entityReader.findById(id, fetchModel);
     }
 
     @Override
     @SessionRequired
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
-        try {
-            return getEntity(instrumented() ? from((createQueryByKey(keyValues))).with(fetchModel).model() : from((createQueryByKey(keyValues))).with(fetchModel).lightweight().model());
-        } catch (final EntityCompanionException e) {
-            throw e;
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+        return entityReader.findByKeyAndFetch(fetchModel, keyValues);
     }
 
     @Override
     @SessionRequired
     public T findByKey(final Object... keyValues) {
-        return findByKeyAndFetch(null, keyValues);
+        return entityReader.findByKey(keyValues);
     }
 
 
@@ -356,7 +371,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
-        final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
+        final AggregatedResultQueryModel model = select(createQueryByKey(getEntityType(), getKeyType(), getFilterable(), entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants, idOnlyProxiedEntityTypeCache);
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
@@ -580,7 +595,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
      */
     private T saveNewEntity(final T entity) {
         // let's make sure that entity is not a duplicate
-        final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
+        final Integer count = count(createQueryByKey(getEntityType(), getKeyType(), getFilterable(), entity.getKey()), Collections.<String, Object> emptyMap());
         if (count > 0) {
             throw new EntityCompanionException(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
@@ -837,59 +852,38 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     @SessionRequired
     public boolean isStale(final Long entityId, final Long version) {
-        if (entityId == null) {
-            return false;
-        }
-
-        final Integer count = ((Number) getSession().createQuery("select count(*) from " + getEntityType().getName() + " where id = :id and version = :version")//
-        .setParameter("id", entityId).setParameter("version", version).uniqueResult()).intValue();
-
-        return count != 1;
+        return entityReader.isStale(entityId, version);
     }
 
     @Override
     @SessionRequired
     public boolean entityExists(final T entity) {
-        return entityExists(entity.getId());
+        return entityReader.entityExists(entity);
     }
 
     @Override
     @SessionRequired
     public boolean entityExists(final Long id) {
-        if (id == null) {
-            return false;
-        }
-        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :in_id").setLong("in_id", id).uniqueResult() != null;
+        return entityReader.entityExists(id);
     }
 
     @Override
     @SessionRequired
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        return evalNumOfPages(model, paramValues, 1).getKey();
+        return entityReader.count(model, paramValues);
     }
 
     @Override
     @SessionRequired
     public int count(final EntityResultQueryModel<T> model) {
-        return count(model, Collections.<String, Object> emptyMap());
-    }
-
-    /**
-     * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
-     *
-     * @param queryModel
-     * @param pageNumber
-     * @param pageCapacity
-     * @return
-     */
-    @SessionRequired
-    protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
+        return entityReader.count(model);
     }
     
+    @Override
+    @SessionRequired
+    public Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
+        return entityReader.evalNumOfPages(model, paramValues, pageCapacity);
+    }
     /**
      * Returns a stream of entities that match the provided query.
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
@@ -897,7 +891,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
-        return stream(queryModel, 100);
+        return entityReader.stream(queryModel, 100);
     }
 
     /**
@@ -907,11 +901,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
      */
     @Override
     @SessionRequired
-    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        return new EntityFetcher(queryExecutionContext).streamEntities(qem, Optional.of(fetchSize));
+    public Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize) {
+        return entityReader.stream(qem, fetchSize);
     }
 
     @Override
@@ -919,14 +910,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Deprecated
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        return getEntitiesOnPage(qem, null, null);
+        try (Stream<T> stream = entityReader.stream(qem)) {
+            return stream.collect(toList());
+        }
     }
 
     @Override
     @SessionRequired
+    @Deprecated
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        return getEntitiesOnPage(qem, 0, numberOfEntities);
+        try (Stream<T> stream = entityReader.stream(qem, numberOfEntities)) {
+            return stream.limit(numberOfEntities).collect(toList());
+        }
     }
 
     /**
@@ -935,7 +931,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     @SessionRequired
     public IPage<T> firstPage(final int pageCapacity) {
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
+        return entityReader.firstPage(pageCapacity);
     }
 
     /**
@@ -944,8 +940,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
-        return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
+        return entityReader.firstPage(model, pageCapacity);
     }
 
     /**
@@ -955,45 +950,37 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
-        return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
+        return entityReader.firstPage(model, summaryModel, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
-        return getPage(qem, pageNo, 0, pageCapacity);
+        return entityReader.getPage(model, pageNo, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
-        
-        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity);
-
-        final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(qem, pageNumber, pageCapacity, numberOfPagesAndCount);
-    }
-
-    @Override
-    @SessionRequired
-    public T getEntity(final QueryExecutionModel<T, ?> model) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
-        final List<T> data = getFirstEntities(qem, 2);
-        if (data.size() > 1) {
-            throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
-        }
-        return data.size() == 1 ? data.get(0) : null;
+        return entityReader.getPage(model, pageNo, pageCount, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final int pageNo, final int pageCapacity) {
-        final Pair<Integer, Integer> numberOfPagesAndCount = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
-        final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPagesAndCount);
+        return entityReader.getPage(pageNo, pageCapacity);
+    }
+    
+    @Override
+    @SessionRequired
+    public List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+        return entityReader.getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+    }
+
+    @Override
+    @SessionRequired
+    public T getEntity(final QueryExecutionModel<T, ?> model) {
+        return entityReader.getEntity(model);
     }
 
     @Override
@@ -1020,30 +1007,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     public void setTransactionGuid(final String guid) {
         this.transactionGuid = guid;
-    }
-
-    /**
-     * Calculates the number of pages of the given size required to fit the whole result set.
-     *
-     *
-     * @param model
-     * @param pageCapacity
-     * @return
-     */
-    @SessionRequired
-    protected Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
-        final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
-                : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();
-
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        final List<EntityAggregates> counts = new EntityFetcher(queryExecutionContext).getEntities(countModel);
-
-        final int resultSize = ((Number) counts.get(0).get("count")).intValue();
-
-        final Integer pageSize = resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
-
-        return Pair.pair(pageSize, resultSize);
     }
 
     /**
@@ -1082,145 +1045,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
 
     public IFilter getFilter() {
         return filter;
-    }
-
-    /**
-     * Calculates summary based on the assumption that <code>model</code> represents summary model for the type T.
-     */
-    private T calcSummary(final QueryExecutionModel<T, ?> model) {
-        final List<T> list = getAllEntities(model);
-        return list.size() == 1 ? list.get(0) : null;
-    }
-
-    /**
-     * Implements pagination based on the provided query.
-     *
-     * @author TG Team
-     *
-     */
-    public class EntityQueryPage implements IPage<T> {
-        private final int pageNumber; // zero-based
-        private final Pair<Integer, Integer> numberOfPagesAndCount;
-        private final int numberOfPages;
-        private final int pageCapacity;
-        private final List<T> data;
-        private final QueryExecutionModel<T, ?> queryModel;
-        private final T summary;
-
-        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
-            this(queryModel, (QueryExecutionModel<T, ?>) null, pageNumber, pageCapacity, numberOfPagesAndCount);
-        }
-
-        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final QueryExecutionModel<T, ?> summaryModel, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
-            this(queryModel, summaryModel != null && numberOfPagesAndCount.getValue() > 0 ? calcSummary(summaryModel) : null, pageNumber, pageCapacity, numberOfPagesAndCount);
-        }
-
-        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final T summary, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
-            this.numberOfPagesAndCount = numberOfPagesAndCount;
-            this.pageNumber = pageNumber;
-            this.pageCapacity = pageCapacity;
-            this.numberOfPages = numberOfPagesAndCount.getKey() == 0 ? 1 : numberOfPagesAndCount.getKey();
-            this.queryModel = queryModel;
-            this.data = numberOfPagesAndCount.getValue() > 0 ? getEntitiesOnPage(queryModel, pageNumber, pageCapacity) : new ArrayList<>();
-
-            this.summary = summary;
-        }
-
-        @Override
-        public T summary() {
-            return summary;
-        }
-
-        @Override
-        public int capacity() {
-            return pageCapacity;
-        }
-
-        @Override
-        public List<T> data() {
-            return Collections.unmodifiableList(data);
-        }
-
-        @Override
-        public boolean hasNext() {
-            return pageNumber < numberOfPages - 1;
-        }
-
-        @Override
-        public boolean hasPrev() {
-            return no() > 0;
-        }
-
-        @Override
-        public IPage<T> next() {
-            if (hasNext()) {
-                if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, pageNumber + 1, pageCapacity, numberOfPagesAndCount);
-                } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPagesAndCount);
-                } else {
-                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public IPage<T> prev() {
-            if (hasPrev()) {
-                if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, pageNumber - 1, pageCapacity, numberOfPagesAndCount);
-                } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPagesAndCount);
-                } else {
-                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public IPage<T> first() {
-            if (hasPrev()) {
-                if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, 0, pageCapacity, numberOfPagesAndCount);
-                } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPagesAndCount);
-                } else {
-                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public IPage<T> last() {
-            if (hasNext()) {
-                if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, numberOfPages - 1, pageCapacity, numberOfPagesAndCount);
-                } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPagesAndCount);
-                } else {
-                    throw new EntityCompanionException(ERR_MSG_NO_QUERY_PROVIDED);
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public int numberOfPages() {
-            return numberOfPages;
-        }
-
-        @Override
-        public String toString() {
-            return "Page " + (no() + 1) + " of " + numberOfPages;
-        }
-
-        @Override
-        public int no() {
-            return pageNumber;
-        }
     }
 
     protected ICompanionObjectFinder getCoFinder() {
@@ -1412,17 +1236,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
         return deleteOps.defaultBatchDeleteByPropertyValues(propName, propEntities);
     }
 
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
-        final EntityResultQueryModel<T> query = select(entityType).model();
-        query.setFilterable(getFilterable());
-        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
-        return instrumented() ? from(query).with(orderBy).model() : from(query).with(orderBy).lightweight().model();
-    }
-
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
-        return produceDefaultQueryExecutionModel(entityType);
-    }
-
     @Override
     public Class<T> getEntityType() {
         return entityType;
@@ -1433,138 +1246,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
         return keyType;
     }
 
-    private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
-        try {
-            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
-            query.setFilterable(getFilterable());
-            return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    /**
-     * Method checks whether the key of the entity type associated with this DAO if composite or not.
-     *
-     * If composite then <code>WHERE</code> statement is build using composite key members and the passed values. The number of values should match the number of composite key
-     * members.
-     *
-     * Otherwise, <code>WHERE</code> statement is build using only property <code>key</code>.
-     *
-     * The created query expects a unique result, and throws a runtime exception if this is not the case.
-     *
-     * TODO Need to consider the case of polymorphic associations such as Rotable, which can be both Bogie and/or Wheelset.
-     */
     @Override
+    @SessionRequired
     public boolean entityWithKeyExists(final Object... keyValues) {
-        final T entity = findByKeyAndFetch(null, keyValues);
-        return entity != null;
+        return entityReader.entityWithKeyExists(keyValues);
     }
 
     @Override
+    @SessionRequired
     public T findByEntityAndFetch(final fetch<T> fetchModel, final T entity) {
-        if (entity.getId() != null) {
-            return findById(entity.getId(), fetchModel);
-        } else {
-            return findByKeyAndFetch(fetchModel, entity.getKey());
-        }
-    }
-
-    /**
-     * Convenient method for composing a query to select an entity by key value.
-     *
-     * @param keyValues
-     * @return
-     */
-    protected EntityResultQueryModel<T> createQueryByKey(final Object... keyValues) {
-        if (keyValues == null || keyValues.length == 0) {
-            throw new IllegalArgumentException("No key values provided.");
-        }
-        final EntityResultQueryModel<T> query = attachKeyConditions(select(getEntityType()).where(), keyValues).model();
-        query.setFilterable(getFilterable());
-        return query;
-    }
-    
-    /**
-     * Creates a query for entities by their keys (simple or composite). If <code>entitiesWithKeys</code> are empty -- returns empty optional. 
-     * 
-     * @param entityType -- the entity type
-     * @param entitiesWithKeys -- the entities with <b>all</b> key values correctly fetched / assigned
-     * @return
-     */
-    public Optional<EntityResultQueryModel<T>> createQueryByKeyFor(final Collection<T> entitiesWithKeys) {
-        IWhere0<T> partQ = select(getEntityType()).where();
-        final List<Field> keyMembers = Finder.getKeyMembers(getEntityType());
-        
-        for (final Iterator<T> iter = entitiesWithKeys.iterator(); iter.hasNext();) {
-            final T entityWithKey = iter.next();
-            final ICompoundCondition0<T> or = attachKeyConditions(partQ, keyMembers, keyMembers.stream().map(keyMember -> entityWithKey.get(keyMember.getName())).toArray());
-            if (iter.hasNext()) {
-                partQ = or.or();
-            } else {
-                return Optional.of(or.model());
-            }
-        }
-
-        return Optional.empty();
-    }
-    
-    /**
-     * Attaches key member conditions to the partially constructed query <code>entryPoint</code> based on its values. 
-     * 
-     * @param entryPoint
-     * @param keyValues
-     * @return
-     */
-    protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final Object... keyValues) {
-        return attachKeyConditions(entryPoint, Finder.getKeyMembers(getEntityType()), keyValues);
-    }
-
-    /**
-     * Attaches key member conditions to the partially constructed query <code>entryPoint</code> based on its values. 
-     * 
-     * @param entryPoint
-     * @param keyMembers
-     * @param keyValues
-     * @return
-     */
-    protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final List<Field> keyMembers, final Object... keyValues) {
-        if (getKeyType() == DynamicEntityKey.class) {
-            // let's be smart about the key values and support the case where an instance of DynamicEntityKey is passed.
-            final Object[] realKeyValues;
-            if (keyValues.length == 1 && keyValues[0] instanceof DynamicEntityKey) {
-                realKeyValues = ((DynamicEntityKey) keyValues[0]).getKeyValues(); 
-            } else {
-                realKeyValues = keyValues;
-            }
-
-            if (keyMembers.size() != realKeyValues.length) {
-                throw new EntityCompanionException(format("The number of provided values (%s) does not match the number of properties in the entity composite key (%s).", realKeyValues.length, keyMembers.size()));
-            }
-
-            ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
-
-            for (int index = 1; index < keyMembers.size(); index++) {
-                cc = cc.and().condition(buildConditionForKeyMember(keyMembers.get(index).getName(), keyMembers.get(index).getType(), realKeyValues[index]));
-            }
-            return cc;
-        } else if (keyValues.length != 1) {
-            throw new EntityCompanionException(format("Only one key value is expected instead of %s when looking for an entity by a non-composite key.", keyValues.length));
-        } else {
-            return entryPoint.condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0]));
-        }
-    }
-
-    private ConditionModel buildConditionForKeyMember(final String propName, final Class<?> propType, final Object propValue) {
-        if (propValue == null) {
-            return cond().prop(propName).isNull().model();
-        } else if (String.class.equals(propType)) {
-            return cond().lowerCase().prop(propName).eq().lowerCase().val(propValue).model();
-        } else if (Class.class.equals(propType)) {
-            return cond().prop(propName).eq().val(((Class<?>) propValue).getName()).model();
-        } else {
-            return cond().prop(propName).eq().val(propValue).model();
-        }
+        return entityReader.findByEntityAndFetch(fetchModel, entity);
     }
 
     public final IFetchProvider<T> getFetchProvider() {
