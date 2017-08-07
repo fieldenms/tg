@@ -174,16 +174,19 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
                     throw e;
                 }
-                final JsonNode metaPropNode = node.get("@" + propertyName);
-                final Optional<MetaProperty<?>> metaProperty = entity.getPropertyOptionally(propertyName);
-                provideOriginalValue(metaProperty, propertyName, metaPropNode, prop.field());
-                if (metaPropNode != null) {
-                    if (metaPropNode.isNull()) {
-                        throw new IllegalStateException("EntitySerialiser has got null meta property '@" + propertyName + "' when reading entity of type [" + type.getName() + "].");
+                final Optional<MetaProperty<?>> metaPropertyOption = entity.getPropertyOptionally(propertyName);
+                if (metaPropertyOption.isPresent()) {
+                    final MetaProperty<Object> metaProperty = (MetaProperty<Object>) metaPropertyOption.get();
+                    final JsonNode metaPropNode = node.get("@" + propertyName);
+                    provideOriginalValue(metaProperty, propertyName, metaPropNode, prop.field());
+                    if (metaPropNode != null) {
+                        if (metaPropNode.isNull()) {
+                            throw new IllegalStateException("EntitySerialiser has got null meta property '@" + propertyName + "' when reading entity of type [" + type.getName() + "].");
+                        }
+                        provideEditable(metaProperty, propertyName, metaPropNode);
+                        provideRequired(metaProperty, propertyName, metaPropNode);
+                        provideVisible(metaProperty, propertyName, metaPropNode);
                     }
-                    provideEditable(metaProperty, propertyName, metaPropNode);
-                    provideRequired(metaProperty, propertyName, metaPropNode);
-                    provideVisible(metaProperty, propertyName, metaPropNode);
                 }
             }
 
@@ -237,48 +240,37 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * 
      * @return
      */
-    private void provideOriginalValue(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode, final Field propField) throws IOException {
+    private void provideOriginalValue(final MetaProperty<Object> metaProperty, final String propName, final JsonNode metaPropNode, final Field propField) throws IOException {
         // deserialise validation result
         if (metaPropNode != null && metaPropNode.isObject() && metaPropNode.size() > 0) {
-            if (!metaProperty.isPresent()) {
-                throw new EntityDeserialisationException(format("Meta property '@%s' is present when reading deserialisation envelope of type [%s], but actual meta-property, into which the values should be set, are missing.", propName, type.getName()));
-            }
-            final MetaProperty<Object> rawMetaProp = (MetaProperty<Object>) metaProperty.get(); // unknown type parameter for meta-property is not relevant here
-            
             final JsonNode validationResultPropNode = metaPropNode.get("_validationResult");
             if (validationResultPropNode != null) {
                 if (validationResultPropNode.isNull()) {
-                    throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + rawMetaProp.getName() + "' when reading entity of type [" + type.getName() + "].");
+                    throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
                 }
-                if (rawMetaProp != null) {
-                    rawMetaProp.setDomainValidationResult(validationResultPropNode.traverse(mapper).readValueAs(Result.class));
-                }
+                metaProperty.setDomainValidationResult(validationResultPropNode.traverse(mapper).readValueAs(Result.class));
             }
         }
         
         // deserialise original value and dirtiness
         if (metaPropNode == null || metaPropNode.get("_cfo") == null) {
             // do nothing -- there is no node and that means that there is default value
-            if (metaProperty.isPresent()) {
-                metaProperty.get().resetState();
-            }
+            metaProperty.resetState();
         } else {
             final JsonNode changedPropNode = metaPropNode.get("_cfo");
             if (changedPropNode.isNull()) {
                 throw new EntityDeserialisationException(format("EntitySerialiser has got null 'changedFromOriginal' inside meta property '@%s' when reading entity of type [%s].", propName, type.getName()));
             }
-            if (metaProperty.isPresent()) {
-                final boolean changedFromOriginalValue = changedPropNode.asBoolean();
+            final boolean changedFromOriginalValue = changedPropNode.asBoolean();
+            
+            if (changedFromOriginalValue) {
+                final JsonNode originalValNode = metaPropNode.get("_originalVal");
+                final Object originalVal = determineValue(originalValNode, propField);
+                metaProperty.setOriginalValue(originalVal);
                 
-                if (changedFromOriginalValue) {
-                    final JsonNode originalValNode = metaPropNode.get("_originalVal");
-                    final Object originalVal = determineValue(originalValNode, propField);
-                    ((MetaProperty<Object>) metaProperty.get()).setOriginalValue(originalVal);
-                    
-                    metaProperty.get().setDirty(changedFromOriginalValue);
-                } else {
-                    metaProperty.get().resetState();
-                }
+                metaProperty.setDirty(changedFromOriginalValue);
+            } else {
+                metaProperty.resetState();
             }
         }
         
@@ -289,26 +281,21 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         // Also these assignments must be done BEFORE any logic that uses them.
         // One of examples is 'setRequired' call that uses 'getLastAttemptedValue' concept which is heavily based on validation results, 'assigned', value / originalValue and 'lastInvalidValue'.
         if (metaPropNode != null && metaPropNode.isObject() && metaPropNode.size() > 0) {
-            if (!metaProperty.isPresent()) {
-                throw new EntityDeserialisationException(format("Meta property '@%s' is present when reading deserialisation envelope of type [%s], but actual meta-property, into which the values should be set, are missing.", propName, type.getName()));
-            }
-            final MetaProperty<Object> rawMetaProp = (MetaProperty<Object>) metaProperty.get(); // unknown type parameter for meta-property is not relevant here
-            
             final JsonNode prevValueNode = metaPropNode.get("_prevValue");
             if (prevValueNode != null) {
-                rawMetaProp.setPrevValue(determineValue(prevValueNode, propField));
+                metaProperty.setPrevValue(determineValue(prevValueNode, propField));
             }
             final JsonNode lastInvalidValueNode = metaPropNode.get("_lastInvalidValue");
             if (lastInvalidValueNode != null) {
-                rawMetaProp.setLastInvalidValue(determineValue(lastInvalidValueNode, propField));
+                metaProperty.setLastInvalidValue(determineValue(lastInvalidValueNode, propField));
             }
             final JsonNode valueChangeCountNode = metaPropNode.get("_valueChangeCount");
             if (valueChangeCountNode != null) {
-                rawMetaProp.setValueChangeCount(valueChangeCountNode.intValue());
+                metaProperty.setValueChangeCount(valueChangeCountNode.intValue());
             }
             final JsonNode assignedNode = metaPropNode.get("_assigned");
             if (assignedNode != null) {
-                rawMetaProp.setAssigned(assignedNode.asBoolean());
+                metaProperty.setAssigned(assignedNode.asBoolean());
             }
         }
     }
@@ -320,7 +307,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @param metaPropNode
      * @return
      */
-    private void provideEditable(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode) {
+    private void provideEditable(final MetaProperty<?> metaProperty, final String propName, final JsonNode metaPropNode) {
         final JsonNode editablePropNode = metaPropNode.get("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
         if (editablePropNode == null) {
             // do nothing -- there is no node and that means that there is default value
@@ -328,9 +315,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (editablePropNode.isNull()) {
                 throw new EntityDeserialisationException(format("EntitySerialiser has got null 'editable' inside meta property '@%s' when reading entity of type [%s].", propName, type.getName()));
             }
-            if (metaProperty.isPresent()) {
-                metaProperty.get().setEditable(editablePropNode.asBoolean());
-            }
+            metaProperty.setEditable(editablePropNode.asBoolean());
         }
     }
 
@@ -341,7 +326,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @param metaPropNode
      * @return
      */
-    private void provideRequired(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode) {
+    private void provideRequired(final MetaProperty<?> metaProperty, final String propName, final JsonNode metaPropNode) {
         final JsonNode requiredPropNode = metaPropNode.get("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
         if (requiredPropNode == null) {
             // do nothing -- there is no node and that means that there is default value
@@ -349,13 +334,11 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (requiredPropNode.isNull()) {
                 throw new EntityDeserialisationException(format("EntitySerialiser has got null 'required' inside meta property '@%s' when reading entity of type [%s].", propName, type.getName()));
             }
-            if (metaProperty.isPresent()) {
-                // Important: generally there is no need to hold 'entity' in isInitialising state during deserialisation.
-                // However in specific case of requiredness setting the setter can be invoked, that's why validation should be avoided -- isInitialising == true helps with that.
-                metaProperty.get().getEntity().beginInitialising();
-                metaProperty.get().setRequired(requiredPropNode.asBoolean());
-                metaProperty.get().getEntity().endInitialising();
-            }
+            // Important: generally there is no need to hold 'entity' in isInitialising state during deserialisation.
+            // However in specific case of requiredness setting the setter can be invoked, that's why validation should be avoided -- isInitialising == true helps with that.
+            metaProperty.getEntity().beginInitialising();
+            metaProperty.setRequired(requiredPropNode.asBoolean());
+            metaProperty.getEntity().endInitialising();
         }
     }
 
@@ -366,7 +349,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @param metaPropNode
      * @return
      */
-    private void provideVisible(final Optional<MetaProperty<?>> metaProperty, final String propName, final JsonNode metaPropNode) {
+    private void provideVisible(final MetaProperty<?> metaProperty, final String propName, final JsonNode metaPropNode) {
         final JsonNode visiblePropNode = metaPropNode.get("_visible");
         if (visiblePropNode == null) {
             // do nothing -- there is no node and that means that there is default value
@@ -374,9 +357,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (visiblePropNode.isNull()) {
                 throw new EntityDeserialisationException(format("EntitySerialiser has got null 'visible' inside meta property '@%s' when reading entity of type [%s].", propName, type.getName()));
             }
-            if (metaProperty.isPresent()) {
-                metaProperty.get().setVisible(visiblePropNode.asBoolean());
-            }
+            metaProperty.setVisible(visiblePropNode.asBoolean());
         }
     }
 
