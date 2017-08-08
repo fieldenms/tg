@@ -3,11 +3,13 @@ package ua.com.fielden.platform.dao;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.companion.ActivatableEntityRetrospectionHelper.addToResultIfApplicableFromActivatablePerspective;
+import static ua.com.fielden.platform.companion.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
+import static ua.com.fielden.platform.companion.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.companion.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -34,6 +36,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.companion.AbstractEntityReader;
+import ua.com.fielden.platform.companion.DeleteOperations;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -46,7 +49,6 @@ import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -55,6 +57,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -109,7 +112,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private final IFilter filter;
     
-    private final CommonEntityCompanionDeleteOperations<T> deleteOps;
+    private final DeleteOperations<T> deleteOps;
 
     @Inject
     private IUniversalConstants universalConstants;
@@ -148,7 +151,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         
         this.filter = filter;
         this.hasSaveOverridden = isSaveOverridden();
-        this.deleteOps = new CommonEntityCompanionDeleteOperations<>(this);
+        this.deleteOps = new DeleteOperations<>(
+                this,
+                () -> getSession(),
+                entityType,
+                () -> newQueryExecutionContext(),
+                () -> new EntityBatchDeleteByIdsOperation<T>(getSession(), (PersistedEntityMetadata<T>) getDomainMetadata().getPersistedEntityMetadataMap().get(entityType)));
     }
 
     /**
@@ -539,10 +547,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return shouldProcessAsActivatable;
     }
 
-    private boolean isNotSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
-        return !AbstractPersistentEntity.CREATED_BY.equals(prop.getName()) && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(prop.getName());
-    }
-
     /**
      * Determines whether automatic conflict resolves between the two entity instance is possible. The ability to resolve conflict automatically is based strictly on dirty
      * properties -- if dirty properties in <code>entity</code> are equals to the same properties in <code>persistedEntity</code> then the conflict can be resolved.
@@ -648,65 +652,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             }
         }
         return result;
-    }
-
-    /**
-     * Collects properties that represent not dirty activatable properties
-     *
-     * @param entity
-     * @return
-     */
-     protected final Set<T2<String, Class<ActivatableAbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
-        if (entity.isInstrumented()) {
-            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
-            for (final MetaProperty<?> prop : entity.getProperties().values()) {
-                // proxied property is considered to be not dirty in this context
-                final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
-                if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
-                    addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
-                }
-            }
-            return result.stream()
-                    .map(prop -> t2(prop.getName(), (Class<ActivatableAbstractEntity<?>>) prop.getType()))
-                    .collect(Collectors.toSet());
-        } else {
-            return Finder.streamRealProperties(entity.getType(), MapTo.class)
-                    .filter(field -> ActivatableAbstractEntity.class.isAssignableFrom(field.getType()))
-                    .map(field -> t2(field.getName(), (Class<ActivatableAbstractEntity<?>>) field.getType()))
-                    .collect(Collectors.toSet());
-        }
-    }
-
-    /**
-     * A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
-     * <p>
-     * A remark: the proxied activatable properties need to be handled from the perspective of activatable entity logic (update of refCount).
-     *
-     * @param entity
-     * @param keyMembers
-     * @param result
-     * @param prop
-     */
-    private void addToResultIfApplicableFromActivatablePerspective(final T entity, final Set<String> keyMembers, final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result, final MetaProperty<?> prop) {
-        // let's first identify whether entity belongs to the deactivatable type of the referenced property type
-        // if so, it should not inflict any ref counts for this property
-        final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
-        final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
-        boolean belongsToDeactivatableDependencies;
-        if (ddAnnotation != null) {
-            // if the main type belongs to dependent deactivatables of the type for the current property,
-            // and that property is a key member then such property should be excluded from standard processing of dirty activatables
-            belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
-        } else {
-            belongsToDeactivatableDependencies = false;
-        }
-        // null values correspond to dereferencing and should be allowed only for already persisted entities
-        // checking prop.isProxy() is really just to prevent calling prop.getValue() on proxied properties, which fails with StrictProxyException
-        // this also assumes that proxied properties might actually have a value and need to be included for further processing
-        // values for proxied properties are then retrieved in a lazy fashion by Hibernate
-        if (!belongsToDeactivatableDependencies && (prop.isProxy() || prop.getValue() != null || entity.isPersisted())) {
-            result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
-        }
     }
 
     private List<String> toStringList(final List<MetaProperty<?>> dirtyProperties) {
