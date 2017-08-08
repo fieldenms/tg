@@ -33,7 +33,7 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public Class<? extends Comparable> getKeyType() {
+    public Class<? extends Comparable<?>> getKeyType() {
         // TODO Auto-generated method stub
         return null;
     }

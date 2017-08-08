@@ -31,7 +31,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      *
      * @return
      */
-    Class<? extends Comparable> getKeyType();
+    Class<? extends Comparable<?>> getKeyType();
 
 
     /**

@@ -32,7 +32,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public Class<? extends Comparable> getKeyType() {
+    public Class<? extends Comparable<?>> getKeyType() {
         return null;
     }
 

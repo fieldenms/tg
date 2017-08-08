@@ -33,7 +33,7 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public Class<? extends Comparable> getKeyType() {
+    public Class<? extends Comparable<?>> getKeyType() {
         // TODO Auto-generated method stub
         return null;
     }
