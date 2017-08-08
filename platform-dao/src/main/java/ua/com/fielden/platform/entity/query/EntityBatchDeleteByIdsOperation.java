@@ -14,7 +14,7 @@ public class EntityBatchDeleteByIdsOperation<T extends AbstractEntity<?>> {
     private final Session session;
     private final PersistedEntityMetadata<T> entityMetadata;
 
-    public EntityBatchDeleteByIdsOperation(final Session session, PersistedEntityMetadata<T> entityMetadata) {
+    public EntityBatchDeleteByIdsOperation(final Session session, final PersistedEntityMetadata<T> entityMetadata) {
         this.session = session;
         this.entityMetadata = entityMetadata;
     }
