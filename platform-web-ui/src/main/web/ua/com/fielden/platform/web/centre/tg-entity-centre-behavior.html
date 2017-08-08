@@ -599,7 +599,7 @@
                  * Adds event listener that will update egi when some entity was changed
                  */
                 self.addEventListener("tg-entity-changed", function(e) {
-                    this.$.egi.updateEntity(e.detail);
+                    e.detail.properties.forEach(prop => this.$.egi.updateEntity(e.detail.entity, prop));
                 }.bind(self));
 
                 this._columnAction = createColumnAction(self);
