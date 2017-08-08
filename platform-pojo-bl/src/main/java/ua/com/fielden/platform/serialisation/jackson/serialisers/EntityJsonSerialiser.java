@@ -42,6 +42,13 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * Standard Jackson serialiser for TG entities.
+ * 
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
     private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
@@ -144,7 +151,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     if (!disregardValueSerialisation(value, excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
-                        generator.writeObject(valueObject(value, prop));
+                        generator.writeObject(valueObject(value, prop.isEntityTyped()));
                         
                         if (!uninstrumented) {
                             final MetaProperty<Object> metaProperty = entity.getProperty(name);
@@ -163,7 +170,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 } else {
                                     existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
                                 }
-                                existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop));
+                                existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop.isEntityTyped()));
                             }
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());
@@ -184,10 +191,10 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_max", max);
                             }
                             if (!isPrevValueDefault(metaProperty)) {
-                                existingMetaProps.put("_prevValue", valueObject(metaProperty.getPrevValue(), prop));
+                                existingMetaProps.put("_prevValue", valueObject(metaProperty.getPrevValue(), prop.isEntityTyped()));
                             }
                             if (!isLastInvalidValueDefault(metaProperty)) {
-                                existingMetaProps.put("_lastInvalidValue", valueObject(metaProperty.getLastInvalidValue(), prop));
+                                existingMetaProps.put("_lastInvalidValue", valueObject(metaProperty.getLastInvalidValue(), prop.isEntityTyped()));
                             }
                             if (!isValueChangeCountDefault(metaProperty)) {
                                 existingMetaProps.put("_valueChangeCount", metaProperty.getValueChangeCount());
@@ -213,8 +220,17 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         }
     }
     
-    private final Object valueObject(final Object value, final CachedProperty prop) {
-        if (value != null && isIdOnlyProxiedEntity(value, prop.isEntityTyped())) {
+    /**
+     * Returns an object to be used for serialisation that corresponds to <code>value</code>.
+     * <p>
+     * Handles id-only-proxy values using special notation.
+     * 
+     * @param value
+     * @param isEntityTyped
+     * @return
+     */
+    private final Object valueObject(final Object value, final boolean isEntityTyped) {
+        if (value != null && isIdOnlyProxiedEntity(value, isEntityTyped)) {
             final AbstractEntity<?> idOnlyProxyEntity = (AbstractEntity<?>) value;
             return ID_ONLY_PROXY_PREFIX + idOnlyProxyEntity.getId();
         } else {
