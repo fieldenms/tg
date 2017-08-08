@@ -304,14 +304,14 @@ public class SerialisationTestResource extends ServerResource {
                 return prevPropValsEqual;
             }
             
-//            TODO Investigate why tests on invalidValue fail:
-//            // check property lastInvalid value equality
-//            final Object lastInvalidValue1 = metaProp1.getLastInvalidValue();
-//            final Object lastInvalidValue2 = metaProp2.getLastInvalidValue();
-//            final Result lastInvalidPropValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, lastInvalidValue1, lastInvalidValue2, propType, metaProp1.getName(), "lastInvalid");
-//            if (!lastInvalidPropValsEqual.isSuccessful()) {
-//                return lastInvalidPropValsEqual;
-//            }
+            // check property lastInvalid value equality
+            final Object lastInvalidValue1 = metaProp1.getLastInvalidValue();
+            final Object lastInvalidValue2 = metaProp2.getLastInvalidValue();
+            final Result lastInvalidPropValsEqual = deepEqualsForTestingForPropValues(metaProp1.getEntity(), metaProp2.getEntity(), setOfCheckedEntities, lastInvalidValue1, lastInvalidValue2, propType, metaProp1.getName(), "lastInvalid");
+            if (!lastInvalidPropValsEqual.isSuccessful()) {
+                return lastInvalidPropValsEqual;
+            }
+            
             // valueChangeCount equality
             if (!EntityUtils.equalsEx(metaProp1.getValueChangeCount(), metaProp2.getValueChangeCount())) {
                 return Result.failure(format("e1 [%s] valueChangeCount [%s] does not equal to e2 [%s] valueChangeCount [%s].", metaProp1.getEntity(), metaProp1.getValueChangeCount(), metaProp2.getEntity(), metaProp2.getValueChangeCount()));
@@ -429,11 +429,15 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
                 factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
-                factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())),
-                factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())),
-                factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1.set("prop", createIdOnlyProxy(restUtil.getSerialiser())),
-                factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1.set("prop", createIdOnlyProxy(restUtil.getSerialiser()))
+                createAndSetIdOnlyProxy(factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
+                createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
+                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
+                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser())
                 );
+    }
+    
+    private static AbstractEntity createAndSetIdOnlyProxy(final AbstractEntity entity, final ISerialiser serialiser) {
+        return entity.beginInitialising().set("prop", createIdOnlyProxy(serialiser)).endInitialising();
     }
     
     private static AbstractEntity createIdOnlyProxy(final ISerialiser serialiser) {
