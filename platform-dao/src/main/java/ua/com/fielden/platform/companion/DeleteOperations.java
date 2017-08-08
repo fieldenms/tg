@@ -2,7 +2,7 @@ package ua.com.fielden.platform.companion;
 
 import static java.lang.String.format;
 import static org.hibernate.LockOptions.UPGRADE;
-import static ua.com.fielden.platform.companion.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
+import static ua.com.fielden.platform.companion.helper.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;

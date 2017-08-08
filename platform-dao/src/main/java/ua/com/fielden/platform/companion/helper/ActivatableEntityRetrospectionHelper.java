@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.companion;
+package ua.com.fielden.platform.companion.helper;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.companion;
+package ua.com.fielden.platform.companion.helper;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
