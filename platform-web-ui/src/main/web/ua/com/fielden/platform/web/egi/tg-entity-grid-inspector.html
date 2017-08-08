@@ -939,7 +939,7 @@
             updateEntity: function (entity, propPath) {
                 const entityIndex = _findEntity(entity, this.entities);
                 if (entityIndex >= 0) {
-                    const path = "egiModel." + entityIndex + ".entity." + propPath;
+                    const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
                 }
             },
