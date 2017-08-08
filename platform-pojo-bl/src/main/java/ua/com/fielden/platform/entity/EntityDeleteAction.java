@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -28,7 +28,7 @@ public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContex
     
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
-    private Set<Long> selectedEntityIds = new LinkedHashSet<Long>();
+    private Set<Long> selectedEntityIds = new HashSet<Long>();
 
     @Observable
     protected EntityDeleteAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
