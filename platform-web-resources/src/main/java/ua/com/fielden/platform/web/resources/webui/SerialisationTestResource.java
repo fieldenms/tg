@@ -431,6 +431,7 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
                 createAndSetIdOnlyProxy(factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
                 createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
+                factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())), // here idOnlyProxy instance really goes into lastInvalidValue due to EntityExistsValidator. It is worthwhile not to remove this weird case for additional checking.
                 createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
                 createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser())
                 );

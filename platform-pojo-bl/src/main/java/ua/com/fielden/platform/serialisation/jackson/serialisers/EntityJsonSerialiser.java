@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -37,6 +38,8 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProp
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
@@ -141,12 +144,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     if (!disregardValueSerialisation(value, excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
-                        if (value != null && isIdOnlyProxiedEntity(value, prop.isEntityTyped())) {
-                            final AbstractEntity<?> idOnlyProxyEntity = (AbstractEntity<?>) value;
-                            generator.writeObject(ID_ONLY_PROXY_PREFIX + idOnlyProxyEntity.getId());
-                        } else {
-                            generator.writeObject(value);
-                        }
+                        generator.writeObject(valueObject(value, prop));
                         
                         if (!uninstrumented) {
                             final MetaProperty<Object> metaProperty = entity.getProperty(name);
@@ -157,9 +155,15 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             if (!isEditableDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, metaProperty.isEditable());
                             }
-                            if (!isChangedFromOriginalDefault(metaProperty)) {
-                                existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
-                                existingMetaProps.put("_originalVal", metaProperty.getOriginalValue());
+                            final T2<Boolean, Optional<T2<Long, Long>>> changedFromOriginalDefaultResult = isChangedFromOriginalDefault(metaProperty);
+                            if (!changedFromOriginalDefaultResult._1) {
+                                if (changedFromOriginalDefaultResult._2.isPresent()) {
+                                    final T2<Long, Long> idOnlyProxyIds = changedFromOriginalDefaultResult._2.get();
+                                    existingMetaProps.put("_cfo", !EntityUtils.equalsEx(idOnlyProxyIds._1, idOnlyProxyIds._2));
+                                } else {
+                                    existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
+                                }
+                                existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop));
                             }
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());
@@ -180,10 +184,10 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_max", max);
                             }
                             if (!isPrevValueDefault(metaProperty)) {
-                                existingMetaProps.put("_prevValue", metaProperty.getPrevValue());
+                                existingMetaProps.put("_prevValue", valueObject(metaProperty.getPrevValue(), prop));
                             }
                             if (!isLastInvalidValueDefault(metaProperty)) {
-                                existingMetaProps.put("_lastInvalidValue", metaProperty.getLastInvalidValue());
+                                existingMetaProps.put("_lastInvalidValue", valueObject(metaProperty.getLastInvalidValue(), prop));
                             }
                             if (!isValueChangeCountDefault(metaProperty)) {
                                 existingMetaProps.put("_valueChangeCount", metaProperty.getValueChangeCount());
@@ -206,6 +210,15 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
             }
 
             generator.writeEndObject();
+        }
+    }
+    
+    private final Object valueObject(final Object value, final CachedProperty prop) {
+        if (value != null && isIdOnlyProxiedEntity(value, prop.isEntityTyped())) {
+            final AbstractEntity<?> idOnlyProxyEntity = (AbstractEntity<?>) value;
+            return ID_ONLY_PROXY_PREFIX + idOnlyProxyEntity.getId();
+        } else {
+            return value;
         }
     }
     

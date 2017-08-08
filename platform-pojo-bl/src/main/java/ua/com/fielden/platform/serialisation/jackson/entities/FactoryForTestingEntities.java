@@ -228,6 +228,10 @@ public class FactoryForTestingEntities {
         return entity;
     }
     
+    public EntityWithOtherEntity createEntityMetaPropWithIdOnlyProxyValues() {
+        return factory.newEntity(EntityWithOtherEntity.class, 1L);
+    }
+    
     public EntityWithString createEntityWithStringNonEditable() {
         final EntityWithString ent = createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay");
         ent.getProperty("prop").setEditable(false);

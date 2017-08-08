@@ -69,6 +69,7 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 /**
@@ -486,11 +487,11 @@ public class EntitySerialisationWithJacksonTest {
             assertEquals(valResultType, actualValResult.getClass());
             assertEquals(valResultMessage, actualValResult.getMessage());
         }
-        assertEquals(value, metaProp.getValue());
-        assertEquals(originalValue, metaProp.getOriginalValue());
-        assertEquals(prevValue, metaProp.getPrevValue());
-        assertEquals(lastInvalidValue, metaProp.getLastInvalidValue());
-        assertEquals(lastAttemptedValue, metaProp.getLastAttemptedValue());
+        assertValueEquals(value, metaProp.getValue());
+        assertValueEquals(originalValue, metaProp.getOriginalValue());
+        assertValueEquals(prevValue, metaProp.getPrevValue());
+        assertValueEquals(lastInvalidValue, metaProp.getLastInvalidValue());
+        assertValueEquals(lastAttemptedValue, metaProp.getLastAttemptedValue());
         
         if (value == originalValue) {
             assertTrue(metaProp.getValue() == metaProp.getOriginalValue());
@@ -508,6 +509,27 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals(editable, metaProp.isEditable());
         assertEquals(required, metaProp.isRequired());
         assertEquals(visible, metaProp.isVisible());
+    }
+    
+    /**
+     * Asserts value equality considering id-only-proxy values.
+     * 
+     * @param value1
+     * @param value2
+     */
+    private static void assertValueEquals(final Object value1, final Object value2) {
+        if (isIdOnlyProxiedEntity(value1) || isIdOnlyProxiedEntity(value2)) {
+            assertEquals(valueId(value1), valueId(value2));
+        } else {
+            assertEquals(value1, value2);
+        }
+    }
+    
+    private static boolean isIdOnlyProxiedEntity(final Object value) {
+        return value instanceof AbstractEntity && ((AbstractEntity<?>) value).isIdOnlyProxy();
+    }
+    private static Long valueId(final Object value) {
+        return value instanceof AbstractEntity ? ((AbstractEntity<?>) value).getId() : null;
     }
     
     @Test
@@ -591,7 +613,29 @@ public class EntitySerialisationWithJacksonTest {
         final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
         checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, prevValue, null, null, true, 3, true, true, false, true);
     }
+    
+    @Test
+    public void meta_property_with_id_only_proxies_restores() {
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithIdOnlyProxyValues();
+        entity.beginInitialising();
+        entity.set("prop", createIdOnlyProxy(10L));
+        DefinersExecutor.execute(entity);
+        
+        entity.beginInitialising().set("prop", createIdOnlyProxy(11L)).endInitialising();
+        
+        final Object value = createIdOnlyProxy(11L);
+        final Object originalValue = createIdOnlyProxy(10L);
+        final Object prevValue = createIdOnlyProxy(10L);
+        checkMetaValues(entity.getProperty("prop"), null, null, value, originalValue, originalValue, null, value, /* tricked by using initialising state */ false, 0, /* tricked by using initialising state [END] */ true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, prevValue, null, value, /* tricked by using initialising state */ true, 1, /* tricked by using initialising state [END] */ true, true, false, true);
+    }
     /////////////////////////////// MetaProperty restoration [END] ///////////////////////////////
+    private AbstractEntity createIdOnlyProxy(final long id) {
+        final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = ((TgJackson) jacksonSerialiser).idOnlyProxiedEntityTypeCache;
+        return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), id);
+    }
 
     private AbstractEntity createIdOnlyProxy() {
         final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = ((TgJackson) jacksonSerialiser).idOnlyProxiedEntityTypeCache;

@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -15,6 +17,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -37,6 +40,11 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isPrevValueDefault(final MetaProperty<Object> metaProperty) {
+        if (metaProperty.isEntity() && (
+            isIdOnlyProxiedEntity(metaProperty.getPrevValue()) || isIdOnlyProxiedEntity(metaProperty.getOriginalValue())
+        )) {
+            return false;
+        }
         return equalsEx(metaProperty.getPrevValue(), metaProperty.getOriginalValue());
     }
 
@@ -48,6 +56,9 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isLastInvalidValueDefault(final MetaProperty<Object> metaProperty) {
+        if (metaProperty.isEntity() && isIdOnlyProxiedEntity(metaProperty.getLastInvalidValue())) {
+            return false;
+        }
         return equalsEx(metaProperty.getLastInvalidValue(), null);
     }
 
@@ -130,8 +141,24 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault());
+    public static <M> T2<Boolean, Optional<T2<Long, Long>>> isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
+        if (metaProperty.isEntity() && (
+            isIdOnlyProxiedEntity(metaProperty.getOriginalValue()) || isIdOnlyProxiedEntity(metaProperty.getValue())
+        )) {
+            // In this special case where one of values (current or original) is id-only-proxy we need to serialise both values.
+            // Also changedFromOriginal flag should be computed based on ids, because original call 'metaProperty.isChangedFromOriginal()' returns always 'false' triggering StrictProxyException.
+            final Long valueId = valueId(metaProperty.getValue());
+            final Long origValueId = valueId(metaProperty.getOriginalValue());
+            return T2.t2(false, Optional.of(T2.t2(valueId, origValueId)));
+        }
+        return T2.t2(equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault()), Optional.empty());
+    }
+    
+    private static boolean isIdOnlyProxiedEntity(final Object value) {
+        return value != null && ((AbstractEntity<?>) value).isIdOnlyProxy();
+    }
+    private static Long valueId(final Object value) {
+        return value != null ? ((AbstractEntity<?>) value).getId() : null;
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
