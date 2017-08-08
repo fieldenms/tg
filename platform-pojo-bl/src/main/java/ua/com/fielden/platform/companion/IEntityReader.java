@@ -132,16 +132,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Evaluates the number of pages of the given capacity to hold all entities matching the provided EQL model.
-     * 
-     * @param model
-     * @param paramValues
-     * @param pageCapacity
-     * @return
-     */
-    Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity);
-    
-    /**
      * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
      *
      * @param Equery

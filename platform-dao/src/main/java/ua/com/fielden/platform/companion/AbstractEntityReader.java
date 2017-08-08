@@ -283,9 +283,8 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      * @param pageCapacity
      * @return
      */
-    @Override
     @SessionRequired
-    public Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
+    protected Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();

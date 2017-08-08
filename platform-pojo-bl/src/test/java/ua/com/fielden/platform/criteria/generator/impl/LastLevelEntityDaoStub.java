@@ -9,10 +9,8 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.Pair;
 
 public class LastLevelEntityDaoStub implements ILastLevelEntity {
 
@@ -199,12 +197,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
 
     @Override
     public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<Integer, Integer> evalNumOfPages(QueryModel<LastLevelEntity> model, Map<String, Object> paramValues, int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }

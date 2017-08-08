@@ -10,10 +10,8 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.Pair;
 
 @EntityType(TopLevelEntity.class)
 public class TopLevelEntityDaoStub implements ITopLevelEntity {
@@ -174,12 +172,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
 
     @Override
     public Stream<TopLevelEntity> stream(QueryExecutionModel<TopLevelEntity, ?> qem) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<Integer, Integer> evalNumOfPages(QueryModel<TopLevelEntity> model, Map<String, Object> paramValues, int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }
