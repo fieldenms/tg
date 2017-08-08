@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,7 +54,6 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     @Title(value = "Export selected?", desc = "Export selected entities")
     @AfterChange(ExportActionHandler.class)
     private boolean exportSelected;
-
     
     @IsProperty
     @Title("Context Holder")
@@ -63,7 +61,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
-    private Set<Long> selectedEntityIds = new LinkedHashSet<Long>();
+    private Set<Long> selectedEntityIds = new HashSet<Long>();
 
     @Observable
     protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
