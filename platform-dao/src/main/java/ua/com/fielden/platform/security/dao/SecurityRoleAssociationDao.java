@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.security.dao;
 
-import static ua.com.fielden.platform.companion.KeyConditionHelper.createQueryByKeyFor;
+import static ua.com.fielden.platform.companion.KeyConditionBuilder.createQueryByKeyFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;

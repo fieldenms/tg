@@ -174,16 +174,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> {
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
-     * Retrieves entities that belong to the specified page according to the provided EQL model.
-     * 
-     * @param queryModel
-     * @param pageNumber
-     * @param pageCapacity
-     * @return
-     */
-    List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity);
-    
-    /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
      * found then a null value is returned.
      *

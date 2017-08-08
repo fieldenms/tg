@@ -206,9 +206,4 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         return null;
     }
 
-    @Override
-    public List<SecondLevelEntity> getEntitiesOnPage(QueryExecutionModel<SecondLevelEntity, ?> queryModel, Integer pageNumber, Integer pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

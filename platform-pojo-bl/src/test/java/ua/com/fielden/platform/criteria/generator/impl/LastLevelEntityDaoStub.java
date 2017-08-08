@@ -209,9 +209,4 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
         return null;
     }
 
-    @Override
-    public List<LastLevelEntity> getEntitiesOnPage(QueryExecutionModel<LastLevelEntity, ?> queryModel, Integer pageNumber, Integer pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

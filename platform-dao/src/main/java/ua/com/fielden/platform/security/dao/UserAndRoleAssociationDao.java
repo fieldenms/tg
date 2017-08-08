@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.security.dao;
 
-import static ua.com.fielden.platform.companion.KeyConditionHelper.createQueryByKeyFor;
+import static ua.com.fielden.platform.companion.KeyConditionBuilder.createQueryByKeyFor;
 
 import java.util.Set;
 

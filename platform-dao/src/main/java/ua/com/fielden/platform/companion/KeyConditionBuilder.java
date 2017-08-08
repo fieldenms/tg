@@ -26,8 +26,8 @@ import ua.com.fielden.platform.reflection.Finder;
  * @author TG Team
  *
  */
-public class KeyConditionHelper {
-    private KeyConditionHelper() {}
+public class KeyConditionBuilder {
+    private KeyConditionBuilder() {}
     
     /**
      * Convenient method for composing a query to select an entity by key value.

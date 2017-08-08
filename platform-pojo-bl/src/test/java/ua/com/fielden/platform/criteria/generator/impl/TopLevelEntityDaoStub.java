@@ -184,9 +184,4 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
         return null;
     }
 
-    @Override
-    public List<TopLevelEntity> getEntitiesOnPage(QueryExecutionModel<TopLevelEntity, ?> queryModel, Integer pageNumber, Integer pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.companion;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.companion.KeyConditionHelper.createQueryByKey;
+import static ua.com.fielden.platform.companion.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -13,24 +14,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.hibernate.Session;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -38,92 +33,79 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<T> {
+/**
+ * This is a base class that implements contract {@link IEntityReader}. 
+ * It is designed to be sub-typed in order to implement abstract methods, which are introduced here and are more of an infrastructural nature.
+ * <p>
+ * The main purpose to have this class extended, is to enable correct DB session association with instances of {@link IPage} that are produced by various pagination API methods.
+ * These pages have the ability to move between next or previous pages, thus, requiring a DB session. 
+ * However, by themselves neither page instances nor this class are session-enabled.
+ * So, this class should be sub-typed with a type that implements {@link ISessionEnabled}.     
+ * 
+ * @author TG Team
+ *
+ * @param <T>
+ */
+public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implements IEntityReader<T> {
     
-    private final Class<T> entityType;
-    private final Class<? extends Comparable<?>> keyType;
-    private final boolean filterable;
-    private final BooleanSupplier shouldInstrument;
+    ///////////////////////////////////////////////////////////
+    ////////////// infrastructural methods ////////////////////
+    ///////////////////////////////////////////////////////////
     
-    private final Supplier<Session> session;
-    private final Supplier<EntityFactory> entityFactory;
-    private final Supplier<ICompanionObjectFinder> coFinder;
-    private final Supplier<DomainMetadata> domainMetadata;
-    private final Supplier<IFilter> filter;
-    private final Supplier<String> username;
-    private final Supplier<IUniversalConstants> universalConstants;
-    private final Supplier<IdOnlyProxiedEntityTypeCache> idOnlyProxiedEntityTypeCache;
+    protected abstract Session getSession();
     
-    public EntityReader(
-            final Class<T> entityType,
-            final Class<? extends Comparable<?>> keyType,
-            final boolean filterable,
-            final BooleanSupplier shouldInstrument,
-            final Supplier<Session> session,
-            final Supplier<EntityFactory> entityFactory,
-            final Supplier<ICompanionObjectFinder> coFinder,
-            final Supplier<DomainMetadata> domainMetadata,
-            final Supplier<IFilter> filter,
-            final Supplier<String> username,
-            final Supplier<IUniversalConstants> universalConstants,
-            final Supplier<IdOnlyProxiedEntityTypeCache> idOnlyProxiedEntityTypeCache) {
-        this.entityType = entityType;
-        this.keyType = keyType;
-        this.filterable = filterable;
-        this.shouldInstrument = shouldInstrument;
-        
-        this.session = session;
-        this.entityFactory = entityFactory;
-        this.coFinder = coFinder;
-        this.domainMetadata = domainMetadata;
-        this.filter = filter;
-        this.username = username;
-        this.universalConstants = universalConstants;
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
-    }
+    protected abstract Class<T> getEntityType();
     
-    public Class<T> getEntityType() {
-        return entityType;
-    }
+    protected abstract Class<? extends Comparable<?>> getKeyType();
     
-    public Class<? extends Comparable<?>> getKeyType() {
-        return keyType;
-    }
+    protected abstract boolean instrumented();
+    
+    protected abstract boolean isFilterable();
+    
+    /**
+     * A factory method to create new instances of {@link QueryExecutionContext}, which is required for implementing various reader methods.
+     * This method is abstract in order to reduce dependencies of this reader implementation on types that are required for instantiating {@link QueryExecutionContext}.
+     *   
+     * @return
+     */
+    protected abstract QueryExecutionContext newQueryExecutionContext();
 
-    
-    private boolean instrumented() {
-        return shouldInstrument.getAsBoolean();
-    }
+    ///////////////////////////////////////////////////////////
+    /////////////// Entity reader API methods /////////////////
+    ///////////////////////////////////////////////////////////
     
     @Override
+    @SessionRequired
     public boolean isStale(final Long entityId, final Long version) {
         if (entityId == null) {
             return false;
         }
 
-        final Integer count = ((Number) session.get().createQuery("select count(*) from " + getEntityType().getName() + " where id = :id and version = :version")//
+        final Integer count = ((Number) getSession().createQuery("select count(*) from " + getEntityType().getName() + " where id = :id and version = :version")//
         .setParameter("id", entityId).setParameter("version", version).uniqueResult()).intValue();
 
         return count != 1;
     }
 
     @Override
+    @SessionRequired
     public T findById(final Long id) {
         return findById(id, null);
     }
 
     @Override
+    @SessionRequired
     public T findById(final Long id, final fetch<T> fetchModel) {
         return fetchOneEntityInstance(id, fetchModel);
     }
 
     @Override
+    @SessionRequired
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
         try {
-            final EntityResultQueryModel<T> queryModel = createQueryByKey(getEntityType(), getKeyType(), filterable, keyValues);
+            final EntityResultQueryModel<T> queryModel = createQueryByKey(getEntityType(), getKeyType(), isFilterable(), keyValues);
             final Builder<T, EntityResultQueryModel<T>> qemBuilder = from(queryModel).with(fetchModel);
             return getEntity(instrumented() ? qemBuilder.model() : qemBuilder.lightweight().model());
         } catch (final EntityCompanionException e) {
@@ -134,11 +116,13 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
     }
 
     @Override
+    @SessionRequired
     public T findByKey(final Object... keyValues) {
         return findByKeyAndFetch(null, keyValues);
     }
 
     @Override
+    @SessionRequired
     public T findByEntityAndFetch(final fetch<T> fetchModel, final T entity) {
         if (entity.getId() != null) {
             return findById(entity.getId(), fetchModel);
@@ -148,70 +132,68 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
     }
 
     @Override
+    @SessionRequired
     public boolean entityExists(final T entity) {
         return entityExists(entity.getId());
     }
 
     @Override
+    @SessionRequired
     public boolean entityExists(final Long id) {
         if (id == null) {
             return false;
         }
-        return session.get().createQuery("select id from " + getEntityType().getName() + " where id = :in_id").setLong("in_id", id).uniqueResult() != null;
+        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :in_id").setLong("in_id", id).uniqueResult() != null;
     }
 
-    /**
-     * Method checks whether the key of the entity type associated with this DAO if composite or not.
-     *
-     * If composite then <code>WHERE</code> statement is build using composite key members and the passed values. The number of values should match the number of composite key
-     * members.
-     *
-     * Otherwise, <code>WHERE</code> statement is build using only property <code>key</code>.
-     *
-     * The created query expects a unique result, and throws a runtime exception if this is not the case.
-     *
-     * TODO Need to consider the case of polymorphic associations such as Rotable, which can be both Bogie and/or Wheelset.
-     */
     @Override
+    @SessionRequired
     public boolean entityWithKeyExists(final Object... keyValues) {
         final T entity = findByKeyAndFetch(null, keyValues);
         return entity != null;
     }
-    
+
     @Override
+    @SessionRequired
+    public int count(final EntityResultQueryModel<T> model) {
+        return count(model, emptyMap());
+    }
+
+    @Override
+    @SessionRequired
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         return evalNumOfPages(model, paramValues, 1).getKey();
     }
 
-    @Override
-    public int count(final EntityResultQueryModel<T> model) {
-        return count(model, Collections.<String, Object> emptyMap());
-    }
-
     /**
-     * Returns a stream of entities that match the provided query. Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
-     * 
+     * Returns a stream of entities that match the provided query.
+     * <p>
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
     @Override
+    @SessionRequired
+    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
+        return stream(queryModel, 100);
+    }
+
+    /**
+     * Returns a stream of entities that match the provided query. 
+     * Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
+     * <p>
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    @Override
+    @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
         return new EntityFetcher(newQueryExecutionContext()).streamEntities(qem, Optional.of(fetchSize));
     }
     
     /**
-     * Returns a stream of entities that match the provided query.
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
-    @Override
-    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
-        return stream(queryModel, 100);
-    }
-
-    /**
      * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
      */
     @Override
+    @SessionRequired
     public IPage<T> firstPage(final int pageCapacity) {
         return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
     }
@@ -220,6 +202,7 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
      * Returns a first page holding up to <code>size</code> instance of entities retrieved by the provided query model. This allows a query based pagination.
      */
     @Override
+    @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
@@ -230,18 +213,21 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
      * based pagination.
      */
     @Override
+    @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     @Override
+    @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return getPage(qem, pageNo, 0, pageCapacity);
     }
 
     @Override
+    @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         
@@ -252,13 +238,31 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
     }
 
     @Override
+    @SessionRequired
     public IPage<T> getPage(final int pageNo, final int pageCapacity) {
         final Pair<Integer, Integer> numberOfPagesAndCount = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
         return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
+    /**
+     * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
+     * <p>
+     * This method is required strictly for "capturing" a DB session to enable pagination as implemented by {@link EntityQueryPage}.
+     *
+     * @param queryModel
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     */
+    @SessionRequired
+    protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
+        return new EntityFetcher(newQueryExecutionContext()).getEntitiesOnPage(qem, pageNumber, pageCapacity);
+    }
+
     @Override
+    @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         final List<T> data;
@@ -280,6 +284,7 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
      * @return
      */
     @Override
+    @SessionRequired
     public Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
@@ -304,7 +309,7 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
         try {
             final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
-            query.setFilterable(filterable);
+            query.setFilterable(isFilterable());
             return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
         } catch (final Exception e) {
             throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getName()), e);
@@ -451,45 +456,15 @@ public class EntityReader<T extends AbstractEntity<?>> implements IEntityReader<
         return list.size() == 1 ? list.get(0) : null;
     }
 
-    /**
-     * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
-     *
-     * @param queryModel
-     * @param pageNumber
-     * @param pageCapacity
-     * @return
-     */
-    @Override
-    public List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        return new EntityFetcher(newQueryExecutionContext()).getEntitiesOnPage(qem, pageNumber, pageCapacity);
-    }
-    
-    /**
-     * A helper method to create new instances of {@link QueryExecutionContext}.
-     * @return
-     */
-    private QueryExecutionContext newQueryExecutionContext() {
-        return new QueryExecutionContext(
-                session.get(), 
-                entityFactory.get(), 
-                coFinder.get(), 
-                domainMetadata.get(), 
-                filter.get(), 
-                username.get(), 
-                universalConstants.get(), 
-                idOnlyProxiedEntityTypeCache.get());
-    }
-
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
         final EntityResultQueryModel<T> query = select(entityType).model();
-        query.setFilterable(filterable);
+        query.setFilterable(isFilterable());
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         return instrumented() ? from(query).with(orderBy).model() : from(query).with(orderBy).lightweight().model();
     }
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
-        return produceDefaultQueryExecutionModel(entityType);
+        return produceDefaultQueryExecutionModel(getEntityType());
     }
 
 }

@@ -3,17 +3,13 @@ package ua.com.fielden.platform.dao;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.LockOptions.UPGRADE;
-import static ua.com.fielden.platform.companion.KeyConditionHelper.createQueryByKey;
+import static ua.com.fielden.platform.companion.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +18,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,19 +33,15 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.companion.EntityReader;
-import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.companion.KeyConditionHelper;
+import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
-import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
@@ -68,17 +59,11 @@ import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -88,7 +73,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.Validators;
 
 /**
@@ -106,13 +90,10 @@ import ua.com.fielden.platform.utils.Validators;
  * @param <K>
  *            -- entitie's key type
  */
-public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T>, ISessionEnabled {
+public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    
-    private final EntityReader<T> entityReader;
-    
     
     private Session session;
     private String transactionGuid;
@@ -168,23 +149,27 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
         this.filter = filter;
         this.hasSaveOverridden = isSaveOverridden();
         this.deleteOps = new CommonEntityCompanionDeleteOperations<>(this);
-        
-        this.entityReader = new EntityReader<>(
-                getEntityType(), 
-                getKeyType(), 
-                getFilterable(), 
-                () -> instrumented(),
-                () -> getSession(),
-                () -> getEntityFactory(),
-                () -> getCoFinder(),
-                () -> domainMetadata,
-                () -> filter,
-                () -> getUsername(),
-                () -> universalConstants,
-                () -> idOnlyProxiedEntityTypeCache);
     }
 
-    protected boolean getFilterable() {
+    /**
+     * A helper method to create new instances of {@link QueryExecutionContext}.
+     * @return
+     */
+    @Override
+    protected QueryExecutionContext newQueryExecutionContext() {
+        return new QueryExecutionContext(
+                getSession(), 
+                getEntityFactory(), 
+                getCoFinder(), 
+                getDomainMetadata(), 
+                getFilter(), 
+                getUsername(), 
+                getUniversalConstants(), 
+                getIdOnlyProxiedEntityTypeCache());
+    }
+
+    @Override
+    protected boolean isFilterable() {
         return false;
     }
     
@@ -267,28 +252,23 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
 
     @Override
     @SessionRequired
-    public T findById(final Long id) {
-        return entityReader.findById(id);
+    @Deprecated
+    public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
+        try (Stream<T> stream = stream(qem)) {
+            return stream.collect(toList());
+        }
     }
 
     @Override
     @SessionRequired
-    public T findById(final Long id, final fetch<T> fetchModel) {
-        return entityReader.findById(id, fetchModel);
+    @Deprecated
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
+        try (Stream<T> stream = stream(qem, numberOfEntities)) {
+            return stream.limit(numberOfEntities).collect(toList());
+        }
     }
-
-    @Override
-    @SessionRequired
-    public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
-        return entityReader.findByKeyAndFetch(fetchModel, keyValues);
-    }
-
-    @Override
-    @SessionRequired
-    public T findByKey(final Object... keyValues) {
-        return entityReader.findByKey(keyValues);
-    }
-
 
     /**
      * {@inheritDoc} 
@@ -371,7 +351,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
-        final AggregatedResultQueryModel model = select(createQueryByKey(getEntityType(), getKeyType(), getFilterable(), entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
+        final AggregatedResultQueryModel model = select(createQueryByKey(getEntityType(), getKeyType(), isFilterable(), entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants, idOnlyProxiedEntityTypeCache);
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
@@ -595,7 +575,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
      */
     private T saveNewEntity(final T entity) {
         // let's make sure that entity is not a duplicate
-        final Integer count = count(createQueryByKey(getEntityType(), getKeyType(), getFilterable(), entity.getKey()), Collections.<String, Object> emptyMap());
+        final Integer count = count(createQueryByKey(getEntityType(), getKeyType(), isFilterable(), entity.getKey()), Collections.<String, Object> emptyMap());
         if (count > 0) {
             throw new EntityCompanionException(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
@@ -850,140 +830,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     }
 
     @Override
-    @SessionRequired
-    public boolean isStale(final Long entityId, final Long version) {
-        return entityReader.isStale(entityId, version);
-    }
-
-    @Override
-    @SessionRequired
-    public boolean entityExists(final T entity) {
-        return entityReader.entityExists(entity);
-    }
-
-    @Override
-    @SessionRequired
-    public boolean entityExists(final Long id) {
-        return entityReader.entityExists(id);
-    }
-
-    @Override
-    @SessionRequired
-    public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        return entityReader.count(model, paramValues);
-    }
-
-    @Override
-    @SessionRequired
-    public int count(final EntityResultQueryModel<T> model) {
-        return entityReader.count(model);
-    }
-    
-    @Override
-    @SessionRequired
-    public Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
-        return entityReader.evalNumOfPages(model, paramValues, pageCapacity);
-    }
-    /**
-     * Returns a stream of entities that match the provided query.
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
-    @Override
-    @SessionRequired
-    public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
-        return entityReader.stream(queryModel, 100);
-    }
-
-    /**
-     * Returns a stream of entities that match the provided query. Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
-     * 
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
-    @Override
-    @SessionRequired
-    public Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize) {
-        return entityReader.stream(qem, fetchSize);
-    }
-
-    @Override
-    @SessionRequired
-    @Deprecated
-    public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (Stream<T> stream = entityReader.stream(qem)) {
-            return stream.collect(toList());
-        }
-    }
-
-    @Override
-    @SessionRequired
-    @Deprecated
-    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (Stream<T> stream = entityReader.stream(qem, numberOfEntities)) {
-            return stream.limit(numberOfEntities).collect(toList());
-        }
-    }
-
-    /**
-     * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
-     */
-    @Override
-    @SessionRequired
-    public IPage<T> firstPage(final int pageCapacity) {
-        return entityReader.firstPage(pageCapacity);
-    }
-
-    /**
-     * Returns a first page holding up to <code>size</code> instance of entities retrieved by the provided query model. This allows a query based pagination.
-     */
-    @Override
-    @SessionRequired
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
-        return entityReader.firstPage(model, pageCapacity);
-    }
-
-    /**
-     * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by the provided query model with appropriate summary model. This allows a query
-     * based pagination.
-     */
-    @Override
-    @SessionRequired
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-        return entityReader.firstPage(model, summaryModel, pageCapacity);
-    }
-
-    @Override
-    @SessionRequired
-    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
-        return entityReader.getPage(model, pageNo, pageCapacity);
-    }
-
-    @Override
-    @SessionRequired
-    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        return entityReader.getPage(model, pageNo, pageCount, pageCapacity);
-    }
-
-    @Override
-    @SessionRequired
-    public IPage<T> getPage(final int pageNo, final int pageCapacity) {
-        return entityReader.getPage(pageNo, pageCapacity);
-    }
-    
-    @Override
-    @SessionRequired
-    public List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return entityReader.getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
-    }
-
-    @Override
-    @SessionRequired
-    public T getEntity(final QueryExecutionModel<T, ?> model) {
-        return entityReader.getEntity(model);
-    }
-
-    @Override
     public Session getSession() {
         if (session == null) {
             throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
@@ -1028,7 +874,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
-
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
@@ -1244,18 +1089,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> implements IE
     @Override
     public Class<? extends Comparable<?>> getKeyType() {
         return keyType;
-    }
-
-    @Override
-    @SessionRequired
-    public boolean entityWithKeyExists(final Object... keyValues) {
-        return entityReader.entityWithKeyExists(keyValues);
-    }
-
-    @Override
-    @SessionRequired
-    public T findByEntityAndFetch(final fetch<T> fetchModel, final T entity) {
-        return entityReader.findByEntityAndFetch(fetchModel, entity);
     }
 
     public final IFetchProvider<T> getFetchProvider() {
