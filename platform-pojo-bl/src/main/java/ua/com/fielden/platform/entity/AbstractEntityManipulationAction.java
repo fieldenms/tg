@@ -16,9 +16,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
 public abstract class AbstractEntityManipulationAction extends AbstractFunctionalEntityWithCentreContext<String> {
-
-    private static final long serialVersionUID = 1L;
-
+    
     @IsProperty
     @MapTo
     @Title(value = "Entity Type", desc = "Entity type")

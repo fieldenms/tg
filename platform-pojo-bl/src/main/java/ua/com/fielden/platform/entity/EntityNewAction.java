@@ -14,6 +14,5 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IEntityNewAction.class)
 public class EntityNewAction extends AbstractEntityManipulationAction {
-    private static final long serialVersionUID = 1L;
-
+    
 }

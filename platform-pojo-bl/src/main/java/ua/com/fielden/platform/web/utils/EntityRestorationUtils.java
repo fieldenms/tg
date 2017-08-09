@@ -123,7 +123,6 @@ public class EntityRestorationUtils {
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
         logger.error(String.format("constructEntityWithContext: type = [%s] id = [%s] originallyProducedEntity = [%s]", companion.getEntityType().getSimpleName(), id, originallyProducedEntity));
         logger.error(String.format("constructEntityWithContext: modifHolder = [%s]", modifiedPropertiesHolder));
-        logger.error(String.format("constructEntityWithContext: context = [%s]", context));
 
         final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, context, companion, producer);
         logger.debug(EntityResourceUtils.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
