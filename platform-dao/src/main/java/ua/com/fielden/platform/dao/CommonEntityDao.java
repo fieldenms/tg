@@ -250,7 +250,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Deprecated
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (Stream<T> stream = stream(qem)) {
+        try (final Stream<T> stream = stream(qem)) {
             return stream.collect(toList());
         }
     }
@@ -260,7 +260,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Deprecated
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (Stream<T> stream = stream(qem, numberOfEntities)) {
+        try (final Stream<T> stream = stream(qem, numberOfEntities)) {
             return stream.limit(numberOfEntities).collect(toList());
         }
     }
