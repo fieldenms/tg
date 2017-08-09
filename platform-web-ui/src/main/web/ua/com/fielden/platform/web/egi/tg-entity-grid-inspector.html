@@ -272,8 +272,8 @@
                                         <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                             <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                             <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
-                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
+                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
                                         </template>
                                     </div>
                                 </template>
@@ -363,8 +363,8 @@
                                             <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                 <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
-                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
+                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
                                             </div>
                                         </template>
                                     </div>
@@ -932,7 +932,18 @@
                     }).bind(this);
                 }, 1)
             },
-
+            
+            /**
+             * Updates entity when some of the properties were changed.
+             */
+            updateEntity: function (entity, propPath) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0) {
+                    const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
+                    this.notifyPath(path, entity.get(propPath));
+                }
+            },
+            
             _getKeyEventTarget: function () {
                 var parent = this;
                 while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
@@ -1746,6 +1757,10 @@
              */
             _getValueFromEntity: function (entity, property) {
                 return entity && entity.get(property);
+            },
+            
+            _getBindedValue: function (change, property, type) {
+                return this._getValue(change.base, property, type);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
