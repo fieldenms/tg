@@ -43,7 +43,7 @@ public interface ICollectionModificationController<MASTER_TYPE extends AbstractE
     
     MASTER_TYPE refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext);
     
-    default T2<T, Collection<ITEM>> refetchActionEntity(final Long masterEntityId) {
+    default T2<T, Collection<ITEM>> refetchActionEntity(final MASTER_TYPE masterEntity) {
         throw new CollectionModificationException("Unsupported.");
     }
 //    {

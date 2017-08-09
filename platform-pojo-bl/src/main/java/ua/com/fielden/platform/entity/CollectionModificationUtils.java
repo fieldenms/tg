@@ -202,7 +202,7 @@ public class CollectionModificationUtils {
         if (!isActionEntityPersistent || masterEntity.getId() == null) {
             return Optional.empty();
         }
-        return Optional.of(controller.refetchActionEntity(masterEntity.getId()));
+        return Optional.of(controller.refetchActionEntity(masterEntity));
     }
     
 }

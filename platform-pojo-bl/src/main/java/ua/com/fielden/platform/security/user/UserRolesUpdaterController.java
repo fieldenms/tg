@@ -37,9 +37,9 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
     }
     
     @Override
-    public T2<UserRolesUpdater, Collection<UserRole>> refetchActionEntity(final Long masterEntityId) {
+    public T2<UserRolesUpdater, Collection<UserRole>> refetchActionEntity(final User masterEntity) {
         final UserRolesUpdater refetchedAction = coUserRolesUpdater.getEntity(
-            from(select(UserRolesUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntityId).model())
+            from(select(UserRolesUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
             .with(fetchAndInstrument(UserRolesUpdater.class).with(AbstractEntity.KEY)/*.with("roles")*/)
             .model()
         );

@@ -41,9 +41,9 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     }
     
     @Override
-    public T2<UserRoleTokensUpdater, Collection<SecurityTokenInfo>> refetchActionEntity(final Long masterEntityId) {
+    public T2<UserRoleTokensUpdater, Collection<SecurityTokenInfo>> refetchActionEntity(final UserRole masterEntity) {
         final UserRoleTokensUpdater refetchedAction = coUserRoleTokensUpdater.getEntity(
-            from(select(UserRoleTokensUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntityId).model())
+            from(select(UserRoleTokensUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
             .with(fetchAndInstrument(UserRoleTokensUpdater.class).with(AbstractEntity.KEY))
             .model()
         );
