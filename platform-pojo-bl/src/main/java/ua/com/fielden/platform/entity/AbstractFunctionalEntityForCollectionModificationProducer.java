@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +54,7 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
     protected final List<String> skipPropertiesForMetaStateResetting() {
         final List<String> propertiesToBeSkipped = new ArrayList<>();
         propertiesToBeSkipped.add("surrogateVersion");
-        propertiesToBeSkipped.addAll(controller().skipPropertiesForMetaStateResettingInCollectionalEditor());
+        propertiesToBeSkipped.addAll(skipPropertiesForMetaStateResettingInCollectionalEditor());
         return propertiesToBeSkipped;
     }
     
@@ -71,5 +72,15 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
      * @return
      */
     protected abstract T provideCurrentlyAssociatedValues(final T entity, final MASTER_TYPE refetchedMasterEntity);
+    
+    /**
+     * Additional properties to be skipped for meta-state resetting for collection modification functional entity. 'surrogateVersion' property will be skipped automatically -- no
+     * need to be listed here.
+     * 
+     * @return
+     */
+    protected List<String> skipPropertiesForMetaStateResettingInCollectionalEditor() {
+        return Arrays.asList();
+    }
     
 }

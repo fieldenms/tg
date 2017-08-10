@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -61,18 +60,8 @@ public interface ICollectionModificationController<MASTER_TYPE extends AbstractE
      *            origin, for example a) master property action b) continuation etc.)
      * @return
      */
-    default boolean skipDirtyChecking(final T action) {
+    default boolean skipDirtyChecking(final T action, final Optional<CentreContext<MASTER_TYPE, AbstractEntity<?>>> actionContext) {
         return false;
-    }
-    
-    /**
-     * Additional properties to be skipped for meta-state resetting for collection modification functional entity. 'surrogateVersion' property will be skipped automatically -- no
-     * need to be listed here.
-     * 
-     * @return
-     */
-    default List<String> skipPropertiesForMetaStateResettingInCollectionalEditor() {
-        return Arrays.asList();
     }
     
 }

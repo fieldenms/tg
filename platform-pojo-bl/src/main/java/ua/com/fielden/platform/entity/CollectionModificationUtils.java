@@ -52,7 +52,7 @@ public class CollectionModificationUtils {
         }
 
         // TODO remove final MASTER_TYPE masterEntityBeingUpdated = (MASTER_TYPE) action.refetchedMasterEntity(); // existence of master entity is checked during "producing" of functional action
-        final MASTER_TYPE masterEntityBeingUpdated = validateMasterEntityAndRefetch(controller.getMasterEntityFromAction(action), action, controller);
+        final MASTER_TYPE masterEntityBeingUpdated = validateMasterEntityAndRefetch(controller.getMasterEntityFromAction(action), action, Optional.empty(), controller);
         final Optional<T2<T, Collection<ITEM>>> persistedEntityAndAvailableItemsOption = retrieveActionFor(masterEntityBeingUpdated, action.isPersistent(), controller);
         
         final T persistedEntity = persistedEntityAndAvailableItemsOption.map(persistedActionAndAvailableItems -> {
@@ -112,12 +112,13 @@ public class CollectionModificationUtils {
     > MASTER_TYPE validateMasterEntityAndRefetch(
         final AbstractEntity<?> masterEntityFromContext, 
         final T entity,
+        final Optional<CentreContext<MASTER_TYPE, AbstractEntity<?>>> entityContext,
         final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
     ) {
         if (masterEntityFromContext == null) {
             throw Result.failure("The master entity for collection modification is not provided in the context.");
         }
-        if (!controller.skipDirtyChecking(entity) && masterEntityFromContext.isInstrumented() && masterEntityFromContext.isDirty()) {
+        if (!controller.skipDirtyChecking(entity, entityContext) && masterEntityFromContext.isInstrumented() && masterEntityFromContext.isDirty()) {
             throw Result.failure("This action is applicable only to a saved entity. Please save entity and try again.");
         }
         final MASTER_TYPE refetchedMasterEntity = controller.refetchMasterEntity(masterEntityFromContext);
@@ -142,12 +143,12 @@ public class CollectionModificationUtils {
         }
         
         final AbstractEntity<?> masterEntityFromContext = controller.getMasterEntityFromContext(context);
-        final MASTER_TYPE refetchedMasterEntity = validateMasterEntityAndRefetch(masterEntityFromContext, entity, controller);
+        final MASTER_TYPE refetchedMasterEntity = validateMasterEntityAndRefetch(masterEntityFromContext, entity, Optional.of(context), controller);
         
-        if (refetchedMasterEntity instanceof EnhancedCentreEntityQueryCriteria) {
-            entity.setMasterEntityHolder(((EnhancedCentreEntityQueryCriteria) refetchedMasterEntity).centreContextHolder());
+        if (masterEntityFromContext instanceof EnhancedCentreEntityQueryCriteria) {
+            entity.setMasterEntityHolder(((EnhancedCentreEntityQueryCriteria) masterEntityFromContext).centreContextHolder());
         } else {
-            entity.setMasterEntity(refetchedMasterEntity);
+            entity.setMasterEntity(masterEntityFromContext);
         }
         
         // IMPORTANT: it is necessary to reset state for "key" property after its change.
