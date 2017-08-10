@@ -52,8 +52,9 @@ public class CollectionModificationUtils {
         }
 
         // TODO remove final MASTER_TYPE masterEntityBeingUpdated = (MASTER_TYPE) action.refetchedMasterEntity(); // existence of master entity is checked during "producing" of functional action
-        final MASTER_TYPE masterEntityBeingUpdated = validateMasterEntityAndRefetch(controller.getMasterEntityFromAction(action), action, Optional.empty(), controller);
-        final Optional<T2<T, Collection<ITEM>>> persistedEntityAndAvailableItemsOption = retrieveActionFor(masterEntityBeingUpdated, action.isPersistent(), controller);
+        final MASTER_TYPE originalMasterEntity = (MASTER_TYPE) controller.getMasterEntityFromAction(action);
+        final MASTER_TYPE masterEntityBeingUpdated = validateMasterEntityAndRefetch(originalMasterEntity, action, Optional.empty(), controller);
+        final Optional<T2<T, Collection<ITEM>>> persistedEntityAndAvailableItemsOption = retrieveActionFor(originalMasterEntity, action.isPersistent(), controller);
         
         final T persistedEntity = persistedEntityAndAvailableItemsOption.map(persistedActionAndAvailableItems -> {
             final Map<Object, ITEM> availableEntities = mapById(persistedActionAndAvailableItems._2, idType);
@@ -79,10 +80,12 @@ public class CollectionModificationUtils {
         // the next block of code is intended to mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
         if (persistedEntity != null) {
             entityToSave = persistedEntity;
+            // TODO here fresh 'availableEntities' property gets overridden by old information...
             action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
         } else {
             entityToSave = companion.new_();
+            // TODO here fresh 'availableEntities' property gets overridden by old information...
             action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             if (!action.getProperty(AbstractEntity.KEY).isRequired()) {
                 // Key property, which represents id of master entity, will be null in case where master entity is new.
