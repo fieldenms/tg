@@ -41,8 +41,8 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
     }
 
     @Override
-    public <T extends IEntityReader<E>, E extends AbstractEntity<?>> T findAsReader(final Class<E> type) {
-        return find(type);
+    public <T extends IEntityReader<E>, E extends AbstractEntity<?>> T findAsReader(final Class<E> type, final boolean uninstrumented) {
+        return uninstrumented ? find(type).uninstrumented() : find(type);
     }
     
     public Injector getInjector() {

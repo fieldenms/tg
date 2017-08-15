@@ -28,5 +28,5 @@ public interface ICompanionObjectFinder {
      * @param type
      * @return
      */
-    <T extends IEntityReader<E>, E extends AbstractEntity<?>> T findAsReader(final Class<E> type);
+    <T extends IEntityReader<E>, E extends AbstractEntity<?>> T findAsReader(final Class<E> type, final boolean uninstrumented);
 }
