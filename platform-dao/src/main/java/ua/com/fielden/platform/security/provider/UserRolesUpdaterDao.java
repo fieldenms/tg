@@ -13,7 +13,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
@@ -34,19 +33,17 @@ import ua.com.fielden.platform.types.tuples.T2;
  */
 @EntityType(UserRolesUpdater.class)
 public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> implements IUserRolesUpdater {
-    private final EntityFactory factory;
     
     @Inject
-    public UserRolesUpdaterDao(final IFilter filter, final EntityFactory factory) {
+    public UserRolesUpdaterDao(final IFilter filter) {
         super(filter);
-        this.factory = factory;
     }
     
     @Override
     @SessionRequired
     @Authorise(UserSaveToken.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
-        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, factory, Long.class, new UserRolesUpdaterController(co(User.class), co(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
+        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
         final Map<Object, UserRole> availableRoles = mapById(action.getRoles(), Long.class);
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
@@ -67,4 +64,5 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionAndUserBeingUpdated._1);
     }
+    
 }

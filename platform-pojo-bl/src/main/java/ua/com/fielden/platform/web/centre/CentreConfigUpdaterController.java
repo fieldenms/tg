@@ -6,6 +6,12 @@ import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
+/**
+ * Controller for {@link CentreConfigUpdater}.
+ * 
+ * @author TG Team
+ *
+ */
 public class CentreConfigUpdaterController implements ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
@@ -14,26 +20,13 @@ public class CentreConfigUpdaterController implements ICollectionModificationCon
     }
     
     @Override
-    public AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context) {
-        return context.getSelectionCrit();
+    public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> getMasterEntityFromContext(final CentreContext<?, ?> context) {
+        return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) context.getSelectionCrit();
     }
     
     @Override
-    public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
-        return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) masterEntityFromContext;
+    public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> getMasterEntityFromAction(final CentreConfigUpdater action) {
+        return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) criteriaEntityRestorer.restoreCriteriaEntity(action.getMasterEntityHolder());
     }
     
-    /**
-     * Retrieves master entity from action entity.
-     * 
-     * TODO some caching?
-     * TODO return type MASTER_TYPE?
-     * 
-     * @return
-     */
-    @Override
-    public AbstractEntity<?> getMasterEntityFromAction(final CentreConfigUpdater action) {
-        return criteriaEntityRestorer.restoreCriteriaEntity(action.getMasterEntityHolder());
-    }
-
 }

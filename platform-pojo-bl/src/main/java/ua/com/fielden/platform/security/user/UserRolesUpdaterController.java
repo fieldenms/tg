@@ -5,15 +5,22 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.CollectionModificationUtils;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
+/**
+ * Controller for {@link UserRolesUpdater}.
+ * 
+ * @author TG Team
+ *
+ */
 public class UserRolesUpdaterController implements ICollectionModificationController<User, UserRolesUpdater, Long, UserRole> {
     private final IEntityDao<User> coUser;
     private final IEntityDao<UserRolesUpdater> coUserRolesUpdater;
@@ -26,27 +33,41 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
     }
     
     @Override
-    public AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context) {
-        // this producer is suitable for property actions on User master and for actions on User centre
-        return context.getMasterEntity() == null ? context.getCurrEntity() : context.getMasterEntity();
+    public User getMasterEntityFromContext(final CentreContext<?, ?> context) {
+        return context.getMasterEntity() == null ? (User) context.getCurrEntity() : (User) context.getMasterEntity();
     }
     
     @Override
-    public User refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
+    public User refetchMasterEntity(final User masterEntityFromContext) {
         return coUser.findById(masterEntityFromContext.getId(), coUser.getFetchProvider().with("roles").fetchModel());
     }
     
     @Override
-    public T2<UserRolesUpdater, Collection<UserRole>> refetchActionEntity(final User masterEntity) {
-        final UserRolesUpdater refetchedAction = coUserRolesUpdater.getEntity(
+    public UserRolesUpdater refetchActionEntity(final User masterEntity) {
+        return coUserRolesUpdater.getEntity(
             from(select(UserRolesUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
             .with(fetchAndInstrument(UserRolesUpdater.class).with(AbstractEntity.KEY)/*.with("roles")*/)
             .model()
         );
-        final Set<UserRole> availableItems = UserRolesUpdaterProducer.loadAvailableRoles(coUserRole);
-        if (refetchedAction != null) {
-            refetchedAction.setRoles(availableItems);
-        }
-        return T2.t2(refetchedAction, availableItems);
     }
+    
+    @Override
+    public Collection<UserRole> refetchAvailableItems(final User masterEntity) {
+        return loadAvailableRoles(coUserRole);
+    }
+    
+    @Override
+    public UserRolesUpdater setAvailableItems(final UserRolesUpdater action, final Collection<UserRole> items) {
+        return action.setRoles((Set<UserRole>) items);
+    }
+    
+    @Override
+    public Long persistedActionVersion(final Long masterEntityId) {
+        return CollectionModificationUtils.persistedActionVersion(masterEntityId, coUserRolesUpdater);
+    }
+    
+    private static Set<UserRole> loadAvailableRoles(final IUserRole coUserRole) {
+        return new LinkedHashSet<>(coUserRole.findAll());
+    }
+    
 }

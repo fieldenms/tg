@@ -4,8 +4,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -25,13 +26,18 @@ public class CollectionModificationUtils {
     }
     
     /**
-     * Validates restored action (it was "produced" by corresponding producer) on subject of 1) removal of available collectional items 2) concurrent modification of the same
-     * collection for the same master entity. After the validation has
+     * Validates action before its saving.
+     * <p>
+     * Validation includes: early throwing of exception if validation error exists,
+     * full validation of master entity (existence, dirtiness and disappearance),
+     * validation on available items deletion,
+     * validation on action conflict against same master entity.
      * 
-     * @param action
+     * @param staleAction
      * @param companion
-     * @param factory
-     * @return
+     * @param idType
+     * @param controller
+     * @return -- the entity to be saved (additional validations could be performed in companion implementation) and re-fetched master entity
      */
     public static <
         MASTER_TYPE extends AbstractEntity<?>, 
@@ -39,65 +45,73 @@ public class CollectionModificationUtils {
         T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, 
         ID_TYPE
     > T2<T, MASTER_TYPE> validateAction(
-        final T action,
+        final T staleAction,
         final IEntityDao<T> companion,
-        final EntityFactory factory,
         final Class<ID_TYPE> idType,
         final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
     ) {
-        final Result res = action.isValid();
+        final Result res = staleAction.isValid();
         // throw validation result of the action if it is not successful:
         if (!res.isSuccessful()) {
             throw res;
         }
-
-        // TODO remove final MASTER_TYPE masterEntityBeingUpdated = (MASTER_TYPE) action.refetchedMasterEntity(); // existence of master entity is checked during "producing" of functional action
-        final MASTER_TYPE originalMasterEntity = (MASTER_TYPE) controller.getMasterEntityFromAction(action);
-        final MASTER_TYPE masterEntityBeingUpdated = validateMasterEntityAndRefetch(originalMasterEntity, action, Optional.empty(), controller);
-        final Optional<T2<T, Collection<ITEM>>> persistedEntityAndAvailableItemsOption = retrieveActionFor(originalMasterEntity, action.isPersistent(), controller);
         
-        final T persistedEntity = persistedEntityAndAvailableItemsOption.map(persistedActionAndAvailableItems -> {
-            final Map<Object, ITEM> availableEntities = mapById(persistedActionAndAvailableItems._2, idType);
-
-            for (final ID_TYPE addedId : action.getAddedIds()) {
+        final MASTER_TYPE staleMasterEntity = controller.getMasterEntityFromAction(staleAction);
+        final MASTER_TYPE refetchedMasterEntity = validateMasterEntityAndRefetch(staleMasterEntity, staleAction, Optional.empty(), controller);
+        
+        final T freshEntity;
+        final Optional<Collection<ITEM>> freshAvailableItems;
+        if (!staleAction.isPersistent()) {
+            freshEntity = null;
+            freshAvailableItems = Optional.empty();
+        } else if (staleMasterEntity.getId() == null) {
+            freshEntity = null;
+            freshAvailableItems = Optional.of(controller.refetchAvailableItems(staleMasterEntity));
+        } else {
+            freshEntity = controller.refetchActionEntity(staleMasterEntity);
+            freshAvailableItems = Optional.of(controller.refetchAvailableItems(staleMasterEntity));
+        }
+        if (freshAvailableItems.isPresent()) {
+            final Map<Object, ITEM> availableEntities = mapById(freshAvailableItems.get(), idType);
+            
+            for (final ID_TYPE addedId : staleAction.getAddedIds()) {
                 if (!availableEntities.containsKey(addedId)) {
                     throw Result.failure("Another user has deleted the item, that you're trying to choose. " + TRY_AGAIN_MSG);
                 }
             }
-            for (final ID_TYPE removedId : action.getRemovedIds()) {
+            for (final ID_TYPE removedId : staleAction.getRemovedIds()) {
                 if (!availableEntities.containsKey(removedId)) {
                     throw Result.failure("Another user has deleted the item, that you're trying to un-tick. " + TRY_AGAIN_MSG);
                 }
             }
-            return persistedActionAndAvailableItems._1;
-        }).orElse(null);
-        
-        if (surrogateVersion(persistedEntity) > action.getSurrogateVersion()) {
-            throw Result.failure("Another user has changed the chosen items. " + TRY_AGAIN_MSG);
         }
-
+        
         final T entityToSave;
-        // the next block of code is intended to mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
-        if (persistedEntity != null) {
-            entityToSave = persistedEntity;
-            // TODO here fresh 'availableEntities' property gets overridden by old information...
-            action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
-            entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
+        if (freshEntity != null) {
+            if (freshEntity.getVersion() > staleAction.getSurrogateVersion()) {
+                throw Result.failure("Another user has changed the chosen items. " + TRY_AGAIN_MSG);
+            }
+            entityToSave = freshEntity;
+            staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
+            // mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
+            entityToSave.setSurrogateVersion(freshEntity.getVersion() + 1L);
         } else {
             entityToSave = companion.new_();
-            // TODO here fresh 'availableEntities' property gets overridden by old information...
-            action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
-            if (!action.getProperty(AbstractEntity.KEY).isRequired()) {
+            staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
+            if (!staleAction.getProperty(AbstractEntity.KEY).isRequired()) {
                 // Key property, which represents id of master entity, will be null in case where master entity is new.
                 // There is a need to relax key requiredness to be able to continue with action saving.
                 entityToSave.getProperty(AbstractEntity.KEY).setRequired(false);
             }
-            entityToSave.setKey(masterEntityBeingUpdated.getId());
-            entityToSave.setSurrogateVersion(null);
+            entityToSave.setKey(refetchedMasterEntity.getId());
+            entityToSave.setSurrogateVersion(0L);
         }
-        // TODO consider passing refetched master entity further if needed: entityToSave.setRefetchedMasterEntity(masterEntityBeingUpdated);
+        
+        if (freshAvailableItems.isPresent()) {
+            controller.setAvailableItems(entityToSave, freshAvailableItems.get());
+        }
 
-        return T2.t2(entityToSave, masterEntityBeingUpdated);
+        return T2.t2(entityToSave, refetchedMasterEntity);
     }
     
     /**
@@ -113,7 +127,7 @@ public class CollectionModificationUtils {
         T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, 
         ID_TYPE
     > MASTER_TYPE validateMasterEntityAndRefetch(
-        final AbstractEntity<?> masterEntityFromContext, 
+        final MASTER_TYPE masterEntityFromContext, 
         final T entity,
         final Optional<CentreContext<MASTER_TYPE, AbstractEntity<?>>> entityContext,
         final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
@@ -131,6 +145,16 @@ public class CollectionModificationUtils {
         return refetchedMasterEntity;
     }
     
+    /**
+     * Initialises entity from context and performs validations.
+     * <p>
+     * Validation includes full validation of master entity (existence, dirtiness and disappearance).
+     * 
+     * @param entity
+     * @param context
+     * @param controller
+     * @return
+     */
     public static <
         MASTER_TYPE extends AbstractEntity<?>, 
         ITEM extends AbstractEntity<?>, 
@@ -145,7 +169,7 @@ public class CollectionModificationUtils {
             return T2.t2(entity, Optional.empty()); // this is used for Cancel button (no context is needed)
         }
         
-        final AbstractEntity<?> masterEntityFromContext = controller.getMasterEntityFromContext(context);
+        final MASTER_TYPE masterEntityFromContext = controller.getMasterEntityFromContext(context);
         final MASTER_TYPE refetchedMasterEntity = validateMasterEntityAndRefetch(masterEntityFromContext, entity, Optional.of(context), controller);
         
         if (masterEntityFromContext instanceof EnhancedCentreEntityQueryCriteria) {
@@ -165,9 +189,25 @@ public class CollectionModificationUtils {
             entity.getProperty(AbstractEntity.KEY).setRequired(false);
         }
         
-        final T previouslyPersistedAction = retrieveActionFor(refetchedMasterEntity, entity.isPersistent(), controller).map(actionAndAvailableItems -> actionAndAvailableItems._1).orElse(null);
-        entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
+        if (!entity.isPersistent() || refetchedMasterEntity.getId() == null) {
+            entity.setSurrogateVersion(-1L);
+        } else {
+            entity.setSurrogateVersion(controller.persistedActionVersion(refetchedMasterEntity.getId()));
+        }
+        
         return T2.t2(entity, Optional.of(refetchedMasterEntity));
+    }
+    
+    /**
+     * Returns current version of existing (persisted) collection modification action for concrete <code>masterEntityId</code>.
+     * If there is no existing action in the database then -1L is returned.
+     * 
+     * @param masterEntityId
+     * @param actionCompanion
+     * @return
+     */
+    public static <M extends AbstractEntity<?>> Long persistedActionVersion(final Long masterEntityId, final IEntityReader<M> actionCompanion) {
+        return actionCompanion.findByKeyOptional(masterEntityId).map(action -> action.getVersion()).orElse(-1L);
     }
     
     /**
@@ -187,26 +227,6 @@ public class CollectionModificationUtils {
             }
         }
         return map;
-    }
-    
-    private static <T extends AbstractEntity<?>> Long surrogateVersion(final T persistedEntity) {
-        return persistedEntity == null ? 99L : (persistedEntity.getVersion() + 100L);
-    }
-    
-    private static <
-        MASTER_TYPE extends AbstractEntity<?>, 
-        ITEM extends AbstractEntity<?>, 
-        T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, 
-        ID_TYPE
-    > Optional<T2<T, Collection<ITEM>>> retrieveActionFor(
-        final MASTER_TYPE masterEntity,
-        final boolean isActionEntityPersistent,
-        final ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller
-    ) {
-        if (!isActionEntityPersistent || masterEntity.getId() == null) {
-            return Optional.empty();
-        }
-        return Optional.of(controller.refetchActionEntity(masterEntity));
     }
     
 }

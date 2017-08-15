@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity;
 import java.util.Collection;
 import java.util.Optional;
 
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -15,39 +14,74 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public interface ICollectionModificationController<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, ID_TYPE, ITEM extends AbstractEntity<?>> {
     
     /**
-     * Retrieves master entity from context. Need to implement this for concrete action. Most likely the master entity is <code>context.getCurrEntity()</code> or
-     * <code>context.getMasterEntity()</code>.
+     * Retrieves master entity from context.
      * 
-     * TODO return type MASTER_TYPE?
-     * 
+     * @param context
      * @return
      */
-    AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context);
+    MASTER_TYPE getMasterEntityFromContext(final CentreContext<?, ?> context);
     
     /**
-     * Retrieves master entity from action entity.
+     * Retrieves master entity from action.
      * 
-     * TODO some caching?
-     * TODO return type MASTER_TYPE?
-     * 
+     * @param action
      * @return
      */
-    default AbstractEntity<?> getMasterEntityFromAction(final T action) {
-        return action.getMasterEntity();
+    default MASTER_TYPE getMasterEntityFromAction(final T action) {
+        return (MASTER_TYPE) action.getMasterEntity();
     }
     
-//    default fetch<MASTER_TYPE> fetchModelForMasterEntity() {
-//        throw new CollectionModificationException("Method 'fetchModelForMasterEntity' is not implemented.");
-//    }
+    /**
+     * Re-fetches master entity.
+     * 
+     * @param masterEntity
+     * @return
+     */
+    default MASTER_TYPE refetchMasterEntity(final MASTER_TYPE masterEntity) {
+        return masterEntity;
+    };
     
-    MASTER_TYPE refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext);
-    
-    default T2<T, Collection<ITEM>> refetchActionEntity(final MASTER_TYPE masterEntity) {
+    /**
+     * Re-fetches action entity related to <code>masterEntity</code>.
+     * 
+     * @param masterEntity
+     * @return
+     */
+    default T refetchActionEntity(final MASTER_TYPE masterEntity) {
         throw new CollectionModificationException("Unsupported.");
     }
-//    {
-//        return companionFinder.find((Class<MASTER_TYPE>) masterEntityFromContext.getDerivedFromType()).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
-//    }
+    
+    /**
+     * Re-fetches available items related to <code>masterEntity</code>.
+     * 
+     * @param masterEntity
+     * @return
+     */
+    default Collection<ITEM> refetchAvailableItems(final MASTER_TYPE masterEntity) {
+        throw new CollectionModificationException("Unsupported.");
+    }
+    
+    /**
+     * Sets available items into action entity.
+     * 
+     * @param action
+     * @param availableItems
+     * @return
+     */
+    default T setAvailableItems(final T action, final Collection<ITEM> availableItems) {
+        throw new CollectionModificationException("Unsupported.");
+    }
+    
+    /**
+     * Returns current version of existing (persisted) collection modification action for concrete <code>masterEntityId</code>.
+     * If there is no existing action in the database then -1L is returned.
+     * 
+     * @param masterEntityId
+     * @return
+     */
+    default Long persistedActionVersion(final Long masterEntityId) {
+        throw new CollectionModificationException("Unsupported.");
+    }
     
     /**
      * By default, collection modification is prohibited in case of dirty (persisted and changed, new) entity. However, there are edge-cases where collection modification is a part

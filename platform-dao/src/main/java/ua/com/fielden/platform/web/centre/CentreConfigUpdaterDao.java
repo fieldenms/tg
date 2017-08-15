@@ -16,7 +16,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -31,20 +30,18 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  */
 @EntityType(CentreConfigUpdater.class)
 public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements ICentreConfigUpdater {
-    private final EntityFactory factory;
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
     @Inject
-    public CentreConfigUpdaterDao(final IFilter filter, final EntityFactory factory, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public CentreConfigUpdaterDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
-        this.factory = factory;
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
     
     @Override
     @SessionRequired
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
-        final T2<CentreConfigUpdater, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> actionAndCriteriaBeingUpdated = validateAction(action, this, factory, String.class, new CentreConfigUpdaterController(criteriaEntityRestorer));
+        final T2<CentreConfigUpdater, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> actionAndCriteriaBeingUpdated = validateAction(action, this, String.class, new CentreConfigUpdaterController(criteriaEntityRestorer));
         final CentreConfigUpdater actionToSave = actionAndCriteriaBeingUpdated._1;
         actionToSave.getProperty("sortingVals").setOriginalValue(action.getProperty("sortingVals").getOriginalValue());
         
