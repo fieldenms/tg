@@ -13,34 +13,30 @@ implements IComparisonOperator<T, ET> {
     abstract T getParent1();
 
     IComparisonOperand<T, ET> getParent2() {
-        return new AbstractExpConditionalOperand<T, ET>(getTokens()) {
+    	return new AbstractExpConditionalOperand<T, ET>() {
             @Override
             T getParent() {
-                return getParent1();
+                return AbstractComparisonOperator.this.getParent1();
             }
         };
     }
 
     IComparisonSetOperand<T> getParent3() {
-        return new AbstractSetOfOperands<T, ET>(getTokens()) {
+    	return new AbstractSetOfOperands<T, ET>() {
             @Override
             T getParent() {
-                return getParent1();
+                return AbstractComparisonOperator.this.getParent1();
             }
         };
     }
 
     IComparisonQuantifiedOperand<T, ET> getParent4() {
-        return new AbstractExpRightSideConditionalOperand<T, ET>(getTokens()) {
+    	return new AbstractExpRightSideConditionalOperand<T, ET>() {
             @Override
             T getParent() {
-                return getParent1();
+                return AbstractComparisonOperator.this.getParent1();
             }
         };
-    }
-
-    AbstractComparisonOperator(final Tokens queryTokens) {
-        super(queryTokens);
     }
 
     @Override

@@ -11,151 +11,192 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements ISingleOperand<T, ET> {
-    abstract T getParent();
+abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends AbstractQueryLink
+		implements ISingleOperand<T, ET> {
+	abstract T getParent();
 
-    protected AbstractSingleOperand(final Tokens queryTokens) {
-        super(queryTokens);
-    }
+	@Override
+	public T val(final Object value) {
+		return copy(getParent(), getTokens().val(value));
+	}
 
-    @Override
-    public T val(final Object value) {
-        return copy(getParent(), getTokens().val(value));
-    }
+	@Override
+	public T iVal(final Object value) {
+		return copy(getParent(), getTokens().iVal(value));
+	}
 
-    @Override
-    public T iVal(final Object value) {
-        return copy(getParent(), getTokens().iVal(value));
-    }
+	@Override
+	public T model(final SingleResultQueryModel<?> model) {
+		return copy(getParent(), getTokens().model(model));
+	}
 
-    @Override
-    public T model(final SingleResultQueryModel<?> model) {
-        return copy(getParent(), getTokens().model(model));
-    }
+	@Override
+	public T param(final String paramName) {
+		return copy(getParent(), getTokens().param(paramName));
+	}
 
-    @Override
-    public T param(final String paramName) {
-        return copy(getParent(), getTokens().param(paramName));
-    }
+	@Override
+	public T param(final Enum paramName) {
+		return param(paramName.toString());
+	}
 
-    @Override
-    public T param(final Enum paramName) {
-        return param(paramName.toString());
-    }
+	@Override
+	public T iParam(final String paramName) {
+		return copy(getParent(), getTokens().iParam(paramName));
+	}
 
-    @Override
-    public T iParam(final String paramName) {
-        return copy(getParent(), getTokens().iParam(paramName));
-    }
+	@Override
+	public T iParam(final Enum paramName) {
+		return iParam(paramName.toString());
+	}
 
-    @Override
-    public T iParam(final Enum paramName) {
-        return iParam(paramName.toString());
-    }
+	@Override
+	public T prop(final String propertyName) {
+		return copy(getParent(), getTokens().prop(propertyName));
+	}
 
-    @Override
-    public T prop(final String propertyName) {
-        return copy(getParent(), getTokens().prop(propertyName));
-    }
+	@Override
+	public T prop(final Enum propertyName) {
+		return prop(propertyName.toString());
+	}
 
-    @Override
-    public T prop(final Enum propertyName) {
-        return prop(propertyName.toString());
-    }
+	@Override
+	public T extProp(final String propertyName) {
+		return copy(getParent(), getTokens().extProp(propertyName));
+	}
 
-    @Override
-    public T extProp(final String propertyName) {
-        return copy(getParent(), getTokens().extProp(propertyName));
-    }
+	@Override
+	public T extProp(final Enum propertyName) {
+		return extProp(propertyName.toString());
+	}
 
-    @Override
-    public T extProp(final Enum propertyName) {
-        return extProp(propertyName.toString());
-    }
+	@Override
+	public T expr(final ExpressionModel expr) {
+		return copy(getParent(), getTokens().expr(expr));
+	}
 
-    @Override
-    public T expr(final ExpressionModel expr) {
-        return copy(getParent(), getTokens().expr(expr));
-    }
+	@Override
+	public IDateDiffIntervalFunction<T, ET> count() {
+		return copy(new DateDiffIntervalFunction<T, ET>() {
 
-    @Override
-    public IDateDiffIntervalFunction<T, ET> count() {
-        return new DateDiffIntervalFunction<T, ET>(getTokens().countDateIntervalFunction(), getParent());
-    }
+			@Override
+			T getParent() {
+				return AbstractSingleOperand.this.getParent();
+			}
 
-    @Override
-    public IFunctionWhere0<T, ET> caseWhen() {
-        return new FunctionWhere0<T, ET>(getTokens().caseWhenFunction(), getParent());
-    }
+		}, getTokens().countDateIntervalFunction());
+	}
 
-    @Override
-    public IIfNullFunctionArgument<T, ET> ifNull() {
-        return new IfNullFunctionArgument<T, ET>(getTokens().ifNull(), getParent());
-    }
+	@Override
+	public IFunctionWhere0<T, ET> caseWhen() {
+		return copy(new FunctionWhere0<T, ET>() {
 
-    @Override
-    public IConcatFunctionArgument<T, ET> concat() {
-        return new ConcatFunctionArgument<T, ET>(getTokens().concat(), getParent());
-    }
+			@Override
+			T getParent4() {
+				return AbstractSingleOperand.this.getParent();
+			}
 
-    @Override
-    public IRoundFunctionArgument<T, ET> round() {
-        return new RoundFunctionArgument<T, ET>(getTokens().round(), getParent());
-    }
+		}, getTokens().caseWhenFunction());
+	}
 
-    @Override
-    public T now() {
-        return copy(getParent(), getTokens().now());
-    }
+	@Override
+	public IIfNullFunctionArgument<T, ET> ifNull() {
+		return copy(new IfNullFunctionArgument<T, ET>() {
 
-    @Override
-    public IFunctionLastArgument<T, ET> upperCase() {
-        return new FunctionLastArgument<T, ET>(getTokens().uppercase(), getParent());
-    }
+			@Override
+			T getParent3() {
+				return AbstractSingleOperand.this.getParent();
+			}
 
-    @Override
-    public IFunctionLastArgument<T, ET> lowerCase() {
-        return new FunctionLastArgument<T, ET>(getTokens().lowercase(), getParent());
-    }
+		}, getTokens().ifNull());
+	}
 
-    @Override
-    public IFunctionLastArgument<T, ET> secondOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().secondOf(), getParent());
-    }
+	@Override
+	public IConcatFunctionArgument<T, ET> concat() {
+		return copy(new ConcatFunctionArgument<T, ET>() {
 
-    @Override
-    public IFunctionLastArgument<T, ET> minuteOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().minuteOf(), getParent());
-    }
+			@Override
+			T getParent3() {
+				return AbstractSingleOperand.this.getParent();
+			}
 
-    @Override
-    public IFunctionLastArgument<T, ET> hourOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().hourOf(), getParent());
-    }
+		}, getTokens().concat());
+	}
 
-    @Override
-    public IFunctionLastArgument<T, ET> dayOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().dayOf(), getParent());
-    }
+	@Override
+	public IRoundFunctionArgument<T, ET> round() {
+		return copy(new RoundFunctionArgument<T, ET>() {
 
-    @Override
-    public IFunctionLastArgument<T, ET> monthOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().monthOf(), getParent());
-    }
+			@Override
+			T getParent3() {
+				return AbstractSingleOperand.this.getParent();
+			}
 
-    @Override
-    public IFunctionLastArgument<T, ET> yearOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().yearOf(), getParent());
-    }
+		}, getTokens().round());
+	}
 
-    @Override
-    public IFunctionLastArgument<T, ET> dateOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().dateOf(), getParent());
-    }
+	@Override
+	public T now() {
+		return copy(getParent(), getTokens().now());
+	}
 
-    @Override
-    public IFunctionLastArgument<T, ET> absOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().absOf(), getParent());
-    }
+	protected FunctionLastArgument<T, ET> createFunctionLastArgument() {
+		return new FunctionLastArgument<T, ET>() {
 
+			@Override
+			T getParent3() {
+				return AbstractSingleOperand.this.getParent();
+			}
+		};
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> upperCase() {
+		return copy(createFunctionLastArgument(), getTokens().uppercase());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> lowerCase() {
+		return copy(createFunctionLastArgument(), getTokens().lowercase());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> secondOf() {
+		return copy(createFunctionLastArgument(), getTokens().secondOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> minuteOf() {
+		return copy(createFunctionLastArgument(), getTokens().minuteOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> hourOf() {
+		return copy(createFunctionLastArgument(), getTokens().hourOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> dayOf() {
+		return copy(createFunctionLastArgument(), getTokens().dayOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> monthOf() {
+		return copy(createFunctionLastArgument(), getTokens().monthOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> yearOf() {
+		return copy(createFunctionLastArgument(), getTokens().yearOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> dateOf() {
+		return copy(createFunctionLastArgument(), getTokens().dateOf());
+	}
+
+	@Override
+	public IFunctionLastArgument<T, ET> absOf() {
+		return copy(createFunctionLastArgument(), getTokens().absOf());
+	}
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.entity.query.fluent.AbstractQueryLink.copy;
+
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,31 +16,37 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
-        return new FromAlias<T>((new Tokens()).from(entityType));
+    	FromAlias<T> parent = new FromAlias<T>();
+    	Tokens tokens = (new Tokens()).from(entityType);
+    	return copy(parent, tokens);
     }
 
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
-        return new FromAlias<T>((new Tokens()).from(sourceQueryModels));
+    	FromAlias<T> parent = new FromAlias<T>();
+    	Tokens tokens = (new Tokens()).from(sourceQueryModels);
+    	return copy(parent, tokens);
     }
 
-    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final AggregatedResultQueryModel... sourceQueryModels) {
-        return new FromAlias<T>((new Tokens()).from(sourceQueryModels));
+    public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
+    	FromAlias<EntityAggregates> parent = new FromAlias<EntityAggregates>();
+    	Tokens tokens = (new Tokens()).from(sourceQueryModels);
+    	return copy(parent, tokens);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static IStandAloneExprOperand expr() {
-        return new StandAloneExpOperand(new Tokens());
+    	return copy(new StandAloneExpOperand(), new Tokens());
     }
 
     public static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> cond() {
-        return new StandAloneConditionOperand<>(new Tokens());
+    	return copy(new StandAloneConditionOperand<>(), new Tokens());
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static IOrderingItem orderBy() {
-        return new OrderingItem(new Tokens());
+    	return copy(new OrderingItem(), new Tokens());
     }
 
     public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(final EntityResultQueryModel<T> queryModel) {

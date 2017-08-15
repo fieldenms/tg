@@ -5,22 +5,18 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
-public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirstYieldedItemAlias<T> {
-    T parent;
+abstract class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirstYieldedItemAlias<T> {
 
-    protected FirstYieldedItemAlias(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent();
 
     @Override
     public T as(final String alias) {
-        return copy(parent, getTokens().as(alias));
+        return copy(getParent(), getTokens().as(alias));
     }
 
     @Override
     public T asRequired(final String alias) {
-        return copy(parent, getTokens().asRequired(alias));
+        return copy(getParent(), getTokens().asRequired(alias));
     }
 
     @Override

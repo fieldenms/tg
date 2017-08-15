@@ -6,10 +6,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 public class StandAloneExpOperationAndClose extends AbstractArithmeticalOperator<IStandAloneExprOperand> implements IStandAloneExprOperationAndClose {
 
-    protected StandAloneExpOperationAndClose(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public ExpressionModel model() {
         return new ExpressionModel(getTokens().getValues());
@@ -17,6 +13,6 @@ public class StandAloneExpOperationAndClose extends AbstractArithmeticalOperator
 
     @Override
     IStandAloneExprOperand getParent() {
-        return new StandAloneExpOperand(getTokens());
+        return new StandAloneExpOperand();
     }
 }

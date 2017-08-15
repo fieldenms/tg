@@ -5,21 +5,38 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionTo;
 
-final class RoundFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> implements IRoundFunctionArgument<T, ET> {
-    T parent;
+abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> implements IRoundFunctionArgument<T, ET> {
 
-    RoundFunctionArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent3();
 
     @Override
     IExprOperand0<IRoundFunctionTo<T>, ET> getParent2() {
-        return new ExprOperand0<IRoundFunctionTo<T>, ET>(getTokens(), new RoundFunctionTo<T>(getTokens(), parent));
+    	return new ExprOperand0<IRoundFunctionTo<T>, ET>(){
+
+			@Override
+			IRoundFunctionTo<T> getParent3() {
+				return new RoundFunctionTo<T>(){
+
+					@Override
+					T getParent() {
+						return RoundFunctionArgument.this.getParent3();
+					}
+					
+				};
+			}
+        	
+        };
     }
 
     @Override
     IRoundFunctionTo<T> getParent() {
-        return new RoundFunctionTo<T>(getTokens(), parent);
+    	return new RoundFunctionTo<T>(){
+
+			@Override
+			T getParent() {
+				return RoundFunctionArgument.this.getParent3();
+			}
+        	
+        };
     }
 }

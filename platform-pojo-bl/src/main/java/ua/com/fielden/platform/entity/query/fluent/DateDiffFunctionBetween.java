@@ -4,17 +4,19 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
-public class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IDateDiffFunctionBetween<T, ET> {
+abstract class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IDateDiffFunctionBetween<T, ET> {
 
-    T parent;
-
-    DateDiffFunctionBetween(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent();
 
     @Override
     public IFunctionLastArgument<T, ET> and() {
-        return new FunctionLastArgument<T, ET>(getTokens(), parent);
+    	return copy(new FunctionLastArgument<T, ET>(){
+
+			@Override
+			T getParent3() {
+				return DateDiffFunctionBetween.this.getParent();
+			}
+        	
+        }, getTokens());
     }
 }

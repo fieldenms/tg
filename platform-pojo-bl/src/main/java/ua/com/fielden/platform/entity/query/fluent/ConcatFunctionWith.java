@@ -4,21 +4,22 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 
-final class ConcatFunctionWith<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IConcatFunctionWith<T, ET> {
-    T parent;
+abstract class ConcatFunctionWith<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IConcatFunctionWith<T, ET> {
 
-    ConcatFunctionWith(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent();
 
     @Override
     public T end() {
-        return copy(parent, getTokens().endOfFunction());
+        return copy(getParent(), getTokens().endOfFunction());
     }
 
     @Override
     public IConcatFunctionArgument<T, ET> with() {
-        return new ConcatFunctionArgument<T, ET>(getTokens(), parent);
+    	return copy(new ConcatFunctionArgument<T, ET>(){
+
+			@Override
+			T getParent3() {
+				return ConcatFunctionWith.this.getParent();
+			}}, getTokens());
     }
 }

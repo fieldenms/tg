@@ -4,21 +4,24 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperationOrEnd0;
 
-class ExprOperationOrEnd0<T, ET extends AbstractEntity<?>> extends AbstractExprOperationOrEnd<IExprOperand0<T, ET>, T, ET> implements IExprOperationOrEnd0<T, ET> {
-    T parent;
+abstract class ExprOperationOrEnd0<T, ET extends AbstractEntity<?>> extends AbstractExprOperationOrEnd<IExprOperand0<T, ET>, T, ET> implements IExprOperationOrEnd0<T, ET> {
 
-    ExprOperationOrEnd0(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent3();
 
     @Override
     IExprOperand0<T, ET> getParent() {
-        return new ExprOperand0<T, ET>(getTokens(), parent);
+    	return new ExprOperand0<T, ET>(){
+
+			@Override
+			T getParent3() {
+				return ExprOperationOrEnd0.this.getParent3();
+			}
+        	
+        };
     }
 
     @Override
     T getParent2() {
-        return parent;
+    	return getParent3();
     }
 }

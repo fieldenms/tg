@@ -5,36 +5,44 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
 
-final class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IFunctionCompoundCondition0<T, ET> {
-    T parent;
+abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> extends AbstractQueryLink
+		implements IFunctionCompoundCondition0<T, ET> {
 
-    FunctionCompoundCondition0(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent();
 
-    @Override
-    public ICaseWhenFunctionArgument<T, ET> then() {
-        return new CaseWhenFunctionArgument<T, ET>(getTokens(), parent);
-    }
+	@Override
+	public ICaseWhenFunctionArgument<T, ET> then() {
+		return copy(new CaseWhenFunctionArgument<T, ET>() {
 
-    private AbstractLogicalCondition<IFunctionWhere0<T, ET>> getLogicalCondition() {
-        return new AbstractLogicalCondition<IFunctionWhere0<T, ET>>(getTokens()) {
+			@Override
+			T getParent3() {
+				return FunctionCompoundCondition0.this.getParent();
+			}
 
-            @Override
-            IFunctionWhere0<T, ET> getParent() {
-                return new FunctionWhere0<T, ET>(getTokens(), parent);
-            }
-        };
-    }
+		}, getTokens());
+	}
 
-    @Override
-    public IFunctionWhere0<T, ET> and() {
-        return getLogicalCondition().and();
-    }
+	@Override
+	public IFunctionWhere0<T, ET> and() {
+		return copy(new FunctionWhere0<T, ET>() {
 
-    @Override
-    public IFunctionWhere0<T, ET> or() {
-        return getLogicalCondition().or();
-    }
+			@Override
+			T getParent4() {
+				return FunctionCompoundCondition0.this.getParent();
+			}
+
+		}, getTokens().and());
+	}
+
+	@Override
+	public IFunctionWhere0<T, ET> or() {
+		return copy(new FunctionWhere0<T, ET>() {
+
+			@Override
+			T getParent4() {
+				return FunctionCompoundCondition0.this.getParent();
+			}
+
+		}, getTokens().or());
+	}
 }

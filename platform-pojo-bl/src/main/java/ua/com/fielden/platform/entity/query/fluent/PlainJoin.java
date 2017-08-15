@@ -6,12 +6,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 class PlainJoin<ET extends AbstractEntity<?>> extends Completed<ET> implements IPlainJoin<ET> {
 
-    PlainJoin(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public IWhere0<ET> where() {
-        return new Where0<ET>(getTokens().where());
+        return copy(new Where0<ET>(), getTokens().where());
     }
 }

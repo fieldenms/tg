@@ -6,11 +6,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 abstract class AbstractSetOfOperands<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<T, ET> implements IComparisonSetOperand<T> {
-    protected AbstractSetOfOperands(final Tokens queryTokens) {
-        super(queryTokens);
-    }
 
-    @Override
+	@Override
     public <E extends Object> T values(final E... values) {
         if (values.length == 0) {
             throw new EqlException("At least one value is expected when calling [values].");

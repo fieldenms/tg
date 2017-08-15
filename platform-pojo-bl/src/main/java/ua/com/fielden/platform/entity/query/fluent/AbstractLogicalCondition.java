@@ -5,10 +5,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 abstract class AbstractLogicalCondition<T> extends AbstractQueryLink implements ILogicalOperator<T> {
     abstract T getParent();
 
-    protected AbstractLogicalCondition(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public T and() {
         return copy(getParent(), getTokens().and());

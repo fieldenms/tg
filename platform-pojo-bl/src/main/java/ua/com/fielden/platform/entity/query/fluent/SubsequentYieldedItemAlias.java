@@ -4,22 +4,16 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentYieldedItemAlias;
 
-public class SubsequentYieldedItemAlias<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> {
-    T parent;
-
-    SubsequentYieldedItemAlias(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+class SubsequentYieldedItemAlias<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> {
 
     @Override
     public ISubsequentCompletedAndYielded<ET> as(final String alias) {
-        return new SubsequentCompletedAndYielded<ET>(getTokens().as(alias));
+        return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().as(alias));
     }
 
     @Override
     public ISubsequentCompletedAndYielded<ET> asRequired(final String alias) {
-        return new SubsequentCompletedAndYielded<ET>(getTokens().asRequired(alias));
+        return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().asRequired(alias));
     }
 
     @Override

@@ -2,16 +2,12 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionTo;
 
-public class RoundFunctionTo<T> extends AbstractQueryLink implements IRoundFunctionTo<T> {
-    T parent;
+abstract class RoundFunctionTo<T> extends AbstractQueryLink implements IRoundFunctionTo<T> {
 
-    RoundFunctionTo(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent();
 
     @Override
     public T to(final Integer precision) {
-        return copy(parent, getTokens().to(precision));
+        return copy(getParent(), getTokens().to(precision));
     }
 }

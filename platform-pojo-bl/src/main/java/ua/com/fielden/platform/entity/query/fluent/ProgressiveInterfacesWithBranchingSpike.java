@@ -54,4 +54,9 @@ public interface ProgressiveInterfacesWithBranchingSpike {
         LogicalOperatorOrEnd prop();
     }
     
+    
+    public static void main(String[] args) {
+    	OpenParenthesis a = null;
+    	a.begin().prop().ifTrue(true).sub().otherwise().add().prop().add().prop().end();
+	}
 }

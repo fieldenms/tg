@@ -6,26 +6,43 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere3;
 
-class FunctionWhere2<T, ET extends AbstractEntity<?>> extends AbstractWhere<IFunctionComparisonOperator2<T, ET>, IFunctionCompoundCondition2<T, ET>, IFunctionWhere3<T, ET>, ET> implements IFunctionWhere2<T, ET> {
-    T parent;
+abstract class FunctionWhere2<T, ET extends AbstractEntity<?>> extends AbstractWhere<IFunctionComparisonOperator2<T, ET>, IFunctionCompoundCondition2<T, ET>, IFunctionWhere3<T, ET>, ET> implements IFunctionWhere2<T, ET> {
 
-    FunctionWhere2(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent4();
 
     @Override
     protected IFunctionWhere3<T, ET> getParent3() {
-        return new FunctionWhere3<T, ET>(getTokens(), parent);
+    	return new FunctionWhere3<T, ET>(){
+
+			@Override
+			T getParent3() {
+				return FunctionWhere2.this.getParent4();
+			}
+        	
+        };
     }
 
     @Override
     IFunctionCompoundCondition2<T, ET> getParent2() {
-        return new FunctionCompoundCondition2<T, ET>(getTokens(), parent);
+    	return new FunctionCompoundCondition2<T, ET>(){
+
+			@Override
+			T getParent3() {
+				return FunctionWhere2.this.getParent4();
+			}
+        	
+        };
     }
 
     @Override
     IFunctionComparisonOperator2<T, ET> getParent() {
-        return new FunctionComparisonOperator2<T, ET>(getTokens(), parent);
+    	return new FunctionComparisonOperator2<T, ET>(){
+
+			@Override
+			T getParent5() {
+				return FunctionWhere2.this.getParent4();
+			}
+        	
+        };
     }
 }

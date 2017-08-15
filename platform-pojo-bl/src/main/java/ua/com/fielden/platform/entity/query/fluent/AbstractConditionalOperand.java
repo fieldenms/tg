@@ -12,10 +12,6 @@ extends AbstractExpConditionalOperand<T1, ET> //
 implements IComparisonOperand<T1, ET>, IExistenceOperator<T2> {
     abstract T2 getParent2();
 
-    protected AbstractConditionalOperand(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public T2 exists(final QueryModel subQuery) {
         return copy(getParent2(), getTokens().exists(false, subQuery));

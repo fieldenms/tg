@@ -6,13 +6,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 public class StandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> extends AbstractComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> implements IStandAloneConditionComparisonOperator<ET> {
 
-    protected StandAloneConditionComparisonOperator(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     IStandAloneConditionCompoundCondition<ET> getParent1() {
-        return new StandAloneConditionCompoundCondition<ET>(getTokens());
+        return new StandAloneConditionCompoundCondition<ET>();
     }
 
 }

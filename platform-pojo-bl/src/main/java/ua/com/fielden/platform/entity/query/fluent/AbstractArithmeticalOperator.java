@@ -5,10 +5,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 abstract class AbstractArithmeticalOperator<T> extends AbstractQueryLink implements IArithmeticalOperator<T> {
     abstract T getParent();
 
-    protected AbstractArithmeticalOperator(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public T add() {
         return copy(getParent(), getTokens().add());

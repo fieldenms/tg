@@ -6,10 +6,6 @@ abstract class AbstractEndExpression<T> extends AbstractQueryLink implements IEn
 
     abstract T getParent();
 
-    protected AbstractEndExpression(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public T endExpr() {
         return copy(getParent(), getTokens().endExpression());

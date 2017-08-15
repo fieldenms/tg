@@ -5,21 +5,38 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionThen;
 
-final class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> implements IIfNullFunctionArgument<T, ET> {
-    T parent;
+abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> implements IIfNullFunctionArgument<T, ET> {
 
-    IfNullFunctionArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent3();
 
     @Override
     IExprOperand0<IIfNullFunctionThen<T, ET>, ET> getParent2() {
-        return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>(getTokens(), new IfNullFunctionThen<T, ET>(getTokens(), parent));
+    	return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>(){
+
+			@Override
+			IIfNullFunctionThen<T, ET> getParent3() {
+				return new IfNullFunctionThen<T, ET>(){
+
+					@Override
+					T getParent() {
+						return IfNullFunctionArgument.this.getParent3();
+					}
+					
+				};
+			}
+        	
+        };
     }
 
     @Override
     IIfNullFunctionThen<T, ET> getParent() {
-        return new IfNullFunctionThen<T, ET>(getTokens(), parent);
+    	return new IfNullFunctionThen<T, ET>(){
+
+			@Override
+			T getParent() {
+				return IfNullFunctionArgument.this.getParent3();
+			}
+        	
+        };
     }
 }

@@ -7,10 +7,6 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
 abstract class AbstractMultipleOperand<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<T, ET> implements IMultipleOperand<T, ET> {
 
-    protected AbstractMultipleOperand(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public T anyOfProps(final String... propertyNames) {
         return copy(getParent(), getTokens().anyOfProps(propertyNames));

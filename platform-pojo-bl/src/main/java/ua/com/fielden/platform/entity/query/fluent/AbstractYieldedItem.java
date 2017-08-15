@@ -5,48 +5,45 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperand;
 
 abstract class AbstractYieldedItem<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<T, ET> implements IYieldOperand<T, ET> {
-    protected AbstractYieldedItem(final Tokens queryTokens) {
-        super(queryTokens);
-    }
 
-    @Override
+	@Override
     public IFunctionLastArgument<T, ET> maxOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().maxOf(), getParent());
+    	return copy(createFunctionLastArgument(), getTokens().maxOf());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> minOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().minOf(), getParent());
+    	return copy(createFunctionLastArgument(), getTokens().minOf());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> sumOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().sumOf(), getParent());
+        return copy(createFunctionLastArgument(), getTokens().sumOf());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> countOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().countOf(), getParent());
+        return copy(createFunctionLastArgument(), getTokens().countOf());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> avgOf() {
-        return new FunctionLastArgument<T, ET>(getTokens().averageOf(), getParent());
+    	return copy(createFunctionLastArgument(), getTokens().averageOf());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> sumOfDistinct() {
-        return new FunctionLastArgument<T, ET>(getTokens().sumOfDistinct(), getParent());
+        return copy(createFunctionLastArgument(), getTokens().sumOfDistinct());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> countOfDistinct() {
-        return new FunctionLastArgument<T, ET>(getTokens().countOfDistinct(), getParent());
+        return copy(createFunctionLastArgument(), getTokens().countOfDistinct());
     }
 
     @Override
     public IFunctionLastArgument<T, ET> avgOfDistinct() {
-        return new FunctionLastArgument<T, ET>(getTokens().averageOfDistinct(), getParent());
+        return copy(createFunctionLastArgument(), getTokens().averageOfDistinct());
     }
 
     @Override

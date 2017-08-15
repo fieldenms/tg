@@ -9,10 +9,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET> implements ISubsequentCompletedAndYielded<ET> {
 
-    SubsequentCompletedAndYielded(final Tokens queryTokens) {
-        super(queryTokens);
-    }
-
     @Override
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
         return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
@@ -20,7 +16,14 @@ class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends Comple
 
     @Override
     public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-        return new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(getTokens().yield(), new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>(getTokens(), this));
+    	return copy(new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(){
+
+			@Override
+			ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> getParent3() {
+				return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>();
+			}
+    		
+    	}, getTokens().yield());
     }
 
     @Override

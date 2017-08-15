@@ -5,21 +5,31 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprItem3;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd2;
 
-final class YieldExprItem2<T, ET extends AbstractEntity<?>> extends AbstractYieldExprOperand<IYieldExprOperationOrEnd2<T, ET>, IYieldExprItem3<T, ET>, ET> implements IYieldExprItem2<T, ET> {
-    T parent;
+abstract class YieldExprItem2<T, ET extends AbstractEntity<?>> extends AbstractYieldExprOperand<IYieldExprOperationOrEnd2<T, ET>, IYieldExprItem3<T, ET>, ET> implements IYieldExprItem2<T, ET> {
 
-    YieldExprItem2(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent3();
 
     @Override
     IYieldExprItem3<T, ET> getParent2() {
-        return new YieldExprItem3<T, ET>(getTokens(), parent);
+    	return new YieldExprItem3<T, ET>(){
+
+			@Override
+			T getParent2() {
+				return YieldExprItem2.this.getParent3();
+			}
+        	
+        };
     }
 
     @Override
     IYieldExprOperationOrEnd2<T, ET> getParent() {
-        return new YieldExprOperationOrEnd2<T, ET>(getTokens(), parent);
+    	return new YieldExprOperationOrEnd2<T, ET>(){
+
+			@Override
+			T getParent3() {
+				return YieldExprItem2.this.getParent3();
+			}
+        	
+        };
     }
 }

@@ -6,21 +6,39 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-final class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> implements ICaseWhenFunctionLastArgument<T, ET> {
-    T parent;
+abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>>
+		extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET>
+		implements ICaseWhenFunctionLastArgument<T, ET> {
 
-    CaseWhenFunctionLastArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
-    }
+	abstract T getParent3();
 
-    @Override
-    IExprOperand0<ICaseWhenFunctionEnd<T>, ET> getParent2() {
-        return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(getTokens(), new CaseWhenFunctionEnd<T>(getTokens(), parent));
-    }
+	@Override
+	IExprOperand0<ICaseWhenFunctionEnd<T>, ET> getParent2() {
+		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>() {
+			@Override
+			ICaseWhenFunctionEnd<T> getParent3() {
+				return new CaseWhenFunctionEnd<T>() {
 
-    @Override
-    ICaseWhenFunctionWhen<T, ET> getParent() {
-        return new CaseWhenFunctionWhen<T, ET>(getTokens(), parent);
-    }
+					@Override
+					T getParent() {
+						return CaseWhenFunctionLastArgument.this.getParent3();
+					}
+
+				};
+			}
+
+		};
+	}
+
+	@Override
+	ICaseWhenFunctionWhen<T, ET> getParent() {
+		return new CaseWhenFunctionWhen<T, ET>() {
+
+			@Override
+			T getParent() {
+				return CaseWhenFunctionLastArgument.this.getParent3();
+			}
+
+		};
+	}
 }
