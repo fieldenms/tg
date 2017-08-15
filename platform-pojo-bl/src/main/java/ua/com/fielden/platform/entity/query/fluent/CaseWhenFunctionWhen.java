@@ -10,8 +10,8 @@ abstract class CaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> extends Cas
     	return new FunctionWhere0<T, ET>(){
 
 			@Override
-			T getParent4() {
-				return CaseWhenFunctionWhen.this.getParent();
+			T nextForFunctionWhere0() {
+				return CaseWhenFunctionWhen.this.nextForCaseWhenFunctionEnd();
 			}
         	
         };

@@ -6,15 +6,15 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IIfNullFunctionThen<T, ET> {
 	
-	abstract T getParent();
+	abstract T nextForIfNullFunctionThen();
 
     @Override
     public IFunctionLastArgument<T, ET> then() {
     	return copy(new FunctionLastArgument<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return IfNullFunctionThen.this.getParent();
+			T nextForFunctionLastArgument() {
+				return IfNullFunctionThen.this.nextForIfNullFunctionThen();
 			}
         	
         }, getTokens());

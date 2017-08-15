@@ -12,7 +12,7 @@ public class StandAloneExpOperationAndClose extends AbstractArithmeticalOperator
     }
 
     @Override
-    IStandAloneExprOperand getParent() {
+    IStandAloneExprOperand nextForAbstractArithmeticalOperator() {
         return new StandAloneExpOperand();
     }
 }

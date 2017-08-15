@@ -9,17 +9,17 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 final class Where2<ET extends AbstractEntity<?>> extends AbstractWhere<IComparisonOperator2<ET>, ICompoundCondition2<ET>, IWhere3<ET>, ET> implements IWhere2<ET> {
 
     @Override
-    protected IWhere3<ET> getParent3() {
+    protected IWhere3<ET> nextForAbstractWhere() {
         return new Where3<ET>();
     }
 
     @Override
-    ICompoundCondition2<ET> getParent2() {
+    ICompoundCondition2<ET> nextForAbstractConditionalOperand() {
         return new CompoundCondition2<ET>();
     }
 
     @Override
-    IComparisonOperator2<ET> getParent() {
+    IComparisonOperator2<ET> nextForAbstractSingleOperand() {
         return new ComparisonOperator2<ET>();
     }
 }

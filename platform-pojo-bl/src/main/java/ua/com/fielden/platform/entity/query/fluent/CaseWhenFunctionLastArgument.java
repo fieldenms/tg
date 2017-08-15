@@ -10,18 +10,18 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>>
 		extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET>
 		implements ICaseWhenFunctionLastArgument<T, ET> {
 
-	abstract T getParent3();
+	abstract T nextForCaseWhenFunctionLastArgument();
 
 	@Override
-	IExprOperand0<ICaseWhenFunctionEnd<T>, ET> getParent2() {
+	IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForAbstractExprOperand() {
 		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>() {
 			@Override
-			ICaseWhenFunctionEnd<T> getParent3() {
+			ICaseWhenFunctionEnd<T> nextForExprOperand0() {
 				return new CaseWhenFunctionEnd<T>() {
 
 					@Override
-					T getParent() {
-						return CaseWhenFunctionLastArgument.this.getParent3();
+					T nextForCaseWhenFunctionEnd() {
+						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument();
 					}
 
 				};
@@ -31,12 +31,12 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>>
 	}
 
 	@Override
-	ICaseWhenFunctionWhen<T, ET> getParent() {
+	ICaseWhenFunctionWhen<T, ET> nextForAbstractSingleOperand() {
 		return new CaseWhenFunctionWhen<T, ET>() {
 
 			@Override
-			T getParent() {
-				return CaseWhenFunctionLastArgument.this.getParent3();
+			T nextForCaseWhenFunctionEnd() {
+				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument();
 			}
 
 		};

@@ -3,10 +3,10 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IEndCondition;
 
 abstract class AbstractEndCondition<T> extends AbstractQueryLink implements IEndCondition<T> {
-    abstract T getParent();
+    abstract T nextForAbstractEndCondition();
 
     @Override
     public T end() {
-        return copy(getParent(), getTokens().endCondition());
+        return copy(nextForAbstractEndCondition(), getTokens().endCondition());
     }
 }

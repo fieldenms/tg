@@ -8,11 +8,11 @@ abstract class AbstractRightSideOperand<T, ET extends AbstractEntity<?>> extends
 
     @Override
     public T any(final SingleResultQueryModel subQuery) {
-        return copy(getParent(), getTokens().any(subQuery));
+        return copy(nextForAbstractSingleOperand(), getTokens().any(subQuery));
     }
 
     @Override
     public T all(final SingleResultQueryModel subQuery) {
-        return copy(getParent(), getTokens().all(subQuery));
+        return copy(nextForAbstractSingleOperand(), getTokens().all(subQuery));
     }
 }

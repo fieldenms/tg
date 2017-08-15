@@ -19,7 +19,7 @@ class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends Comple
     	return copy(new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(){
 
 			@Override
-			ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> getParent3() {
+			ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
 				return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>();
 			}
     		

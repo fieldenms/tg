@@ -7,40 +7,43 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET> implements ICompletedAndYielded<ET> {
+class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET>
+		implements ICompletedAndYielded<ET> {
 
-    @Override
-    public EntityResultQueryModel<ET> model() {
-        return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(), false);
-    }
+	@Override
+	public EntityResultQueryModel<ET> model() {
+		return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(),
+				false);
+	}
 
-    @Override
-    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
-    }
+	@Override
+	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
+	}
 
-    @Override
-    public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-    	SubsequentCompletedAndYielded<ET> parent = new SubsequentCompletedAndYielded<ET>();
-    	IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> parent2 = new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>(){
-    		@Override
-			ISubsequentCompletedAndYielded<ET> getParent() {
-				return parent;
-			}
-    	};
+	@Override
+	public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
+		return copy(createFunctionYieldedLastArgument(), getTokens().yield());
+	}
 
-    	return copy(new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(){
+	private FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument() {
+		return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>() {
 
 			@Override
-			IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> getParent3() {
-				return parent2;
+			IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
+				return new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>() {
+					@Override
+					ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias() {
+						return new SubsequentCompletedAndYielded<ET>();
+					}
+				};
 			}
-    		
-    	}, getTokens().yield());
-    }
 
-    @Override
-    public ISubsequentCompletedAndYielded<ET> yieldAll() {
-        return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().yieldAll());
-    }
+		};
+	}
+
+	@Override
+	public ISubsequentCompletedAndYielded<ET> yieldAll() {
+		return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().yieldAll());
+	}
 }

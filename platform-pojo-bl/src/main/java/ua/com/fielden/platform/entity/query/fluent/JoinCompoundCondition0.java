@@ -6,25 +6,13 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 final class JoinCompoundCondition0<ET extends AbstractEntity<?>> extends Join<ET> implements IJoinCompoundCondition0<ET> {
 
-//    private AbstractLogicalCondition<IJoinWhere0<ET>> getLogicalCondition() {
-//        return new AbstractLogicalCondition<IJoinWhere0<ET>>() {
-//
-//            @Override
-//            IJoinWhere0<ET> getParent() {
-//                return new JoinWhere0<ET>();
-//            }
-//        };
-//    }
-
     @Override
     public IJoinWhere0<ET> and() {
     	return copy(new JoinWhere0<ET>(), getTokens().and());
-        //return getLogicalCondition().and();
     }
 
     @Override
     public IJoinWhere0<ET> or() {
     	return copy(new JoinWhere0<ET>(), getTokens().or());
-    	//return getLogicalCondition().or();
     }
 }

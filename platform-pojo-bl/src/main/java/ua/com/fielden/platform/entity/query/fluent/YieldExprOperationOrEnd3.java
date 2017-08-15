@@ -9,27 +9,27 @@ abstract class YieldExprOperationOrEnd3<T, ET extends AbstractEntity<?>>
 		extends AbstractExprOperationOrEnd<IYieldExprItem3<T, ET>, IYieldExprOperationOrEnd2<T, ET>, ET>
 		implements IYieldExprOperationOrEnd3<T, ET> {
 
-	abstract T getParent3();
+	abstract T nextForYieldExprOperationOrEnd3();
 
 	@Override
-	IYieldExprOperationOrEnd2<T, ET> getParent2() {
+	IYieldExprOperationOrEnd2<T, ET> nextForAbstractExprOperationOrEnd() {
 		return new YieldExprOperationOrEnd2<T, ET>() {
 
 			@Override
-			T getParent3() {
-				return YieldExprOperationOrEnd3.this.getParent3();
+			T nextForYieldExprOperationOrEnd2() {
+				return YieldExprOperationOrEnd3.this.nextForYieldExprOperationOrEnd3();
 			}
 
 		};
 	}
 
 	@Override
-	IYieldExprItem3<T, ET> getParent() {
+	IYieldExprItem3<T, ET> nextForAbstractArithmeticalOperator() {
 		return new YieldExprItem3<T, ET>() {
 
 			@Override
-			T getParent2() {
-				return YieldExprOperationOrEnd3.this.getParent3();
+			T nextForYieldExprItem3() {
+				return YieldExprOperationOrEnd3.this.nextForYieldExprOperationOrEnd3();
 			}
 
 		};

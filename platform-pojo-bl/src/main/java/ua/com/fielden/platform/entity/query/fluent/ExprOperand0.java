@@ -6,27 +6,27 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperationOrEnd0;
 
 abstract class ExprOperand0<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IExprOperationOrEnd0<T, ET>, IExprOperand1<T, ET>, ET> implements IExprOperand0<T, ET> {
-	abstract T getParent3();
+	abstract T nextForExprOperand0();
 
     @Override
-    IExprOperationOrEnd0<T, ET> getParent() {
+    IExprOperationOrEnd0<T, ET> nextForAbstractSingleOperand() {
     	return new ExprOperationOrEnd0<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return ExprOperand0.this.getParent3();
+			T nextForExprOperationOrEnd0() {
+				return ExprOperand0.this.nextForExprOperand0();
 			}
         	
         };
     }
 
     @Override
-    IExprOperand1<T, ET> getParent2() {
+    IExprOperand1<T, ET> nextForAbstractExprOperand() {
     	return new ExprOperand1<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return ExprOperand0.this.getParent3();
+			T nextForExprOperand1() {
+				return ExprOperand0.this.nextForExprOperand0();
 			}
         	
         };

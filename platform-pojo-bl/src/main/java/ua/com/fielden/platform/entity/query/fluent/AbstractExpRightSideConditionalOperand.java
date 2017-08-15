@@ -8,13 +8,17 @@ abstract class AbstractExpRightSideConditionalOperand<T, ET extends AbstractEnti
 
 	@Override
     public IExprOperand0<T, ET> beginExpr() {
-    	return copy(new ExprOperand0<T, ET>(){
+		return copy(createExprOperand0(), getTokens().beginExpression());
+    }
+
+	private ExprOperand0<T, ET> createExprOperand0() {
+		return new ExprOperand0<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return AbstractExpRightSideConditionalOperand.this.getParent();
+			T nextForExprOperand0() {
+				return AbstractExpRightSideConditionalOperand.this.nextForAbstractSingleOperand();
 			}
         	
-        }, getTokens().beginExpression());
-    }
+        };
+	}
 }

@@ -3,30 +3,30 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IArithmeticalOperator;
 
 abstract class AbstractArithmeticalOperator<T> extends AbstractQueryLink implements IArithmeticalOperator<T> {
-    abstract T getParent();
+    abstract T nextForAbstractArithmeticalOperator();
 
     @Override
     public T add() {
-        return copy(getParent(), getTokens().add());
+        return copy(nextForAbstractArithmeticalOperator(), getTokens().add());
     }
 
     @Override
     public T sub() {
-        return copy(getParent(), getTokens().subtract());
+        return copy(nextForAbstractArithmeticalOperator(), getTokens().subtract());
     }
 
     @Override
     public T mult() {
-        return copy(getParent(), getTokens().multiply());
+        return copy(nextForAbstractArithmeticalOperator(), getTokens().multiply());
     }
 
     @Override
     public T div() {
-        return copy(getParent(), getTokens().divide());
+        return copy(nextForAbstractArithmeticalOperator(), getTokens().divide());
     }
 
     @Override
     public T mod() {
-        return copy(getParent(), getTokens().modulo());
+        return copy(nextForAbstractArithmeticalOperator(), getTokens().modulo());
     }
 }

@@ -8,19 +8,20 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 abstract class CaseWhenFunctionArgument<T, ET extends AbstractEntity<?>>
 		extends AbstractExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET>
 		implements ICaseWhenFunctionArgument<T, ET> {
-	abstract T getParent3();
+
+	abstract T nextForCaseWhenFunctionArgument();
 
 	@Override
-	IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET> getParent2() {
+	IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET> nextForAbstractExprOperand() {
 		return new ExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>() {
 
 			@Override
-			ICaseWhenFunctionWhen<T, ET> getParent3() {
+			ICaseWhenFunctionWhen<T, ET> nextForExprOperand0() {
 				return new CaseWhenFunctionWhen<T, ET>() {
 
 					@Override
-					T getParent() {
-						return CaseWhenFunctionArgument.this.getParent3();
+					T nextForCaseWhenFunctionEnd() {
+						return CaseWhenFunctionArgument.this.nextForCaseWhenFunctionArgument();
 					}
 
 				};
@@ -30,12 +31,12 @@ abstract class CaseWhenFunctionArgument<T, ET extends AbstractEntity<?>>
 	}
 
 	@Override
-	ICaseWhenFunctionWhen<T, ET> getParent() {
+	ICaseWhenFunctionWhen<T, ET> nextForAbstractSingleOperand() {
 		return new CaseWhenFunctionWhen<T, ET>() {
 
 			@Override
-			T getParent() {
-				return CaseWhenFunctionArgument.this.getParent3();
+			T nextForCaseWhenFunctionEnd() {
+				return CaseWhenFunctionArgument.this.nextForCaseWhenFunctionArgument();
 			}
 
 		};

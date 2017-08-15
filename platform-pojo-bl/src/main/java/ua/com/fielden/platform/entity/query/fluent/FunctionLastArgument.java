@@ -6,22 +6,22 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<T, IExprOperand0<T, ET>, ET> implements IFunctionLastArgument<T, ET> {
 
-	abstract T getParent3();
+	abstract T nextForFunctionLastArgument();
 
     @Override
-    IExprOperand0<T, ET> getParent2() {
+    IExprOperand0<T, ET> nextForAbstractExprOperand() {
     	return new ExprOperand0<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return FunctionLastArgument.this.getParent3();
+			T nextForExprOperand0() {
+				return FunctionLastArgument.this.nextForFunctionLastArgument();
 			}
         	
         };
     }
 
     @Override
-    T getParent() {
-        return getParent3();
+    T nextForAbstractSingleOperand() {
+        return nextForFunctionLastArgument();
     }
 }

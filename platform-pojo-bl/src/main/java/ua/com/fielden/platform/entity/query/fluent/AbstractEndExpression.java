@@ -4,10 +4,10 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class AbstractEndExpression<T> extends AbstractQueryLink implements IEndExpression<T> {
 
-    abstract T getParent();
+    abstract T nextForAbstractEndExpression();
 
     @Override
     public T endExpr() {
-        return copy(getParent(), getTokens().endExpression());
+        return copy(nextForAbstractEndExpression(), getTokens().endExpression());
     }
 }

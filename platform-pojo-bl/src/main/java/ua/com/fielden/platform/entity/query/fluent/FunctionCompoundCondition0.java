@@ -8,15 +8,15 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> extends AbstractQueryLink
 		implements IFunctionCompoundCondition0<T, ET> {
 
-	abstract T getParent();
+	abstract T nextForFunctionCompoundCondition0();
 
 	@Override
 	public ICaseWhenFunctionArgument<T, ET> then() {
 		return copy(new CaseWhenFunctionArgument<T, ET>() {
 
 			@Override
-			T getParent3() {
-				return FunctionCompoundCondition0.this.getParent();
+			T nextForCaseWhenFunctionArgument() {
+				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 
 		}, getTokens());
@@ -27,8 +27,8 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> exten
 		return copy(new FunctionWhere0<T, ET>() {
 
 			@Override
-			T getParent4() {
-				return FunctionCompoundCondition0.this.getParent();
+			T nextForFunctionWhere0() {
+				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 
 		}, getTokens().and());
@@ -39,8 +39,8 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> exten
 		return copy(new FunctionWhere0<T, ET>() {
 
 			@Override
-			T getParent4() {
-				return FunctionCompoundCondition0.this.getParent();
+			T nextForFunctionWhere0() {
+				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 
 		}, getTokens().or());

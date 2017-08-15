@@ -8,39 +8,39 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class FunctionWhere0<T, ET extends AbstractEntity<?>> extends AbstractWhere<IFunctionComparisonOperator0<T, ET>, IFunctionCompoundCondition0<T, ET>, IFunctionWhere1<T, ET>, ET> implements IFunctionWhere0<T, ET> {
 
-	abstract T getParent4();
+	abstract T nextForFunctionWhere0();
 
     @Override
-    protected IFunctionWhere1<T, ET> getParent3() {
+    protected IFunctionWhere1<T, ET> nextForAbstractWhere() {
     	return new FunctionWhere1<T, ET>(){
 
 			@Override
-			T getParent4() {
-				return FunctionWhere0.this.getParent4();
+			T nextForFunctionWhere1() {
+				return FunctionWhere0.this.nextForFunctionWhere0();
 			}
         	
         };
     }
 
     @Override
-    IFunctionCompoundCondition0<T, ET> getParent2() {
+    IFunctionCompoundCondition0<T, ET> nextForAbstractConditionalOperand() {
         return new FunctionCompoundCondition0<T, ET>(){
 
 			@Override
-			T getParent() {
-				return FunctionWhere0.this.getParent4();
+			T nextForFunctionCompoundCondition0() {
+				return FunctionWhere0.this.nextForFunctionWhere0();
 			}
         	
         };
     }
 
     @Override
-    IFunctionComparisonOperator0<T, ET> getParent() {
+    IFunctionComparisonOperator0<T, ET> nextForAbstractSingleOperand() {
         return new FunctionComparisonOperator0<T, ET>(){
 
 			@Override
-			T getParent5() {
-				return FunctionWhere0.this.getParent4();
+			T nextForFunctionComparisonOperator0() {
+				return FunctionWhere0.this.nextForFunctionWhere0();
 			}};
     }
 }

@@ -13,7 +13,7 @@ public class StandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> 
     }
 
     @Override
-    IStandAloneConditionOperand<ET> getParent() {
+    IStandAloneConditionOperand<ET> nextForAbstractLogicalCondition() {
         return new StandAloneConditionOperand<ET>();
     }
 }

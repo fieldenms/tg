@@ -8,13 +8,17 @@ abstract class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> extends 
 
 	@Override
     public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
-    	return copy(new CaseWhenFunctionLastArgument<T, ET>(){
+		return copy(createCaseWhenFunctionLastArgument(), getTokens());
+    }
+
+	private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument() {
+		return new CaseWhenFunctionLastArgument<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return CaseWhenFunctionElseEnd.this.getParent();
+			T nextForCaseWhenFunctionLastArgument() {
+				return CaseWhenFunctionElseEnd.this.nextForCaseWhenFunctionEnd();
 			}
         	
-        }, getTokens());
-    }
+        };
+	}
 }

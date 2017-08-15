@@ -7,27 +7,27 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class FunctionWhere3<T, ET extends AbstractEntity<?>> extends AbstractConditionalOperand<IFunctionComparisonOperator3<T, ET>, IFunctionCompoundCondition3<T, ET>, ET> implements IFunctionWhere3<T, ET> {
 
-	abstract T getParent3();
+	abstract T nextForFunctionWhere3();
 
     @Override
-    IFunctionCompoundCondition3<T, ET> getParent2() {
+    IFunctionCompoundCondition3<T, ET> nextForAbstractConditionalOperand() {
     	return new FunctionCompoundCondition3<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return FunctionWhere3.this.getParent3();
+			T nextForFunctionCompoundCondition3() {
+				return FunctionWhere3.this.nextForFunctionWhere3();
 			}
         	
         };
     }
 
     @Override
-    IFunctionComparisonOperator3<T, ET> getParent() {
+    IFunctionComparisonOperator3<T, ET> nextForAbstractSingleOperand() {
     	return new FunctionComparisonOperator3<T, ET>(){
 
 			@Override
-			T getParent5() {
-				return FunctionWhere3.this.getParent3();
+			T nextForFunctionComparisonOperator3() {
+				return FunctionWhere3.this.nextForFunctionWhere3();
 			}
         	
         };

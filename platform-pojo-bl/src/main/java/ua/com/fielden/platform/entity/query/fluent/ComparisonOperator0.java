@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 class ComparisonOperator0<ET extends AbstractEntity<?>> extends AbstractComparisonOperator<ICompoundCondition0<ET>, ET> implements IComparisonOperator0<ET> {
 
 	@Override
-    ICompoundCondition0<ET> getParent1() {
+    ICompoundCondition0<ET> nextForAbstractComparisonOperator() {
         return new CompoundCondition0<ET>();
     }
 }

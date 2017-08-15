@@ -7,19 +7,19 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> implements IRoundFunctionArgument<T, ET> {
 
-	abstract T getParent3();
+	abstract T nextForRoundFunctionArgument();
 
     @Override
-    IExprOperand0<IRoundFunctionTo<T>, ET> getParent2() {
+    IExprOperand0<IRoundFunctionTo<T>, ET> nextForAbstractExprOperand() {
     	return new ExprOperand0<IRoundFunctionTo<T>, ET>(){
 
 			@Override
-			IRoundFunctionTo<T> getParent3() {
+			IRoundFunctionTo<T> nextForExprOperand0() {
 				return new RoundFunctionTo<T>(){
 
 					@Override
-					T getParent() {
-						return RoundFunctionArgument.this.getParent3();
+					T nextForRoundFunctionTo() {
+						return RoundFunctionArgument.this.nextForRoundFunctionArgument();
 					}
 					
 				};
@@ -29,12 +29,12 @@ abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> extends Ab
     }
 
     @Override
-    IRoundFunctionTo<T> getParent() {
+    IRoundFunctionTo<T> nextForAbstractSingleOperand() {
     	return new RoundFunctionTo<T>(){
 
 			@Override
-			T getParent() {
-				return RoundFunctionArgument.this.getParent3();
+			T nextForRoundFunctionTo() {
+				return RoundFunctionArgument.this.nextForRoundFunctionArgument();
 			}
         	
         };

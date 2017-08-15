@@ -4,9 +4,9 @@ abstract class AbstractQueryLink {
 
 	private Tokens tokens;
 
-	static protected <T> T copy(final T parent, final Tokens tokens) {
-		((AbstractQueryLink) parent).setTokens(tokens);
-		return parent;
+	static protected <T> T copy(final T next, final Tokens tokens) {
+		((AbstractQueryLink) next).setTokens(tokens);
+		return next;
 	}
 
 	public Tokens getTokens() {

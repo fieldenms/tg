@@ -6,15 +6,15 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class FunctionComparisonOperator2<T, ET extends AbstractEntity<?>> extends AbstractComparisonOperator<IFunctionCompoundCondition2<T, ET>, ET> implements IFunctionComparisonOperator2<T, ET> {
 
-	abstract T getParent5();
+	abstract T nextForFunctionComparisonOperator2();
 
     @Override
-    IFunctionCompoundCondition2<T, ET> getParent1() {
+    IFunctionCompoundCondition2<T, ET> nextForAbstractComparisonOperator() {
         return new FunctionCompoundCondition2<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return FunctionComparisonOperator2.this.getParent5();
+			T nextForFunctionCompoundCondition2() {
+				return FunctionComparisonOperator2.this.nextForFunctionComparisonOperator2();
 			}
         	
         };

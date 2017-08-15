@@ -3,15 +3,15 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 
 abstract class AbstractLogicalCondition<T> extends AbstractQueryLink implements ILogicalOperator<T> {
-    abstract T getParent();
+    abstract T nextForAbstractLogicalCondition();
 
     @Override
     public T and() {
-        return copy(getParent(), getTokens().and());
+        return copy(nextForAbstractLogicalCondition(), getTokens().and());
     }
 
     @Override
     public T or() {
-        return copy(getParent(), getTokens().or());
+        return copy(nextForAbstractLogicalCondition(), getTokens().or());
     }
 }

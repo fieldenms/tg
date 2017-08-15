@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 public class StandAloneExpOperand extends AbstractYieldedItem<IStandAloneExprOperationAndClose, AbstractEntity<?>> implements IStandAloneExprOperand {
 
     @Override
-    IStandAloneExprOperationAndClose getParent() {
+    IStandAloneExprOperationAndClose nextForAbstractSingleOperand() {
         return new StandAloneExpOperationAndClose();
     }
 }

@@ -6,19 +6,19 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> implements IConcatFunctionArgument<T, ET> {
-	abstract T getParent3();
+	abstract T nextForConcatFunctionArgument();
 
     @Override
-    IExprOperand0<IConcatFunctionWith<T, ET>, ET> getParent2() {
+    IExprOperand0<IConcatFunctionWith<T, ET>, ET> nextForAbstractExprOperand() {
     	return new ExprOperand0<IConcatFunctionWith<T, ET>, ET>(){
 
 			@Override
-			IConcatFunctionWith<T, ET> getParent3() {
+			IConcatFunctionWith<T, ET> nextForExprOperand0() {
 				return new ConcatFunctionWith<T, ET>(){
 
 					@Override
-					T getParent() {
-						return ConcatFunctionArgument.this.getParent3();
+					T nextForConcatFunctionWith() {
+						return ConcatFunctionArgument.this.nextForConcatFunctionArgument();
 					}
 					
 				};
@@ -28,12 +28,12 @@ abstract class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> extends A
     }
 
     @Override
-    IConcatFunctionWith<T, ET> getParent() {
+    IConcatFunctionWith<T, ET> nextForAbstractSingleOperand() {
         return new ConcatFunctionWith<T, ET>(){
 
 			@Override
-			T getParent() {
-				return ConcatFunctionArgument.this.getParent3();
+			T nextForConcatFunctionWith() {
+				return ConcatFunctionArgument.this.nextForConcatFunctionArgument();
 			}
         	
         };

@@ -9,13 +9,17 @@ class Completed<ET extends AbstractEntity<?>> extends CompletedAndYielded<ET> im
     @Override
     public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
         
-        return copy(new FunctionLastArgument<ICompleted<ET>, ET>(){
+        return copy(createFunctionLastArgument(), getTokens().groupBy());
+    }
+
+	private FunctionLastArgument<ICompleted<ET>, ET> createFunctionLastArgument() {
+		return new FunctionLastArgument<ICompleted<ET>, ET>(){
 
 			@Override
-			ICompleted<ET> getParent3() {
+			ICompleted<ET> nextForFunctionLastArgument() {
 				return new Completed<ET>();
 			}
         	
-        }, getTokens().groupBy());
-    }
+        };
+	}
 }

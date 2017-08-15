@@ -4,30 +4,30 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class CaseWhenFunctionEnd<T> extends AbstractQueryLink implements ICaseWhenFunctionEnd<T> {
 
-	abstract T getParent();
+	abstract T nextForCaseWhenFunctionEnd();
 
     @Override
     public T end() {
-        return copy(getParent(), getTokens().endOfFunction());
+        return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction());
     }
 
     @Override
     public T endAsInt() {
-        return copy(getParent(), getTokens().endOfFunction(TypeCastAsInteger.INSTANCE));
+        return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsInteger.INSTANCE));
     }
 
     @Override
     public T endAsBool() {
-        return copy(getParent(), getTokens().endOfFunction(TypeCastAsBoolean.INSTANCE));
+        return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsBoolean.INSTANCE));
     }
 
     @Override
     public T endAsStr(final int length) {
-        return copy(getParent(), getTokens().endOfFunction(TypeCastAsString.getInstance(length)));
+        return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsString.getInstance(length)));
     }
 
     @Override
     public T endAsDecimal(final int presicion, final int scale) {
-        return copy(getParent(), getTokens().endOfFunction(TypeCastAsDecimal.getInstance(presicion, scale)));
+        return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsDecimal.getInstance(presicion, scale)));
     }
 }

@@ -6,20 +6,20 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 abstract class YieldExprOperationOrEnd0<T, ET extends AbstractEntity<?>> extends AbstractExprOperationOrEnd<IYieldExprItem0<T, ET>, T, ET> implements IYieldExprOperationOrEnd0<T, ET> {
 
-	abstract T getParent3();
+	abstract T nextForYieldExprOperationOrEnd0();
 
     @Override
-    T getParent2() {
-        return getParent3();
+    T nextForAbstractExprOperationOrEnd() {
+        return nextForYieldExprOperationOrEnd0();
     }
 
     @Override
-    IYieldExprItem0<T, ET> getParent() {
+    IYieldExprItem0<T, ET> nextForAbstractArithmeticalOperator() {
     	return new YieldExprItem0<T, ET>(){
 
 			@Override
-			T getParent3() {
-				return YieldExprOperationOrEnd0.this.getParent3();
+			T nextForYieldExprItem0() {
+				return YieldExprOperationOrEnd0.this.nextForYieldExprOperationOrEnd0();
 			}
         	
         };

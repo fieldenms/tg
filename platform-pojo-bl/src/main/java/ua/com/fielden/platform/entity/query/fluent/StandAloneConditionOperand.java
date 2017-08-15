@@ -10,12 +10,12 @@ extends AbstractWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, 
 implements IStandAloneConditionOperand<ET> {
 
     @Override
-    IStandAloneConditionCompoundCondition<ET> getParent2() {
+    IStandAloneConditionCompoundCondition<ET> nextForAbstractConditionalOperand() {
         return new StandAloneConditionCompoundCondition<ET>();
     }
 
     @Override
-    IStandAloneConditionComparisonOperator<ET> getParent() {
+    IStandAloneConditionComparisonOperator<ET> nextForAbstractSingleOperand() {
         return new StandAloneConditionComparisonOperator<ET>();
     }
 }
