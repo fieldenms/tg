@@ -168,7 +168,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         assertEquals(co(EntityWithMoney.class).count(query) * 2, result);
         assertFalse("Session should already be closed", co.getSession().isOpen());
     }
-    
+
     @Override
     protected void populateDomain() {
         super.populateDomain();

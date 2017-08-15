@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.meta.impl;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -20,12 +20,14 @@ public abstract class AbstractBeforeChangeEventHandler<T> implements IBeforeChan
     @Inject
     private ICompanionObjectFinder coFinder;
     
-    protected <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+    @Override
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
         if (coFinder == null) {
             throw new BceOrAceInitException("Companion object finder has not been instantiatiated.");
         }
         
-        return coFinder.find(type);
+        return coFinder.findAsReader(type, true);
     }
 
+    
 }
