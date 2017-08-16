@@ -19,7 +19,7 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
         final CommonEntityDao<?> randomCo = (CommonEntityDao<?>) co(PlatformTestDomainTypes.entityTypes.get(rnd.nextInt(PlatformTestDomainTypes.entityTypes.size())));
         
         for (Class<? extends AbstractEntity<?>> type: PlatformTestDomainTypes.entityTypes) {
-            final IEntityDao<?> co = randomCo.co(type);
+            final IEntityDao<?> co = randomCo.co$(type);
             assertNotNull(format("Companion object for entity [%s] could not have been instantiated.", type.getName()), co);
         }
     }
@@ -30,8 +30,8 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
         final CommonEntityDao<?> randomCo = (CommonEntityDao<?>) co(PlatformTestDomainTypes.entityTypes.get(rnd.nextInt(PlatformTestDomainTypes.entityTypes.size())));
         
         for (Class<? extends AbstractEntity<?>> type: PlatformTestDomainTypes.entityTypes) {
-            final IEntityDao<?> co1 = randomCo.co(type);
-            final IEntityDao<?> co2 = randomCo.co(type);
+            final IEntityDao<?> co1 = randomCo.co$(type);
+            final IEntityDao<?> co2 = randomCo.co$(type);
             assertTrue(format("Companion object for entity [%s] was not cached.", type.getName()), co1 == co2);
         }
     }
@@ -46,8 +46,8 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
         assertFalse(randomCo1 == randomCo2);
         
         for (Class<? extends AbstractEntity<?>> type: PlatformTestDomainTypes.entityTypes) {
-            final IEntityDao<?> co1 = randomCo1.co(type);
-            final IEntityDao<?> co2 = randomCo2.co(type);
+            final IEntityDao<?> co1 = randomCo1.co$(type);
+            final IEntityDao<?> co2 = randomCo2.co$(type);
             assertFalse(format("Companion objects for entity [%s] produced by different companions should not be the same.", type.getName()), co1 == co2);
         }
     }
