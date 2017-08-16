@@ -736,9 +736,7 @@
                                 "val": value,
                                 "origVal": originalValue
                             };
-                            if (propertyName !== 'surrogateVersion') { // need to skip collectional editor surrogate property not to affect @modified
-                                modPropHolder["@modified"] = true;
-                            }
+                            modPropHolder["@modified"] = true;
                             if (typeof valId !== 'undefined') {
                                 modPropHolder[propertyName]['valId'] = valId;
                             }
@@ -913,7 +911,7 @@
                 return ['columnParameters',// adjust column width action
                         'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
                         'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
-                        'surrogateVersion', 'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
+                        'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
                         'visibleMenuItems', 'invisibleMenuItems', // menu visibility action (MenuSaveAction)
                         'skipUi' // specialised property to control functional entity master appearance
                        ].indexOf(propertyName) !== -1;

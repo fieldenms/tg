@@ -48,7 +48,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     private Long surrogateVersion;
     
     @IsProperty
-    @Title("Master entity")
+    @Title(value = "Master entity", desc = "Master entity instance that is set during producing of this functional action.")
     private AbstractEntity<?> masterEntity;
 
     @Observable
@@ -125,12 +125,4 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
         }
     }
     
-//    void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
-//        // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
-//        this.refetchedMasterEntity = refetchedMasterEntity;
-//    }
-//    
-//    public AbstractEntity<?> refetchedMasterEntity() {
-//        return refetchedMasterEntity;
-//    }
 }

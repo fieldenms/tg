@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.initAction;
+
 import java.util.Optional;
 
 import com.google.inject.Inject;
@@ -19,10 +18,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * <p>
  * Implementors should implement method {@link #provideCurrentlyAssociatedValues(AbstractFunctionalEntityForCollectionModification, AbstractEntity)} to initialise the properties
  * for this functional action.
- * <p>
- * This producer also initialises the master entity for this action. The master entity gets assigned into 'key'. To get properly fetched instance of master entity there is a need
- * to implement method {@link #fetchModelForMasterEntity()}. To specify, how to get the master entity from context, method {@link #getMasterEntityFromContext(CentreContext)} needs
- * to be implemented.
  *
  * @author TG Team
  *
@@ -34,28 +29,21 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
         super(factory, actionType, companionFinder);
     }
     
-    abstract protected ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller();
-    
-    @Override
-    protected final T provideDefaultValues(final T entity) {
-        final CentreContext<MASTER_TYPE, AbstractEntity<?>> context = (CentreContext<MASTER_TYPE, AbstractEntity<?>>) getContext();
-        final T2<T, Optional<MASTER_TYPE>> actionAndMasterEntity = CollectionModificationUtils.initAction(entity, context, controller());
-        final T action = actionAndMasterEntity._1;
-        return actionAndMasterEntity._2.map(refetchedMasterEntity -> provideCurrentlyAssociatedValues(action, refetchedMasterEntity)).orElse(action);
-    }
-    
     /**
-     * IMPORTANT: it is necessary NOT to reset state for "surrogateVersion" property after its change. This is necessary to leave the property marked as 'changed from original'
-     * (origVal == null) to be able to apply afterwards the initial value against '"surrogateVersion", that was possibly changed by another user'.
+     * Returns {@link ICollectionModificationController} instance for this producer.
      * 
      * @return
      */
+    abstract protected ICollectionModificationController<MASTER_TYPE, T, ID_TYPE, ITEM> controller();
+    
+    /**
+     * Overridden to perform standard collection modification entity initialisation.
+     */
     @Override
-    protected final List<String> skipPropertiesForMetaStateResetting() {
-        final List<String> propertiesToBeSkipped = new ArrayList<>();
-        propertiesToBeSkipped.add("surrogateVersion");
-        propertiesToBeSkipped.addAll(skipPropertiesForMetaStateResettingInCollectionalEditor());
-        return propertiesToBeSkipped;
+    protected final T provideDefaultValues(final T entity) {
+        final T2<T, Optional<MASTER_TYPE>> actionAndMasterEntity = initAction(entity, (CentreContext<MASTER_TYPE, AbstractEntity<?>>) getContext(), controller());
+        final T action = actionAndMasterEntity._1;
+        return actionAndMasterEntity._2.map(refetchedMasterEntity -> provideCurrentlyAssociatedValues(action, refetchedMasterEntity)).orElse(action);
     }
     
     /**
@@ -72,15 +60,5 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
      * @return
      */
     protected abstract T provideCurrentlyAssociatedValues(final T entity, final MASTER_TYPE refetchedMasterEntity);
-    
-    /**
-     * Additional properties to be skipped for meta-state resetting for collection modification functional entity. 'surrogateVersion' property will be skipped automatically -- no
-     * need to be listed here.
-     * 
-     * @return
-     */
-    protected List<String> skipPropertiesForMetaStateResettingInCollectionalEditor() {
-        return Arrays.asList();
-    }
     
 }

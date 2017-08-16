@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 @CompanionObject(ICentreConfigUpdater.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
+    
     @IsProperty(CustomisableColumn.class)
     @Title("Customisable Columns")
     private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
@@ -36,9 +37,8 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @Title(value = "Sorting Changed", desc = "Indicates whether successful saving of this entity actually changed centre sorting")
     private boolean sortingChanged;
     
-    
     @IsProperty
-    @Title("Master Entity Holder")
+    @Title(value = "Master Entity Holder", desc = "Master entity's holder that is set during producing of this functional action and is used to restore master entity in companion object.")
     private CentreContextHolder masterEntityHolder;
     
     @Observable
