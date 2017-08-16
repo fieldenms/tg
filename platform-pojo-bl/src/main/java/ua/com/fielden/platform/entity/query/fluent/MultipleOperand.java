@@ -5,8 +5,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
-abstract class AbstractMultipleOperand<T, ET extends AbstractEntity<?>> //
-		extends AbstractSingleOperand<T, ET> //
+abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
+		extends SingleOperand<T, ET> //
 		implements IMultipleOperand<T, ET> {
 
 	@Override

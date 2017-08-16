@@ -4,8 +4,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonQuantifiedOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-abstract class AbstractExpRightSideConditionalOperand<T, ET extends AbstractEntity<?>> //
-		extends AbstractRightSideOperand<T, ET> //
+abstract class ExpRightSideConditionalOperand<T, ET extends AbstractEntity<?>> //
+		extends RightSideOperand<T, ET> //
 		implements IComparisonQuantifiedOperand<T, ET> {
 
 	@Override
@@ -18,7 +18,7 @@ abstract class AbstractExpRightSideConditionalOperand<T, ET extends AbstractEnti
 
 			@Override
 			protected T nextForExprOperand0() {
-				return AbstractExpRightSideConditionalOperand.this.nextForAbstractSingleOperand();
+				return ExpRightSideConditionalOperand.this.nextForAbstractSingleOperand();
 			}
 
 		};

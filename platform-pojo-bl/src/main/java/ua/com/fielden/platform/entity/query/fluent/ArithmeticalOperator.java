@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IArithmeticalOperator;
 
-abstract class AbstractArithmeticalOperator<T> //
+abstract class ArithmeticalOperator<T> //
 		extends AbstractQueryLink //
 		implements IArithmeticalOperator<T> {
 

@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class DateDiffFunctionArgument<T, ET extends AbstractEntity<?>> //
-extends AbstractExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> //
+extends ExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> //
 implements IDateDiffFunctionArgument<T, ET> {
 
 	protected abstract T nextForDateDiffFunctionArgument();

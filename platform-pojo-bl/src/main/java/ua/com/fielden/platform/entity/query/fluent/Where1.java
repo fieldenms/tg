@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
 
 final class Where1<ET extends AbstractEntity<?>> //
-		extends AbstractWhere<IComparisonOperator1<ET>, ICompoundCondition1<ET>, IWhere2<ET>, ET> //
+		extends Where<IComparisonOperator1<ET>, ICompoundCondition1<ET>, IWhere2<ET>, ET> //
 		implements IWhere1<ET> {
 
 	@Override

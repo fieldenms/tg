@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class CaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET> //
+		extends ExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET> //
 		implements ICaseWhenFunctionArgument<T, ET> {
 
 	protected abstract T nextForCaseWhenFunctionArgument();

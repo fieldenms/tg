@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
 abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperand<T, IExprOperand0<T, ET>, ET> //
+		extends ExprOperand<T, IExprOperand0<T, ET>, ET> //
 		implements IFunctionLastArgument<T, ET> {
 
 	protected abstract T nextForFunctionLastArgument();

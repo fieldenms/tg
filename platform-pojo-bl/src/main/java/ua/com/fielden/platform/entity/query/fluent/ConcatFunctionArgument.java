@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> //
+		extends ExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> //
 		implements IConcatFunctionArgument<T, ET> {
 
 	protected abstract T nextForConcatFunctionArgument();

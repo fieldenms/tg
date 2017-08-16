@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
+		extends ExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
 		implements ICaseWhenFunctionLastArgument<T, ET> {
 
 	protected abstract T nextForCaseWhenFunctionLastArgument();

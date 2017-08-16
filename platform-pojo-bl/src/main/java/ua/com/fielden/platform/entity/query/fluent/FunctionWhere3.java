@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere3;
 
 abstract class FunctionWhere3<T, ET extends AbstractEntity<?>> //
-		extends AbstractConditionalOperand<IFunctionComparisonOperator3<T, ET>, IFunctionCompoundCondition3<T, ET>, ET> //
+		extends ConditionalOperand<IFunctionComparisonOperator3<T, ET>, IFunctionCompoundCondition3<T, ET>, ET> //
 		implements IFunctionWhere3<T, ET> {
 
 	protected abstract T nextForFunctionWhere3();

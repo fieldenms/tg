@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinCompoundCondition2;
 
 final class JoinComparisonOperator2<ET extends AbstractEntity<?>> //
-		extends AbstractComparisonOperator<IJoinCompoundCondition2<ET>, ET> //
+		extends ComparisonOperator<IJoinCompoundCondition2<ET>, ET> //
 		implements IJoinComparisonOperator2<ET> {
 
 	@Override

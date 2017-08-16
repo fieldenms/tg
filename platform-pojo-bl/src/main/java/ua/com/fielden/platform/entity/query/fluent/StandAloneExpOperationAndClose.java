@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 public final class StandAloneExpOperationAndClose //
-		extends AbstractArithmeticalOperator<IStandAloneExprOperand> //
+		extends ArithmeticalOperator<IStandAloneExprOperand> //
 		implements IStandAloneExprOperationAndClose {
 
 	@Override

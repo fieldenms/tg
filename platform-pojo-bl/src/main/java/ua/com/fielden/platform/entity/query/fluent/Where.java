@@ -5,8 +5,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere;
 
-abstract class AbstractWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<? extends IWhere<T1, T2, T3, ET>>, T3, ET extends AbstractEntity<?>> //
-		extends AbstractWhereWithoutNesting<T1, T2, ET> //
+abstract class Where<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<? extends IWhere<T1, T2, T3, ET>>, T3, ET extends AbstractEntity<?>> //
+		extends WhereWithoutNesting<T1, T2, ET> //
 		implements IWhere<T1, T2, T3, ET> {
 
 	protected abstract T3 nextForAbstractWhere();

@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
+abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements ISingleOperand<T, ET> {
 
@@ -83,7 +83,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForDateDiffIntervalFunction() {
-				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForAbstractSingleOperand();
 			}
 
 		}, getTokens().countDateIntervalFunction());
@@ -95,7 +95,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForFunctionWhere0() {
-				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForAbstractSingleOperand();
 			}
 
 		}, getTokens().caseWhenFunction());
@@ -107,7 +107,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForIfNullFunctionArgument() {
-				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForAbstractSingleOperand();
 			}
 
 		}, getTokens().ifNull());
@@ -119,7 +119,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForConcatFunctionArgument() {
-				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForAbstractSingleOperand();
 			}
 
 		}, getTokens().concat());
@@ -131,7 +131,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForRoundFunctionArgument() {
-				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForAbstractSingleOperand();
 			}
 
 		}, getTokens().round());
@@ -147,7 +147,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForFunctionLastArgument() {
-				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForAbstractSingleOperand();
 			}
 		};
 	}

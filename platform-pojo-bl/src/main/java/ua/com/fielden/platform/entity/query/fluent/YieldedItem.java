@@ -4,8 +4,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperand;
 
-abstract class AbstractYieldedItem<T, ET extends AbstractEntity<?>> //
-		extends AbstractSingleOperand<T, ET> //
+abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
+		extends SingleOperand<T, ET> //
 		implements IYieldOperand<T, ET> {
 
 	@Override

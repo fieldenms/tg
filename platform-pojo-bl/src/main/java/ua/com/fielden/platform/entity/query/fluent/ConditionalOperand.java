@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
-abstract class AbstractConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
-		extends AbstractExpConditionalOperand<T1, ET> //
+abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
+		extends ExpConditionalOperand<T1, ET> //
 		implements IComparisonOperand<T1, ET>, IExistenceOperator<T2> {
 
 	protected abstract T2 nextForAbstractConditionalOperand();

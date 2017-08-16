@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionTo;
 
 abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> //
+		extends ExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> //
 		implements IRoundFunctionArgument<T, ET> {
 
 	protected abstract T nextForRoundFunctionArgument();

@@ -4,8 +4,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IQuantifiedOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractRightSideOperand<T, ET extends AbstractEntity<?>> //
-		extends AbstractMultipleOperand<T, ET> //
+abstract class RightSideOperand<T, ET extends AbstractEntity<?>> //
+		extends MultipleOperand<T, ET> //
 		implements IQuantifiedOperand<T, ET> {
 
 	@Override

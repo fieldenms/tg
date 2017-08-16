@@ -5,8 +5,8 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractSetOfOperands<T, ET extends AbstractEntity<?>> //
-		extends AbstractSingleOperand<T, ET> //
+abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
+		extends SingleOperand<T, ET> //
 		implements IComparisonSetOperand<T> {
 
 	@Override

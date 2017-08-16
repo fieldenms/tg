@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionThen;
 
 abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> //
+		extends ExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> //
 		implements IIfNullFunctionArgument<T, ET> {
 
 	protected abstract T nextForIfNullFunctionArgument();

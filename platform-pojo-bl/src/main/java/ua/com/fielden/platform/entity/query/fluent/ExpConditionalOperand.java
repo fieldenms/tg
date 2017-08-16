@@ -3,8 +3,8 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperand;
 
-abstract class AbstractExpConditionalOperand<T, ET extends AbstractEntity<?>> //
-		extends AbstractMultipleOperand<T, ET> //
+abstract class ExpConditionalOperand<T, ET extends AbstractEntity<?>> //
+		extends MultipleOperand<T, ET> //
 		implements IComparisonOperand<T, ET> {
 
 	@Override
@@ -17,7 +17,7 @@ abstract class AbstractExpConditionalOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForExprOperand0() {
-				return AbstractExpConditionalOperand.this.nextForAbstractSingleOperand();
+				return ExpConditionalOperand.this.nextForAbstractSingleOperand();
 			}
 
 		};

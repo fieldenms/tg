@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperationOrEnd2;
 
 abstract class ExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
-		extends AbstractExprOperationOrEnd<IExprOperand2<T, ET>, IExprOperationOrEnd1<T, ET>, ET> //
+		extends ExprOperationOrEnd<IExprOperand2<T, ET>, IExprOperationOrEnd1<T, ET>, ET> //
 		implements IExprOperationOrEnd2<T, ET> {
 
 	protected abstract T nextForExprOperationOrEnd2();

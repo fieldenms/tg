@@ -7,35 +7,35 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 
-abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
+abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IComparisonOperator<T, ET> {
 	
 	protected abstract T nextForAbstractComparisonOperator();
 
 	private IComparisonOperand<T, ET> createIComparisonOperand() {
-		return new AbstractExpConditionalOperand<T, ET>() {
+		return new ExpConditionalOperand<T, ET>() {
 			@Override
 			protected T nextForAbstractSingleOperand() {
-				return AbstractComparisonOperator.this.nextForAbstractComparisonOperator();
+				return ComparisonOperator.this.nextForAbstractComparisonOperator();
 			}
 		};
 	}
 
 	private IComparisonSetOperand<T> createIComparisonSetOperand() {
-		return new AbstractSetOfOperands<T, ET>() {
+		return new SetOfOperands<T, ET>() {
 			@Override
 			protected T nextForAbstractSingleOperand() {
-				return AbstractComparisonOperator.this.nextForAbstractComparisonOperator();
+				return ComparisonOperator.this.nextForAbstractComparisonOperator();
 			}
 		};
 	}
 
 	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand() {
-		return new AbstractExpRightSideConditionalOperand<T, ET>() {
+		return new ExpRightSideConditionalOperand<T, ET>() {
 			@Override
 			protected T nextForAbstractSingleOperand() {
-				return AbstractComparisonOperator.this.nextForAbstractComparisonOperator();
+				return ComparisonOperator.this.nextForAbstractComparisonOperator();
 			}
 		};
 	}

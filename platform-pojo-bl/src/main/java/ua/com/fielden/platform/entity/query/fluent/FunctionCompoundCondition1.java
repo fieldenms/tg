@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere1;
 
 abstract class FunctionCompoundCondition1<T, ET extends AbstractEntity<?>> //
-		extends AbstractCompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> //
+		extends CompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> //
 		implements IFunctionCompoundCondition1<T, ET> {
 
 	protected abstract T nextForFunctionCompoundCondition1();
