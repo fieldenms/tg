@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.entity.query.fluent;
+package ua.com.fielden.platform.entity.query.fluent.enums;
 
-public enum ArithmeticalOperator {
-    ADD("+"), SUB("-"), DIV("/"), MULT("*"), MOD("%");
+public enum JoinType {
+    LJ("LEFT JOIN"), IJ("INNER JOIN");
 
     private final String value;
 
-    ArithmeticalOperator(final String value) {
+    JoinType(final String value) {
         this.value = value;
     }
 

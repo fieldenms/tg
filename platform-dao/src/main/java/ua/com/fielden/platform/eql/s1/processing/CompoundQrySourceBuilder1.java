@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.CompoundSource1;
 import ua.com.fielden.platform.eql.s1.elements.ISource1;
 import ua.com.fielden.platform.utils.Pair;

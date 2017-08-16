@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 abstract class ThreeArgumentsFunctionBuilder1 extends AbstractTokensBuilder1 {

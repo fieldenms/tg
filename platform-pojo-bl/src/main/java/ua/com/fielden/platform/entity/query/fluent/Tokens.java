@@ -8,6 +8,14 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
+import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;

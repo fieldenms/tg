@@ -3,10 +3,10 @@ package ua.com.fielden.platform.eql.meta;
 import java.util.Arrays;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.eql.s1.elements.CompoundCondition1;
 import ua.com.fielden.platform.eql.s1.elements.CompoundSingleOperand1;
 import ua.com.fielden.platform.eql.s1.elements.Conditions1;

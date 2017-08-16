@@ -12,8 +12,8 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.s2.elements.ComparisonTest2;

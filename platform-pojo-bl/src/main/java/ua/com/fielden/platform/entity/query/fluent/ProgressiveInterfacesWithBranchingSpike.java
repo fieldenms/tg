@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 
 public interface ProgressiveInterfacesWithBranchingSpike {
 

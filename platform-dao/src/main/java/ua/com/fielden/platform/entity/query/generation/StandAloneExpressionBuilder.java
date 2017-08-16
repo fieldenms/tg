@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;

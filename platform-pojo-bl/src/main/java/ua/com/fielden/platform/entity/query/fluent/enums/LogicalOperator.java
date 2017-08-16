@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.fluent;
+package ua.com.fielden.platform.entity.query.fluent.enums;
 
 public enum LogicalOperator {
     AND("AND"), OR("OR");

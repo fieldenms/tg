@@ -1,5 +1,12 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,10 +16,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -54,11 +61,6 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.Pair;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
     protected final IWhere0<TgVehicle> where_veh = select(VEHICLE).where();

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.fluent;
+package ua.com.fielden.platform.entity.query.fluent.enums;
 
 public enum TokenCategory {
     PROP, EXT_PROP, VAL, IVAL, PARAM, IPARAM, EXPR, EXPR_TOKENS, COND_TOKENS, NEGATED_COND_TOKENS, EQUERY_TOKENS, //

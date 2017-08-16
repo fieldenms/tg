@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 
 public class CompoundSingleOperand1 {

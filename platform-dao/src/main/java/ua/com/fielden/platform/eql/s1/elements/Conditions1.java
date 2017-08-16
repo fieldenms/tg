@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.Conditions2;
 import ua.com.fielden.platform.eql.s2.elements.ICondition2;

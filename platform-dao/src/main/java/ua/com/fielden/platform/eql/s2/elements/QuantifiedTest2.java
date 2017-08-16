@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
 
 public class QuantifiedTest2 extends AbstractCondition2 {

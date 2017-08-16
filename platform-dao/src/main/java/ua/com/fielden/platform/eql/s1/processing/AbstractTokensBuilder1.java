@@ -1,10 +1,18 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.Functions;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -21,13 +29,6 @@ import ua.com.fielden.platform.eql.s1.elements.QueryBasedSet1;
 import ua.com.fielden.platform.eql.s2.elements.ISetOperand2;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.

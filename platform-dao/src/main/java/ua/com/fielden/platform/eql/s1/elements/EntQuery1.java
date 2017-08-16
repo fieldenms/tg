@@ -5,7 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;

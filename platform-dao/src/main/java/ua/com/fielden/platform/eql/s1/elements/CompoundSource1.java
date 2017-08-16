@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.s2.elements.ISource2;

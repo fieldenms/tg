@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.s1.processing;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.GroupBy1;
 import ua.com.fielden.platform.eql.s1.elements.GroupBys1;
 import ua.com.fielden.platform.utils.Pair;

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 
 public class CompoundSource2 implements IElement2 {
     private final ISource2 source;

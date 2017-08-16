@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.CompoundCondition1;
 import ua.com.fielden.platform.eql.s1.elements.ICondition1;
 import ua.com.fielden.platform.utils.Pair;

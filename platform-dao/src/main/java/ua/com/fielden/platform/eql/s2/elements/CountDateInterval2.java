@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.s2.elements;
 
 import java.math.BigDecimal;
 
-import ua.com.fielden.platform.entity.query.fluent.DateIntervalUnit;
+import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 
 public class CountDateInterval2 extends TwoOperandsFunction2 {
 

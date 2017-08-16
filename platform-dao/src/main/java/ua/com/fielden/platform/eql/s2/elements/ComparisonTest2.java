@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 
 public class ComparisonTest2 extends AbstractCondition2 {
     private final ISingleOperand2 leftOperand;

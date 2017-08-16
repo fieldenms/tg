@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.fluent;
+package ua.com.fielden.platform.entity.query.fluent.enums;
 
 public enum QueryTokens {
     ASC("ASC"), DESC("DESC"), ON("ON"), WHERE("WHERE"), YIELD("SELECT"), GROUP_BY("GROUP BY"), ORDER_BY("ORDER BY"), FROM("FROM");

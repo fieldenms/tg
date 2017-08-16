@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.s1.elements.Concat1;
 import ua.com.fielden.platform.eql.s1.elements.ISingleOperand1;
 import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
