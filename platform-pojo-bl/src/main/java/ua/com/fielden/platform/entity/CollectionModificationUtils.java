@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -172,11 +171,7 @@ public class CollectionModificationUtils {
         final MASTER_TYPE masterEntityFromContext = controller.getMasterEntityFromContext(context);
         final MASTER_TYPE refetchedMasterEntity = validateMasterEntityAndRefetch(masterEntityFromContext, entity, Optional.of(context), controller);
         
-        if (masterEntityFromContext instanceof EnhancedCentreEntityQueryCriteria) {
-            entity.setMasterEntityHolder(((EnhancedCentreEntityQueryCriteria) masterEntityFromContext).centreContextHolder());
-        } else {
-            entity.setMasterEntity(masterEntityFromContext);
-        }
+        entity.setMasterEntity(masterEntityFromContext);
         
         // IMPORTANT: it is necessary to reset state for "key" property after its change.
         //   This is necessary to make the property marked as 'not changed from original' (origVal == val == 'DEMO') to be able not to re-apply afterwards

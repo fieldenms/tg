@@ -45,6 +45,8 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     
     @Override
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
+        entity.setMasterEntityHolder(masterEntity.centreContextHolder());
+        
         final Class<?> root = masterEntity.getEntityClass();
         final ICentreDomainTreeManagerAndEnhancer freshCentre = masterEntity.freshCentreSupplier().get();
         

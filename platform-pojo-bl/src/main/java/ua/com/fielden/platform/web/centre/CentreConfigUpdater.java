@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -34,7 +35,22 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @IsProperty
     @Title(value = "Sorting Changed", desc = "Indicates whether successful saving of this entity actually changed centre sorting")
     private boolean sortingChanged;
-
+    
+    
+    @IsProperty
+    @Title("Master Entity Holder")
+    private CentreContextHolder masterEntityHolder;
+    
+    @Observable
+    public CentreConfigUpdater setMasterEntityHolder(final CentreContextHolder masterEntityHolder) {
+        this.masterEntityHolder = masterEntityHolder;
+        return this;
+    }
+    
+    public CentreContextHolder getMasterEntityHolder() {
+        return masterEntityHolder;
+    }
+    
     @Observable
     public CentreConfigUpdater setSortingChanged(final boolean sortingChanged) {
         this.sortingChanged = sortingChanged;
