@@ -11,61 +11,61 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T anyOfProps(final String... propertyNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().anyOfProps(propertyNames));
+		return copy(nextForSingleOperand(), getTokens().anyOfProps(propertyNames));
 	}
 
 	@Override
 	public T anyOfValues(final Object... values) {
-		return copy(nextForAbstractSingleOperand(), getTokens().anyOfValues(values));
+		return copy(nextForSingleOperand(), getTokens().anyOfValues(values));
 	}
 
 	@Override
 	public T anyOfParams(final String... paramNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().anyOfParams(paramNames));
+		return copy(nextForSingleOperand(), getTokens().anyOfParams(paramNames));
 	}
 
 	@Override
 	public T anyOfIParams(final String... paramNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().anyOfIParams(paramNames));
+		return copy(nextForSingleOperand(), getTokens().anyOfIParams(paramNames));
 	}
 
 	@Override
 	public T anyOfModels(final PrimitiveResultQueryModel... models) {
-		return copy(nextForAbstractSingleOperand(), getTokens().anyOfModels(models));
+		return copy(nextForSingleOperand(), getTokens().anyOfModels(models));
 	}
 
 	@Override
 	public T anyOfExpressions(final ExpressionModel... expressions) {
-		return copy(nextForAbstractSingleOperand(), getTokens().anyOfExpressions(expressions));
+		return copy(nextForSingleOperand(), getTokens().anyOfExpressions(expressions));
 	}
 
 	@Override
 	public T allOfProps(final String... propertyNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().allOfProps(propertyNames));
+		return copy(nextForSingleOperand(), getTokens().allOfProps(propertyNames));
 	}
 
 	@Override
 	public T allOfValues(final Object... values) {
-		return copy(nextForAbstractSingleOperand(), getTokens().allOfValues(values));
+		return copy(nextForSingleOperand(), getTokens().allOfValues(values));
 	}
 
 	@Override
 	public T allOfParams(final String... paramNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().allOfParams(paramNames));
+		return copy(nextForSingleOperand(), getTokens().allOfParams(paramNames));
 	}
 
 	@Override
 	public T allOfIParams(final String... paramNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().allOfIParams(paramNames));
+		return copy(nextForSingleOperand(), getTokens().allOfIParams(paramNames));
 	}
 
 	@Override
 	public T allOfModels(final PrimitiveResultQueryModel... models) {
-		return copy(nextForAbstractSingleOperand(), getTokens().allOfModels(models));
+		return copy(nextForSingleOperand(), getTokens().allOfModels(models));
 	}
 
 	@Override
 	public T allOfExpressions(final ExpressionModel... expressions) {
-		return copy(nextForAbstractSingleOperand(), getTokens().allOfExpressions(expressions));
+		return copy(nextForSingleOperand(), getTokens().allOfExpressions(expressions));
 	}
 }

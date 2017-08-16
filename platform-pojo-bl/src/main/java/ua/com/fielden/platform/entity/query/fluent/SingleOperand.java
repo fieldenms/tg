@@ -15,26 +15,26 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements ISingleOperand<T, ET> {
 
-	protected abstract T nextForAbstractSingleOperand();
+	protected abstract T nextForSingleOperand();
 
 	@Override
 	public T val(final Object value) {
-		return copy(nextForAbstractSingleOperand(), getTokens().val(value));
+		return copy(nextForSingleOperand(), getTokens().val(value));
 	}
 
 	@Override
 	public T iVal(final Object value) {
-		return copy(nextForAbstractSingleOperand(), getTokens().iVal(value));
+		return copy(nextForSingleOperand(), getTokens().iVal(value));
 	}
 
 	@Override
 	public T model(final SingleResultQueryModel<?> model) {
-		return copy(nextForAbstractSingleOperand(), getTokens().model(model));
+		return copy(nextForSingleOperand(), getTokens().model(model));
 	}
 
 	@Override
 	public T param(final String paramName) {
-		return copy(nextForAbstractSingleOperand(), getTokens().param(paramName));
+		return copy(nextForSingleOperand(), getTokens().param(paramName));
 	}
 
 	@Override
@@ -44,7 +44,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T iParam(final String paramName) {
-		return copy(nextForAbstractSingleOperand(), getTokens().iParam(paramName));
+		return copy(nextForSingleOperand(), getTokens().iParam(paramName));
 	}
 
 	@Override
@@ -54,7 +54,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T prop(final String propertyName) {
-		return copy(nextForAbstractSingleOperand(), getTokens().prop(propertyName));
+		return copy(nextForSingleOperand(), getTokens().prop(propertyName));
 	}
 
 	@Override
@@ -64,7 +64,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T extProp(final String propertyName) {
-		return copy(nextForAbstractSingleOperand(), getTokens().extProp(propertyName));
+		return copy(nextForSingleOperand(), getTokens().extProp(propertyName));
 	}
 
 	@Override
@@ -74,7 +74,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T expr(final ExpressionModel expr) {
-		return copy(nextForAbstractSingleOperand(), getTokens().expr(expr));
+		return copy(nextForSingleOperand(), getTokens().expr(expr));
 	}
 
 	@Override
@@ -83,7 +83,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForDateDiffIntervalFunction() {
-				return SingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForSingleOperand();
 			}
 
 		}, getTokens().countDateIntervalFunction());
@@ -95,7 +95,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForFunctionWhere0() {
-				return SingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForSingleOperand();
 			}
 
 		}, getTokens().caseWhenFunction());
@@ -107,7 +107,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForIfNullFunctionArgument() {
-				return SingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForSingleOperand();
 			}
 
 		}, getTokens().ifNull());
@@ -119,7 +119,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForConcatFunctionArgument() {
-				return SingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForSingleOperand();
 			}
 
 		}, getTokens().concat());
@@ -131,7 +131,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForRoundFunctionArgument() {
-				return SingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForSingleOperand();
 			}
 
 		}, getTokens().round());
@@ -139,7 +139,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T now() {
-		return copy(nextForAbstractSingleOperand(), getTokens().now());
+		return copy(nextForSingleOperand(), getTokens().now());
 	}
 
 	protected FunctionLastArgument<T, ET> createFunctionLastArgument() {
@@ -147,7 +147,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForFunctionLastArgument() {
-				return SingleOperand.this.nextForAbstractSingleOperand();
+				return SingleOperand.this.nextForSingleOperand();
 			}
 		};
 	}

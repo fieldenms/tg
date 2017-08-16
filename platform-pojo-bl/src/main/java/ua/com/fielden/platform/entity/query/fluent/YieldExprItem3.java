@@ -11,7 +11,7 @@ abstract class YieldExprItem3<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForYieldExprItem3();
 
 	@Override
-	protected IYieldExprOperationOrEnd3<T, ET> nextForAbstractSingleOperand() {
+	protected IYieldExprOperationOrEnd3<T, ET> nextForSingleOperand() {
 		return new YieldExprOperationOrEnd3<T, ET>() {
 
 			@Override

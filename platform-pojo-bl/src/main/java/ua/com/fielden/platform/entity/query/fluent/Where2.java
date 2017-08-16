@@ -11,17 +11,17 @@ final class Where2<ET extends AbstractEntity<?>> //
 		implements IWhere2<ET> {
 
 	@Override
-	protected IWhere3<ET> nextForAbstractWhere() {
+	protected IWhere3<ET> nextForWhere() {
 		return new Where3<ET>();
 	}
 
 	@Override
-	protected ICompoundCondition2<ET> nextForAbstractConditionalOperand() {
+	protected ICompoundCondition2<ET> nextForConditionalOperand() {
 		return new CompoundCondition2<ET>();
 	}
 
 	@Override
-	protected IComparisonOperator2<ET> nextForAbstractSingleOperand() {
+	protected IComparisonOperator2<ET> nextForSingleOperand() {
 		return new ComparisonOperator2<ET>();
 	}
 }

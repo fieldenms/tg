@@ -10,12 +10,12 @@ final class Where3<ET extends AbstractEntity<?>> //
 		implements IWhere3<ET> {
 
 	@Override
-	protected ICompoundCondition3<ET> nextForAbstractConditionalOperand() {
+	protected ICompoundCondition3<ET> nextForConditionalOperand() {
 		return new CompoundCondition3<ET>();
 	}
 
 	@Override
-	protected IComparisonOperator3<ET> nextForAbstractSingleOperand() {
+	protected IComparisonOperator3<ET> nextForSingleOperand() {
 		return new ComparisonOperator3<ET>();
 	}
 }

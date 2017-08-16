@@ -11,17 +11,17 @@ final class JoinWhere0<ET extends AbstractEntity<?>> //
 		implements IJoinWhere0<ET> {
 
 	@Override
-	protected IJoinWhere1<ET> nextForAbstractWhere() {
+	protected IJoinWhere1<ET> nextForWhere() {
 		return new JoinWhere1<ET>();
 	}
 
 	@Override
-	protected IJoinCompoundCondition0<ET> nextForAbstractConditionalOperand() {
+	protected IJoinCompoundCondition0<ET> nextForConditionalOperand() {
 		return new JoinCompoundCondition0<ET>();
 	}
 
 	@Override
-	protected IJoinComparisonOperator0<ET> nextForAbstractSingleOperand() {
+	protected IJoinComparisonOperator0<ET> nextForSingleOperand() {
 		return new JoinComparisonOperator0<ET>();
 	}
 }

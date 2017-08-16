@@ -50,6 +50,6 @@ abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T countAll() {
-		return copy(nextForAbstractSingleOperand(), getTokens().countAll());
+		return copy(nextForSingleOperand(), getTokens().countAll());
 	}
 }

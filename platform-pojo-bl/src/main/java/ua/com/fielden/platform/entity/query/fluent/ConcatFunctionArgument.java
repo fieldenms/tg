@@ -12,7 +12,7 @@ abstract class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForConcatFunctionArgument();
 
 	@Override
-	protected IExprOperand0<IConcatFunctionWith<T, ET>, ET> nextForAbstractExprOperand() {
+	protected IExprOperand0<IConcatFunctionWith<T, ET>, ET> nextForExprOperand() {
 		return new ExprOperand0<IConcatFunctionWith<T, ET>, ET>() {
 
 			@Override
@@ -31,7 +31,7 @@ abstract class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IConcatFunctionWith<T, ET> nextForAbstractSingleOperand() {
+	protected IConcatFunctionWith<T, ET> nextForSingleOperand() {
 		return new ConcatFunctionWith<T, ET>() {
 
 			@Override

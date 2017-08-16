@@ -9,15 +9,15 @@ abstract class Where<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogical
 		extends WhereWithoutNesting<T1, T2, ET> //
 		implements IWhere<T1, T2, T3, ET> {
 
-	protected abstract T3 nextForAbstractWhere();
+	protected abstract T3 nextForWhere();
 
 	@Override
 	public T3 begin() {
-		return copy(nextForAbstractWhere(), getTokens().beginCondition(false));
+		return copy(nextForWhere(), getTokens().beginCondition(false));
 	}
 
 	@Override
 	public T3 notBegin() {
-		return copy(nextForAbstractWhere(), getTokens().beginCondition(true));
+		return copy(nextForWhere(), getTokens().beginCondition(true));
 	}
 }

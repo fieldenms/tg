@@ -17,7 +17,7 @@ abstract class ExpConditionalOperand<T, ET extends AbstractEntity<?>> //
 
 			@Override
 			protected T nextForExprOperand0() {
-				return ExpConditionalOperand.this.nextForAbstractSingleOperand();
+				return ExpConditionalOperand.this.nextForSingleOperand();
 			}
 
 		};

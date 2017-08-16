@@ -9,7 +9,7 @@ public final class StandAloneConditionComparisonOperator<ET extends AbstractEnti
 		implements IStandAloneConditionComparisonOperator<ET> {
 
 	@Override
-	protected IStandAloneConditionCompoundCondition<ET> nextForAbstractComparisonOperator() {
+	protected IStandAloneConditionCompoundCondition<ET> nextForComparisonOperator() {
 		return new StandAloneConditionCompoundCondition<ET>();
 	}
 

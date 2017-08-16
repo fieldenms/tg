@@ -11,7 +11,7 @@ abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForFunctionLastArgument();
 
 	@Override
-	protected IExprOperand0<T, ET> nextForAbstractExprOperand() {
+	protected IExprOperand0<T, ET> nextForExprOperand() {
 		return new ExprOperand0<T, ET>() {
 
 			@Override
@@ -23,7 +23,7 @@ abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected T nextForAbstractSingleOperand() {
+	protected T nextForSingleOperand() {
 		return nextForFunctionLastArgument();
 	}
 }

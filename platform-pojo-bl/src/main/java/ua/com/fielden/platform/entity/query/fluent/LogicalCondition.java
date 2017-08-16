@@ -6,15 +6,15 @@ abstract class LogicalCondition<T> //
 		extends AbstractQueryLink //
 		implements ILogicalOperator<T> {
 
-	protected abstract T nextForAbstractLogicalCondition();
+	protected abstract T nextForLogicalCondition();
 
 	@Override
 	public T and() {
-		return copy(nextForAbstractLogicalCondition(), getTokens().and());
+		return copy(nextForLogicalCondition(), getTokens().and());
 	}
 
 	@Override
 	public T or() {
-		return copy(nextForAbstractLogicalCondition(), getTokens().or());
+		return copy(nextForLogicalCondition(), getTokens().or());
 	}
 }

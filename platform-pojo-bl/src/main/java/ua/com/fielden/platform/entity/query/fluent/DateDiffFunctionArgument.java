@@ -12,7 +12,7 @@ implements IDateDiffFunctionArgument<T, ET> {
 	protected abstract T nextForDateDiffFunctionArgument();
 
     @Override
-    protected IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET> nextForAbstractExprOperand() {
+    protected IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET> nextForExprOperand() {
     	return new ExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>(){
 
 			@Override
@@ -31,7 +31,7 @@ implements IDateDiffFunctionArgument<T, ET> {
     }
 
     @Override
-    protected IDateDiffFunctionBetween<T, ET> nextForAbstractSingleOperand() {
+    protected IDateDiffFunctionBetween<T, ET> nextForSingleOperand() {
     	return new DateDiffFunctionBetween<T, ET>(){
 
 			@Override

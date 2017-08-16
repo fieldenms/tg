@@ -12,7 +12,7 @@ abstract class YieldExprItem1<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForYieldExprItem1();
 
 	@Override
-	protected IYieldExprItem2<T, ET> nextForAbstractYieldExprOperand() {
+	protected IYieldExprItem2<T, ET> nextForYieldExprOperand() {
 		return new YieldExprItem2<T, ET>() {
 
 			@Override
@@ -24,7 +24,7 @@ abstract class YieldExprItem1<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IYieldExprOperationOrEnd1<T, ET> nextForAbstractSingleOperand() {
+	protected IYieldExprOperationOrEnd1<T, ET> nextForSingleOperand() {
 		return new YieldExprOperationOrEnd1<T, ET>() {
 
 			@Override

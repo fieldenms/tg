@@ -14,27 +14,27 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
 		if (values.length == 0) {
 			throw new EqlException("At least one value is expected when calling [values].");
 		} else {
-			return copy(nextForAbstractSingleOperand(), getTokens().setOfValues(values));
+			return copy(nextForSingleOperand(), getTokens().setOfValues(values));
 		}
 	}
 
 	@Override
 	public T props(final String... properties) {
-		return copy(nextForAbstractSingleOperand(), getTokens().setOfProps(properties));
+		return copy(nextForSingleOperand(), getTokens().setOfProps(properties));
 	}
 
 	@Override
 	public T params(final String... paramNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().setOfParams(paramNames));
+		return copy(nextForSingleOperand(), getTokens().setOfParams(paramNames));
 	}
 
 	@Override
 	public T iParams(final String... paramNames) {
-		return copy(nextForAbstractSingleOperand(), getTokens().setOfIParams(paramNames));
+		return copy(nextForSingleOperand(), getTokens().setOfIParams(paramNames));
 	}
 
 	@Override
 	public T model(final SingleResultQueryModel model) {
-		return copy(nextForAbstractSingleOperand(), getTokens().model(model));
+		return copy(nextForSingleOperand(), getTokens().model(model));
 	}
 }

@@ -7,10 +7,10 @@ abstract class YieldExprOperand<T1, T2, ET extends AbstractEntity<?>> //
 		extends YieldedItem<T1, ET> //
 		implements IYieldExprOperand<T1, T2, ET> {
 
-	protected abstract T2 nextForAbstractYieldExprOperand();
+	protected abstract T2 nextForYieldExprOperand();
 
 	@Override
 	public T2 beginExpr() {
-		return copy(nextForAbstractYieldExprOperand(), getTokens().beginExpression());
+		return copy(nextForYieldExprOperand(), getTokens().beginExpression());
 	}
 }

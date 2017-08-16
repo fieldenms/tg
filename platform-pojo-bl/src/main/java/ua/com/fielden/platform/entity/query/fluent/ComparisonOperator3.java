@@ -9,7 +9,7 @@ final class ComparisonOperator3<ET extends AbstractEntity<?>> //
 		implements IComparisonOperator3<ET> {
 
 	@Override
-	protected ICompoundCondition3<ET> nextForAbstractComparisonOperator() {
+	protected ICompoundCondition3<ET> nextForComparisonOperator() {
 		return new CompoundCondition3<ET>();
 	}
 }

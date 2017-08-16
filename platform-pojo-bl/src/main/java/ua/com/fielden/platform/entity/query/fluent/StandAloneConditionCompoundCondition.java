@@ -15,7 +15,7 @@ public final class StandAloneConditionCompoundCondition<ET extends AbstractEntit
 	}
 
 	@Override
-	protected IStandAloneConditionOperand<ET> nextForAbstractLogicalCondition() {
+	protected IStandAloneConditionOperand<ET> nextForLogicalCondition() {
 		return new StandAloneConditionOperand<ET>();
 	}
 }

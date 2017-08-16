@@ -11,7 +11,7 @@ abstract class FunctionYieldedLastArgument<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForFunctionYieldedLastArgument();
 
 	@Override
-	protected IYieldExprItem0<T, ET> nextForAbstractYieldExprOperand() {
+	protected IYieldExprItem0<T, ET> nextForYieldExprOperand() {
 		return new YieldExprItem0<T, ET>() {
 
 			@Override
@@ -23,7 +23,7 @@ abstract class FunctionYieldedLastArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected T nextForAbstractSingleOperand() {
+	protected T nextForSingleOperand() {
 		return nextForFunctionYieldedLastArgument();
 	}
 }

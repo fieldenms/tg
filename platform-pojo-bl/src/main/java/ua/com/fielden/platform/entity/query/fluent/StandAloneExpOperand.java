@@ -9,7 +9,7 @@ public final class StandAloneExpOperand //
 		implements IStandAloneExprOperand {
 
 	@Override
-	protected IStandAloneExprOperationAndClose nextForAbstractSingleOperand() {
+	protected IStandAloneExprOperationAndClose nextForSingleOperand() {
 		return new StandAloneExpOperationAndClose();
 	}
 }

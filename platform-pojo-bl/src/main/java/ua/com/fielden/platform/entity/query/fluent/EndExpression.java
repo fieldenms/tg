@@ -6,10 +6,10 @@ abstract class EndExpression<T> //
 		extends AbstractQueryLink //
 		implements IEndExpression<T> {
 
-	protected abstract T nextForAbstractEndExpression();
+	protected abstract T nextForEndExpression();
 
 	@Override
 	public T endExpr() {
-		return copy(nextForAbstractEndExpression(), getTokens().endExpression());
+		return copy(nextForEndExpression(), getTokens().endExpression());
 	}
 }

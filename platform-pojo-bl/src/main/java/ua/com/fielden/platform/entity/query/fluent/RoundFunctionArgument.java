@@ -12,7 +12,7 @@ abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForRoundFunctionArgument();
 
 	@Override
-	protected IExprOperand0<IRoundFunctionTo<T>, ET> nextForAbstractExprOperand() {
+	protected IExprOperand0<IRoundFunctionTo<T>, ET> nextForExprOperand() {
 		return new ExprOperand0<IRoundFunctionTo<T>, ET>() {
 
 			@Override
@@ -31,7 +31,7 @@ abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IRoundFunctionTo<T> nextForAbstractSingleOperand() {
+	protected IRoundFunctionTo<T> nextForSingleOperand() {
 		return new RoundFunctionTo<T>() {
 
 			@Override

@@ -11,13 +11,13 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 		extends AbstractQueryLink //
 		implements IComparisonOperator<T, ET> {
 	
-	protected abstract T nextForAbstractComparisonOperator();
+	protected abstract T nextForComparisonOperator();
 
 	private IComparisonOperand<T, ET> createIComparisonOperand() {
 		return new ExpConditionalOperand<T, ET>() {
 			@Override
-			protected T nextForAbstractSingleOperand() {
-				return ComparisonOperator.this.nextForAbstractComparisonOperator();
+			protected T nextForSingleOperand() {
+				return ComparisonOperator.this.nextForComparisonOperator();
 			}
 		};
 	}
@@ -25,8 +25,8 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 	private IComparisonSetOperand<T> createIComparisonSetOperand() {
 		return new SetOfOperands<T, ET>() {
 			@Override
-			protected T nextForAbstractSingleOperand() {
-				return ComparisonOperator.this.nextForAbstractComparisonOperator();
+			protected T nextForSingleOperand() {
+				return ComparisonOperator.this.nextForComparisonOperator();
 			}
 		};
 	}
@@ -34,8 +34,8 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand() {
 		return new ExpRightSideConditionalOperand<T, ET>() {
 			@Override
-			protected T nextForAbstractSingleOperand() {
-				return ComparisonOperator.this.nextForAbstractComparisonOperator();
+			protected T nextForSingleOperand() {
+				return ComparisonOperator.this.nextForComparisonOperator();
 			}
 		};
 	}
@@ -102,11 +102,11 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 
 	@Override
 	public T isNull() {
-		return copy(nextForAbstractComparisonOperator(), getTokens().isNull(false));
+		return copy(nextForComparisonOperator(), getTokens().isNull(false));
 	}
 
 	@Override
 	public T isNotNull() {
-		return copy(nextForAbstractComparisonOperator(), getTokens().isNull(true));
+		return copy(nextForComparisonOperator(), getTokens().isNull(true));
 	}
 }

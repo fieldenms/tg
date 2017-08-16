@@ -10,17 +10,17 @@ class OrderingItem //
 		implements IOrderingItem {
 
 	@Override
-	protected ISingleOperandOrderable nextForAbstractSingleOperand() {
+	protected ISingleOperandOrderable nextForSingleOperand() {
 		return new SingleOperandOrderable();
 	}
 
 	@Override
-	protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForAbstractExprOperand() {
+	protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand() {
 		return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>() {
 
 			@Override
 			protected ISingleOperandOrderable nextForExprOperand0() {
-				return OrderingItem.this.nextForAbstractSingleOperand();
+				return OrderingItem.this.nextForSingleOperand();
 			}
 
 		};

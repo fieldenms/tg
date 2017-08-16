@@ -12,7 +12,7 @@ abstract class ExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForExprOperationOrEnd2();
 
 	@Override
-	protected IExprOperationOrEnd1<T, ET> nextForAbstractExprOperationOrEnd() {
+	protected IExprOperationOrEnd1<T, ET> nextForExprOperationOrEnd() {
 		return new ExprOperationOrEnd1<T, ET>() {
 
 			@Override
@@ -24,7 +24,7 @@ abstract class ExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IExprOperand2<T, ET> nextForAbstractArithmeticalOperator() {
+	protected IExprOperand2<T, ET> nextForArithmeticalOperator() {
 		return new ExprOperand2<T, ET>() {
 
 			@Override

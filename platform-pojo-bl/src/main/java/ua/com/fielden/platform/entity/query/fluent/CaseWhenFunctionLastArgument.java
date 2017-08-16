@@ -13,7 +13,7 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForCaseWhenFunctionLastArgument();
 
 	@Override
-	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForAbstractExprOperand() {
+	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand() {
 		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>() {
 			@Override
 			protected ICaseWhenFunctionEnd<T> nextForExprOperand0() {
@@ -31,7 +31,7 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected ICaseWhenFunctionWhen<T, ET> nextForAbstractSingleOperand() {
+	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand() {
 		return new CaseWhenFunctionWhen<T, ET>() {
 
 			@Override

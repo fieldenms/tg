@@ -10,12 +10,12 @@ public final class StandAloneConditionOperand<ET extends AbstractEntity<?>> //
 		implements IStandAloneConditionOperand<ET> {
 
 	@Override
-	protected IStandAloneConditionCompoundCondition<ET> nextForAbstractConditionalOperand() {
+	protected IStandAloneConditionCompoundCondition<ET> nextForConditionalOperand() {
 		return new StandAloneConditionCompoundCondition<ET>();
 	}
 
 	@Override
-	protected IStandAloneConditionComparisonOperator<ET> nextForAbstractSingleOperand() {
+	protected IStandAloneConditionComparisonOperator<ET> nextForSingleOperand() {
 		return new StandAloneConditionComparisonOperator<ET>();
 	}
 }

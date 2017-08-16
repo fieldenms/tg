@@ -11,7 +11,7 @@ abstract class FunctionComparisonOperator1<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForFunctionComparisonOperator1();
 
 	@Override
-	protected IFunctionCompoundCondition1<T, ET> nextForAbstractComparisonOperator() {
+	protected IFunctionCompoundCondition1<T, ET> nextForComparisonOperator() {
 		return new FunctionCompoundCondition1<T, ET>() {
 
 			@Override

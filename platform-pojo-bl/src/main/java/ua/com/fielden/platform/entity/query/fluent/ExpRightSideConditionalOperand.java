@@ -18,7 +18,7 @@ abstract class ExpRightSideConditionalOperand<T, ET extends AbstractEntity<?>> /
 
 			@Override
 			protected T nextForExprOperand0() {
-				return ExpRightSideConditionalOperand.this.nextForAbstractSingleOperand();
+				return ExpRightSideConditionalOperand.this.nextForSingleOperand();
 			}
 
 		};

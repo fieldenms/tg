@@ -13,7 +13,7 @@ abstract class FunctionWhere2<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForFunctionWhere2();
 
 	@Override
-	protected IFunctionWhere3<T, ET> nextForAbstractWhere() {
+	protected IFunctionWhere3<T, ET> nextForWhere() {
 		return new FunctionWhere3<T, ET>() {
 
 			@Override
@@ -25,7 +25,7 @@ abstract class FunctionWhere2<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IFunctionCompoundCondition2<T, ET> nextForAbstractConditionalOperand() {
+	protected IFunctionCompoundCondition2<T, ET> nextForConditionalOperand() {
 		return new FunctionCompoundCondition2<T, ET>() {
 
 			@Override
@@ -37,7 +37,7 @@ abstract class FunctionWhere2<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IFunctionComparisonOperator2<T, ET> nextForAbstractSingleOperand() {
+	protected IFunctionComparisonOperator2<T, ET> nextForSingleOperand() {
 		return new FunctionComparisonOperator2<T, ET>() {
 
 			@Override

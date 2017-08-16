@@ -7,10 +7,10 @@ abstract class ExprOperand<T1, T2, ET extends AbstractEntity<?>> //
 		extends SingleOperand<T1, ET> //
 		implements IExprOperand<T1, T2, ET> {
 
-	protected abstract T2 nextForAbstractExprOperand();
+	protected abstract T2 nextForExprOperand();
 
 	@Override
 	public T2 beginExpr() {
-		return copy(nextForAbstractExprOperand(), getTokens().beginExpression());
+		return copy(nextForExprOperand(), getTokens().beginExpression());
 	}
 }

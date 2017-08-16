@@ -14,7 +14,7 @@ public final class StandAloneExpOperationAndClose //
 	}
 
 	@Override
-	protected IStandAloneExprOperand nextForAbstractArithmeticalOperator() {
+	protected IStandAloneExprOperand nextForArithmeticalOperator() {
 		return new StandAloneExpOperand();
 	}
 }

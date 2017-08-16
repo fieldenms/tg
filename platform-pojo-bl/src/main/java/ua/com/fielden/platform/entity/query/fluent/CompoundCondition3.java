@@ -10,12 +10,12 @@ final class CompoundCondition3<ET extends AbstractEntity<?>> //
 		implements ICompoundCondition3<ET> {
 
 	@Override
-	protected IWhere3<ET> nextForAbstractLogicalCondition() {
+	protected IWhere3<ET> nextForLogicalCondition() {
 		return new Where3<ET>();
 	}
 
 	@Override
-	protected ICompoundCondition2<ET> nextForAbstractCompoundCondition() {
+	protected ICompoundCondition2<ET> nextForCompoundCondition() {
 		return new CompoundCondition2<ET>();
 	}
 }

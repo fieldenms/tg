@@ -6,10 +6,10 @@ abstract class EndCondition<T> //
 		extends AbstractQueryLink //
 		implements IEndCondition<T> {
 
-	protected abstract T nextForAbstractEndCondition();
+	protected abstract T nextForEndCondition();
 
 	@Override
 	public T end() {
-		return copy(nextForAbstractEndCondition(), getTokens().endCondition());
+		return copy(nextForEndCondition(), getTokens().endCondition());
 	}
 }

@@ -12,7 +12,7 @@ abstract class FunctionCompoundCondition1<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForFunctionCompoundCondition1();
 
 	@Override
-	protected IFunctionWhere1<T, ET> nextForAbstractLogicalCondition() {
+	protected IFunctionWhere1<T, ET> nextForLogicalCondition() {
 		return new FunctionWhere1<T, ET>() {
 
 			@Override
@@ -24,7 +24,7 @@ abstract class FunctionCompoundCondition1<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IFunctionCompoundCondition0<T, ET> nextForAbstractCompoundCondition() {
+	protected IFunctionCompoundCondition0<T, ET> nextForCompoundCondition() {
 		return new FunctionCompoundCondition0<T, ET>() {
 
 			@Override

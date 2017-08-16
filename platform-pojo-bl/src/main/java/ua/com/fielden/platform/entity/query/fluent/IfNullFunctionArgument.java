@@ -12,7 +12,7 @@ abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
 	protected abstract T nextForIfNullFunctionArgument();
 
 	@Override
-	protected IExprOperand0<IIfNullFunctionThen<T, ET>, ET> nextForAbstractExprOperand() {
+	protected IExprOperand0<IIfNullFunctionThen<T, ET>, ET> nextForExprOperand() {
 		return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>() {
 
 			@Override
@@ -31,7 +31,7 @@ abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IIfNullFunctionThen<T, ET> nextForAbstractSingleOperand() {
+	protected IIfNullFunctionThen<T, ET> nextForSingleOperand() {
 		return new IfNullFunctionThen<T, ET>() {
 
 			@Override
