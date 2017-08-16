@@ -10,17 +10,6 @@ abstract class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> //
 
 	protected abstract T nextForDateDiffIntervalFunction();
 
-	private DateDiffFunction<T, ET> createDateDiffFunction() {
-		return new DateDiffFunction<T, ET>() {
-
-			@Override
-			protected T nextForDateDiffFunction() {
-				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction();
-			}
-
-		};
-	}
-
 	@Override
 	public IDateDiffFunction<T, ET> seconds() {
 		return copy(createDateDiffFunction(), getTokens().secondsInterval());
@@ -50,4 +39,15 @@ abstract class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> //
 	public IDateDiffFunction<T, ET> years() {
 		return copy(createDateDiffFunction(), getTokens().yearsInterval());
 	}
+	
+	private DateDiffFunction<T, ET> createDateDiffFunction() {
+		return new DateDiffFunction<T, ET>() {
+
+			@Override
+			protected T nextForDateDiffFunction() {
+				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction();
+			}
+
+		};
+	}	
 }

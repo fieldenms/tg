@@ -13,33 +13,6 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 	
 	protected abstract T nextForComparisonOperator();
 
-	private IComparisonOperand<T, ET> createIComparisonOperand() {
-		return new ExpConditionalOperand<T, ET>() {
-			@Override
-			protected T nextForSingleOperand() {
-				return ComparisonOperator.this.nextForComparisonOperator();
-			}
-		};
-	}
-
-	private IComparisonSetOperand<T> createIComparisonSetOperand() {
-		return new SetOfOperands<T, ET>() {
-			@Override
-			protected T nextForSingleOperand() {
-				return ComparisonOperator.this.nextForComparisonOperator();
-			}
-		};
-	}
-
-	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand() {
-		return new ExpRightSideConditionalOperand<T, ET>() {
-			@Override
-			protected T nextForSingleOperand() {
-				return ComparisonOperator.this.nextForComparisonOperator();
-			}
-		};
-	}
-
 	@Override
 	public IComparisonQuantifiedOperand<T, ET> eq() {
 		return copy(createIComparisonQuantifiedOperand(), getTokens().eq());
@@ -108,5 +81,32 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 	@Override
 	public T isNotNull() {
 		return copy(nextForComparisonOperator(), getTokens().isNull(true));
+	}
+	
+	private IComparisonOperand<T, ET> createIComparisonOperand() {
+		return new ExpConditionalOperand<T, ET>() {
+			@Override
+			protected T nextForSingleOperand() {
+				return ComparisonOperator.this.nextForComparisonOperator();
+			}
+		};
+	}
+
+	private IComparisonSetOperand<T> createIComparisonSetOperand() {
+		return new SetOfOperands<T, ET>() {
+			@Override
+			protected T nextForSingleOperand() {
+				return ComparisonOperator.this.nextForComparisonOperator();
+			}
+		};
+	}
+
+	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand() {
+		return new ExpRightSideConditionalOperand<T, ET>() {
+			@Override
+			protected T nextForSingleOperand() {
+				return ComparisonOperator.this.nextForComparisonOperator();
+			}
+		};
 	}
 }

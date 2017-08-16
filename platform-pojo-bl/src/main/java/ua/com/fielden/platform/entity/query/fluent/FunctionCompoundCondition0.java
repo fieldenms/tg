@@ -13,37 +13,38 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public ICaseWhenFunctionArgument<T, ET> then() {
-		return copy(new CaseWhenFunctionArgument<T, ET>() {
+		return copy(createCaseWhenFunctionArgument(), getTokens());
+	}
+
+	@Override
+	public IFunctionWhere0<T, ET> and() {
+		return copy(createFunctionWhere0(), getTokens().and());
+	}
+
+	@Override
+	public IFunctionWhere0<T, ET> or() {
+		return copy(createFunctionWhere0(), getTokens().or());
+	}
+	
+	private FunctionWhere0<T, ET> createFunctionWhere0() {
+		return new FunctionWhere0<T, ET>() {
+
+			@Override
+			protected T nextForFunctionWhere0() {
+				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
+			}
+
+		};
+	}
+	
+	private CaseWhenFunctionArgument<T, ET> createCaseWhenFunctionArgument() {
+		return new CaseWhenFunctionArgument<T, ET>() {
 
 			@Override
 			protected T nextForCaseWhenFunctionArgument() {
 				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 
-		}, getTokens());
-	}
-
-	@Override
-	public IFunctionWhere0<T, ET> and() {
-		return copy(new FunctionWhere0<T, ET>() {
-
-			@Override
-			protected T nextForFunctionWhere0() {
-				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
-			}
-
-		}, getTokens().and());
-	}
-
-	@Override
-	public IFunctionWhere0<T, ET> or() {
-		return copy(new FunctionWhere0<T, ET>() {
-
-			@Override
-			protected T nextForFunctionWhere0() {
-				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
-			}
-
-		}, getTokens().or());
+		};
 	}
 }

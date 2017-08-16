@@ -79,77 +79,32 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IDateDiffIntervalFunction<T, ET> count() {
-		return copy(new DateDiffIntervalFunction<T, ET>() {
-
-			@Override
-			protected T nextForDateDiffIntervalFunction() {
-				return SingleOperand.this.nextForSingleOperand();
-			}
-
-		}, getTokens().countDateIntervalFunction());
+		return copy(createDateDiffIntervalFunction(), getTokens().countDateIntervalFunction());
 	}
 
 	@Override
 	public IFunctionWhere0<T, ET> caseWhen() {
-		return copy(new FunctionWhere0<T, ET>() {
-
-			@Override
-			protected T nextForFunctionWhere0() {
-				return SingleOperand.this.nextForSingleOperand();
-			}
-
-		}, getTokens().caseWhenFunction());
+		return copy(createFunctionWhere0(), getTokens().caseWhenFunction());
 	}
 
 	@Override
 	public IIfNullFunctionArgument<T, ET> ifNull() {
-		return copy(new IfNullFunctionArgument<T, ET>() {
-
-			@Override
-			protected T nextForIfNullFunctionArgument() {
-				return SingleOperand.this.nextForSingleOperand();
-			}
-
-		}, getTokens().ifNull());
+		return copy(createIfNullFunctionArgument(), getTokens().ifNull());
 	}
 
 	@Override
 	public IConcatFunctionArgument<T, ET> concat() {
-		return copy(new ConcatFunctionArgument<T, ET>() {
-
-			@Override
-			protected T nextForConcatFunctionArgument() {
-				return SingleOperand.this.nextForSingleOperand();
-			}
-
-		}, getTokens().concat());
+		return copy(createConcatFunctionArgument(), getTokens().concat());
 	}
 
 	@Override
 	public IRoundFunctionArgument<T, ET> round() {
-		return copy(new RoundFunctionArgument<T, ET>() {
-
-			@Override
-			protected T nextForRoundFunctionArgument() {
-				return SingleOperand.this.nextForSingleOperand();
-			}
-
-		}, getTokens().round());
+		return copy(createRoundFunctionArgument(), getTokens().round());
 	}
 
 	@Override
 	public T now() {
 		return copy(nextForSingleOperand(), getTokens().now());
-	}
-
-	protected FunctionLastArgument<T, ET> createFunctionLastArgument() {
-		return new FunctionLastArgument<T, ET>() {
-
-			@Override
-			protected T nextForFunctionLastArgument() {
-				return SingleOperand.this.nextForSingleOperand();
-			}
-		};
 	}
 
 	@Override
@@ -200,5 +155,70 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	@Override
 	public IFunctionLastArgument<T, ET> absOf() {
 		return copy(createFunctionLastArgument(), getTokens().absOf());
+	}
+	
+	private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction() {
+		return new DateDiffIntervalFunction<T, ET>() {
+
+			@Override
+			protected T nextForDateDiffIntervalFunction() {
+				return SingleOperand.this.nextForSingleOperand();
+			}
+
+		};
+	}
+
+	private FunctionWhere0<T, ET> createFunctionWhere0() {
+		return new FunctionWhere0<T, ET>() {
+
+			@Override
+			protected T nextForFunctionWhere0() {
+				return SingleOperand.this.nextForSingleOperand();
+			}
+
+		};
+	}
+
+	private IfNullFunctionArgument<T, ET> createIfNullFunctionArgument() {
+		return new IfNullFunctionArgument<T, ET>() {
+
+			@Override
+			protected T nextForIfNullFunctionArgument() {
+				return SingleOperand.this.nextForSingleOperand();
+			}
+
+		};
+	}
+
+	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument() {
+		return new ConcatFunctionArgument<T, ET>() {
+
+			@Override
+			protected T nextForConcatFunctionArgument() {
+				return SingleOperand.this.nextForSingleOperand();
+			}
+
+		};
+	}
+
+	private RoundFunctionArgument<T, ET> createRoundFunctionArgument() {
+		return new RoundFunctionArgument<T, ET>() {
+
+			@Override
+			protected T nextForRoundFunctionArgument() {
+				return SingleOperand.this.nextForSingleOperand();
+			}
+
+		};
+	}
+
+	protected FunctionLastArgument<T, ET> createFunctionLastArgument() {
+		return new FunctionLastArgument<T, ET>() {
+
+			@Override
+			protected T nextForFunctionLastArgument() {
+				return SingleOperand.this.nextForSingleOperand();
+			}
+		};
 	}
 }

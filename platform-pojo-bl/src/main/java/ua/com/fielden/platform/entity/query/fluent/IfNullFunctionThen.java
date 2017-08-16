@@ -12,13 +12,17 @@ abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IFunctionLastArgument<T, ET> then() {
-		return copy(new FunctionLastArgument<T, ET>() {
+		return copy(createFunctionLastArgument(), getTokens());
+	}
+
+	private FunctionLastArgument<T, ET> createFunctionLastArgument() {
+		return new FunctionLastArgument<T, ET>() {
 
 			@Override
 			protected T nextForFunctionLastArgument() {
 				return IfNullFunctionThen.this.nextForIfNullFunctionThen();
 			}
 
-		}, getTokens());
+		};
 	}
 }

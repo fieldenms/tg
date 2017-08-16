@@ -22,6 +22,11 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 	}
 
 	@Override
+	public ISubsequentCompletedAndYielded<ET> yieldAll() {
+		return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().yieldAll());
+	}
+
+	@Override
 	public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
 		return copy(createFunctionYieldedLastArgument(), getTokens().yield());
 	}
@@ -40,10 +45,5 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 			}
 
 		};
-	}
-
-	@Override
-	public ISubsequentCompletedAndYielded<ET> yieldAll() {
-		return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().yieldAll());
 	}
 }

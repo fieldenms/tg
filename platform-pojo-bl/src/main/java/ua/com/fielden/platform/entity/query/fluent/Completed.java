@@ -10,7 +10,6 @@ class Completed<ET extends AbstractEntity<?>> //
 
 	@Override
 	public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
-
 		return copy(createFunctionLastArgument(), getTokens().groupBy());
 	}
 

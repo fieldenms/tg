@@ -18,19 +18,22 @@ final class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
 
 	@Override
 	public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-		return copy(
-				new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>() {
-
-					@Override
-					protected ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
-						return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>();
-					}
-
-				}, getTokens().yield());
+		return copy(createFunctionYieldedLastArgument(), getTokens().yield());
 	}
 
 	@Override
 	public AggregatedResultQueryModel modelAsAggregate() {
 		return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
+	}
+	
+	private FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument() {
+		return new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>() {
+
+			@Override
+			protected ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
+				return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>();
+			}
+
+		};
 	}
 }
