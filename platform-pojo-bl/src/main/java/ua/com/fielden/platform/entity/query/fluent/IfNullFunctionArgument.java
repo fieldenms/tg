@@ -5,38 +5,40 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionThen;
 
-abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> implements IIfNullFunctionArgument<T, ET> {
+abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
+		extends AbstractExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> //
+		implements IIfNullFunctionArgument<T, ET> {
 
-	abstract T nextForIfNullFunctionArgument();
+	protected abstract T nextForIfNullFunctionArgument();
 
-    @Override
-    IExprOperand0<IIfNullFunctionThen<T, ET>, ET> nextForAbstractExprOperand() {
-    	return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>(){
+	@Override
+	protected IExprOperand0<IIfNullFunctionThen<T, ET>, ET> nextForAbstractExprOperand() {
+		return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>() {
 
 			@Override
-			IIfNullFunctionThen<T, ET> nextForExprOperand0() {
-				return new IfNullFunctionThen<T, ET>(){
+			protected IIfNullFunctionThen<T, ET> nextForExprOperand0() {
+				return new IfNullFunctionThen<T, ET>() {
 
 					@Override
-					T nextForIfNullFunctionThen() {
+					protected T nextForIfNullFunctionThen() {
 						return IfNullFunctionArgument.this.nextForIfNullFunctionArgument();
 					}
-					
+
 				};
 			}
-        	
-        };
-    }
 
-    @Override
-    IIfNullFunctionThen<T, ET> nextForAbstractSingleOperand() {
-    	return new IfNullFunctionThen<T, ET>(){
+		};
+	}
+
+	@Override
+	protected IIfNullFunctionThen<T, ET> nextForAbstractSingleOperand() {
+		return new IfNullFunctionThen<T, ET>() {
 
 			@Override
-			T nextForIfNullFunctionThen() {
+			protected T nextForIfNullFunctionThen() {
 				return IfNullFunctionArgument.this.nextForIfNullFunctionArgument();
 			}
-        	
-        };
-    }
+
+		};
+	}
 }

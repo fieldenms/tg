@@ -11,30 +11,30 @@ abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>, ET exte
 		extends AbstractQueryLink //
 		implements IComparisonOperator<T, ET> {
 	
-	abstract T nextForAbstractComparisonOperator();
+	protected abstract T nextForAbstractComparisonOperator();
 
-	IComparisonOperand<T, ET> createIComparisonOperand() {
+	private IComparisonOperand<T, ET> createIComparisonOperand() {
 		return new AbstractExpConditionalOperand<T, ET>() {
 			@Override
-			T nextForAbstractSingleOperand() {
+			protected T nextForAbstractSingleOperand() {
 				return AbstractComparisonOperator.this.nextForAbstractComparisonOperator();
 			}
 		};
 	}
 
-	IComparisonSetOperand<T> createIComparisonSetOperand() {
+	private IComparisonSetOperand<T> createIComparisonSetOperand() {
 		return new AbstractSetOfOperands<T, ET>() {
 			@Override
-			T nextForAbstractSingleOperand() {
+			protected T nextForAbstractSingleOperand() {
 				return AbstractComparisonOperator.this.nextForAbstractComparisonOperator();
 			}
 		};
 	}
 
-	IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand() {
+	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand() {
 		return new AbstractExpRightSideConditionalOperand<T, ET>() {
 			@Override
-			T nextForAbstractSingleOperand() {
+			protected T nextForAbstractSingleOperand() {
 				return AbstractComparisonOperator.this.nextForAbstractComparisonOperator();
 			}
 		};

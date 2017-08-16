@@ -18,7 +18,7 @@ abstract class AbstractQueryLink {
 		return tokens.toString();
 	}
 
-	void setTokens(final Tokens tokens) {
+	private void setTokens(final Tokens tokens) {
 		this.tokens = tokens;
 	}
 }

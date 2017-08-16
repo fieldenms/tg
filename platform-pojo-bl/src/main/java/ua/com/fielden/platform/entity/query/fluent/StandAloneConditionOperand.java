@@ -6,16 +6,16 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 
 public class StandAloneConditionOperand<ET extends AbstractEntity<?>> //
-extends AbstractWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> //
-implements IStandAloneConditionOperand<ET> {
+		extends AbstractWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> //
+		implements IStandAloneConditionOperand<ET> {
 
-    @Override
-    IStandAloneConditionCompoundCondition<ET> nextForAbstractConditionalOperand() {
-        return new StandAloneConditionCompoundCondition<ET>();
-    }
+	@Override
+	protected IStandAloneConditionCompoundCondition<ET> nextForAbstractConditionalOperand() {
+		return new StandAloneConditionCompoundCondition<ET>();
+	}
 
-    @Override
-    IStandAloneConditionComparisonOperator<ET> nextForAbstractSingleOperand() {
-        return new StandAloneConditionComparisonOperator<ET>();
-    }
+	@Override
+	protected IStandAloneConditionComparisonOperator<ET> nextForAbstractSingleOperand() {
+		return new StandAloneConditionComparisonOperator<ET>();
+	}
 }

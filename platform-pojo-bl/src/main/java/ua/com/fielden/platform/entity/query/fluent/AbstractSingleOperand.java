@@ -11,9 +11,11 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends AbstractQueryLink
+abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> //
+		extends AbstractQueryLink //
 		implements ISingleOperand<T, ET> {
-	abstract T nextForAbstractSingleOperand();
+
+	protected abstract T nextForAbstractSingleOperand();
 
 	@Override
 	public T val(final Object value) {
@@ -80,7 +82,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 		return copy(new DateDiffIntervalFunction<T, ET>() {
 
 			@Override
-			T nextForDateDiffIntervalFunction() {
+			protected T nextForDateDiffIntervalFunction() {
 				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
 			}
 
@@ -92,7 +94,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 		return copy(new FunctionWhere0<T, ET>() {
 
 			@Override
-			T nextForFunctionWhere0() {
+			protected T nextForFunctionWhere0() {
 				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
 			}
 
@@ -104,7 +106,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 		return copy(new IfNullFunctionArgument<T, ET>() {
 
 			@Override
-			T nextForIfNullFunctionArgument() {
+			protected T nextForIfNullFunctionArgument() {
 				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
 			}
 
@@ -116,7 +118,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 		return copy(new ConcatFunctionArgument<T, ET>() {
 
 			@Override
-			T nextForConcatFunctionArgument() {
+			protected T nextForConcatFunctionArgument() {
 				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
 			}
 
@@ -128,7 +130,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 		return copy(new RoundFunctionArgument<T, ET>() {
 
 			@Override
-			T nextForRoundFunctionArgument() {
+			protected T nextForRoundFunctionArgument() {
 				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
 			}
 
@@ -144,7 +146,7 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
 		return new FunctionLastArgument<T, ET>() {
 
 			@Override
-			T nextForFunctionLastArgument() {
+			protected T nextForFunctionLastArgument() {
 				return AbstractSingleOperand.this.nextForAbstractSingleOperand();
 			}
 		};

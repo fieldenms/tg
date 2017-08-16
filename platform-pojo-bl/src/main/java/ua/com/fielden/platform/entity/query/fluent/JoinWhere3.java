@@ -5,15 +5,17 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinCompoundCondition3;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinWhere3;
 
-final class JoinWhere3<ET extends AbstractEntity<?>> extends AbstractConditionalOperand<IJoinComparisonOperator3<ET>, IJoinCompoundCondition3<ET>, ET> implements IJoinWhere3<ET> {
+final class JoinWhere3<ET extends AbstractEntity<?>> //
+		extends AbstractConditionalOperand<IJoinComparisonOperator3<ET>, IJoinCompoundCondition3<ET>, ET> //
+		implements IJoinWhere3<ET> {
 
 	@Override
-    IJoinCompoundCondition3<ET> nextForAbstractConditionalOperand() {
-        return new JoinCompoundCondition3<ET>();
-    }
+	protected IJoinCompoundCondition3<ET> nextForAbstractConditionalOperand() {
+		return new JoinCompoundCondition3<ET>();
+	}
 
-    @Override
-    IJoinComparisonOperator3<ET> nextForAbstractSingleOperand() {
-        return new JoinComparisonOperator3<ET>();
-    }
+	@Override
+	protected IJoinComparisonOperator3<ET> nextForAbstractSingleOperand() {
+		return new JoinComparisonOperator3<ET>();
+	}
 }

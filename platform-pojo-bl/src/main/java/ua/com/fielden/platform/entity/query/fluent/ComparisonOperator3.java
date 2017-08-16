@@ -4,10 +4,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator3;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition3;
 
-class ComparisonOperator3<ET extends AbstractEntity<?>> extends AbstractComparisonOperator<ICompoundCondition3<ET>, ET> implements IComparisonOperator3<ET> {
+final class ComparisonOperator3<ET extends AbstractEntity<?>> //
+		extends AbstractComparisonOperator<ICompoundCondition3<ET>, ET> //
+		implements IComparisonOperator3<ET> {
 
-    @Override
-    ICompoundCondition3<ET> nextForAbstractComparisonOperator() {
-        return new CompoundCondition3<ET>();
-    }
+	@Override
+	protected ICompoundCondition3<ET> nextForAbstractComparisonOperator() {
+		return new CompoundCondition3<ET>();
+	}
 }

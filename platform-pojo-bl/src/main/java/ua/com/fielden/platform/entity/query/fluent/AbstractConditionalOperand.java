@@ -8,37 +8,38 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 abstract class AbstractConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
-extends AbstractExpConditionalOperand<T1, ET> //
-implements IComparisonOperand<T1, ET>, IExistenceOperator<T2> {
-    abstract T2 nextForAbstractConditionalOperand();
+		extends AbstractExpConditionalOperand<T1, ET> //
+		implements IComparisonOperand<T1, ET>, IExistenceOperator<T2> {
 
-    @Override
-    public T2 exists(final QueryModel subQuery) {
-        return copy(nextForAbstractConditionalOperand(), getTokens().exists(false, subQuery));
-    }
+	protected abstract T2 nextForAbstractConditionalOperand();
 
-    @Override
-    public T2 notExists(final QueryModel subQuery) {
-        return copy(nextForAbstractConditionalOperand(), getTokens().exists(true, subQuery));
-    }
+	@Override
+	public T2 exists(final QueryModel subQuery) {
+		return copy(nextForAbstractConditionalOperand(), getTokens().exists(false, subQuery));
+	}
 
-    @Override
-    public T2 existsAnyOf(final QueryModel... subQueries) {
-        return copy(nextForAbstractConditionalOperand(), getTokens().existsAnyOf(false, subQueries));
-    }
+	@Override
+	public T2 notExists(final QueryModel subQuery) {
+		return copy(nextForAbstractConditionalOperand(), getTokens().exists(true, subQuery));
+	}
 
-    @Override
-    public T2 notExistsAnyOf(final QueryModel... subQueries) {
-        return copy(nextForAbstractConditionalOperand(), getTokens().existsAnyOf(true, subQueries));
-    }
+	@Override
+	public T2 existsAnyOf(final QueryModel... subQueries) {
+		return copy(nextForAbstractConditionalOperand(), getTokens().existsAnyOf(false, subQueries));
+	}
 
-    @Override
-    public T2 existsAllOf(final QueryModel... subQueries) {
-        return copy(nextForAbstractConditionalOperand(), getTokens().existsAllOf(false, subQueries));
-    }
+	@Override
+	public T2 notExistsAnyOf(final QueryModel... subQueries) {
+		return copy(nextForAbstractConditionalOperand(), getTokens().existsAnyOf(true, subQueries));
+	}
 
-    @Override
-    public T2 notExistsAllOf(final QueryModel... subQueries) {
-        return copy(nextForAbstractConditionalOperand(), getTokens().existsAllOf(true, subQueries));
-    }
+	@Override
+	public T2 existsAllOf(final QueryModel... subQueries) {
+		return copy(nextForAbstractConditionalOperand(), getTokens().existsAllOf(false, subQueries));
+	}
+
+	@Override
+	public T2 notExistsAllOf(final QueryModel... subQueries) {
+		return copy(nextForAbstractConditionalOperand(), getTokens().existsAllOf(true, subQueries));
+	}
 }

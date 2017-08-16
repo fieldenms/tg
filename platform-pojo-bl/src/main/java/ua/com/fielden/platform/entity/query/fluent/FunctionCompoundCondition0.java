@@ -5,17 +5,18 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
 
-abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> extends AbstractQueryLink
+abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> //
+		extends AbstractQueryLink //
 		implements IFunctionCompoundCondition0<T, ET> {
 
-	abstract T nextForFunctionCompoundCondition0();
+	protected abstract T nextForFunctionCompoundCondition0();
 
 	@Override
 	public ICaseWhenFunctionArgument<T, ET> then() {
 		return copy(new CaseWhenFunctionArgument<T, ET>() {
 
 			@Override
-			T nextForCaseWhenFunctionArgument() {
+			protected T nextForCaseWhenFunctionArgument() {
 				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 
@@ -27,7 +28,7 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> exten
 		return copy(new FunctionWhere0<T, ET>() {
 
 			@Override
-			T nextForFunctionWhere0() {
+			protected T nextForFunctionWhere0() {
 				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 
@@ -39,7 +40,7 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> exten
 		return copy(new FunctionWhere0<T, ET>() {
 
 			@Override
-			T nextForFunctionWhere0() {
+			protected T nextForFunctionWhere0() {
 				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0();
 			}
 

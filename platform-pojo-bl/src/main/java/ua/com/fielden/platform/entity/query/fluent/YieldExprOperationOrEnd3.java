@@ -5,18 +5,18 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd3;
 
-abstract class YieldExprOperationOrEnd3<T, ET extends AbstractEntity<?>>
-		extends AbstractExprOperationOrEnd<IYieldExprItem3<T, ET>, IYieldExprOperationOrEnd2<T, ET>, ET>
+abstract class YieldExprOperationOrEnd3<T, ET extends AbstractEntity<?>> //
+		extends AbstractExprOperationOrEnd<IYieldExprItem3<T, ET>, IYieldExprOperationOrEnd2<T, ET>, ET> //
 		implements IYieldExprOperationOrEnd3<T, ET> {
 
-	abstract T nextForYieldExprOperationOrEnd3();
+	protected abstract T nextForYieldExprOperationOrEnd3();
 
 	@Override
-	IYieldExprOperationOrEnd2<T, ET> nextForAbstractExprOperationOrEnd() {
+	protected IYieldExprOperationOrEnd2<T, ET> nextForAbstractExprOperationOrEnd() {
 		return new YieldExprOperationOrEnd2<T, ET>() {
 
 			@Override
-			T nextForYieldExprOperationOrEnd2() {
+			protected T nextForYieldExprOperationOrEnd2() {
 				return YieldExprOperationOrEnd3.this.nextForYieldExprOperationOrEnd3();
 			}
 
@@ -24,11 +24,11 @@ abstract class YieldExprOperationOrEnd3<T, ET extends AbstractEntity<?>>
 	}
 
 	@Override
-	IYieldExprItem3<T, ET> nextForAbstractArithmeticalOperator() {
+	protected IYieldExprItem3<T, ET> nextForAbstractArithmeticalOperator() {
 		return new YieldExprItem3<T, ET>() {
 
 			@Override
-			T nextForYieldExprItem3() {
+			protected T nextForYieldExprItem3() {
 				return YieldExprOperationOrEnd3.this.nextForYieldExprOperationOrEnd3();
 			}
 

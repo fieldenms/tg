@@ -2,10 +2,11 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition;
 
-abstract class AbstractCompoundCondition<T1, T2> extends AbstractLogicalCondition<T1>
+abstract class AbstractCompoundCondition<T1, T2> //
+		extends AbstractLogicalCondition<T1> //
 		implements ICompoundCondition<T1, T2> {
 
-	abstract T2 nextForAbstractCompoundCondition();
+	protected abstract T2 nextForAbstractCompoundCondition();
 
 	@Override
 	public T2 end() {

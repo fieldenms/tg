@@ -7,27 +7,30 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET> implements ISubsequentCompletedAndYielded<ET> {
+final class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
+		extends CompletedCommon<ET> //
+		implements ISubsequentCompletedAndYielded<ET> {
 
-    @Override
-    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
-    }
+	@Override
+	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
+	}
 
-    @Override
-    public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-    	return copy(new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(){
+	@Override
+	public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
+		return copy(
+				new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>() {
 
-			@Override
-			ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
-				return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>();
-			}
-    		
-    	}, getTokens().yield());
-    }
+					@Override
+					protected ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
+						return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>();
+					}
 
-    @Override
-    public AggregatedResultQueryModel modelAsAggregate() {
-        return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
-    }
+				}, getTokens().yield());
+	}
+
+	@Override
+	public AggregatedResultQueryModel modelAsAggregate() {
+		return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
+	}
 }

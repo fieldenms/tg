@@ -6,21 +6,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>>
-		extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET>
+abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
+		extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
 		implements ICaseWhenFunctionLastArgument<T, ET> {
 
-	abstract T nextForCaseWhenFunctionLastArgument();
+	protected abstract T nextForCaseWhenFunctionLastArgument();
 
 	@Override
-	IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForAbstractExprOperand() {
+	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForAbstractExprOperand() {
 		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>() {
 			@Override
-			ICaseWhenFunctionEnd<T> nextForExprOperand0() {
+			protected ICaseWhenFunctionEnd<T> nextForExprOperand0() {
 				return new CaseWhenFunctionEnd<T>() {
 
 					@Override
-					T nextForCaseWhenFunctionEnd() {
+					protected T nextForCaseWhenFunctionEnd() {
 						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument();
 					}
 
@@ -31,11 +31,11 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>>
 	}
 
 	@Override
-	ICaseWhenFunctionWhen<T, ET> nextForAbstractSingleOperand() {
+	protected ICaseWhenFunctionWhen<T, ET> nextForAbstractSingleOperand() {
 		return new CaseWhenFunctionWhen<T, ET>() {
 
 			@Override
-			T nextForCaseWhenFunctionEnd() {
+			protected T nextForCaseWhenFunctionEnd() {
 				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument();
 			}
 

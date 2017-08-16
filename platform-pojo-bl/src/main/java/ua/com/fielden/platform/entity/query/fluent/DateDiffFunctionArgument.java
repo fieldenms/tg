@@ -5,20 +5,22 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-abstract class DateDiffFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> implements IDateDiffFunctionArgument<T, ET> {
+abstract class DateDiffFunctionArgument<T, ET extends AbstractEntity<?>> //
+extends AbstractExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> //
+implements IDateDiffFunctionArgument<T, ET> {
 
-	abstract T nextForDateDiffFunctionArgument();
+	protected abstract T nextForDateDiffFunctionArgument();
 
     @Override
-    IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET> nextForAbstractExprOperand() {
+    protected IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET> nextForAbstractExprOperand() {
     	return new ExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>(){
 
 			@Override
-			IDateDiffFunctionBetween<T, ET> nextForExprOperand0() {
+			protected IDateDiffFunctionBetween<T, ET> nextForExprOperand0() {
 				return new DateDiffFunctionBetween<T, ET>(){
 
 					@Override
-					T nextForDateDiffFunctionBetween() {
+					protected T nextForDateDiffFunctionBetween() {
 						return DateDiffFunctionArgument.this.nextForDateDiffFunctionArgument();
 					}
 					
@@ -29,11 +31,11 @@ abstract class DateDiffFunctionArgument<T, ET extends AbstractEntity<?>> extends
     }
 
     @Override
-    IDateDiffFunctionBetween<T, ET> nextForAbstractSingleOperand() {
+    protected IDateDiffFunctionBetween<T, ET> nextForAbstractSingleOperand() {
     	return new DateDiffFunctionBetween<T, ET>(){
 
 			@Override
-			T nextForDateDiffFunctionBetween() {
+			protected T nextForDateDiffFunctionBetween() {
 				return DateDiffFunctionArgument.this.nextForDateDiffFunctionArgument();
 			}
         	

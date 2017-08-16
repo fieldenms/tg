@@ -5,38 +5,40 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionTo;
 
-abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> implements IRoundFunctionArgument<T, ET> {
+abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> //
+		extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> //
+		implements IRoundFunctionArgument<T, ET> {
 
-	abstract T nextForRoundFunctionArgument();
+	protected abstract T nextForRoundFunctionArgument();
 
-    @Override
-    IExprOperand0<IRoundFunctionTo<T>, ET> nextForAbstractExprOperand() {
-    	return new ExprOperand0<IRoundFunctionTo<T>, ET>(){
+	@Override
+	protected IExprOperand0<IRoundFunctionTo<T>, ET> nextForAbstractExprOperand() {
+		return new ExprOperand0<IRoundFunctionTo<T>, ET>() {
 
 			@Override
-			IRoundFunctionTo<T> nextForExprOperand0() {
-				return new RoundFunctionTo<T>(){
+			protected IRoundFunctionTo<T> nextForExprOperand0() {
+				return new RoundFunctionTo<T>() {
 
 					@Override
-					T nextForRoundFunctionTo() {
+					protected T nextForRoundFunctionTo() {
 						return RoundFunctionArgument.this.nextForRoundFunctionArgument();
 					}
-					
+
 				};
 			}
-        	
-        };
-    }
 
-    @Override
-    IRoundFunctionTo<T> nextForAbstractSingleOperand() {
-    	return new RoundFunctionTo<T>(){
+		};
+	}
+
+	@Override
+	protected IRoundFunctionTo<T> nextForAbstractSingleOperand() {
+		return new RoundFunctionTo<T>() {
 
 			@Override
-			T nextForRoundFunctionTo() {
+			protected T nextForRoundFunctionTo() {
 				return RoundFunctionArgument.this.nextForRoundFunctionArgument();
 			}
-        	
-        };
-    }
+
+		};
+	}
 }

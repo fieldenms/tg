@@ -4,15 +4,17 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
-public class StandAloneExpOperationAndClose extends AbstractArithmeticalOperator<IStandAloneExprOperand> implements IStandAloneExprOperationAndClose {
+public class StandAloneExpOperationAndClose //
+		extends AbstractArithmeticalOperator<IStandAloneExprOperand> //
+		implements IStandAloneExprOperationAndClose {
 
-    @Override
-    public ExpressionModel model() {
-        return new ExpressionModel(getTokens().getValues());
-    }
+	@Override
+	public ExpressionModel model() {
+		return new ExpressionModel(getTokens().getValues());
+	}
 
-    @Override
-    IStandAloneExprOperand nextForAbstractArithmeticalOperator() {
-        return new StandAloneExpOperand();
-    }
+	@Override
+	protected IStandAloneExprOperand nextForAbstractArithmeticalOperator() {
+		return new StandAloneExpOperand();
+	}
 }

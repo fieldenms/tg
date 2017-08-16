@@ -7,13 +7,13 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET>
+class CompletedAndYielded<ET extends AbstractEntity<?>> //
+		extends CompletedCommon<ET> //
 		implements ICompletedAndYielded<ET> {
 
 	@Override
 	public EntityResultQueryModel<ET> model() {
-		return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(),
-				false);
+		return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(),	false);
 	}
 
 	@Override
@@ -30,10 +30,10 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<
 		return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>() {
 
 			@Override
-			IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
+			protected IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
 				return new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>() {
 					@Override
-					ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias() {
+					protected ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias() {
 						return new SubsequentCompletedAndYielded<ET>();
 					}
 				};

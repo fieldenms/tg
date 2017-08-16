@@ -4,19 +4,20 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunction;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffIntervalFunction;
 
-abstract class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> extends AbstractQueryLink
+abstract class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> //
+		extends AbstractQueryLink //
 		implements IDateDiffIntervalFunction<T, ET> {
 
-	abstract T nextForDateDiffIntervalFunction();
+	protected abstract T nextForDateDiffIntervalFunction();
 
 	private DateDiffFunction<T, ET> createDateDiffFunction() {
 		return new DateDiffFunction<T, ET>() {
 
 			@Override
-			T nextForDateDiffFunction() {
+			protected T nextForDateDiffFunction() {
 				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction();
 			}
-			
+
 		};
 	}
 

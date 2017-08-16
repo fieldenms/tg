@@ -4,10 +4,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinCondition;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinWhere0;
 
-class JoinOn<ET extends AbstractEntity<?>> extends AbstractQueryLink implements IJoinCondition<ET> {
+class JoinOn<ET extends AbstractEntity<?>> //
+		extends AbstractQueryLink //
+		implements IJoinCondition<ET> {
 
-    @Override
-    public IJoinWhere0<ET> on() {
-        return copy(new JoinWhere0<ET>(), getTokens().on());
-    }
+	@Override
+	public IJoinWhere0<ET> on() {
+		return copy(new JoinWhere0<ET>(), getTokens().on());
+	}
 }

@@ -4,19 +4,21 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionThen;
 
-abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IIfNullFunctionThen<T, ET> {
-	
-	abstract T nextForIfNullFunctionThen();
+abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> //
+		extends AbstractQueryLink //
+		implements IIfNullFunctionThen<T, ET> {
 
-    @Override
-    public IFunctionLastArgument<T, ET> then() {
-    	return copy(new FunctionLastArgument<T, ET>(){
+	protected abstract T nextForIfNullFunctionThen();
+
+	@Override
+	public IFunctionLastArgument<T, ET> then() {
+		return copy(new FunctionLastArgument<T, ET>() {
 
 			@Override
-			T nextForFunctionLastArgument() {
+			protected T nextForFunctionLastArgument() {
 				return IfNullFunctionThen.this.nextForIfNullFunctionThen();
 			}
-        	
-        }, getTokens());
-    }
+
+		}, getTokens());
+	}
 }
