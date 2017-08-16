@@ -35,15 +35,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
 
 
     /**
-     * This is a mixin method that should indicate whether data retrieval should follow the instrumented or uninstrumented strategy for entity instantiation during retrieval.
-     * 
-     * @return
-     */
-    default boolean instrumented() {
-        return true;
-    }
-    
-    /**
      * A factory method that creates an instance of the same companion object it is invoked on, but with method {@link #instrumented()} returning <code>false</code>.
      * 
      * @return
