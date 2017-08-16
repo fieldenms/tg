@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
-public class StandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
+public final class StandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
 		extends AbstractLogicalCondition<IStandAloneConditionOperand<ET>> //
 		implements IStandAloneConditionCompoundCondition<ET> {
 

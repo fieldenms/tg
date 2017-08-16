@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 
-public class StandAloneExpOperand //
+public final class StandAloneExpOperand //
 		extends AbstractYieldedItem<IStandAloneExprOperationAndClose, AbstractEntity<?>> //
 		implements IStandAloneExprOperand {
 

@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 
-public class StandAloneConditionOperand<ET extends AbstractEntity<?>> //
+public final class StandAloneConditionOperand<ET extends AbstractEntity<?>> //
 		extends AbstractWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> //
 		implements IStandAloneConditionOperand<ET> {
 
