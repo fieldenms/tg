@@ -24,6 +24,9 @@ public class CentreConfigUpdaterController implements ICollectionModificationCon
         return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) context.getSelectionCrit();
     }
     
+    /**
+     * Overridden to restore master entity (criteria entity) from masterEntityHolder that was initialised in producer.
+     */
     @Override
     public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> getMasterEntityFromAction(final CentreConfigUpdater action) {
         return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) criteriaEntityRestorer.restoreCriteriaEntity(action.getMasterEntityHolder());

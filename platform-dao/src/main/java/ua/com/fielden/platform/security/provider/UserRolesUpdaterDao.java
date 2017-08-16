@@ -44,15 +44,16 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     @Authorise(UserSaveToken.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
         final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
-        final Map<Object, UserRole> availableRoles = mapById(action.getRoles(), Long.class);
+        final UserRolesUpdater actionToSave = actionAndUserBeingUpdated._1;
+        final Map<Object, UserRole> availableRoles = mapById(actionToSave.getRoles(), Long.class);
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
-        for (final Long addedId : action.getAddedIds()) {
+        for (final Long addedId : actionToSave.getAddedIds()) {
             addedAssociations.add(co(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(addedId)));
         }
 
         final Set<UserAndRoleAssociation> removedAssociations = new LinkedHashSet<>();
-        for (final Long removedId : action.getRemovedIds()) {
+        for (final Long removedId : actionToSave.getRemovedIds()) {
             removedAssociations.add(co(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(removedId)));
         }
 
@@ -62,7 +63,7 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
         co(UserAndRoleAssociationBatchAction.class).save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
-        return super.save(actionAndUserBeingUpdated._1);
+        return super.save(actionToSave);
     }
     
 }

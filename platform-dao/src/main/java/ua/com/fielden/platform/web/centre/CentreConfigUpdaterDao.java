@@ -68,12 +68,12 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
             }
             
             // apply usage information
-            for (final String chosenId : action.getChosenIds()) {
+            for (final String chosenId : actionToSave.getChosenIds()) {
                 centreManager.getSecondTick().use(root, treeName(chosenId), true);
             }
             
             // apply sorting information
-            for (final String sortingVal: action.getSortingVals()) {
+            for (final String sortingVal: actionToSave.getSortingVals()) {
                 final String[] splitted = sortingVal.split(":");
                 final String name = treeName(splitted[0]);
                 centreManager.getSecondTick().toggleOrdering(root, name);

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.persistedActionVersionFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -14,7 +15,6 @@ import java.util.SortedSet;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.CollectionModificationUtils;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
@@ -71,7 +71,7 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     
     @Override
     public Long persistedActionVersion(final Long masterEntityId) {
-        return CollectionModificationUtils.persistedActionVersion(masterEntityId, coUserRoleTokensUpdater);
+        return persistedActionVersionFor(masterEntityId, coUserRoleTokensUpdater);
     }
     
     private static Set<SecurityTokenInfo> loadAvailableTokens(final SecurityTokenProvider securityTokenProvider, final EntityFactory factory) {

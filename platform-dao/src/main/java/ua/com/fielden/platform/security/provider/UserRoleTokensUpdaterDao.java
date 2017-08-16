@@ -51,20 +51,21 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     @Authorise(UserRoleSaveToken.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
         final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co(UserRoleTokensUpdater.class)));
+        final UserRoleTokensUpdater actionToSave = actionAndUserRoleBeingUpdated._1;
         
         // after all validations have passed -- the association changes could be saved:
         final UserRole userRoleBeingUpdated = actionAndUserRoleBeingUpdated._2;
-        final Map<Object, SecurityTokenInfo> availableTokens = mapById(action.getTokens(), String.class);
+        final Map<Object, SecurityTokenInfo> availableTokens = mapById(actionToSave.getTokens(), String.class);
         
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
-        for (final String addedId : action.getAddedIds()) {
+        for (final String addedId : actionToSave.getAddedIds()) {
             final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(addedId).getKey());
             final SecurityRoleAssociation assoc = factory.newByKey(SecurityRoleAssociation.class, token, userRoleBeingUpdated);
             addedAssociations.add(assoc);
         }
 
         final Set<SecurityRoleAssociation> removedAssociations = new LinkedHashSet<>();
-        for (final String removedId : action.getRemovedIds()) {
+        for (final String removedId : actionToSave.getRemovedIds()) {
             final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(removedId).getKey());
             final SecurityRoleAssociation assoc = factory.newByKey(SecurityRoleAssociation.class, token, userRoleBeingUpdated);
             removedAssociations.add(assoc);
@@ -76,7 +77,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
         co(SecurityRoleAssociationBatchAction.class).save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
-        return super.save(actionAndUserRoleBeingUpdated._1);
+        return super.save(actionToSave);
     }
 
     private Class<? extends ISecurityToken> loadToken(final String name) {

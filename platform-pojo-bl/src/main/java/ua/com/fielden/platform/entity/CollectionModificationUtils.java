@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.error.Result.failure;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,11 +34,11 @@ public class CollectionModificationUtils {
      * validation on available items deletion,
      * validation on action conflict against same master entity.
      * 
-     * @param staleAction
+     * @param staleAction -- stale instance of action with non-stale addedIds, removedIds and chosenIds. Please note that available items could be stale. Use returning action with updated available items instead.
      * @param companion
      * @param idType
      * @param controller
-     * @return -- the entity to be saved (additional validations could be performed in companion implementation) and re-fetched master entity
+     * @return -- the action to be saved (additional validations could be performed in companion implementation) and re-fetched master entity
      */
     public static <
         MASTER_TYPE extends AbstractEntity<?>, 
@@ -65,35 +67,40 @@ public class CollectionModificationUtils {
             freshAvailableItems = Optional.empty();
         } else if (staleMasterEntity.getId() == null) {
             freshEntity = null;
+            // Available items should be re-fetched in both cases: persisted and non-persisted master entity.
             freshAvailableItems = Optional.of(controller.refetchAvailableItems(staleMasterEntity));
         } else {
+            // Persisted action could exist only in case of persisted master entity. But it could be 'null', this is the case of action history beginning.
             freshEntity = controller.refetchActionEntity(staleMasterEntity);
             freshAvailableItems = Optional.of(controller.refetchAvailableItems(staleMasterEntity));
         }
         if (freshAvailableItems.isPresent()) {
+            // There is a need to validate existence of available items that was checked or unchecked: if such item disappears then validation conflict should be thrown.
             final Map<Object, ITEM> availableEntities = mapById(freshAvailableItems.get(), idType);
             
             for (final ID_TYPE addedId : staleAction.getAddedIds()) {
                 if (!availableEntities.containsKey(addedId)) {
-                    throw Result.failure("Another user has deleted the item, that you're trying to choose. " + TRY_AGAIN_MSG);
+                    throw failure("Another user has deleted the item, that you're trying to choose. " + TRY_AGAIN_MSG);
                 }
             }
             for (final ID_TYPE removedId : staleAction.getRemovedIds()) {
                 if (!availableEntities.containsKey(removedId)) {
-                    throw Result.failure("Another user has deleted the item, that you're trying to un-tick. " + TRY_AGAIN_MSG);
+                    throw failure("Another user has deleted the item, that you're trying to un-tick. " + TRY_AGAIN_MSG);
                 }
             }
         }
         
         final T entityToSave;
         if (freshEntity != null) {
+            // Stale action's surrogate version can be either -1 (no persisted action existed during producing phase) or >= 0 (version of persisted action existed during producing phase).
+            // If freshEntity is not empty then it represents new version of persisted action. It should be validated on conflict:
             if (freshEntity.getVersion() > staleAction.getSurrogateVersion()) {
                 throw Result.failure("Another user has changed the chosen items. " + TRY_AGAIN_MSG);
             }
             entityToSave = freshEntity;
             staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             // mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
-            entityToSave.setSurrogateVersion(freshEntity.getVersion() + 1L);
+            entityToSave.setSurrogateVersion(freshEntity.getVersion() + 1L); // surrogate version will be equal to actual action version after saving
         } else {
             entityToSave = companion.new_();
             staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
@@ -102,11 +109,12 @@ public class CollectionModificationUtils {
                 // There is a need to relax key requiredness to be able to continue with action saving.
                 entityToSave.getProperty(AbstractEntity.KEY).setRequired(false);
             }
-            entityToSave.setKey(refetchedMasterEntity.getId());
-            entityToSave.setSurrogateVersion(0L);
+            entityToSave.setKey(refetchedMasterEntity.getId()); // here id could be null and it is legitimate situation indicating that master entity is new. This makes the action possible to being used as continuation.
+            entityToSave.setSurrogateVersion(0L); // surrogate version will be equal to actual action version after saving
         }
         
         if (freshAvailableItems.isPresent()) {
+            // need to override 'stale' available items with fresh ones: this is needed in case of additional custom validations in concrete companion objects
             controller.setAvailableItems(entityToSave, freshAvailableItems.get());
         }
 
@@ -170,7 +178,8 @@ public class CollectionModificationUtils {
         
         final MASTER_TYPE masterEntityFromContext = controller.getMasterEntityFromContext(context);
         final MASTER_TYPE refetchedMasterEntity = validateMasterEntityAndRefetch(masterEntityFromContext, entity, Optional.of(context), controller);
-        
+        // The master entity is being set here to be able to retrieve it later in companion object's logic.
+        // Please note that we need exact original master entity instance, this is especially important for dirty instances (continuation case) which become non-dirty after re-fetching.
         entity.setMasterEntity(masterEntityFromContext);
         
         // IMPORTANT: it is necessary to reset state for "key" property after its change.
@@ -185,7 +194,7 @@ public class CollectionModificationUtils {
         }
         
         if (!entity.isPersistent() || refetchedMasterEntity.getId() == null) {
-            entity.setSurrogateVersion(-1L);
+            entity.setSurrogateVersion(-1L); // persisted action does not exist
         } else {
             entity.setSurrogateVersion(controller.persistedActionVersion(refetchedMasterEntity.getId()));
         }
@@ -201,7 +210,7 @@ public class CollectionModificationUtils {
      * @param actionCompanion
      * @return
      */
-    public static <M extends AbstractEntity<?>> Long persistedActionVersion(final Long masterEntityId, final IEntityReader<M> actionCompanion) {
+    public static <M extends AbstractEntity<?>> Long persistedActionVersionFor(final Long masterEntityId, final IEntityReader<M> actionCompanion) {
         return actionCompanion.findByKeyOptional(masterEntityId).map(action -> action.getVersion()).orElse(-1L);
     }
     

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.persistedActionVersionFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -11,7 +12,6 @@ import java.util.Set;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.CollectionModificationUtils;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -46,7 +46,7 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
     public UserRolesUpdater refetchActionEntity(final User masterEntity) {
         return coUserRolesUpdater.getEntity(
             from(select(UserRolesUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
-            .with(fetchAndInstrument(UserRolesUpdater.class).with(AbstractEntity.KEY)/*.with("roles")*/)
+            .with(fetchAndInstrument(UserRolesUpdater.class).with(AbstractEntity.KEY))
             .model()
         );
     }
@@ -63,7 +63,7 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
     
     @Override
     public Long persistedActionVersion(final Long masterEntityId) {
-        return CollectionModificationUtils.persistedActionVersion(masterEntityId, coUserRolesUpdater);
+        return persistedActionVersionFor(masterEntityId, coUserRolesUpdater);
     }
     
     private static Set<UserRole> loadAvailableRoles(final IUserRole coUserRole) {
