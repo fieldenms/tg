@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -31,8 +32,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     private Long compoundMasterEntityId;
     private String chosenProperty;
 
-    private ICompanionObjectFinder coFinder;
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+    private final ICompanionObjectFinder coFinder;
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
@@ -48,13 +49,13 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
-        IEntityDao<?> co = coCache.get(type);
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+        IEntityReader<?> co = coCache.get(type);
         if (co == null) {
-            co = coFinder.find(type);
+            co = coFinder.findAsReader(type, true);
             coCache.put(type, co);
         }
-        return (C) co;
+        return (R) co;
     }
 
     

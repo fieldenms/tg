@@ -3,11 +3,10 @@ package ua.com.fielden.platform.dao;
 import java.io.IOException;
 import java.util.List;
 
-import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.security.user.User;
 
 /**
