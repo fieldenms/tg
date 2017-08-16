@@ -82,19 +82,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 
     /**
-     * Returns default {@link FetchProvider} for the entity.
-     * <p>
-     * This fetch provider represents the 'aggregated' variant of all fetch providers needed mainly for entity master actions (and potentially others): <br>
-     * <br>
-     * 1. visual representation of entity properties in entity master UI <br>
-     * 2. validation / modification processes with BCE / ACE / conversions handling <br>
-     * 3. autocompletion of entity-typed properties
-     *
-     * @return
-     */
-    IFetchProvider<T> getFetchProvider();
-    
-    /**
      * Returns all entities produced by the provided query.
      *
      * @param quert

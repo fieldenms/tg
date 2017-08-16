@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -39,6 +40,11 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
         return null;
     }
 
+    @Override
+    public <T extends IEntityReader<E>, E extends AbstractEntity<?>> T findAsReader(final Class<E> type, final boolean uninstrumented) {
+        return uninstrumented ? find(type).uninstrumented() : find(type);
+    }
+    
     public Injector getInjector() {
         return injector;
     }
