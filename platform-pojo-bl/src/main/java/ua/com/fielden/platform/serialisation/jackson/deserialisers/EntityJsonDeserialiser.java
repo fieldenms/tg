@@ -301,6 +301,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 metaProperty.getEntity().beginInitialising();
                 metaProperty.setRequired(requiredNode.asBoolean());
                 metaProperty.getEntity().endInitialising();
+            } else {
+                metaProperty.getEntity().beginInitialising();
+                metaProperty.setRequired(false);
+                metaProperty.getEntity().endInitialising();
             }
             final JsonNode visibleNode = metaPropNode.get("_visible");
             if (visibleNode != null) {
