@@ -167,6 +167,11 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     }
 
     @Override
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
+        return (T) provider.find(type, true);
+    }
+
+    @Override
     public final Date date(final String dateTime) {
         return formatter.parseDateTime(dateTime).toDate();
     }

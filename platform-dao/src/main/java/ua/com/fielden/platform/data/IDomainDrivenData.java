@@ -37,6 +37,8 @@ public interface IDomainDrivenData {
     <T> T getInstance(final Class<T> type);
 
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type);
+    
+    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type);
 
     Date date(final String dateTime);
 

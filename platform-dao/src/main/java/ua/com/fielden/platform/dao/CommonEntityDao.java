@@ -96,7 +96,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
-    private boolean instrumented = true;
+    private boolean $instrumented$ = true;
 
     private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
@@ -167,23 +167,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     protected boolean isFilterable() {
         return false;
-    }
-    
-    @Override
-    public boolean instrumented() {
-        return instrumented;
-    }
-
-    @Override
-    public <E extends IEntityDao<T>> E uninstrumented() {
-        if (!instrumented) {
-            return (E) this;
-        }
-        
-        final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
-        final CommonEntityDao<T> co = (CommonEntityDao<T>) injector.getInstance(coType);
-        co.instrumented = false;
-        return (E) co;
     }
     
     private boolean isSaveOverridden() {
@@ -387,13 +370,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         
         IEntityDao<?> co = co$Cache.get(type);
         if (co == null) {
-            co = getCoFinder().find(type);
+            co = getCoFinder().find(type, false);
             co$Cache.put(type, co);
         }
         return (C) co;
     }
 
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> readerCache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
 
     /**
      * A convenient way to obtain a companion as a reader that reads uninstrumented entities.
@@ -402,20 +385,24 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         if (!instrumented() && getEntityType().equals(type)) {
-            return (R) this;
+            return (C) this;
         }
 
-        IEntityReader<?> co = readerCache.get(type);
+        IEntityDao<?> co = coCache.get(type);
         if (co == null) {
-            co = getCoFinder().findAsReader(type, true);
-            readerCache.put(type, co);
+            co = getCoFinder().find(type, true);
+            coCache.put(type, co);
         }
-        return (R) co;
+        return (C) co;
     }
 
-    
+    @Override
+    public boolean instrumented() {
+        return $instrumented$;
+    }
+
     private final Map<String, IContinuationData> moreData = new HashMap<>();
     
     /**
