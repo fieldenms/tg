@@ -30,7 +30,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
     
     @Before
     public void setUp()  {
-        dao = co(EntityWithMoney.class);
+        dao = co$(EntityWithMoney.class);
         logic = getInstance(LogicThatNeedsTransaction.class);
         factory = getInstance(EntityFactory.class);
     }
@@ -102,7 +102,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
 
     @Test
     public void test_session_required_atomic_behaviour() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
         try {
             final EntityWithMoney one = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
                     //new EntityWithMoney("one", "first", new Money("0.00"));

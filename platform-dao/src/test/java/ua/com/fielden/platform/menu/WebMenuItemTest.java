@@ -11,8 +11,8 @@ public class WebMenuItemTest extends AbstractDaoTestCase {
 
     @Test
     public void only_base_user_can_be_an_owner_of_web_menu_item_visibility_configuration() {
-        final User owner = co(User.class).findByKey("USER_1");
-        final User nonBaseOwner = co(User.class).findByKey("USER_2");
+        final User owner = co$(User.class).findByKey("USER_1");
+        final User nonBaseOwner = co$(User.class).findByKey("USER_2");
 
         final WebMenuItemInvisibility menuItem = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1");
         menuItem.setOwner(nonBaseOwner);
@@ -22,12 +22,12 @@ public class WebMenuItemTest extends AbstractDaoTestCase {
         menuItem.setOwner(owner);
         assertTrue(menuItem.isValid().isSuccessful());
         
-        co(WebMenuItemInvisibility.class).save(menuItem);
+        co$(WebMenuItemInvisibility.class).save(menuItem);
     }
     
     @Test
     public void every_developer_needs_to_know_that_required_and_key_member_properties_cannot_be_assigned_to_null_thus_no_need_check_for_nullness_in_BCE_handlers_for_such_properties() {
-        final User owner = co(User.class).findByKey("USER_1");
+        final User owner = co$(User.class).findByKey("USER_1");
 
         final WebMenuItemInvisibility menuItem = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1").setOwner(owner);
         assertTrue(menuItem.isValid().isSuccessful());

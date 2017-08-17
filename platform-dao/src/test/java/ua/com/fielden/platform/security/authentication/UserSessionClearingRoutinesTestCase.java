@@ -33,7 +33,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = co(UserSession.class);
+    private final IUserSession coSession = co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
 
     @Test
@@ -123,7 +123,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         super.populateDomain();
 
         // add more users
-        final IUser coUser = co(User.class);
+        final IUser coUser = co$(User.class);
         final User user1 = coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
         save(new_(TgPerson.class, "Person 1").setUser(user1));
         final User user2 = coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true));

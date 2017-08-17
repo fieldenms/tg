@@ -28,68 +28,68 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
 
     @Test
     public void by_default_find_by_key_returns_instrumented_instances() {
-        final EntityWithMoney entity = co(EntityWithMoney.class).findByKey("KEY1");
+        final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("KEY1");
         assertTrue(entity.isInstrumented());
     }
 
     @Test
     public void uninstrumented_find_by_key_returns_unnstrumented_instances() {
-        final EntityWithMoney entity = co(EntityWithMoney.class).uninstrumented().findByKey("KEY1");
+        final EntityWithMoney entity = co$(EntityWithMoney.class).uninstrumented().findByKey("KEY1");
         assertFalse(entity.isInstrumented());
     }
     
     @Test
     public void by_default_find_by_id_returns_instrumented_instances() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.findById(co.findByKey("KEY1").getId());
         assertTrue(entity.isInstrumented());
     }
 
     @Test
     public void uninstrumented_find_by_id_returns_uninstrumented_instances() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.uninstrumented().findById(co.findByKey("KEY1").getId());
         assertFalse(entity.isInstrumented());
     }
 
     @Test
     public void by_default_find_by_id_and_fetch_returns_instrumented_instances() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.findById(co.findByKey("KEY1").getId(), fetchAll(EntityWithMoney.class));
         assertTrue(entity.isInstrumented());
     }
 
     @Test
     public void uninstrumented_find_by_id_and_fetch_returns_uninstrumented_instances() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.uninstrumented().findById(co.findByKey("KEY1").getId(), fetchAll(EntityWithMoney.class));
         assertFalse(entity.isInstrumented());
     }
 
     @Test
     public void by_default_find_by_key_and_fetch_returns_instrumented_instances() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.findByKeyAndFetch(fetchAll(EntityWithMoney.class), "KEY1");
         assertTrue(entity.isInstrumented());
     }
 
     @Test
     public void uninstrumented_find_by_key_and_fetch_returns_uninstrumented_instances() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.uninstrumented().findByKeyAndFetch(fetchAll(EntityWithMoney.class), "KEY1");
         assertFalse(entity.isInstrumented());
     }
 
     @Test
     public void by_default_first_page_returns_instrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(10).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).firstPage(10).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
     }
 
     @Test
     public void uninstrumented_first_page_returns_uninstrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().firstPage(10).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().firstPage(10).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -101,7 +101,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(qem, 10).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).firstPage(qem, 10).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -113,7 +113,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(qem, 10).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).firstPage(qem, 10).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -125,7 +125,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().firstPage(qem, 10).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().firstPage(qem, 10).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -137,7 +137,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().firstPage(qem, 10).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().firstPage(qem, 10).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -145,21 +145,21 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
 
     @Test
     public void by_default_get_page_returns_instrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getPage(1, 2).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).getPage(1, 2).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
     }
 
     @Test
     public void uninstrumented_get_page_returns_uninstrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getPage(1, 2).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getPage(1, 2).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
 
     @Test
     public void next_on_uninstrumented_get_page_returns_uninstrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getPage(0, 2).next().data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getPage(0, 2).next().data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -171,7 +171,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getPage(qem, 1, 2).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).getPage(qem, 1, 2).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -183,7 +183,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getPage(qem, 0, 2).next().data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).getPage(qem, 0, 2).next().data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -195,7 +195,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getPage(qem, 1, 2).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getPage(qem, 1, 2).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -207,7 +207,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getPage(qem, 0, 2).next().data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getPage(qem, 0, 2).next().data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -219,7 +219,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getPage(qem, 1, 2).data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getPage(qem, 1, 2).data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -231,7 +231,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getPage(qem, 0, 2).next().data();
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getPage(qem, 0, 2).next().data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -244,7 +244,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .lightweight().model();
 
-        final EntityWithMoney entity = co(EntityWithMoney.class).getEntity(qem);
+        final EntityWithMoney entity = co$(EntityWithMoney.class).getEntity(qem);
         assertTrue(entity !=  null);
         assertFalse(entity.isInstrumented());
     }
@@ -256,7 +256,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .model();
 
-        final EntityWithMoney entity = co(EntityWithMoney.class).uninstrumented().getEntity(qem);
+        final EntityWithMoney entity = co$(EntityWithMoney.class).uninstrumented().getEntity(qem);
         assertTrue(entity !=  null);
         assertFalse(entity.isInstrumented());
     }
@@ -268,7 +268,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .lightweight().model();
 
-        final EntityWithMoney entity = co(EntityWithMoney.class).uninstrumented().getEntity(qem);
+        final EntityWithMoney entity = co$(EntityWithMoney.class).uninstrumented().getEntity(qem);
         assertTrue(entity !=  null);
         assertFalse(entity.isInstrumented());
     }
@@ -280,7 +280,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getAllEntities(qem);
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).getAllEntities(qem);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -292,7 +292,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getAllEntities(qem);
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getAllEntities(qem);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -304,7 +304,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getAllEntities(qem);
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getAllEntities(qem);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -316,7 +316,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getFirstEntities(qem, 10);
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).getFirstEntities(qem, 10);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -328,7 +328,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getFirstEntities(qem, 10);
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getFirstEntities(qem, 10);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -340,7 +340,7 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getFirstEntities(qem, 10);
+        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).uninstrumented().getFirstEntities(qem, 10);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
@@ -352,8 +352,8 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        try (final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).stream(qem)) {
-            assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).stream(qem)) {
+            assertEquals("All entities are instrumented", co$(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
         }
     }
 
@@ -364,8 +364,8 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).model();
 
-        try (final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem, 1)) {
-            assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).uninstrumented().stream(qem, 1)) {
+            assertEquals("All entities are instrumented", co$(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
         }
     }
 
@@ -376,8 +376,8 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(fetchAll(EntityWithMoney.class))
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
-        try (final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem, 1)) {
-            assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+        try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).uninstrumented().stream(qem, 1)) {
+            assertEquals("All entities are instrumented", co$(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
         }
     }
 
