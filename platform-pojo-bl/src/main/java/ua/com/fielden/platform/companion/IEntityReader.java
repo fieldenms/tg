@@ -20,7 +20,7 @@ import ua.com.fielden.platform.pagination.IPage;
  *
  * @param <T>
  */
-public interface IEntityReader<T extends AbstractEntity<?>> {
+public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T> {
 
     /**
      * Returns default {@link FetchProvider} for the entity.

@@ -59,7 +59,7 @@ public class SavingNewActivatableEntitiesWithoutReferencesToOtherActivatablesTes
         // move to the future and change the current user
         constants.setNow(dateTime("2016-05-17 13:36:57"));
         final User currentUser = up.getUser();
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
 
         try {
             // perform entity modification and saving

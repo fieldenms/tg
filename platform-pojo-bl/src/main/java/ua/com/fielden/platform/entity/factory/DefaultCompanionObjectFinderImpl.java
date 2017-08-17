@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity.factory;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
+import java.util.Optional;
+
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -42,7 +45,8 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
 
     @Override
     public <T extends IEntityReader<E>, E extends AbstractEntity<?>> T findAsReader(final Class<E> type, final boolean uninstrumented) {
-        return uninstrumented ? find(type).uninstrumented() : find(type);
+        final Optional<IEntityDao<E>> reader = Optional.ofNullable(find(type));
+        return (T) reader.map(co -> uninstrumented ? co.uninstrumented() : co).orElse(null);
     }
     
     public Injector getInjector() {

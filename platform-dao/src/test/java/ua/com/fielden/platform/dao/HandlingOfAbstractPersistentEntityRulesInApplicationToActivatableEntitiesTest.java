@@ -27,10 +27,10 @@ public class HandlingOfAbstractPersistentEntityRulesInApplicationToActivatableEn
     @Test
     public void lastUpdatedBy_does_not_change_if_the_only_changed_property_for_an_activatable_entity_is_refCount() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(username, co(User.class));
+        up.setUsername(username, co$(User.class));
 
         // Cat7 will be referenced by a newly created Cat6, and should not change its last-updated information even though its recCount is goint to be changed
-        final TgCategory originalCat7 = co(TgCategory.class).findByKey(cat7);
+        final TgCategory originalCat7 = co$(TgCategory.class).findByKey(cat7);
         assertNull(originalCat7.getLastUpdatedBy());
         assertNull(originalCat7.getLastUpdatedDate());
         assertEquals(Integer.valueOf(0), originalCat7.getRefCount());
@@ -46,7 +46,7 @@ public class HandlingOfAbstractPersistentEntityRulesInApplicationToActivatableEn
     @Test
     public void saving_new_activatable_entity_does_not_lead_to_changes_of_createdBy_user_refCount() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(username, co(User.class));
+        up.setUsername(username, co$(User.class));
         final User currUser = up.getUser();
         
         final Integer originalUserRefCount = currUser.getRefCount();
@@ -59,14 +59,14 @@ public class HandlingOfAbstractPersistentEntityRulesInApplicationToActivatableEn
     @Test
     public void updating_activatable_entity_does_not_lead_to_changes_of_lastUpdatedBy_user_refCount() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(username, co(User.class));
+        up.setUsername(username, co$(User.class));
         final User currUser = up.getUser();
         
         final Integer originalUserRefCount = currUser.getRefCount();
         assertEquals(Integer.valueOf(0), originalUserRefCount);
         
-        save(co(TgCategory.class).findByKey(cat7).setDesc("some new desc"));
-        final TgCategory updatedCat7 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7); 
+        save(co$(TgCategory.class).findByKey(cat7).setDesc("some new desc"));
+        final TgCategory updatedCat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7); 
         
         assertEquals(currUser, updatedCat7.getLastUpdatedBy());
         assertEquals(originalUserRefCount, updatedCat7.getLastUpdatedBy().getRefCount());
@@ -75,10 +75,10 @@ public class HandlingOfAbstractPersistentEntityRulesInApplicationToActivatableEn
     @Test
     public void deactivating_activatable_entity_does_not_lead_to_changes_of_lastUpdatedBy_and_createdBy_user_refCount_values() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(username, co(User.class));
+        up.setUsername(username, co$(User.class));
         final User currUser = up.getUser();
         
-        final TgCategory cat7Orig = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7);
+        final TgCategory cat7Orig = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7);
         assertTrue(cat7Orig.isActive());
         
         final Integer origCreatedByUserRefCount = cat7Orig.getCreatedBy().getRefCount();
@@ -88,7 +88,7 @@ public class HandlingOfAbstractPersistentEntityRulesInApplicationToActivatableEn
         
         save(cat7Orig.setActive(false));
         
-        final TgCategory updatedCat7 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7); 
+        final TgCategory updatedCat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7); 
         
         assertEquals(currUser, updatedCat7.getLastUpdatedBy());
         assertEquals(Integer.valueOf(0), updatedCat7.getLastUpdatedBy().getRefCount());

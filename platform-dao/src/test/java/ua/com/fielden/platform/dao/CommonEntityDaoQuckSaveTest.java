@@ -25,7 +25,7 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
     @Test
     public void entity_version_is_updated_after_quickSave() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         EntityWithMoney entity = co.findByKey("KEY1");
 
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
@@ -40,7 +40,7 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
     @Test
     public void optimistic_locking_based_on_versioning_works_for_quickSave() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         // get entity, which will be modified but not saved
         final EntityWithMoney entity = co.findByKey("KEY1");
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
@@ -62,7 +62,7 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
     @Test
     public void transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_quickSave() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         final EntityWithMoney entity = co.findByKey("KEY1");
         final Date transDate = co.findByKey("KEY1").getTransDate();
         assertNotNull("Test pre-condition is invalid -- transDate should be null.", transDate);
@@ -74,7 +74,7 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
         final EntityWithMoney newEntity = new_(EntityWithMoney.class, "new entity");
         assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
         newEntity.setMoney(new Money("12")); // required property -- has to be set
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         assertNotNull("transDate should have been assigned.", co.findById(co.quickSave(newEntity)).getTransDate());
     }
 
@@ -85,14 +85,14 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
         final Date date = new DateTime(2009, 01, 01, 0, 0, 0, 0).toDate();
         newEntity.setTransDate(date);
         newEntity.setMoney(new Money("12")); // required property -- has to be set
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         assertEquals("transDate should not have been re-assigned.", date, co.findById(co.quickSave(newEntity)).getTransDate());
     }
 
     @Test
     @Ignore("This test is not really valuable as a unit test. It has more of a proof-of-concept benchmark connataion.")
     public void test_quickSave_is_more_performant_than_save() {
-        final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
         int times = 100;
         
         long quickSaveTime = 0;
@@ -118,7 +118,7 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
     @Test
     public void quickSave_invocation_on_companions_with_overriden_save_throws_exception_to_prevent_invalid_execution() {
-        final IEntityDao<EntityWithSimpleMoney> co = co(EntityWithSimpleMoney.class);
+        final IEntityDao<EntityWithSimpleMoney> co = co$(EntityWithSimpleMoney.class);
         try {
             co.quickSave(new_(EntityWithSimpleMoney.class, "SOME KEY"));
             fail();

@@ -37,7 +37,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserTestCase extends AbstractDaoTestCase {
 
-    private final IUser coUser = co(User.class);
+    private final IUser coUser = co$(User.class);
 
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
@@ -240,7 +240,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     
     @Test 
     public void unit_test_user_cannot_be_persisted() {
-        final IUser coUser = co(User.class);
+        final IUser coUser = co$(User.class);
         final User user = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         
         try {
@@ -254,7 +254,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     @Test
     public void self_modification_of_user_instance_result_in_correct_assignment_of_the_last_updated_by_group_of_properties() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(up.getUser().getKey(), co(User.class)); // refresh the user
+        up.setUsername(up.getUser().getKey(), co$(User.class)); // refresh the user
 
         final User currUser = up.getUser();
         assertNotNull(currUser);
@@ -270,7 +270,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertEquals(2L, savedUser.getVersion().longValue());
         
         // refresh the user instance in the provider
-        up.setUsername(currUser.getKey(), co(User.class));
+        up.setUsername(currUser.getKey(), co$(User.class));
         
         final User user = up.getUser();
         assertTrue(user.isPersisted());
@@ -286,13 +286,13 @@ public class UserTestCase extends AbstractDaoTestCase {
     
     @Test
     public void property_lastUpdatedBy_is_fetched_as_id_only_proxy_even_for_a_fetchOnly_strategy_for_owning_entity() {
-        final User user = co(User.class).findByKeyAndFetch(fetchOnly(User.class), "USER1");
+        final User user = co$(User.class).findByKeyAndFetch(fetchOnly(User.class), "USER1");
         assertTrue(user.getLastUpdatedBy().isIdOnlyProxy());
     }
  
     @Test
     public void if_base_prop_is_set_to_false_then_prop_basedOnUser_becomes_required() {
-        final User user1 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER1");
+        final User user1 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER1");
         user1.setBase(false);
         
         assertTrue(user1.getProperty("basedOnUser").isRequired());
@@ -307,7 +307,7 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void if_base_prop_is_set_to_true_then_prop_basedOnUser_becomes_not_required_and_its_value_is_removed() {
-        final User user5 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER5");
+        final User user5 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER5");
         assertTrue(user5.getProperty("basedOnUser").isRequired());
         assertNotNull(user5.getBasedOnUser());
         user5.setBase(true);
@@ -320,7 +320,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     
     @Test
     public void system_users_cannot_have_property_base_changed() {
-        final User unitTestUser = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
+        final User unitTestUser = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
         assertNotNull(unitTestUser);
         assertTrue(unitTestUser.isBase());
         assertTrue(unitTestUser.getProperty("base").isValid());
@@ -331,7 +331,7 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void the_use_of_self_as_basedOnUser_is_not_permitted() {
-        final User user1 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER1");
+        final User user1 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER1");
         assertTrue(user1.getProperty("basedOnUser").isValid());
         user1.setBasedOnUser(user1);
         assertFalse(user1.getProperty("basedOnUser").isValid());
@@ -340,11 +340,11 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void system_users_cannot_have_property_basedOnUser_changed() {
-        final User unitTestUser = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
+        final User unitTestUser = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
         assertNotNull(unitTestUser);
         assertNull(unitTestUser.getBasedOnUser());
         assertTrue(unitTestUser.getProperty("basedOnUser").isValid());
-        final User user3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        final User user3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
         unitTestUser.setBasedOnUser(user3);
         assertFalse(unitTestUser.getProperty("basedOnUser").isValid());
         assertNull(unitTestUser.getBasedOnUser());
@@ -353,17 +353,17 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void only_a_base_user_can_be_set_as_basedOnUser() {
-        final User user5 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER5");
+        final User user5 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER5");
         assertTrue(user5.getProperty("basedOnUser").isValid());
         assertEquals("USER1", user5.getBasedOnUser().getKey());
         
-        final User nonbaseUser6 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER6");
+        final User nonbaseUser6 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER6");
         user5.setBasedOnUser(nonbaseUser6);
         assertFalse(user5.getProperty("basedOnUser").isValid());
         assertEquals("USER1", user5.getBasedOnUser().getKey());
         assertEquals(format(UserBaseOnUserValidator.ONLY_BASE_USER_CAN_BE_USED_FOR_INHERITANCE, nonbaseUser6.getKey()), user5.getProperty("basedOnUser").getFirstFailure().getMessage());
         
-        final User baseUser3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        final User baseUser3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
         user5.setBasedOnUser(baseUser3);
         final User savedUser5 = save(user5);
         assertTrue(savedUser5.getProperty("basedOnUser").isValid());
@@ -372,10 +372,10 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void once_basedOnUser_is_assigned_to_a_base_user_then_its_property_base_becomes_false() {
-        final User user3 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER3");
+        final User user3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
         assertTrue(user3.isBase());
 
-        final User baseUser4 = coUser.findByKeyAndFetch(co(User.class).getFetchProvider().fetchModel(), "USER4");
+        final User baseUser4 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER4");
         user3.setBasedOnUser(baseUser4);
         assertFalse(user3.isBase());
     }

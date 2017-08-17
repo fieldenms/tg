@@ -23,13 +23,13 @@ public class MenuSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void only_basse_user_can_save_module_menu_changes() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
 
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList("item1", "item2", "item3")))
                 .setVisibleMenuItems(new HashSet<>(Arrays.asList("item2"))));
 
-        final List<WebMenuItemInvisibility> menuItems = co(WebMenuItemInvisibility.class).
+        final List<WebMenuItemInvisibility> menuItems = co$(WebMenuItemInvisibility.class).
                 getAllEntities(from(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(up.getUser()).model()).
                         with(EntityUtils.fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model());
         assertEquals("The number of expected number of invisible menu items is incorrect", 2, menuItems.size());
@@ -40,13 +40,13 @@ public class MenuSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void non_base_user_can_not_save_module_menu_changes() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUser(co(User.class).findByKey("USER_2"));
+        up.setUser(co$(User.class).findByKey("USER_2"));
 
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList("item1", "item2", "item3")))
                 .setVisibleMenuItems(new HashSet<>(Arrays.asList("item2"))));
 
-        final List<WebMenuItemInvisibility> menuItems = co(WebMenuItemInvisibility.class).
+        final List<WebMenuItemInvisibility> menuItems = co$(WebMenuItemInvisibility.class).
                 getAllEntities(from(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(up.getUser().getBasedOnUser()).model()).
                         with(EntityUtils.fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model());
         assertEquals("The number of expected number of invisible menu items is incorrect", 0, menuItems.size());

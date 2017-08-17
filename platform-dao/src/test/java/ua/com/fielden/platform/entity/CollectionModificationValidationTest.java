@@ -131,7 +131,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final User user = save(new_(User.class, newUsername));
         createUpdater(user);
         
-        co(User.class).batchDelete(listOf(user.getId()));
+        co$(User.class).batchDelete(listOf(user.getId()));
         
         try {
             createUpdater(user);
@@ -156,8 +156,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         originalUpdater.setRemovedIds(removedIds);
         
         // removal of available entity
-        this.<IUserAndRoleAssociation, UserAndRoleAssociation>co(UserAndRoleAssociation.class).removeAssociation(setOf(userToRole2));
-        co(UserRole.class).batchDelete(listOf(role2.getId()));
+        this.<IUserAndRoleAssociation, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(setOf(userToRole2));
+        co$(UserRole.class).batchDelete(listOf(role2.getId()));
 
         // starting the process of saving: a) produce it first (should be successfull) b) save
         final UserRolesUpdater updater = createUpdater(user);
@@ -186,7 +186,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         originalUpdater.setAddedIds(addedIds);
         
         // removal of available entity
-        co(UserRole.class).batchDelete(listOf(role1.getId()));
+        co$(UserRole.class).batchDelete(listOf(role1.getId()));
 
         // starting the process of saving: a) produce it first (should be successfull) b) save
         final UserRolesUpdater updater = createUpdater(user);
@@ -252,7 +252,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     public void available_entities_are_ordered_by_key_and_such_order_does_not_mutate_during_validation_cycles_in_user_roles_collectional_editor() {
         final User user = save(new_(User.class, newUsername));
         
-        final UserRole unitTestRole = co(UserRole.class).findByKey(UNIT_TEST_ROLE);
+        final UserRole unitTestRole = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
         final UserRole role3 = save(new_(UserRole.class, "ROLE3", "desc").setActive(true));
