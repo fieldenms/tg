@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
+import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,4 +49,17 @@ public class StreamUtilsTest {
         assertEquals(0L, tail.count());
     }
 
+    @Test
+    public void takeWhile_for_empty_stream_returns_empty_stream() {
+        assertEquals(0L, takeWhile(Stream.empty(), e -> true).count());
+    }
+
+    @Test
+    public void takeWhile_returns_the_longest_predicate_of_the_stream_whose_elements_satisfy_predicare() {
+        final Stream<Integer> prefix = takeWhile(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e < 5);
+
+        final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
+        assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
+        assertEquals(4, expectedCurrValue.get());
+    }
 }

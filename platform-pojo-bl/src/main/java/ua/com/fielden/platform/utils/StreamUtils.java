@@ -2,6 +2,10 @@ package ua.com.fielden.platform.utils;
 
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -32,6 +36,38 @@ public class StreamUtils {
         Stream<T> tail = StreamSupport.stream(iterable.spliterator(), false);
         
         return T2.t2(head, tail);
+    }
+
+    /**
+     * Returns the longest prefix of the <code>stream</code> whose elements satisfy <code>predicate</code>.
+     *
+     * @param stream
+     * @param predicate
+     * @return
+     */
+    public static <T> Stream<T> takeWhile(final Stream<T> stream, final Predicate<? super T> predicate) {
+       return StreamSupport.stream(takeWhile(stream.spliterator(), predicate), false);
+    }
+
+    private static <T> Spliterator<T> takeWhile(final Spliterator<T> splitr, final Predicate<? super T> predicate) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            boolean stillGoing = true;
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                if (stillGoing) {
+                    final boolean hadNext = splitr.tryAdvance(elem -> {
+                        if (predicate.test(elem)) {
+                            consumer.accept(elem);
+                        } else {
+                            stillGoing = false;
+                        }
+                    });
+                    return hadNext && stillGoing;
+                }
+                return false;
+            }
+        };
     }
 
 }
