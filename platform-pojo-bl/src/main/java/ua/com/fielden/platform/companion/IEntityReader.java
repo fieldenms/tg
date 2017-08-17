@@ -7,11 +7,10 @@ import java.util.stream.Stream;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
@@ -21,7 +20,20 @@ import ua.com.fielden.platform.utils.Pair;
  *
  * @param <T>
  */
-public interface IEntityReader<T extends AbstractEntity<?>> {
+public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T> {
+
+    /**
+     * Returns default {@link FetchProvider} for the entity.
+     * <p>
+     * This fetch provider represents the 'aggregated' variant of all fetch providers needed mainly for entity master actions (and potentially others): <br>
+     * <br>
+     * 1. visual representation of entity properties in entity master UI <br>
+     * 2. validation / modification processes with BCE / ACE / conversions handling <br>
+     * 3. autocompletion of entity-typed properties
+     *
+     * @return
+     */
+    IFetchProvider<T> getFetchProvider();
 
     /**
      * Should return true if entity with provided id and version value is stale, i.e. its version is older then the latest persisted entity with the same id.

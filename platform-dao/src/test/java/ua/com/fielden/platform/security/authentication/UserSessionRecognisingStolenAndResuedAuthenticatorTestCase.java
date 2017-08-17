@@ -34,7 +34,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = co(UserSession.class);
+    private final IUserSession coSession = co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final TickerForSessionCache cacheTicker = (TickerForSessionCache) getInstance(Ticker.class);
 
@@ -90,7 +90,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
         super.populateDomain();
 
         // add more users
-        final IUser coUser = co(User.class);
+        final IUser coUser = co$(User.class);
         save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true))));
         save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true))));
 

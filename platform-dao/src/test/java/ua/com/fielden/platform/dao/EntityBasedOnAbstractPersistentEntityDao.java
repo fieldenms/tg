@@ -40,7 +40,7 @@ public class EntityBasedOnAbstractPersistentEntityDao extends CommonEntityDao<En
         final List<AbstractPersistentEntity<?>> result = new ArrayList<>();
         result.addAll(thisToSave.stream().map(entity -> save(entity)).collect(Collectors.toList()));
         
-        final EntityBasedOnAbstractPersistentEntity2Dao thatCo = co(EntityBasedOnAbstractPersistentEntity2.class);
+        final EntityBasedOnAbstractPersistentEntity2Dao thatCo = co$(EntityBasedOnAbstractPersistentEntity2.class);
         result.addAll(thatToSave.stream().map(entity -> thatCo.save(entity)).collect(Collectors.toList()));
         
         return result;

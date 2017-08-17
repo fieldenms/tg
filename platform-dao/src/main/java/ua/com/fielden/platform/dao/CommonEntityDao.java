@@ -379,7 +379,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         if (getEntityType().equals(type)) {
             return (C) this;
         }

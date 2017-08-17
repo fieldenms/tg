@@ -37,7 +37,7 @@ public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
         final EntityWithMoney instance =new_(EntityWithMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance("USD")));
         // saving instance of MoneyClass
-        final IEntityDao<EntityWithMoney> dao = co(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> dao = co$(EntityWithMoney.class);
         dao.save(instance);
         // retrieve saved instance
         final EntityWithMoney instance2 = dao.findByKey("name");
@@ -46,7 +46,7 @@ public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
 
     @Test
     public void retrieved_entity_with_money_is_observable() {
-        final IEntityWithMoney coEntityWithMoney = co(EntityWithMoney.class);
+        final IEntityWithMoney coEntityWithMoney = co$(EntityWithMoney.class);
         final EntityWithMoney instance =  coEntityWithMoney.findByKey("aname1");
         instance.addPropertyChangeListener("money", new PropertyChangeListener() {
             @Override
@@ -64,7 +64,7 @@ public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
         final EntityWithSimpleMoney instance = new_(EntityWithSimpleMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance(Locale.getDefault())));
         // saving instance of MoneyClass
-        final EntityWithSimpleMoneyDao dao = co(EntityWithSimpleMoney.class);
+        final EntityWithSimpleMoneyDao dao = co$(EntityWithSimpleMoney.class);
         dao.save(instance);
         // retrieve saved instance
         final EntityWithSimpleMoney instance2 = dao.findByKey("name");

@@ -51,9 +51,9 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void menu_restored_with_base_user_has_all_menu_items_with_appropriate_visible_property() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final IWebMenuItemInvisibility mii = co$(WebMenuItemInvisibility.class);
 
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
                         "module1/module1item3",
@@ -116,9 +116,9 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void menu_restored_wtih_non_base_user_has_no_invisible_menu_items() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final IWebMenuItemInvisibility mii = co$(WebMenuItemInvisibility.class);
 
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
                         "module1/module1item3",
@@ -129,7 +129,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3"))));
 
-        up.setUser(co(User.class).findByKey("USER_2"));
+        up.setUser(co$(User.class).findByKey("USER_2"));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up);
         final Menu menu = menuProducer.newEntity();
 

@@ -15,8 +15,8 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
     @Test
     public void non_conflicting_changes_should_have_been_resolved() {
-        final TgCategory cat1_v1 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        final TgCategory cat1_v2 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        final TgCategory cat1_v1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        final TgCategory cat1_v2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
 
         final TgCategory savedCat1_v1 = save(cat1_v1.setDesc("new desc"));
         final TgCategory savedCat1_v2 = save(cat1_v2.setKey("CAT1"));
@@ -27,8 +27,8 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
     @Test
     public void identical_conflicting_changes_should_have_been_resolved() {
-        final TgCategory cat1_v1 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        final TgCategory cat1_v2 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        final TgCategory cat1_v1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        final TgCategory cat1_v2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
 
         final TgCategory savedCat1_v1 = save(cat1_v1.setDesc("new desc"));
         final TgCategory savedCat1_v2 = save(cat1_v2.setDesc("new desc"));
@@ -38,8 +38,8 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
     @Test
     public void conflicting_changes_should_have_prevent_entity_saving() {
-        final TgCategory cat1_v1 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        final TgCategory cat1_v2 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        final TgCategory cat1_v1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        final TgCategory cat1_v2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
 
         save(cat1_v1.setDesc("new desc"));
 
@@ -54,11 +54,11 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
     @Test
     public void concurrent_setting_of_activatable_property_should_not_lead_to_conflict_resolution_errors() {
-        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
 
         save(new_(TgSystem.class, "Sys2").setActive(true).setCategory(cat1));
         save(new_(TgSystem.class, "Sys3").setActive(true).setCategory(cat1));
-        assertEquals(Integer.valueOf(3), co(TgCategory.class).findByKey("Cat1").getRefCount());
+        assertEquals(Integer.valueOf(3), co$(TgCategory.class).findByKey("Cat1").getRefCount());
     }
 
 

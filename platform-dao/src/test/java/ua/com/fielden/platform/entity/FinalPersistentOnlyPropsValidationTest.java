@@ -17,7 +17,7 @@ public class FinalPersistentOnlyPropsValidationTest extends AbstractDaoTestCase 
 
     @Test
     public void assigned_and_persisted_final_properties_cannot_be_changed() {
-        final TgCategory catBeforChanged = co(TgCategory.class).findByKey("Cat1");
+        final TgCategory catBeforChanged = co$(TgCategory.class).findByKey("Cat1");
         assertTrue(catBeforChanged.getProperty("finalProp").isEditable());
         
         catBeforChanged.setFinalProp(42);
@@ -36,7 +36,7 @@ public class FinalPersistentOnlyPropsValidationTest extends AbstractDaoTestCase 
 
     @Test
     public void unassigned_final_properties_of_persisted_entities_can_be_assigned_and_changed_multiple_times_before_saving() {
-        final TgCategory cat = co(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat = co$(TgCategory.class).findByKey("Cat1");
         assertNull(cat.getFinalProp());
         assertTrue(cat.getProperty("finalProp").isEditable());
         assertTrue(cat.getProperty("finalProp").isValid());

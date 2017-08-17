@@ -3,11 +3,10 @@ package ua.com.fielden.platform.dao;
 import java.io.IOException;
 import java.util.List;
 
-import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -34,15 +33,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
     Class<? extends Comparable<?>> getKeyType();
 
 
-    /**
-     * This is a mixin method that should indicate whether data retrieval should follow the instrumented or uninstrumented strategy for entity instantiation during retrieval.
-     * 
-     * @return
-     */
-    default boolean instrumented() {
-        return true;
-    }
-    
     /**
      * A factory method that creates an instance of the same companion object it is invoked on, but with method {@link #instrumented()} returning <code>false</code>.
      * 
@@ -81,19 +71,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      */
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 
-    /**
-     * Returns default {@link FetchProvider} for the entity.
-     * <p>
-     * This fetch provider represents the 'aggregated' variant of all fetch providers needed mainly for entity master actions (and potentially others): <br>
-     * <br>
-     * 1. visual representation of entity properties in entity master UI <br>
-     * 2. validation / modification processes with BCE / ACE / conversions handling <br>
-     * 3. autocompletion of entity-typed properties
-     *
-     * @return
-     */
-    IFetchProvider<T> getFetchProvider();
-    
     /**
      * Returns all entities produced by the provided query.
      *
