@@ -33,6 +33,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
+    private IEntityDao<T> co$;
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
@@ -97,7 +98,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     private T new_() {
-        final IEntityDao<T> companion = co(this.entityType);
+        final IEntityDao<T> companion = companion();
         if (companion != null) {
             return companion.new_();
         } else {
@@ -150,9 +151,17 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected EntityFactory factory() {
         return factory;
     }
-
+    
+    /**
+     * Returns companion object for instrumented instances instantiation.
+     * 
+     * @return
+     */
     protected IEntityDao<T> companion() {
-        return co(this.entityType);
+        if (co$ == null) {
+            co$ = coFinder.find(this.entityType);
+        }
+        return co$;
     }
 
     /**
