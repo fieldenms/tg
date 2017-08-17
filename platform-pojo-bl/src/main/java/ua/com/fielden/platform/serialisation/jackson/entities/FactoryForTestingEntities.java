@@ -245,6 +245,48 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
     
+    public EntityWithMetaProperty createRequiredMetaPropThatBecameNonRequired() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("requiredProp", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.getProperty("requiredProp").setRequired(false);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createNonEditableMetaPropThatBecameEditable() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("nonEditableProp", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.getProperty("nonEditableProp").setEditable(true);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createNonVisibleMetaPropThatBecameVisible() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("nonVisibleProp", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.getProperty("nonVisibleProp").setVisible(true);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createNonDefaultChangeCountMetaPropThatBecameDefault() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("propWithValueChangeCount", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.set("propWithValueChangeCount", "Ok Ok"); // value change count becomes 1
+        
+        entity.getProperty("propWithValueChangeCount").setValueChangeCount(0); // make it default afterwards
+        return entity;
+    }
+    
     public AbstractEntity createUninstrumentedEntity(final boolean proxiedType, final Class entityType) {
         return createUninstrumentedPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
     }

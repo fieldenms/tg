@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditableDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequiredDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 import java.io.IOException;
@@ -282,16 +286,19 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (valueChangeCountNode != null) {
                 assertNonEmptyNode(valueChangeCountNode);
                 metaProperty.setValueChangeCount(valueChangeCountNode.intValue());
+            } else {
+                metaProperty.setValueChangeCount(getValueChangeCountDefault());
             }
             final JsonNode assignedNode = metaPropNode.get("_assigned");
-            if (assignedNode != null) {
-                assertNonEmptyNode(assignedNode);
-                metaProperty.setAssigned(assignedNode.asBoolean());
-            }
+            assertNonEmptyNode(assignedNode);
+            metaProperty.setAssigned(assignedNode.asBoolean());
+                
             final JsonNode editableNode = metaPropNode.get("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
             if (editableNode != null) {
                 assertNonEmptyNode(editableNode);
                 metaProperty.setEditable(editableNode.asBoolean());
+            } else {
+                metaProperty.setEditable(getEditableDefault());
             }
             final JsonNode requiredNode = metaPropNode.get("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
             if (requiredNode != null) {
@@ -303,13 +310,15 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 metaProperty.getEntity().endInitialising();
             } else {
                 metaProperty.getEntity().beginInitialising();
-                metaProperty.setRequired(false);
+                metaProperty.setRequired(getRequiredDefault());
                 metaProperty.getEntity().endInitialising();
             }
             final JsonNode visibleNode = metaPropNode.get("_visible");
             if (visibleNode != null) {
                 assertNonEmptyNode(visibleNode);
                 metaProperty.setVisible(visibleNode.asBoolean());
+            } else {
+                metaProperty.setVisible(getVisibleDefault());
             }
         }
         return metaProperty;
@@ -321,6 +330,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @param node
      */
     private static void assertNonEmptyNode(final JsonNode node) {
+        if (node == null) {
+            throw new EntityDeserialisationException("EntitySerialiser has got no node during meta property deserialisation.");
+        }
         if (node.isNull()) {
             throw new EntityDeserialisationException("EntitySerialiser has got 'null' node inside during meta property deserialisation.");
         }

@@ -615,6 +615,47 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
+    public void required_meta_property_that_became_non_required_restores() {
+        final AbstractEntity<?> entity = factory.createRequiredMetaPropThatBecameNonRequired();
+        final String value = "Ok";
+        checkMetaValues(entity.getProperty("requiredProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("requiredProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+    }
+    
+    @Test
+    public void non_editable_meta_property_that_became_editable_restores() {
+        final AbstractEntity<?> entity = factory.createNonEditableMetaPropThatBecameEditable();
+        final String value = "Ok";
+        checkMetaValues(entity.getProperty("nonEditableProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("nonEditableProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+    }
+    
+    @Test
+    public void non_visible_meta_property_that_became_visible_restores() {
+        final AbstractEntity<?> entity = factory.createNonVisibleMetaPropThatBecameVisible();
+        final String value = "Ok";
+        checkMetaValues(entity.getProperty("nonVisibleProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("nonVisibleProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+    }
+    
+    @Test
+    public void non_default_valueChangeCount_in_meta_property_that_became_default_restores() {
+        final AbstractEntity<?> entity = factory.createNonDefaultChangeCountMetaPropThatBecameDefault();
+        final String value = "Ok Ok";
+        final String originalValue = "Ok";
+        checkMetaValues(entity.getProperty("propWithValueChangeCount"), null, null, value, originalValue, originalValue, null, value, true, 0, true, true, false, true);
+        
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+        checkMetaValues(restoredEntity.getProperty("propWithValueChangeCount"), null, null, value, originalValue, originalValue, null, value, true, 0, true, true, false, true);
+    }
+    
+    @Test
     public void meta_property_with_id_only_proxies_restores() {
         final AbstractEntity<?> entity = factory.createEntityMetaPropWithIdOnlyProxyValues();
         entity.beginInitialising();
@@ -629,7 +670,7 @@ public class EntitySerialisationWithJacksonTest {
         checkMetaValues(entity.getProperty("prop"), null, null, value, originalValue, originalValue, null, value, /* tricked by using initialising state */ false, 0, /* tricked by using initialising state [END] */ true, true, false, true);
         
         final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
-        checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, prevValue, null, value, true, 1, true, true, false, true);
+        checkMetaValues(restoredEntity.getProperty("prop"), null, null, value, originalValue, prevValue, null, value, true, 0, true, true, false, true);
     }
     /////////////////////////////// MetaProperty restoration [END] ///////////////////////////////
     private AbstractEntity createIdOnlyProxy(final long id) {

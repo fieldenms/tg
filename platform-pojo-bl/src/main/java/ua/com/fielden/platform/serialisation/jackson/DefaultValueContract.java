@@ -64,13 +64,22 @@ public class DefaultValueContract {
 
     ///////////////////////////////////////////////// valueChangeCount /////////////////////////////////////////////////
     /**
+     * Returns the default value of <code>valueChangeCount</code> property.
+     *
+     * @return
+     */
+    public static int getValueChangeCountDefault() {
+        return 0;
+    }
+    
+    /**
      * Returns <code>true</code> if the value of <code>valueChangeCount</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static boolean isValueChangeCountDefault(final MetaProperty<Object> metaProperty) {
-        return equalsEx(metaProperty.getValueChangeCount(), 0);
+        return equalsEx(metaProperty.getValueChangeCount(), getValueChangeCountDefault());
     }
 
     ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
