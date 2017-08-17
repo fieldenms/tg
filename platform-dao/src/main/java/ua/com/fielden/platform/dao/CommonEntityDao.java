@@ -23,6 +23,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.companion.DeleteOperations;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.companion.PersistentEntitySaver;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -370,7 +371,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return universalConstants;
     }
     
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
     
     /**
      * A convenient way to obtain companion instances by the types of corresponding entities.
@@ -384,13 +385,36 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             return (C) this;
         }
         
-        IEntityDao<?> co = coCache.get(type);
+        IEntityDao<?> co = co$Cache.get(type);
         if (co == null) {
             co = getCoFinder().find(type);
-            coCache.put(type, co);
+            co$Cache.put(type, co);
         }
         return (C) co;
     }
+
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> readerCache = new HashMap<>();
+
+    /**
+     * A convenient way to obtain a companion as a reader that reads uninstrumented entities.
+     *
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+        if (!instrumented() && getEntityType().equals(type)) {
+            return (R) this;
+        }
+
+        IEntityReader<?> co = readerCache.get(type);
+        if (co == null) {
+            co = getCoFinder().findAsReader(type, true);
+            readerCache.put(type, co);
+        }
+        return (R) co;
+    }
+
     
     private final Map<String, IContinuationData> moreData = new HashMap<>();
     
