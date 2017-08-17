@@ -43,24 +43,24 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     @SessionRequired
     @Authorise(UserSaveToken.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
-        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
+        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co$(User.class), co$(UserRolesUpdater.class), this.<IUserRole, UserRole>co$(UserRole.class)));
         final UserRolesUpdater actionToSave = actionAndUserBeingUpdated._1;
         final Map<Object, UserRole> availableRoles = mapById(actionToSave.getRoles(), Long.class);
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final Long addedId : actionToSave.getAddedIds()) {
-            addedAssociations.add(co(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(addedId)));
+            addedAssociations.add(co$(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(addedId)));
         }
 
         final Set<UserAndRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final Long removedId : actionToSave.getRemovedIds()) {
-            removedAssociations.add(co(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(removedId)));
+            removedAssociations.add(co$(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(removedId)));
         }
 
         final UserAndRoleAssociationBatchAction batchAction = new UserAndRoleAssociationBatchAction();
         batchAction.setSaveEntities(addedAssociations);
         batchAction.setRemoveEntities(removedAssociations);
-        co(UserAndRoleAssociationBatchAction.class).save(batchAction);
+        co$(UserAndRoleAssociationBatchAction.class).save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);

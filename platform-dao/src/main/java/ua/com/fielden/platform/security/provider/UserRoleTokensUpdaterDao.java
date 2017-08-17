@@ -50,7 +50,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     @SessionRequired
     @Authorise(UserRoleSaveToken.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
-        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co(UserRoleTokensUpdater.class)));
+        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, applicationSettings, co$(UserRole.class), co$(UserRoleTokensUpdater.class)));
         final UserRoleTokensUpdater actionToSave = actionAndUserRoleBeingUpdated._1;
         
         // after all validations have passed -- the association changes could be saved:
@@ -74,7 +74,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
         final SecurityRoleAssociationBatchAction batchAction = new SecurityRoleAssociationBatchAction();
         batchAction.setSaveEntities(addedAssociations);
         batchAction.setRemoveEntities(removedAssociations);
-        co(SecurityRoleAssociationBatchAction.class).save(batchAction);
+        co$(SecurityRoleAssociationBatchAction.class).save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);
