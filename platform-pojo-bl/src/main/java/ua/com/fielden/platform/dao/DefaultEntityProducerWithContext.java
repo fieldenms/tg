@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -29,16 +30,21 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T> {
     private final EntityFactory factory;
     protected final Class<T> entityType;
+    private final IEntityDao<T> companion;
     // optional context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
-    private IEntityDao<T> co$;
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
         this.entityType = entityType;
         this.coFinder = companionFinder;
+        this.companion = coFinder.find(entityType);
+        if (this.companion == null && !entityType.getSimpleName().startsWith("CentreEntityQueryCriteriaToEnhance")) {
+            throw new EntityDefinitionException(String.format("A companion for entity [%s] could not be located, which suggests a definition error. Such entities cannot be used in producers.", entityType.getName()));
+        }
+
     }
     
     /**
@@ -164,16 +170,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return factory;
     }
     
-    /**
-     * Returns companion object for instrumented instances instantiation.
-     * 
-     * @return
-     */
     protected IEntityDao<T> companion() {
-        if (co$ == null) {
-            co$ = coFinder.find(this.entityType);
-        }
-        return co$;
+        return companion;
     }
 
     /**
