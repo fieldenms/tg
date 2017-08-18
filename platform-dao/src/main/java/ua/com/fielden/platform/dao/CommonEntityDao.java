@@ -355,6 +355,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
     
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
     
     /**
      * A convenient way to obtain companion instances by the types of corresponding entities.
@@ -375,8 +376,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         return (C) co;
     }
-
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
 
     /**
      * A convenient way to obtain a companion as a reader that reads uninstrumented entities.
