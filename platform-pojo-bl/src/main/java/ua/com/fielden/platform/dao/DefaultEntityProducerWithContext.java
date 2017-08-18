@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -25,6 +27,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
+    private final IEntityDao<T> companion;
     
     // optional centre context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
@@ -39,6 +42,11 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         this.factory = factory;
         this.entityType = entityType;
         this.coFinder = companionFinder;
+        this.companion = coFinder.find(entityType);
+        if (this.companion == null && !entityType.getSimpleName().startsWith("CentreEntityQueryCriteriaToEnhance")) {
+            throw new EntityDefinitionException(String.format("A companion for entity [%s] could not be located, which suggests a definition error. Such entities cannot be used in producers.", entityType.getName()));
+        }
+
     }
 
     
@@ -103,7 +111,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     private T new_() {
-        final IEntityDao<T> companion = co(this.entityType);
+        final IEntityDao<T> companion = companion();
         if (companion != null) {
             return companion.new_();
         } else {
@@ -158,7 +166,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
 
     protected IEntityDao<T> companion() {
-        return co(this.entityType);
+        return companion;
     }
 
     /**
