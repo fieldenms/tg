@@ -125,8 +125,20 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected T provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
-        return companion().findById(entityId, companion().getFetchProvider().fetchModel());
+        return refetchInstrumentedEntityById(entityId);
     };
+    
+    /**
+     * Refetches entity by its <code>entityId</code> using default fetch provider. Returns instrumented entity
+     * that could be potentially used for those producers that return refetched instrumented entities instead 
+     * of returning produced instances (dual-purpose producers).
+     * 
+     * @param entityId
+     * @return
+     */
+    protected final T refetchInstrumentedEntityById(final Long entityId) {
+        return companion().findById(entityId, companion().getFetchProvider().fetchModel());
+    }
     
     /**
      * Override this method in case where some additional initialisation is needed for the new entity, edited by standard {@link EntityNewAction}.
