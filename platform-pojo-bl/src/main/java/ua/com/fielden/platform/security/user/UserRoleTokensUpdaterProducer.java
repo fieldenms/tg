@@ -26,7 +26,7 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
     @Inject
     public UserRoleTokensUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IApplicationSettings applicationSettings) {
         super(factory, UserRoleTokensUpdater.class, companionFinder);
-        this.controller = new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co(UserRoleTokensUpdater.class));
+        this.controller = new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), companion() /* instrumented */);
     }
     
     @Override

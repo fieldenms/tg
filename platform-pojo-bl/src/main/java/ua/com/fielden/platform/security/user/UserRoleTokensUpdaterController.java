@@ -1,10 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.persistedActionVersionFor;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -14,7 +10,6 @@ import java.util.SortedSet;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
@@ -31,13 +26,13 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     private final EntityFactory factory;
     private final SecurityTokenProvider securityTokenProvider;
     private final IEntityDao<UserRole> coUserRole;
-    private final IEntityDao<UserRoleTokensUpdater> coUserRoleTokensUpdater;
+    private final IEntityDao<UserRoleTokensUpdater> co$UserRoleTokensUpdater;
     
-    public UserRoleTokensUpdaterController(final EntityFactory factory, final IApplicationSettings applicationSettings, final IEntityDao<UserRole> coUserRole, final IEntityDao<UserRoleTokensUpdater> coUserRoleTokensUpdater) {
+    public UserRoleTokensUpdaterController(final EntityFactory factory, final IApplicationSettings applicationSettings, final IEntityDao<UserRole> coUserRole, final IEntityDao<UserRoleTokensUpdater> co$UserRoleTokensUpdater) {
         this.factory = factory;
         this.securityTokenProvider = new SecurityTokenProvider(applicationSettings.pathToSecurityTokens(), applicationSettings.securityTokensPackageName());
         this.coUserRole = coUserRole;
-        this.coUserRoleTokensUpdater = coUserRoleTokensUpdater;
+        this.co$UserRoleTokensUpdater = co$UserRoleTokensUpdater;
     }
     
     @Override
@@ -52,11 +47,7 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     
     @Override
     public UserRoleTokensUpdater refetchActionEntity(final UserRole masterEntity) {
-        return coUserRoleTokensUpdater.getEntity(
-            from(select(UserRoleTokensUpdater.class).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
-            .with(fetchAndInstrument(UserRoleTokensUpdater.class).with(AbstractEntity.KEY))
-            .model()
-        );
+        return co$UserRoleTokensUpdater.findByKey(masterEntity.getId());
     }
     
     @Override
@@ -71,7 +62,7 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     
     @Override
     public Long persistedActionVersion(final Long masterEntityId) {
-        return persistedActionVersionFor(masterEntityId, coUserRoleTokensUpdater);
+        return persistedActionVersionFor(masterEntityId, co$UserRoleTokensUpdater);
     }
     
     private static Set<SecurityTokenInfo> loadAvailableTokens(final SecurityTokenProvider securityTokenProvider, final EntityFactory factory) {

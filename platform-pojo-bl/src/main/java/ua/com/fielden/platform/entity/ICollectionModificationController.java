@@ -33,17 +33,27 @@ public interface ICollectionModificationController<MASTER_TYPE extends AbstractE
     
     /**
      * Re-fetches master entity.
+     * <p>
+     * Please note that most likely there is no need to re-fetch using instrumented companion.
+     * Re-fetched master entity is used in post init / save activities to retrieve property values
+     * and to be used as a value for other entities.
+     * <p>
+     * Use original master entity instance if some dirtiness, validation results should be used.
+     * For such cases please return <code>originalMasterEntity</code> from this method back.
      * 
-     * @param masterEntity
+     * @param originalMasterEntity
      * @return
      */
-    default MASTER_TYPE refetchMasterEntity(final MASTER_TYPE masterEntity) {
-        return masterEntity;
+    default MASTER_TYPE refetchMasterEntity(final MASTER_TYPE originalMasterEntity) {
+        return originalMasterEntity;
     };
     
     /**
      * Re-fetches action entity related to <code>masterEntity</code>. Must be implemented for persistent functional actions.
-     * 
+     * <p>
+     * Please note that action must be re-fetched using instrumented companion,
+     * because re-fetched instance (if any) will be saved later.
+     *  
      * @param masterEntity
      * @return
      */
@@ -53,6 +63,8 @@ public interface ICollectionModificationController<MASTER_TYPE extends AbstractE
     
     /**
      * Re-fetches available items related to <code>masterEntity</code>. Must be implemented for persistent functional actions.
+     *
+     * Please note that there is no need to re-fetch available items using instrumented companion.
      * 
      * @param masterEntity
      * @return
