@@ -30,8 +30,6 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -51,8 +49,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     private final Logger logger = Logger.getLogger(getClass());
     private final String newUsername = "NEW_USER";
     
-    private CentreConfigUpdater createUpdaterWithoutMasterEntity() {
-        final CentreConfigUpdaterProducer producer = getInstance(CentreConfigUpdaterProducer.class);
+    private UserRolesUpdater createUpdaterWithoutMasterEntity() {
+        final UserRolesUpdaterProducer producer = getInstance(UserRolesUpdaterProducer.class);
         final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
         producer.setContext(context);
         return producer.newEntity();
