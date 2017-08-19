@@ -37,6 +37,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> co$Cache = new HashMap<>();
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
@@ -47,7 +48,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     
     /**
-     * A convenient way to obtain companion instances by the types of corresponding entities.
+     * A convenient way to obtain companion instances by the types of corresponding entities, which read uninstrumented entities.
      * 
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
@@ -62,6 +63,21 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return (R) co;
     }
 
+    /**
+     * A convenient way to obtain companion instances by the types of corresponding entities, which read instrumented entities.
+     * 
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co$(final Class<E> type) {
+        IEntityReader<?> co = co$Cache.get(type);
+        if (co == null) {
+            co = coFinder.findAsReader(type, false);
+            co$Cache.put(type, co);
+        }
+        return (R) co;
+    }
     
     @Override
     public final T newEntity() {
