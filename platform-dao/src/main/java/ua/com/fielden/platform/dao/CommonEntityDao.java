@@ -23,7 +23,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.companion.DeleteOperations;
-import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.companion.ICanReadUninstrumented;
 import ua.com.fielden.platform.companion.PersistentEntitySaver;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -44,7 +44,6 @@ import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -65,7 +64,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @param <K>
  *            -- entitie's key type
  */
-public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled {
+public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
@@ -397,6 +396,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return (C) co;
     }
 
+    @Override
+    public void readUninstrumented() {
+        this.$instrumented$ = false;
+    }
+    
+    /**
+     * This method is inherited from {@link AbstractEntityReader} and overridden to inform the reader when should it read uninstrumented entities.
+     * 
+     * @return
+     */
     @Override
     public boolean instrumented() {
         return $instrumented$;
