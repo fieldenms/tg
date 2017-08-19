@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -25,6 +27,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
+    private final Optional<IEntityDao<T>> companion;
     
     // optional centre context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
@@ -39,6 +42,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         this.factory = factory;
         this.entityType = entityType;
         this.coFinder = companionFinder;
+        this.companion = Optional.ofNullable(coFinder.find(entityType));
     }
 
     
@@ -103,12 +107,9 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     private T new_() {
-        final IEntityDao<T> companion = co(this.entityType);
-        if (companion != null) {
-            return companion.new_();
-        } else {
-            return factory.newEntity(this.entityType);
-        }
+        return companion
+                .map(co -> co.new_())
+                .orElseGet(() -> factory.newEntity(this.entityType));
     }
 
     /**
@@ -125,13 +126,15 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * <p>
      * Please, note that most likely it is needed to invoke super implementation. However, if the other, more specific, fetchModel needs to be specified -- the complete override 
      * is applicable.
+     * <p>
+     * Throws {@link NoSuchElementException} if the associated entity has no companion object, which this method tries to use for finding the entity by <code>id</code>.
      * 
      * @param entityId - the id of the edited entity
      * @return
      */
     protected T provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
-        return companion().findById(entityId, companion().getFetchProvider().fetchModel());
-    };
+        return companion.map(co -> co.findById(entityId, co.getFetchProvider().fetchModel())).get();
+    }
     
     /**
      * Override this method in case where some additional initialisation is needed for the new entity, edited by standard {@link EntityNewAction}.
@@ -155,10 +158,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     protected EntityFactory factory() {
         return factory;
-    }
-
-    protected IEntityDao<T> companion() {
-        return co(this.entityType);
     }
 
     /**

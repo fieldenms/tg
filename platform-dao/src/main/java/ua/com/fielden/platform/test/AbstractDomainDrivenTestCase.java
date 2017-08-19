@@ -15,7 +15,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -154,10 +156,31 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
         return pp.save(instance);
     }
 
+    
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
+
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type) {
-        return (T) provider.find(type);
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
+        IEntityDao<?> co = co$Cache.get(type);
+        if (co == null) {
+            co = provider.find(type, false);
+            co$Cache.put(type, co);
+        }
+        return (C) co;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        IEntityDao<?> co = coCache.get(type);
+        if (co == null) {
+            co = provider.find(type, true);
+            coCache.put(type, co);
+        }
+        return (C) co;
+
     }
 
     @Override

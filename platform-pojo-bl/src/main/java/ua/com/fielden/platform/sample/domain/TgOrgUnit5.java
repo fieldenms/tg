@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @MapEntityTo
 @CompanionObject(ITgOrgUnit5.class)
 public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Required
