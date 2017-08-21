@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.Function;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,17 +30,18 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T> {
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    private final IEntityDao<T> companion;
+    private final Optional<IEntityDao<T>> companion;
     // optional context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> co$Cache = new HashMap<>();
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
         this.entityType = entityType;
         this.coFinder = companionFinder;
-        this.companion = coFinder.find(entityType);
+        this.companion = Optional.ofNullable(coFinder.find(entityType));
         if (this.companion == null && !entityType.getSimpleName().startsWith("CentreEntityQueryCriteriaToEnhance")) {
             throw new EntityDefinitionException(String.format("A companion for entity [%s] could not be located, which suggests a definition error. Such entities cannot be used in producers.", entityType.getName()));
         }
@@ -48,7 +49,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
     
     /**
-     * A convenient way to obtain companion instances by the types of corresponding entities.
+     * A convenient way to obtain companion instances by the types of corresponding entities, which read uninstrumented entities.
      * 
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
@@ -63,6 +64,21 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return (R) co;
     }
 
+    /**
+     * A convenient way to obtain companion instances by the types of corresponding entities, which read instrumented entities.
+     * 
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co$(final Class<E> type) {
+        IEntityReader<?> co = co$Cache.get(type);
+        if (co == null) {
+            co = coFinder.findAsReader(type, false);
+            co$Cache.put(type, co);
+        }
+        return (R) co;
+    }
     
     @Override
     public final T newEntity() {
@@ -104,12 +120,9 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     private T new_() {
-        final IEntityDao<T> companion = companion();
-        if (companion != null) {
-            return companion.new_();
-        } else {
-            return factory.newEntity(this.entityType);
-        }
+        return companion
+                .map(co -> co.new_())
+                .orElseGet(() -> factory.newEntity(this.entityType));
     }
 
     /**
@@ -126,13 +139,15 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * <p>
      * Please, note that most likely it is needed to invoke super implementation. However, if the other, more specific, fetchModel needs to be specified -- the complete override 
      * is applicable.
+     * <p>
+     * Throws {@link NoSuchElementException} if the associated entity has no companion object, which this method tries to use for finding the entity by <code>id</code>.
      * 
      * @param entityId - the id of the edited entity
      * @return
      */
     protected T provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
         return refetchInstrumentedEntityById(entityId);
-    };
+    }
     
     /**
      * Refetches entity by its <code>entityId</code> using default fetch provider. Returns instrumented entity
@@ -170,10 +185,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return factory;
     }
     
-    protected IEntityDao<T> companion() {
-        return companion;
-    }
-
     /**
      * Use this method in case when the master context (as functional entity) is required for entity instantiation.
      *

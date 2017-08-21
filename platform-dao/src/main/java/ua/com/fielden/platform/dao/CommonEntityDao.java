@@ -23,6 +23,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.companion.DeleteOperations;
+import ua.com.fielden.platform.companion.ICanReadUninstrumented;
 import ua.com.fielden.platform.companion.PersistentEntitySaver;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -43,7 +44,6 @@ import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -64,7 +64,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @param <K>
  *            -- entitie's key type
  */
-public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled {
+public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
@@ -95,7 +95,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
-    private boolean instrumented = true;
+    private boolean $instrumented$ = true;
 
     private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
@@ -166,23 +166,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     protected boolean isFilterable() {
         return false;
-    }
-    
-    @Override
-    public boolean instrumented() {
-        return instrumented;
-    }
-
-    @Override
-    public <E extends IEntityDao<T>> E uninstrumented() {
-        if (!instrumented) {
-            return (E) this;
-        }
-        
-        final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
-        final CommonEntityDao<T> co = (CommonEntityDao<T>) injector.getInstance(coType);
-        co.instrumented = false;
-        return (E) co;
     }
     
     private boolean isSaveOverridden() {
@@ -370,7 +353,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return universalConstants;
     }
     
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
     
     /**
      * A convenient way to obtain companion instances by the types of corresponding entities.
@@ -384,14 +368,49 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             return (C) this;
         }
         
+        IEntityDao<?> co = co$Cache.get(type);
+        if (co == null) {
+            co = getCoFinder().find(type, false);
+            co$Cache.put(type, co);
+        }
+        return (C) co;
+    }
+
+    /**
+     * A convenient way to obtain a companion as a reader that reads uninstrumented entities.
+     *
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        if (!instrumented() && getEntityType().equals(type)) {
+            return (C) this;
+        }
+
         IEntityDao<?> co = coCache.get(type);
         if (co == null) {
-            co = getCoFinder().find(type);
+            co = getCoFinder().find(type, true);
             coCache.put(type, co);
         }
         return (C) co;
     }
+
+    @Override
+    public void readUninstrumented() {
+        this.$instrumented$ = false;
+    }
     
+    /**
+     * This method is inherited from {@link AbstractEntityReader} and overridden to inform the reader when should it read uninstrumented entities.
+     * 
+     * @return
+     */
+    @Override
+    public boolean instrumented() {
+        return $instrumented$;
+    }
+
     private final Map<String, IContinuationData> moreData = new HashMap<>();
     
     /**

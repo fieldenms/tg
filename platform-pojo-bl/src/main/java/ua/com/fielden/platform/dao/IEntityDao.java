@@ -32,13 +32,23 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      */
     Class<? extends Comparable<?>> getKeyType();
 
-
     /**
-     * A factory method that creates an instance of the same companion object it is invoked on, but with method {@link #instrumented()} returning <code>false</code>.
-     * 
+     * A factory method that creates an instance of a companion object for the specified entity type.
+     * The reader methods of such companion return <code>uninstrumented</code> entities.
+     *
      * @return
      */
-    default <E extends IEntityDao<T>> E uninstrumented() {
+    default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        throw new UnsupportedOperationException("This method should be overriden by descendants.");
+    }
+
+    /**
+     * A factory method that creates an instance of a companion object for the specified entity type.
+     * The reader methods of such companion return <code>instrumented</code> entities, which are suitable for mutation and saving.
+     *
+     * @return
+     */
+    default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         throw new UnsupportedOperationException("This method should be overriden by descendants.");
     }
     

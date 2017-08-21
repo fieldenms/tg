@@ -459,7 +459,7 @@ public class EntityResourceUtils {
             } else if (reflectedValueId.isPresent()) {
                 logger.debug(String.format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                 // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
                 return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
                 logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
@@ -469,7 +469,7 @@ public class EntityResourceUtils {
                 /*      */model();
                 final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
                 try {
-                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType).uninstrumented();
+                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
                     return propertyCompanion.getEntity(qem);
                 } catch (final UnexpectedNumberOfReturnedEntities e) {
                     return null;
@@ -486,7 +486,7 @@ public class EntityResourceUtils {
                     key = keys[0];
                 }
 
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
                 return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
