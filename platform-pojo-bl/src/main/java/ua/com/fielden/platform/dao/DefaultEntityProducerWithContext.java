@@ -6,15 +6,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.NoSuchElementException;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -42,10 +42,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         this.entityType = entityType;
         this.coFinder = companionFinder;
         this.companion = Optional.ofNullable(coFinder.find(entityType));
-        if (this.companion == null && !entityType.getSimpleName().startsWith("CentreEntityQueryCriteriaToEnhance")) {
-            throw new EntityDefinitionException(String.format("A companion for entity [%s] could not be located, which suggests a definition error. Such entities cannot be used in producers.", entityType.getName()));
-        }
-
     }
     
     /**
@@ -158,7 +154,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected final T refetchInstrumentedEntityById(final Long entityId) {
-        return companion().findById(entityId, companion().getFetchProvider().fetchModel());
+        return companion.get().findById(entityId, companion.get().getFetchProvider().fetchModel());
     }
     
     /**

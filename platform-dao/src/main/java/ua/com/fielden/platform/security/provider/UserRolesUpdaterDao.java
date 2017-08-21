@@ -43,7 +43,7 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     @SessionRequired
     @Authorise(UserSaveToken.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
-        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co$(User.class).uninstrumented(), co$(UserRolesUpdater.class), this.<IUserRole, UserRole>co$(UserRole.class).uninstrumented()));
+        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
         final UserRolesUpdater actionToSave = actionAndUserBeingUpdated._1;
         final Map<Object, UserRole> availableRoles = mapById(actionToSave.getRoles(), Long.class);
         
