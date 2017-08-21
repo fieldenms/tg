@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.meta.impl;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,7 +15,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
  * Handles updates to section title:
  * <p><ul>
  * <li>for new entity -- "Add new [Title Of Entity]"
- * <li>for persisted entity -- "[key]: [desc]"
+ * <li>for persisted entity -- "[key]: [desc]" or just "[key]" if description is empty
  * </ul><p>
  *  
  * @author TG Team
@@ -30,7 +31,11 @@ public class DefaultOpenCompoundMasterActionKeyDefiner implements IAfterChangeEv
         
         final String sectionTitleValue = !key.isPersisted() 
             ? "Add new " + getEntityTitleAndDesc(key.getType()).getKey()
-            : format("%s: %s", key.getKey(), key.getDesc()); // TODO please handle 'null' descriptions not to be shown as "KEY1: null"
+            : (
+              isEmpty(key.getDesc())
+              ? format("%s", key.getKey())
+              : format("%s: %s", key.getKey(), key.getDesc())
+            );
         property.getEntity().set("sectionTitle", sectionTitleValue);
     }
     
