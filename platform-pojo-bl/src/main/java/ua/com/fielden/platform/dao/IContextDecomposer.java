@@ -18,7 +18,7 @@ public interface IContextDecomposer {
     }
     
     public static <M extends AbstractEntity<?>> IContextDecomposer decompose(final CentreContext<M, ?> context) {
-        return new IContextDecomposer() {
+        final IContextDecomposer contextDecomposer = new IContextDecomposer() {
             private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
             
             @Override
@@ -31,6 +31,8 @@ public interface IContextDecomposer {
                 this.context = context;
             }
         };
+        contextDecomposer.setContext((CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>>) context);
+        return contextDecomposer;
     }
     
     CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext();

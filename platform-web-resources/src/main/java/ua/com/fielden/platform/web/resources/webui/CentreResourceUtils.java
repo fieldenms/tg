@@ -550,8 +550,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
-                // TODO this is very important part -- test functionality behind (query enhancer, autocompletion of criteria entity props)
-                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(/* TODO */false, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
+                // TODO This is very important part -- test functionality behind, specifically autocompletion of criteria entity props.
+                // Query enhancements need full, deep, context: thats why disregardOriginallyProducedEntities needs to be true.
+                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(/* TODO */true, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
             }
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
