@@ -994,7 +994,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
 
         return action(EntityNewAction.class).
-                withContext(context().withSelectionCrit().withComputation(entity -> entityType).build()).
+                withContext(context().withSelectionCrit().withComputation((entity, context) -> entityType).build()).
                 icon(icon).
                 withStyle(style).
                 shortDesc(format("Add new %s", entityTitle)).
@@ -1358,7 +1358,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/ withComputation(entity -> 3).build())
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/ withComputation((entity, context) -> 3).build())
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
@@ -1641,7 +1641,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
         if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation(entity -> 5).build());
+            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation((entity, context) -> 5).build());
         } else {
             afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }

@@ -6,10 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.NoSuchElementException;
-
+import java.util.Optional;
+import java.util.function.BiFunction;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -213,7 +212,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
                context.getSelectedEntities().size() == 1 ? context.getCurrEntity() : null;
     }
     
-    private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> getComputation() {
+    private Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> getComputation() {
         return context == null ? Optional.empty() : context.getComputation();
     }
     
@@ -373,7 +372,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
     
     // COMPUTATION:
-    protected Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation() {
+    protected Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation() {
         return getComputation();
     }
     

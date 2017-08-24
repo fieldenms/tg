@@ -27,7 +27,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
             final Class<AbstractEntity<?>> entityType =                     
                 context.getComputation().map( computation -> {
-                        final Object computed = computation.apply(entity);
+                        final Object computed = computation.apply(entity, context);
                         // it is by convention that a computational context may return custom entity type of tg-entity-master to be displayed
                         // if the type of the result if either Class or T2 representing a tuple of Type (Class) and ID (Long)
                         if (computed instanceof Class) {

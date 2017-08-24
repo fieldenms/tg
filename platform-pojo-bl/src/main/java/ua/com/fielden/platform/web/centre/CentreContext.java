@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -51,9 +51,16 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     private M masterEntity;
 
     /**
-     * The computation function used to calculate additional information for action on entity centre.
+     * The computation function used to calculate additional information for action on entity centre or master.
+     * <p>
+     * This is the function from some <code>context</code> and / or functional <code>entity</code> (produced from that context).
+     * Implementors, such as functional entity producers, query enhancers etc., could use any <code>context</code> however
+     * it most likely will be the context from which computation has been retrieved.
+     * <p>
+     * If some static value returns from computation (independent from any context and functional entity)
+     * then <code>computation.apply(null, null)</code> form could be used in implementors.
      */
-    private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
+    private Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation = Optional.empty();
 
     private String chosenProperty;
     
@@ -116,11 +123,11 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
             + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty);
     }
 
-    public void setComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+    public void setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         this.computation = Optional.of(computation);
     }
 
-    public Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> getComputation() {
+    public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> getComputation() {
         return computation;
     }
     

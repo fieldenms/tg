@@ -30,7 +30,7 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
             // it is by convention that a computational context may return a value of type T2 representing a tuple of Type (Class) and ID (Long)
             final Long id = 
                     context.getComputation()
-                    .map(computation -> computation.apply(entity))
+                    .map(computation -> computation.apply(entity, context))
                     .filter(computed -> computed instanceof T2)
                     .map(computed -> ((T2<Class<AbstractEntity<?>>, Long>) computed)._2)
                     .orElseGet(() -> {
