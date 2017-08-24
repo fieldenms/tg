@@ -114,6 +114,18 @@ public interface IContextDecomposer {
         return false;
     }
     
+    
+    default <M extends AbstractEntity<?>> boolean masterEntityOfMasterEntityInstanceOf(final Class<M> type) {
+        if (masterEntityNotEmpty()) {
+            final AbstractEntity<?> masterEntity = masterEntity();
+            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
+                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+                return decompose(masterFuncEntity.context()).masterEntityInstanceOf(type);
+            }
+        }
+        return false;
+    }
+    
     default boolean selectionCritOfMasterEntityNotEmpty() {
         if (masterEntityNotEmpty()) {
             final AbstractEntity<?> masterEntity = masterEntity();
@@ -141,6 +153,13 @@ public interface IContextDecomposer {
         final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
         final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
         return (M) masterEntityOfMasterEntity.get("key");
+    }
+    
+    default <M extends AbstractEntity<?>> M masterEntityOfMasterEntity(final Class<M> type) {
+        final AbstractEntity<?> masterEntity = masterEntity();
+        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
+        return (M) masterEntityOfMasterEntity;
     }
     
     // CHOSEN PROPERTY:
@@ -236,6 +255,12 @@ public interface IContextDecomposer {
     // COMPUTATION:
     default Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation() {
         return getComputation();
+    }
+    
+    default Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computationOfMasterEntity() {
+        final AbstractEntity<?> masterEntity = masterEntity();
+        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
+        return decompose(masterFuncEntity.context()).computation();
     }
     
     // SELECTED ENTITIES:
