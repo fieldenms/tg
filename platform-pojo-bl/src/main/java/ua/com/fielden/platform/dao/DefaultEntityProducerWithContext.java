@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.BiFunction;
+
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -16,7 +14,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -26,7 +23,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  * @param <T>
  */
-public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T> {
+public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
     private final EntityFactory factory;
     protected final Class<T> entityType;
     private final Optional<IEntityDao<T>> companion;
@@ -180,220 +177,13 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return factory;
     }
     
-    /**
-     * Use this method in case when the master context (as functional entity) is required for entity instantiation.
-     *
-     * @return
-     */
-    protected AbstractEntity<?> getMasterEntity() {
-        return context == null ? null : context.getMasterEntity();
-    }
-    
-    protected CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext() {
+    @Override
+    public CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext() {
         return context;
     }
-
+    
+    @Override
     public void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
         this.context = context;
-    }
-
-    protected String getChosenProperty() {
-        return context == null ? null : context.getChosenProperty();
-    }
-    
-    
-    
-    
-    
-    
-    
-    private AbstractEntity<?> getCurrEntity() {
-        return context == null ? null :
-               context.getSelectedEntities().size() == 1 ? context.getCurrEntity() : null;
-    }
-    
-    private Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> getComputation() {
-        return context == null ? Optional.empty() : context.getComputation();
-    }
-    
-    private List<AbstractEntity<?>> getSelectedEntities() {
-        return context == null ? Collections.unmodifiableList(new ArrayList<>()) : context.getSelectedEntities();
-    }
-    
-    ////////////////////////////////// CONTEXT DECOMPOSITION API //////////////////////////////////
-    
-    // MASTER ENTITY:
-    protected AbstractEntity<?> masterEntity() {
-        return getMasterEntity();
-    }
-    
-    protected <M extends AbstractEntity<?>> M masterEntity(final Class<M> type) {
-        return (M) masterEntity();
-    }
-    
-    protected boolean masterEntityEmpty() {
-        return masterEntity() == null;
-    }
-    
-    protected boolean masterEntityNotEmpty() {
-        return !masterEntityEmpty();
-    }
-    
-    protected <M extends AbstractEntity<?>> boolean masterEntityInstanceOf(final Class<M> type) {
-        return masterEntityNotEmpty() && type.isAssignableFrom(masterEntity().getClass());
-    }
-    
-    protected <M extends AbstractEntity<?>> boolean masterEntityKeyInstanceOf(final Class<M> type) {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (masterEntity.get("key") != null) {
-                return type.isAssignableFrom(masterEntity.get("key").getClass());
-            }
-        }
-        return false;
-    }
-    
-    protected <M extends AbstractEntity<?>> boolean masterEntityKeyOfMasterEntityInstanceOf(final Class<M> type) {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                if (masterFuncEntity.context() != null && masterFuncEntity.context().getMasterEntity() != null) {
-                    final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
-                    if (masterEntityOfMasterEntity.get("key") != null) {
-                        return type.isAssignableFrom(masterEntityOfMasterEntity.get("key").getClass());
-                    }
-                }
-            }
-        }
-        return false;
-    }
-    
-    protected boolean selectionCritOfMasterEntityNotEmpty() {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                return masterFuncEntity.context() != null && masterFuncEntity.context().getSelectionCrit() != null;
-            }
-        }
-        return false;
-    }
-    
-    protected EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntity() {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        return masterFuncEntity.context().getSelectionCrit();
-    }
-    
-    protected <M extends AbstractEntity<?>> M masterEntityKey(final Class<M> type) {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        return (M) masterEntity.get("key");
-    }
-    
-    protected <M extends AbstractEntity<?>> M masterEntityKeyOfMasterEntity(final Class<M> type) {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
-        return (M) masterEntityOfMasterEntity.get("key");
-    }
-    
-    // CHOSEN PROPERTY:
-    /**
-     * Returns chosen property value: <code>null</code> if chosen property is not applicable,
-     * "" if property action for 'this' column was actioned, and non-empty property name otherwise
-     * (master property editor actions and centre column actions).
-     * 
-     * @return
-     */
-    protected String chosenProperty() {
-        return getChosenProperty();
-    }
-    
-    /**
-     * Returns <code>true</code> if chosen property is not applicable, <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    protected boolean chosenPropertyEmpty() {
-        return chosenProperty() == null;
-    }
-    
-    /**
-     * Returns <code>true</code> if chosen property is applicable ("" or non-empty string), <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    protected boolean chosenPropertyNotEmpty() {
-        return !chosenPropertyEmpty();
-    }
-    
-    /**
-     * Returns <code>true</code> if chosen property equals to concrete non-null value, <code>false</code> otherwise.
-     * 
-     * @param value
-     * @return
-     */
-    protected boolean chosenPropertyEqualsTo(final String value) {
-        if (value == null) {
-            throw new EntityProducingException("Null value is not permitted.");
-        }
-        return value.equals(chosenProperty());
-    }
-    
-    /**
-     * Returns <code>true</code> if action for 'this' column has been clicked, <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    protected boolean chosenPropertyRepresentsThisColumn() {
-        return chosenPropertyEqualsTo("");
-    }
-    
-    // CURRENT ENTITY:
-    protected AbstractEntity<?> currentEntity() {
-        return getCurrEntity();
-    }
-    
-    protected <M extends AbstractEntity<?>> M currentEntity(final Class<M> type) {
-        return (M) currentEntity();
-    }
-    
-    protected boolean currentEntityEmpty() {
-        return currentEntity() == null;
-    }
-    
-    protected boolean currentEntityNotEmpty() {
-        return !currentEntityEmpty();
-    }
-    
-    protected <M extends AbstractEntity<?>> boolean currentEntityInstanceOf(final Class<M> type) {
-        return currentEntityNotEmpty() && type.isAssignableFrom(currentEntity().getClass());
-    }
-    
-    // COMPUTATION:
-    protected Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation() {
-        return getComputation();
-    }
-    
-    // SELECTED ENTITIES:
-    private List<AbstractEntity<?>> selectedEntities() {
-        return getSelectedEntities();
-    }
-    
-    protected boolean selectedEntitiesEmpty() {
-        return selectedEntities().isEmpty();
-    }
-    
-    protected boolean selectedEntitiesNonEmpty() {
-        return !selectedEntitiesEmpty();
-    }
-    
-    protected boolean selectedEntitiesOnlyOne() {
-        return selectedEntities().size() == 1;
-    }
-    
-    protected boolean selectedEntitiesMoreThanOne() {
-        return selectedEntities().size() > 1;
     }
 }
