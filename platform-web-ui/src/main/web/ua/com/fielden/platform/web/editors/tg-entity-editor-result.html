@@ -406,7 +406,7 @@
 				}
                 this._scrollToSelected();
             },
-            
+
             selectPrev: function () {
                 if (this._keyBoardNavigationReady === false) {
                     this._keyBoardNavigationReady = true;
@@ -427,17 +427,29 @@
                 }
                 this._scrollToSelected();
             },
-            
+
+            /** Selects the currenlty focused item in the list if none was selected.
+              * It is used to treat the focused item as if it was selected upon user's attempts to "accept" values.
+              */
+            selectCurrentIfNoneSelected: function() {
+                if (Object.keys(this.selectedValues).length === 0) {
+					this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                }
+            },
+
             _scrollToSelected: function () {
                 if (!isNaN(this._selectedIndex)) {
                     const item = this.querySelectorAll(".tg-item")[this._selectedIndex];
-                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
-                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
-                        if (item.offsetTop < this.scrollTop) {
-                            this.scrollTop = item.offsetTop;
-                        } else {
-                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
-                        }
+                    // item is going to be undefined if there are no matching values
+                    if (item) {
+	                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
+	                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
+	                        if (item.offsetTop < this.scrollTop) {
+	                            this.scrollTop = item.offsetTop;
+	                        } else {
+	                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
+	                        }
+	                    }
                     }
                 }
             },
