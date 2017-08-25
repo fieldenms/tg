@@ -477,14 +477,13 @@
              * Displays the search result.
              */
             _onFound: function (entities) {
-                var self = this;
-                var result = self.$.result;
+                const result = this.$.result;
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
 
                 result.clearSelection();
 
-                for (var index = 0; index < entities.length; index++) {
+                for (let index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
                     // This includes correct conversion of simple, composite and union entities
                     const key = this.reflector().convert(entities[index]);
@@ -494,20 +493,20 @@
 
                 // There is a need to check whether element already exists before appending it to document.body.
                 // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
-                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                const elementExists = Polymer.dom(document.body).querySelector("#result");
                 if (!elementExists) {
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-                var self = this;
+
                 this.async(function () {
                     if (result.opened) {
-                        self._resultOpened();
+                        this._resultOpened();
                     } else {
                         result.open();
                     }
                     result.notifyResize();
-                }, 100);
+                }.bind(this), 100);
             },
 
             /**
@@ -538,17 +537,14 @@
             },
 
             _resultOpened: function (e) {
-                var self = this;
-                var activeElement = document.activeElement;
-                if (self.$.input === activeElement || /* if the autocompleter in focus */ 
+                const activeElement = document.activeElement;
+                if (this.$.input === activeElement || /* if the autocompleter in focus */ 
                     document.body === activeElement   /* or no other input or button in focus then show found values */) {
-                    self.opened = true;
-	                self.async(function () {
-	                    self.$.result.highlightMatchedParts();
-	                }, 100);
+                    this.opened = true;
+                    this.$.result.highlightMatchedParts();
                 } else {
-                    self.opened = true;
-                    self.$.result.cancel(e);
+                    this.opened = true;
+                    this.$.result.cancel(e);
                 }
             },
 
