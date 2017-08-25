@@ -121,6 +121,12 @@
                     observer: '_retrievedEntitiesChanged'
                 },
                 /**
+                 * The selection criteria entity that can be binded to insertion point
+                 */
+                selectionCriteriaEntity: {
+                    type: Object
+                },
+                /**
                  * Summary entity retrieved when running this centre.
                  */
                 retrievedTotals: {
@@ -437,6 +443,7 @@
                             this.retrievedTotals = summary;
                         }
                         this.retrievedEntities = resultEntities;
+                        this.selectionCriteriaEntity = criteriaEntity;
                         this.$.egi.renderingHints = renderingHints;
                         this.$.egi._adjustColumnWidths(columnWidths);
                         this.$.egi._adjustColumns(visibleColumnsWithOrder);
