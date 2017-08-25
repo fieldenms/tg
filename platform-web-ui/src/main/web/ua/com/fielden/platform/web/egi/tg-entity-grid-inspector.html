@@ -636,10 +636,10 @@
             }
             return newPos;
         };
-        const calculateFixedColumnWidth = function(columns, numOfFixedColumns) {
+        const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
-        const calculateScrollableColumnWidth = function(columns, numOfFixedColumns) {
+        const calculateScrollableColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index >= numOfFixedColumns ? curr.width : 0), 0);
         }
         const calculateColumnWidthExcept = function (egi, columnIndex, columnElements, columnLength, checkboxes, primaryActions, secondaryActions) {
@@ -932,7 +932,7 @@
                     }).bind(this);
                 }, 1)
             },
-            
+
             /**
              * Updates entity when some of the properties were changed.
              */
@@ -944,6 +944,23 @@
                 }
             },
             
+            silentlySelectEntity: function (entity, select) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+                    this.set("egiModel." + entityIndex + ".selected", select);
+                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                }
+            },
+            
+            selectEntity: function(entity, select) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+                    this.set("egiModel." + entityIndex + ".selected", select);
+                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    this.fire("egi-selection-changed", [{entity: this.entities[entityIndex], select: select}]);
+                }
+            },
+
             _getKeyEventTarget: function () {
                 var parent = this;
                 while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
@@ -1487,8 +1504,6 @@
                         selected: true
                     };
                 }
-
-                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
 
@@ -1519,7 +1534,7 @@
                 this._totalsRowCount = summaryRowsCount;
                 this._totalsRows = gridSummary;
             },
-            
+
             _updateColumnsWidthProperties: function (triggerResize) {
                 this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
                 this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
@@ -1537,25 +1552,31 @@
              * Event handler for select all checkbox
              */
             _allSelectionChanged: function (e) {
-                var i;
                 if (this.egiModel) {
-                    var target = e.target || e.srcElement;
-                    for (i = 0; i < this.egiModel.length; i += 1) {
-                        this.set("egiModel." + i + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], target.checked);
+                    const target = e.target || e.srcElement;
+                    const selectionDetails = [];
+                    for (let i = 0; i < this.egiModel.length; i += 1) {
+                        if (this.egiModel[i].selected !== target.checked) {
+                            this.set("egiModel." + i + ".selected", target.checked);
+                            _processEntitySelection(this.selectedEntities, this.entities[i], target.checked);
+                            selectionDetails.push({
+                                entity: this.entities[i],
+                                select: target.checked
+                            });
+                        }
                     }
                     this.selectedAll = target.checked;
-                    console.log("all ", this.getSelectedRows());
-                    this.fire("egi-selection-changed", this.getSelectedEntities());
+                    if (selectionDetails.length > 0) {
+                        this.fire("egi-selection-changed", selectionDetails);
+                    }
                 }
             },
             /**
              * Event handler for selecting concrete entity
              */
             _selectionChanged: function (e) {
-                var index;
                 if (this.egiModel) {
-                    index = e.model.entityIndex;
+                    const index = e.model.entityIndex;
                     var target = e.target || e.srcElement;
                     //Perform selection range selection or single selection.
                     if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
@@ -1563,6 +1584,10 @@
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
                         _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        this.fire("egi-selection-changed", [{
+                            entity: this.entities[index],
+                            select: target.checked
+                        }]);
                     }
                     //Set up the last selection index (it will be used for range selection.)
                     if (target.checked) {
@@ -1578,23 +1603,28 @@
                     })) {
                         this.selectedAll = true;
                     }
-                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
-                console.log("single checkbox: " + index, this.getSelectedRows());
             },
 
             /**
              * Selects the range fromIndex toIndex of entities.
              */
             _selectRange: function (fromIndex, toIndex) {
-                var from = fromIndex < toIndex ? fromIndex : toIndex;
-                var to = fromIndex < toIndex ? toIndex : fromIndex;
-                var index;
-                for (index = from; index <= to; index++) {
-                    if (!this.egiModel[index].selected) {
-                        this.set("egiModel." + index + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], true);
+                const from = fromIndex < toIndex ? fromIndex : toIndex;
+                const to = fromIndex < toIndex ? toIndex : fromIndex;
+                const selectionDetails = [];
+                for (let i = from; i <= to; i++) {
+                    if (!this.egiModel[i].selected) {
+                        this.set("egiModel." + i + ".selected", true);
+                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        selectionDetails.push({
+                            entity: this.entities[i],
+                            select: true
+                        });
                     }
+                }
+                if (selectionDetails.length > 0) {
+                    this.fire("egi-selection-changed", selectionDetails);
                 }
             },
 
@@ -1612,7 +1642,7 @@
                 if (columnGrowFactor === 0 || index < numOfFixedCols) {
                     colStyle += "flex-grow: 0;flex-shrink:0;";
                 } else {
-                    colStyle += "flex-grow: " + columnGrowFactor +";";
+                    colStyle += "flex-grow: " + columnGrowFactor + ";";
                 }
                 if (itemWidth === 0) {
                     colStyle += "display: none;";
@@ -1697,7 +1727,7 @@
                         }
                         this.fire("tg-egi-column-change", parameters);
                     }
-                    
+
                 }
                 this._updateColumnsWidthProperties(true);
             },
@@ -1758,7 +1788,7 @@
             _getValueFromEntity: function (entity, property) {
                 return entity && entity.get(property);
             },
-            
+
             _getBindedValue: function (change, property, type) {
                 return this._getValue(change.base, property, type);
             },
@@ -1837,7 +1867,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                if (this._getValueFromEntity(entity, property) === true) { 
+                if (this._getValueFromEntity(entity, property) === true) {
                     return "icons:check";
                 } else {
                     return "noicon";
@@ -1902,12 +1932,19 @@
              * Clears the selection on current page.
              */
             clearPageSelection: function () {
-                var i;
-                for (i = 0; i < this.egiModel.length; i++) {
+                const selectionDetails = [];
+                for (let i = 0; i < this.egiModel.length; i++) {
                     if (this.egiModel[i].selected) {
                         _processEntitySelection(this.selectedEntities, this.egiModel[i].entity, false);
                         this.set("egiModel." + i + ".selected", false);
+                        selectionDetails.push({
+                            entity: this.egiModel[i].entity,
+                            select: false
+                        });
                     }
+                }
+                if (selectionDetails.length > 0) {
+                    this.fire("egi-selection-changed", selectionDetails);
                 }
             },
 
@@ -1915,11 +1952,17 @@
              * Clears selection.
              */
             clearSelection: function () {
-                var i;
-                for (i = 0; i < this.egiModel.length; i++) {
+                for (let i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
-                this.fire("egi-selection-changed", this.getSelectedEntities());
+                if (this.selectedEntities.length > 0) {
+                    this.fire("egi-selection-changed", this.selectedEntities.map(entity => {
+                        return {
+                            entity: entity,
+                            select: false
+                        }
+                    }));
+                }
                 this.selectedEntities = [];
             },
             /*

@@ -150,6 +150,13 @@
                     type: Object,
                     observer: '_retrievedEntitySelectionChanged'
                 },
+                
+                /**
+                 * Holds the egi selction for binding into insertion point
+                 */
+                egiSelection : {
+                    type: Array
+                },
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
@@ -609,6 +616,13 @@
                     e.detail.entities.forEach(entity => {
                         e.detail.properties.forEach(prop => this.$.egi.updateEntity(entity, prop));
                     });
+                }.bind(self));
+                
+                /**
+                 * Adds event listener that will propagate selection on egi to insertion points
+                 */
+                self.addEventListener("egi-selection-chnaged", function(e) {
+                    this.egiSelection = e.detail;
                 }.bind(self));
 
                 this._columnAction = createColumnAction(self);
