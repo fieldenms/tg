@@ -21,7 +21,7 @@ public class TgStatusActivationFunctionalEntityProducer extends DefaultEntityPro
 
     @Override
     protected TgStatusActivationFunctionalEntity provideDefaultValues(final TgStatusActivationFunctionalEntity entity) {
-        entity.setSelectedEntityId(getContext().getCurrEntity().getId());
+        entity.setSelectedEntityId(currentEntity().getId());
         return entity;
     }
 }

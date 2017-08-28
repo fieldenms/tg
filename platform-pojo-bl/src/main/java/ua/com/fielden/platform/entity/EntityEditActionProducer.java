@@ -23,14 +23,13 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
     @Override
     protected EntityEditAction provideDefaultValues(final EntityEditAction entity) {
         final EntityEditAction editedEntity = super.provideDefaultValues(entity);
-        if (getContext() != null) {
-            final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext();
-            final AbstractEntity<?> currEntity = context.getSelectedEntities().isEmpty() ? null : context.getCurrEntity();
+        if (contextNotEmpty()) {
+            final AbstractEntity<?> currEntity = currentEntity();
             // in a polymorphic UI case, IDs may come from a computational context
             // it is by convention that a computational context may return a value of type T2 representing a tuple of Type (Class) and ID (Long)
             final Long id = 
-                    context.getComputation()
-                    .map(computation -> computation.apply(entity, context))
+                    computation()
+                    .map(computation -> computation.apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext()))
                     .filter(computed -> computed instanceof T2)
                     .map(computed -> ((T2<Class<AbstractEntity<?>>, Long>) computed)._2)
                     .orElseGet(() -> {

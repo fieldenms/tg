@@ -22,8 +22,8 @@ public class TgCreatePersistentStatusActionProducer extends DefaultEntityProduce
 
     @Override
     protected TgCreatePersistentStatusAction provideDefaultValues(final TgCreatePersistentStatusAction entity) {
-        if (getContext() != null) {
-            final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) getContext().getMasterEntity();
+        if (masterEntityInstanceOf(TgPersistentEntityWithProperties.class)) {
+            final TgPersistentEntityWithProperties me = masterEntity(TgPersistentEntityWithProperties.class);
             if (me.isDirty()) {
                 throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
             }

@@ -24,12 +24,11 @@ public class TgCentreInvokerWithCentreContextProducer extends DefaultEntityProdu
 
     @Override
     protected TgCentreInvokerWithCentreContext provideDefaultValues(final TgCentreInvokerWithCentreContext entity) {
-        logger.error("restored masterEntity (centre context): " + getContext());
-        logger.error("restored masterEntity (centre context's selection criteria): " + getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
-        logger.error("restored masterEntity (centre context's selection criteria): " + getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
+        logger.error("restored masterEntity (centre context's selection criteria): " + selectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
+        logger.error("restored masterEntity (centre context's selection criteria): " + selectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
         
-        entity.setCritOnlyBigDecimalPropCriterion(getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
-        entity.setBigDecimalPropFromCriterion(getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
+        entity.setCritOnlyBigDecimalPropCriterion(selectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
+        entity.setBigDecimalPropFromCriterion(selectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
         return entity;
     }
 }

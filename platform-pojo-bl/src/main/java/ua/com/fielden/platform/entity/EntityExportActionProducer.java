@@ -23,11 +23,11 @@ public class EntityExportActionProducer extends DefaultEntityProducerWithContext
 
     @Override
     protected EntityExportAction provideDefaultValues(final EntityExportAction entity) {
-        if (getContext() != null) {
-            entity.setCentreContextHolder(getContext().getSelectionCrit().centreContextHolder());
+        if (selectionCritNotEmpty()) {
+            entity.setCentreContextHolder(selectionCrit().centreContextHolder());
             
-            final List<AbstractEntity<?>> selectedEntities = getContext().getSelectedEntities();
-            if (!selectedEntities.isEmpty()) {
+            if (selectedEntitiesNotEmpty()) {
+                final List<AbstractEntity<?>> selectedEntities = selectedEntities();
                 entity.setSelectedEntityIds(
                     selectedEntities.stream()
                     .map(selectedEntity -> selectedEntity.getId())

@@ -24,15 +24,15 @@ public class TgFunctionalEntityWithCentreContextProducer extends DefaultEntityPr
 
     @Override
     protected TgFunctionalEntityWithCentreContext provideDefaultValues(final TgFunctionalEntityWithCentreContext entity) {
-        if (getContext() != null) {
-            final String contextDependentValue = "" + getContext().getSelectedEntities().size() + (getContext().getSelectionCrit() != null ? " && crit" : " no crit");
+        if (contextNotEmpty()) {
+            final String contextDependentValue = "" + selectedEntities().size() + (selectionCritNotEmpty() ? " && crit" : " no crit");
             entity.setValueToInsert(contextDependentValue);
             
             final Set<Long> selectedEntityIds = new LinkedHashSet<Long>();
-            getContext().getSelectedEntities().forEach(selectedEntity -> selectedEntityIds.add(selectedEntity.getId()));
+            selectedEntities().forEach(selectedEntity -> selectedEntityIds.add(selectedEntity.getId()));
             entity.setSelectedEntityIds(selectedEntityIds);
             
-            final String userParam = getContext().getSelectionCrit() != null ? getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_userParam.key") : "UNKNOWN_USER";
+            final String userParam = selectionCritNotEmpty() ? selectionCrit().get("tgPersistentEntityWithProperties_userParam.key") : "UNKNOWN_USER";
             entity.setUserParam(userParam);
         }
         entity.setWithBrackets(true);

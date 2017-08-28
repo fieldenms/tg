@@ -21,7 +21,7 @@ public class TgONStatusActivationFunctionalEntityProducer extends DefaultEntityP
 
     @Override
     protected TgONStatusActivationFunctionalEntity provideDefaultValues(final TgONStatusActivationFunctionalEntity entity) {
-        entity.setSelectedEntityId(getContext().getCurrEntity().getId());
+        entity.setSelectedEntityId(currentEntity().getId());
         return entity;
     }
 }

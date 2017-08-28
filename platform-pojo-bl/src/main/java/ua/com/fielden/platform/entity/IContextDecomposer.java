@@ -60,6 +60,10 @@ public interface IContextDecomposer {
     CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext();
     void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context);
     
+    default boolean contextNotEmpty() {
+        return getContext() != null;
+    }
+    
     ////////////////////////////////////////////
     
     default String getChosenProperty() {
@@ -138,6 +142,15 @@ public interface IContextDecomposer {
             }
         }
         return false;
+    }
+    
+    
+    default boolean selectionCritNotEmpty() {
+        return getContext() != null && getContext().getSelectionCrit() != null;
+    }
+    
+    default EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit() {
+        return getContext().getSelectionCrit();
     }
     
     default boolean selectionCritOfMasterEntityNotEmpty() {
@@ -286,7 +299,7 @@ public interface IContextDecomposer {
         return selectedEntities().isEmpty();
     }
     
-    default boolean selectedEntitiesNonEmpty() {
+    default boolean selectedEntitiesNotEmpty() {
         return !selectedEntitiesEmpty();
     }
     

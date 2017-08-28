@@ -15,8 +15,8 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
 
     @Override
     protected CentreColumnWidthConfigUpdater provideDefaultValues(final CentreColumnWidthConfigUpdater entity) {
-        if (getContext() != null) {
-            entity.setCriteriaEntityHolder(getContext().getSelectionCrit().centreContextHolder());
+        if (selectionCritNotEmpty()) {
+            entity.setCriteriaEntityHolder(selectionCrit().centreContextHolder());
         }
         return entity;
     }
