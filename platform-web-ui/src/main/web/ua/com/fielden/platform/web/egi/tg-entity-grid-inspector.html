@@ -693,6 +693,13 @@
                     type: Function,
                     notify: true
                 },
+                /**
+                 * Holds the entity centre selection and updates it's own selection model when it changes.
+                 */
+                centreSelection: {
+                    type: Array,
+                    observer: "_centreSelectionChanged"
+                },
                 lock: {
                     type: Boolean,
                     value: false
@@ -949,7 +956,7 @@
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
                     _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
-                    this.fire("egi-selection-changed", [{entity: this.entities[entityIndex], select: select}]);
+                    this.fire("tg-entity-selected", [{entity: this.entities[entityIndex], select: select}]);
                 }
             },
 
@@ -1540,6 +1547,16 @@
                     this._resizeEventListener();
                 }.bind(this), 1);
             },
+            
+            _centreSelectionChanged: function (newSelection, oldSelection) {
+                newSelection.forEach(entitySelection => {
+                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
+                        this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
+                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                    }
+                });
+            },
             /**
              * Event handler for select all checkbox
              */
@@ -1559,7 +1576,7 @@
                     }
                     this.selectedAll = target.checked;
                     if (selectionDetails.length > 0) {
-                        this.fire("egi-selection-changed", selectionDetails);
+                        this.fire("tg-entity-selected", selectionDetails);
                     }
                 }
             },
@@ -1576,7 +1593,7 @@
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
                         _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
-                        this.fire("egi-selection-changed", [{
+                        this.fire("tg-entity-selected", [{
                             entity: this.entities[index],
                             select: target.checked
                         }]);
@@ -1616,7 +1633,7 @@
                     }
                 }
                 if (selectionDetails.length > 0) {
-                    this.fire("egi-selection-changed", selectionDetails);
+                    this.fire("tg-entity-selected", selectionDetails);
                 }
             },
 
@@ -1936,7 +1953,7 @@
                     }
                 }
                 if (selectionDetails.length > 0) {
-                    this.fire("egi-selection-changed", selectionDetails);
+                    this.fire("tg-entity-selected", selectionDetails);
                 }
             },
 
@@ -1948,7 +1965,7 @@
                     this.set("egiModel." + i + ".selected", false);
                 }
                 if (this.selectedEntities.length > 0) {
-                    this.fire("egi-selection-changed", this.selectedEntities.map(entity => {
+                    this.fire("tg-entity-selected", this.selectedEntities.map(entity => {
                         return {
                             entity: entity,
                             select: false

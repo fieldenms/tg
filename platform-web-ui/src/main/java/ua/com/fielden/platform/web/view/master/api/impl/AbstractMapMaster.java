@@ -38,7 +38,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .attr("entity", "[[_currBindingEntity]]")
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
-                .attr("egi-selection", "[[egiSelection]]")
+                .attr("centre-selection", "[[centreSelection]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");
 

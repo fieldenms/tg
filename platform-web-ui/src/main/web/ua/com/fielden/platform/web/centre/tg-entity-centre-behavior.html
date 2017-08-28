@@ -154,7 +154,7 @@
                 /**
                  * Holds the egi selction for binding into insertion point
                  */
-                egiSelection : {
+                centreSelection : {
                     type: Array
                 },
                 /**
@@ -618,19 +618,12 @@
                 }.bind(self));
                 
                 /**
-                 * Adds event listener fot entity selection in insertion point that will update egi selection model.
+                 * Adds event listener fot entity selection in insertion point that will update other insertion point and also egi.
                  */
                 self.addEventListener("tg-entity-selected", function(e) {
-                    e.detail.forEach(entitySelection => this.$.egi.selectEntity(entitySelection.entity, entitySelection.select));
+                    this.centreSelection = e.detail;
                 }.bind(self));
                 
-                /**
-                 * Adds event listener that will propagate selection on egi to insertion points
-                 */
-                self.addEventListener("egi-selection-changed", function(e) {
-                    this.egiSelection = e.detail;
-                }.bind(self));
-
                 this._columnAction = createColumnAction(self);
 
             }, // end of ready callback

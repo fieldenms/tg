@@ -925,7 +925,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     .attr("retrieved-entities", "{{retrievedEntities}}")
                     .attr("retrieved-totals", "{{retrievedTotals}}")
                     .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
-                    .attr("egi-selection", "[[egiSelection]]")
+                    .attr("centre-selection", "[[centreSelection]]")
                     .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
                 leftInsertionPointsDom.add(insertionPoint);

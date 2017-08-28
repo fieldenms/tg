@@ -182,9 +182,9 @@
                     notify: true
                 },
                 
-                egiSelection: {
+                centreSelection: {
                     type: Array,
-                    observer: '_egiSelectionChanged'
+                    observer: '_centreSelectionChanged'
                 },
                 /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
@@ -291,9 +291,9 @@
                 }
             },
             
-            _egiSelectionChanged: function (newValue, oldValue) {
+            _centreSelectionChanged: function (newValue, oldValue) {
                 if (this._element) {
-                    this._element.egiSelection = newValue;
+                    this._element.centreSelection = newValue;
                 }
             },
             
@@ -334,7 +334,7 @@
                                 self.retrievedEntitySelection = this.retrievedEntitySelection;
                             });
                             self._element.retrievedEntitySelection = self.retrievedEntitySelection;
-                            self._element.egiSelection = self.egiSelection;
+                            self._element.centreSelection = self.centreSelection;
                             self._element.addEventListener("column-properties-mapper-changed", function (ev) {
                                 self.columnPropertiesMapper = this.columnPropertiesMapper;
                             });
