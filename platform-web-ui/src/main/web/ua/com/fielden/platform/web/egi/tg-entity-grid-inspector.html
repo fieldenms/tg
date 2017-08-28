@@ -944,14 +944,6 @@
                 }
             },
             
-            silentlySelectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.entities);
-                if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
-                    this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
-                }
-            },
-            
             selectEntity: function(entity, select) {
                 const entityIndex = _findEntity(entity, this.entities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {

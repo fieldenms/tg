@@ -598,7 +598,6 @@
                         if (self._criteriaLoaded === false) {
                             throw "Cannot activate result-set view (not initialised criteria).";
                         }
-
                         self._selectedView = 1;
                     }, 100);
                 }).bind(self);
@@ -619,9 +618,16 @@
                 }.bind(self));
                 
                 /**
+                 * Adds event listener fot entity selection in insertion point that will update egi selection model.
+                 */
+                self.addEventListener("tg-entity-selected", function(e) {
+                    e.detail.forEach(entitySelection => this.$.egi.selectEntity(entitySelection.entity, entitySelection.select));
+                }.bind(self));
+                
+                /**
                  * Adds event listener that will propagate selection on egi to insertion points
                  */
-                self.addEventListener("egi-selection-chnaged", function(e) {
+                self.addEventListener("egi-selection-changed", function(e) {
                     this.egiSelection = e.detail;
                 }.bind(self));
 

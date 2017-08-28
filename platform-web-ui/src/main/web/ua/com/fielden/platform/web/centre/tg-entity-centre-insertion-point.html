@@ -181,6 +181,11 @@
                     observer: '_updateElementWithRetrievedEntitySelection',
                     notify: true
                 },
+                
+                egiSelection: {
+                    type: Array,
+                    observer: '_egiSelectionChanged'
+                },
                 /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
                  * consistent with the order of columns.
@@ -286,6 +291,12 @@
                 }
             },
             
+            _egiSelectionChanged: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.egiSelection = newValue;
+                }
+            },
+            
             _updateElementWithColumnPropertiesMapper: function (newValue, oldValue) {
                 if (this._element) {
                     this._element.columnPropertiesMapper = newValue;
@@ -323,6 +334,7 @@
                                 self.retrievedEntitySelection = this.retrievedEntitySelection;
                             });
                             self._element.retrievedEntitySelection = self.retrievedEntitySelection;
+                            self._element.egiSelection = self.egiSelection;
                             self._element.addEventListener("column-properties-mapper-changed", function (ev) {
                                 self.columnPropertiesMapper = this.columnPropertiesMapper;
                             });
