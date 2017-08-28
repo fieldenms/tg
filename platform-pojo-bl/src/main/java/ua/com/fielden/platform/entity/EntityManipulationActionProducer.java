@@ -4,7 +4,6 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;

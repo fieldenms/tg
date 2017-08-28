@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
+import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;

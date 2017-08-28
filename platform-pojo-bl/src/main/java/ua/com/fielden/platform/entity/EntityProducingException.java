@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity;
 
 /**
  * Runtime exceptional situation describing incorrect use of context decomposition API inside producer implementation.

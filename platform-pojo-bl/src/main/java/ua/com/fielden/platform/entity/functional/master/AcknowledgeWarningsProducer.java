@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
+import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
