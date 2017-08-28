@@ -66,10 +66,6 @@ public interface IContextDecomposer {
     
     ////////////////////////////////////////////
     
-    default String getChosenProperty() {
-        return getContext() == null ? null : getContext().getChosenProperty();
-    }
-    
     default AbstractEntity<?> getCurrEntity() {
         return getContext() == null ? null :
                getContext().getSelectedEntities().size() == 1 ? getContext().getCurrEntity() : null;
@@ -198,7 +194,7 @@ public interface IContextDecomposer {
      * @return
      */
     default String chosenProperty() {
-        return getChosenProperty();
+        return getContext() == null ? null : getContext().getChosenProperty();
     }
     
     /**

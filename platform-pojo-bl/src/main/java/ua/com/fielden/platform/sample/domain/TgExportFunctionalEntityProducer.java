@@ -24,8 +24,8 @@ public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithC
         if (masterEntityNotEmpty()) {
             entity.setMasterEntity(masterEntity(TgPersistentEntityWithProperties.class));
         }
-        if (getChosenProperty() != null) {
-            entity.setActionProperty(getChosenProperty());
+        if (chosenPropertyNotEmpty()) {
+            entity.setActionProperty(chosenProperty());
         }
         return entity;
     }

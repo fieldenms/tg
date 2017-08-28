@@ -29,8 +29,8 @@ public class TgCreatePersistentStatusActionProducer extends DefaultEntityProduce
             }
         }
         
-        if (getChosenProperty() != null) {
-            entity.setActionProperty(getChosenProperty());
+        if (chosenPropertyNotEmpty()) {
+            entity.setActionProperty(chosenProperty());
         }
         
         return entity;
