@@ -26,12 +26,12 @@ public class AcknowledgeWarningsProducer extends DefaultEntityProducerWithContex
 
     @Override
     public AcknowledgeWarnings provideDefaultValues(final AcknowledgeWarnings entity) {
-        if (getMasterEntity() != null) {
-            final Set<PropertyWarning> propertyWarnings = getMasterEntity()
+        if (masterEntityNotEmpty()) {
+            final Set<PropertyWarning> propertyWarnings = masterEntity()
                     .nonProxiedProperties()
                     .filter(mp -> mp.hasWarnings())
                     .map(mp -> {
-                        return factory().newEntity(PropertyWarning.class, CriteriaReflector.getCriteriaTitleAndDesc(getMasterEntity().getType(), mp.getName()).getKey(), mp.getFirstWarning().getMessage());
+                        return factory().newEntity(PropertyWarning.class, CriteriaReflector.getCriteriaTitleAndDesc(masterEntity().getType(), mp.getName()).getKey(), mp.getFirstWarning().getMessage());
                     })
                     .collect(Collectors.toCollection(() -> new TreeSet<PropertyWarning>()));
             entity.setWarnings(propertyWarnings);

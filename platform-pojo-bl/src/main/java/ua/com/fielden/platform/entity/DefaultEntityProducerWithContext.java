@@ -72,8 +72,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     @Override
     public final T newEntity() {
         final T producedEntity;
-        if (getMasterEntity() != null && EntityEditAction.class.isAssignableFrom(getMasterEntity().getClass())) {
-            final EntityEditAction entityEditAction = (EntityEditAction) getMasterEntity();
+        if (masterEntityInstanceOf(EntityEditAction.class)) {
+            final EntityEditAction entityEditAction = masterEntity(EntityEditAction.class);
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
@@ -91,8 +91,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
                 }
             }
             
-            if (getMasterEntity() != null && EntityNewAction.class.isAssignableFrom(getMasterEntity().getClass())) {
-                producedEntity = provideDefaultValuesForStandardNew(entity, (EntityNewAction) getMasterEntity());
+            if (masterEntityInstanceOf(EntityNewAction.class)) {
+                producedEntity = provideDefaultValuesForStandardNew(entity, masterEntity(EntityNewAction.class));
             } else {
                 producedEntity = provideDefaultValues(entity);
             }

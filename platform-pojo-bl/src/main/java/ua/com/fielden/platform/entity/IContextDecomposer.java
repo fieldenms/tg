@@ -9,12 +9,36 @@ import java.util.function.BiFunction;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
+/**
+ * This interface represents a set of utilities for context decomposition.
+ * <p>
+ * There are two types of methods: accessors and predicates.
+ * <p>
+ * Predicates are used to query existence, conformity to types or kinds, conditions on count etc.
+ * <p>
+ * After concrete predicate(s) has been succeeded the API accessor should be used to actually retrieve the part that conforms to the predicate(s).
+ * 
+ * @author TG Team
+ *
+ */
 public interface IContextDecomposer {
     
+    /**
+     * Creates {@link IContextDecomposer} instance for decomposing <code>optionalContext</code>.
+     * 
+     * @param optionalContext
+     * @return
+     */
     public static <M extends AbstractEntity<?>> IContextDecomposer decompose(final Optional<CentreContext<M, ?>> optionalContext) {
         return decompose(optionalContext.orElse(null));
     }
     
+    /**
+     * Creates {@link IContextDecomposer} instance for decomposing <code>context</code>.
+     * 
+     * @param context
+     * @return
+     */
     public static <M extends AbstractEntity<?>> IContextDecomposer decompose(final CentreContext<M, ?> context) {
         final IContextDecomposer contextDecomposer = new IContextDecomposer() {
             private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
@@ -37,14 +61,6 @@ public interface IContextDecomposer {
     void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context);
     
     ////////////////////////////////////////////
-    /**
-     * Use this method in case when the master context (as functional entity) is required for entity instantiation.
-     *
-     * @return
-     */
-    default AbstractEntity<?> getMasterEntity() {
-        return getContext() == null ? null : getContext().getMasterEntity();
-    }
     
     default String getChosenProperty() {
         return getContext() == null ? null : getContext().getChosenProperty();
@@ -67,7 +83,7 @@ public interface IContextDecomposer {
     
     // MASTER ENTITY:
     default AbstractEntity<?> masterEntity() {
-        return getMasterEntity();
+        return getContext() == null ? null : getContext().getMasterEntity();
     }
     
     default <M extends AbstractEntity<?>> M masterEntity(final Class<M> type) {

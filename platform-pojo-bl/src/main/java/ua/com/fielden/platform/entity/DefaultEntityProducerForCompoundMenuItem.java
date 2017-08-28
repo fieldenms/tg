@@ -18,7 +18,7 @@ public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunction
 
     @Override
     protected T provideDefaultValues(final T entity) {
-        final AbstractEntity<?> openCompoundMasterAction = getMasterEntity();
+        final AbstractEntity<?> openCompoundMasterAction = masterEntity();
         
         if (openCompoundMasterAction == null) {
             throw new IllegalStateException("Upper level functional entity (for compound master opening) cannot be null.");
