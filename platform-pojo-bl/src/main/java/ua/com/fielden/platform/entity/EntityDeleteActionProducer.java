@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public class EntityDeleteActionProducer extends DefaultEntityProducerWithContext<EntityDeleteAction> implements IEntityProducer<EntityDeleteAction> {
+public class EntityDeleteActionProducer extends DefaultEntityProducerWithContext<EntityDeleteAction> {
 
     @Inject
     public EntityDeleteActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

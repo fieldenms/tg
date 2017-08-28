@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
-import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
@@ -20,7 +19,7 @@ import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
  * @author TG Team
  *
  */
-public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<User, UserRolesUpdater, Long, UserRole> implements IEntityProducer<UserRolesUpdater> {
+public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<User, UserRolesUpdater, Long, UserRole> {
     private final ICollectionModificationController<User, UserRolesUpdater, Long, UserRole> controller;
     
     @Inject

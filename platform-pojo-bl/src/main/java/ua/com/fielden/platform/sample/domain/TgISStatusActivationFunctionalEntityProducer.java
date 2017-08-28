@@ -3,7 +3,6 @@ package ua.com.fielden.platform.sample.domain;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
@@ -13,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public class TgISStatusActivationFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgISStatusActivationFunctionalEntity> implements IEntityProducer<TgISStatusActivationFunctionalEntity> {
+public class TgISStatusActivationFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgISStatusActivationFunctionalEntity> {
 
     @Inject
     public TgISStatusActivationFunctionalEntityProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

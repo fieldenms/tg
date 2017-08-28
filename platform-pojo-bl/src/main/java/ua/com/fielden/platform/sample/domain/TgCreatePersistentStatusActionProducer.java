@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
@@ -14,7 +13,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgCreatePersistentStatusActionProducer extends DefaultEntityProducerWithContext<TgCreatePersistentStatusAction> implements IEntityProducer<TgCreatePersistentStatusAction> {
+public class TgCreatePersistentStatusActionProducer extends DefaultEntityProducerWithContext<TgCreatePersistentStatusAction> {
 
     @Inject
     public TgCreatePersistentStatusActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

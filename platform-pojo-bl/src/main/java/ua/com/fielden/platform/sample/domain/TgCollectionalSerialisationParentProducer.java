@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
@@ -14,7 +13,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public class TgCollectionalSerialisationParentProducer extends DefaultEntityProducerWithContext<TgCollectionalSerialisationParent> implements IEntityProducer<TgCollectionalSerialisationParent> {
+public class TgCollectionalSerialisationParentProducer extends DefaultEntityProducerWithContext<TgCollectionalSerialisationParent> {
 
     @Inject
     public TgCollectionalSerialisationParentProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

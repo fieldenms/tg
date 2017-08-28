@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  * @param <T>
  */
-public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> > extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
+public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> > extends DefaultEntityProducerWithContext<T> {
     
     public DefaultEntityProducerForCompoundMenuItem(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         super(factory, entityType, companionFinder);

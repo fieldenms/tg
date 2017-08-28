@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
@@ -15,7 +14,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgCentreInvokerWithCentreContextProducer extends DefaultEntityProducerWithContext<TgCentreInvokerWithCentreContext> implements IEntityProducer<TgCentreInvokerWithCentreContext> {
+public class TgCentreInvokerWithCentreContextProducer extends DefaultEntityProducerWithContext<TgCentreInvokerWithCentreContext> {
     private final Logger logger = Logger.getLogger(getClass());
 
     @Inject
