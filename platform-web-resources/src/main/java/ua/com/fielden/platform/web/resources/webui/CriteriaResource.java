@@ -380,6 +380,7 @@ public class CriteriaResource extends ServerResource {
             return Optional.of(new Pair<>(
                     queryEnhancerConfig.get().getKey(),
                     CentreResourceUtils.createCentreContext(
+                            true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
                             webUiConfig,
                             companionFinder,
                             serverGdtm,
