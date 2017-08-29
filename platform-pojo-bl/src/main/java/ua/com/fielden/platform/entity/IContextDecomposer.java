@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,12 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * Predicates are used to query existence, conformity to types or kinds, conditions on count etc.
  * <p>
  * After concrete predicate(s) has been succeeded the API accessor should be used to actually retrieve the part that conforms to the predicate(s).
+ * <p>
+ * If there is a certainty that concrete single-cased context part exists -- please use corresponding accessor only.
+ * If there are multiple choices -- please use predicates and their corresponding follow-up accessors.
+ * <p>
+ * Besides first level API there also exist the API for second level context, aka the context of {@link #masterEntity()}.
+ * All of second-level methods contain 'OfMasterEntity' suffix (in the end of method name, except for those that end with predicate suffixes like 'InstanceOf' or 'NotEmpty').
  * 
  * @author TG Team
  *
@@ -57,7 +65,7 @@ public interface IContextDecomposer {
         return contextDecomposer;
     }
     
-    ////////////////////////////////// CONTEXT DECOMPOSITION API //////////////////////////////////
+    ////////////////////////////////// CONTEXT DECOMPOSITION API [FIRST LEVEL] //////////////////////////////////
     
     // CONTEXT AS A WHOLE:
     /**
@@ -127,6 +135,33 @@ public interface IContextDecomposer {
      */
     default <M extends AbstractEntity<?>> M masterEntity(final Class<M> type) {
         return (M) masterEntity();
+    }
+    
+    // MASTER ENTITY'S KEY:
+    /**
+     * Returns <code>true</code> if masterEntity's key exists and is instance of concrete <code>type</code>, <code>false</code> otherwise.
+     * 
+     * @param type
+     * @return
+     */
+    default <M extends AbstractEntity<?>> boolean keyOfMasterEntityInstanceOf(final Class<M> type) {
+        if (masterEntityNotEmpty()) {
+            final AbstractEntity<?> masterEntity = masterEntity();
+            if (masterEntity.get(KEY) != null) {
+                return type.isAssignableFrom(masterEntity.get(KEY).getClass());
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Returns masterEntity's key of concrete <code>type</code>.
+     * 
+     * @param type
+     * @return
+     */
+    default <M extends AbstractEntity<?>> M keyOfMasterEntity(final Class<M> type) {
+        return (M) masterEntity().get(KEY);
     }
     
     // CHOSEN PROPERTY:
@@ -313,103 +348,140 @@ public interface IContextDecomposer {
         return getContext() == null ? Optional.empty() : getContext().getComputation();
     }
     
-    ////////////////////////////
+    ////////////////////////////////// CONTEXT DECOMPOSITION API [SECOND LEVEL] //////////////////////////////////
     
-    default <M extends AbstractEntity<?>> boolean masterEntityKeyInstanceOf(final Class<M> type) {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (masterEntity.get("key") != null) {
-                return type.isAssignableFrom(masterEntity.get("key").getClass());
-            }
-        }
-        return false;
-    }
-    
-    default <M extends AbstractEntity<?>> boolean masterEntityKeyOfMasterEntityInstanceOf(final Class<M> type) {
+    // CONTEXT AS A WHOLE:
+    /**
+     * Returns <code>true</code> if masterEntity's context exists, <code>false</code> otherwise.
+     * 
+     * @return
+     */
+    default boolean contextOfMasterEntityNotEmpty() {
         if (masterEntityNotEmpty()) {
             final AbstractEntity<?> masterEntity = masterEntity();
             if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                if (masterFuncEntity.context() != null && masterFuncEntity.context().getMasterEntity() != null) {
-                    final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
-                    if (masterEntityOfMasterEntity.get("key") != null) {
-                        return type.isAssignableFrom(masterEntityOfMasterEntity.get("key").getClass());
-                    }
-                }
+                return ((AbstractFunctionalEntityWithCentreContext) masterEntity).context() != null;
             }
         }
         return false;
     }
     
+    default CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContextOfMasterEntity() {
+        return ((AbstractFunctionalEntityWithCentreContext) masterEntity()).context();
+    }
     
+    // MASTER ENTITY:
+    /**
+     * Returns <code>true</code> if masterEntity's master entity exists and is instance of concrete <code>type</code>, <code>false</code> otherwise.
+     * 
+     * @param type
+     * @return
+     */
     default <M extends AbstractEntity<?>> boolean masterEntityOfMasterEntityInstanceOf(final Class<M> type) {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                return decompose(masterFuncEntity.context()).masterEntityInstanceOf(type);
-            }
-        }
-        return false;
+        return contextOfMasterEntityNotEmpty() && decompose(getContextOfMasterEntity()).masterEntityInstanceOf(type);
     }
     
-    default boolean selectionCritOfMasterEntityNotEmpty() {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                return masterFuncEntity.context() != null && masterFuncEntity.context().getSelectionCrit() != null;
-            }
-        }
-        return false;
-    }
-    
-    default EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntity() {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        return masterFuncEntity.context().getSelectionCrit();
-    }
-    
-    default <M extends AbstractEntity<?>> M masterEntityKey(final Class<M> type) {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        return (M) masterEntity.get("key");
-    }
-    
-    default <M extends AbstractEntity<?>> M masterEntityKeyOfMasterEntity(final Class<M> type) {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
-        return (M) masterEntityOfMasterEntity.get("key");
-    }
-    
+    /**
+     * Returns masterEntity's master entity of concrete <code>type</code>.
+     * 
+     * @param type
+     * @return
+     */
     default <M extends AbstractEntity<?>> M masterEntityOfMasterEntity(final Class<M> type) {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        final AbstractEntity<?> masterEntityOfMasterEntity = masterFuncEntity.context().getMasterEntity();
-        return (M) masterEntityOfMasterEntity;
+        return decompose(getContextOfMasterEntity()).masterEntity(type);
     }
     
+    // MASTER ENTITY'S KEY:
+    /**
+     * Returns <code>true</code> if masterEntity's master entity key exists and is instance of concrete <code>type</code>, <code>false</code> otherwise.
+     * 
+     * @param type
+     * @return
+     */
+    default <M extends AbstractEntity<?>> boolean keyOfMasterEntityOfMasterEntityInstanceOf(final Class<M> type) {
+        return contextOfMasterEntityNotEmpty() && decompose(getContextOfMasterEntity()).keyOfMasterEntityInstanceOf(type);
+    }
+    
+    /**
+     * Returns masterEntity's master entity key of concrete <code>type</code>.
+     * 
+     * @param type
+     * @return
+     */
+    default <M extends AbstractEntity<?>> M keyOfMasterEntityOfMasterEntity(final Class<M> type) {
+        return decompose(getContextOfMasterEntity()).keyOfMasterEntity(type);
+    }
+    
+    // CHOSEN PROPERTY:
+    /**
+     * Returns masterEntity's chosen property value: <code>null</code> if chosen property is not applicable,
+     * "" if property action for 'this' column was actioned, and non-empty property name otherwise
+     * (master property editor actions and centre column actions).
+     * 
+     * @return
+     */
+    default String chosenPropertyOfMasterEntity() {
+        return decompose(getContextOfMasterEntity()).chosenProperty();
+    }
+    
+    // CURRENT ENTITY:
+    /**
+     * Returns <code>true</code> if masterEntity's current entity exists and is instance of concrete <code>type</code>, <code>false</code> otherwise.
+     * 
+     * @param type
+     * @return
+     */
     default <M extends AbstractEntity<?>> boolean currentEntityOfMasterEntityInstanceOf(final Class<M> type) {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-                return decompose(masterFuncEntity.context()).currentEntityInstanceOf(type);
-            }
-        }
-        return false;
+        return contextOfMasterEntityNotEmpty() && decompose(getContextOfMasterEntity()).currentEntityInstanceOf(type);
     }
     
+    /**
+     * Returns masterEntity's current entity of concrete <code>type</code>.
+     * 
+     * @param type
+     * @return
+     */
     default <M extends AbstractEntity<?>> M currentEntityOfMasterEntity(final Class<M> type) {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        return decompose(masterFuncEntity.context()).currentEntity(type);
+        return decompose(getContextOfMasterEntity()).currentEntity(type);
     }
     
+    // SELECTION CRITERIA:
+    /**
+     * Returns <code>true</code> if masterEntity's selection criteria entity exists, <code>false</code> otherwise.
+     * 
+     * @return
+     */
+    default boolean selectionCritOfMasterEntityNotEmpty() {
+        return contextOfMasterEntityNotEmpty() && decompose(getContextOfMasterEntity()).selectionCritNotEmpty();
+    }
+    
+    /**
+     * Returns masterEntity's selection criteria entity.
+     * 
+     * @return
+     */
+    default EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntity() {
+        return decompose(getContextOfMasterEntity()).selectionCrit();
+    }
+    
+    // SELECTED ENTITIES:
+    /**
+     * Returns masterEntity's selected entities.
+     * 
+     * @return
+     */
+    default List<AbstractEntity<?>> selectedEntitiesOfMasterEntity() {
+        return decompose(getContextOfMasterEntity()).selectedEntities();
+    }
+    
+    // COMPUTATION:
+    /**
+     * Returns masterEntity's optional computation.
+     * 
+     * @return
+     */
     default Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computationOfMasterEntity() {
-        final AbstractEntity<?> masterEntity = masterEntity();
-        final AbstractFunctionalEntityWithCentreContext masterFuncEntity = (AbstractFunctionalEntityWithCentreContext) masterEntity;
-        return decompose(masterFuncEntity.context()).computation();
+        return decompose(getContextOfMasterEntity()).computation();
     }
     
 }
