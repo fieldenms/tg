@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
@@ -77,7 +76,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
-            return restUtil.rawListJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(applied));
+            return restUtil.rawListJSONRepresentation(applied);
         }, restUtil);
     }
 }

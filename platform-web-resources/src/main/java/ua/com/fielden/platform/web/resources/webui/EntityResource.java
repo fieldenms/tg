@@ -204,7 +204,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             producer
                             );
                     logger.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(entity));
+                    return restUtil.rawListJSONRepresentation(entity);
                 }
             } else {
                 logger.debug("ENTITY_RESOURCE: retrieve finished.");
@@ -236,7 +236,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = WebUiResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
         final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder);
-        return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
+        return restUtil.singleJSONRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
     }
 
     private Pair<T, Optional<Exception>> tryToSave(final SavingInfoHolder savingInfoHolder) {
