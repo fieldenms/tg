@@ -143,7 +143,11 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Post
     public Representation save(final Representation envelope) {
         logger.debug("ENTITY_RESOURCE: save started.");
-        final Representation result = WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToSave(envelope), restUtil);
+        final Representation result = WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            final SavingInfoHolder savingInfoHolder = WebUiResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+            final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, serverGdtm, userProvider, companion);
+            return restUtil.singleJSONRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
+        }, restUtil);
         logger.debug("ENTITY_RESOURCE: save finished.");
         return result;
     }
@@ -225,22 +229,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
             return delete(entityId);
         }, restUtil);
-    }
-
-    /**
-     * Tries to save the changes for the entity and returns it in JSON format.
-     *
-     * @param envelope
-     * @return
-     */
-    private Representation tryToSave(final Representation envelope) {
-        final SavingInfoHolder savingInfoHolder = WebUiResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder);
-        return restUtil.singleJSONRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
-    }
-
-    private Pair<T, Optional<Exception>> tryToSave(final SavingInfoHolder savingInfoHolder) {
-        return tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, serverGdtm, userProvider, companion);
     }
     
     /**

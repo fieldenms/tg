@@ -106,16 +106,36 @@ public class EntityResourceContinuationsHelper {
     }
     
     /**
+     * Creates map of continuations by continuation keys.
+     * 
+     * @param continuations
+     * @param continuationProperties
+     * @return
+     */
+    public static Map<String, IContinuationData> createContinuationsMap(final List<IContinuationData> continuations, final List<String> continuationProperties) {
+        final Map<String, IContinuationData> map = new LinkedHashMap<>();
+        for (int index = 0; index < continuations.size(); index++) {
+            map.put(continuationProperties.get(index), continuations.get(index));
+        }
+        return map;
+    }
+    
+    // EXPERIMENTAL API:
+    
+    /**
      * Restores the entity from {@link SavingInfoHolder} and tries to save it.
+     * <p>
+     * TODO This version of 'tryToSave' lays foundation for independent from Web UI infrastructure saving process (unlike fully-fledged EntityResource.tryToSave method in platform-web-resources module).
+     * <p>
+     * TODO Originally this method was needed for #777 'Web API' issue.
+     * <p>
+     * TODO At this stage it appears that only 'missing piece' is unavailability of concrete producer types for concrete entity types in dao module (currently producer types reside in Web UI configuration).
+     * Default, 'empty', producers are used -- see method createEntityProducer.
      * 
      * @param savingInfoHolder
      * @param entityType
      * @param entityFactory
      * @param companionFinder
-     * @param critGenerator
-     * @param webUiConfig
-     * @param serverGdtm
-     * @param userProvider
      * @param companion
      * @return
      */
@@ -134,21 +154,6 @@ public class EntityResourceContinuationsHelper {
 
         final Pair<T, Optional<Exception>> potentiallySavedWithException = saveWithContinuations(applied, continuations, companion);
         return potentiallySavedWithException;
-    }
-    
-    /**
-     * Creates map of continuations by continuation keys.
-     * 
-     * @param continuations
-     * @param continuationProperties
-     * @return
-     */
-    public static Map<String, IContinuationData> createContinuationsMap(final List<IContinuationData> continuations, final List<String> continuationProperties) {
-        final Map<String, IContinuationData> map = new LinkedHashMap<>();
-        for (int index = 0; index < continuations.size(); index++) {
-            map.put(continuationProperties.get(index), continuations.get(index));
-        }
-        return map;
     }
     
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
