@@ -37,7 +37,6 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .clazz("tg-map")
                 .attr("entity", "[[_currBindingEntity]]")
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
-                .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");

@@ -173,15 +173,6 @@
                     observer: '_updateElementWithRetrievedTotals',
                     notify: true
                 },
-                /**
-                 * Last updated entity selection in centre that has this insertion point's element.
-                 */
-                retrievedEntitySelection: {
-                    type: Object,
-                    observer: '_updateElementWithRetrievedEntitySelection',
-                    notify: true
-                },
-                
                 centreSelection: {
                     type: Array,
                     observer: '_centreSelectionChanged'
@@ -285,12 +276,6 @@
                 }
             },
             
-            _updateElementWithRetrievedEntitySelection: function (newValue, oldValue) {
-                if (this._element) {
-                    this._element.retrievedEntitySelection = newValue;
-                }
-            },
-            
             _centreSelectionChanged: function (newValue, oldValue) {
                 if (this._element) {
                     this._element.centreSelection = newValue;
@@ -330,10 +315,6 @@
                                 self.retrievedTotals = this.retrievedTotals;
                             });
                             self._element.retrievedTotals = self.retrievedTotals;
-                            self._element.addEventListener("retrieved-entity-selection-changed", function (ev) {
-                                self.retrievedEntitySelection = this.retrievedEntitySelection;
-                            });
-                            self._element.retrievedEntitySelection = self.retrievedEntitySelection;
                             self._element.centreSelection = self.centreSelection;
                             self._element.addEventListener("column-properties-mapper-changed", function (ev) {
                                 self.columnPropertiesMapper = this.columnPropertiesMapper;

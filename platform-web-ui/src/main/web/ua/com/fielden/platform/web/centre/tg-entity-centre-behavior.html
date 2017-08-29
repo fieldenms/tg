@@ -144,14 +144,6 @@
                     observer: '_columnPropertiesMapperChanged'
                 },
                 /**
-                 * Last updated entity selection in this centre.
-                 */
-                retrievedEntitySelection: {
-                    type: Object,
-                    observer: '_retrievedEntitySelectionChanged'
-                },
-                
-                /**
                  * Holds the egi selction for binding into insertion point
                  */
                 centreSelection : {
@@ -425,10 +417,6 @@
 
             _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
                 this.$.egi.totals = retrievedTotals;
-            },
-
-            _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
-                this.$.egi.retrievedEntitySelection = retrievedEntitySelection;
             },
 
             _columnPropertiesMapperChanged: function (columnPropertiesMapper, oldValue) {
