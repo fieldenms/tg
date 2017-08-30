@@ -921,6 +921,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     .attr("id", "ip" + el.numberOfAction)
                     .attr("short-desc", el.conf().shortDesc.orElse(""))
                     .attr("long-desc", el.conf().longDesc.orElse(""))
+                    .attr("selection-criteria-entity", "[[selectionCriteriaEntity]]")
+                    .attr("is-centre-running", "[[_triggerRun]]")
                     .attr("retrieved-entities", "{{retrievedEntities}}")
                     .attr("retrieved-totals", "{{retrievedTotals}}")
                     .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")

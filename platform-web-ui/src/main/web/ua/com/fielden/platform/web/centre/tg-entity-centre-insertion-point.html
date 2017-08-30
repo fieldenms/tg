@@ -144,6 +144,20 @@
                  */
                 longDesc: String,
                 /**
+                 * The selection criteria entity binded to this insertion point
+                 */
+                selectionCriteriaEntity: {
+                    type: Object,
+                    observer: '_updateElementWithSelectionCriteriaEntity',
+                },
+                /**
+                 * Indicates whether centre was ran or not. Is binded in the entity centre.
+                 */
+                isCentreRunning: {
+                    type: Boolean,
+                    observer: '_updateElementWithRunIndicator',
+                },
+                /**
                  * The entities retrieved when running centre that has this insertion point
                  */
                 retrievedEntities: {
@@ -241,6 +255,18 @@
                     return self.$.elementLoader.reload();
                 }
             },
+            
+            _updateElementWithSelectionCriteriaEntity: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.selectionCriteriaEntity = newValue;
+                }
+            },
+            
+            _updateElementWithRunIndicator: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.isCentreRunning = newValue;
+                }
+            },
 
             _updateElementWithRetrievedEntities: function (newValue, oldValue) {
                 if (this._element) {
@@ -283,6 +309,8 @@
                         .then(function (element) {
                             self.activated = true;
                             self._element = element;
+                            self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
+                            self._element.isCentreRunning = self.isCentreRunning;
                             self._element.addEventListener("retrieved-entities-changed", function (ev) {
                                 self.retrievedEntities = this.retrievedEntities;
                             });
