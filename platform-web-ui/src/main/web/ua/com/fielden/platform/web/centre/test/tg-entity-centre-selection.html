@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>entity centre selection tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+	<test-fixture id="CentreFixture">
+    	<template>
+    	    <tg-MiTgPersistentEntityWithProperties-centre id="centre"></tg-MiTgPersistentEntityWithProperties-centre>
+    	</template>
+	</test-fixture>
+
+    <script>
+	suite('entity centre selection', function() {
+	    let centre;
+	
+	    setup(function() {
+			centre = fixture('CentreFixture');
+	    });
+	    
+	    test('running does not occur for invalid criteria', function (done) {
+            const old_postRun = centre._postRun;
+            let phase = "first";
+            
+            centre.addEventListener("tg-entity-selected", (e) => {
+                const selectionDetails = e.detail;
+                if (phase === "first") {
+                    assert.strictEqual(e.detail.entities.length, 1, "The number of selected entities in the first phase should be 1.");
+                    assert.strictEqual(e.detail.shouldScrollToSelected, false, "It should be scrolled to seelected entity.");
+                    assert.strictEqual(e.detail.entities[0].select, true, "First entity in egi should be selected.");
+                    assert.strictEqual(e.detail.entities[0].entity, centre.$.egi.entities[0], "First entity in egi chnaged it's selection.");
+                    done();
+                }
+            });
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre.$.egi.selectEntity(resultEntities[0], true);
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                centre.run();
+            };
+
+ 			centre.retrieve();
+	    });
+	});
+    </script>
+
+</body>
+
+</html>
