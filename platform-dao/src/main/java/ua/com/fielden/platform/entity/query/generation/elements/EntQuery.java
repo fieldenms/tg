@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.getOrderPropsFromCompositeEntityKey;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
@@ -125,7 +126,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        return yields.size() == 0 && !yieldAll && resultTypeIsPersistedType && isSubQuery();
+        return yields.size() == 0 && !yieldAll && isResulTypePersisted()/*resultTypeIsPersistedType*/ && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -448,7 +449,8 @@ public class EntQuery implements ISingleOperand {
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!\n Query: " + queryBlocks);
         }
 
-        resultTypeIsPersistedType = (resultType == null || resultType == EntityAggregates.class) ? false
+        resultTypeIsPersistedType = //isResulTypePersisted();
+        (resultType == null || resultType == EntityAggregates.class) ? false
                 : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
@@ -457,6 +459,10 @@ public class EntQuery implements ISingleOperand {
 
         assignPropertyPersistenceInfoToYields();
         //sources.reorderSources();
+    }
+    
+    private boolean isResulTypePersisted() {
+        return (resultType == null || resultType == EntityAggregates.class) ? false : (isPersistedEntityType(this.resultType) || isSyntheticBasedOnPersistentEntityType(this.resultType));
     }
 
     private Map<EntPropStage, List<EntProp>> groupPropsByStage(final List<EntProp> props) {
