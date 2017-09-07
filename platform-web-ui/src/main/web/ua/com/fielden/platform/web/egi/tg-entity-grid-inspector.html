@@ -1510,20 +1510,27 @@
              * Event handler for select all checkbox
              */
             _allSelectionChanged: function (e) {
+                const target = e.target || e.srcElement;
+                this._selectAll(target.checked);
+            },
+            
+            /**
+             * Selects/unselects all entities. 
+             */
+            selectAll: function (checked) {
                 if (this.egiModel) {
-                    const target = e.target || e.srcElement;
                     const selectionDetails = [];
                     for (let i = 0; i < this.egiModel.length; i += 1) {
-                        if (this.egiModel[i].selected !== target.checked) {
-                            this.set("egiModel." + i + ".selected", target.checked);
-                            _processEntitySelection(this.selectedEntities, this.entities[i], target.checked);
+                        if (this.egiModel[i].selected !== checked) {
+                            this.set("egiModel." + i + ".selected", checked);
+                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
                             selectionDetails.push({
                                 entity: this.entities[i],
-                                select: target.checked
+                                select: checked
                             });
                         }
                     }
-                    this.selectedAll = target.checked;
+                    this.selectedAll = checked;
                     if (selectionDetails.length > 0) {
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
@@ -1532,6 +1539,7 @@
                     }
                 }
             },
+            
             /**
              * Event handler for selecting concrete entity
              */
@@ -1897,23 +1905,7 @@
              * Clears the selection on current page.
              */
             clearPageSelection: function () {
-                const selectionDetails = [];
-                for (let i = 0; i < this.egiModel.length; i++) {
-                    if (this.egiModel[i].selected) {
-                        _processEntitySelection(this.selectedEntities, this.egiModel[i].entity, false);
-                        this.set("egiModel." + i + ".selected", false);
-                        selectionDetails.push({
-                            entity: this.egiModel[i].entity,
-                            select: false
-                        });
-                    }
-                }
-                if (selectionDetails.length > 0) {
-                    this.fire("tg-entity-selected", {
-                        shouldScrollToSelected: false,
-                        entities: selectionDetails
-                    });
-                }
+                this.selectAll(false);
             },
 
             /**
@@ -1923,10 +1915,14 @@
                 for (let i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
-                if (this.selectedEntities.length > 0) {
+                this.selectedAll = false;
+                // First clear all selection and then fire event
+                const prevSelectedEntities = this.selectedEntities;
+                this.selectedEntities = [];
+                if (prevSelectedEntities.length > 0) {
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
-                        entities: this.selectedEntities.map(entity => {
+                        entities: prevSelectedEntities.map(entity => {
                             return {
                                 entity: entity,
                                 select: false
@@ -1934,7 +1930,6 @@
                         })
                     });
                 }
-                this.selectedEntities = [];
             },
             /*
              * Below are functions those are related to shadow style calculation.
