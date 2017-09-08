@@ -372,6 +372,14 @@
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
                         newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
+                        
+                        if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
+                            this._originallyProducedEntity = null;
+                        } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        }
                     }
 
                     // custom external action
@@ -382,14 +390,6 @@
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after successful save
                         this._continuations = {};
-                        
-                        if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
-                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
-                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
-                            this._originallyProducedEntity = null;
-                        } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
-                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
-                        }
                         
                         // Context creator should assigned only after successful master entity saving.
                         // In case of successful assignment it gets promoted to embedded views by means of binding.
