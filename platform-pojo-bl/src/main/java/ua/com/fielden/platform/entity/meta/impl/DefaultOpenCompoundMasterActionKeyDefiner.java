@@ -32,9 +32,9 @@ public class DefaultOpenCompoundMasterActionKeyDefiner implements IAfterChangeEv
         final String sectionTitleValue = !key.isPersisted() 
             ? "Add new " + getEntityTitleAndDesc(key.getType()).getKey()
             : (
-              isEmpty(key.getDesc())
+              isEmpty(entityDesc(key))
               ? format("%s", entityTitleObject(key))
-              : format("%s: %s", entityTitleObject(key), key.getDesc())
+              : format("%s: %s", entityTitleObject(key), entityDesc(key))
             );
         property.getEntity().set("sectionTitle", sectionTitleValue);
     }
@@ -47,6 +47,16 @@ public class DefaultOpenCompoundMasterActionKeyDefiner implements IAfterChangeEv
      */
     protected Object entityTitleObject(final AbstractEntity<?> entity) {
         return entity.getKey();
+    }
+    
+    /**
+     * Override this method to provide custom entity description formatting in section title.
+     * 
+     * @param entity
+     * @return
+     */
+    protected String entityDesc(final AbstractEntity<?> entity) {
+        return entity.getDesc();
     }
     
 }
