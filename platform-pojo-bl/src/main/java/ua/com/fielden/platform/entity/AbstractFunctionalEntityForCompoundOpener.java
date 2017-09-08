@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -22,7 +21,6 @@ import ua.com.fielden.platform.entity.meta.impl.DefaultOpenCompoundMasterActionK
 public abstract class AbstractFunctionalEntityForCompoundOpener<K extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
     
     @IsProperty
-    @MapTo
     @SkipEntityExistsValidation // this is needed to be able to use new (not persisted) instances of keys
     @AfterChange(DefaultOpenCompoundMasterActionKeyDefiner.class)
     private K key;

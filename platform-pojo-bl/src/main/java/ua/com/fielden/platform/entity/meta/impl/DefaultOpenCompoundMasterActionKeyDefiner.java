@@ -33,10 +33,20 @@ public class DefaultOpenCompoundMasterActionKeyDefiner implements IAfterChangeEv
             ? "Add new " + getEntityTitleAndDesc(key.getType()).getKey()
             : (
               isEmpty(key.getDesc())
-              ? format("%s", key.getKey())
-              : format("%s: %s", key.getKey(), key.getDesc())
+              ? format("%s", entityTitleObject(key))
+              : format("%s: %s", entityTitleObject(key), key.getDesc())
             );
         property.getEntity().set("sectionTitle", sectionTitleValue);
+    }
+    
+    /**
+     * Override this method to provide custom entity formatting in section title.
+     * 
+     * @param entity
+     * @return
+     */
+    protected Object entityTitleObject(final AbstractEntity<?> entity) {
+        return entity.getKey();
     }
     
 }
