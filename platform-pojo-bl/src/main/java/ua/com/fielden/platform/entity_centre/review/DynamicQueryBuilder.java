@@ -61,7 +61,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DynamicQueryBuilder {
-    private final static Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
+    private static final Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
 
     /**
      * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
@@ -851,7 +851,7 @@ public class DynamicQueryBuilder {
             final Map<Boolean, List<String>> searchValues = ((List<String>) property.getValue()).stream().collect(Collectors.groupingBy(str -> str.contains("*")));
             
             final ConditionModel condition;
-            final String propertyNameWithoutKey = propertyName.substring(0, propertyName.length() - 4);
+            final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyName);
             final Class<? extends AbstractEntity<?>> propType = baseEntityType((Class<AbstractEntity<?>>) property.getType());
             if (searchValues.containsKey(false) && searchValues.containsKey(true)) {
                 condition = cond()

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import static java.math.RoundingMode.HALF_EVEN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -7,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -15,6 +17,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import org.junit.Test;
@@ -225,6 +229,15 @@ public class EntityUtilsTest {
         assertFalse(isSyntheticEntityType(null));
         assertFalse(isSyntheticBasedOnPersistentEntityType(null));
         assertFalse(isUnionEntityType(null));
+    }
+    
+    @Test
+    public void equalsEx_correctly_compares_instances_of_BigDecimal() {
+        assertTrue(equalsEx(new BigDecimal("0.42"), new BigDecimal("0.42")));
+        assertTrue(equalsEx(new BigDecimal("42.00"), new BigDecimal("42.0")));
+        assertTrue(equalsEx(new BigDecimal("0.00"), BigDecimal.ZERO));
+        assertTrue(equalsEx(new BigDecimal("42.00").setScale(1, HALF_EVEN), new BigDecimal("42.01").setScale(1, HALF_EVEN)));
+        assertFalse(equalsEx(new BigDecimal("42.00"), new BigDecimal("42.01")));
     }
 
 }
