@@ -235,7 +235,7 @@
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                <paper-checkbox class="blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                <paper-checkbox class="all-checkbox blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="action-cell layout horizontal center no-flexible">
@@ -500,7 +500,7 @@
                         <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
                             <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal table-header-row" style="top:0;left:0">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                    <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                    <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                     <div class="action-cell no-flexible">
