@@ -144,11 +144,10 @@
                     observer: '_columnPropertiesMapperChanged'
                 },
                 /**
-                 * Last updated entity selection in this centre.
+                 * Holds the egi selection for binding into an insertion point
                  */
-                retrievedEntitySelection: {
-                    type: Object,
-                    observer: '_retrievedEntitySelectionChanged'
+                centreSelection : {
+                    type: Object
                 },
                 /**
                  * The menu item type, that identifies this entity centre.
@@ -420,10 +419,6 @@
                 this.$.egi.totals = retrievedTotals;
             },
 
-            _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
-                this.$.egi.retrievedEntitySelection = retrievedEntitySelection;
-            },
-
             _columnPropertiesMapperChanged: function (columnPropertiesMapper, oldValue) {
                 this.$.egi.columnPropertiesMapper = columnPropertiesMapper;
             },
@@ -591,7 +586,6 @@
                         if (self._criteriaLoaded === false) {
                             throw "Cannot activate result-set view (not initialised criteria).";
                         }
-
                         self._selectedView = 1;
                     }, 100);
                 }).bind(self);
@@ -610,7 +604,14 @@
                         e.detail.properties.forEach(prop => this.$.egi.updateEntity(entity, prop));
                     });
                 }.bind(self));
-
+                
+                /**
+                 * Adds event listener fot entity selection in insertion point that will update other insertion point and also egi.
+                 */
+                self.addEventListener("tg-entity-selected", function(e) {
+                    this.centreSelection = e.detail;
+                }.bind(self));
+                
                 this._columnAction = createColumnAction(self);
 
             }, // end of ready callback

@@ -235,7 +235,7 @@
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                <paper-checkbox class="blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                <paper-checkbox class="all-checkbox blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="action-cell layout horizontal center no-flexible">
@@ -500,7 +500,7 @@
                         <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
                             <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal table-header-row" style="top:0;left:0">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                    <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                    <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                     <div class="action-cell no-flexible">
@@ -586,27 +586,15 @@
             }
             return -1;
         };
-        const _processEntitySelection = function (selectedEntities, entity, select, egi) {
+        const _processEntitySelection = function (selectedEntities, entity, select) {
             var selectedIndex = selectedEntities.indexOf(entity);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
-                    if (egi) {
-                        egi.retrievedEntitySelection = {
-                            entity: entity,
-                            selected: true
-                        };
-                    }
                 }
             } else {
                 if (selectedIndex >= 0) {
                     selectedEntities.splice(selectedIndex, 1);
-                    if (egi) {
-                        egi.retrievedEntitySelection = {
-                            entity: entity,
-                            selected: false
-                        };
-                    }
                 }
             }
         };
@@ -636,10 +624,10 @@
             }
             return newPos;
         };
-        const calculateFixedColumnWidth = function(columns, numOfFixedColumns) {
+        const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
-        const calculateScrollableColumnWidth = function(columns, numOfFixedColumns) {
+        const calculateScrollableColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index >= numOfFixedColumns ? curr.width : 0), 0);
         }
         const calculateColumnWidthExcept = function (egi, columnIndex, columnElements, columnLength, checkboxes, primaryActions, secondaryActions) {
@@ -661,6 +649,13 @@
             }
             return columnWidth;
         };
+        const updateSelectAll = function (egi, egiModel) {
+            if (egiModel.length > 0 && egiModel.every(elem => elem.selected)) {
+                egi.selectedAll = true;
+            } else {
+                egi.selectedAll = false;
+            }
+        };
         const sign = (value) => value < 0 ? -1 : 1;
         Polymer({
             is: "tg-entity-grid-inspector",
@@ -676,14 +671,6 @@
                     observer: "_columnsChanged"
                 },
                 /**
-                 * Last updated entity selection.
-                 */
-                retrievedEntitySelection: {
-                    type: Object,
-                    observer: '_retrievedEntitySelectionChanged',
-                    notify: true
-                },
-                /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
                  * consistent with the order of columns.
                  *
@@ -692,6 +679,13 @@
                 columnPropertiesMapper: {
                     type: Function,
                     notify: true
+                },
+                /**
+                 * Holds the entity centre selection and updates it's own selection model when it changes.
+                 */
+                centreSelection: {
+                    type: Object,
+                    observer: "_centreSelectionChanged"
                 },
                 lock: {
                     type: Boolean,
@@ -932,7 +926,7 @@
                     }).bind(this);
                 }, 1)
             },
-            
+
             /**
              * Updates entity when some of the properties were changed.
              */
@@ -943,7 +937,22 @@
                     this.notifyPath(path, entity.get(propPath));
                 }
             },
-            
+
+            selectEntity: function (entity, select) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+                    this.set("egiModel." + entityIndex + ".selected", select);
+                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    this.fire("tg-entity-selected", {
+                        shouldScrollToSelected: false,
+                        entities: [{
+                            entity: this.entities[entityIndex],
+                            select: select
+                        }]
+                    });
+                }
+            },
+
             _getKeyEventTarget: function () {
                 var parent = this;
                 while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
@@ -1391,58 +1400,6 @@
                 }
             },
 
-            _retrievedEntitySelectionChanged: function (newValue, oldValue) {
-                const entityIndex = _findEntity(newValue.entity, this.entities);
-                if (entityIndex >= 0) {
-                    this.set("egiModel." + entityIndex + ".selected", newValue.selected);
-                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
-
-                    if (newValue.selected) { // bring to view the entity that was checked
-                        const scrollContainer = this.querySelector("#scrollContainer");
-                        if (scrollContainer) {
-                            const entityRows = scrollContainer.querySelectorAll('.table-data-row');
-                            const entityRow = entityRows[entityIndex];
-                            if (entityRow) {
-                                this._scrollTo(entityRow, scrollContainer);
-                            } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
-                                const oldAction = this._scrollContainerEntitiesStampedCustomAction;
-                                this._scrollContainerEntitiesStampedCustomAction = (function () {
-                                    oldAction();
-                                    const scrollContainer = this.querySelector("#scrollContainer");
-                                    const entityRows = scrollContainer.querySelectorAll('.table-data-row');
-                                    const entityRow = entityRows[entityIndex];
-                                    this._scrollTo(entityRow, scrollContainer);
-                                    this._scrollContainerEntitiesStampedCustomAction = oldAction;
-                                }).bind(this);
-                            }
-                        }
-                    }
-                }
-            },
-
-            /**
-             * Scrolls '' to concrete entityRow dom element.
-             *
-             * TODO 1: this function to be merged with _scrollToTarget.
-             * TODO 2: this function to support scrolling for the case where horisontal scroll bar exists (at this stage scrolled row will be hidden behind this scroll bar).
-             */
-            _scrollTo: function (entityRow, scrollContainer) {
-                const scrollContainerHeight = scrollContainer.offsetHeight;
-                const entityRowHeight = entityRow.offsetHeight;
-                const topLockPanel = this.querySelector('#topLockPanel');
-                const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
-                const bottomLockPanel = this.querySelector('#bottomLockPanel');
-                const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
-                const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
-                if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
-                    // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
-                    scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
-                } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
-                    // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
-                    scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
-                }
-            },
-
             /**
              * Observs the changes to entities property.
              */
@@ -1459,12 +1416,8 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
-                let selectedEntity = null;
                 newValue.forEach(function (newEntity) {
                     const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
-                    if (isSelected) {
-                        selectedEntity = newEntity;
-                    }
                     const egiEntity = {
                         selected: isSelected,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
@@ -1472,23 +1425,8 @@
                     }
                     tempEgiModel.push(egiEntity);
                 });
-                if (tempEgiModel.length > 0 && tempEgiModel.every(function (elem) {
-                    return elem.selected
-                })) {
-                    this.selectedAll = true;
-                } else {
-                    this.selectedAll = false;
-                }
+                updateSelectAll(this, tempEgiModel);
                 self.egiModel = tempEgiModel;
-
-                if (selectedEntity) {
-                    self.retrievedEntitySelection = {
-                        entity: selectedEntity,
-                        selected: true
-                    };
-                }
-
-                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
 
@@ -1519,7 +1457,7 @@
                 this._totalsRowCount = summaryRowsCount;
                 this._totalsRows = gridSummary;
             },
-            
+
             _updateColumnsWidthProperties: function (triggerResize) {
                 this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
                 this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
@@ -1533,29 +1471,81 @@
                     this._resizeEventListener();
                 }.bind(this), 1);
             },
+
+            _centreSelectionChanged: function (newSelection, oldSelection) {
+                let numOfSelected = 0;
+                let lastSelectedIndex = -1;
+                newSelection.entities.forEach(entitySelection => {
+                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
+                        this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
+                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                    }
+                    if (entitySelection.select) {
+                        numOfSelected += 1;
+                        lastSelectedIndex = entityIndex;
+                    }
+                });
+                //update selectAll parameter according to entity selection.
+                updateSelectAll(this, this.egiModel);
+                //Scroll to the selected one if it is the only one and should scroll is true.
+                if (newSelection.shouldScrollToSelected && numOfSelected === 1) {
+                    const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
+                    const entityRow = entityRows[lastSelectedIndex];
+                    if (entityRow) {
+                        this._scrollToTarget(entityRow);
+                    } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
+                        const oldAction = this._scrollContainerEntitiesStampedCustomAction;
+                        this._scrollContainerEntitiesStampedCustomAction = (function () {
+                            oldAction();
+                            const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
+                            const entityRow = entityRows[lastSelectedIndex];
+                            this._scrollToTarget(entityRow);
+                            this._scrollContainerEntitiesStampedCustomAction = oldAction;
+                        }).bind(this);
+                    }
+                }
+            },
             /**
              * Event handler for select all checkbox
              */
             _allSelectionChanged: function (e) {
-                var i;
+                const target = e.target || e.srcElement;
+                this.selectAll(target.checked);
+            },
+            
+            /**
+             * Selects/unselects all entities. 
+             */
+            selectAll: function (checked) {
                 if (this.egiModel) {
-                    var target = e.target || e.srcElement;
-                    for (i = 0; i < this.egiModel.length; i += 1) {
-                        this.set("egiModel." + i + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], target.checked);
+                    const selectionDetails = [];
+                    for (let i = 0; i < this.egiModel.length; i += 1) {
+                        if (this.egiModel[i].selected !== checked) {
+                            this.set("egiModel." + i + ".selected", checked);
+                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
+                            selectionDetails.push({
+                                entity: this.entities[i],
+                                select: checked
+                            });
+                        }
                     }
-                    this.selectedAll = target.checked;
-                    console.log("all ", this.getSelectedRows());
-                    this.fire("egi-selection-changed", this.getSelectedEntities());
+                    this.selectedAll = checked;
+                    if (selectionDetails.length > 0) {
+                        this.fire("tg-entity-selected", {
+                            shouldScrollToSelected: false,
+                            entities: selectionDetails
+                        });
+                    }
                 }
             },
+            
             /**
              * Event handler for selecting concrete entity
              */
             _selectionChanged: function (e) {
-                var index;
                 if (this.egiModel) {
-                    index = e.model.entityIndex;
+                    const index = e.model.entityIndex;
                     var target = e.target || e.srcElement;
                     //Perform selection range selection or single selection.
                     if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
@@ -1563,6 +1553,13 @@
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
                         _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        this.fire("tg-entity-selected", {
+                            shouldScrollToSelected: false,
+                            entities: [{
+                                entity: this.entities[index],
+                                select: target.checked
+                        }]
+                        });
                     }
                     //Set up the last selection index (it will be used for range selection.)
                     if (target.checked) {
@@ -1573,28 +1570,34 @@
                     //Set up selecteAll property.
                     if (this.selectedAll && !target.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
-                        return elem.selected
-                    })) {
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(elem => elem.selected)) {
                         this.selectedAll = true;
                     }
-                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
-                console.log("single checkbox: " + index, this.getSelectedRows());
             },
 
             /**
              * Selects the range fromIndex toIndex of entities.
              */
             _selectRange: function (fromIndex, toIndex) {
-                var from = fromIndex < toIndex ? fromIndex : toIndex;
-                var to = fromIndex < toIndex ? toIndex : fromIndex;
-                var index;
-                for (index = from; index <= to; index++) {
-                    if (!this.egiModel[index].selected) {
-                        this.set("egiModel." + index + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], true);
+                const from = fromIndex < toIndex ? fromIndex : toIndex;
+                const to = fromIndex < toIndex ? toIndex : fromIndex;
+                const selectionDetails = [];
+                for (let i = from; i <= to; i++) {
+                    if (!this.egiModel[i].selected) {
+                        this.set("egiModel." + i + ".selected", true);
+                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        selectionDetails.push({
+                            entity: this.entities[i],
+                            select: true
+                        });
                     }
+                }
+                if (selectionDetails.length > 0) {
+                    this.fire("tg-entity-selected", {
+                        shouldScrollToSelected: false,
+                        entities: selectionDetails
+                    });
                 }
             },
 
@@ -1612,7 +1615,7 @@
                 if (columnGrowFactor === 0 || index < numOfFixedCols) {
                     colStyle += "flex-grow: 0;flex-shrink:0;";
                 } else {
-                    colStyle += "flex-grow: " + columnGrowFactor +";";
+                    colStyle += "flex-grow: " + columnGrowFactor + ";";
                 }
                 if (itemWidth === 0) {
                     colStyle += "display: none;";
@@ -1697,7 +1700,7 @@
                         }
                         this.fire("tg-egi-column-change", parameters);
                     }
-                    
+
                 }
                 this._updateColumnsWidthProperties(true);
             },
@@ -1758,7 +1761,7 @@
             _getValueFromEntity: function (entity, property) {
                 return entity && entity.get(property);
             },
-            
+
             _getBindedValue: function (change, property, type) {
                 return this._getValue(change.base, property, type);
             },
@@ -1837,7 +1840,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                if (this._getValueFromEntity(entity, property) === true) { 
+                if (this._getValueFromEntity(entity, property) === true) {
                     return "icons:check";
                 } else {
                     return "noicon";
@@ -1902,25 +1905,31 @@
              * Clears the selection on current page.
              */
             clearPageSelection: function () {
-                var i;
-                for (i = 0; i < this.egiModel.length; i++) {
-                    if (this.egiModel[i].selected) {
-                        _processEntitySelection(this.selectedEntities, this.egiModel[i].entity, false);
-                        this.set("egiModel." + i + ".selected", false);
-                    }
-                }
+                this.selectAll(false);
             },
 
             /**
              * Clears selection.
              */
             clearSelection: function () {
-                var i;
-                for (i = 0; i < this.egiModel.length; i++) {
+                for (let i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
-                this.fire("egi-selection-changed", this.getSelectedEntities());
+                this.selectedAll = false;
+                // First clear all selection and then fire event
+                const prevSelectedEntities = this.selectedEntities;
                 this.selectedEntities = [];
+                if (prevSelectedEntities.length > 0) {
+                    this.fire("tg-entity-selected", {
+                        shouldScrollToSelected: false,
+                        entities: prevSelectedEntities.map(entity => {
+                            return {
+                                entity: entity,
+                                select: false
+                            }
+                        })
+                    });
+                }
             },
             /*
              * Below are functions those are related to shadow style calculation.
