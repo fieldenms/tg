@@ -151,6 +151,17 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
     
     /**
+     * Re-fetches entity using <code>property</code>'s fetch provider for the entity type behind this producer.
+     * Returns uninstrumented instance.
+     * 
+     * @param entity
+     * @return
+     */
+    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
+        return co((Class<M>) entity.getType()).findById(entity.getId(), companion.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+    }
+    
+    /**
      * Override this method in case where some additional initialisation is needed for the new entity, edited by standard {@link EntityNewAction}.
      * 
      * @param entity
