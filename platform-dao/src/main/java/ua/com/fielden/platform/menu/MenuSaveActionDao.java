@@ -38,7 +38,7 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
     @SessionRequired
     public MenuSaveAction save(final MenuSaveAction entity) {
         if (userProvider.getUser().isBase()) {
-            final IWebMenuItemInvisibility coMenuInvisibility = co(WebMenuItemInvisibility.class);
+            final IWebMenuItemInvisibility coMenuInvisibility = co$(WebMenuItemInvisibility.class);
             if (!entity.getInvisibleMenuItems().isEmpty()) {
                 entity.getInvisibleMenuItems().forEach(menuItem -> {
                     try {

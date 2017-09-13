@@ -1,8 +1,17 @@
 package ua.com.fielden.platform.entity.proxy;
 
 import static javassist.util.proxy.ProxyFactory.isProxyClass;
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.math.BigDecimal;
@@ -10,11 +19,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
@@ -222,7 +229,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     @Test
     public void properties_with_id_only_proxy_values_can_be_updated_with_null_and_saved() {
-        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final ITgVehicle coVehicle = co$(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKey("CAR2");
 
         assertFalse(Reflector.isPropertyProxied(vehicle, "station"));
@@ -241,7 +248,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     @Test
     public void properties_with_id_only_proxy_values_cannot_be_updated_with_non_null_values() {
-        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final ITgVehicle coVehicle = co$(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKey("CAR2");
 
         assertFalse(Reflector.isPropertyProxied(vehicle, "station"));
@@ -251,7 +258,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         assertFalse(vehicle.getProperty("station").isDirty());
 
         final EntityResultQueryModel<TgOrgUnit5> query = select(TgOrgUnit5.class).where().prop("name").eq().val("orgunit5_1").model();
-        final TgOrgUnit5 station51 = co(TgOrgUnit5.class).uninstrumented().getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
+        final TgOrgUnit5 station51 = co(TgOrgUnit5.class).getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
 
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(station51));
         assertTrue(setStationResult instanceof Left);
@@ -261,7 +268,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     @Test
     public void properties_that_could_have_id_only_proxy_values_but_are_null_can_be_updated_with_non_null_values() {
-        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final ITgVehicle coVehicle = co$(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKey("CAR1");
 
         assertFalse(Reflector.isPropertyProxied(vehicle, "station"));
@@ -270,7 +277,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         assertFalse(vehicle.getProperty("station").isDirty());
 
         final EntityResultQueryModel<TgOrgUnit5> query = select(TgOrgUnit5.class).where().prop("name").eq().val("orgunit5_1").model();
-        final TgOrgUnit5 station51 = co(TgOrgUnit5.class).uninstrumented().getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
+        final TgOrgUnit5 station51 = co(TgOrgUnit5.class).getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
 
         vehicle.setStation(station51);
         assertTrue(vehicle.getProperty("station").isDirty());
@@ -282,7 +289,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     @Test
     public void explicitly_unfetched_properties_of_entity_type_can_neither_be_accessed_nor_mutated() {
-        final ITgVehicle coVehicle = co(TgVehicle.class);
+        final ITgVehicle coVehicle = co$(TgVehicle.class);
         final fetch<TgVehicle> fetch = fetchKeyAndDescOnly(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKeyAndFetch(fetch, "CAR2");
 
@@ -323,7 +330,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
         final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-        final TgBogieLocation location = co(TgBogieLocation.class).new_();
+        final TgBogieLocation location = co$(TgBogieLocation.class).new_();
         location.setWorkshop(workshop1);
         final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));

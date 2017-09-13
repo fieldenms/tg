@@ -3,11 +3,10 @@ package ua.com.fielden.platform.dao;
 import java.io.IOException;
 import java.util.List;
 
-import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -33,22 +32,23 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      */
     Class<? extends Comparable<?>> getKeyType();
 
+    /**
+     * A factory method that creates an instance of a companion object for the specified entity type.
+     * The reader methods of such companion return <code>uninstrumented</code> entities.
+     *
+     * @return
+     */
+    default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        throw new UnsupportedOperationException("This method should be overriden by descendants.");
+    }
 
     /**
-     * This is a mixin method that should indicate whether data retrieval should follow the instrumented or uninstrumented strategy for entity instantiation during retrieval.
-     * 
+     * A factory method that creates an instance of a companion object for the specified entity type.
+     * The reader methods of such companion return <code>instrumented</code> entities, which are suitable for mutation and saving.
+     *
      * @return
      */
-    default boolean instrumented() {
-        return true;
-    }
-    
-    /**
-     * A factory method that creates an instance of the same companion object it is invoked on, but with method {@link #instrumented()} returning <code>false</code>.
-     * 
-     * @return
-     */
-    default <E extends IEntityDao<T>> E uninstrumented() {
+    default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         throw new UnsupportedOperationException("This method should be overriden by descendants.");
     }
     

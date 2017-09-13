@@ -25,7 +25,7 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
 
     @Test
     public void only_active_values_are_matched_when_activeOnly_argument_is_true() {
-        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
+        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co$(TgCategory.class), true);
         
         final List<TgCategory> result = matcher.findMatches("CAT%");
         assertEquals(2, result.size());
@@ -35,7 +35,7 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
 
     @Test
     public void both_active_and_inactive_values_are_matched_when_activeOnly_argument_is_false() {
-        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), false);
+        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co$(TgCategory.class), false);
         
         final List<TgCategory> result = matcher.findMatches("CAT%");
         assertEquals(4, result.size());
@@ -47,12 +47,12 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
 
     @Test(expected = EntityException.class)
     public void matching_activeOnly_for_non_activatable_entities_is_not_permitted() {
-        new FallbackValueMatcherWithContext<>(co(EntityWithMoney.class), true);
+        new FallbackValueMatcherWithContext<>(co$(EntityWithMoney.class), true);
     }
 
     @Test
     public void matching_by_description_is_supported() {
-        final FallbackValueMatcherWithContext<EntityWithMoney, EntityWithMoney> matcher = new FallbackValueMatcherWithContext<>(co(EntityWithMoney.class), false);
+        final FallbackValueMatcherWithContext<EntityWithMoney, EntityWithMoney> matcher = new FallbackValueMatcherWithContext<>(co$(EntityWithMoney.class), false);
         
         final List<EntityWithMoney> result = matcher.findMatches("desc%");
         assertEquals(2, result.size());

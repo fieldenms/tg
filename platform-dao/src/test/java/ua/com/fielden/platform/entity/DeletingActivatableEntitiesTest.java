@@ -27,12 +27,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
         
         final TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat).setSecondCategory(cat));
-        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(2), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
         
-        co(TgSystem.class).delete(sys);
+        co$(TgSystem.class).delete(sys);
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys.getId()).isPresent());
-        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys.getId()).isPresent());
+        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
     
     @Test
@@ -42,14 +42,14 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         
         // set properties one by one and assert refCount increasing
         final TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat1).setSecondCategory(cat2));
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat1.getKey()).getRefCount());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat2.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat1.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat2.getKey()).getRefCount());
         
-        co(TgSystem.class).delete(sys);
+        co$(TgSystem.class).delete(sys);
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys.getId()).isPresent());
-        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat1.getKey()).getRefCount());
-        assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey(cat2.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys.getId()).isPresent());
+        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat1.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat2.getKey()).getRefCount());
     }
 
 
@@ -60,12 +60,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
         save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         
-        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(2), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
         
-        co(TgSystem.class).delete(sys1);
+        co$(TgSystem.class).delete(sys1);
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -75,12 +75,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys1 = save(new_(TgSystem.class, "NEW_SYS_1").setActive(true).setFirstCategory(cat));
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(false).setSecondCategory(cat));
 
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
 
-        co(TgSystem.class).delete(sys2);
+        co$(TgSystem.class).delete(sys2);
 
-        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -90,12 +90,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
         
-        co(TgSystem.class).delete(select(TgSystem.class).where().prop("key").in().values(sys1.getKey(), sys2.getKey()).model());
+        co$(TgSystem.class).delete(select(TgSystem.class).where().prop("key").in().values(sys1.getKey(), sys2.getKey()).model());
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -108,12 +108,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final Map<String, Object> params = new HashMap<>();
         params.put("sys1", sys1.getKey());
         params.put("sys3", sys3.getKey());
-        co(TgSystem.class).delete(select(TgSystem.class).where().prop("key").in().params("sys1", "sys3").model(), params);
+        co$(TgSystem.class).delete(select(TgSystem.class).where().prop("key").in().params("sys1", "sys3").model(), params);
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -123,12 +123,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
         
-        co(TgSystem.class).batchDelete(select(TgSystem.class).where().prop("key").in().values(sys1.getKey(), sys2.getKey()).model());
+        co$(TgSystem.class).batchDelete(select(TgSystem.class).where().prop("key").in().values(sys1.getKey(), sys2.getKey()).model());
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -141,12 +141,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final Map<String, Object> params = new HashMap<>();
         params.put("sys1", sys1.getKey());
         params.put("sys3", sys3.getKey());
-        co(TgSystem.class).batchDelete(select(TgSystem.class).where().prop("key").in().params("sys1", "sys3").model(), params);
+        co$(TgSystem.class).batchDelete(select(TgSystem.class).where().prop("key").in().params("sys1", "sys3").model(), params);
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -156,12 +156,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
         
-        co(TgSystem.class).batchDelete(Arrays.asList(new Long[] {sys1.getId(), sys2.getId()}));
+        co$(TgSystem.class).batchDelete(Arrays.asList(new Long[] {sys1.getId(), sys2.getId()}));
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -171,12 +171,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
         
-        co(TgSystem.class).batchDelete(Arrays.asList(new TgSystem[] {sys1, sys2}));
+        co$(TgSystem.class).batchDelete(Arrays.asList(new TgSystem[] {sys1, sys2}));
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -186,12 +186,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
         
-        co(TgSystem.class).batchDeleteByPropertyValues("secondCategory", Arrays.asList(new Long[] {cat.getId()}));
+        co$(TgSystem.class).batchDeleteByPropertyValues("secondCategory", Arrays.asList(new Long[] {cat.getId()}));
         
-        assertTrue(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertFalse(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(1), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -201,12 +201,12 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final TgSystem sys2 = save(new_(TgSystem.class, "NEW_SYS_2").setActive(true).setSecondCategory(cat));
         final TgSystem sys3 = save(new_(TgSystem.class, "NEW_SYS_3").setActive(true).setSecondCategory(cat));
         
-        co(TgSystem.class).batchDeleteByPropertyValues("firstCategory", Arrays.asList(new TgCategory[] {cat}));
+        co$(TgSystem.class).batchDeleteByPropertyValues("firstCategory", Arrays.asList(new TgCategory[] {cat}));
         
-        assertFalse(co(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
-        assertTrue(co(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
-        assertEquals(Integer.valueOf(2), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertFalse(co$(TgSystem.class).findByIdOptional(sys1.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys2.getId()).isPresent());
+        assertTrue(co$(TgSystem.class).findByIdOptional(sys3.getId()).isPresent());
+        assertEquals(Integer.valueOf(2), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
     @Test
@@ -218,7 +218,7 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         final Random rnd1 = new Random();
         final Random rnd2 = new Random();
         
-        final User transactionUser = co(User.class).findByKeyAndFetch(fetchAll(User.class), UNIT_TEST_USER);
+        final User transactionUser = co$(User.class).findByKeyAndFetch(fetchAll(User.class), UNIT_TEST_USER);
         final IUserProvider up = getInstance(IUserProvider.class);
         
         
@@ -227,7 +227,7 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
 
             for (int index = 0; index < NO_OF_CREATED_ACTIVE_DEPENDENCIES; index++) {
                 save(new_(TgSystem.class, "NEW_SYS_" + index).setActive(true).setFirstCategory(cat));
-                System.out.println("CREATED... " + co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+                System.out.println("CREATED... " + co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
                 try {
                     Thread.sleep(rnd1.nextInt(10));
                 } catch (Exception e) {
@@ -241,15 +241,15 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
             
             for (int index = 0; index < NO_OF_CREATED_ACTIVE_DEPENDENCIES; index++) {
                 final TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat));
-                final String msg = "CREATED... " + co(TgCategory.class).findByKey(cat.getKey()).getRefCount();
+                final String msg = "CREATED... " + co$(TgCategory.class).findByKey(cat.getKey()).getRefCount();
                 try {
                     Thread.sleep(rnd2.nextInt(10));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 
-                co(TgSystem.class).delete(sys);
-                System.out.println(msg + " ... DELETED... " + co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+                co$(TgSystem.class).delete(sys);
+                System.out.println(msg + " ... DELETED... " + co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
             }
         });
         
@@ -259,7 +259,7 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         creationThread.join();
         creationDeletionThread.join();
         
-        assertEquals(Integer.valueOf(NO_OF_CREATED_ACTIVE_DEPENDENCIES), co(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertEquals(Integer.valueOf(NO_OF_CREATED_ACTIVE_DEPENDENCIES), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
 
 }

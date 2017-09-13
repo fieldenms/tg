@@ -17,7 +17,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
  * 
  */
 public class UserPasswordResetTest extends AbstractDaoTestCase {
-    private final IUser coUser = co(User.class);
+    private final IUser coUser = co$(User.class);
     private final ResetUserPassword passwordReset = new ResetUserPassword(coUser);
 
     @Test

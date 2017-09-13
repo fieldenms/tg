@@ -104,8 +104,8 @@ public class Yields implements IPropertyCollector {
     }
 
     public String sql() {
-        final StringBuffer sb = new StringBuffer();
-        final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<Yield>();
+        final StringBuilder sb = new StringBuilder();
+        final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<>();
 
         for (final Yield yield : yields.values()) {
             if (!yield.getInfo().isCompositeProperty() && !yield.getInfo().isUnionEntity()) {
@@ -113,7 +113,7 @@ public class Yields implements IPropertyCollector {
             }
         }
 
-        if (yieldsToBeIncludedIntoSql.size() == 0) {
+        if (yieldsToBeIncludedIntoSql.isEmpty()) {
             throw new IllegalStateException("It appears to be yieldless query!");
         }
 

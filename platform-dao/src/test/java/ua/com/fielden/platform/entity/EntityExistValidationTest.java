@@ -17,7 +17,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void existing_active_entity_can_be_assigned_to_property_with_default_validation() {
-        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat1);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -25,7 +25,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void existing_but_inactive_entity_cannot_be_assigned_to_property_with_default_validation() {
-        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat2);
 
         final Result result = sys.isValid();
@@ -35,10 +35,10 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void non_existing_entity_cannot_be_assigned_to_property_with_default_validation() {
-        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
 
         // let's delete cat2 to make it non-existing
-        co(TgCategory.class).delete(cat2);
+        co$(TgCategory.class).delete(cat2);
 
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat2);
 
@@ -49,7 +49,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void existing_entity_can_be_assigned_to_property_with_skipped_exists_validation() {
-        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setSecondCategory(cat2);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -66,10 +66,10 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void non_existing_entity_cannot_be_assigned_to_property_with_only_active_check_skipped_validation() {
-        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
 
         // let's delete cat2 to make it non-existing
-        co(TgCategory.class).delete(cat2);
+        co$(TgCategory.class).delete(cat2);
 
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat2);
 
@@ -80,7 +80,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void existing_but_inactive_entity_can_be_assigned_to_property_with_only_active_check_skipped_validation() {
-        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat2);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -89,7 +89,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void existing_and_active_entity_can_be_assigned_to_property_with_only_active_check_skipped_validation() {
-        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat1);
 
         assertTrue(sys.isValid().isSuccessful());

@@ -144,6 +144,20 @@
                  */
                 longDesc: String,
                 /**
+                 * The selection criteria entity binded to this insertion point
+                 */
+                selectionCriteriaEntity: {
+                    type: Object,
+                    observer: '_updateElementWithSelectionCriteriaEntity',
+                },
+                /**
+                 * Indicates whether centre was ran or not. Is binded in the entity centre.
+                 */
+                isCentreRunning: {
+                    type: Boolean,
+                    observer: '_updateElementWithRunIndicator',
+                },
+                /**
                  * The entities retrieved when running centre that has this insertion point
                  */
                 retrievedEntities: {
@@ -159,13 +173,9 @@
                     observer: '_updateElementWithRetrievedTotals',
                     notify: true
                 },
-                /**
-                 * Last updated entity selection in centre that has this insertion point's element.
-                 */
-                retrievedEntitySelection: {
+                centreSelection: {
                     type: Object,
-                    observer: '_updateElementWithRetrievedEntitySelection',
-                    notify: true
+                    observer: '_centreSelectionChanged'
                 },
                 /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
@@ -241,6 +251,18 @@
                     return self.$.elementLoader.reload();
                 }
             },
+            
+            _updateElementWithSelectionCriteriaEntity: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.selectionCriteriaEntity = newValue;
+                }
+            },
+            
+            _updateElementWithRunIndicator: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.isCentreRunning = newValue;
+                }
+            },
 
             _updateElementWithRetrievedEntities: function (newValue, oldValue) {
                 if (this._element) {
@@ -254,9 +276,9 @@
                 }
             },
             
-            _updateElementWithRetrievedEntitySelection: function (newValue, oldValue) {
+            _centreSelectionChanged: function (newValue, oldValue) {
                 if (this._element) {
-                    this._element.retrievedEntitySelection = newValue;
+                    this._element.centreSelection = newValue;
                 }
             },
             
@@ -283,6 +305,8 @@
                         .then(function (element) {
                             self.activated = true;
                             self._element = element;
+                            self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
+                            self._element.isCentreRunning = self.isCentreRunning;
                             self._element.addEventListener("retrieved-entities-changed", function (ev) {
                                 self.retrievedEntities = this.retrievedEntities;
                             });
@@ -291,10 +315,7 @@
                                 self.retrievedTotals = this.retrievedTotals;
                             });
                             self._element.retrievedTotals = self.retrievedTotals;
-                            self._element.addEventListener("retrieved-entity-selection-changed", function (ev) {
-                                self.retrievedEntitySelection = this.retrievedEntitySelection;
-                            });
-                            self._element.retrievedEntitySelection = self.retrievedEntitySelection;
+                            self._element.centreSelection = self.centreSelection;
                             self._element.addEventListener("column-properties-mapper-changed", function (ev) {
                                 self.columnPropertiesMapper = this.columnPropertiesMapper;
                             });

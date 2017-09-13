@@ -99,7 +99,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     protected User ordinarySave(final User user) {
         // remove all authenticated sessions in case the user is being deactivated
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
-            this.<IUserSession, UserSession>co(UserSession.class).clearAll(user);
+            this.<IUserSession, UserSession>co$(UserSession.class).clearAll(user);
         }
 
         // if a new active user is being created then need to send an activation email
@@ -118,7 +118,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public List<? extends UserRole> findAllUserRoles() {
-        return this.<IUserRole, UserRole>co(UserRole.class).findAll();
+        return this.<IUserRole, UserRole>co$(UserRole.class).findAll();
     }
 
     @Override
@@ -158,14 +158,14 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         // first remove user/role associations
-        this.<IUserAndRoleAssociation, UserAndRoleAssociation>co(UserAndRoleAssociation.class).removeAssociation(removeList);
+        this.<IUserAndRoleAssociation, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(removeList);
         // then insert new user/role associations
         saveAssociation(saveList);
     }
 
     private void saveAssociation(final Set<UserAndRoleAssociation> associations) {
         for (final UserAndRoleAssociation association : associations) {
-            co(UserAndRoleAssociation.class).save(association);
+            co$(UserAndRoleAssociation.class).save(association);
         }
     }
 
@@ -233,7 +233,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final User savedUser = save(user);
 
         // clear all the current user sessions
-        this.<IUserSession, UserSession>co(UserSession.class).clearAll(savedUser);
+        this.<IUserSession, UserSession>co$(UserSession.class).clearAll(savedUser);
         return savedUser;
 
     }
@@ -317,26 +317,26 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // first clear and remove all user sessions
         for (final Long userId: userIds) {
             final User user = findById(userId, fetchAll(User.class));
-            this.<IUserSession, UserSession>co(UserSession.class).clearAll(user);
+            this.<IUserSession, UserSession>co$(UserSession.class).clearAll(user);
         }
 
         // then let's remove all user related configurations
         final Long[] ids = userIds.toArray(new Long[]{});
 
         final EntityResultQueryModel<UserAndRoleAssociation> qUserRoleAssociations = select(UserAndRoleAssociation.class).where().prop("user.id").in().values(ids).model();
-        this.co(UserAndRoleAssociation.class).batchDelete(qUserRoleAssociations);
+        this.co$(UserAndRoleAssociation.class).batchDelete(qUserRoleAssociations);
 
         final EntityResultQueryModel<WebMenuItemInvisibility> qMainMenuItemInvisibility = select(WebMenuItemInvisibility.class).where().prop("owner.id").in().values(ids).model();
-        this.co(WebMenuItemInvisibility.class).batchDelete(qMainMenuItemInvisibility);
+        this.co$(WebMenuItemInvisibility.class).batchDelete(qMainMenuItemInvisibility);
 
         final EntityResultQueryModel<EntityLocatorConfig> qEntityLocatorConfig = select(EntityLocatorConfig.class).where().prop("owner.id").in().values(ids).model();
-        this.co(EntityLocatorConfig.class).batchDelete(qEntityLocatorConfig);
+        this.co$(EntityLocatorConfig.class).batchDelete(qEntityLocatorConfig);
 
         final EntityResultQueryModel<EntityMasterConfig> qEntityMasterConfig = select(EntityMasterConfig.class).where().prop("owner.id").in().values(ids).model();
-        this.co(EntityMasterConfig.class).batchDelete(qEntityMasterConfig);
+        this.co$(EntityMasterConfig.class).batchDelete(qEntityMasterConfig);
 
         final EntityResultQueryModel<EntityCentreConfig> qEntityCentreConfig = select(EntityCentreConfig.class).where().prop("owner.id").in().values(ids).model();
-        this.co(EntityCentreConfig.class).batchDelete(qEntityCentreConfig);
+        this.co$(EntityCentreConfig.class).batchDelete(qEntityCentreConfig);
 
         // and only now can we delete users
         return defaultBatchDelete(userIds);
