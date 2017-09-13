@@ -1126,7 +1126,7 @@
             const lastDotIndex = dotNotatedProp.lastIndexOf(".");
             const rest = lastDotIndex > -1 ? dotNotatedProp.slice(lastDotIndex + 1) : dotNotatedProp;
             const firstVal = lastDotIndex > -1 ? entity.get(dotNotatedProp.slice(0, lastDotIndex)) : entity;
-            return firstVal && rest.length > 0 ? firstVal.type().prop(rest) || undefined : undefined;
+            return firstVal && rest.length > 0 ? firstVal.constructor.prototype.type.call(firstVal).prop(rest) || undefined : undefined;
          },
 
         /**

@@ -366,6 +366,9 @@ public class EntityUtils {
      * #equals(&quot;Hi&quot;, &quot;Ho&quot;)  == false
      * </pre>
      *
+     * Also, this method uses <code>.compareTo</code> to compate instances of {@link BigDecimal}.
+     * <p>
+     * 
      * @param o1
      *            the first object to compare
      * @param o2
@@ -373,7 +376,21 @@ public class EntityUtils {
      * @return boolean {@code true} if and only if both objects are {@code null} or equal
      */
     public static boolean equalsEx(final Object o1, final Object o2) {
-        return o1 == o2 || o1 != null && o2 != null && o1.equals(o2);
+        final boolean result;
+        if (o1 == o2) {
+            result = true;
+        } else if (o1 != null && o2 != null) {
+            // comparison of decimals requires special handling
+            if (o1 instanceof BigDecimal && o2 instanceof BigDecimal) {
+                result = ((BigDecimal) o1).compareTo((BigDecimal) o2) == 0; 
+            } else {
+                result = o1.equals(o2);
+            }
+        } else {
+            result = false;
+        }
+        
+        return result;
     }
 
     /**

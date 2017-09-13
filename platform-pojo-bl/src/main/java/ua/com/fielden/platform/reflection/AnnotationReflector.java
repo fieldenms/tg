@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
+import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
@@ -361,7 +363,7 @@ public final class AnnotationReflector {
             final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(forType, dotNotationExp);
             return getAnnotationForClass(annotationType, transformed.getKey());
         } else {
-            return AnnotationReflector.getAnnotation(Finder.findFieldByName(forType, dotNotationExp), annotationType);
+            return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
 

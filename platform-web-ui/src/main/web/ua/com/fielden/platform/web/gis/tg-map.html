@@ -63,11 +63,10 @@
                 },
                 
                 /**
-                 * Last updated entity selection in centre that has this insertion point's element.
+                 * Last entity centre selection.
                  */
-                retrievedEntitySelection: {
+                centreSelection: {
                     type: Object,
-                    notify: true
                 },
                 
                 /**
@@ -92,7 +91,7 @@
             
             observers: [
                 '_retrievedEntitiesChanged(retrievedEntities, _initialised)',
-                '_retrievedEntitySelectionChanged(retrievedEntitySelection, _initialised)',
+                '_centreSelectionChanged(centreSelection, _initialised)',
                 '_columnPropertiesMapperChanged(columnPropertiesMapper, _initialised)'
             ],
             
@@ -120,9 +119,8 @@
                 }
             },
             
-            _retrievedEntitySelectionChanged: function (retrievedEntitySelection, _initialised) {
-                // console.debug('tg-map: retrievedEntitySelection = ', retrievedEntitySelection);
-                this.retrievedEntitySelectionHandler(retrievedEntitySelection);
+            _centreSelectionChanged: function (centreSelection, _initialised) {
+                this.centreSelectionHandler(centreSelection);
             },
             
             _columnPropertiesMapperChanged: function (columnPropertiesMapper, _initialised) {
@@ -138,7 +136,7 @@
             retrivedEntitiesHandler: function (newRetrievedEntities) {
             },
             
-            retrievedEntitySelectionHandler: function (newRetrievedEntitySelection) {
+            centreSelectionHandler: function (newCentreSelection) {
             },
             
             columnPropertiesMapperHandler: function (newColumnPropertiesMapper) {
