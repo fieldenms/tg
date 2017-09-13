@@ -160,7 +160,7 @@ public class CollectionModificationUtils {
      * @param entity
      * @param context
      * @param controller
-     * @return
+     * @return -- a pair of initialised action with 1) re-fetched master entity or 2) empty optional in the case of 'Cancel' button pressed
      */
     public static <
         MASTER_TYPE extends AbstractEntity<?>, 
