@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -318,6 +320,16 @@ public interface IContextDecomposer {
      */
     default List<AbstractEntity<?>> selectedEntities() {
         return getContext() == null ? Collections.unmodifiableList(new ArrayList<>()) : getContext().getSelectedEntities();
+    }
+    
+    /**
+     * Returns selected entity ids as a set.
+     * Iterator over this set does not imply any particular order.
+     * 
+     * @return
+     */
+    default Set<Long> selectedEntityIds() {
+        return selectedEntities().stream().map(ent -> ent.getId()).collect(toSet());
     }
     
     /**

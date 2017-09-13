@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.stream.Collectors;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -24,12 +22,7 @@ public class EntityDeleteActionProducer extends DefaultEntityProducerWithContext
     protected EntityDeleteAction provideDefaultValues(final EntityDeleteAction entity) {
         if (selectedEntitiesNotEmpty()) {
             entity.setEntityType(selectedEntities().get(0).getType());
-            
-            entity.setSelectedEntityIds(
-                selectedEntities().stream()
-                .map(selectedEntity -> selectedEntity.getId())
-                .collect(Collectors.toSet())
-            );
+            entity.setSelectedEntityIds(selectedEntityIds());
         }
         return entity;
     }

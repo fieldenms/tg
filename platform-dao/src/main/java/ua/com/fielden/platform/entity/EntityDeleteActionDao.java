@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.Set;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -25,9 +23,8 @@ public class EntityDeleteActionDao extends CommonEntityDao<EntityDeleteAction> i
     
     @Override
     public EntityDeleteAction save(final EntityDeleteAction entity) {
-        final Set<Long> selectedEntityIds = entity.getSelectedEntityIds();
-        if (!selectedEntityIds.isEmpty()) {
-            co$((Class<? extends AbstractEntity<?>>) entity.getEntityType()).batchDelete(selectedEntityIds);
+        if (!entity.getSelectedEntityIds().isEmpty()) {
+            co$((Class<? extends AbstractEntity<?>>) entity.getEntityType()).batchDelete(entity.getSelectedEntityIds());
         } else {
             throw new EntityCompanionException("Please select at least one entity to delete.");
         }

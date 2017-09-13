@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -63,12 +62,10 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             adhocParams.put("fetchSize", entity.getNumber());
             entities = selectionCrit.exportQueryRunner().apply(adhocParams).limit(entity.getNumber());
         } else {
-            final Set<Long> selectedEntityIds = entity.getSelectedEntityIds();
-            if (selectedEntityIds.isEmpty()) {
+            if (entity.getSelectedEntityIds().isEmpty()) {
                 throw Result.failure("Please select at least one entry to export.");
             }
-            final Long[] ids = selectedEntityIds.stream().toArray(size -> new Long[size]);
-            adhocParams.put("ids", ids);
+            adhocParams.put("ids", entity.getSelectedEntityIds().toArray(new Long[0]));
             entities = selectionCrit.exportQueryRunner().apply(adhocParams);
         }
         try {

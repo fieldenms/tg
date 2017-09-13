@@ -28,7 +28,7 @@ public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContex
     
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
-    private Set<Long> selectedEntityIds = new HashSet<Long>();
+    private Set<Long> selectedEntityIds = new HashSet<>();
 
     @Observable
     protected EntityDeleteAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {

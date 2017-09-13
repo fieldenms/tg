@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -36,7 +36,7 @@ public class TgFunctionalEntityWithCentreContext extends AbstractFunctionalEntit
     
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
-    private Set<Long> selectedEntityIds = new LinkedHashSet<Long>();
+    private Set<Long> selectedEntityIds = new HashSet<>();
     
     @IsProperty
     @Title("User Param")

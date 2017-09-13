@@ -48,7 +48,7 @@ public class TgFunctionalEntityWithCentreContextDao extends CommonEntityDao<TgFu
         }
         
         for (final Long selectedEntityId : entity.getSelectedEntityIds()) {
-            final TgPersistentEntityWithProperties selected = dao.findById(selectedEntityId); // (TgPersistentEntityWithProperties) selectedEntity;
+            final TgPersistentEntityWithProperties selected = dao.findById(selectedEntityId);
             selected.set("desc", entity.getUserParam() + ": " + entity.getValueToInsert() + ": " + selected.get("desc"));
             if (entity.getWithBrackets()) {
                 selected.set("desc", "[" + selected.get("desc") + "]");

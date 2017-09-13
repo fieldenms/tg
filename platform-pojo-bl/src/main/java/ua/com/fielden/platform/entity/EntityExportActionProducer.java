@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -25,14 +22,8 @@ public class EntityExportActionProducer extends DefaultEntityProducerWithContext
     protected EntityExportAction provideDefaultValues(final EntityExportAction entity) {
         if (selectionCritNotEmpty()) {
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
-            
             if (selectedEntitiesNotEmpty()) {
-                final List<AbstractEntity<?>> selectedEntities = selectedEntities();
-                entity.setSelectedEntityIds(
-                    selectedEntities.stream()
-                    .map(selectedEntity -> selectedEntity.getId())
-                    .collect(Collectors.toSet())
-                );
+                entity.setSelectedEntityIds(selectedEntityIds());
             }
         }
         return entity;

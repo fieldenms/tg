@@ -61,7 +61,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
-    private Set<Long> selectedEntityIds = new HashSet<Long>();
+    private Set<Long> selectedEntityIds = new HashSet<>();
 
     @Observable
     protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
