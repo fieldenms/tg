@@ -1,15 +1,24 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+
 abstract class AbstractQueryLink {
 
 	private Tokens tokens;
 
 	static protected <T> T copy(final T next, final Tokens tokens) {
+        if (tokens == null) {
+        	throw new EqlException("Invalid argument -- tokens should not be null.");
+        }
+        
 		((AbstractQueryLink) next).setTokens(tokens);
 		return next;
 	}
 
 	public Tokens getTokens() {
+        if (tokens == null) {
+        	throw new EqlException("Invalid situation. Tokens have not been assigned yet!");
+        }
 		return tokens;
 	}
 
@@ -19,7 +28,11 @@ abstract class AbstractQueryLink {
 	}
 
 	private void setTokens(final Tokens tokens) {
-		this.tokens = tokens;
+        if (this.tokens == null) {
+        	this.tokens = tokens;
+        } else {
+        	throw new EqlException("Invalid situation. Should not replace already assigned tokens!");
+        }
 	}
 
 	@Override
