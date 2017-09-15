@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity grid inspector dynamic column DOM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+
+    <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+</head>
+
+<body>
+    <test-fixture id="EgiFixture">
+        <template>
+            <tg-entity-grid-inspector id="egi">
+                <template is="dom-repeat" items="[[columnObjects]]" as="column">
+                    <tg-property-column property="[[column.property]]" width="[[column.width]]" min-width="[[column.minWidth]]" grow-factor="0" type="String" column-title="[[column.title]]" column-desc="[[column.desc]]">
+                    </tg-property-column>
+                </template>
+            </tg-entity-grid-inspector>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('entity grid inspector', function () {
+            let egi;
+
+            setup(function () {
+                egi = fixture('EgiFixture');
+            });
+
+            test('add two columns and removed one', function (done) {
+                egi.columnObjects = [];
+
+                assert.strictEqual(0, egi.allColumns.length, "At the begining all columns should be empty");
+                assert.strictEqual(0, egi.columns.length, "At the begining columns should be empty");
+
+                egi.push("columnObjects", {
+                    property: "test",
+                    width: 80,
+                    minWidth: 60,
+                    title: "Test",
+                    desc: "Test"
+                });
+                egi.push("columnObjects", {
+                    property: "test1",
+                    width: 80,
+                    minWidth: 60,
+                    title: "Test1",
+                    desc: "Test1"
+                });
+                egi.splice("columnObjects", 0, 1);
+
+                flush(function () {
+                    assert.strictEqual(1, egi.allColumns.length, "Removed last column from all columns");
+                    assert.strictEqual(1, egi.columns.length, "Removed last column from columns");
+                    assert.strictEqual("test", egi.allColumns[0].property, "test column should remains in all columns");
+                    assert.strictEqual("test", egi.columns[0].property, "test column should remain in columns");
+                    done();
+                });
+            });
+        })
+    </script>
+
+</body>
+
+</html>
