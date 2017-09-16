@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -22,10 +26,12 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -110,6 +116,21 @@ public class EntityUtils {
             return "";
         }
         return toString(value, value.getClass());
+    }
+    
+    /**
+     * This is a convenient function to get the first non-null value, similar as the COALESCE function in SQL.
+     * Throws exception {@link NoSuchElementException} if there was no non-null elements.
+     * 
+     * @param value
+     * @param alternative
+     * @param otherAlternatives
+     * @return
+     */
+    public static <A> A coalesce(final A value, final A alternative, final A... otherAlternatives) {
+        return concat(of(value, alternative), otherAlternatives != null ? stream(otherAlternatives) : empty())
+                .filter(v -> v != null)
+                .findFirst().get();
     }
 
     /**
