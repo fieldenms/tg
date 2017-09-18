@@ -656,12 +656,13 @@
                 egi.selectedAll = false;
             }
         };
-        const removeColumn = function (egi, columnsProperty, columns, columnToRemove) {
-            let columnIndex = columns.findIndex(col => col.property === columnToRemove.property);
-            while (columnIndex >= 0) {
-                egi.splice(columnsProperty, columnIndex, 1);
-                columnIndex = columns.findIndex(col => col.property === columnToRemove.property);
+        const removeColumn = function (column, fromColumns) {
+            const index = fromColumns.indexOf(column);
+            if (index >= 0) {
+                fromColumns.splice(index, 1);
+                return true;
             }
+            return false;
         };
         const sign = (value) => value < 0 ? -1 : 1;
         const columnFilter = node => node.nodeType === Node.ELEMENT_NODE && node.tagName === "TG-PROPERTY-COLUMN";
@@ -796,8 +797,6 @@
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
 
-            observers: ["_allColumnsChanged(allColumns.splices)"],
-
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
             },
@@ -914,7 +913,6 @@
                 //Observe column DOM changes
                 Polymer.dom(this.$.column_selector).observeNodes(info => {
                     this._columnDomChanged(info.addedNodes.filter(columnFilter), info.removedNodes.filter(columnFilter));
-                    console.log("---egi nodes changed-------", info);
                 });
             },
 
@@ -1447,36 +1445,22 @@
             },
 
             _columnDomChanged: function (addedColumns, removedColumns) {
+                const columnsCopy = this.columns.slice();
+                let columnsChanged = false;
                 removedColumns.forEach(col => {
-                    const index = this.allColumns.indexOf(col);
-                    if (index >= 0) {
-                        this.splice("allColumns", index, 1);
-                    }
+                    removeColumn(col, this.allColumns);
+                    columnsChanged = removeColumn(col, columnsCopy);
                 });
+                
                 addedColumns.forEach(col => {
                     const index = this.allColumns.findIndex(column => column.property === col.property);
                     if (index < 0) {
-                        this.push("allColumns", col);
+                        this.allColumns.push(col);
+                        columnsCopy.push(col);
+                        columnsChanged = true;
                     }
                 });
-            },
-
-            _allColumnsChanged: function (changeRecord) {
-                if (changeRecord) {
-                    const columnsCopy = this.columns.slice();
-                    changeRecord.indexSplices.forEach(s => {
-                        s.removed.forEach(function (column) {
-                            const columnIndex = columnsCopy.indexOf(column);
-                            if (columnIndex >= 0) {
-                                columnsCopy.splice(columnsCopy.indexOf(column), 1);
-                            }
-                        });
-                        for (let i = 0; i < s.addedCount; i++) {
-                            const columnIndex = s.index + i;
-                            const newColumn = s.object[columnIndex];
-                            columnsCopy.push(newColumn);
-                        }
-                    });
+                if (columnsChanged) {
                     this._adjustColumns(columnsCopy.map(column => column.property === "" ? "this": column.property));
                 }
             },
