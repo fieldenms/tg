@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +38,6 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
@@ -93,11 +95,11 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     @Post
     @Override
     public Representation post(final Representation envelope) {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
-            final CentreContextHolder centreContextHolder = WebUiResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
 
@@ -142,7 +144,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                     centreContextHolder, 
                     criteriaEntity, 
                     contextConfig,
-                    criterionPropertyName /* TODO would it be useful to contain criterionPropertyName and perhaps from/to or is/is_not prefixes in ChosenProperty? Please investigate. */
+                    criterionPropertyName
                     );
             if (context.isPresent()) {
                 logger.debug("context for prop [" + criterionPropertyName + "] = " + context);

@@ -20,7 +20,6 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     @Override
     protected T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {
-            // final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext();
             final AbstractEntity<?> currEntity = currentEntity();
             final EnhancedCentreEntityQueryCriteria<?, ?> selCrit = selectionCrit();
             final Class<AbstractEntity<?>> entityType = 

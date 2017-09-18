@@ -2,6 +2,10 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreJSONResult;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,7 +46,6 @@ import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * Resource for integration test of Java and JavaScript serialisation.
@@ -71,8 +74,8 @@ public class SerialisationTestResource extends ServerResource {
      */
     @Post
     public Representation checkEntitiesOnEqualityAndSendResult(final Representation envelope) {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
-            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) WebUiResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
+        return handleUndesiredExceptions(getResponse(), () -> {
+            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) restoreJSONResult(envelope, restUtil).getInstance();
 
             final Result result = deepEqualsForTesting(this.entities, entities);
             if (!result.isSuccessful()) {
@@ -87,7 +90,7 @@ public class SerialisationTestResource extends ServerResource {
      */
     @Get
     public Representation sendSerialisedEntities() {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             return restUtil.listJSONRepresentation(this.entities);
         }, restUtil);
     }
@@ -149,21 +152,21 @@ public class SerialisationTestResource extends ServerResource {
                 }
 
                 // type equality
-                if (!EntityUtils.equalsEx(e1.getType(), e2.getType())) {
+                if (!equalsEx(e1.getType(), e2.getType())) {
                     return Result.failure(format("e1 [%s] type [%s] does not equal to e2 [%s] type [%s].", e1, e1.getType(), e2, e2.getType()));
                 }
                 if (EntityUtils.isPropertyDescriptor(e1.getType())) {
                     final PropertyDescriptor pd1 = (PropertyDescriptor) e1;
                     final PropertyDescriptor pd2 = (PropertyDescriptor) e2;
-                    if (!EntityUtils.equalsEx(pd1.getEntityType(), pd2.getEntityType())) {
+                    if (!equalsEx(pd1.getEntityType(), pd2.getEntityType())) {
                         return Result.failure(format("PropertyDescriptors equality: pd1 [%s] entityType [%s] does not equal to pd2 [%s] entityType [%s].", pd1, pd1.getEntityType(), pd2, pd2.getEntityType()));
                     }
-                    if (!EntityUtils.equalsEx(pd1.getPropertyName(), pd2.getPropertyName())) {
+                    if (!equalsEx(pd1.getPropertyName(), pd2.getPropertyName())) {
                         return Result.failure(format("PropertyDescriptors equality: pd1 [%s] propertyName [%s] does not equal to pd2 [%s] propertyName [%s].", pd1, pd1.getPropertyName(), pd2, pd2.getPropertyName()));
                     }
                 }
                 // id equality
-                if (!EntityUtils.equalsEx(e1.getId(), e2.getId())) {
+                if (!equalsEx(e1.getId(), e2.getId())) {
                     return Result.failure(format("e1 [%s] id [%s] does not equal to e2 [%s] id [%s].", e1, e1.getId(), e2, e2.getId()));
                 }
                 
@@ -182,17 +185,17 @@ public class SerialisationTestResource extends ServerResource {
                     // id-only proxy class equality
                     if (e1Instrumented) {
                         // getSuperclass() is needed due to wrapping of the actual class by Guice during instrumentation
-                        if (!EntityUtils.equalsEx(e1.getClass().getSuperclass(), e2.getClass().getSuperclass())) {
+                        if (!equalsEx(e1.getClass().getSuperclass(), e2.getClass().getSuperclass())) {
                             return Result.failure(format("e1 [%s] id-only proxy type [%s] does not equal to e2 [%s] id-only proxy type [%s].", e1, e1.getClass().getSuperclass(), e2, e2.getClass().getSuperclass()));
                         }
                     } else {
-                        if (!EntityUtils.equalsEx(e1.getClass(), e2.getClass())) {
+                        if (!equalsEx(e1.getClass(), e2.getClass())) {
                             return Result.failure(format("e1 [%s] id-only proxy type [%s] does not equal to e2 [%s] id-only proxy type [%s].", e1, e1.getClass(), e2, e2.getClass()));
                         }
                     }
                 } else {
                     // version equality
-                    if (!EntityUtils.equalsEx(e1.getVersion(), e2.getVersion())) {
+                    if (!equalsEx(e1.getVersion(), e2.getVersion())) {
                         return Result.failure(format("e1 [%s] version [%s] does not equal to e2 [%s] version [%s].", e1, e1.getVersion(), e2, e2.getVersion()));
                     }
                     
@@ -244,7 +247,7 @@ public class SerialisationTestResource extends ServerResource {
                 return eq;
             }
         } else {
-            if (!EntityUtils.equalsEx(value1, value2)) { // prop equality
+            if (!equalsEx(value1, value2)) { // prop equality
                 return Result.failure(format("e1 [%s] (type = %s) " + valuePrefix + "prop [%s] value [%s] does not equal to e2 [%s] (type = %s) " + valuePrefix + "prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, toString(value1), e2, e2.getType().getSimpleName(), propName, toString(value2)));
             }
         }
@@ -280,11 +283,11 @@ public class SerialisationTestResource extends ServerResource {
             // dirty equality
             //        if (!metaProp1.isCollectional()) {
             
-            if (!EntityUtils.equalsEx(metaProp1.isChangedFromOriginal(), metaProp2.isChangedFromOriginal())) {
+            if (!equalsEx(metaProp1.isChangedFromOriginal(), metaProp2.isChangedFromOriginal())) {
                 return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
             }
             // please refer to provideOriginalValue method in EntityJsonDeserialiser for more details on 'dirtiness'
-//                if (!EntityUtils.equalsEx(metaProp1.isDirty(), metaProp2.isDirty())) {
+//                if (!equalsEx(metaProp1.isDirty(), metaProp2.isDirty())) {
 //                    return Result.failure(format("e1 [%s] prop's [%s] dirtiness [%s] does not equal to e2 [%s] prop's [%s] dirtiness [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isDirty(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isDirty()));
 //                }
             
@@ -313,11 +316,11 @@ public class SerialisationTestResource extends ServerResource {
             }
             
             // valueChangeCount equality
-            if (!EntityUtils.equalsEx(metaProp1.getValueChangeCount(), metaProp2.getValueChangeCount())) {
+            if (!equalsEx(metaProp1.getValueChangeCount(), metaProp2.getValueChangeCount())) {
                 return Result.failure(format("e1 [%s] valueChangeCount [%s] does not equal to e2 [%s] valueChangeCount [%s].", metaProp1.getEntity(), metaProp1.getValueChangeCount(), metaProp2.getEntity(), metaProp2.getValueChangeCount()));
             }
             // 'assigned' equality
-            if (!EntityUtils.equalsEx(metaProp1.isAssigned(), metaProp2.isAssigned())) {
+            if (!equalsEx(metaProp1.isAssigned(), metaProp2.isAssigned())) {
                 return Result.failure(format("e1 [%s] assigned [%s] does not equal to e2 [%s] assigned [%s].", metaProp1.getEntity(), metaProp1.isAssigned(), metaProp2.getEntity(), metaProp2.isAssigned()));
             }
             
@@ -325,15 +328,15 @@ public class SerialisationTestResource extends ServerResource {
             //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
             //        }
             // editable equality
-            if (!EntityUtils.equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
+            if (!equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
                 return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
             }
             // required equality
-            if (!EntityUtils.equalsEx(metaProp1.isRequired(), metaProp2.isRequired())) {
+            if (!equalsEx(metaProp1.isRequired(), metaProp2.isRequired())) {
                 return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
             }
             // visible equality
-            if (!EntityUtils.equalsEx(metaProp1.isVisible(), metaProp2.isVisible())) {
+            if (!equalsEx(metaProp1.isVisible(), metaProp2.isVisible())) {
                 return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
             }
             // validationResult equality
@@ -351,19 +354,19 @@ public class SerialisationTestResource extends ServerResource {
             if (validationResult2 == null) {
                 return false;
             } else {
-                if (!EntityUtils.equalsEx(validationResult.getClass(), validationResult2.getClass())) {
+                if (!equalsEx(validationResult.getClass(), validationResult2.getClass())) {
                     return false;
                 }
-                if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
+                if (!equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
                     return false;
                 }
                 if (validationResult.getEx() == null) {
                     return validationResult2.getEx() == null;
                 }
-                if (!EntityUtils.equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
+                if (!equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
                     return false;
                 }
-                if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
+                if (!equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
                     return false;
                 }
                 return true;

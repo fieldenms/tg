@@ -1195,12 +1195,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            logger.error("computation function == " + context.get().getComputation());
-            logger.error("master entity holder == " + context.get().getMasterEntity());
+            logger.debug("computation function == " + context.get().getComputation());
+            logger.debug("master entity holder == " + context.get().getMasterEntity());
             final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
-            logger.error("restored masterEntity: " + funcEntity);
-            logger.error("restored masterEntity (centre context's selection criteria): " + funcEntity.getCritOnlyBigDecimalPropCriterion());
-            logger.error("restored masterEntity (centre context's selection criteria): " + funcEntity.getBigDecimalPropFromCriterion());
+            logger.debug("restored masterEntity: " + funcEntity);
+            logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getCritOnlyBigDecimalPropCriterion());
+            logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getBigDecimalPropFromCriterion());
             return where.val(1).eq().val(1);
         }
     }

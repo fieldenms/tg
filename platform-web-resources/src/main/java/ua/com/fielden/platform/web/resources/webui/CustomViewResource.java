@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+
 import java.io.ByteArrayInputStream;
 
 import org.restlet.Context;
@@ -13,8 +15,6 @@ import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
-
 import com.google.common.base.Charsets;
 
 /**
@@ -47,7 +47,7 @@ public class CustomViewResource extends DeviceProfileDifferentiatorResource {
 
     @Override
     protected Representation get() throws ResourceException {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             final String source = sourceController().loadSource("/custom_view/" + this.viewName, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil());
