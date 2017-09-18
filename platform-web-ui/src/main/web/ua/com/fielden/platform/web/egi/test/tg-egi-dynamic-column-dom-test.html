@@ -31,7 +31,7 @@
                 egi = fixture('EgiFixture');
             });
 
-            test('add two columns and removed one', function (done) {
+            test('egi column dom modification works', function (done) {
                 //Check whether egi has no column at the beginning.
                 assert.strictEqual(0, egi.allColumns.length, "At the begining all columns should be empty");
                 assert.strictEqual(0, egi.columns.length, "At the begining columns should be empty");
