@@ -663,18 +663,6 @@
                 columnIndex = columns.findIndex(col => col.property === columnToRemove.property);
             }
         };
-        const adjustColumnsGrowFactor = function (egi, columns) {
-            const columnWithGrowFactor = columns.find((item, index) => index >= egi.numOfFixedCols && item.growFactor > 0);
-            if (!columnWithGrowFactor && columns.length > 0 && columns.length >= egi.numOfFixedCols) {
-                egi.set("columns." + (columns.length - 1) + ".growFactor", 1);
-                const column = columns[columns.length - 1];
-                const parameters = {};
-                parameters[column.property] = {
-                    growFactor: 1
-                }
-                egi.fire("tg-egi-column-change", parameters);
-            }
-        };
         const sign = (value) => value < 0 ? -1 : 1;
         const columnFilter = node => node.nodeType === Node.ELEMENT_NODE && node.tagName === "TG-PROPERTY-COLUMN";
         Polymer({
@@ -687,7 +675,8 @@
                 },
                 totals: Object,
                 columns: {
-                    type: Array
+                    type: Array,
+                    observer: "_columnsChanged"
                 },
                 /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
@@ -807,7 +796,7 @@
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
 
-            observers: ["_columnsChanged(columns.splices)"],
+            observers: ["_allColumnsChanged(allColumns.splices)"],
 
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
@@ -1459,18 +1448,40 @@
 
             _columnDomChanged: function (addedColumns, removedColumns) {
                 removedColumns.forEach(col => {
-                    removeColumn(this, "columns", this.columns, col);
-                    removeColumn(this, "allColumns", this.allColumns, col);
+                    const index = this.allColumns.indexOf(col);
+                    if (index >= 0) {
+                        this.splice("allColumns", index, 1);
+                    }
                 });
                 addedColumns.forEach(col => {
-                    this.push("allColumns", col);
-                    this.push("columns", col);
+                    const index = this.allColumns.findIndex(column => column.property === col.property);
+                    if (index < 0) {
+                        this.push("allColumns", col);
+                    }
                 });
-                adjustColumnsGrowFactor(this, this.columns);
-                this._updateColumnsWidthProperties(true);
             },
 
-            _columnsChanged: function (columnsChaged) {
+            _allColumnsChanged: function (changeRecord) {
+                if (changeRecord) {
+                    const columnsCopy = this.columns.slice();
+                    changeRecord.indexSplices.forEach(s => {
+                        s.removed.forEach(function (column) {
+                            const columnIndex = columnsCopy.indexOf(column);
+                            if (columnIndex >= 0) {
+                                columnsCopy.splice(columnsCopy.indexOf(column), 1);
+                            }
+                        });
+                        for (let i = 0; i < s.addedCount; i++) {
+                            const columnIndex = s.index + i;
+                            const newColumn = s.object[columnIndex];
+                            columnsCopy.push(newColumn);
+                        }
+                    });
+                    this._adjustColumns(columnsCopy.map(column => column.property === "" ? "this": column.property));
+                }
+            },
+
+            _columnsChanged: function (newColumns, oldColumns) {
                 let summaryRowsCount = 0;
                 this.columns.forEach(function (item) {
                     if (item.summary && item.summary.length > summaryRowsCount) {
@@ -1498,12 +1509,10 @@
                 this._totalsRows = gridSummary;
             },
 
-            _updateColumnsWidthProperties: function (triggerResize) {
+            _updateColumnsWidthProperties: function () {
                 this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
                 this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-                if (triggerResize) {
-                    this._updateTableSizeAsync();
-                }
+                this._updateTableSizeAsync();
             },
 
             _updateTableSizeAsync: function () {
@@ -1714,7 +1723,7 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -1730,9 +1739,18 @@
                 });
                 if (!this.$.reflector.equalsEx(this.columns, resultantColumns)) {
                     this.columns = resultantColumns;
-                    adjustColumnsGrowFactor(this, this.columns);
+                    const columnWithGrowFactor = this.columns.find((item, index) => index >= this.numOfFixedCols && item.growFactor > 0);
+                    if (!columnWithGrowFactor && this.columns.length > 0 && this.columns.length >= this.numOfFixedCols) {
+                        this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+                        const column = this.columns[this.columns.length - 1];
+                        const parameters = {};
+                        parameters[column.property] = {
+                            growFactor: 1
+                        }
+                        this.fire("tg-egi-column-change", parameters);
+                    }
                 }
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -2095,7 +2113,7 @@
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._updateColumnsWidthProperties(true);
+                        this._updateColumnsWidthProperties();
                         //scroll if needed.
                         if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;

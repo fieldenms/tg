@@ -29,7 +29,7 @@
 
 <body unresolved class="fullbleed">
     <template is="dom-bind" id="app" class="layout vertical">
-        <div class="layout horizontal" style="padding:20px 0">
+        <div class="layout horizontal" style="padding:0 20px">
             <paper-input label="property" style="margin-right:20px" value="{{columnProperty}}"></paper-input>
             <paper-input label="width" style="margin-right:20px" value="{{columnWidth}}"></paper-input>
             <paper-input label="min width" style="margin-right:20px" value="{{columnMinWidth}}"></paper-input>
@@ -49,7 +49,11 @@
             const app = document.querySelector('#app');
             app.columns = [];
             app.addColumn = function () {
-                app.push("columns", {property:app.columnProperty, width: app.columnWidth, minWidth: app.columnMinWidth, title: app.columnTitle, desc: app.columnDesc});
+                if (app.columns.findIndex(col => col.property === app.columnProperty) < 0) {
+                    app.push("columns", {property:app.columnProperty, width: app.columnWidth, minWidth: app.columnMinWidth, title: app.columnTitle, desc: app.columnDesc});
+                } else {
+                    alert("It's impossible to add column with two identical property names!");
+                }
             }
             app.removeLastColumn = function () {
                 app.splice("columns", app.columns.length - 1, 1);
