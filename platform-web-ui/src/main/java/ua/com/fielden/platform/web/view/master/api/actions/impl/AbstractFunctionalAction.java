@@ -73,7 +73,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap0("        savingInfoHolder['modifHolder'] = functionalEntity;") + //
                 wrap0("        savingInfoHolder['originallyProducedEntity'] = null;") + //
 
-                wrap0("        const masterEntity = self._currEntity;") + //
+                wrap0("        var masterEntity = self._currEntity;") + //
                 wrap0("        functionalEntity.key = { val: 'NoMatter', origVal: null };") + //
                 wrap0("        // THE PLACE FOR CUSTOM LOGIC:") + //
                 wrap1("        %s", preAction, () -> preAction.build().toString()) + //
