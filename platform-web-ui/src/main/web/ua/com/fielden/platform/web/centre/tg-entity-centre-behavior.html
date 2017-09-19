@@ -71,7 +71,7 @@
             return queryParam;
         };
         const createColumnAction = function (entityCentre) {
-
+            
             const actionModel = document.createElement("tg-ui-action");
             actionModel.uiRole = 'ICON';
             actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater';
@@ -87,14 +87,12 @@
             actionModel.postActionSuccess = function (functionalEntity) {};
             actionModel.postActionError = function (functionalEntity) {};
             actionModel.attrs = {
-                entityType: 'ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater',
-                currentState: 'EDIT',
-                centreUuid: entityCentre.uuid
+                entityType:'ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater', currentState:'EDIT', centreUuid: entityCentre.uuid
             };
             actionModel.requireSelectionCriteria = 'true';
             actionModel.requireSelectedEntities = 'NONE';
             actionModel.requireMasterEntity = 'false';
-
+            
             return actionModel;
         };
 
@@ -148,7 +146,7 @@
                 /**
                  * Holds the egi selection for binding into an insertion point
                  */
-                centreSelection: {
+                centreSelection : {
                     type: Object
                 },
                 /**
@@ -375,7 +373,7 @@
                     value: 'EDIT'
                 }
             },
-
+            
             listeners: {
                 "tg-egi-column-change": "_saveColumnWidth"
             },
@@ -597,24 +595,23 @@
                 self.updateProgress = (function (percentage, clazz, isVisible) {
                     this.$.egi.updateProgress(percentage, clazz, isVisible);
                 }).bind(self);
-
+                
                 /**
                  * Adds event listener that will update egi when some entity was changed
                  */
-                self.addEventListener("tg-entity-changed", function (e) {
+                self.addEventListener("tg-entity-changed", function(e) {
                     e.detail.entities.forEach(entity => {
                         e.detail.properties.forEach(prop => this.$.egi.updateEntity(entity, prop));
                     });
                 }.bind(self));
-
+                
                 /**
                  * Adds event listener fot entity selection in insertion point that will update other insertion point and also egi.
                  */
-                self.addEventListener("tg-entity-selected", function (e) {
+                self.addEventListener("tg-entity-selected", function(e) {
                     this.centreSelection = e.detail;
                 }.bind(self));
-
-                // Creates column action.
+                
                 this._columnAction = createColumnAction(self);
 
             }, // end of ready callback
@@ -647,7 +644,7 @@
             detached: function () {
                 this.masterSavedListener.unsubscribe();
             },
-
+            
             _saveColumnWidth: function (e) {
                 if (this.$.selection_criteria._currBindingEntity) {
                     this._columnAction.columnParameters = e.detail;
