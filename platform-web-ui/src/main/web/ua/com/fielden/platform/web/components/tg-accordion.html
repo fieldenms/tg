@@ -78,6 +78,15 @@
             heading: String
         },
 
+        ready: function () {
+            this.$.collapse.__defineGetter__("_isDisplayed", function () {
+                const rect = this.getBoundingClientRect();
+                return !!Object.entries(Object.getOwnPropertyDescriptors(Object.getPrototypeOf(rect)))
+                      .filter(([key, descriptor]) => typeof descriptor.get === 'function').map(([key]) => key)
+                      .find(prop => rect[prop] !== 0);
+            }.bind(this.$.collapse));
+        },
+
         _calcIcon: function (isOpened) {
             return "icons:" + (this.opened ? 'expand-less' : 'expand-more');
         },
