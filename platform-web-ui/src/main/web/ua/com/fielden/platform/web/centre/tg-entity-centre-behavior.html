@@ -646,7 +646,8 @@
             },
             
             _saveColumnWidth: function (e) {
-                if (this.$.selection_criteria._currBindingEntity) {
+                const target = e.target || e.srcElement;
+                if (this.$.selection_criteria._currBindingEntity && target === this.$.egi) {
                     this._columnAction.columnParameters = e.detail;
                     this._columnAction._run();
                 }
