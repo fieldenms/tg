@@ -156,6 +156,30 @@
                 return this._masterDom()._toastGreeting();
             },
             
+            _isEditor: function (elem) {
+                return typeof elem._editingValue !== 'undefined' && typeof elem._commValue !== 'undefined' && typeof elem.commit === 'function';
+            },
+            
+            _findFocusedEditor: function () {
+                let el = document.activeElement;
+                while ((el = el.parentElement) && !this._isEditor(el));
+                return el;
+            },
+            
+            /**
+             * If some tg-editor is focused, it is necessary to commit its value (thus trigerring validation process) if it is changed.
+             * This ensures that all other processes occuring after that (for example, saving) will be correctly queued on top of validation with actual 'fresh' value 
+             * in currently focused editor.
+             */
+            _commitFocusedEditorSynchronously: function () {
+                const focusedEditor = this._findFocusedEditor();
+                if (focusedEditor) {
+                    if (!focusedEditor.reflector().equalsEx(focusedEditor._editingValue, focusedEditor._commValue)) {
+                        focusedEditor.commit();
+                    }
+                }
+            },
+            
             _shortcutPressed: function (e) {
                 var shortcut = e.detail.combo;
                 console.debug('Master shortcut', shortcut, 'processing...');
@@ -164,7 +188,7 @@
                 if (action) {
                     // Respect nodes that are disabled in the UI.
                     if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                        action.$.actionButton.focus();
+                        this._commitFocusedEditorSynchronously();
                         action._asyncRun();
                     }
                 } else {
@@ -172,11 +196,7 @@
                     if (uiAction) {
                         // Respect nodes that are disabled in the UI.
                         if (!uiAction.isActionInProgress) {
-                            if (uiAction.isIconButton) {
-                                uiAction.$.iActionButton.focus();
-                            } else {
-                                uiAction.$.bActionButton.focus();
-                            }
+                            this._commitFocusedEditorSynchronously();
                             uiAction._run();
                         }
                     } else {
