@@ -1460,13 +1460,13 @@
                     }
                 });
                 if (columnsChanged) {
-                    this._adjustColumns(columnsCopy.map(column => column.property === "" ? "this": column.property));
+                    this._adjustColumns(columnsCopy.map(column => column.property));
                 }
             },
 
             _columnsChanged: function (newColumns, oldColumns) {
                 let summaryRowsCount = 0;
-                this.columns.forEach(function (item) {
+                newColumns.forEach(function (item) {
                     if (item.summary && item.summary.length > summaryRowsCount) {
                         summaryRowsCount = item.summary.length;
                     }
@@ -1476,7 +1476,7 @@
                 if (summaryRowsCount > 0) {
                     for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
                         const totalsRow = [];
-                        this.columns.forEach(function (item) {
+                        newColumns.forEach(function (item) {
                             if (item.summary && item.summary[summaryRowCounter]) {
                                 const total = item.summary[summaryRowCounter]
                                 totalsRow.push(true);
@@ -1715,7 +1715,7 @@
             _adjustColumns: function (newColumns) {
                 const resultantColumns = [];
                 newColumns.forEach(columnName => {
-                    const column = this.allColumns.find(item => item.property === (columnName === "this" ? "" : columnName));
+                    const column = this.allColumns.find(item => item.property === columnName);
                     if (column) {
                         resultantColumns.push(column);
                     }
