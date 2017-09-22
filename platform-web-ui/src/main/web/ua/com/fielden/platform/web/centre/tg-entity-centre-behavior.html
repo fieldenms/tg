@@ -441,7 +441,7 @@
                         this.selectionCriteriaEntity = criteriaEntity;
                         this.$.egi.renderingHints = renderingHints;
                         this.$.egi._adjustColumnWidths(columnWidths);
-                        this.$.egi._adjustColumns(visibleColumnsWithOrder);
+                        this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                         if (this._triggerRun && this._selectedView === 0) {
                             this.async(function () {
                                 this._selectedView = 1;
@@ -646,8 +646,13 @@
             },
             
             _saveColumnWidth: function (e) {
-                this._columnAction.columnParameters = e.detail;
-                this._columnAction._run();
+                const target = e.target || e.srcElement;
+                //Run save column action only for if the selection criteria is present and the even't target is centre's egi.
+                //If selection criteira is not present then save column action was triggered because of incorrect egi DOM configuration. (e.g user specified all columns with grow factor equal to 0)
+                if (this.$.selection_criteria._currBindingEntity && target === this.$.egi) {
+                    this._columnAction.columnParameters = e.detail;
+                    this._columnAction._run();
+                }
             },
 
             /**

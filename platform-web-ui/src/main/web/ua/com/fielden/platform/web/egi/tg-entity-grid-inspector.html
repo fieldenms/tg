@@ -157,7 +157,6 @@
         }
         .grid-toolbar {
             height: auto;
-            min-height: 4rem;
             position: relative;
             overflow: hidden;
         }
@@ -656,7 +655,16 @@
                 egi.selectedAll = false;
             }
         };
+        const removeColumn = function (column, fromColumns) {
+            const index = fromColumns.indexOf(column);
+            if (index >= 0) {
+                fromColumns.splice(index, 1);
+                return true;
+            }
+            return false;
+        };
         const sign = (value) => value < 0 ? -1 : 1;
+        const columnFilter = node => node.nodeType === Node.ELEMENT_NODE && node.tagName === "TG-PROPERTY-COLUMN";
         Polymer({
             is: "tg-entity-grid-inspector",
 
@@ -884,6 +892,10 @@
                 this.selectedEntities = [];
                 this.openedEntities = [];
 
+                //Initialise columns
+                this.allColumns = [];
+                this.columns = [];
+
                 //Initialising the primary action.
                 this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
@@ -896,6 +908,11 @@
 
                 //Initialising event listeners.
                 this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+                //Observe column DOM changes
+                Polymer.dom(this.$.column_selector).observeNodes(info => {
+                    this._columnDomChanged(info.addedNodes.filter(columnFilter), info.removedNodes.filter(columnFilter));
+                });
             },
 
             attached: function () {
@@ -905,25 +922,21 @@
                 if (this.customShortcuts) {
                     this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
                 }
+                //Initialising property column mappings
+                this.columnPropertiesMapper = (function (entity) {
+                    const result = [];
+                    for (let index = 0; index < this.columns.length; index++) {
+                        const column = this.columns[index];
+                        const entry = {
+                            dotNotation: column.property,
+                            value: this._getValue(entity, column.property, column.type)
+                        };
+                        result.push(entry);
+                    }
+                    return result;
+                }).bind(this);
                 this.async(function () {
                     this.keyEventTarget = this._getKeyEventTarget();
-                    //Initialising columns (property column mappings)
-                    this.allColumns = [];
-                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
-                    this.columns = this.allColumns;
-                    this._updateColumnsWidthProperties(false);
-                    this.columnPropertiesMapper = (function (entity) {
-                        const result = [];
-                        for (let index = 0; index < this.columns.length; index++) {
-                            const column = this.columns[index];
-                            const entry = {
-                                dotNotation: column.property,
-                                value: this._getValue(entity, column.property, column.type)
-                            };
-                            result.push(entry);
-                        }
-                        return result;
-                    }).bind(this);
                 }, 1)
             },
 
@@ -1430,9 +1443,30 @@
                 this._updateTableSizeAsync();
             },
 
-            _columnsChanged: function (columns, oldColumns) {
+            _columnDomChanged: function (addedColumns, removedColumns) {
+                const columnsCopy = this.columns.slice();
+                let columnsChanged = false;
+                removedColumns.forEach(col => {
+                    removeColumn(col, this.allColumns);
+                    columnsChanged = removeColumn(col, columnsCopy);
+                });
+                
+                addedColumns.forEach(col => {
+                    const index = this.allColumns.findIndex(column => column.property === col.property);
+                    if (index < 0) {
+                        this.allColumns.push(col);
+                        columnsCopy.push(col);
+                        columnsChanged = true;
+                    }
+                });
+                if (columnsChanged) {
+                    this._adjustColumns(columnsCopy.map(column => column.property));
+                }
+            },
+
+            _columnsChanged: function (newColumns, oldColumns) {
                 let summaryRowsCount = 0;
-                columns.forEach(function (item) {
+                newColumns.forEach(function (item) {
                     if (item.summary && item.summary.length > summaryRowsCount) {
                         summaryRowsCount = item.summary.length;
                     }
@@ -1442,7 +1476,7 @@
                 if (summaryRowsCount > 0) {
                     for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
                         const totalsRow = [];
-                        columns.forEach(function (item) {
+                        newColumns.forEach(function (item) {
                             if (item.summary && item.summary[summaryRowCounter]) {
                                 const total = item.summary[summaryRowCounter]
                                 totalsRow.push(true);
@@ -1458,12 +1492,10 @@
                 this._totalsRows = gridSummary;
             },
 
-            _updateColumnsWidthProperties: function (triggerResize) {
+            _updateColumnsWidthProperties: function () {
                 this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
                 this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-                if (triggerResize) {
-                    this._updateTableSizeAsync();
-                }
+                this._updateTableSizeAsync();
             },
 
             _updateTableSizeAsync: function () {
@@ -1513,9 +1545,9 @@
                 const target = e.target || e.srcElement;
                 this.selectAll(target.checked);
             },
-            
+
             /**
-             * Selects/unselects all entities. 
+             * Selects/unselects all entities.
              */
             selectAll: function (checked) {
                 if (this.egiModel) {
@@ -1539,7 +1571,7 @@
                     }
                 }
             },
-            
+
             /**
              * Event handler for selecting concrete entity
              */
@@ -1674,7 +1706,7 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -1683,7 +1715,7 @@
             _adjustColumns: function (newColumns) {
                 const resultantColumns = [];
                 newColumns.forEach(columnName => {
-                    const column = this.allColumns.find(item => item.property === (columnName === "this" ? "" : columnName));
+                    const column = this.allColumns.find(item => item.property === columnName);
                     if (column) {
                         resultantColumns.push(column);
                     }
@@ -1700,9 +1732,8 @@
                         }
                         this.fire("tg-egi-column-change", parameters);
                     }
-
                 }
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -2065,7 +2096,7 @@
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._updateColumnsWidthProperties(true);
+                        this._updateColumnsWidthProperties();
                         //scroll if needed.
                         if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;
