@@ -7,13 +7,13 @@
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
+<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
-<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -794,7 +794,7 @@
                 _lastSelectedIndex: Number
             },
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
 
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
@@ -819,47 +819,7 @@
             },
 
             _shortcutPressed: function (e) {
-                var shortcut = e.detail.combo;
-                console.debug('Master shortcut', shortcut, 'processing...');
-
-                var iconButton = this.querySelector('paper-icon-button[shortcut="' + shortcut + '"]');
-                if (iconButton) {
-                    // Respect nodes that are disabled in the UI.
-                    if (window.getComputedStyle(iconButton)['pointer-events'] !== 'none') {
-                        iconButton.focus();
-                        MockInteractions.tap(iconButton);
-                    }
-                } else {
-                    var action = this.querySelector('tg-action[shortcut="' + shortcut + '"]');
-                    if (action) {
-                        // Respect nodes that are disabled in the UI.
-                        if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                            action.$.actionButton.focus();
-                            action._asyncRun();
-                        }
-                    } else {
-                        var uiAction = this.querySelector('tg-ui-action[shortcut="' + shortcut + '"]');
-                        if (uiAction) {
-                            // Respect nodes that are disabled in the UI.
-                            if (!uiAction.isActionInProgress) {
-                                if (uiAction.isIconButton) {
-                                    uiAction.$.iActionButton.focus();
-                                } else {
-                                    uiAction.$.bActionButton.focus();
-                                }
-                                uiAction._run();
-                            }
-                        } else {
-                            console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
-                        }
-                    }
-                }
-
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
-                console.debug('Master shortcut', shortcut, 'processing... done');
+                this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
             },
 
             /**
