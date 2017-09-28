@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/master/tg-entity-master-styles.html">
+<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <script>
     (function () {
@@ -156,64 +157,14 @@
                 return this._masterDom()._toastGreeting();
             },
             
-            _isEditor: function (elem) {
-                return typeof elem._editingValue !== 'undefined' && typeof elem._commValue !== 'undefined' && typeof elem.commit === 'function';
-            },
-            
-            _findFocusedEditor: function () {
-                let el = document.activeElement;
-                while ((el = el.parentElement) && !this._isEditor(el));
-                return el;
-            },
-            
-            /**
-             * If some tg-editor is focused, it is necessary to commit its value (thus trigerring validation process) if it is changed.
-             * This ensures that all other processes occuring after that (for example, saving) will be correctly queued on top of validation with actual 'fresh' value 
-             * in currently focused editor.
-             */
-            _commitFocusedEditorSynchronously: function () {
-                const focusedEditor = this._findFocusedEditor();
-                if (focusedEditor) {
-                    if (!focusedEditor.reflector().equalsEx(focusedEditor._editingValue, focusedEditor._commValue)) {
-                        focusedEditor.commit();
-                    }
-                }
-            },
-            
             _shortcutPressed: function (e) {
-                var shortcut = e.detail.combo;
-                console.debug('Master shortcut', shortcut, 'processing...');
-                
-                var action = this.$$('tg-action[shortcut="' + shortcut + '"]');
-                if (action) {
-                    // Respect nodes that are disabled in the UI.
-                    if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                        this._commitFocusedEditorSynchronously();
-                        action._asyncRun();
-                    }
-                } else {
-                    var uiAction = this.$$('tg-ui-action[shortcut="' + shortcut + '"]');
-                    if (uiAction) {
-                        // Respect nodes that are disabled in the UI.
-                        if (!uiAction.isActionInProgress) {
-                            this._commitFocusedEditorSynchronously();
-                            uiAction._run();
-                        }
-                    } else {
-                        console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
-                    }
-                }
-
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
-                console.debug('Master shortcut', shortcut, 'processing... done');
+                this.processShortcut(e, ['tg-action', 'tg-ui-action']);
             }
         };
 
         Polymer.TgBehaviors.TgEntityMasterTemplateBehavior = [
             Polymer.IronA11yKeysBehavior,
+            Polymer.TgBehaviors.TgShortcutProcessingBehavior,
             Polymer.TgBehaviors.TgEntityMasterBehavior,
             Polymer.TgBehaviors.TgEntityMasterTemplateBehaviorImpl
         ];
