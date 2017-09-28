@@ -1,8 +1,9 @@
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+
+<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <dom-module id="tg-selection-view">
     <style>
@@ -21,14 +22,17 @@
         Polymer({
             is: 'tg-selection-view',
             
-            behaviors: [Polymer.IronA11yKeysBehavior],
-
+            behaviors: [
+                Polymer.IronA11yKeysBehavior,
+                Polymer.TgBehaviors.TgShortcutProcessingBehavior
+            ],
+            
             hostAttributes: {
                 'tabindex' : '0'
             },
             
             _ownKeyBindings: {
-                'ctrl+s ctrl+e ctrl+r f5': '_processShortcut'  
+                'ctrl+s ctrl+e ctrl+r f5': '_shortcutPressed'
             },
             
             attached: function () {
@@ -46,23 +50,8 @@
                 return parent || this;
             },
             
-            _processShortcut: function (e) {
-                var shortcut = e.detail.combo;
-                console.debug('Master shortcut', shortcut, 'processing...');
-                
-                var button = this.querySelector('paper-button[shortcut="' + shortcut + '"]');
-                if (button) {
-                    // Respect nodes that are disabled in the UI.
-                    if (window.getComputedStyle(button)['pointer-events'] !== 'none') {
-                        button.focus();
-                        MockInteractions.tap(button);
-                    }
-                } 
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
-                console.debug('Master shortcut', shortcut, 'processing... done');
+            _shortcutPressed: function (e) {
+                this.processShortcut(e, ['paper-button']);
             }
         });
     </script>

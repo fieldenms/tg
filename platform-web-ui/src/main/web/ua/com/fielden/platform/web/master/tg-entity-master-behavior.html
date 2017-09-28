@@ -5,22 +5,6 @@
 
 <script>
     (function () {
-        var SimultaneousSaveException = function () {
-            Object.call(this);
-
-            this.message = "Simultaneous save exception: the save process has been already started before and not ended. Please, block UI until the save action completes.";
-        };
-        SimultaneousSaveException.prototype = Object.create(Object.prototype);
-        SimultaneousSaveException.prototype.constructor = SimultaneousSaveException;
-
-        /**
-         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-         *
-         */
-        SimultaneousSaveException.prototype.toString = function () {
-            return this.message;
-        }
-        
         var selectEnabledEditor = function (editor) {
             var selectedElement = editor.querySelector('.custom-input:not([hidden]):not([disabled])');
             return (selectedElement && selectedElement.querySelector('textarea')) || selectedElement;
@@ -289,6 +273,21 @@
                 _originallyProducedEntity: {
                     type: Object,
                     value: null
+                },
+                
+                /**
+                 * Indicates whether saving process has been initiated by using CTRL+S key or tapping on SAVE button (or even programatically).
+                 * Strictly speaking it becomes 'true' when 'save' function gets functioned.
+                 *
+                 * _savingInitiated is needed to disable master view only once during debouncing of multiple saving requests, which in turn will be turned into single ajax request,
+                 * and thus only single 'view enablement' action.
+                 *
+                 * Debouncing of saving actions is needed to avoid multiple concurrent saving requests. However it adds additional debouncing 50-second delay similarly
+                 * as in validation.
+                 */
+                _savingInitiated: {
+                    type: Boolean,
+                    value: false
                 }
             },
 
@@ -477,17 +476,20 @@
                                 old_actionProgressStatusChanged(newValue, oldValue);
                                 if (newValue === false) {
                                     _self.enableView();
+                                    _self._savingInitiated = false;
                                 }
                             }).bind(action);
                         }
                         action._run();
                     } else if (_exceptionOccured !== null) {
                         this.enableView();
+                        this._savingInitiated = false;
                         
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after unsuccessful save due to non-continuation exception
                         this._continuations = {};
                     } else {
                         this.enableView();
+                        this._savingInitiated = false;
                     }
 
                     return potentiallySavedOrNewEntity.isValidWithoutException();
@@ -503,6 +505,7 @@
                         this.postSavedError.bind(this)(errorResult);
                     }
                     this.enableView();
+                    this._savingInitiated = false;
                 }).bind(self);
 
                 self.edit = (function () {
@@ -532,30 +535,36 @@
                 }).bind(self);
 
                 self.save = (function (newContinuation, continuationProperty) {
-                    this.disableView();
-                    var self = this;
-                    if (self._savingInProgress()) {
-                        var SimultaneousSaveException = self._getSimultaneousSaveExceptionType();
-                        throw new SimultaneousSaveException();
+                    const slf = this;
+                    if (!slf._savingInitiated) {
+                        slf._savingInitiated = true;
+                        slf.disableView();
                     }
                     
-                    // if continuation has been passed into saving function (in postSaveSuccess callback of continuation's tg-ui-action)
-                    // then it should be stored locally in _continuations map.
-                    if (newContinuation) {
-                        this._continuations[continuationProperty] = newContinuation;
-                    }
-
-                    // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
-                    // otherwise -- saving process will simply start immediately
-                    var lastValidationPromise = self._validator().abortValidationExceptLastOne();
-                    if (lastValidationPromise !== null) {
-                        console.warn("Saving is chained to the last validation promise...");
-                        return lastValidationPromise
-                            .then(function () {
-                                return self._createSavingPromise();
-                            });
-                    }
-                    return self._createSavingPromise();
+                    return new Promise(function (resolve, reject) {
+                        slf.debounce('invoke-saving', function () {
+                            // cancel the 'invoke-saving' debouncer if there is any active one:
+                            slf.cancelDebouncer('invoke-saving');
+                            
+                            // if continuation has been passed into saving function (in postSaveSuccess callback of continuation's tg-ui-action)
+                            // then it should be stored locally in _continuations map.
+                            if (newContinuation) {
+                                slf._continuations[continuationProperty] = newContinuation;
+                            }
+                            
+                            // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
+                            // otherwise -- saving process will simply start immediately
+                            const lastValidationPromise = slf._validator().abortValidationExceptLastOne();
+                            if (lastValidationPromise !== null) {
+                                console.warn("Saving is chained to the last validation promise...");
+                                return resolve(lastValidationPromise
+                                    .then(function () {
+                                        return slf._createSavingPromise();
+                                    }));
+                            }
+                            return resolve(slf._createSavingPromise());
+                        }, 50);
+                    });
                 }).bind(self);
                 
                 self._makeKeyUnmodifiedIfItIsModified = (function () {
@@ -866,10 +875,6 @@
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
-            _getSimultaneousSaveExceptionType: function () {
-                return SimultaneousSaveException;
-            },
-
             _saverLoadingChanged: function (newValue, oldValue) {
                 console.log("_saverLoadingChanged:", newValue, oldValue);
                 if (oldValue === true && newValue === false) {
