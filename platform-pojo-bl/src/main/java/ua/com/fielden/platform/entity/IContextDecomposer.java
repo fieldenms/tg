@@ -266,6 +266,33 @@ public interface IContextDecomposer {
         return (M) currentEntity();
     }
     
+    // CURRENT ENTITY'S KEY:
+    /**
+     * Returns <code>true</code> if currentEntity's key exists and is instance of concrete <code>type</code>, <code>false</code> otherwise.
+     * 
+     * @param type
+     * @return
+     */
+    default <M extends AbstractEntity<?>> boolean keyOfCurrentEntityInstanceOf(final Class<M> type) {
+        if (currentEntityNotEmpty()) {
+            final AbstractEntity<?> currentEntity = currentEntity();
+            if (currentEntity.get(KEY) != null) {
+                return type.isAssignableFrom(currentEntity.get(KEY).getClass());
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Returns currentEntity's key of concrete <code>type</code>.
+     * 
+     * @param type
+     * @return
+     */
+    default <M extends AbstractEntity<?>> M keyOfCurrentEntity(final Class<M> type) {
+        return (M) currentEntity().get(KEY);
+    }
+    
     // SELECTION CRITERIA:
     /**
      * Returns <code>true</code> if selection criteria entity does not exist, <code>false</code> otherwise.
