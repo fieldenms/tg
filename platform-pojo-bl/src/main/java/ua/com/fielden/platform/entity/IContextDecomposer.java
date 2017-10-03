@@ -451,6 +451,16 @@ public interface IContextDecomposer {
         return decompose(getContextOfMasterEntity()).keyOfMasterEntity(type);
     }
     
+    // MASTER ENTITY'S SELECTION CRIT:
+    /**
+     * Returns masterEntity's master entity selectionCrit.
+     * 
+     * @return
+     */
+    default EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntityOfMasterEntity() {
+        return decompose(getContextOfMasterEntity()).selectionCritOfMasterEntity();
+    }
+    
     // CHOSEN PROPERTY:
     /**
      * Returns masterEntity's chosen property value: <code>null</code> if chosen property is not applicable,
