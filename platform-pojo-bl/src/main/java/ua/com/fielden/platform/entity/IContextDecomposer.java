@@ -405,6 +405,15 @@ public interface IContextDecomposer {
         return false;
     }
     
+    /**
+     * Returns <code>true</code> if masterEntity's context does not exist, <code>false</code> otherwise.
+     * 
+     * @return
+     */
+    default boolean contextOfMasterEntityEmpty() {
+        return !contextOfMasterEntityNotEmpty();
+    }
+    
     default CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContextOfMasterEntity() {
         return ((AbstractFunctionalEntityWithCentreContext) masterEntity()).context();
     }
@@ -474,6 +483,33 @@ public interface IContextDecomposer {
     }
     
     // CURRENT ENTITY:
+    /**
+     * Returns <code>true</code> if masterEntity's current entity does not exist, <code>false</code> otherwise.
+     * 
+     * @return
+     */
+    default boolean currentEntityOfMasterEntityEmpty() {
+        return contextOfMasterEntityEmpty() || decompose(getContextOfMasterEntity()).currentEntityEmpty();
+    }
+    
+    /**
+     * Returns <code>true</code> if masterEntity's current entity exists, <code>false</code> otherwise.
+     * 
+     * @return
+     */
+    default boolean currentEntityOfMasterEntityNotEmpty() {
+        return !currentEntityOfMasterEntityEmpty();
+    }
+    
+    /**
+     * Returns masterEntity's current entity.
+     * 
+     * @return
+     */
+    default AbstractEntity<?> currentEntityOfMasterEntity() {
+        return decompose(getContextOfMasterEntity()).currentEntity();
+    }
+    
     /**
      * Returns <code>true</code> if masterEntity's current entity exists and is instance of concrete <code>type</code>, <code>false</code> otherwise.
      * 
