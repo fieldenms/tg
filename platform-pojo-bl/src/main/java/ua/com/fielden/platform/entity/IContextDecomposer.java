@@ -430,6 +430,15 @@ public interface IContextDecomposer {
     }
     
     /**
+     * Returns masterEntity's master entity.
+     * 
+     * @return
+     */
+    default AbstractEntity<?> masterEntityOfMasterEntity() {
+        return decompose(getContextOfMasterEntity()).masterEntity();
+    }
+    
+    /**
      * Returns masterEntity's master entity of concrete <code>type</code>.
      * 
      * @param type
