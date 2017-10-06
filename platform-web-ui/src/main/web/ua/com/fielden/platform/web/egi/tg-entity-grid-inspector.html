@@ -7,13 +7,13 @@
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
+<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
-<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -157,7 +157,6 @@
         }
         .grid-toolbar {
             height: auto;
-            min-height: 4rem;
             position: relative;
             overflow: hidden;
         }
@@ -656,7 +655,16 @@
                 egi.selectedAll = false;
             }
         };
+        const removeColumn = function (column, fromColumns) {
+            const index = fromColumns.indexOf(column);
+            if (index >= 0) {
+                fromColumns.splice(index, 1);
+                return true;
+            }
+            return false;
+        };
         const sign = (value) => value < 0 ? -1 : 1;
+        const columnFilter = node => node.nodeType === Node.ELEMENT_NODE && node.tagName === "TG-PROPERTY-COLUMN";
         Polymer({
             is: "tg-entity-grid-inspector",
 
@@ -786,7 +794,7 @@
                 _lastSelectedIndex: Number
             },
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
 
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
@@ -811,47 +819,7 @@
             },
 
             _shortcutPressed: function (e) {
-                var shortcut = e.detail.combo;
-                console.debug('Master shortcut', shortcut, 'processing...');
-
-                var iconButton = this.querySelector('paper-icon-button[shortcut="' + shortcut + '"]');
-                if (iconButton) {
-                    // Respect nodes that are disabled in the UI.
-                    if (window.getComputedStyle(iconButton)['pointer-events'] !== 'none') {
-                        iconButton.focus();
-                        MockInteractions.tap(iconButton);
-                    }
-                } else {
-                    var action = this.querySelector('tg-action[shortcut="' + shortcut + '"]');
-                    if (action) {
-                        // Respect nodes that are disabled in the UI.
-                        if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                            action.$.actionButton.focus();
-                            action._asyncRun();
-                        }
-                    } else {
-                        var uiAction = this.querySelector('tg-ui-action[shortcut="' + shortcut + '"]');
-                        if (uiAction) {
-                            // Respect nodes that are disabled in the UI.
-                            if (!uiAction.isActionInProgress) {
-                                if (uiAction.isIconButton) {
-                                    uiAction.$.iActionButton.focus();
-                                } else {
-                                    uiAction.$.bActionButton.focus();
-                                }
-                                uiAction._run();
-                            }
-                        } else {
-                            console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
-                        }
-                    }
-                }
-
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
-                console.debug('Master shortcut', shortcut, 'processing... done');
+                this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
             },
 
             /**
@@ -884,6 +852,10 @@
                 this.selectedEntities = [];
                 this.openedEntities = [];
 
+                //Initialise columns
+                this.allColumns = [];
+                this.columns = [];
+
                 //Initialising the primary action.
                 this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
@@ -896,6 +868,11 @@
 
                 //Initialising event listeners.
                 this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+                //Observe column DOM changes
+                Polymer.dom(this.$.column_selector).observeNodes(info => {
+                    this._columnDomChanged(info.addedNodes.filter(columnFilter), info.removedNodes.filter(columnFilter));
+                });
             },
 
             attached: function () {
@@ -905,25 +882,21 @@
                 if (this.customShortcuts) {
                     this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
                 }
+                //Initialising property column mappings
+                this.columnPropertiesMapper = (function (entity) {
+                    const result = [];
+                    for (let index = 0; index < this.columns.length; index++) {
+                        const column = this.columns[index];
+                        const entry = {
+                            dotNotation: column.property,
+                            value: this._getValue(entity, column.property, column.type)
+                        };
+                        result.push(entry);
+                    }
+                    return result;
+                }).bind(this);
                 this.async(function () {
                     this.keyEventTarget = this._getKeyEventTarget();
-                    //Initialising columns (property column mappings)
-                    this.allColumns = [];
-                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
-                    this.columns = this.allColumns;
-                    this._updateColumnsWidthProperties(false);
-                    this.columnPropertiesMapper = (function (entity) {
-                        const result = [];
-                        for (let index = 0; index < this.columns.length; index++) {
-                            const column = this.columns[index];
-                            const entry = {
-                                dotNotation: column.property,
-                                value: this._getValue(entity, column.property, column.type)
-                            };
-                            result.push(entry);
-                        }
-                        return result;
-                    }).bind(this);
                 }, 1)
             },
 
@@ -1430,9 +1403,30 @@
                 this._updateTableSizeAsync();
             },
 
-            _columnsChanged: function (columns, oldColumns) {
+            _columnDomChanged: function (addedColumns, removedColumns) {
+                const columnsCopy = this.columns.slice();
+                let columnsChanged = false;
+                removedColumns.forEach(col => {
+                    removeColumn(col, this.allColumns);
+                    columnsChanged = removeColumn(col, columnsCopy);
+                });
+                
+                addedColumns.forEach(col => {
+                    const index = this.allColumns.findIndex(column => column.property === col.property);
+                    if (index < 0) {
+                        this.allColumns.push(col);
+                        columnsCopy.push(col);
+                        columnsChanged = true;
+                    }
+                });
+                if (columnsChanged) {
+                    this._adjustColumns(columnsCopy.map(column => column.property));
+                }
+            },
+
+            _columnsChanged: function (newColumns, oldColumns) {
                 let summaryRowsCount = 0;
-                columns.forEach(function (item) {
+                newColumns.forEach(function (item) {
                     if (item.summary && item.summary.length > summaryRowsCount) {
                         summaryRowsCount = item.summary.length;
                     }
@@ -1442,7 +1436,7 @@
                 if (summaryRowsCount > 0) {
                     for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
                         const totalsRow = [];
-                        columns.forEach(function (item) {
+                        newColumns.forEach(function (item) {
                             if (item.summary && item.summary[summaryRowCounter]) {
                                 const total = item.summary[summaryRowCounter]
                                 totalsRow.push(true);
@@ -1458,12 +1452,10 @@
                 this._totalsRows = gridSummary;
             },
 
-            _updateColumnsWidthProperties: function (triggerResize) {
+            _updateColumnsWidthProperties: function () {
                 this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
                 this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-                if (triggerResize) {
-                    this._updateTableSizeAsync();
-                }
+                this._updateTableSizeAsync();
             },
 
             _updateTableSizeAsync: function () {
@@ -1513,9 +1505,9 @@
                 const target = e.target || e.srcElement;
                 this.selectAll(target.checked);
             },
-            
+
             /**
-             * Selects/unselects all entities. 
+             * Selects/unselects all entities.
              */
             selectAll: function (checked) {
                 if (this.egiModel) {
@@ -1539,7 +1531,7 @@
                     }
                 }
             },
-            
+
             /**
              * Event handler for selecting concrete entity
              */
@@ -1674,7 +1666,7 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -1683,7 +1675,7 @@
             _adjustColumns: function (newColumns) {
                 const resultantColumns = [];
                 newColumns.forEach(columnName => {
-                    const column = this.allColumns.find(item => item.property === (columnName === "this" ? "" : columnName));
+                    const column = this.allColumns.find(item => item.property === columnName);
                     if (column) {
                         resultantColumns.push(column);
                     }
@@ -1700,9 +1692,8 @@
                         }
                         this.fire("tg-egi-column-change", parameters);
                     }
-
                 }
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -2065,7 +2056,7 @@
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._updateColumnsWidthProperties(true);
+                        this._updateColumnsWidthProperties();
                         //scroll if needed.
                         if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;

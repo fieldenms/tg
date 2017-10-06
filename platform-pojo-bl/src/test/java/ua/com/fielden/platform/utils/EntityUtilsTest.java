@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -20,6 +21,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
@@ -238,6 +240,31 @@ public class EntityUtilsTest {
         assertTrue(equalsEx(new BigDecimal("0.00"), BigDecimal.ZERO));
         assertTrue(equalsEx(new BigDecimal("42.00").setScale(1, HALF_EVEN), new BigDecimal("42.01").setScale(1, HALF_EVEN)));
         assertFalse(equalsEx(new BigDecimal("42.00"), new BigDecimal("42.01")));
+    }
+
+    @Test
+    public void coalesce_returns_first_value_if_it_is_non_null() {
+        assertEquals("first", coalesce("first", "second"));
+    }
+
+    @Test
+    public void coalesce_returns_second_non_null_value_if_the_first_is_null() {
+        assertEquals("second", coalesce(null, "second"));
+    }
+
+    @Test
+    public void coalesce_returns_the_first_non_null_value() {
+        assertEquals("third", coalesce(null, null, "third"));
+    }
+    
+    @Test(expected = NoSuchElementException.class)
+    public void coalesce_throws_exception_if_all_values_are_null() {
+        coalesce(null, null, null, null);
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
+        coalesce(null, null, null /*this is an array argument*/);
     }
 
 }

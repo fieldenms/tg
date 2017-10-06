@@ -537,6 +537,9 @@
                         return master.save(); // saving promise
                     }
                     return Promise.resolve(ironRequest); // retrieval promise; resolves immediately
+                })
+                .catch(function (error) {
+                    console.error(error);
                 });
             }).bind(self);
         },

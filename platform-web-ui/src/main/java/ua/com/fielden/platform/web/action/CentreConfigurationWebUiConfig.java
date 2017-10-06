@@ -124,7 +124,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "    if (functionalEntity.get('sortingChanged') === true) {\n"
                                     + "        return self.retrieve().then(function () { self.run(true); });\n"
                                     + "    } else {\n"
-                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds'));\n"
+                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
                                     + "    }\n"
                                     + "");
                             }
