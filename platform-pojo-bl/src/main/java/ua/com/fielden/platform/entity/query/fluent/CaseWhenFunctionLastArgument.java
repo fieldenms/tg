@@ -10,18 +10,22 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 		extends ExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
 		implements ICaseWhenFunctionLastArgument<T, ET> {
 
-	protected abstract T nextForCaseWhenFunctionLastArgument();
+    protected CaseWhenFunctionLastArgument(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForCaseWhenFunctionLastArgument(final Tokens tokens);
 
 	@Override
-	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand() {
-		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>() {
+	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(tokens) {
 			@Override
-			protected ICaseWhenFunctionEnd<T> nextForExprOperand0() {
-				return new CaseWhenFunctionEnd<T>() {
+			protected ICaseWhenFunctionEnd<T> nextForExprOperand0(final Tokens tokens) {
+				return new CaseWhenFunctionEnd<T>(tokens) {
 
 					@Override
-					protected T nextForCaseWhenFunctionEnd() {
-						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument();
+					protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
+						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
 					}
 
 				};
@@ -31,12 +35,12 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand() {
-		return new CaseWhenFunctionWhen<T, ET>() {
+	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new CaseWhenFunctionWhen<T, ET>(tokens) {
 
 			@Override
-			protected T nextForCaseWhenFunctionEnd() {
-				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument();
+			protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
+				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
 			}
 
 		};

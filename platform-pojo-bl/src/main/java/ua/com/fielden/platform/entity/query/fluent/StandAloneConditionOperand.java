@@ -9,13 +9,17 @@ public final class StandAloneConditionOperand<ET extends AbstractEntity<?>> //
 		extends WhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> //
 		implements IStandAloneConditionOperand<ET> {
 
+    public StandAloneConditionOperand(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
-	protected IStandAloneConditionCompoundCondition<ET> nextForConditionalOperand() {
-		return new StandAloneConditionCompoundCondition<ET>();
+	protected IStandAloneConditionCompoundCondition<ET> nextForConditionalOperand(final Tokens tokens) {
+		return new StandAloneConditionCompoundCondition<ET>(tokens);
 	}
 
 	@Override
-	protected IStandAloneConditionComparisonOperator<ET> nextForSingleOperand() {
-		return new StandAloneConditionComparisonOperator<ET>();
+	protected IStandAloneConditionComparisonOperator<ET> nextForSingleOperand(final Tokens tokens) {
+		return new StandAloneConditionComparisonOperator<ET>(tokens);
 	}
 }

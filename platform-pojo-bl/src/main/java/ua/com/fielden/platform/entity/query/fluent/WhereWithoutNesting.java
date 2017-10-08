@@ -10,11 +10,15 @@ abstract class WhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 ex
 		extends ConditionalOperand<T1, T2, ET> //
 		implements IWhereWithoutNesting<T1, T2, ET> {
 
+    protected WhereWithoutNesting(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	public T2 condition(final ConditionModel condition) {
-		return copy(nextForConditionalOperand(), getTokens().cond(condition));
+		return nextForConditionalOperand(getTokens().cond(condition));
 	}
 
 	public T2 negatedCondition(final ConditionModel condition) {
-		return copy(nextForConditionalOperand(), getTokens().negatedCond(condition));
+		return nextForConditionalOperand(getTokens().negatedCond(condition));
 	}
 }

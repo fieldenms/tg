@@ -8,8 +8,12 @@ public final class StandAloneExpOperand //
 		extends YieldedItem<IStandAloneExprOperationAndClose, AbstractEntity<?>> //
 		implements IStandAloneExprOperand {
 
+    public StandAloneExpOperand(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
-	protected IStandAloneExprOperationAndClose nextForSingleOperand() {
-		return new StandAloneExpOperationAndClose();
+	protected IStandAloneExprOperationAndClose nextForSingleOperand(final Tokens tokens) {
+		return new StandAloneExpOperationAndClose(tokens);
 	}
 }

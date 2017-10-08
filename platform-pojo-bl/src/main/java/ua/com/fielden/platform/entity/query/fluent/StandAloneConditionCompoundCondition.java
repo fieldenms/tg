@@ -9,13 +9,17 @@ public final class StandAloneConditionCompoundCondition<ET extends AbstractEntit
 		extends LogicalCondition<IStandAloneConditionOperand<ET>> //
 		implements IStandAloneConditionCompoundCondition<ET> {
 
+    public StandAloneConditionCompoundCondition(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public ConditionModel model() {
 		return new ConditionModel(getTokens().getValues());
 	}
 
 	@Override
-	protected IStandAloneConditionOperand<ET> nextForLogicalCondition() {
-		return new StandAloneConditionOperand<ET>();
+	protected IStandAloneConditionOperand<ET> nextForLogicalCondition(final Tokens tokens) {
+		return new StandAloneConditionOperand<ET>(tokens);
 	}
 }

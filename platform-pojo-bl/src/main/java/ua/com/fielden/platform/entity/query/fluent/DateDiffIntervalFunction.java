@@ -8,44 +8,48 @@ abstract class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IDateDiffIntervalFunction<T, ET> {
 
-	protected abstract T nextForDateDiffIntervalFunction();
+    protected DateDiffIntervalFunction(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForDateDiffIntervalFunction(final Tokens tokens);
 
 	@Override
 	public IDateDiffFunction<T, ET> seconds() {
-		return copy(createDateDiffFunction(), getTokens().secondsInterval());
+		return createDateDiffFunction(getTokens().secondsInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> minutes() {
-		return copy(createDateDiffFunction(), getTokens().minutesInterval());
+		return createDateDiffFunction(getTokens().minutesInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> hours() {
-		return copy(createDateDiffFunction(), getTokens().hoursInterval());
+		return createDateDiffFunction(getTokens().hoursInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> days() {
-		return copy(createDateDiffFunction(), getTokens().daysInterval());
+		return createDateDiffFunction(getTokens().daysInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> months() {
-		return copy(createDateDiffFunction(), getTokens().monthsInterval());
+		return createDateDiffFunction(getTokens().monthsInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> years() {
-		return copy(createDateDiffFunction(), getTokens().yearsInterval());
+		return createDateDiffFunction(getTokens().yearsInterval());
 	}
 	
-	private DateDiffFunction<T, ET> createDateDiffFunction() {
-		return new DateDiffFunction<T, ET>() {
+	private DateDiffFunction<T, ET> createDateDiffFunction(final Tokens tokens) {
+		return new DateDiffFunction<T, ET>(tokens) {
 
 			@Override
-			protected T nextForDateDiffFunction() {
-				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction();
+			protected T nextForDateDiffFunction(final Tokens tokens) {
+				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction(tokens);
 			}
 
 		};

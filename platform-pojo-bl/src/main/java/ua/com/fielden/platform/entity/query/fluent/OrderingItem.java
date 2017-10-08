@@ -9,18 +9,22 @@ class OrderingItem //
 		extends ExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> //
 		implements IOrderingItem {
 
+    public OrderingItem(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
-	protected ISingleOperandOrderable nextForSingleOperand() {
-		return new SingleOperandOrderable();
+	protected ISingleOperandOrderable nextForSingleOperand(final Tokens tokens) {
+		return new SingleOperandOrderable(tokens);
 	}
 
 	@Override
-	protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand() {
-		return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>() {
+	protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(tokens) {
 
 			@Override
-			protected ISingleOperandOrderable nextForExprOperand0() {
-				return OrderingItem.this.nextForSingleOperand();
+			protected ISingleOperandOrderable nextForExprOperand0(final Tokens tokens) {
+				return OrderingItem.this.nextForSingleOperand(tokens);
 			}
 
 		};
@@ -28,6 +32,6 @@ class OrderingItem //
 
 	@Override
 	public ISingleOperandOrderable yield(final String yieldAlias) {
-		return copy(new SingleOperandOrderable(), getTokens().yield(yieldAlias));
+		return new SingleOperandOrderable(getTokens().yield(yieldAlias));
 	}
 }

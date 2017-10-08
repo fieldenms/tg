@@ -9,16 +9,20 @@ abstract class FirstYieldedItemAlias<T> //
 		extends AbstractQueryLink //
 		implements IFirstYieldedItemAlias<T> {
 
-	protected abstract T nextForFirstYieldedItemAlias();
+    protected FirstYieldedItemAlias(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForFirstYieldedItemAlias(final Tokens tokens);
 
 	@Override
 	public T as(final String alias) {
-		return copy(nextForFirstYieldedItemAlias(), getTokens().as(alias));
+		return nextForFirstYieldedItemAlias(getTokens().as(alias));
 	}
 
 	@Override
 	public T asRequired(final String alias) {
-		return copy(nextForFirstYieldedItemAlias(), getTokens().asRequired(alias));
+		return nextForFirstYieldedItemAlias(getTokens().asRequired(alias));
 	}
 
 	@Override

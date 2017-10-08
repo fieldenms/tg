@@ -9,27 +9,31 @@ abstract class FunctionWhere3<T, ET extends AbstractEntity<?>> //
 		extends ConditionalOperand<IFunctionComparisonOperator3<T, ET>, IFunctionCompoundCondition3<T, ET>, ET> //
 		implements IFunctionWhere3<T, ET> {
 
-	protected abstract T nextForFunctionWhere3();
+    protected FunctionWhere3(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForFunctionWhere3(final Tokens tokens);
 
 	@Override
-	protected IFunctionCompoundCondition3<T, ET> nextForConditionalOperand() {
-		return new FunctionCompoundCondition3<T, ET>() {
+	protected IFunctionCompoundCondition3<T, ET> nextForConditionalOperand(final Tokens tokens) {
+		return new FunctionCompoundCondition3<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionCompoundCondition3() {
-				return FunctionWhere3.this.nextForFunctionWhere3();
+			protected T nextForFunctionCompoundCondition3(final Tokens tokens) {
+				return FunctionWhere3.this.nextForFunctionWhere3(tokens);
 			}
 
 		};
 	}
 
 	@Override
-	protected IFunctionComparisonOperator3<T, ET> nextForSingleOperand() {
-		return new FunctionComparisonOperator3<T, ET>() {
+	protected IFunctionComparisonOperator3<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new FunctionComparisonOperator3<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionComparisonOperator3() {
-				return FunctionWhere3.this.nextForFunctionWhere3();
+			protected T nextForFunctionComparisonOperator3(final Tokens tokens) {
+				return FunctionWhere3.this.nextForFunctionWhere3(tokens);
 			}
 
 		};

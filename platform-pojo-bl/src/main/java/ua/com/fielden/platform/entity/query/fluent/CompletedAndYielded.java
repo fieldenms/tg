@@ -11,6 +11,10 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 		extends CompletedCommon<ET> //
 		implements ICompletedAndYielded<ET> {
 
+    protected CompletedAndYielded(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public EntityResultQueryModel<ET> model() {
 		return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(),	false);
@@ -23,23 +27,23 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 
 	@Override
 	public ISubsequentCompletedAndYielded<ET> yieldAll() {
-		return copy(new SubsequentCompletedAndYielded<ET>(), getTokens().yieldAll());
+		return new SubsequentCompletedAndYielded<ET>(getTokens().yieldAll());
 	}
 
 	@Override
 	public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-		return copy(createFunctionYieldedLastArgument(), getTokens().yield());
+		return createFunctionYieldedLastArgument(getTokens().yield());
 	}
 
-	private FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument() {
-		return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>() {
+	private FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument(final Tokens tokens) {
+		return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(tokens) {
 
 			@Override
-			protected IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument() {
-				return new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>() {
+			protected IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument(final Tokens tokens) {
+				return new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>(tokens) {
 					@Override
-					protected ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias() {
-						return new SubsequentCompletedAndYielded<ET>();
+					protected ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias(final Tokens tokens) {
+						return new SubsequentCompletedAndYielded<ET>(tokens);
 					}
 				};
 			}

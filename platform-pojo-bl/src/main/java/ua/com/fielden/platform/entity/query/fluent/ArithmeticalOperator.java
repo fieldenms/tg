@@ -6,30 +6,34 @@ abstract class ArithmeticalOperator<T> //
 		extends AbstractQueryLink //
 		implements IArithmeticalOperator<T> {
 
-	protected abstract T nextForArithmeticalOperator();
+    protected ArithmeticalOperator(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForArithmeticalOperator(final Tokens tokens);
 
 	@Override
 	public T add() {
-		return copy(nextForArithmeticalOperator(), getTokens().add());
+		return nextForArithmeticalOperator(getTokens().add());
 	}
 
 	@Override
 	public T sub() {
-		return copy(nextForArithmeticalOperator(), getTokens().subtract());
+		return nextForArithmeticalOperator(getTokens().subtract());
 	}
 
 	@Override
 	public T mult() {
-		return copy(nextForArithmeticalOperator(), getTokens().multiply());
+		return nextForArithmeticalOperator(getTokens().multiply());
 	}
 
 	@Override
 	public T div() {
-		return copy(nextForArithmeticalOperator(), getTokens().divide());
+		return nextForArithmeticalOperator(getTokens().divide());
 	}
 
 	@Override
 	public T mod() {
-		return copy(nextForArithmeticalOperator(), getTokens().modulo());
+		return nextForArithmeticalOperator(getTokens().modulo());
 	}
 }

@@ -7,6 +7,10 @@ final class OrderingItemCloseable //
 		extends OrderingItem //
 		implements IOrderingItemCloseable {
 
+    public OrderingItemCloseable(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public OrderingModel model() {
 		return new OrderingModel(getTokens().getValues());

@@ -8,8 +8,12 @@ class PlainJoin<ET extends AbstractEntity<?>> //
 		extends Completed<ET> //
 		implements IPlainJoin<ET> {
 
+    protected PlainJoin(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public IWhere0<ET> where() {
-		return copy(new Where0<ET>(), getTokens().where());
+		return new Where0<ET>(getTokens().where());
 	}
 }

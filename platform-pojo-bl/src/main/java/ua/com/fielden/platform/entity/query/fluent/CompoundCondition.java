@@ -6,10 +6,14 @@ abstract class CompoundCondition<T1, T2> //
 		extends LogicalCondition<T1> //
 		implements ICompoundCondition<T1, T2> {
 
-	protected abstract T2 nextForCompoundCondition();
+    protected CompoundCondition(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T2 nextForCompoundCondition(final Tokens tokens);
 
 	@Override
 	public T2 end() {
-		return copy(nextForCompoundCondition(), getTokens().endCondition());
+		return nextForCompoundCondition(getTokens().endCondition());
 	}
 }

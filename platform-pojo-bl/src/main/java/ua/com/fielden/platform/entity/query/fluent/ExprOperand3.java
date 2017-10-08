@@ -8,15 +8,19 @@ abstract class ExprOperand3<T, ET extends AbstractEntity<?>> //
 		extends SingleOperand<IExprOperationOrEnd3<T, ET>, ET> //
 		implements IExprOperand3<T, ET> {
 
-	protected abstract T nextForExprOperand3();
+    protected ExprOperand3(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForExprOperand3(final Tokens tokens);
 
 	@Override
-	protected IExprOperationOrEnd3<T, ET> nextForSingleOperand() {
-		return new ExprOperationOrEnd3<T, ET>() {
+	protected IExprOperationOrEnd3<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new ExprOperationOrEnd3<T, ET>(tokens) {
 
 			@Override
-			protected T nextForExprOperationOrEnd3() {
-				return ExprOperand3.this.nextForExprOperand3();
+			protected T nextForExprOperationOrEnd3(final Tokens tokens) {
+				return ExprOperand3.this.nextForExprOperand3(tokens);
 			}
 
 		};

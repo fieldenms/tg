@@ -7,10 +7,14 @@ abstract class ExprOperationOrEnd<T1, T2, ET extends AbstractEntity<?>> //
 		extends ArithmeticalOperator<T1> //
 		implements IExprOperationOrEnd<T1, T2, ET> {
 
-	protected abstract T2 nextForExprOperationOrEnd();
+    protected ExprOperationOrEnd(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T2 nextForExprOperationOrEnd(final Tokens tokens);
 
 	@Override
 	public T2 endExpr() {
-		return copy(nextForExprOperationOrEnd(), getTokens().endExpression());
+		return nextForExprOperationOrEnd(getTokens().endExpression());
 	}
 }

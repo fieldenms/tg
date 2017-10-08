@@ -130,7 +130,7 @@ import ua.com.fielden.platform.utils.Pair;
  * 
  */
 final class Tokens {
-    private final List<Pair<TokenCategory, Object>> values = new ArrayList<Pair<TokenCategory, Object>>();
+    private final List<Pair<TokenCategory, Object>> values = new ArrayList<>();
     private Class<? extends AbstractEntity<?>> mainSourceType;
     private boolean yieldAll;
     private final ValuePreprocessor valuePreprocessor;

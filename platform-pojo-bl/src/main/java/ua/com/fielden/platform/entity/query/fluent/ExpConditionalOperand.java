@@ -7,17 +7,21 @@ abstract class ExpConditionalOperand<T, ET extends AbstractEntity<?>> //
 		extends MultipleOperand<T, ET> //
 		implements IComparisonOperand<T, ET> {
 
+    protected ExpConditionalOperand(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public EntityQueryProgressiveInterfaces.IExprOperand0<T, ET> beginExpr() {
-		return copy(createExprOperand0(), getTokens().beginExpression());
+		return createExprOperand0(getTokens().beginExpression());
 	}
 
-	private ExprOperand0<T, ET> createExprOperand0() {
-		return new ExprOperand0<T, ET>() {
+	private ExprOperand0<T, ET> createExprOperand0(final Tokens tokens) {
+		return new ExprOperand0<T, ET>(tokens) {
 
 			@Override
-			protected T nextForExprOperand0() {
-				return ExpConditionalOperand.this.nextForSingleOperand();
+			protected T nextForExprOperand0(final Tokens tokens) {
+				return ExpConditionalOperand.this.nextForSingleOperand(tokens);
 			}
 
 		};

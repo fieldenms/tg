@@ -9,19 +9,23 @@ abstract class CaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> //
 		extends ExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET> //
 		implements ICaseWhenFunctionArgument<T, ET> {
 
-	protected abstract T nextForCaseWhenFunctionArgument();
+    protected CaseWhenFunctionArgument(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForCaseWhenFunctionArgument(final Tokens tokens);
 
 	@Override
-	protected IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET> nextForExprOperand() {
-		return new ExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>() {
+	protected IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>(tokens) {
 
 			@Override
-			protected ICaseWhenFunctionWhen<T, ET> nextForExprOperand0() {
-				return new CaseWhenFunctionWhen<T, ET>() {
+			protected ICaseWhenFunctionWhen<T, ET> nextForExprOperand0(final Tokens tokens) {
+				return new CaseWhenFunctionWhen<T, ET>(tokens) {
 
 					@Override
-					protected T nextForCaseWhenFunctionEnd() {
-						return CaseWhenFunctionArgument.this.nextForCaseWhenFunctionArgument();
+					protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
+						return CaseWhenFunctionArgument.this.nextForCaseWhenFunctionArgument(tokens);
 					}
 
 				};
@@ -31,12 +35,12 @@ abstract class CaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand() {
-		return new CaseWhenFunctionWhen<T, ET>() {
+	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new CaseWhenFunctionWhen<T, ET>(tokens) {
 
 			@Override
-			protected T nextForCaseWhenFunctionEnd() {
-				return CaseWhenFunctionArgument.this.nextForCaseWhenFunctionArgument();
+			protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
+				return CaseWhenFunctionArgument.this.nextForCaseWhenFunctionArgument(tokens);
 			}
 
 		};

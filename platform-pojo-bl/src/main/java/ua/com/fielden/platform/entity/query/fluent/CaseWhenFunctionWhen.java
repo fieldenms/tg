@@ -8,17 +8,21 @@ abstract class CaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> //
 		extends CaseWhenFunctionElseEnd<T, ET> //
 		implements ICaseWhenFunctionWhen<T, ET> {
 
+    protected CaseWhenFunctionWhen(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public IFunctionWhere0<T, ET> when() {
-		return copy(createFunctionWhere0(), getTokens().conditionStart());
+		return createFunctionWhere0(getTokens().conditionStart());
 	}
 	
-	private FunctionWhere0<T, ET> createFunctionWhere0() {
-		return new FunctionWhere0<T, ET>() {
+	private FunctionWhere0<T, ET> createFunctionWhere0(final Tokens tokens) {
+		return new FunctionWhere0<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionWhere0() {
-				return CaseWhenFunctionWhen.this.nextForCaseWhenFunctionEnd();
+			protected T nextForFunctionWhere0(final Tokens tokens) {
+				return CaseWhenFunctionWhen.this.nextForCaseWhenFunctionEnd(tokens);
 			}
 
 		};

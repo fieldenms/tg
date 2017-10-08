@@ -7,13 +7,17 @@ final class SingleOperandOrderable //
 		extends AbstractQueryLink //
 		implements ISingleOperandOrderable {
 
+    public SingleOperandOrderable(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public IOrderingItemCloseable asc() {
-		return copy(new OrderingItemCloseable(), getTokens().asc());
+		return new OrderingItemCloseable(getTokens().asc());
 	}
 
 	@Override
 	public IOrderingItemCloseable desc() {
-		return copy(new OrderingItemCloseable(), getTokens().desc());
+		return new OrderingItemCloseable(getTokens().desc());
 	}
 }

@@ -8,13 +8,17 @@ final class JoinCompoundCondition0<ET extends AbstractEntity<?>> //
 		extends Join<ET> //
 		implements IJoinCompoundCondition0<ET> {
 
-	@Override
+    public JoinCompoundCondition0(final Tokens tokens) {
+        super(tokens);
+    }
+    
+ 	@Override
 	public IJoinWhere0<ET> and() {
-		return copy(new JoinWhere0<ET>(), getTokens().and());
+		return new JoinWhere0<ET>(getTokens().and());
 	}
 
 	@Override
 	public IJoinWhere0<ET> or() {
-		return copy(new JoinWhere0<ET>(), getTokens().or());
+		return new JoinWhere0<ET>(getTokens().or());
 	}
 }

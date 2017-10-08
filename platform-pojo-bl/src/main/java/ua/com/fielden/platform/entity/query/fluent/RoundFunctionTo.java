@@ -6,10 +6,14 @@ abstract class RoundFunctionTo<T> //
 		extends AbstractQueryLink //
 		implements IRoundFunctionTo<T> {
 
-	protected abstract T nextForRoundFunctionTo();
+    protected RoundFunctionTo(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForRoundFunctionTo(final Tokens tokens);
 
 	@Override
 	public T to(final Integer precision) {
-		return copy(nextForRoundFunctionTo(), getTokens().to(precision));
+		return nextForRoundFunctionTo(getTokens().to(precision));
 	}
 }

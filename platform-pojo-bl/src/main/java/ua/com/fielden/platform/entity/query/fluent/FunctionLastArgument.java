@@ -8,22 +8,26 @@ abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> //
 		extends ExprOperand<T, IExprOperand0<T, ET>, ET> //
 		implements IFunctionLastArgument<T, ET> {
 
-	protected abstract T nextForFunctionLastArgument();
+    protected FunctionLastArgument(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForFunctionLastArgument(final Tokens tokens);
 
 	@Override
-	protected IExprOperand0<T, ET> nextForExprOperand() {
-		return new ExprOperand0<T, ET>() {
+	protected IExprOperand0<T, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<T, ET>(tokens) {
 
 			@Override
-			protected T nextForExprOperand0() {
-				return FunctionLastArgument.this.nextForFunctionLastArgument();
+			protected T nextForExprOperand0(final Tokens tokens) {
+				return FunctionLastArgument.this.nextForFunctionLastArgument(tokens);
 			}
 
 		};
 	}
 
 	@Override
-	protected T nextForSingleOperand() {
-		return nextForFunctionLastArgument();
+	protected T nextForSingleOperand(final Tokens tokens) {
+		return nextForFunctionLastArgument(tokens);
 	}
 }

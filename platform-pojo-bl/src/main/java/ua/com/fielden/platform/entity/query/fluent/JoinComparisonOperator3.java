@@ -8,8 +8,12 @@ final class JoinComparisonOperator3<ET extends AbstractEntity<?>> //
 		extends ComparisonOperator<IJoinCompoundCondition3<ET>, ET> //
 		implements IJoinComparisonOperator3<ET> {
 
+    public JoinComparisonOperator3(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
-	protected IJoinCompoundCondition3<ET> nextForComparisonOperator() {
-		return new JoinCompoundCondition3<ET>();
+	protected IJoinCompoundCondition3<ET> nextForComparisonOperator(final Tokens tokens) {
+		return new JoinCompoundCondition3<ET>(tokens);
 	}
 }

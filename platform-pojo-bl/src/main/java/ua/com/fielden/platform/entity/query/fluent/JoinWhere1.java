@@ -10,18 +10,22 @@ final class JoinWhere1<ET extends AbstractEntity<?>> //
 		extends Where<IJoinComparisonOperator1<ET>, IJoinCompoundCondition1<ET>, IJoinWhere2<ET>, ET> //
 		implements IJoinWhere1<ET> {
 
+    public JoinWhere1(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
-	protected IJoinWhere2<ET> nextForWhere() {
-		return new JoinWhere2<ET>();
+	protected IJoinWhere2<ET> nextForWhere(final Tokens tokens) {
+		return new JoinWhere2<ET>(tokens);
 	}
 
 	@Override
-	protected IJoinCompoundCondition1<ET> nextForConditionalOperand() {
-		return new JoinCompoundCondition1<ET>();
+	protected IJoinCompoundCondition1<ET> nextForConditionalOperand(final Tokens tokens) {
+		return new JoinCompoundCondition1<ET>(tokens);
 	}
 
 	@Override
-	protected IJoinComparisonOperator1<ET> nextForSingleOperand() {
-		return new JoinComparisonOperator1<ET>();
+	protected IJoinComparisonOperator1<ET> nextForSingleOperand(final Tokens tokens) {
+		return new JoinComparisonOperator1<ET>(tokens);
 	}
 }

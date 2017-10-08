@@ -9,6 +9,10 @@ class CompletedCommon<ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements ICompletedCommon<ET> {
 
+    protected CompletedCommon(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
 		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());

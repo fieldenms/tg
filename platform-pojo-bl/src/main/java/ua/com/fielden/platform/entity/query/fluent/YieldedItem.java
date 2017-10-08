@@ -8,48 +8,52 @@ abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
 		extends SingleOperand<T, ET> //
 		implements IYieldOperand<T, ET> {
 
+    public YieldedItem(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public IFunctionLastArgument<T, ET> maxOf() {
-		return copy(createFunctionLastArgument(), getTokens().maxOf());
+		return createFunctionLastArgument(getTokens().maxOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> minOf() {
-		return copy(createFunctionLastArgument(), getTokens().minOf());
+		return createFunctionLastArgument(getTokens().minOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> sumOf() {
-		return copy(createFunctionLastArgument(), getTokens().sumOf());
+		return createFunctionLastArgument(getTokens().sumOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> countOf() {
-		return copy(createFunctionLastArgument(), getTokens().countOf());
+		return createFunctionLastArgument(getTokens().countOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> avgOf() {
-		return copy(createFunctionLastArgument(), getTokens().averageOf());
+		return createFunctionLastArgument(getTokens().averageOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> sumOfDistinct() {
-		return copy(createFunctionLastArgument(), getTokens().sumOfDistinct());
+		return createFunctionLastArgument(getTokens().sumOfDistinct());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> countOfDistinct() {
-		return copy(createFunctionLastArgument(), getTokens().countOfDistinct());
+		return createFunctionLastArgument(getTokens().countOfDistinct());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> avgOfDistinct() {
-		return copy(createFunctionLastArgument(), getTokens().averageOfDistinct());
+		return createFunctionLastArgument(getTokens().averageOfDistinct());
 	}
 
 	@Override
 	public T countAll() {
-		return copy(nextForSingleOperand(), getTokens().countAll());
+		return nextForSingleOperand(getTokens().countAll());
 	}
 }

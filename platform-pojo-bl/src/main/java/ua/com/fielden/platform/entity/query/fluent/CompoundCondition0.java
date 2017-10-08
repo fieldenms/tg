@@ -8,13 +8,17 @@ final class CompoundCondition0<ET extends AbstractEntity<?>> //
 		extends Completed<ET> //
 		implements ICompoundCondition0<ET> {
 
+    public CompoundCondition0(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public IWhere0<ET> and() {
-		return copy(new Where0<ET>(), getTokens().and());
+		return new Where0<ET>(getTokens().and());
 	}
 
 	@Override
 	public IWhere0<ET> or() {
-		return copy(new Where0<ET>(), getTokens().or());
+		return new Where0<ET>(getTokens().or());
 	}
 }

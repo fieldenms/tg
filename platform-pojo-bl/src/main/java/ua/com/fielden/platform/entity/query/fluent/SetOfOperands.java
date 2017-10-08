@@ -9,32 +9,36 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
 		extends SingleOperand<T, ET> //
 		implements IComparisonSetOperand<T> {
 
+    protected SetOfOperands(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public <E extends Object> T values(final E... values) {
 		if (values.length == 0) {
 			throw new EqlException("At least one value is expected when calling [values].");
 		} else {
-			return copy(nextForSingleOperand(), getTokens().setOfValues(values));
+			return nextForSingleOperand(getTokens().setOfValues(values));
 		}
 	}
 
 	@Override
 	public T props(final String... properties) {
-		return copy(nextForSingleOperand(), getTokens().setOfProps(properties));
+		return nextForSingleOperand(getTokens().setOfProps(properties));
 	}
 
 	@Override
 	public T params(final String... paramNames) {
-		return copy(nextForSingleOperand(), getTokens().setOfParams(paramNames));
+		return nextForSingleOperand(getTokens().setOfParams(paramNames));
 	}
 
 	@Override
 	public T iParams(final String... paramNames) {
-		return copy(nextForSingleOperand(), getTokens().setOfIParams(paramNames));
+		return nextForSingleOperand(getTokens().setOfIParams(paramNames));
 	}
 
 	@Override
 	public T model(final SingleResultQueryModel model) {
-		return copy(nextForSingleOperand(), getTokens().model(model));
+		return nextForSingleOperand(getTokens().model(model));
 	}
 }

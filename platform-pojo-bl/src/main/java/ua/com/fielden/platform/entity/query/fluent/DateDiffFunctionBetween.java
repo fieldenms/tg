@@ -8,19 +8,23 @@ abstract class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IDateDiffFunctionBetween<T, ET> {
 
-	protected abstract T nextForDateDiffFunctionBetween();
+    protected DateDiffFunctionBetween(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForDateDiffFunctionBetween(final Tokens tokens);
 
 	@Override
 	public IFunctionLastArgument<T, ET> and() {
-		return copy(createFunctionLastArgument(), getTokens());
+		return createFunctionLastArgument(getTokens());
 	}
 
-	private FunctionLastArgument<T, ET> createFunctionLastArgument() {
-		return new FunctionLastArgument<T, ET>() {
+	private FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
+		return new FunctionLastArgument<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionLastArgument() {
-				return DateDiffFunctionBetween.this.nextForDateDiffFunctionBetween();
+			protected T nextForFunctionLastArgument(final Tokens tokens) {
+				return DateDiffFunctionBetween.this.nextForDateDiffFunctionBetween(tokens);
 			}
 
 		};

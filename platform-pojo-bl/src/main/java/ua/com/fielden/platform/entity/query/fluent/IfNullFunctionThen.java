@@ -8,19 +8,23 @@ abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IIfNullFunctionThen<T, ET> {
 
-	protected abstract T nextForIfNullFunctionThen();
+    protected IfNullFunctionThen(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForIfNullFunctionThen(final Tokens tokens);
 
 	@Override
 	public IFunctionLastArgument<T, ET> then() {
-		return copy(createFunctionLastArgument(), getTokens());
+		return createFunctionLastArgument(getTokens());
 	}
 
-	private FunctionLastArgument<T, ET> createFunctionLastArgument() {
-		return new FunctionLastArgument<T, ET>() {
+	private FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
+		return new FunctionLastArgument<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionLastArgument() {
-				return IfNullFunctionThen.this.nextForIfNullFunctionThen();
+			protected T nextForFunctionLastArgument(final Tokens tokens) {
+				return IfNullFunctionThen.this.nextForIfNullFunctionThen(tokens);
 			}
 
 		};

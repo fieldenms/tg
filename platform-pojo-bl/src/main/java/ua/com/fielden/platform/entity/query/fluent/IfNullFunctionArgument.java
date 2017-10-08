@@ -9,19 +9,23 @@ abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
 		extends ExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> //
 		implements IIfNullFunctionArgument<T, ET> {
 
-	protected abstract T nextForIfNullFunctionArgument();
+    protected IfNullFunctionArgument(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForIfNullFunctionArgument(final Tokens tokens);
 
 	@Override
-	protected IExprOperand0<IIfNullFunctionThen<T, ET>, ET> nextForExprOperand() {
-		return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>() {
+	protected IExprOperand0<IIfNullFunctionThen<T, ET>, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<IIfNullFunctionThen<T, ET>, ET>(tokens) {
 
 			@Override
-			protected IIfNullFunctionThen<T, ET> nextForExprOperand0() {
-				return new IfNullFunctionThen<T, ET>() {
+			protected IIfNullFunctionThen<T, ET> nextForExprOperand0(final Tokens tokens) {
+				return new IfNullFunctionThen<T, ET>(tokens) {
 
 					@Override
-					protected T nextForIfNullFunctionThen() {
-						return IfNullFunctionArgument.this.nextForIfNullFunctionArgument();
+					protected T nextForIfNullFunctionThen(final Tokens tokens) {
+						return IfNullFunctionArgument.this.nextForIfNullFunctionArgument(tokens);
 					}
 
 				};
@@ -31,12 +35,12 @@ abstract class IfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected IIfNullFunctionThen<T, ET> nextForSingleOperand() {
-		return new IfNullFunctionThen<T, ET>() {
+	protected IIfNullFunctionThen<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new IfNullFunctionThen<T, ET>(tokens) {
 
 			@Override
-			protected T nextForIfNullFunctionThen() {
-				return IfNullFunctionArgument.this.nextForIfNullFunctionArgument();
+			protected T nextForIfNullFunctionThen(final Tokens tokens) {
+				return IfNullFunctionArgument.this.nextForIfNullFunctionArgument(tokens);
 			}
 
 		};

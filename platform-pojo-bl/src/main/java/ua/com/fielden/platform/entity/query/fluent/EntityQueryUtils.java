@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static ua.com.fielden.platform.entity.query.fluent.AbstractQueryLink.copy;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -16,31 +14,31 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
 	public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
-		return copy(new FromAlias<T>(), (new Tokens()).from(entityType));
+		return new FromAlias<T>(new Tokens().from(entityType));
 	}
 
 	public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
-		return copy(new FromAlias<T>(), (new Tokens()).from(sourceQueryModels));
+		return new FromAlias<T>(new Tokens().from(sourceQueryModels));
 	}
 
 	public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
-		return copy(new FromAlias<EntityAggregates>(), (new Tokens()).from(sourceQueryModels));
+		return new FromAlias<EntityAggregates>(new Tokens().from(sourceQueryModels));
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static IStandAloneExprOperand expr() {
-		return copy(new StandAloneExpOperand(), new Tokens());
+		return new StandAloneExpOperand(new Tokens());
 	}
 
 	public static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> cond() {
-		return copy(new StandAloneConditionOperand<>(), new Tokens());
+		return new StandAloneConditionOperand<>(new Tokens());
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static IOrderingItem orderBy() {
-		return copy(new OrderingItem(), new Tokens());
+		return new OrderingItem(new Tokens());
 	}
 
 	public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(

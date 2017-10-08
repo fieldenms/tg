@@ -15,26 +15,30 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements ISingleOperand<T, ET> {
 
-	protected abstract T nextForSingleOperand();
+    protected SingleOperand(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForSingleOperand(final Tokens tokens);
 
 	@Override
 	public T val(final Object value) {
-		return copy(nextForSingleOperand(), getTokens().val(value));
+		return nextForSingleOperand(getTokens().val(value));
 	}
 
 	@Override
 	public T iVal(final Object value) {
-		return copy(nextForSingleOperand(), getTokens().iVal(value));
+		return nextForSingleOperand(getTokens().iVal(value));
 	}
 
 	@Override
 	public T model(final SingleResultQueryModel<?> model) {
-		return copy(nextForSingleOperand(), getTokens().model(model));
+		return nextForSingleOperand(getTokens().model(model));
 	}
 
 	@Override
 	public T param(final String paramName) {
-		return copy(nextForSingleOperand(), getTokens().param(paramName));
+		return nextForSingleOperand(getTokens().param(paramName));
 	}
 
 	@Override
@@ -44,7 +48,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T iParam(final String paramName) {
-		return copy(nextForSingleOperand(), getTokens().iParam(paramName));
+		return nextForSingleOperand(getTokens().iParam(paramName));
 	}
 
 	@Override
@@ -54,7 +58,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T prop(final String propertyName) {
-		return copy(nextForSingleOperand(), getTokens().prop(propertyName));
+		return nextForSingleOperand(getTokens().prop(propertyName));
 	}
 
 	@Override
@@ -64,7 +68,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T extProp(final String propertyName) {
-		return copy(nextForSingleOperand(), getTokens().extProp(propertyName));
+		return nextForSingleOperand(getTokens().extProp(propertyName));
 	}
 
 	@Override
@@ -74,150 +78,150 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T expr(final ExpressionModel expr) {
-		return copy(nextForSingleOperand(), getTokens().expr(expr));
+		return nextForSingleOperand(getTokens().expr(expr));
 	}
 
 	@Override
 	public IDateDiffIntervalFunction<T, ET> count() {
-		return copy(createDateDiffIntervalFunction(), getTokens().countDateIntervalFunction());
+		return createDateDiffIntervalFunction(getTokens().countDateIntervalFunction());
 	}
 
 	@Override
 	public IFunctionWhere0<T, ET> caseWhen() {
-		return copy(createFunctionWhere0(), getTokens().caseWhenFunction());
+		return createFunctionWhere0(getTokens().caseWhenFunction());
 	}
 
 	@Override
 	public IIfNullFunctionArgument<T, ET> ifNull() {
-		return copy(createIfNullFunctionArgument(), getTokens().ifNull());
+		return createIfNullFunctionArgument(getTokens().ifNull());
 	}
 
 	@Override
 	public IConcatFunctionArgument<T, ET> concat() {
-		return copy(createConcatFunctionArgument(), getTokens().concat());
+		return createConcatFunctionArgument(getTokens().concat());
 	}
 
 	@Override
 	public IRoundFunctionArgument<T, ET> round() {
-		return copy(createRoundFunctionArgument(), getTokens().round());
+		return createRoundFunctionArgument(getTokens().round());
 	}
 
 	@Override
 	public T now() {
-		return copy(nextForSingleOperand(), getTokens().now());
+		return nextForSingleOperand(getTokens().now());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> upperCase() {
-		return copy(createFunctionLastArgument(), getTokens().uppercase());
+		return createFunctionLastArgument(getTokens().uppercase());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> lowerCase() {
-		return copy(createFunctionLastArgument(), getTokens().lowercase());
+		return createFunctionLastArgument(getTokens().lowercase());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> secondOf() {
-		return copy(createFunctionLastArgument(), getTokens().secondOf());
+		return createFunctionLastArgument(getTokens().secondOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> minuteOf() {
-		return copy(createFunctionLastArgument(), getTokens().minuteOf());
+		return createFunctionLastArgument(getTokens().minuteOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> hourOf() {
-		return copy(createFunctionLastArgument(), getTokens().hourOf());
+		return createFunctionLastArgument(getTokens().hourOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> dayOf() {
-		return copy(createFunctionLastArgument(), getTokens().dayOf());
+		return createFunctionLastArgument(getTokens().dayOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> monthOf() {
-		return copy(createFunctionLastArgument(), getTokens().monthOf());
+		return createFunctionLastArgument(getTokens().monthOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> yearOf() {
-		return copy(createFunctionLastArgument(), getTokens().yearOf());
+		return createFunctionLastArgument(getTokens().yearOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> dateOf() {
-		return copy(createFunctionLastArgument(), getTokens().dateOf());
+		return createFunctionLastArgument(getTokens().dateOf());
 	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> absOf() {
-		return copy(createFunctionLastArgument(), getTokens().absOf());
+		return createFunctionLastArgument(getTokens().absOf());
 	}
 	
-	private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction() {
-		return new DateDiffIntervalFunction<T, ET>() {
+	private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction(final Tokens tokens) {
+		return new DateDiffIntervalFunction<T, ET>(tokens) {
 
 			@Override
-			protected T nextForDateDiffIntervalFunction() {
-				return SingleOperand.this.nextForSingleOperand();
+			protected T nextForDateDiffIntervalFunction(final Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
 			}
 
 		};
 	}
 
-	private FunctionWhere0<T, ET> createFunctionWhere0() {
-		return new FunctionWhere0<T, ET>() {
+	private FunctionWhere0<T, ET> createFunctionWhere0(final Tokens tokens) {
+		return new FunctionWhere0<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionWhere0() {
-				return SingleOperand.this.nextForSingleOperand();
+			protected T nextForFunctionWhere0(final Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
 			}
 
 		};
 	}
 
-	private IfNullFunctionArgument<T, ET> createIfNullFunctionArgument() {
-		return new IfNullFunctionArgument<T, ET>() {
+	private IfNullFunctionArgument<T, ET> createIfNullFunctionArgument(final Tokens tokens) {
+		return new IfNullFunctionArgument<T, ET>(tokens) {
 
 			@Override
-			protected T nextForIfNullFunctionArgument() {
-				return SingleOperand.this.nextForSingleOperand();
+			protected T nextForIfNullFunctionArgument(final Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
 			}
 
 		};
 	}
 
-	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument() {
-		return new ConcatFunctionArgument<T, ET>() {
+	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument(final Tokens tokens) {
+		return new ConcatFunctionArgument<T, ET>(tokens) {
 
 			@Override
-			protected T nextForConcatFunctionArgument() {
-				return SingleOperand.this.nextForSingleOperand();
+			protected T nextForConcatFunctionArgument(final Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
 			}
 
 		};
 	}
 
-	private RoundFunctionArgument<T, ET> createRoundFunctionArgument() {
-		return new RoundFunctionArgument<T, ET>() {
+	private RoundFunctionArgument<T, ET> createRoundFunctionArgument(final Tokens tokens) {
+		return new RoundFunctionArgument<T, ET>(tokens) {
 
 			@Override
-			protected T nextForRoundFunctionArgument() {
-				return SingleOperand.this.nextForSingleOperand();
+			protected T nextForRoundFunctionArgument(final Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
 			}
 
 		};
 	}
 
-	protected FunctionLastArgument<T, ET> createFunctionLastArgument() {
-		return new FunctionLastArgument<T, ET>() {
+	protected FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
+		return new FunctionLastArgument<T, ET>(tokens) {
 
 			@Override
-			protected T nextForFunctionLastArgument() {
-				return SingleOperand.this.nextForSingleOperand();
+			protected T nextForFunctionLastArgument(final Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
 			}
 		};
 	}

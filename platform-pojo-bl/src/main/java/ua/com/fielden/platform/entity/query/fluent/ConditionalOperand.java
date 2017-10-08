@@ -11,35 +11,39 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
 		extends ExpConditionalOperand<T1, ET> //
 		implements IComparisonOperand<T1, ET>, IExistenceOperator<T2> {
 
-	protected abstract T2 nextForConditionalOperand();
+    protected ConditionalOperand(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T2 nextForConditionalOperand(final Tokens tokens);
 
 	@Override
 	public T2 exists(final QueryModel subQuery) {
-		return copy(nextForConditionalOperand(), getTokens().exists(false, subQuery));
+		return nextForConditionalOperand(getTokens().exists(false, subQuery));
 	}
 
 	@Override
 	public T2 notExists(final QueryModel subQuery) {
-		return copy(nextForConditionalOperand(), getTokens().exists(true, subQuery));
+		return nextForConditionalOperand(getTokens().exists(true, subQuery));
 	}
 
 	@Override
 	public T2 existsAnyOf(final QueryModel... subQueries) {
-		return copy(nextForConditionalOperand(), getTokens().existsAnyOf(false, subQueries));
+		return nextForConditionalOperand(getTokens().existsAnyOf(false, subQueries));
 	}
 
 	@Override
 	public T2 notExistsAnyOf(final QueryModel... subQueries) {
-		return copy(nextForConditionalOperand(), getTokens().existsAnyOf(true, subQueries));
+		return nextForConditionalOperand(getTokens().existsAnyOf(true, subQueries));
 	}
 
 	@Override
 	public T2 existsAllOf(final QueryModel... subQueries) {
-		return copy(nextForConditionalOperand(), getTokens().existsAllOf(false, subQueries));
+		return nextForConditionalOperand(getTokens().existsAllOf(false, subQueries));
 	}
 
 	@Override
 	public T2 notExistsAllOf(final QueryModel... subQueries) {
-		return copy(nextForConditionalOperand(), getTokens().existsAllOf(true, subQueries));
+		return nextForConditionalOperand(getTokens().existsAllOf(true, subQueries));
 	}
 }

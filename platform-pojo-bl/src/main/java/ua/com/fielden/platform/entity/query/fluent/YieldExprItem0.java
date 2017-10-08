@@ -9,26 +9,30 @@ abstract class YieldExprItem0<T, ET extends AbstractEntity<?>> //
 		extends YieldExprOperand<IYieldExprOperationOrEnd0<T, ET>, IYieldExprItem1<T, ET>, ET> //
 		implements IYieldExprItem0<T, ET> {
 
-	protected abstract T nextForYieldExprItem0();
+    protected YieldExprItem0(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForYieldExprItem0(final Tokens tokens);
 
 	@Override
-	protected IYieldExprItem1<T, ET> nextForYieldExprOperand() {
-		return new YieldExprItem1<T, ET>() {
+	protected IYieldExprItem1<T, ET> nextForYieldExprOperand(final Tokens tokens) {
+		return new YieldExprItem1<T, ET>(tokens) {
 
 			@Override
-			protected T nextForYieldExprItem1() {
-				return YieldExprItem0.this.nextForYieldExprItem0();
+			protected T nextForYieldExprItem1(final Tokens tokens) {
+				return YieldExprItem0.this.nextForYieldExprItem0(tokens);
 			}
 
 		};
 	}
 
 	@Override
-	protected IYieldExprOperationOrEnd0<T, ET> nextForSingleOperand() {
-		return new YieldExprOperationOrEnd0<T, ET>() {
+	protected IYieldExprOperationOrEnd0<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new YieldExprOperationOrEnd0<T, ET>(tokens) {
 			@Override
-			protected T nextForYieldExprOperationOrEnd0() {
-				return YieldExprItem0.this.nextForYieldExprItem0();
+			protected T nextForYieldExprOperationOrEnd0(final Tokens tokens) {
+				return YieldExprItem0.this.nextForYieldExprItem0(tokens);
 			}
 
 		};

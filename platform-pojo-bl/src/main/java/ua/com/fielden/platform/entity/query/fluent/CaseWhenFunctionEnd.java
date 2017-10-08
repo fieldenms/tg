@@ -6,30 +6,34 @@ abstract class CaseWhenFunctionEnd<T> //
 		extends AbstractQueryLink //
 		implements ICaseWhenFunctionEnd<T> {
 
-	protected abstract T nextForCaseWhenFunctionEnd();
+    protected CaseWhenFunctionEnd(final Tokens tokens) {
+        super(tokens);
+    }
+    
+	protected abstract T nextForCaseWhenFunctionEnd(final Tokens tokens);
 
 	@Override
 	public T end() {
-		return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction());
+		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction());
 	}
 
 	@Override
 	public T endAsInt() {
-		return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsInteger.INSTANCE));
+		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsInteger.INSTANCE));
 	}
 
 	@Override
 	public T endAsBool() {
-		return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsBoolean.INSTANCE));
+		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsBoolean.INSTANCE));
 	}
 
 	@Override
 	public T endAsStr(final int length) {
-		return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsString.getInstance(length)));
+		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsString.getInstance(length)));
 	}
 
 	@Override
 	public T endAsDecimal(final int presicion, final int scale) {
-		return copy(nextForCaseWhenFunctionEnd(), getTokens().endOfFunction(TypeCastAsDecimal.getInstance(presicion, scale)));
+		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsDecimal.getInstance(presicion, scale)));
 	}
 }

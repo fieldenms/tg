@@ -8,8 +8,12 @@ final class FromAlias<ET extends AbstractEntity<?>> //
 		extends Join<ET> //
 		implements IFromAlias<ET> {
 
+    public FromAlias(final Tokens tokens) {
+        super(tokens);
+    }
+    
 	@Override
 	public IJoin<ET> as(final String alias) {
-		return copy(new Join<ET>(), getTokens().joinAlias(alias));
+		return new Join<ET>(getTokens().joinAlias(alias));
 	}
 }
