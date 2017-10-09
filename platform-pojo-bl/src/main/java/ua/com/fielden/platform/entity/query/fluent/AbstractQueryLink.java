@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 abstract class AbstractQueryLink {
 
@@ -11,7 +14,7 @@ abstract class AbstractQueryLink {
             throw new EqlException("Invalid argument -- tokens should not be null.");
         }
 
-        this.tokens = tokens; // TODO may need to clone...
+        this.tokens = tokens;
     }
 
 	public Tokens getTokens() {
@@ -39,10 +42,6 @@ abstract class AbstractQueryLink {
 		}
 		
 		final AbstractQueryLink that = (AbstractQueryLink) obj;
-		if (tokens == null && that.tokens != null || !tokens.equals(that.tokens)) {
-		    return false;
-		}
-		
-		return true;
+		return equalsEx(this.tokens, that.tokens);
 	}
 }
