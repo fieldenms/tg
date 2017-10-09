@@ -103,6 +103,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SE
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -685,25 +686,18 @@ final class Tokens {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Tokens other = (Tokens) obj;
-		if (mainSourceType == null) {
-			if (other.mainSourceType != null)
-				return false;
-		} else if (!mainSourceType.equals(other.mainSourceType))
-			return false;
-		if (values == null) {
-			if (other.values != null)
-				return false;
-		} else if (!values.equals(other.values))
-			return false;
-		if (yieldAll != other.yieldAll)
-			return false;
-		return true;
+		}
+		
+		if (!(obj instanceof Tokens)) {
+		    return false;
+		}
+		
+		final Tokens that = (Tokens) obj;
+		
+		return equalsEx(this.mainSourceType, that.mainSourceType) &&
+		       equalsEx(this.yieldAll, that.yieldAll) &&
+		       equalsEx(this.values, that.values);
 	}
 }
