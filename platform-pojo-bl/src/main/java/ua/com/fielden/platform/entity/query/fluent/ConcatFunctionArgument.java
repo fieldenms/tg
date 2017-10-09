@@ -5,21 +5,44 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-final class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> implements IConcatFunctionArgument<T, ET> {
-    T parent;
+abstract class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> //
+		extends ExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> //
+		implements IConcatFunctionArgument<T, ET> {
 
-    ConcatFunctionArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected ConcatFunctionArgument(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForConcatFunctionArgument(final Tokens tokens);
 
-    @Override
-    IExprOperand0<IConcatFunctionWith<T, ET>, ET> getParent2() {
-        return new ExprOperand0<IConcatFunctionWith<T, ET>, ET>(getTokens(), new ConcatFunctionWith<T, ET>(getTokens(), parent));
-    }
+	@Override
+	protected IExprOperand0<IConcatFunctionWith<T, ET>, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<IConcatFunctionWith<T, ET>, ET>(tokens) {
 
-    @Override
-    IConcatFunctionWith<T, ET> getParent() {
-        return new ConcatFunctionWith<T, ET>(getTokens(), parent);
-    }
+			@Override
+			protected IConcatFunctionWith<T, ET> nextForExprOperand0(final Tokens tokens) {
+				return new ConcatFunctionWith<T, ET>(tokens) {
+
+					@Override
+					protected T nextForConcatFunctionWith(final Tokens tokens) {
+						return ConcatFunctionArgument.this.nextForConcatFunctionArgument(tokens);
+					}
+
+				};
+			}
+
+		};
+	}
+
+	@Override
+	protected IConcatFunctionWith<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new ConcatFunctionWith<T, ET>(tokens) {
+
+			@Override
+			protected T nextForConcatFunctionWith(final Tokens tokens) {
+				return ConcatFunctionArgument.this.nextForConcatFunctionArgument(tokens);
+			}
+
+		};
+	}
 }

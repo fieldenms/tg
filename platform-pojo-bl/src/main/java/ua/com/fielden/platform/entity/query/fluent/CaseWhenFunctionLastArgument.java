@@ -6,21 +6,43 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-final class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> implements ICaseWhenFunctionLastArgument<T, ET> {
-    T parent;
+abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
+		extends ExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
+		implements ICaseWhenFunctionLastArgument<T, ET> {
 
-    CaseWhenFunctionLastArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected CaseWhenFunctionLastArgument(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForCaseWhenFunctionLastArgument(final Tokens tokens);
 
-    @Override
-    IExprOperand0<ICaseWhenFunctionEnd<T>, ET> getParent2() {
-        return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(getTokens(), new CaseWhenFunctionEnd<T>(getTokens(), parent));
-    }
+	@Override
+	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(tokens) {
+			@Override
+			protected ICaseWhenFunctionEnd<T> nextForExprOperand0(final Tokens tokens) {
+				return new CaseWhenFunctionEnd<T>(tokens) {
 
-    @Override
-    ICaseWhenFunctionWhen<T, ET> getParent() {
-        return new CaseWhenFunctionWhen<T, ET>(getTokens(), parent);
-    }
+					@Override
+					protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
+						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
+					}
+
+				};
+			}
+
+		};
+	}
+
+	@Override
+	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new CaseWhenFunctionWhen<T, ET>(tokens) {
+
+			@Override
+			protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
+				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
+			}
+
+		};
+	}
 }

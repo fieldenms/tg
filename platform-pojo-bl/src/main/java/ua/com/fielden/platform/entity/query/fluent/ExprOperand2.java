@@ -5,21 +5,37 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand3;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperationOrEnd2;
 
-final class ExprOperand2<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IExprOperationOrEnd2<T, ET>, IExprOperand3<T, ET>, ET> implements IExprOperand2<T, ET> {
-    T parent;
+abstract class ExprOperand2<T, ET extends AbstractEntity<?>> //
+		extends ExprOperand<IExprOperationOrEnd2<T, ET>, IExprOperand3<T, ET>, ET> //
+		implements IExprOperand2<T, ET> {
 
-    ExprOperand2(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    public ExprOperand2(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForExprOperand2(final Tokens tokens);
 
-    @Override
-    IExprOperand3<T, ET> getParent2() {
-        return new ExprOperand3<T, ET>(getTokens(), parent);
-    }
+	@Override
+	protected IExprOperand3<T, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand3<T, ET>(tokens) {
 
-    @Override
-    IExprOperationOrEnd2<T, ET> getParent() {
-        return new ExprOperationOrEnd2<T, ET>(getTokens(), parent);
-    }
+			@Override
+			protected T nextForExprOperand3(final Tokens tokens) {
+				return ExprOperand2.this.nextForExprOperand2(tokens);
+			}
+
+		};
+	}
+
+	@Override
+	protected IExprOperationOrEnd2<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new ExprOperationOrEnd2<T, ET>(tokens) {
+
+			@Override
+			protected T nextForExprOperationOrEnd2(final Tokens tokens) {
+				return ExprOperand2.this.nextForExprOperand2(tokens);
+			}
+
+		};
+	}
 }

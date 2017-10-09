@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 
 public class CompoundSource implements IPropertyCollector {
     private final ISource source;

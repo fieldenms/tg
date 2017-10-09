@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Conditions;
@@ -17,7 +19,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Sources;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
-import static org.junit.Assert.assertEquals;
 
 public class BaseEntQueryCompositionTCase extends BaseEntQueryTCase {
     protected final String mercLike = "MERC%";

@@ -4,14 +4,27 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionElseEnd;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionLastArgument;
 
-public class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> extends CaseWhenFunctionEnd<T> implements ICaseWhenFunctionElseEnd<T, ET> {
+abstract class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
+		extends CaseWhenFunctionEnd<T> //
+		implements ICaseWhenFunctionElseEnd<T, ET> {
 
-    CaseWhenFunctionElseEnd(final Tokens queryTokens, final T parent) {
-        super(queryTokens, parent);
+    protected CaseWhenFunctionElseEnd(final Tokens tokens) {
+        super(tokens);
     }
+    
+	@Override
+	public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
+		return createCaseWhenFunctionLastArgument(getTokens());
+	}
 
-    @Override
-    public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
-        return new CaseWhenFunctionLastArgument<T, ET>(getTokens(), parent);
-    }
+	private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument(final Tokens tokens) {
+		return new CaseWhenFunctionLastArgument<T, ET>(tokens) {
+
+			@Override
+			protected T nextForCaseWhenFunctionLastArgument(final Tokens tokens) {
+				return CaseWhenFunctionElseEnd.this.nextForCaseWhenFunctionEnd(tokens);
+			}
+
+		};
+	}
 }
