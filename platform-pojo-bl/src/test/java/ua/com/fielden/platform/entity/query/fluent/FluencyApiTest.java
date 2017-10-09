@@ -15,10 +15,10 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 
 public class FluencyApiTest extends TestCase {
 
-	private static List<Method> objectMethods = new ArrayList<Method>();
-    private static List<String> additionalMethodNames = new ArrayList<>();
+	private static final List<Method> objectMethods = new ArrayList<>();
+    private static final List<String> additionalMethodNames = new ArrayList<>();
 
-    {
+    static {
         for (final Method method : Object.class.getMethods()) {
             objectMethods.add(method);
         }
@@ -30,48 +30,48 @@ public class FluencyApiTest extends TestCase {
         additionalMethodNames.add("setTokens");
     }
 
-	private static String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
+	private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
 			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf" };
 
-	private static String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf",
+	private static final String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf",
 			"sumOfDistinct", "countOfDistinct", "avgOfDistinct", "countAll" };
 
-	private static String[] anyOfs = new String[] { "anyOfProps", "anyOfModels", "anyOfValues", "anyOfParams",
+	private static final String[] anyOfs = new String[] { "anyOfProps", "anyOfModels", "anyOfValues", "anyOfParams",
 			"anyOfIParams", "anyOfExpressions" };
 
-	private static String[] allOfs = new String[] { "allOfProps", "allOfModels", "allOfValues", "allOfParams",
+	private static final String[] allOfs = new String[] { "allOfProps", "allOfModels", "allOfValues", "allOfParams",
 			"allOfIParams", "allOfExpressions" };
 
-	private static String[] exists = new String[] { "exists", "notExists", "existsAnyOf", "notExistsAnyOf",
+	private static final String[] exists = new String[] { "exists", "notExists", "existsAnyOf", "notExistsAnyOf",
 			"existsAllOf", "notExistsAllOf" };
 
-	private static String model = "model";
-	private static String modelAsAggregate = "modelAsAggregate";
-	private static String prop = "prop";
-	private static String extProp = "extProp";
-	private static String param = "param";
-	private static String iParam = "iParam";
-	private static String val = "val";
-	private static String iVal = "iVal";
-	private static String begin = "begin";
-	private static String notBegin = "notBegin";
-	private static String beginExpr = "beginExpr";
-	private static String expr = "expr";
-	private static String condition = "condition";
-	private static String negatedCondition = "negatedCondition";
-	private static String join = "join";
-	private static String as = "as";
-	private static String asRequired = "asRequired";
-	private static String modelAsEntity = "modelAsEntity";
-	private static String modelAsPrimitive = "modelAsPrimitive";
-	private static String where = "where";
-	private static String groupBy = "groupBy";
-	private static String yield = "yield";
-	private static String yieldAll = "yieldAll";
-	private static String leftJoin = "leftJoin";
+	private static final String model = "model";
+	private static final String modelAsAggregate = "modelAsAggregate";
+	private static final String prop = "prop";
+	private static final String extProp = "extProp";
+	private static final String param = "param";
+	private static final String iParam = "iParam";
+	private static final String val = "val";
+	private static final String iVal = "iVal";
+	private static final String begin = "begin";
+	private static final String notBegin = "notBegin";
+	private static final String beginExpr = "beginExpr";
+	private static final String expr = "expr";
+	private static final String condition = "condition";
+	private static final String negatedCondition = "negatedCondition";
+	private static final String join = "join";
+	private static final String as = "as";
+	private static final String asRequired = "asRequired";
+	private static final String modelAsEntity = "modelAsEntity";
+	private static final String modelAsPrimitive = "modelAsPrimitive";
+	private static final String where = "where";
+	private static final String groupBy = "groupBy";
+	private static final String yield = "yield";
+	private static final String yieldAll = "yieldAll";
+	private static final String leftJoin = "leftJoin";
 
 	private static Set<String> getMethods(final Class<?> type) {
-		final Set<String> result = new HashSet<String>();
+		final Set<String> result = new HashSet<>();
 		for (final Method method : type.getMethods()) {
 			if (!objectMethods.contains(method) && !additionalMethodNames.contains(method.getName())) {
 				result.add(method.getName());
