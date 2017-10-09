@@ -8,10 +8,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 class Join<ET extends AbstractEntity<?>> extends PlainJoin<ET> implements IJoin<ET> {
 
-    Join(final Tokens queryTokens) {
-        super(queryTokens);
+    protected Join(final Tokens tokens) {
+        super(tokens);
     }
-
+     
     @Override
     public <T extends AbstractEntity<?>> IJoinAlias<ET> join(final Class<T> entityType) {
         return new JoinAlias<ET>(getTokens().innerJoin(entityType));

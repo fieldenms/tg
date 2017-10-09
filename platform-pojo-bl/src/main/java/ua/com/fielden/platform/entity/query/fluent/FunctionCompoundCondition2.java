@@ -5,21 +5,37 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere2;
 
-final class FunctionCompoundCondition2<T, ET extends AbstractEntity<?>> extends AbstractCompoundCondition<IFunctionWhere2<T, ET>, IFunctionCompoundCondition1<T, ET>> implements IFunctionCompoundCondition2<T, ET> {
-    T parent;
+abstract class FunctionCompoundCondition2<T, ET extends AbstractEntity<?>> //
+		extends CompoundCondition<IFunctionWhere2<T, ET>, IFunctionCompoundCondition1<T, ET>> //
+		implements IFunctionCompoundCondition2<T, ET> {
 
-    FunctionCompoundCondition2(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected FunctionCompoundCondition2(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForFunctionCompoundCondition2(final Tokens tokens);
 
-    @Override
-    IFunctionWhere2<T, ET> getParent() {
-        return new FunctionWhere2<T, ET>(getTokens(), parent);
-    }
+	@Override
+	protected IFunctionWhere2<T, ET> nextForLogicalCondition(final Tokens tokens) {
+		return new FunctionWhere2<T, ET>(tokens) {
 
-    @Override
-    IFunctionCompoundCondition1<T, ET> getParent2() {
-        return new FunctionCompoundCondition1<T, ET>(getTokens(), parent);
-    }
+			@Override
+			protected T nextForFunctionWhere2(final Tokens tokens) {
+				return FunctionCompoundCondition2.this.nextForFunctionCompoundCondition2(tokens);
+			}
+
+		};
+	}
+
+	@Override
+	protected IFunctionCompoundCondition1<T, ET> nextForCompoundCondition(final Tokens tokens) {
+		return new FunctionCompoundCondition1<T, ET>(tokens) {
+
+			@Override
+			protected T nextForFunctionCompoundCondition1(final Tokens tokens) {
+				return FunctionCompoundCondition2.this.nextForFunctionCompoundCondition2(tokens);
+			}
+
+		};
+	}
 }

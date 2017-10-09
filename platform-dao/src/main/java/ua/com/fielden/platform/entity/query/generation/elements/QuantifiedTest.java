@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 
 public class QuantifiedTest extends AbstractCondition {
     private final ISingleOperand leftOperand;

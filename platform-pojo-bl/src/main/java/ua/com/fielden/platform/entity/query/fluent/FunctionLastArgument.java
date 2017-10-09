@@ -4,21 +4,30 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
-final class FunctionLastArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<T, IExprOperand0<T, ET>, ET> implements IFunctionLastArgument<T, ET> {
-    T parent;
+abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> //
+		extends ExprOperand<T, IExprOperand0<T, ET>, ET> //
+		implements IFunctionLastArgument<T, ET> {
 
-    FunctionLastArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected FunctionLastArgument(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForFunctionLastArgument(final Tokens tokens);
 
-    @Override
-    IExprOperand0<T, ET> getParent2() {
-        return new ExprOperand0<T, ET>(getTokens(), parent);
-    }
+	@Override
+	protected IExprOperand0<T, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<T, ET>(tokens) {
 
-    @Override
-    T getParent() {
-        return parent;
-    }
+			@Override
+			protected T nextForExprOperand0(final Tokens tokens) {
+				return FunctionLastArgument.this.nextForFunctionLastArgument(tokens);
+			}
+
+		};
+	}
+
+	@Override
+	protected T nextForSingleOperand(final Tokens tokens) {
+		return nextForFunctionLastArgument(tokens);
+	}
 }

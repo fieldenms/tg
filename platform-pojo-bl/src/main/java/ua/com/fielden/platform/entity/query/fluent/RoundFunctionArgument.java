@@ -5,21 +5,44 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionTo;
 
-final class RoundFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> implements IRoundFunctionArgument<T, ET> {
-    T parent;
+abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> //
+		extends ExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> //
+		implements IRoundFunctionArgument<T, ET> {
 
-    RoundFunctionArgument(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected RoundFunctionArgument(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForRoundFunctionArgument(final Tokens tokens);
 
-    @Override
-    IExprOperand0<IRoundFunctionTo<T>, ET> getParent2() {
-        return new ExprOperand0<IRoundFunctionTo<T>, ET>(getTokens(), new RoundFunctionTo<T>(getTokens(), parent));
-    }
+	@Override
+	protected IExprOperand0<IRoundFunctionTo<T>, ET> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<IRoundFunctionTo<T>, ET>(tokens) {
 
-    @Override
-    IRoundFunctionTo<T> getParent() {
-        return new RoundFunctionTo<T>(getTokens(), parent);
-    }
+			@Override
+			protected IRoundFunctionTo<T> nextForExprOperand0(final Tokens tokens) {
+				return new RoundFunctionTo<T>(tokens) {
+
+					@Override
+					protected T nextForRoundFunctionTo(final Tokens tokens) {
+						return RoundFunctionArgument.this.nextForRoundFunctionArgument(tokens);
+					}
+
+				};
+			}
+
+		};
+	}
+
+	@Override
+	protected IRoundFunctionTo<T> nextForSingleOperand(final Tokens tokens) {
+		return new RoundFunctionTo<T>(tokens) {
+
+			@Override
+			protected T nextForRoundFunctionTo(final Tokens tokens) {
+				return RoundFunctionArgument.this.nextForRoundFunctionArgument(tokens);
+			}
+
+		};
+	}
 }
