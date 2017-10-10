@@ -24,7 +24,7 @@ public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContex
     
     @IsProperty
     @Title("Entity Type")
-    private Class<?> entityType;
+    private Class<? extends AbstractEntity<?>> entityType;
     
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
@@ -42,12 +42,12 @@ public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContex
     }
 
     @Observable
-    public EntityDeleteAction setEntityType(final Class<?> entityType) {
+    public EntityDeleteAction setEntityType(final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
         return this;
     }
 
-    public Class<?> getEntityType() {
+    public Class<? extends AbstractEntity<?>> getEntityType() {
         return entityType;
     }
 }

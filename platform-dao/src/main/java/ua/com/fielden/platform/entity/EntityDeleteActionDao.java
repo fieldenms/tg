@@ -24,7 +24,7 @@ public class EntityDeleteActionDao extends CommonEntityDao<EntityDeleteAction> i
     @Override
     public EntityDeleteAction save(final EntityDeleteAction entity) {
         if (!entity.getSelectedEntityIds().isEmpty()) {
-            co$((Class<? extends AbstractEntity<?>>) entity.getEntityType()).batchDelete(entity.getSelectedEntityIds());
+            co$(entity.getEntityType()).batchDelete(entity.getSelectedEntityIds());
         } else {
             throw new EntityCompanionException("Please select at least one entity to delete.");
         }
