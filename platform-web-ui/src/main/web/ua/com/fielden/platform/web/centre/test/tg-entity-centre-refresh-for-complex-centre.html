@@ -36,45 +36,41 @@
             });
 
             test('refresh action works for complex centre', function (done) {
-                var old_postRun = centre._postRun;
-                var old_value, oldEditValue, valToEdit, testingPhase, masterEditor, saveButton;
-                var changeValue = function (value, phase) {
+                const old_postRun = centre._postRun;
+                let old_value, oldEditValue, valToEdit, testingPhase, masterEditor, saveButton;
+                const changeValue = function (value, phase) {
                     masterEditor._editingValue = '' + value;
                     masterEditor.commit();
                     testingPhase = phase;
                     saveButton._asyncRun()
                 }
-
+                
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    var entity, editAction;
-
+                    let entity, editAction;
+                    
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
-
+                    
                     entity = resultEntities[0];
-
+                    
                     editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
                     editAction.currentEntity = entity;
-
+                    
                     if (testingPhase === 'first') {
                         assert.strictEqual(summary.get('kount'), 21, 'The number of retrieved entities is incorrect should be 21.');
                         oldEditValue = summary.get('max_of_dec');
                         valToEdit = oldEditValue + 1;
-
+                        
                         editAction._run();
-
+                        
                         editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-                            console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
-
-                            var outerMaster = editAction._masterReferenceForTesting;
-
-                            outerMaster.addEventListener('after-load', function (event) {
-                                var embeddedMaster = event.detail;
-
+                            editAction._masterReferenceForTesting.addEventListener('after-load', function (event) {
+                                const embeddedMaster = event.detail;
+                                
                                 masterEditor = embeddedMaster.$.editor_4_bigDecimalProp;
-
+                                
                                 embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
                                 };
-
+                                
                                 embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
                                     saveButton = embeddedMaster.querySelector("tg-action[role='save']");
                                     if (testingPhase === 'first') {
@@ -93,23 +89,23 @@
                         done();
                     }
                 };
-
+                
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    const keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
                     testingPhase = 'first';
                     keyEditor._editingValue = 'DEMO0*, DEMO1*, DEMO20*';
                     keyEditor.commit();
                     centre.run();
                 };
-
+                
                 centre.retrieve();
             });
             
             test('refresh action after modification works', function (done) {
-                var old_postRun = centre._postRun;
-                var old_refresh = centre.refreshEntities.bind(centre);
-                var old_value, new_value, testingPhase, masterEditor, saveButton, entity, editAction;
-                var changeValue = function (value, phase) {
+                const old_postRun = centre._postRun;
+                const old_refresh = centre.refreshEntities.bind(centre);
+                let old_value, new_value, testingPhase, masterEditor, saveButton, entity, editAction;
+                const changeValue = function (value, phase) {
                     masterEditor._editingValue = '' + value;
                     masterEditor.commit();
                     testingPhase = phase;
@@ -117,12 +113,12 @@
                 }
                 
                 centre.refreshEntities = function (entities) {
-                    var prom = old_refresh(entities);
+                    old_refresh(entities);
                     if (testingPhase === 'third' || testingPhase === 'finish') {
                         centre.currentPage();
                     }
                 }
-
+                
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     if (testingPhase === 'first') {
@@ -137,18 +133,14 @@
                     } else if (testingPhase === 'second') {
                         editAction._run();
                         editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-                            console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
-
-                            var outerMaster = editAction._masterReferenceForTesting;
-
-                            outerMaster.addEventListener('after-load', function (event) {
-                                var embeddedMaster = event.detail;
-
+                            editAction._masterReferenceForTesting.addEventListener('after-load', function (event) {
+                                const embeddedMaster = event.detail;
+                                
                                 masterEditor = embeddedMaster.$.editor_4_key;
-
+                                
                                 embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
                                 };
-
+                                
                                 embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
                                     saveButton = embeddedMaster.querySelector("tg-action[role='save']");
                                     if (testingPhase === 'second') {
@@ -169,20 +161,20 @@
                         done();
                     }
                 };
-
+                
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     testingPhase = 'first';
                     centre.run();
                 };
-
+                
                 centre.retrieve();
             });
             
             test('refresh didn\'t took affect after modification for not exisitng entities.', function (done) {
-                var old_postRun = centre._postRun;
-                var old_refresh = centre.refreshEntities.bind(centre);
-                var old_value, new_value, testingPhase, masterEditor, saveButton, entity, editAction;
-                var changeValue = function (value, phase) {
+                const old_postRun = centre._postRun;
+                const old_refresh = centre.refreshEntities.bind(centre);
+                let old_value, new_value, testingPhase, masterEditor, saveButton, entity, editAction;
+                const changeValue = function (value, phase) {
                     masterEditor._editingValue = '' + value;
                     masterEditor.commit();
                     testingPhase = phase;
@@ -190,7 +182,7 @@
                 }
                 
                 centre.refreshEntities = function (entities) {
-                    var prom = old_refresh(entities);
+                    old_refresh(entities);
                     if (testingPhase === 'third') {
                         changeValue(old_value, 'finish')
                     } else if (testingPhase === 'finish') {
@@ -199,13 +191,13 @@
                         assert.strictEqual(centre.$.egi.entities.length, 1, 'The number of entities on the last page is incorrect: ' + centre.$.egi.entities.length);
                         centre._postRun = old_postRun;
                         centre.refreshEntities = old_refresh;
-                        var keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                        const keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
                         keyEditor._editingValue = '';
                         keyEditor.commit();
                         done();
                     }
                 }
-
+                
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     if (testingPhase === 'first') {
@@ -220,18 +212,14 @@
                     } else if (testingPhase === 'second') {
                         editAction._run();
                         editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-                            console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
-
-                            var outerMaster = editAction._masterReferenceForTesting;
-
-                            outerMaster.addEventListener('after-load', function (event) {
-                                var embeddedMaster = event.detail;
-
+                            editAction._masterReferenceForTesting.addEventListener('after-load', function (event) {
+                                const embeddedMaster = event.detail;
+                                
                                 masterEditor = embeddedMaster.$.editor_4_key;
-
+                                
                                 embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
                                 };
-
+                                
                                 embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
                                     saveButton = embeddedMaster.querySelector("tg-action[role='save']");
                                     if (testingPhase === 'second') {
@@ -242,12 +230,12 @@
                         }
                     }
                 };
-
+                
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     testingPhase = 'first';
                     centre.run();
                 };
-
+                
                 centre.retrieve();
             });
         });
