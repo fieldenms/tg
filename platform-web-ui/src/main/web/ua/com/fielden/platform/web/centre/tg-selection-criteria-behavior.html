@@ -384,7 +384,7 @@
             nextPage: function () {
                 this._openToast(null, "Loading next page", false, "", true);
                 this._validatePageCount();
-                if (!this._canNext()) {
+                if (!this._canNext()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
@@ -397,7 +397,7 @@
             prevPage: function () {
                 this._openToast(null, "Loading previous page", false, "", true);
                 this._validatePageCount();
-                if (!this._canPrev()) {
+                if (!this._canPrev()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
@@ -410,7 +410,7 @@
             firstPage: function () {
                 this._openToast(null, "Loading first page", false, "", true);
                 this._validatePageCount();
-                if (!this._canFirst()) {
+                if (!this._canFirst()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
@@ -423,7 +423,7 @@
             lastPage: function () {
                 this._openToast(null, "Loading last page", false, "", true);
                 this._validatePageCount();
-                if (!this._canLast()) {
+                if (!this._canLast()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
