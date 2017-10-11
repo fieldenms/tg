@@ -399,7 +399,7 @@ public interface IContextDecomposer {
         if (masterEntityNotEmpty()) {
             final AbstractEntity<?> masterEntity = masterEntity();
             if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                return ((AbstractFunctionalEntityWithCentreContext) masterEntity).context() != null;
+                return ((AbstractFunctionalEntityWithCentreContext<?>) masterEntity).context() != null;
             }
         }
         return false;
