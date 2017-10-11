@@ -1588,9 +1588,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .icon("editor:mode-edit")
                                 .withStyle("color: green")
                                 .shortDesc("Edit entity")
-                                .longDesc("Opens master for editing this entity").build()).
-                        // withNoParentCentreRefresh().
-                                //build());
+                                .longDesc("Opens master for editing this entity")
+                                .withNoParentCentreRefresh()
+                                .build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1602,7 +1602,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                build()
 
                 //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
-                        also()
+                        .also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
