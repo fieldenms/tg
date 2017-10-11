@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
 import java.util.Arrays;
@@ -8,6 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -19,15 +22,12 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
 
 @SuppressWarnings({ "unchecked", "serial" })
 public class DynamicFetchBuilderTest {
@@ -149,8 +149,8 @@ public class DynamicFetchBuilderTest {
         "propIntAvg", //
         "propIntMin", //
         }));
-        final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("sumInt").with("avgInt").with("mutIntSum")//
-        .with("propIntSum").with("propIntAvg").with("propIntMin").without("id").without("version");
+        final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchNone(masterKlass).with("sumInt").with("avgInt").with("mutIntSum")//
+        .with("propIntSum").with("propIntAvg").with("propIntMin");//.without("id").without("version");
         assertEquals("The fetch for total proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createTotalFetchModel(masterKlass, fetchProperties));
     }
 
