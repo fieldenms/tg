@@ -53,6 +53,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         case KEY_AND_DESC:
             includeKeyAndDescOnly();
             break;
+        case NONE:
+        	break;
         case ID:
             includeIdOly();
             break;
