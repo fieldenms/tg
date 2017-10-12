@@ -216,6 +216,15 @@
             },
             
             /**
+             * Postal subscription to 'refresh.post.success' events of embedded masters from master-with-master menu items.
+             * It gets populated in attached callback only once, even though the same master instance gets used several time.
+             */
+            _dialogClosingRedirector: {
+                type: Object,
+                value: null
+            },
+            
+            /**
              * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
              */
             refreshCompoundMaster: {
@@ -318,6 +327,22 @@
                         postal.publish({
                             channel: compoundMasterCentreRefreshChannel,
                             topic: centreRefreshTopic,
+                            data: data
+                        });
+                    }
+                });
+            }
+            if (self._dialogClosingRedirector === null) {
+                const embeddedMasterCancelChannel = self.uuid;
+                const compoundMasterCancelChannel = self.centreUuid;
+                const cancelTopic = 'refresh.post.success';
+                self._dialogClosingRedirector = postal.subscribe({
+                    channel: embeddedMasterCancelChannel,
+                    topic: cancelTopic,
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: compoundMasterCancelChannel,
+                            topic: cancelTopic,
                             data: data
                         });
                     }
