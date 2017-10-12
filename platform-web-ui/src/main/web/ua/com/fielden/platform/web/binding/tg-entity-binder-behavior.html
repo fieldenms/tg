@@ -405,6 +405,8 @@
                     		    	e.detail.entityId = deserialisedInstance.get('id');
                     		    	e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
                     		    	e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
+                    		    } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0])) {
+                    		        e.detail.entityId = deserialisedInstance[0].get('id');
                     		    }
                     		}
                     	}
@@ -810,11 +812,11 @@
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
                 
                 self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
-                // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
+                console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
                 self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() || 
                                                                            !self._currBindingEntity.isPersisted()         ||
                                                                            self._bindingEntityModified;
-                // console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
+                console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;
