@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.meta.impl.DefaultOpenCompoundMasterActionK
  *
  * @param <K> -- primary entity type for compound master
  */
-public abstract class AbstractFunctionalEntityForCompoundOpener<K extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
+public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
     
     @IsProperty
     @SkipEntityExistsValidation // this is needed to be able to use new (not persisted) instances of keys
@@ -30,7 +30,7 @@ public abstract class AbstractFunctionalEntityForCompoundOpener<K extends Abstra
     private String sectionTitle;
     
     @Observable
-    public AbstractFunctionalEntityForCompoundOpener<K> setSectionTitle(final String sectionTitle) {
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setSectionTitle(final String sectionTitle) {
         this.sectionTitle = sectionTitle;
         return this;
     }
@@ -41,7 +41,7 @@ public abstract class AbstractFunctionalEntityForCompoundOpener<K extends Abstra
     
     @Override
     @Observable
-    public AbstractFunctionalEntityForCompoundOpener<K> setKey(final K key) {
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setKey(final K key) {
         this.key = key;
         return this;
     }
