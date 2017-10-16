@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -79,17 +81,17 @@ public class EntityResourceContinuationsHelper {
     }
 
     /**
-     * Performs DAO saving of <code>validatedEntity</code>.
+     * Performs saving of <code>validatedEntity</code>.
      * <p>
-     * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its concrete companion object (for example VehicleStatusChangeDao) or in
-     * {@link CommonEntityDao} saving methods -- still that entity instance will be returned in case of exceptional situation and will be bound to respective entity master. The
-     * toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
+     * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its companion object (for example <code>VehicleStatusChangeDao</code>) or in
+     * {@link CommonEntityDao}, the mutated entity instance is returned in case of an exceptional situation and bound to a corresponding entity master. The
+     * toast message shows the exception, not the first validation error of the entity.
      *
      * @param validatedEntity
      * @param continuations -- continuations of the entity to be used during saving
      *
-     * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
-     *         appropriate entity master) and thrown exception (to be shown in toast message)
+     * @return if saving was successful -- returns saved entity without any exception, if saving was unsuccessful due to an exception -- returns <code>validatedEntity</code> (to be bound to
+     *         the appropriate entity master) and the thrown exception (to be displayed as a toast message)
      */
     public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> saveWithContinuations(final T validatedEntity, final Map<String, IContinuationData> continuations, final IEntityDao<T> companion) {
         T savedEntity;
@@ -99,10 +101,10 @@ public class EntityResourceContinuationsHelper {
         } catch (final Exception exception) {
             // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
             // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving
-            return Pair.pair(validatedEntity, Optional.of(exception));
+            return pair(validatedEntity, Optional.of(exception));
         }
     
-        return Pair.pair(savedEntity, Optional.empty());
+        return pair(savedEntity, Optional.empty());
     }
     
     /**
@@ -140,12 +142,11 @@ public class EntityResourceContinuationsHelper {
      * @return
      */
     public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> tryToSave(
-        final SavingInfoHolder savingInfoHolder,
-        final Class<T> entityType,
-        final EntityFactory entityFactory,
-        final ICompanionObjectFinder companionFinder,
-        final IEntityDao<T> companion
-    ) {
+            final SavingInfoHolder savingInfoHolder,
+            final Class<T> entityType,
+            final EntityFactory entityFactory,
+            final ICompanionObjectFinder companionFinder,
+            final IEntityDao<T> companion) {
         final List<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
