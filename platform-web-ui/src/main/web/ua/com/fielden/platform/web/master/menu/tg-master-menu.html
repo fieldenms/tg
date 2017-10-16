@@ -407,7 +407,7 @@
  		},
  		
  		/** Used by the master, which incorporates this menu to check if it can be closed. */
- 		canClose: function () {
+ 		canLeave: function () {
  			var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
  			var reason = section.canLeave();
  			if (reason) {
