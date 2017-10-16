@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 public abstract class AbstractFunEntityForDataExport<K extends Comparable<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

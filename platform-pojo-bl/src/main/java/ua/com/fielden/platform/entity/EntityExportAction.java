@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -23,10 +25,10 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
  * @author TG Team
  *
  */
-@KeyType(String.class)
+@KeyType(NoKey.class)
 @KeyTitle(value = "Export", desc = "Export data into file")
 @CompanionObject(IEntityExportAction.class)
-public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
+public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public static final String PROP_EXPORT_ALL = "exportAll";
     public static final String PROP_EXPORT_TOP = "exportTop";
     public static final String PROP_EXPORT_SELECTED = "exportSelected";
@@ -63,6 +65,10 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     @Title("Selected Entity IDs")
     private Set<Long> selectedEntityIds = new HashSet<>();
 
+    public EntityExportAction() {
+        setKey(NO_KEY);
+    }
+    
     @Observable
     protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
         this.selectedEntityIds.clear();

@@ -36,7 +36,6 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     @Override
     public EntityExportAction new_() {
         final EntityExportAction entity = super.new_();
-        entity.setKey("Export");
         entity.setExportAll(true);
         return entity;
     }
