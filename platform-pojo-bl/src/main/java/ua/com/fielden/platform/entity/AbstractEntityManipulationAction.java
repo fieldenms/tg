@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -12,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  */
-@KeyType(String.class)
+@KeyType(NoKey.class)
 public abstract class AbstractEntityManipulationAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     
     @IsProperty
@@ -30,6 +32,10 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
     @Title("Element Name")
     private String elementName;
 
+    protected AbstractEntityManipulationAction() {
+        setKey(NO_KEY);
+    }
+    
     @Observable
     public AbstractEntityManipulationAction setElementName(final String elementName) {
         this.elementName = elementName;
