@@ -13,7 +13,7 @@ import ua.com.fielden.platform.reflection.Finder;
 
 public class fetch<T extends AbstractEntity<?>> {
     public enum FetchCategory {
-        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID, ALL_INCL_CALC
+        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID, ALL_INCL_CALC, NONE
     }
 
     private final Class<T> entityType;
