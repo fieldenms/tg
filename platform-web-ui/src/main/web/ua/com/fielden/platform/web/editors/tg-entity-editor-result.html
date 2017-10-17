@@ -94,7 +94,7 @@
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" noink class="tg-item vertical-layout">
+                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -163,6 +163,14 @@
                     value: 0
                 },
                 
+                /**
+                 * A private property to indicate the fact that the internal state of the component is ready for keyboard navigation (up/down keys). 
+                 */
+                _keyBoardNavigationReady: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /** A property to pass in an instance of tg-reflector, used for value conversion during rendering. */
                 reflector: {
                     type: Object,
@@ -184,6 +192,7 @@
             
             clearSelection: function () {
                 this._selectedIndex = 0;
+                this._keyBoardNavigationReady = false;
                 this.$.selector.selectedItem = null;
             	this.selectedValues = {};
             	while(this.pop('_values')){}
@@ -217,37 +226,48 @@
                 return this.reflector.convert(entity.get(propName)) + '';
             },
             
-            _makeId: function(id) {
-            	return "id" + id;
+            /**
+             * Makes a value for attribute id based on the provided index.
+             * Such id values are used for paperItem HTML elements representing list items. 
+             */
+            _makeId: function(index) {
+            	return "id" + index;
             },
-            
+
+            /**
+             * Extracts a list item index from the id value of a corresponding paperItem HTML element.
+             */
+            _unmakeId: function(id) {
+            	return Number(id.substring(2));
+            },
+
             /* Highlights matched parts of autocompleted values.
              * Handles all properties that were specified as to be highlighted. */
             highlightMatchedParts: function () {
 				this.async(function() {
 				    this._foundSome = this._values.length > 0;
-					for (var index = 0; index < this._values.length; index++) {
+					for (let index = 0; index < this._values.length; index++) {
 						let html = '';                	
-						var v = this._values[index];
+						const v = this._values[index];
 						
 						// add key value with highlighting of matching parts
 						const descProp = 'desc';
 						const withDesc = this.additionalProperties.hasOwnProperty(descProp);
-						html = html + this._addHighlightedKeyProp(v, withDesc)
+						html = html + this._addHighlightedKeyProp(v, withDesc);
 		
 						// add values for additional properties with highlighting of matching parts if required
-						for (var propName in this.additionalProperties) {
+						for (let propName in this.additionalProperties) {
 							// interested only in the object's direct properties
 							if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
 								// should highlight?
-								var highlight = this.additionalProperties[propName];
+								const highlight = this.additionalProperties[propName];
 								html = html + this._addHighlightedPropByName(v, propName, highlight);
 							}
 						}
 						
 						// put the composed for the current item HTML into the content of paper-item
-						var id = this._makeId(index);
-						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
+						const id = this._makeId(index);
+						const paperItem = Polymer.dom(this.root).querySelector("#" + id);
 						if (paperItem) {
 							Polymer.dom(paperItem).innerHTML = html;
 						}
@@ -259,16 +279,21 @@
 			_addHighlightedKeyProp : function(v, withDesc) {
 				let html = '<div style="white-space: nowrap">';
 				
+				// let's first handle the key
 				let matchedParts = this._matchedParts(v.key, this.searchQuery);
-				for (let index = 0; index < matchedParts.length; index++) {
-					let part = matchedParts[index];
-					if (part.matched) {
-						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
-						html = html
-								+ '<span class="key-value key-value-highlighted">'
-								+ part.part + '</span>';
-					} else {
-						html = html + part.part;
+				if (matchedParts.length === 0) {
+				    html = html + v.key;
+				} else {
+					for (let index = 0; index < matchedParts.length; index++) {
+						const part = matchedParts[index];
+						if (part.matched === true) {
+							// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+							html = html
+									+ '<span class="key-value key-value-highlighted">'
+									+ part.part + '</span>';
+						} else {
+							html = html + part.part;
+						}
 					}
 				}
 				
@@ -277,17 +302,20 @@
 				    if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
 					    html = html	+ '<span style="color:#737373"> &ndash; <i>';				
 						matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
-						for (let index = 0; index < matchedParts.length; index++) {
-							let part = matchedParts[index];
-							if (part.matched) {
-								// addition style-scope and this.is (element name) styles is required to enformse custom style processing
-								html = html	+ '<span class="key-value-highlighted">' + part.part + '</span>';
-							} else {
-								html = html + part.part;
+						if (matchedParts.length === 0) {
+						    html = html + propValueAsString;
+						} else {
+							for (let index = 0; index < matchedParts.length; index++) {
+								const part = matchedParts[index];
+								if (part.matched) {
+									// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+									html = html	+ '<span class="key-value-highlighted">' + part.part + '</span>';
+								} else {
+									html = html + part.part;
+								}
 							}
-	
 						}
-						
+
 						html = html + '</i></span>';
 				    }
 				}
@@ -329,24 +357,36 @@
 			 ****************** SELECTION HANDLERS *******************
 			 *********************************************************/
 			_itemSelected : function(event) {
-				var value = event.detail.item.getAttribute("value");
-				console.log(value);
+				this._keyBoardNavigationReady = true;
+				this._selectedIndex = this._unmakeId(event.detail.item.id);
+
+				const value = event.detail.item.getAttribute("value");
 				this.selectedValues[value] = _.find(this._values, function (obj) {
                     return obj.key === value;
                 });
-				
-				
-				console.log('selected item: ', this.selectedValues[value], ' size:', Object.keys(this.selectedValues).length);
 			},
 
 			_itemDeselected : function(event) {
-				var value = event.detail.item.getAttribute("value");
-				console.log(value);
-				delete this.selectedValues[value];
+				this._keyBoardNavigationReady = true;
+				this._selectedIndex = this._unmakeId(event.detail.item.id);
 
-				console.log('unselected item: ', value, ' size:', Object.keys(this.selectedValues).length);
+				const value = event.detail.item.getAttribute("value");
+				delete this.selectedValues[value];
 			},
 
+			/**
+			 * Locates a HTML element that represent a list item with the specified index and focuses it.
+			 * Corresponding to list items HTML elements must have attribute "tabindex = -1", otherwise calls to .focus() have no effect.
+			 */
+			focusItemWithIndex: function(index) {
+			    this._selectedIndex = index;
+				const id = this._makeId(index);
+				const paperItem = Polymer.dom(this.root).querySelector("#" + id);
+				if (paperItem) {
+					paperItem.focus();
+				}  
+			},
+			
 			selectFirst: function () {
 			    if (this._values.length > 0) {
 			        this._selectedIndex = 0;
@@ -355,51 +395,69 @@
 			},
 			
 			selectNext: function () {
-			    if ((!this.multi && !this.$.selector.selected) || (this.multi === true && this.$.selector.selectedValues.length === 0)) {
-                    this.selectFirst();
-                } else {
-                    var length = this._values.length;
-                    if (this.multi == false) {
-                        this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
-                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
-                    } else {
-                        var index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
-                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
-                        this.$.selector.select(this.$.selector._indexToValue(index));
-                        this._selectedIndex = index;
-                    }
-                }
+				if (this._keyBoardNavigationReady === false) {
+					this._keyBoardNavigationReady = true;
+					if (this.multi === true) {
+						this.focusItemWithIndex(0);
+					} else {
+						this.selectFirst();
+					}
+				} else {
+					const length = this._values.length;
+					if (this.multi === true) {
+						const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+						this.focusItemWithIndex(index);
+					} else {
+						this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+						this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+					}
+				}
                 this._scrollToSelected();
             },
-            
+
             selectPrev: function () {
-                if ((!this.multi && !this.$.selector.selected) || (this.multi === true && this.$.selector.selectedValues.length === 0)) {
-                    this.selectFirst();
+                if (this._keyBoardNavigationReady === false) {
+                    this._keyBoardNavigationReady = true;
+                    if (this.multi === true) {
+                    	this.focusItemWithIndex(0);
+                    } else {
+			        	this.selectFirst();
+                    }
                 } else {
-                    var length = this._values.length;
-                    if (this.multi === false) {
+                    const length = this._values.length;
+                    if (this.multi === true) {
+                        const index = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
+                        this.focusItemWithIndex(index);
+                    } else {
                         this._selectedIndex = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
-                    } else {
-                        var index = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
-                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
-                        this.$.selector.select(this.$.selector._indexToValue(index));
-                        this._selectedIndex = index;
                     }
                 }
                 this._scrollToSelected();
             },
-            
+
+            /** Selects the currenlty focused item in the list if none was selected.
+              * It is used to treat the focused item as if it was selected upon user's attempts to "accept" values.
+              */
+            selectCurrentIfNoneSelected: function() {
+                if (Object.keys(this.selectedValues).length === 0) {
+					this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                }
+            },
+
             _scrollToSelected: function () {
                 if (!isNaN(this._selectedIndex)) {
                     const item = this.querySelectorAll(".tg-item")[this._selectedIndex];
-                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
-                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
-                        if (item.offsetTop < this.scrollTop) {
-                            this.scrollTop = item.offsetTop;
-                        } else {
-                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
-                        }
+                    // item is going to be undefined if there are no matching values
+                    if (item) {
+	                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
+	                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
+	                        if (item.offsetTop < this.scrollTop) {
+	                            this.scrollTop = item.offsetTop;
+	                        } else {
+	                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
+	                        }
+	                    }
                     }
                 }
             },

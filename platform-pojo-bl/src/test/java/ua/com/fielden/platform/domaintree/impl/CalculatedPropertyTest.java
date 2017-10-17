@@ -27,6 +27,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
@@ -220,12 +221,12 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
         final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "entityProp", dtm());
 
         assertFalse("Should be not successful.", cp.isValid().isSuccessful());
-        assertFalse("Expression should be incorrect.", cp.getProperty("contextualExpression").isValidWithRequiredCheck());
+        assertFalse("Expression should be incorrect.", cp.getProperty("contextualExpression").isValidWithRequiredCheck(false));
         assertEquals("Should be equal.", cp.isValid(), cp.getProperty("contextualExpression").getFirstFailure());
 
         cp.setContextualExpression("2 * integerProp");
         assertFalse("Should still be not successful.", cp.isValid().isSuccessful());
-        assertFalse("Title should be incorrect.", cp.getProperty("title").isValidWithRequiredCheck());
+        assertFalse("Title should be incorrect.", cp.getProperty("title").isValidWithRequiredCheck(false));
         assertEquals("Should be equal.", cp.isValid(), cp.getProperty("title").getFirstFailure());
 
         cp.setTitle("New calculated property");
@@ -268,7 +269,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
         final CalculatedProperty copy = (CalculatedProperty) dtm().copyCalculatedProperty(MasterEntity.class, "entityProp.calculatedProperty");
         assertFalse("Should be not successful.", copy.isValid().isSuccessful());
-        assertFalse("Title should be incorrect (the same as original calc prop).", copy.getProperty("title").isValidWithRequiredCheck());
+        assertFalse("Title should be incorrect (the same as original calc prop).", copy.getProperty("title").isValidWithRequiredCheck(false));
         assertEquals("Should be equal.", copy.isValid(), copy.getProperty("title").getFirstFailure());
 
         checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", null, null, NO_ATTR, null, dtm());
@@ -989,7 +990,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
         try {
             dtm().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
             fail("Should be failed.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 
@@ -1019,7 +1020,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
         try {
             dtm().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
             fail("Should be failed.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
     }
 

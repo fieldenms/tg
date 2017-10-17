@@ -4,7 +4,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -24,6 +27,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
+    private final Optional<IEntityDao<T>> companion;
     
     // optional centre context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
@@ -31,32 +35,49 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     private Long compoundMasterEntityId;
     private String chosenProperty;
 
-    private ICompanionObjectFinder coFinder;
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+    private final ICompanionObjectFinder coFinder;
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> co$Cache = new HashMap<>();
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
         this.entityType = entityType;
         this.coFinder = companionFinder;
+        this.companion = Optional.ofNullable(coFinder.find(entityType));
     }
 
     
     /**
-     * A convenient way to obtain companion instances by the types of corresponding entities.
+     * A convenient way to obtain companion instances by the types of corresponding entities, which read uninstrumented entities.
      * 
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
-        IEntityDao<?> co = coCache.get(type);
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+        IEntityReader<?> co = coCache.get(type);
         if (co == null) {
-            co = coFinder.find(type);
+            co = coFinder.findAsReader(type, true);
             coCache.put(type, co);
         }
-        return (C) co;
+        return (R) co;
     }
 
+    /**
+     * A convenient way to obtain companion instances by the types of corresponding entities, which read instrumented entities.
+     * 
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co$(final Class<E> type) {
+        IEntityReader<?> co = co$Cache.get(type);
+        if (co == null) {
+            co = coFinder.findAsReader(type, false);
+            co$Cache.put(type, co);
+        }
+        return (R) co;
+    }
     
     @Override
     public final T newEntity() {
@@ -66,13 +87,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
-            final IEntityDao<T> companion = co(this.entityType);
-            final T entity;
-            if (companion != null) {
-                entity = companion.new_();
-            } else {
-                entity = factory().newEntity(this.entityType);
-            }
+            final T entity = new_();
             
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
@@ -103,6 +118,17 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
     
     /**
+     * A helper function to instantiate a new entity using either companion if available or entity factory otherwise.
+     *
+     * @return
+     */
+    private T new_() {
+        return companion
+                .map(co -> co.new_())
+                .orElseGet(() -> factory.newEntity(this.entityType));
+    }
+
+    /**
      * In rare cases where there is a need not to reset meta-state of the property -- this property needs to be listed in this method.
      * 
      * @return
@@ -116,13 +142,15 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * <p>
      * Please, note that most likely it is needed to invoke super implementation. However, if the other, more specific, fetchModel needs to be specified -- the complete override 
      * is applicable.
+     * <p>
+     * Throws {@link NoSuchElementException} if the associated entity has no companion object, which this method tries to use for finding the entity by <code>id</code>.
      * 
      * @param entityId - the id of the edited entity
      * @return
      */
     protected T provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
-        return companion().findById(entityId, companion().getFetchProvider().fetchModel());
-    };
+        return companion.map(co -> co.findById(entityId, co.getFetchProvider().fetchModel())).get();
+    }
     
     /**
      * Override this method in case where some additional initialisation is needed for the new entity, edited by standard {@link EntityNewAction}.
@@ -146,10 +174,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     protected EntityFactory factory() {
         return factory;
-    }
-
-    protected IEntityDao<T> companion() {
-        return co(this.entityType);
     }
 
     /**

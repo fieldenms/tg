@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.view.master;
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.DefaultEntityProducerForCompoundMenuItem;
@@ -13,16 +15,18 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-
-import com.google.inject.Injector;
 
 /**
  * Represents entity master.
@@ -56,7 +60,29 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.injector = injector;
     }
-
+    
+    /**
+     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+     * 
+     *
+     * @param entityType
+     * @param entityProducerType
+     * @param injector
+     * @param customCode -- custom JS code to be executed after master component creation.
+     * @param customCodeOnAttach -- custom JS code to be executed every time master component is attached to client application's DOM
+     * 
+     * @return
+     */
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
+            final Class<T> entityType,
+            final Class<? extends IEntityProducer<T>> entityProducerType,
+            final Injector injector,
+            final JsCode customCode, 
+            final JsCode customCodeOnAttach
+            ) {
+        return new EntityMaster<>(entityType, entityProducerType, new NoUiMaster<>(entityType, customCode, customCodeOnAttach), injector);
+    }
+    
     /**
      * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
      *
@@ -69,7 +95,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
             final Injector injector) {
-        return new EntityMaster<T>(entityType, entityProducerType, null, injector);
+        return new EntityMaster<>(entityType, entityProducerType, null, injector);
     }
 
     /**
@@ -84,11 +110,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
             final Class<T> entityType,
             final Injector injector) {
-        return new EntityMaster<T>(entityType, null, null, injector);
+        return new EntityMaster<>(entityType, null, null, injector);
     }
 
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
-        return new NoUiMaster<T>(entityType);
+        return new NoUiMaster<>(entityType);
     }
 
     /**
@@ -152,11 +178,21 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      * @param coFinder
      * @return
      */
-    public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+    public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(
+            final String propertyName, 
+            final Class<T> entityType, 
+            final ICompanionObjectFinder coFinder) {
+        
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : PropertyTypeDeterminator.determinePropertyType(entityType, propertyName));
         final IEntityDao<V> co = coFinder.find(propertyType);
-        return new FallbackValueMatcherWithContext<T, V>(co);
+
+        // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
+        final boolean activeOnly = 
+                ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
+                !Finder.findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
+        
+        return new FallbackValueMatcherWithContext<>(co, activeOnly);
     }
 
     @Override
@@ -174,13 +210,19 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     private static class NoUiMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
         private final IRenderable renderable;
-
+        
         public NoUiMaster(final Class<T> entityType) {
+            this(entityType, new JsCode(""), new JsCode(""));
+        }
+
+        public NoUiMaster(final Class<T> entityType, final JsCode customCode, final JsCode customCodeOnAttach) {
             final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                     .replace("<!--@imports-->", "")
                     .replace("@entity_type", entityType.getSimpleName())
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")
+                    .replace("//@master-is-ready-custom-code", customCode.toString())
+                    .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.toString())
                     .replace("@prefDim", "null")
                     .replace("@noUiValue", "true")
                     .replace("@saveOnActivationValue", "true");
@@ -220,4 +262,5 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         return masterConfig.actionConfig(actionKind, actionNumber);
     }
+    
 }

@@ -72,19 +72,19 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @Title(value = "Is Time Only?", desc = "Should display only time portion?")
     private Boolean _time;
 
-    //  @IsProperty
-    //    @Title(value = "Type", desc = "The string representation of the property type, which can be pattern-matched to determine for e.g. UI editor type")
-    //    private String _type;
-    //
-    //    @Observable
-    //    public EntityTypeProp set_type(final String _type) {
-    //        this._type = _type;
-    //        return this;
-    //    }
-    //
-    //    public String get_type() {
-    //        return _type;
-    //    }
+    @IsProperty
+    @Title(value = "Show Trailing Zeros?", desc = "Should display trailing zeros?")
+    private boolean _trailingZeros;
+
+    @Observable
+    public EntityTypeProp set_trailingZeros(final boolean _trailingZeros) {
+        this._trailingZeros = _trailingZeros;
+        return this;
+    }
+
+    public boolean get_trailingZeros() {
+        return _trailingZeros;
+    }
 
     @Observable
     public EntityTypeProp set_time(final Boolean _time) {

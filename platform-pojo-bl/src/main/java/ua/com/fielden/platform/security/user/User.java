@@ -28,6 +28,10 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
+import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
+import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
+import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
+import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -80,9 +84,9 @@ public class User extends ActivatableAbstractEntity<String> {
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
     
-    @IsProperty
+    @IsProperty(length = 255)
     @Invisible
-    @MapTo(length = 255)
+    @MapTo
     @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 
@@ -93,11 +97,15 @@ public class User extends ActivatableAbstractEntity<String> {
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
     @MapTo
+    @BeforeChange(@Handler(UserBaseValidator.class))
+    @AfterChange(UserBaseDefiner.class)
     private boolean base = false;
 
     @IsProperty
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
     @MapTo
+    @BeforeChange(@Handler(UserBaseOnUserValidator.class))
+    @AfterChange(UserBasedOnUserDefiner.class)
     private User basedOnUser;
 
     @IsProperty
@@ -229,12 +237,6 @@ public class User extends ActivatableAbstractEntity<String> {
     @Observable
     public User setBase(final boolean base) {
         this.base = base;
-        if (base) {
-            setBasedOnUser(null);
-        } else if (system_users.isOneOf(this)) {
-            throw Result.failure(format("User %s is an application built-in account and should remain a base user.", getKey()));
-        }
-        getProperty("basedOnUser").setRequired(!base);
         return this;
     }
 
@@ -244,22 +246,7 @@ public class User extends ActivatableAbstractEntity<String> {
 
     @Observable
     public User setBasedOnUser(final User basedOnUser) {
-        if (basedOnUser == this) {
-            throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
-        }
-
-        if (basedOnUser != null && system_users.isOneOf(this)) {
-            throw Result.failure(format("User %s is an application built-in account and cannot have a base user.", getKey()));
-        }
-
-        if (basedOnUser != null && !basedOnUser.isBase()) {
-            throw Result.failure(format("User %s is not a base user and thus cannot be used for inheritance.", basedOnUser.getKey()));
-        }
-
         this.basedOnUser = basedOnUser;
-        if (basedOnUser != null) {
-            setBase(false);
-        }
         return this;
     }
 

@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.types;
 
+import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_EVEN;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Currency.getInstance;
 import static java.util.Locale.getDefault;
-import static java.lang.String.format;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -17,6 +17,7 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Random;
 
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 
 /**
@@ -52,14 +53,23 @@ public class Money implements Comparable<Money> {
      */
     public static final Money zero = new Money("0.00");
 
+    @IsProperty(precision = 18, scale = 2)
     @MapTo
     private final BigDecimal amount;
+    
+    @IsProperty(precision = 18, scale = 2)
     @MapTo
     private final BigDecimal exTaxAmount;
+    
+    @IsProperty(precision = 18, scale = 2)
     @MapTo
     private final BigDecimal taxAmount;
+    
+    @IsProperty
     @MapTo
     private final Integer taxPercent;
+    
+    @IsProperty
     @MapTo
     private final Currency currency;
 

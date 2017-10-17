@@ -22,14 +22,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.esotericsoftware.kryo.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
-import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -46,9 +50,6 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.esotericsoftware.kryo.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -90,8 +91,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         properties = createCachedProperties(type);
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
@@ -128,6 +129,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
+        }
+        if (AbstractUnionEntity.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_union(true);
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
@@ -178,19 +182,23 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
                     entityTypeProp.set_time(Boolean.TRUE);
                 }
-                final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
-                if (mapTo != null) {
-                    final Long length = mapTo.length();
+                final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
+                if (isPropertyAnnotation != null) {
+                    final Long length = Long.valueOf(isPropertyAnnotation.length());
                     if (!isLengthDefault(length)) {
                         entityTypeProp.set_length(length);
                     }
-                    final Long precision = mapTo.precision();
+                    final Long precision = Long.valueOf(isPropertyAnnotation.precision());
                     if (!isPrecisionDefault(precision)) {
                         entityTypeProp.set_precision(precision);
                     }
-                    final Long scale = mapTo.scale();
+                    final Long scale = Long.valueOf(isPropertyAnnotation.scale());
                     if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
+                    }
+                    final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
+                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                        entityTypeProp.set_trailingZeros(trailingZeros);
                     }
                 }
                 final String timeZone = getTimeZone(type, name);
@@ -222,7 +230,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return newId.toString();
     }
 
-    static private ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
+    private static ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
         @Override
         protected JacksonContext initialValue() {
             return new JacksonContext();
@@ -267,7 +275,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * @author TG Team
      *
      */
-    public final static class CachedProperty {
+    public static final class CachedProperty {
         private final Field field;
         private Class<?> propertyType;
         private boolean entityTyped = false;
@@ -299,7 +307,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      *
      * @see Context
      */
-    static public JacksonContext getContext() {
+    public static JacksonContext getContext() {
         return contextThreadLocal.get();
     }
 }

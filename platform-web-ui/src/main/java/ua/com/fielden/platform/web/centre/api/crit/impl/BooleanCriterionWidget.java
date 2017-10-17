@@ -27,4 +27,9 @@ public class BooleanCriterionWidget extends AbstractMultiCriterionWidget {
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue()
                 ));
     }
+
+    @Override
+    protected String getCriterionClass(final int editorIndex) {
+        return "range-criterion-editor-" + (editorIndex + 1);
+    }
 }

@@ -9,8 +9,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryCategory;
@@ -97,7 +97,8 @@ public class EntQueryGenerator {
         where.getModel(), //
         select.getModel(), //
         groupBy.getModel(), //
-        produceOrderBys(orderModel, paramValues));
+        produceOrderBys(orderModel, paramValues), //
+        qryModel.isYieldAll());
     }
 
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, //

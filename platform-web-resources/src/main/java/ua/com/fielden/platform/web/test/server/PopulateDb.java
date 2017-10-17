@@ -19,7 +19,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -69,6 +68,7 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -115,17 +115,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
-        final IUser coUser = co(User.class);
+        final IUser coUser = co$(User.class);
         final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(u);
 
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
         final User su = coUser.resetPasswd(_su, _su.getKey());
-        final User _demo = co(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
+        final User _demo = co$(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
         final User demo = coUser.resetPasswd(_demo, _demo.getKey());
 
-        final ITgPerson aoPerson = (ITgPerson) co(TgPerson.class);
+        final ITgPerson aoPerson = (ITgPerson) co$(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
@@ -168,7 +168,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
         save(colourEntity);
-        save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
+        save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS").setCritOnlySingleProp(new Date()));
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
@@ -200,11 +200,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
         save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
         save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
-        
+
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
-        
-        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co(TgPersistentStatus.class).findByKey("DR")));
-        
+
+        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+
         logger.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
@@ -217,7 +217,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             for (final Object oldMessageEntity: oldMessageEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldMessageEntity;
                 final Map<String, Object> messageProps = ((Map<String, Object>) map.get("properties"));
-                final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key"); 
+                final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key");
                 TgMachine found = machines.get(machineKey);
                 if (found == null) {
                     final TgMachine newMachine = new_(TgMachine.class, machineKey);
@@ -240,7 +240,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
         logger.info("\tPopulating machines...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -253,7 +253,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             for (final Object oldMachineEntity: oldMachineEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldMachineEntity;
                 final Map<String, Object> machineProps = ((Map<String, Object>) map.get("properties"));
-                final String machineKey = (String) machineProps.get("key"); 
+                final String machineKey = (String) machineProps.get("key");
                 TgMachine found = machines.get(machineKey);
                 if (found == null) {
                     final TgMachine newMachine = new_(TgMachine.class, machineKey);
@@ -276,7 +276,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 final Object lastMessageObject = machineProps.get("lastMessage");
                 if (lastMessageObject != null) {
                     final Map<String, Object> lastMessageProps = (Map<String, Object>) ((Map<String, Object>) lastMessageObject).get("properties");
-                    
+
                     save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) lastMessageProps.get("gpsTime"))).toDate())
                             .setX(BigDecimal.valueOf((double) lastMessageProps.get("x")))
                             .setY(BigDecimal.valueOf((double) lastMessageProps.get("y")))
@@ -293,7 +293,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final IOException ex) {
             throw new IllegalStateException(ex);
         }
-        
+
         logger.info("\tPopulating geozones...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -301,12 +301,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final InputStream stream = new FileInputStream(file);
             final ObjectMapper objectMapper = new ObjectMapper();
             final ArrayList oldPolygonEntities = objectMapper.readValue(stream, ArrayList.class);
-            
+
             final Map<String, TgPolygon> polygons = new HashMap<>();
             for (final Object oldPolygonEntity: oldPolygonEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldPolygonEntity;
                 final Map<String, Object> polygonProps = ((Map<String, Object>) map.get("properties"));
-                final String polygonKey = (String) polygonProps.get("key"); 
+                final String polygonKey = (String) polygonProps.get("key");
                 TgPolygon found = polygons.get(polygonKey);
                 if (found == null) {
                     final TgPolygon newPolygon = new_(TgPolygon.class, polygonKey);
@@ -314,7 +314,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                     found = save(newPolygon);
                     polygons.put(polygonKey, found);
                 }
-                
+
                 final ArrayList<Object> coordinates = (ArrayList<Object>) polygonProps.get("coordinates");
                 for (final Object coord: coordinates) {
                     final Map<String, Object> coordProps = ((Map<String, Object>) ((Map<String, Object>) coord).get("properties"));
@@ -335,7 +335,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
+            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);
@@ -404,7 +404,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         for (int i = 0; i < 30; i++) {
             save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))
-                    .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic"))
+                    .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic").toUpperCase())
                     .setIntegerProp(random(43, 67, 24, 35, 18, 99, 23))
                     .setEntityProp(random(ent1, null, ent2))
                     .setBigDecimalProp(random(new BigDecimal(23).setScale(5), new BigDecimal(4).setScale(5), new BigDecimal(99).setScale(5)))

@@ -23,17 +23,13 @@ public class QueryBasedSource extends AbstractSource {
     }
 
     public QueryBasedSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery... models) {
-        super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
-        this.models = Arrays.asList(models);
-        populateYieldMatrixFromQueryModels(models);
-        validateYieldsMatrix();
-    }
-
-    private static boolean checkWhetherResultTypeIsPersisted(final EntQuery... models) {
+        super(alias, domainMetadataAnalyser);
         if (models == null || models.length == 0) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
-        return models[0].isPersistedType();
+        this.models = Arrays.asList(models);
+        populateYieldMatrixFromQueryModels(models);
+        validateYieldsMatrix();
     }
 
     private void populateYieldMatrixFromQueryModels(final EntQuery... models) {
@@ -50,7 +46,26 @@ public class QueryBasedSource extends AbstractSource {
             }
         }
     }
-
+    
+    private Yield getYield(final String yieldAlias) {
+        final List<Yield> yields = yieldsMatrix.get(yieldAlias);
+        
+        if (yields != null) {
+            if (yields.size() == 1) {
+                return yields.get(0);
+            }
+            
+            for (final Yield yield : yieldsMatrix.get(yieldAlias)) {
+                if (yield.getInfo().getJavaType() != null) {
+                    return yield;
+                }
+            }
+            
+            return yields.get(0);
+        }
+        return null;
+    }
+    
     private boolean getYieldNullability(final String yieldAlias) {
         final boolean result = false;
         for (final Yield yield : yieldsMatrix.get(yieldAlias)) {
@@ -72,8 +87,9 @@ public class QueryBasedSource extends AbstractSource {
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
         for (final Yield yield : firstModel().getYields().getYields()) {
-            sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), //
-            getYieldNullability(yield.getInfo().getName())/*yield.getInfo().isNullable()*/|| parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
+            final Yield properYield = getYield(yield.getAlias());
+            sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), properYield.getInfo().getJavaType(), properYield.getInfo().getHibType(), yield.getInfo().getColumn(), //
+            getYieldNullability(yield.getInfo().getName()) || parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
         }
     }
 
@@ -100,7 +116,7 @@ public class QueryBasedSource extends AbstractSource {
     }
 
     private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
-        final Yield firstLevelPropYield = firstModel().getYields().getYieldByAlias(first);
+        final Yield firstLevelPropYield = getYield(first);
 
         if (firstLevelPropYield == null || firstLevelPropYield.isCompositePropertyHeader()) { // there are no such first level prop at all within source query yields
             final PropertyMetadata explicitPropMetadata = getDomainMetadataAnalyser().getInfoForDotNotatedProp(sourceType(), first);

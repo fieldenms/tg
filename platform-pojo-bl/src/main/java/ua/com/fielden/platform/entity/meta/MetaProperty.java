@@ -171,7 +171,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [removeWarnings] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public boolean isValidWithRequiredCheck() {
+    public boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
         throw new StrictProxyException(format("Invalid call [isValidWithRequiredCheck] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -233,6 +233,20 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public void setValue(final Object value) {
         throw new StrictProxyException(format("Invalid call [setValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+    
+    /**
+     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same if the one being assigned.
+     * @param value -- the value to be assigned.
+     * @param enforce -- will force value assignment (with all the BCE and ACE related logic) even if it matches the current value
+     */
+    public final void setValue(final Object value, final boolean enforce) {
+        setEnforceMutator(enforce);
+        try {
+            setValue(value);
+        } finally {
+            setEnforceMutator(false);
+        }
     }
 
     /**
@@ -403,7 +417,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [isEnforceMutator] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
-    public void setEnforceMutator(final boolean enforceMutator) {
+    protected void setEnforceMutator(final boolean enforceMutator) {
         throw new StrictProxyException(format("Invalid call [setEnforceMutator] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 

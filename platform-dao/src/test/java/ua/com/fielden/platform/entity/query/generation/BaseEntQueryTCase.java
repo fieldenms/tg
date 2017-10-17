@@ -25,7 +25,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;
@@ -42,10 +42,13 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.HyperlinkType;
+import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -60,8 +63,9 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
@@ -76,6 +80,7 @@ public class BaseEntQueryTCase {
     protected static final Class<TgPersonName> PERSON_NAME = TgPersonName.class;
     protected static final Class<TgAuthor> AUTHOR = TgAuthor.class;
     protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;
+    protected static final Class<TgAverageFuelUsage> AVERAGE_FUEL_USAGE = TgAverageFuelUsage.class;
     protected static final Class<TgOrgUnit5> ORG5 = TgOrgUnit5.class;
     protected static final Class<TgOrgUnit4> ORG4 = TgOrgUnit4.class;
     protected static final Class<TgOrgUnit3> ORG3 = TgOrgUnit3.class;
@@ -102,9 +107,12 @@ public class BaseEntQueryTCase {
         hibTypeDefaults.put(Boolean.class, YesNoType.class);
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        hibTypeDefaults.put(Colour.class, ColourType.class);
+        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
     }
 
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()), PlatformTestDomainTypes.entityTypes, DbVersion.H2);
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
@@ -253,9 +261,13 @@ public class BaseEntQueryTCase {
     }
 
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type) {
-        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
+        return ppi(name, javaType, nullable, hibType, column, null, null, null, type);
     }
 
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final Integer length, final Integer precision, final Integer scale, final PropertyCategory type) {
+        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column, length, precision, scale)).hibType(hibType).type(type).build();
+    }
+    
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type) {
         return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
     }

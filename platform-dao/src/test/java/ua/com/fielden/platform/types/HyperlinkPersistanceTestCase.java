@@ -40,7 +40,7 @@ public class HyperlinkPersistanceTestCase extends AbstractDaoTestCase {
         final OrderingModel orderBy = orderBy().prop("webpage").asc().model();
         final QueryExecutionModel<TgAuthor, EntityResultQueryModel<TgAuthor>> qem = from(query).with(fetchAll(TgAuthor.class)).with(orderBy).model();
 
-        final List<TgAuthor> authors = co(TgAuthor.class).getAllEntities(qem);
+        final List<TgAuthor> authors = co$(TgAuthor.class).getAllEntities(qem);
         assertEquals(2, authors.size());
         assertEquals(date, authors.get(0));
         assertEquals(shcherbyna, authors.get(1));
@@ -59,7 +59,7 @@ public class HyperlinkPersistanceTestCase extends AbstractDaoTestCase {
         final OrderingModel orderBy = orderBy().prop("webpage").asc().model();
         final QueryExecutionModel<TgAuthor, EntityResultQueryModel<TgAuthor>> qem = from(query).with(fetchAll(TgAuthor.class)).with(orderBy).model();
 
-        final List<TgAuthor> authors = co(TgAuthor.class).getAllEntities(qem);
+        final List<TgAuthor> authors = co$(TgAuthor.class).getAllEntities(qem);
         assertEquals(1, authors.size());
         assertEquals(date, authors.get(0));
     }
@@ -77,7 +77,7 @@ public class HyperlinkPersistanceTestCase extends AbstractDaoTestCase {
         final OrderingModel orderBy = orderBy().prop("webpage").asc().model();
         final QueryExecutionModel<TgAuthor, EntityResultQueryModel<TgAuthor>> qem = from(query).with(fetchAll(TgAuthor.class)).with(orderBy).model();
 
-        final List<TgAuthor> authors = co(TgAuthor.class).getAllEntities(qem);
+        final List<TgAuthor> authors = co$(TgAuthor.class).getAllEntities(qem);
         assertEquals(1, authors.size());
         assertEquals(date, authors.get(0));
     }

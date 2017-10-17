@@ -4,16 +4,25 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprItem3;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd3;
 
-final class YieldExprItem3<T, ET extends AbstractEntity<?>> extends AbstractYieldedItem<IYieldExprOperationOrEnd3<T, ET>, ET> implements IYieldExprItem3<T, ET> {
-    T parent;
+abstract class YieldExprItem3<T, ET extends AbstractEntity<?>> //
+		extends YieldedItem<IYieldExprOperationOrEnd3<T, ET>, ET> //
+		implements IYieldExprItem3<T, ET> {
 
-    YieldExprItem3(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected YieldExprItem3(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForYieldExprItem3(final Tokens tokens);
 
-    @Override
-    IYieldExprOperationOrEnd3<T, ET> getParent() {
-        return new YieldExprOperationOrEnd3<T, ET>(getTokens(), parent);
-    }
+	@Override
+	protected IYieldExprOperationOrEnd3<T, ET> nextForSingleOperand(final Tokens tokens) {
+		return new YieldExprOperationOrEnd3<T, ET>(tokens) {
+
+			@Override
+			protected T nextForYieldExprOperationOrEnd3(final Tokens tokens) {
+				return YieldExprItem3.this.nextForYieldExprItem3(tokens);
+			}
+
+		};
+	}
 }

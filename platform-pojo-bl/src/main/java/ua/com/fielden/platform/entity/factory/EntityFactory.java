@@ -93,6 +93,8 @@ public class EntityFactory {
             constructor.setAccessible(false);
             setId(entityClass, id, entity);
             return entity;
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -113,6 +115,8 @@ public class EntityFactory {
             setReferenceToThis(entity);
             setId(entityClass, id, entity);
             return entity;
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -172,6 +176,8 @@ public class EntityFactory {
             setKey(entityClass, key, entity);
             entity.setDesc(desc);
             return entity;
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }

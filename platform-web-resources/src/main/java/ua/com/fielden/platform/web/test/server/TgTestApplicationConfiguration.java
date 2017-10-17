@@ -6,7 +6,6 @@ import org.restlet.Component;
 
 import com.google.inject.Injector;
 
-import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -20,6 +19,7 @@ import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * Configuration point for Web UI Testing Server.
@@ -54,7 +54,7 @@ public class TgTestApplicationConfiguration extends Component {
             // the interactive login page resource is considered one of the system resources, which does not require guarding
             getDefaultHost().attach(LoginResource.BINDING_PATH, new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
             getDefaultHost().attach(LoginInitiateResetResource.BINDING_PATH, new LoginInitiateResetResourceFactory(injector));
-            getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector));
+            getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector, "Robust solutions serve the sociaty well."));
             getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(injector));
 
             // FIXME The old resources need to be completely removed from the platform

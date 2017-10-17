@@ -239,6 +239,21 @@
                 	type: String,
                 	observer: '_acceptedValueChanged'
                 },
+                
+                /**
+                 * The mouse down event listener that selectes the text inside input when first time clicked.
+                 */
+                _onDown: {
+                    type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	if (document.activeElement !== this.decoratedInput()) {
+                                this.decoratedInput().select();
+                                this._preventEventBubbling(event);
+                            }
+                    	}).bind(this);
+                	}
+                },
 
             	/**
              	 * This event is invoked after the component gained focus.
@@ -268,44 +283,41 @@
                 	}
             	},
                 
-            	/**
-            	 * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
-            	 *
-            	 * Designated to be bound to child elements.
-            	 */
-            	_onChange: {
-                	type: Function,
-                	value: function () {
-                		return (function (event) {
-                    		// console.debug("_onChange:", event);
-	      		            if (this['_onChange_handler']) {
-    				    		this.cancelAsync(this['_onChange_handler']);
-        					}
-            				this['_onChange_handler'] = this.async(function() {
-                        		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
-                        			this.commit();
-                        		}
-            				}.bind(this), 50);
-                    	}).bind(this);
-                	}
+                /**
+                 * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
+                 *
+                 * Designated to be bound to child elements.
+                 */
+                _onChange: {
+                    type: Function,
+                    value: function () {
+                        return (function (event) {
+                            // console.debug("_onChange:", event);
+                            if (this['_onChange_handler']) {
+                                this.cancelAsync(this['_onChange_handler']);
+                            }
+                            this['_onChange_handler'] = this.async(function() {
+                                this.commitIfChanged();
+                            }.bind(this), 50);
+                        }).bind(this);
+                     }
                 },
-
-            	/**
-            	 * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
-            	 *
-            	 * Designated to be bound to child elements.
-            	 */
-            	_onKeydown: {
-                	type: Function,
-                	value: function () {
-                		return (function (event) {
-                		    // console.debug("_onKeydown:", event);
-                		    
-                    		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
-                    			this.commit();
-                    		}
-                    	}).bind(this);
-                	}
+                
+                /**
+                 * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
+                 *
+                 * Designated to be bound to child elements.
+                 */
+                _onKeydown: {
+                    type: Function,
+                    value: function () {
+                        return (function (event) {
+                            // console.debug("_onKeydown:", event);
+                            if (event.keyCode === 13) { // 'Enter' has been pressed
+                                this.commitIfChanged();
+                            }
+                        }).bind(this);
+                    }
                 },
                 
             	/**
@@ -354,6 +366,13 @@
                 // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
                 //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
                 this.commit();
+            },
+            
+            _preventEventBubbling(event) {
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             },
             
             _recordDefinition: function (entity, propertyName, _editorValidationMsg) {
@@ -623,11 +642,20 @@
             },
             
             /**
+             * Commits editing value '_editingValue' in case if it is changed from previously committed value '_commValue'.
+             */
+            commitIfChanged: function () {
+                if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
+                    this.commit();
+                }
+            },
+            
+            /**
              * Please, override this method (in descendant editors) in case where some custom '_editingValue' preprocessing is needed. 
              */
             _commitForDescendants: function () {
             },
-
+            
             _bindMessages: function (entity, propertyName, _editorValidationMsg) {
             	// console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
@@ -727,7 +755,7 @@
              * Overide this to provide custom formatting for tooltip text.
              */
             _formatTooltipText: function (value) {
-                var formatedText = this._formatText(value);
+                const formatedText = this._formatText(value);
                 return formatedText && "<b>" + formatedText + "</b>";
             },
             

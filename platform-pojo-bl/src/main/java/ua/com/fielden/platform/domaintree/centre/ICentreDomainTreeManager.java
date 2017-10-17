@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -158,7 +159,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         boolean isChangedAnalysisManager(final String name);
 
         /**
-         * Removes an analysis manager with specified <code>name</code>. Throws {@link IllegalArgumentException} when analysis does not exist. The analysis to be removed can be
+         * Removes an analysis manager with specified <code>name</code>. Throws {@link DomainTreeException} when analysis does not exist. The analysis to be removed can be
          * persisted or not (but should exist - at least locally). <br>
          * <br>
          *
@@ -318,7 +319,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          *
          */
         public enum MetaValueType {
-            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING
+            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
         }
 
         /**
@@ -350,7 +351,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         int getColumnsNumber();
 
         /**
-         * Sets a <i>columnsNumber</i> for criteria editors. Should be >= 1, as it represents a columns number in entity criteria (throws {@link IllegalArgumentException} if trying
+         * Sets a <i>columnsNumber</i> for criteria editors. Should be >= 1, as it represents a columns number in entity criteria (throws {@link DomainTreeException} if trying
          * to set <code>columnsNumber</code> <= 0).
          *
          * @param columnsNumber
@@ -363,7 +364,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Returns value that indicates whether <i>main</i> value of a criteria property is empty or not.<br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -377,7 +378,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets a <i>main</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -391,7 +392,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets a <i>main</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -468,9 +469,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -484,9 +485,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets a <i>secondary</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -500,9 +501,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets a <i>secondary</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -518,9 +519,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -534,9 +535,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -551,9 +552,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -567,9 +568,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          *
          * @param root
          *            -- a root type that contains property.
@@ -584,7 +585,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets a date prefix of a criteria <i>date</i> property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link DomainTreeException} when the
          * property is not of date type.
          *
          * @param root
@@ -599,7 +600,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets a date prefix of a criteria <i>date</i> property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link DomainTreeException} when the
          * property is not of date type.
          *
          * @param root
@@ -615,7 +616,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets a date mnemonic of a criteria <i>date</i> property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link DomainTreeException} when the
          * property is not of date type.
          *
          * @param root
@@ -630,7 +631,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets a date mnemonic of a criteria <i>date</i> property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link DomainTreeException} when the
          * property is not of date type.
          *
          * @param root
@@ -646,7 +647,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets an "and before" flag of a criteria <i>date</i> property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link DomainTreeException} when the
          * property is not of date type.
          *
          * @param root
@@ -661,7 +662,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets an "and before" flag of a criteria <i>date</i> property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link DomainTreeException} when the
          * property is not of date type.
          *
          * @param root
@@ -677,7 +678,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets an "or null" flag (missing value) of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -691,7 +692,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets an "or null" flag (missing value) of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -706,7 +707,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Gets a "not" flag (negation) of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -720,7 +721,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Sets an "not" flag (negation) of a criteria property. <br>
          * <br>
          *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
          * @param root
          *            -- a root type that contains property.
@@ -738,7 +739,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Marks a concrete property's tick to be <b>mutably</b> checked in domain tree representation. <br>
          * <br>
          *
-         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link IllegalArgumentException}.
+         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link DomainTreeException}.
          * <p>
          * <b>IMPORTANT</b> : a list of checked properties also contains "placeholders", which can be swapped, moved exactly as simple property. Placeholder property name has
          * contract "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but this is only for information, not for "property-related"
@@ -826,5 +827,38 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      *
      */
     public interface IAddToResultTickManager extends IOrderingManager, IWidthManager, ITickManager {
+        /**
+         * Gets a <i>growFactor</i> for property. <br>
+         * <br>
+         *
+         * This contract should not conflict with "checked properties" (or with "used properties" -- more accurately) contract. The conflict will produce an
+         * {@link DomainTreeException}.<br>
+         * <br>
+         *
+         * @param root
+         *            -- a root type that contains property.
+         * @param property
+         *            -- a dot-notation expression that defines a property.
+         * @return
+         */
+        int getGrowFactor(final Class<?> root, final String property);
+
+        /**
+         * Sets a <i>growFactor</i> for property. <br>
+         * <br>
+         *
+         * This action should not conflict with "checked properties" (or with "used properties" -- more accurately) contract. The conflict will produce an
+         * {@link DomainTreeException}.<br>
+         * <br>
+         *
+         * @param root
+         *            -- a root type that contains property.
+         * @param property
+         *            -- a dot-notation expression that defines a property.
+         * @param width
+         *            -- a width to set
+         * @return -- a result tick representation
+         */
+        IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);
     }
 }

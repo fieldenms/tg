@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.dao;
 
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -90,7 +91,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
-        createQueryByKeyFor(associations).map(query -> batchDelete(query));
+        createQueryByKeyFor(getEntityType(), getKeyType(), associations).map(query -> batchDelete(query));
     }
     
     @Override

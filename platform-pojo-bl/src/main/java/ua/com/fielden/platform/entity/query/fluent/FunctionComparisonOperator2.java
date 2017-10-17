@@ -4,16 +4,25 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionComparisonOperator2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition2;
 
-class FunctionComparisonOperator2<T, ET extends AbstractEntity<?>> extends AbstractComparisonOperator<IFunctionCompoundCondition2<T, ET>, ET> implements IFunctionComparisonOperator2<T, ET> {
-    T parent;
+abstract class FunctionComparisonOperator2<T, ET extends AbstractEntity<?>> //
+		extends ComparisonOperator<IFunctionCompoundCondition2<T, ET>, ET> //
+		implements IFunctionComparisonOperator2<T, ET> {
 
-    FunctionComparisonOperator2(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected FunctionComparisonOperator2(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForFunctionComparisonOperator2(final Tokens tokens);
 
-    @Override
-    IFunctionCompoundCondition2<T, ET> getParent1() {
-        return new FunctionCompoundCondition2<T, ET>(getTokens(), parent);
-    }
+	@Override
+	protected IFunctionCompoundCondition2<T, ET> nextForComparisonOperator(final Tokens tokens) {
+		return new FunctionCompoundCondition2<T, ET>(tokens) {
+
+			@Override
+			protected T nextForFunctionCompoundCondition2(final Tokens tokens) {
+				return FunctionComparisonOperator2.this.nextForFunctionComparisonOperator2(tokens);
+			}
+
+		};
+	}
 }

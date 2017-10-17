@@ -83,7 +83,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface IsProperty {
-    public static String stubForLinkProperty = "----dummy-property----";
+    public static final String DEFAULT_LINK_PROPERTY = "----dummy-property----";
+    public static final int DEFAULT_LENGTH = 0;
+    public static final int DEFAULT_PRECISION = -1;
+    public static final int DEFAULT_SCALE = -1;
+    public static final boolean DEFAULT_TRAILING_ZEROS = true;
+
 
     /**
      * This setting should be used to identify a type parameter of the property type. For example, it could indicate an element type for collectional properties.
@@ -119,7 +124,7 @@ public @interface IsProperty {
      *
      * @return
      */
-    String linkProperty() default stubForLinkProperty;
+    String linkProperty() default DEFAULT_LINK_PROPERTY;
 
     /**
      * Declares property as such that should be assigned automatically before entity is saved for the first time.
@@ -127,4 +132,36 @@ public @interface IsProperty {
      * @return
      */
     boolean assignBeforeSave() default false;
+    
+    /**
+     * Length indicates the maximum length of a value for a <code>String</code> property.
+     * 
+     * @return
+     */
+    int length() default DEFAULT_LENGTH;
+
+    /**
+     * Precision is the number of digits in a number. For example, the number 123.45 has a precision of 5.
+     * <p>
+     * This parameter is applicable only to properties of type <code>BigDecimal</code>. 
+     * @return
+     */
+    int precision() default DEFAULT_PRECISION;
+
+    
+    /**
+     * Scale is the number of digits to the right of the decimal point in a number. For example, the number 123.45 has a scale of 2.
+     * <p>
+     * This parameter is applicable only to properties of type <code>BigDecimal</code>.
+     * @return
+     */
+    int scale() default DEFAULT_SCALE;
+    
+    /**
+     * This parameter should be used to indicate whether trailing zeros have any significance for decimal properties (including Money).
+     * Such information can be used by, for example, UI logic for displaying or hind the trailing zeros. 
+     * 
+     * @return
+     */
+    boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
 }

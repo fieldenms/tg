@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;

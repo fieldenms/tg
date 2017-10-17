@@ -381,7 +381,7 @@
                     	
                     	if (this._reflector().isWarning(deserialisedResult)) {
                     		console.warn(this._toastMsgForError(deserialisedResult));
-                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
+                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult), false);
                     	} else {
                     		// continue with normal handling of the result's instance
                     		var deserialisedInstance = deserialisedResult.instance;
@@ -390,7 +390,8 @@
                     		//   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
                     		// Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                     	    if (this._reflector().isError(deserialisedResult)) {
-                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
+                    	        console.log('deserialisedResult: ', deserialisedResult);
+                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), !this._reflector().isContinuationError(deserialisedResult));
                         	}
     	                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     	    if (this._reflector().isError(deserialisedResult)) {
@@ -401,7 +402,7 @@
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;
                     		    if (typeof deserialisedInstance.id !== 'undefined') {
-                    		    	e.detail.entityId = deserialisedInstance.id;
+                    		    	e.detail.entityId = deserialisedInstance.get('id');
                     		    	e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
                     		    	e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
                     		    }
@@ -410,7 +411,7 @@
                     } else { // other codes
                     	var error = 'Request could not be dispatched.';
                         console.warn(error);
-                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.', true);
                         // this is equivalent to server side error
                         // threfore, this._postRetrievedDefaultError should be invoked
                         this._postRetrievedDefaultError(error);
@@ -426,7 +427,7 @@
                         if (this._reflector().isError(deserialisedResult)) {
                             // throw the toast message about the server-side error
                             var msg = this._toastMsgForError(deserialisedResult);
-                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
+                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg, true);
                             // continue with custom error handling of the error result
                             customErrorHandlerFor(deserialisedResult);
                         } else {
@@ -435,7 +436,7 @@
                         }
                     } else if (xhr.status === 403) { // forbidden!
                         // TODO should prompt for login in place...
-                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.");
+                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.", true);
                         customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
@@ -518,6 +519,11 @@
                 	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
                 	
+                    const oldCurrBindingEntity = this._currBindingEntity;
+                    if (oldCurrBindingEntity == null) {
+                        this.fire('binding-entity-did-not-appear', errorResult);
+                    }
+                	
                 	// custom external action
                 	if (this.postRetrievedError) {
 	                    this.postRetrievedError(errorResult);
@@ -569,12 +575,14 @@
                 this._toastGreeting().hasMore = hasMoreInfo;
                 this._toastGreeting().msgText = moreInfo;
                 this._toastGreeting().showProgress = showProgress;
+                this._toastGreeting().isCritical = false;
                 if (hasMoreInfo) {
                     if (!entity.isValid()) {
                     	// TODO is it still relevant? msgHeading
               			// TODO is it still relevant? msgHeading
       					// TODO is it still relevant? msgHeading
                         this._toastGreeting().msgHeading = "Error";
+                        this._toastGreeting().isCritical = true;
                     } else if (entity.isValidWithWarning()) {
                         this._toastGreeting().msgHeading = "Warning";
                     } else {
@@ -592,6 +600,7 @@
                 this._toastGreeting().hasMore = hasMoreInfo;
                 this._toastGreeting().msgText = moreInfo;
                 this._toastGreeting().showProgress = showProgress;
+                this._toastGreeting().isCritical = false;
                 if (hasMoreInfo) {
                     this._toastGreeting().msgHeading = "Info";
                 }
@@ -608,7 +617,9 @@
             /**
              * Opens the toast with some error message including full 'moreInfo' message.
              */
-            _openToastForError: function (toastMsg, moreInfo) {
+            _openToastForError: function (toastMsg, moreInfo, isCritical) {
+                console.log('this._toastGreeting().isCritical = ', isCritical);
+                this._toastGreeting().isCritical = isCritical;
                 this._toastGreeting().text = toastMsg;
                 if (moreInfo) {
                     this._toastGreeting().hasMore = true;
@@ -619,6 +630,7 @@
       			// TODO is it still relevant? msgHeading
 				// TODO is it still relevant? msgHeading
              	this._toastGreeting().msgHeading = "Error";
+                console.log('about to show ... this._toastGreeting().isCritical = ', isCritical);
                 this._toastGreeting().show();
             },
             
@@ -698,7 +710,7 @@
                 };
                 var self = this;
                 if (self._reflector().isEntity(bindingEntity)) {
-                    modPropHolder["id"] = bindingEntity["id"];
+                    modPropHolder["id"] = bindingEntity.get('id');
                     modPropHolder["version"] = bindingEntity["version"];
                     modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
 
@@ -768,8 +780,8 @@
                     self._resetState();
                 }
                 // After the entity has received, potentially its id has been updated:
-                if (self._idConvert(entity.id) !== self.entityId) {
-                    self.entityId = self._idConvert(entity.id);
+                if (self._idConvert(entity.get('id')) !== self.entityId) {
+                    self.entityId = self._idConvert(entity.get('id'));
                 }
                 // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
                 var previousModifiedPropertiesHolder = null;
@@ -856,7 +868,7 @@
             _extractBindingView: function (entity, previousModifiedPropertiesHolder, prevCurrBindingEntity) {
                 var self = this;
                 var bindingView = self._reflector().newEntity(entity.type().fullClassName());
-                bindingView["id"] = entity["id"];
+                bindingView["id"] = entity.get('id');
                 bindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
@@ -894,7 +906,8 @@
              * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
              */
             _isNecessaryForConversion: function (propertyName) {
-                return ['entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
+                return ['columnParameters',// adjust column width action
+                        'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
                         'forNew', 'menuTitle', 'sectionTitle', // compound master opening actions
                         'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
                         'surrogateVersion', 'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
@@ -914,7 +927,7 @@
                 var originalBindingView = self._reflector().newEntityEmpty();
 
                 originalBindingView["_type"] = entity["_type"];
-                originalBindingView["id"] = entity["id"];
+                originalBindingView["id"] = entity.get('id');
                 originalBindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 

@@ -2,7 +2,9 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
@@ -16,10 +18,10 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.union.UnionEntity;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 
 /**
  * Test case for {@link AnnotationReflector}.
@@ -83,6 +85,13 @@ public class AnnotationReflectorTest {
         // ordinary property tests
         assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property"));
         assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").value());
+    }
+    
+    @Test
+    public void retrieval_of_annotations_for_non_existing_properties_succeeds_with_null_result() {
+        assertNull(getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property_that_does_not_exist"));
+        assertNull(getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.sub_property_that_does_not_exist"));
+        assertNull(getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property_that_does_not_exist.sub_property_that_does_not_exist"));
     }
 
     @Test

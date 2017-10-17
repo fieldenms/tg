@@ -88,6 +88,7 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
+    			on-down="_onDown"
     			disabled$="[[_disabled]]"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <content class=".property-action"></content>
@@ -199,8 +200,12 @@
                             'h:m:ss.SSSa',
                             'H:m:ss.SSS',
                             'LT',
+                            'hmma',
+                            'Hmm',
                             'h:ma',
-                            'H:m'
+                            'H:m',
+                            'ha',
+                            'H'
                         ];
                     }
                 },
@@ -223,7 +228,7 @@
                     if (this._validMoment !== null) {
                         return this._validMoment.valueOf();
                     } else {
-                        throw "The entered date is incorrect."
+                        throw 'The entered ' + (this.datePortion === 'TIME' ? 'time' : 'date') + ' is incorrect.';
                     }
                 } else {
                     return null;

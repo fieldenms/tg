@@ -17,6 +17,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Collection;
@@ -52,6 +53,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         case KEY_AND_DESC:
             includeKeyAndDescOnly();
             break;
+        case NONE:
+        	break;
         case ID:
             includeIdOly();
             break;
@@ -147,9 +150,9 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeKeyAndDescOnly() {
         if (isPersistedEntityType(getEntityType())) {
             includeIdAndVersionOnly();
-        }
-
-        if (isUnionEntityType(getEntityType())) {
+        } else if (isSyntheticBasedOnPersistentEntityType(getEntityType())) {
+            with(ID, true);
+        } else if (isUnionEntityType(getEntityType())) {
             includeAllFirstLevelProps();
         }
 

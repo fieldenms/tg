@@ -5,24 +5,33 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 
-class OrderingItem extends AbstractExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> implements IOrderingItem {
+class OrderingItem //
+		extends ExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> //
+		implements IOrderingItem {
 
-    OrderingItem(final Tokens queryTokens) {
-        super(queryTokens);
+    public OrderingItem(final Tokens tokens) {
+        super(tokens);
     }
+    
+	@Override
+	protected ISingleOperandOrderable nextForSingleOperand(final Tokens tokens) {
+		return new SingleOperandOrderable(tokens);
+	}
 
-    @Override
-    ISingleOperandOrderable getParent() {
-        return new SingleOperandOrderable(getTokens());
-    }
+	@Override
+	protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand(final Tokens tokens) {
+		return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(tokens) {
 
-    @Override
-    IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> getParent2() {
-        return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(getTokens(), getParent());
-    }
+			@Override
+			protected ISingleOperandOrderable nextForExprOperand0(final Tokens tokens) {
+				return OrderingItem.this.nextForSingleOperand(tokens);
+			}
 
-    @Override
-    public ISingleOperandOrderable yield(final String yieldAlias) {
-        return new SingleOperandOrderable(getTokens().yield(yieldAlias));
-    }
+		};
+	}
+
+	@Override
+	public ISingleOperandOrderable yield(final String yieldAlias) {
+		return new SingleOperandOrderable(getTokens().yield(yieldAlias));
+	}
 }

@@ -29,6 +29,19 @@ import org.apache.commons.collections.map.ListOrderedMap;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
+import com.esotericsoftware.kryo.Context;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.SerializationException;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.serialize.BigDecimalSerializer;
+import com.esotericsoftware.kryo.serialize.BigIntegerSerializer;
+import com.esotericsoftware.kryo.serialize.BooleanSerializer;
+import com.esotericsoftware.kryo.serialize.DateSerializer;
+import com.esotericsoftware.kryo.serialize.IntSerializer;
+import com.esotericsoftware.kryo.serialize.LongSerializer;
+import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
+import com.esotericsoftware.kryo.serialize.StringSerializer;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -80,14 +93,14 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.Functions;
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -135,19 +148,6 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
-
-import com.esotericsoftware.kryo.Context;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.SerializationException;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.serialize.BigDecimalSerializer;
-import com.esotericsoftware.kryo.serialize.BigIntegerSerializer;
-import com.esotericsoftware.kryo.serialize.BooleanSerializer;
-import com.esotericsoftware.kryo.serialize.DateSerializer;
-import com.esotericsoftware.kryo.serialize.IntSerializer;
-import com.esotericsoftware.kryo.serialize.LongSerializer;
-import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
-import com.esotericsoftware.kryo.serialize.StringSerializer;
 
 /**
  * The descendant of {@link Kryo} with TG specific logic to correctly assign serialisers and recognise descendants of {@link AbstractEntity}. This covers correct determination of

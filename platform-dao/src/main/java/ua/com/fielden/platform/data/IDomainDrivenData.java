@@ -36,6 +36,8 @@ public interface IDomainDrivenData {
 
     <T> T getInstance(final Class<T> type);
 
+    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type);
+    
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type);
 
     Date date(final String dateTime);
@@ -53,7 +55,7 @@ public interface IDomainDrivenData {
 
     default void setupUser(final User.system_users defaultUser, final String emailDomain) {
         if (useSavedDataPopulationScript()) {
-            final IUser coUser = co(User.class);
+            final IUser coUser = co$(User.class);
             final User su = coUser.findUser(defaultUser.name());
             final IUserProvider up = getInstance(IUserProvider.class);
             up.setUser(su);
@@ -61,7 +63,7 @@ public interface IDomainDrivenData {
 
             // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
             // It should always be used as the current user for data population activities
-            final IUser coUser = co(User.class);
+            final IUser coUser = co$(User.class);
             final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
             final IUserProvider up = getInstance(IUserProvider.class);
             up.setUser(u);
@@ -76,7 +78,7 @@ public interface IDomainDrivenData {
                 final IApplicationSettings settings = getInstance(IApplicationSettings.class);
                 final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
                 final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-                final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
+                final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
                 final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
                 for (final SecurityTokenNode securityNode : topNodes) {
                     alg.search(securityNode, predicate);

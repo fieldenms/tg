@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer.DomainTreeEnhancerWithPropertiesPopulation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -423,7 +424,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     private void validateAndThrow(final String property) {
-        if (!getProperty(property).isValidWithRequiredCheck()) {
+        if (!getProperty(property).isValidWithRequiredCheck(false)) {
             throw getProperty(property).getFirstFailure();
         }
     }
@@ -598,7 +599,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     protected static void validateRootWithoutRootTypeEnforcement(final IDomainTreeEnhancer enhancer, final Class<?> root) {
         try {
             AbstractDomainTree.validateRootType(root);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
             throw new IncorrectCalcPropertyException(e.getMessage());
         }
     }
@@ -617,7 +618,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         try {
             AbstractDomainTree.illegalType(cp.getRoot(), newContextPath, "Could not use 'non-AE' property [" + newContextPath + "] in type [" + cp.getRoot().getSimpleName()
                     + "] for 'contextPath' of calculated property.", AbstractEntity.class);
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
             throw new IncorrectCalcPropertyException(e.getMessage());
         }
     }

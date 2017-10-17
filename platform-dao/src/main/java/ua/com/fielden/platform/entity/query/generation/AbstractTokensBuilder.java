@@ -1,22 +1,23 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.Functions;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -295,8 +296,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     private Object preprocessValue(final Object value) {
         if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-            final List<Object> values = new ArrayList<Object>();
-            for (final Object object : (Iterable) value) {
+            final Iterable<?> iterable = value.getClass().isArray() ? Arrays.asList((Object[]) value) : (Collection<?>) value;
+            final List<Object> values = new ArrayList<>();
+            for (final Object object : iterable) {
                 final Object furtherPreprocessed = preprocessValue(object);
                 if (furtherPreprocessed instanceof List) {
                     values.addAll((List) furtherPreprocessed);
@@ -412,4 +414,5 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     public DbVersion getDbVersion() {
         return getQueryBuilder().getDbVersion();
     }
+    
 }

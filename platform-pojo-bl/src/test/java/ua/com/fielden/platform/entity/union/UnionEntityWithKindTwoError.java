@@ -4,6 +4,8 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.sample.domain.EntityOne;
+import ua.com.fielden.platform.sample.domain.EntityTwo;
 
 public class UnionEntityWithKindTwoError extends AbstractUnionEntity {
     @IsProperty

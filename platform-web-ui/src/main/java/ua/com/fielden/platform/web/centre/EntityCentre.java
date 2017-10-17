@@ -1,5 +1,16 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,9 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
@@ -29,6 +41,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
@@ -83,6 +96,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
+import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -97,6 +111,49 @@ import ua.com.fielden.snappy.DateRangeConditionEnum;
  *
  */
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
+
+    private final String IMPORTS = "<!--@imports-->";
+    private final String FULL_ENTITY_TYPE = "@full_entity_type";
+    private final String FULL_MI_TYPE = "@full_mi_type";
+    private final String MI_TYPE = "@mi_type";
+    //egi related properties
+    private final String EGI_LAYOUT = "@gridLayout";
+    private final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
+    private final String EGI_SHORTCUTS = "@customShortcuts";
+    private final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
+    private final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
+    private final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
+    private final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
+    private final String EGI_NUM_OF_FIXED_COLUMNS = "@numOfFixedCols";
+    private final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
+    private final String EGI_HEADER_FIXED = "@headerFixed";
+    private final String EGI_SUMMARY_FIXED = "@summaryFixed";
+    private final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
+    private final String EGI_PAGE_CAPACITY = "@pageCapacity";
+    private final String EGI_ACTIONS = "//generatedActionObjects";
+    private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
+    private final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
+    private final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
+    private final String EGI_DOM = "<!--@egi_columns-->";
+    private final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
+    private final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
+    private final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    //Toolbar related
+    private final String TOOLBAR_DOM = "<!--@toolbar-->";
+    private final String TOOLBAR_JS = "//toolbarGeneratedFunction";
+    private final String TOOLBAR_STYLES = "/*toolbarStyles*/";
+    //Selection criteria related
+    private final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
+    private final String CRITERIA_DOM = "<!--@criteria_editors-->";
+    private final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
+    //Insertion points
+    private final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
+    private final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
+    private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
+    private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
+    private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+
+
     private final Logger logger = Logger.getLogger(getClass());
     private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
     private final String name;
@@ -192,25 +249,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
         cdtmae.getEnhancer().apply();
-
         if (resultSetProps.isPresent()) {
+            final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp property : resultSetProps.get()) {
-                if (property.propName.isPresent()) {
-                    final String propertyName = treeName(property.propName.get());
-                    cdtmae.getSecondTick().check(entityType, propertyName, true);
-                    cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
-                } else {
-                    if (property.propDef.isPresent()) { // represents the 'custom' property
-                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                        final String propertyName = treeName(customPropName);
-                        cdtmae.getSecondTick().check(entityType, propertyName, true);
-                        cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
-                    } else {
-                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
-                    }
-                }
-                if (property.tooltipProp.isPresent()) {
-                    cdtmae.getSecondTick().check(entityType, treeName(property.tooltipProp.get()), true);
+                final String propertyName = getPropName(property);
+                cdtmae.getSecondTick().check(entityType, propertyName, true);
+                cdtmae.getSecondTick().use(entityType, propertyName, true);
+                cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
+                if (growFactors.containsKey(propertyName)) {
+                    cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
                 }
             }
         }
@@ -242,6 +289,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
+    }
+
+    /**
+     * Returns the property name for specified {@link ResultSetProp} instance. The returned property name can be used for retrieving and altering data in
+     * {@link ICentreDomainTreeManager}.
+     *
+     * @param property
+     * @return
+     */
+    private static String getPropName(final ResultSetProp property) {
+        if (property.propName.isPresent()) {
+            return treeName(property.propName.get());
+        } else {
+            if (property.propDef.isPresent()) { // represents the 'custom' property
+                final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
+                return treeName(customPropName);
+            } else {
+                throw new PropertyDefinitionException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+            }
+        }
     }
 
     /**
@@ -644,10 +711,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return createRenderableRepresentation(getAssociatedEntityCentreManager());
     }
 
-    public IRenderable buildEgi() {
-        return createRenderableEgiRepresentaton(getAssociatedEntityCentreManager());
-    }
-
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
@@ -655,101 +718,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         } else {
             return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, CentreUpdater.FRESH_CENTRE_NAME);
         }
-    }
-
-    private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
-        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
-                +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
-                +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
-                +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
-                +
-                "<div class='truncate relative' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", false)]]'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>"
-                + "</div>" +
-                "</div>";
-
-        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
-                +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
-                +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
-                +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
-                +
-                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", true)]]'></iron-icon>"
-                + "</div>" +
-                "</div>";
-        final DomContainer domContainer = new DomContainer();
-        final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();
-        final Class<?> managedType = centre.getEnhancer().getManagedType(getEntityType());
-        if (resultProps.isPresent()) {
-            for (int columnIndex = 0; columnIndex < resultProps.get().size(); columnIndex++) {
-                final ResultSetProp resultProp = resultProps.get().get(columnIndex);
-                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
-                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
-                final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
-                final String typeTemplate = EntityUtils.isBoolean(propertyType) ? booleanValueString : simpleValueString;
-                final Pair<String, String> columnTitileAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName);
-                domContainer.add(
-                        new InnerTextElement(typeTemplate
-                                .replaceAll("@calc-property-name", propertyName)
-                                .replaceAll("@property-name", resultPropName)
-                                .replace("@column-title", columnTitileAndDesc.getKey())
-                                .replace("@column-desc", columnTitileAndDesc.getValue())
-                                .replaceAll("@column-index", Integer.toString(columnIndex))
-                                .replaceAll("@property-type", Matcher.quoteReplacement(
-                                        egiRepresentationFor(
-                                                propertyType,
-                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
-                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName)
-                                                        : null))
-                                        ))));
-            }
-        }
-
-        logger.debug("Initiating top-level actions' shortcuts...");
-        final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
-        final StringBuilder shortcuts = new StringBuilder();
-
-        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
-            shortcuts.append(shortcut + " ");
-        }
-
-        if (topLevelActions.isPresent()) {
-
-            for (int i = 0; i < topLevelActions.get().size(); i++) {
-                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
-                final EntityActionConfig config = topLevelAction.getKey();
-                if (config.shortcut.isPresent()) {
-                    shortcuts.append(config.shortcut.get() + " ");
-                }
-            }
-        }
-
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
-        final String egiStr = text.
-                replace("@SHORTCUTS", shortcuts).
-                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
-                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
-                replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
-                replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
-                replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
-                replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
-                replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
-                replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
-                replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
-                replaceAll("@miType", getMenuItemType().getSimpleName()).
-                replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
-
-        return new IRenderable() {
-
-            @Override
-            public DomElement render() {
-                return new InnerTextElement(egiStr);
-            }
-        };
     }
 
     private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
@@ -810,10 +778,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultProps.isPresent()) {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
-                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
-
-                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
+                final String resultPropName = getPropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
@@ -827,7 +793,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         null,
-                        centre.getSecondTick().getWidth(root, resultPropName),
+                        resultProp.width,
+                        centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,
                         tooltipProp,
                         egiRepresentationFor(
@@ -836,13 +803,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
                         CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
                         action);
-                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
-                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
+                if (summaryProps.isPresent() && summaryProps.get().containsKey(dslName(resultPropName))) {
+                    final List<SummaryPropDef> summaries = summaryProps.get().get(dslName(resultPropName));
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
                 }
                 propertyColumns.add(el);
             }
-            calculteGrowFactor(propertyColumns);
         }
 
         logger.debug("Initiating prop actions...");
@@ -955,9 +921,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     .attr("id", "ip" + el.numberOfAction)
                     .attr("short-desc", el.conf().shortDesc.orElse(""))
                     .attr("long-desc", el.conf().longDesc.orElse(""))
+                    .attr("selection-criteria-entity", "[[selectionCriteriaEntity]]")
+                    .attr("is-centre-running", "[[_triggerRun]]")
                     .attr("retrieved-entities", "{{retrievedEntities}}")
                     .attr("retrieved-totals", "{{retrievedTotals}}")
-                    .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
+                    .attr("centre-selection", "[[centreSelection]]")
                     .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
                 leftInsertionPointsDom.add(insertionPoint);
@@ -969,7 +937,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
         }
+        //Generating shortcuts for EGI
+        final StringBuilder shortcuts = new StringBuilder();
 
+        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
+            shortcuts.append(shortcut + " ");
+        }
+
+        if (topLevelActions.isPresent()) {
+
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+                final EntityActionConfig config = topLevelAction.getKey();
+                if (config.shortcut.isPresent()) {
+                    shortcuts.append(config.shortcut.get() + " ");
+                }
+            }
+        }
+        ///////////////////////////////////////
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
@@ -981,37 +966,47 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
-                replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
-                //TODO It looks like that is not needed any longer.
-                //replace("@entity_type", entityType.getSimpleName()).
-                replace("@gridLayout", gridLayoutConfig.getKey()).
-                replace("@full_entity_type", entityType.getName()).
-                replace("@mi_type", miType.getSimpleName()).
-                replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
-                replace("//toolbarGeneratedFunction", dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
-                replace("/*toolbarStyles*/", dslDefaultConfig.getToolbarConfig().styles().toString()).
-                replace("@full_mi_type", miType.getName()).
-                replace("@pageCapacity", Integer.toString(dslDefaultConfig.getPageCapacity())).
-                replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
-                replace("<!--@criteria_editors-->", editorContainer.toString()).
-                replace("<!--@egi_columns-->", egiColumns.toString()).
-                replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
-                replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
-                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
+                replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
+                replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
+                replace(FULL_ENTITY_TYPE, entityType.getName()).
+                replace(MI_TYPE, miType.getSimpleName()).
+                //egi related properties
+                replace(EGI_SHORTCUTS, shortcuts).
+                replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).
+                replace(EGI_CHECKBOX_VISIBILITY, CHECKBOX_VISIBLE.eval(!dslDefaultConfig.shouldHideCheckboxes())).
+                replace(EGI_CHECKBOX_FIXED, CHECKBOX_FIXED.eval(dslDefaultConfig.getScrollConfig().isCheckboxesFixed())).
+                replace(EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED, CHECKBOX_WITH_PRIMARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed())).
+                replace(EGI_NUM_OF_FIXED_COLUMNS, Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
+                replace(EGI_SECONDARY_ACTION_FIXED, SECONDARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed())).
+                replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
+                replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
+                replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
+                ///////////////////////
+                replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
+                replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
+                replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
+                replace(FULL_MI_TYPE, miType.getName()).
+                replace(EGI_PAGE_CAPACITY, Integer.toString(dslDefaultConfig.getPageCapacity())).
+                replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
+                replace(CRITERIA_DOM, editorContainer.toString()).
+                replace(EGI_DOM, egiColumns.toString()).
+                replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
+                replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
+                replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
                         : insertionPointActionsString).
-                replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
+                replace(EGI_PRIMARY_ACTION, primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
                         : primaryActionObjectString).
-                replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
+                replace(EGI_PROPERTY_ACTIONS, propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
                         : propActionsString).
-                replace("//@layoutConfig", layout.code().toString()).
-                replace("//gridLayoutConfig", gridLayoutConfig.getValue()).
-                replace("<!--@functional_actions-->", functionalActionsDom.toString()).
-                replace("<!--@primary_action-->", primaryActionDom.toString()).
-                replace("<!--@secondary_actions-->", secondaryActionsDom.toString()).
-                replace("<!--@insertion_point_actions-->", insertionPointActionsDom.toString()).
-                replace("<!--@left_insertion_points-->", leftInsertionPointsDom.toString()).
-                replace("<!--@right_insertion_points-->", rightInsertionPointsDom.toString()).
-                replace("<!--@bottom_insertion_points-->", bottomInsertionPointsDom.toString());
+                replace(SELECTION_CRITERIA_LAYOUT_CONFIG, layout.code().toString()).
+                replace(EGI_LAYOUT_CONFIG, gridLayoutConfig.getValue()).
+                replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString()).
+                replace(EGI_PRIMARY_ACTION_DOM, primaryActionDom.toString()).
+                replace(EGI_SECONDARY_ACTIONS_DOM, secondaryActionsDom.toString()).
+                replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
+                replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
+                replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
+                replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString());
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override
@@ -1026,20 +1021,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /**
      * Calculates the relative grow factor for all columns.
      */
-    private void calculteGrowFactor(final List<PropertyColumnElement> propertyColumns) {
-        int minWidth = 0;
-        for (final PropertyColumnElement column : propertyColumns) {
-            if (minWidth == 0 && column.width > 0 && column.isFlexible) {
-                minWidth = column.width;
-            } else if (minWidth > 0 && column.width > 0 && column.isFlexible && column.width < minWidth) {
-                minWidth = column.width;
-            }
-        }
-        for (final PropertyColumnElement column : propertyColumns) {
-            if (column.isFlexible) {
-                column.setGrowFactor(minWidth > 0 ? Math.round((float) column.width / minWidth) : 0);
-            }
-        }
+    private Map<String, Integer> calculateGrowFactors(final List<ResultSetProp> propertyColumns) {
+        //Searching for the minimal column width which are not flexible and their width is greater than 0.
+        final int minWidth = propertyColumns.stream()
+                .filter(column -> column.isFlexible && column.width > 0)
+                .reduce(Integer.MAX_VALUE,
+                        (min, column) -> min > column.width ? column.width : min,
+                        (min1, min2) -> min1 < min2 ? min1 : min2);
+        //Map each resultSetProp which is not flexible and has width greater than 0 to it's grow factor.
+        return propertyColumns.stream()
+                .filter(column -> column.isFlexible && column.width > 0)
+                .collect(Collectors.toMap(
+                        column -> getPropName(column),
+                        column -> Math.round((float) column.width / minWidth)));
     }
 
     private Pair<String, String> generateGridLayoutConfig() {
@@ -1218,26 +1212,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return element.createActionObject();
     }
 
-    /**
-     * Return DSL representation for property name.
-     *
-     * @param name
-     * @return
-     */
-    private static String dslName(final String name) {
-        return name.equals("") ? "this" : name;
-    }
-
-    /**
-     * Return domain tree representation for property name.
-     *
-     * @param name
-     * @return
-     */
-    private static String treeName(final String name) {
-        return name.equals("this") ? "" : name;
-    }
-
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {
         final String dslProp = dslName(critProp);
         return dslDefaultConfig.getValueMatchersForSelectionCriteria().isPresent()
@@ -1300,6 +1274,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     public Optional<IFetchProvider<T>> getAdditionalFetchProvider() {
         return dslDefaultConfig.getFetchProvider();
+    }
+
+    /**
+     * Returns fetch provider consisting only of 'tooltip properties': properties that are used as tooltips for other properties.
+     *
+     * @return
+     */
+    public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
+        final Set<String> tooltipProps = new LinkedHashSet<>();
+        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        resultSetProps.ifPresent(resultProps -> {
+            resultProps.stream().forEach(property -> {
+                if (property.tooltipProp.isPresent()) {
+                    tooltipProps.add(property.tooltipProp.get());
+                }
+            });
+        });
+        return tooltipProps.isEmpty() ? Optional.empty() : Optional.of(EntityUtils.fetchNotInstrumented(entityType).with(tooltipProps));
     }
 
     public Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

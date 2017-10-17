@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.YIELD;
+
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.YIELD;
 
 public class OrderByBuilder extends AbstractTokensBuilder {
     private boolean descOrder;

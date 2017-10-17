@@ -260,7 +260,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return revalidation result
      */
     @Override
-    public synchronized final Result revalidate(final boolean ignoreRequiredness) {
+    public final synchronized Result revalidate(final boolean ignoreRequiredness) {
         // revalidation is required only is there is an assigned value
         if (assigned) {
             return validate(getLastAttemptedValue(), validationAnnotations, ignoreRequiredness);
@@ -476,7 +476,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Removes all validation warnings (not errors) from the property.
      */
     @Override
-    public synchronized final void clearWarnings() {
+    public final synchronized void clearWarnings() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
             for (final Entry<IBeforeChangeEventHandler<T>, Result> handlerAndResult : annotationHandlers.entrySet()) {
@@ -493,11 +493,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public synchronized final boolean isValidWithRequiredCheck() {
+    public final synchronized boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
         final boolean result = isValid();
-        if (result) {
+        if (result && (!ignoreRequirednessForCritOnly || !isCritOnly)) {
             // if valid check whether it's requiredness sound
-            final Object value = ((AbstractEntity<?>) getEntity()).get(getName());
+            final Object value = getEntity().get(getName());
             // this is a potential alternative approach to validating requiredness for proxied properties
             // leaving it here for future reference
 //            if (isRequired() && isProxy()) {
@@ -1067,7 +1067,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     @Override
-    public void setEnforceMutator(final boolean enforceMutator) {
+    protected void setEnforceMutator(final boolean enforceMutator) {
         this.enforceMutator = enforceMutator;
     }
 

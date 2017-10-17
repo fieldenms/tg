@@ -17,7 +17,7 @@ public class ConcurrentAccessToCompanionObjectsTest extends AbstractDaoTestCase 
     
     @Test
     public void concurrently_accessed_DAO_corrupt_sessions() throws Exception {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         
         
         final Runnable runnable = new Runnable() {

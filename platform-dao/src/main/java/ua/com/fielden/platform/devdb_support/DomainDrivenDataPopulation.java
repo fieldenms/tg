@@ -162,8 +162,13 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     }
 
     @Override
-    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type) {
         return (T) provider.find(type);
+    }
+
+    @Override
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
+        return (T) provider.find(type, true);
     }
 
     @Override
@@ -222,7 +227,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
-        final IEntityDao<T> co = co(entityClass);
+        final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }
 

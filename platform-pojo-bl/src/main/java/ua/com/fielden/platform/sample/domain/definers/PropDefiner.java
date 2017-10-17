@@ -10,8 +10,9 @@ public class PropDefiner implements IAfterChangeEventHandler<String> {
     @Override
     public void handle(final MetaProperty<String> property, final String newValue) {
         final TgEntityWithPropertyDependency entity = (TgEntityWithPropertyDependency) property.getEntity();
+        final String otherPropName = "dependentProp";
+        
         if (!entity.isPersisted()) {
-            final String otherPropName = "dependentProp";
             if (EntityUtils.equalsEx(newValue, "IS")) {
                 // try {
                 //     Thread.sleep(2000);
@@ -21,6 +22,11 @@ public class PropDefiner implements IAfterChangeEventHandler<String> {
                 entity.set(otherPropName, "InService");
                 // entity.getProperty(otherPropName).setEditable(false);
             }
+        }
+        
+        if (!property.getEntity().isInitialising() && EntityUtils.equalsEx(newValue, "DR")) {
+            entity.set(otherPropName, null);
+            entity.getProperty(otherPropName).setRequired(true);
         }
     }
 

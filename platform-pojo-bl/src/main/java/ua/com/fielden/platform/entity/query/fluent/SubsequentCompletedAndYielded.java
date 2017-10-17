@@ -7,24 +7,37 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET> implements ISubsequentCompletedAndYielded<ET> {
-
-    SubsequentCompletedAndYielded(final Tokens queryTokens) {
-        super(queryTokens);
+final class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
+		extends CompletedCommon<ET> //
+		implements ISubsequentCompletedAndYielded<ET> {
+    
+    protected SubsequentCompletedAndYielded(final Tokens tokens) {
+        super(tokens);
     }
+    
+	@Override
+	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
+	}
 
-    @Override
-    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-        return new EntityResultQueryModel<T>(getTokens().getValues(), resultType);
-    }
+	@Override
+	public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
+		return createFunctionYieldedLastArgument(getTokens().yield());
+	}
 
-    @Override
-    public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-        return new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(getTokens().yield(), new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>(getTokens(), this));
-    }
+	@Override
+	public AggregatedResultQueryModel modelAsAggregate() {
+		return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
+	}
+	
+	private FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument(final Tokens tokens) {
+		return new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(tokens) {
 
-    @Override
-    public AggregatedResultQueryModel modelAsAggregate() {
-        return new AggregatedResultQueryModel(getTokens().getValues());
-    }
+			@Override
+			protected ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument(final Tokens tokens) {
+				return new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>(tokens);
+			}
+
+		};
+	}
 }

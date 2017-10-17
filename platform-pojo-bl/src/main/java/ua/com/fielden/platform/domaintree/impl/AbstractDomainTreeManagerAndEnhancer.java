@@ -17,6 +17,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
@@ -72,7 +73,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     public static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
-        private final static Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
+        private static final Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
         private final IDomainTreeEnhancer baseEnhancer;
         private final IDomainTreeRepresentationWithMutability dtr;
 
@@ -462,6 +463,25 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
             // inject an enhanced type into method implementation
             base.moveToTheEnd(enhancerWithPropertiesPopulation.getManagedType(root), what);
             return this;
+        }
+        
+        @Override
+        public boolean isUsed(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base.isUsed(enhancerWithPropertiesPopulation.getManagedType(root), property);
+        }
+
+        @Override
+        public IUsageManager use(final Class<?> root, final String property, final boolean check) {
+            // inject an enhanced type into method implementation
+            base.use(enhancerWithPropertiesPopulation.getManagedType(root), property, check);
+            return this;
+        }
+
+        @Override
+        public List<String> usedProperties(final Class<?> root) {
+            // inject an enhanced type into method implementation
+            return base.usedProperties(enhancerWithPropertiesPopulation.getManagedType(root));
         }
 
         protected IDomainTreeEnhancer enhancer() {

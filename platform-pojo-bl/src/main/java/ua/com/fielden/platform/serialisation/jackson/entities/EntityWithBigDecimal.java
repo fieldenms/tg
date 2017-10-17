@@ -19,8 +19,8 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 public class EntityWithBigDecimal extends AbstractEntity<String> {
 
-    @IsProperty
-    @MapTo(length = 10, precision = 10, scale = 3)
+    @IsProperty(precision = 10, scale = 3)
+    @MapTo
     @Title(value = "Title", desc = "Desc")
     @Secrete
     private BigDecimal prop;

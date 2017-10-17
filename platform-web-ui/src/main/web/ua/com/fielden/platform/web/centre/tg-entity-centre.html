@@ -52,7 +52,7 @@
 
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-        <iron-pages id="views" selected="[[_selectedView]]" on-scroll="_handleScroll" on-iron-select="_pageSelectionChanged">
+        <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
             <div class="fit">
                 <paper-material>
                     <tg-selection-view id="selectionView">
@@ -60,7 +60,7 @@
                         <div class="selection-criteria-buttons layout horizontal justified" style="padding: 0 24px 24px 24px;">
                             <div class="layout horizontal">
                                 <paper-button id="saver" raised shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
-                                <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard configuration">Discard</paper-button>
+                                <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
                             </div>
                             <div class="layout horizontal">
                                 <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
@@ -112,7 +112,6 @@
             _processSaverError: Function,
             _processDiscarderResponse: Function,
             _processDiscarderError: Function,
-            _handleScroll: Function,
             _saverDisabled: Boolean,
             _discarderDisabled: Boolean,
             _runnerDisabled: Boolean,

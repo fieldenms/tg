@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,18 +13,16 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public abstract class AbstractSource implements ISource {
 
-    protected final boolean persistedType;
     public final DbVersion dbVersion;
 
     /**
@@ -63,9 +62,8 @@ public abstract class AbstractSource implements ISource {
         this.sqlAlias = sqlAlias;
     }
 
-    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean persistedType) {
+    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.alias = alias;
-        this.persistedType = persistedType;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.dbVersion = domainMetadataAnalyser.getDbVersion();
     }
@@ -146,7 +144,7 @@ public abstract class AbstractSource implements ISource {
     }
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
-        if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
+        if ((isPersistedEntityType(sourceType()) || isSyntheticBasedOnPersistentEntityType(sourceType())) && prop.getName().equalsIgnoreCase(getAlias())) {
             final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, /*sourceType()*/Long.class, Hibernate.LONG, false || isNullable());
             return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
         } else {

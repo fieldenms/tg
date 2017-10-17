@@ -6,24 +6,26 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
 
-final class Where2<ET extends AbstractEntity<?>> extends AbstractWhere<IComparisonOperator2<ET>, ICompoundCondition2<ET>, IWhere3<ET>, ET> implements IWhere2<ET> {
+final class Where2<ET extends AbstractEntity<?>> //
+		extends Where<IComparisonOperator2<ET>, ICompoundCondition2<ET>, IWhere3<ET>, ET> //
+		implements IWhere2<ET> {
 
-    Where2(final Tokens queryTokens) {
-        super(queryTokens);
+    public Where2(final Tokens tokens) {
+        super(tokens);
     }
+    
+	@Override
+	protected IWhere3<ET> nextForWhere(final Tokens tokens) {
+		return new Where3<ET>(tokens);
+	}
 
-    @Override
-    protected IWhere3<ET> getParent3() {
-        return new Where3<ET>(getTokens());
-    }
+	@Override
+	protected ICompoundCondition2<ET> nextForConditionalOperand(final Tokens tokens) {
+		return new CompoundCondition2<ET>(tokens);
+	}
 
-    @Override
-    ICompoundCondition2<ET> getParent2() {
-        return new CompoundCondition2<ET>(getTokens());
-    }
-
-    @Override
-    IComparisonOperator2<ET> getParent() {
-        return new ComparisonOperator2<ET>(getTokens());
-    }
+	@Override
+	protected IComparisonOperator2<ET> nextForSingleOperand(final Tokens tokens) {
+		return new ComparisonOperator2<ET>(tokens);
+	}
 }

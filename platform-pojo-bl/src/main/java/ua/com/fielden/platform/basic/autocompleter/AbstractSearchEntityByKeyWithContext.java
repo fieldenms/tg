@@ -15,8 +15,8 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>>
                       implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
 
-    private final IEntityDao<T> companion;
+    protected final IEntityDao<T> companion;
     private final fetch<T> defaultFetchModel;
     private fetch<T> fetchModel;
     private CONTEXT context;

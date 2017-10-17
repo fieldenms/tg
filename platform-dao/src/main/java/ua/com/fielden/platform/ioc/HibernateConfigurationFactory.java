@@ -49,16 +49,13 @@ public class HibernateConfigurationFactory {
     public HibernateConfigurationFactory(//
             final Properties props, //
             final Map<Class, Class> defaultHibernateTypes, //
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
-            final MapEntityTo userMapTo)
-            throws Exception {
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         this.props = props;
 
         domainMetadata = new DomainMetadata(//
                 defaultHibernateTypes,//
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationEntityTypes, //
-                userMapTo, //
                 determineDbVersion(props));
         
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
@@ -74,7 +71,7 @@ public class HibernateConfigurationFactory {
             return DbVersion.H2;
         } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
             return DbVersion.POSTGRESQL;
-        } else if (dialect.equals("org.hibernate.dialect.SQLServerDialect")) {
+        } else if (dialect.contains("SQLServer")) {
             return DbVersion.MSSQL;
         } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
             return DbVersion.ORACLE;

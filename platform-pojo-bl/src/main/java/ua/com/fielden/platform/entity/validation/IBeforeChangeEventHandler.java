@@ -3,6 +3,8 @@ package ua.com.fielden.platform.entity.validation;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 
@@ -17,6 +19,7 @@ import ua.com.fielden.platform.error.Result;
  *
  */
 public interface IBeforeChangeEventHandler<T> {
+
     /**
      * Processed Before Change Event (BCE) for a <code>property</code>.
      * <p>
@@ -37,4 +40,16 @@ public interface IBeforeChangeEventHandler<T> {
      * @return
      */
     Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations);
+
+    /**
+     * Returns a narrowed down to the reader contract companion object for the given entity type.
+     * By default this method throws {@link UnsupportedOperationException} exception. 
+     * 
+     * @param type
+     * @return
+     */
+    default <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+        throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractBeforeChangeEventHandler] as the base type to inherit the implementation.");
+    }
+
 }

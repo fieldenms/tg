@@ -4,6 +4,20 @@ import static java.lang.String.format;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_ONE2ONE_ASSOCIATION_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -257,14 +271,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     @MapTo("_ID")
     private Long id;
-    @MapTo("_VERSION")
+    
+    @MapTo(value = "_VERSION", defaultValue = "0")
     private Long version = 0L;
+    
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
     @Required
     private K key;
-    private transient final boolean compositeKey;
+    
+    private final boolean compositeKey;
+    
     @IsProperty
     @MapTo("DESC_")
     private String desc;
@@ -345,7 +363,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
-        actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
+        actualEntityType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(getClass());
 
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
@@ -690,32 +708,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
                     // perform some early runtime validation whether property was defined correctly
                     // TODO this kind of validation should really be implemented as part of the compilation process
-                    if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
-                        final String error = format("Property [%s] in [%s] is collectional (or a property descriptor), but has missing type argument, which should be specified as part of annotation @IsProperty.",
-                                propName, getType().getName());
-                        logger.error(error);
-                        throw new EntityDefinitionException(error);
-                    }
-
-                    final Class<? extends AbstractEntity<?>> entityType = getType();
-                    if (isCollectional && isLinkPropertyRequiredButMissing(propName)) {
-                        final String error = format("Property [%s] in entity [%s] is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.",
-                                propName, getType().getName());
-                        logger.error(error);
-                        throw new EntityDefinitionException(error);
-                    }
-
-                    if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
-                            && !Finder.isOne2One_association(entityType, propName)) {
-                        final String error = format("Property [%s] in entity [%s] has AE key type, but it does not form correct one2one association due to non-parent type of property key.",
-                                propName, getType().getName());
-                        logger.error(error);
-                        throw new EntityDefinitionException(error);
-                    }
+                    earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType);
 
                     // if setter is annotated then try to instantiate specified validator
                     //logger.debug("Collecting validators for " + field.getName());
-                    final Set<Annotation> declatedValidationAnnotations = new HashSet<Annotation>();
+                    final Set<Annotation> declatedValidationAnnotations = new HashSet<>();
                     final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
                     // create ACE handler
                     //logger.debug("Initiating meta-property ACE handler for " + field.getName());
@@ -752,6 +749,70 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
         endInitialising();
         //logger.debug("Finished meta construction for type " + getType());
+    }
+
+    /**
+     * Early runtime validation of property definitions. This kind of validations should be moved to complile time in due course. 
+     * 
+     * @param propName
+     * @param type
+     * @param isCollectional
+     * @param isPropertyAnnotation
+     * @param propertyAnnotationType
+     */
+    private void earlyRuntimePropertyDefinitionValidation(final String propName, final Class<?> type, final boolean isCollectional, final IsProperty isPropertyAnnotation, final Class<?> propertyAnnotationType) {
+        final boolean isNumeric = isNumeric(type);
+        
+        if (!isNumeric &&
+            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || 
+             isPropertyAnnotation.scale() != DEFAULT_SCALE || 
+             isPropertyAnnotation.trailingZeros() != DEFAULT_TRAILING_ZEROS)) {
+            final String error = format(INVALID_USE_OF_NUMERIC_PARAMS_MSG,  propName, getType().getName());
+            logger.error(error);
+            throw new EntityDefinitionException(error);
+            
+        }
+
+        if (isNumeric &&
+            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) && 
+            (isPropertyAnnotation.precision() <= 0 || isPropertyAnnotation.scale() < 0)) {
+            final String error = format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
+            logger.error(error);
+            throw new EntityDefinitionException(error);
+        }
+
+        if (isNumeric && isPropertyAnnotation.precision() != DEFAULT_PRECISION && isPropertyAnnotation.precision() <= isPropertyAnnotation.scale()) {
+                final String error = format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
+                logger.error(error);
+                throw new EntityDefinitionException(error);
+                
+        }
+
+        if (!isString(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
+            final String error = format(INVALID_USE_OF_PARAM_LENGTH_MSG, propName, getType().getName());
+            logger.error(error);
+            throw new EntityDefinitionException(error);
+        }
+        
+        if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
+            final String error = format(COLLECTIONAL_PROP_MISSING_TYPE_MSG, propName, getType().getName());
+            logger.error(error);
+            throw new EntityDefinitionException(error);
+        }
+
+        final Class<? extends AbstractEntity<?>> entityType = getType();
+        if (isCollectional && isLinkPropertyRequiredButMissing(propName)) {
+            final String error = format(COLLECTIONAL_PROP_MISSING_LINK_MSG, propName, getType().getName());
+            logger.error(error);
+            throw new EntityDefinitionException(error);
+        }
+
+        if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
+                && !Finder.isOne2One_association(entityType, propName)) {
+            final String error = format(INVALID_ONE2ONE_ASSOCIATION_MSG, propName, getType().getName());
+            logger.error(error);
+            throw new EntityDefinitionException(error);
+        }
     }
 
     /**
@@ -1197,9 +1258,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (!isInstrumented()) {
             throw new EntityException(format("Uninstrumented entity [%s] should not be validated.", getType().getName()));
         }
-        // iterate over properties in search of the first invalid one
+        // iterate over properties in search of the first invalid one, including requiredness for any kind of property
         final java.util.Optional<Result> firstFailure = nonProxiedProperties()
-        .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
+        .filter(mp -> !mp.isValidWithRequiredCheck(false) && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
 
         // returns first failure if exists or successful result if there was no failure.

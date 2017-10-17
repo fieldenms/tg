@@ -49,7 +49,7 @@ import ua.com.fielden.platform.utils.Pair;
 @EntityType(TgStop.class)
 public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     private final ITgMessage messageCompanion;
-    private final static Logger logger = Logger.getLogger(TgStopDao.class);
+    private static final Logger logger = Logger.getLogger(TgStopDao.class);
     private static final int SOFT_MESSAGE_COUNT_THRESHOLD = 5;
 
     @Inject
@@ -60,7 +60,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
 
     @Override
     @SessionRequired
-    protected List<TgStop> getEntitiesOnPage(final QueryExecutionModel<TgStop, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+    public List<TgStop> getEntitiesOnPage(final QueryExecutionModel<TgStop, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         return retrieveStops(queryModel.getParamValues(), messageCompanion, getEntityFactory());
     }
 
@@ -110,7 +110,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
 
     @Override
     @SessionRequired
-    protected Pair<Integer, Integer> evalNumOfPages(final QueryModel<TgStop> model, final Map<String, Object> paramValues, final int pageCapacity) {
+    public Pair<Integer, Integer> evalNumOfPages(final QueryModel<TgStop> model, final Map<String, Object> paramValues, final int pageCapacity) {
         return Pair.pair(1, 100 /* FIXME ? */);
     }
 

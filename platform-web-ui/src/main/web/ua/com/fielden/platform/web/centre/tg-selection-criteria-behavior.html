@@ -205,22 +205,24 @@
                 this.currentState = "EDIT";
 
                 this.staleCriteriaMessage = null;
-
+                
                 self._processRunnerResponse = function (e) {
                     self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
-                        var criteriaEntity = entityAndCustomObject[0];
+                        const criteriaEntity = entityAndCustomObject[0];
                         self._provideExceptionOccured(criteriaEntity, exceptionOccured);
-                        var customObject = self._reflector().customObject(entityAndCustomObject);
-                        var resultEntities = customObject.resultEntities || [];
-                        var pageCount = customObject.pageCount;
-                        var pageNumber = customObject.pageNumber;
-                        var metaValues = customObject.metaValues;
-                        var centreChanged = customObject.isCentreChanged;
-                        var renderingHints = customObject.renderingHints || [];
-                        var summary = customObject.summary;
-                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        const customObject = self._reflector().customObject(entityAndCustomObject);
+                        const resultEntities = customObject.resultEntities || [];
+                        const pageCount = customObject.pageCount;
+                        const pageNumber = customObject.pageNumber;
+                        const metaValues = customObject.metaValues;
+                        const centreChanged = customObject.isCentreChanged;
+                        const renderingHints = customObject.renderingHints || [];
+                        const summary = customObject.summary;
+                        const staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        const columnWidths = customObject.columnWidths;
+                        const visibleColumnsWithOrder = customObject.visibleColumnsWithOrder;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder);
                     });
                 };
 
@@ -231,7 +233,9 @@
                 };
 
                 // calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder) {
+                    this.fire('egi-entities-appeared', resultEntities);
+                    
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
@@ -247,7 +251,7 @@
                         var msg = "Running completed successfully.";
                         this._openToastWithoutEntity(msg, false, msg, false);
 
-                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary);
+                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     } else {
                         this._setPropertyModel(metaValues);
                         this._centreChanged = centreChanged;
@@ -256,11 +260,13 @@
                         this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                         var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
                     }
                 }).bind(self);
 
                 self._postRunDefaultError = (function (errorResult) {
+                    this.fire('egi-entities-did-not-appear', errorResult);
+                    
                     // This function will be invoked after server-side error appear.
                     // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
                     console.warn("SERVER ERROR: ", errorResult);
@@ -280,7 +286,7 @@
                     console.log("postValidated", customObject);
                 }).bind(self);
             },
-
+            
             /**
              * Overridden to populate 'propertyModel' and '_isCentreChange' flag from arrived information.
              */
@@ -378,7 +384,7 @@
             nextPage: function () {
                 this._openToast(null, "Loading next page", false, "", true);
                 this._validatePageCount();
-                if (!this._canNext()) {
+                if (!this._canNext()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
@@ -391,7 +397,7 @@
             prevPage: function () {
                 this._openToast(null, "Loading previous page", false, "", true);
                 this._validatePageCount();
-                if (!this._canPrev()) {
+                if (!this._canPrev()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
@@ -404,7 +410,7 @@
             firstPage: function () {
                 this._openToast(null, "Loading first page", false, "", true);
                 this._validatePageCount();
-                if (!this._canFirst()) {
+                if (!this._canFirst()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
@@ -417,7 +423,7 @@
             lastPage: function () {
                 this._openToast(null, "Loading last page", false, "", true);
                 this._validatePageCount();
-                if (!this._canLast()) {
+                if (!this._canLast()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
@@ -505,7 +511,7 @@
             idsToRefresh: function (entities) {
                 var ids = [];
                 for (var i = 0; i < entities.length; i = i + 1) {
-                    ids.push(entities[i].id);
+                    ids.push(entities[i].get('id'));
                 }
                 return ids;
             },
@@ -616,14 +622,14 @@
                 }
 
                 return contextHolder;
-            },
+            }
 
         };
 
         Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
-   Polymer.TgBehaviors.TgEntityBinderBehavior,
-   Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
-  ];
+            Polymer.TgBehaviors.TgEntityBinderBehavior,
+            Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
+        ];
 
     })();
 </script>

@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 
 public class Conditions extends AbstractCondition {
     private final ICondition firstCondition;

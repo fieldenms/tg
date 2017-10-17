@@ -493,13 +493,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "uncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
             fail("There shouldn't be any getUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
         unionEntity.setComplexPartEntity(complexEntity);
@@ -517,13 +515,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "anotherUncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getAnotherUncommonProperty()");
             fail("There shouldn't be any getAnotherUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
         unionEntity.setDynamicKeyPartEntity(dynamicEntity);
@@ -541,13 +537,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "uncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
             fail("There shouldn't be any getUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         // Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
         unionEntity = factory.newEntity(UnionEntityForReflector.class);

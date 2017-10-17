@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -11,7 +10,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -20,10 +18,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -32,9 +28,6 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.either.Either;
-import ua.com.fielden.platform.types.either.Left;
-import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -47,7 +40,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_that_entity_with_simple_key_is_handled_correctly() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         // find all
         final List<EntityWithMoney> result = dao.getPage(0, 25).data();
@@ -66,7 +59,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_non_existing_entity_by_id_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         final Long nonExistingId = -10L;
 
@@ -79,7 +72,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_existing_entity_by_id_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
@@ -96,7 +89,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_non_existing_entity_by_id_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         final Long nonExistingId = -10L;
 
@@ -109,7 +102,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_existing_entity_by_id_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
@@ -126,7 +119,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_non_existing_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         final String nonExistingKey = "NON EXISTING KEY";
 
@@ -139,7 +132,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_existing_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
@@ -156,10 +149,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_non_existing_composite_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
 
         final String nonExistingKey = "NON EXISTING KEY";
-        final EntityWithMoney secondKey = co(EntityWithMoney.class).findByKey("KEY1");
+        final EntityWithMoney secondKey = co$(EntityWithMoney.class).findByKey("KEY1");
 
         final EntityWithDynamicCompositeKey entity = co.findByKey(nonExistingKey, secondKey);
         assertNull(entity);
@@ -170,7 +163,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_existing_composite_entity_by_key_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
 
         try (final Stream<EntityWithDynamicCompositeKey> stream = co.stream(from(select(EntityWithDynamicCompositeKey.class).model()).model())) {
             stream.forEach(entity -> {
@@ -187,7 +180,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     
     @Test
     public void finding_non_existing_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         final String nonExistingKey = "NON EXISTING KEY";
 
@@ -200,7 +193,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_existing_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
@@ -217,10 +210,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     
     @Test
     public void finding_non_existing_composite_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
 
         final String nonExistingKey = "NON EXISTING KEY";
-        final EntityWithMoney secondKey = co(EntityWithMoney.class).findByKey("KEY1");
+        final EntityWithMoney secondKey = co$(EntityWithMoney.class).findByKey("KEY1");
 
         final EntityWithDynamicCompositeKey entity = co.findByKeyAndFetch(fetchAll(EntityWithDynamicCompositeKey.class), nonExistingKey, secondKey);
         assertNull(entity);
@@ -231,7 +224,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_existing_composite_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
 
         try (final Stream<EntityWithDynamicCompositeKey> stream = co.stream(from(select(EntityWithDynamicCompositeKey.class).model()).model())) {
             stream.forEach(entity -> {
@@ -248,7 +241,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void getEntity_with_query_that_has_empty_result_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         final String nonExistingKey = "NON EXISTING KEY";
         final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(select(EntityWithMoney.class).where().prop("key").eq().val(nonExistingKey).model()).model();
@@ -262,7 +255,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void getEntity_with_query_that_has_non_empty_result_produces_consistent_result_for_non_optional_and_optional_versions() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
@@ -281,10 +274,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_composite_entity_by_passing_null_as_values_for_any_of_required_key_members_returns_null() {
-        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
 
         final String requiredKeyMember = null;
-        final EntityWithMoney optionalKeyMember = co(EntityWithMoney.class).findByKey("KEY1");
+        final EntityWithMoney optionalKeyMember = co$(EntityWithMoney.class).findByKey("KEY1");
 
         final EntityWithDynamicCompositeKey entity = co.findByKey(requiredKeyMember, optionalKeyMember);
         assertNull(entity);
@@ -292,7 +285,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void finding_composite_entity_by_passing_null_as_values_for_any_of_non_required_key_members_result_in_matching_entity() {
-        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
 
         final String requiredKeyMember = "key-1-1";
         final EntityWithMoney optionalKeyMember = null;
@@ -306,8 +299,8 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     
     @Test
     public void test_that_entity_with_composite_key_is_handled_correctly() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
-        final EntityWithDynamicCompositeKeyDao daoComposite = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+        final EntityWithDynamicCompositeKeyDao daoComposite = co$(EntityWithDynamicCompositeKey.class);
 
         // find all
         final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(0, 25).data();
@@ -324,7 +317,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_that_unfiltered_pagination_works() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final IPage<EntityWithMoney> page = dao.firstPage(2);
         assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
@@ -346,7 +339,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_that_custom_query_pagination_works() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityResultQueryModel<EntityWithMoney> q = select(EntityWithMoney.class)//
                 .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
@@ -373,7 +366,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_exists_using_entity() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
         assertTrue(dao.entityExists(entity));
@@ -381,7 +374,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_exists_by_key() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         assertTrue(dao.entityWithKeyExists("key1"));
         assertFalse(dao.entityWithKeyExists("non-existent-key"));
@@ -389,8 +382,8 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_exists_by_composite_key() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
-        final EntityWithDynamicCompositeKeyDao daoComposite = co(EntityWithDynamicCompositeKey.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+        final EntityWithDynamicCompositeKeyDao daoComposite = co$(EntityWithDynamicCompositeKey.class);
 
         final String keyPartOne = "key-1-1";
         final EntityWithMoney keyPartTwo = dao.findByKey("KEY1");
@@ -401,7 +394,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_is_dirty_support() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         EntityWithMoney entity = dao.findByKeyAndFetch(fetchAllInclCalc(EntityWithMoney.class), "key1");
         assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
@@ -431,7 +424,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_property_dirty_support() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         EntityWithMoney entity = dao.findByKey("key1");
         assertEquals("There should be no dirty properties after entity retrieval.", 0, entity.getDirtyProperties().size());
@@ -470,7 +463,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_original_state_can_be_restored_with_dirty_check() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
         assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
@@ -489,7 +482,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void setting_original_property_value_after_change_should_make_entity_not_dirty() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         EntityWithMoney entity = dao.findByKey("key1");
         assertFalse(entity.isDirty());
@@ -507,7 +500,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_date_time_support() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         EntityWithMoney entity = dao.findByKey("key1");
         // test read date time
@@ -551,7 +544,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_version_is_updated_after_save() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         EntityWithMoney entity = dao.findByKey("key1");
 
@@ -566,7 +559,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_entity_staleness_check() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
         // update entity to simulate staleness
@@ -582,7 +575,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_optimistic_locking_based_on_versioning_works_for_save() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         // get entity, which will be modified but not saved
         final EntityWithMoney entity = dao.findByKey("key1");
@@ -645,7 +638,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_save() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
         final Date transDate = entity.getTransDate();
@@ -658,7 +651,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_transaction_date_property_for_new_entity_gets_auto_assigned_with_save() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney newEntity = new_(EntityWithMoney.class, "new entity");
         assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
@@ -669,7 +662,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_save() {
-        final EntityWithMoneyDao dao = co(EntityWithMoney.class);
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney newEntity = new_(EntityWithMoney.class, "new entity");
         final Date date = new DateTime(2009, 01, 01, 0, 0, 0, 0).toDate();
@@ -681,17 +674,17 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Test
     public void co_API_returns_this_for_invocations_on_companion_objects_with_their_entity_type_passed_as_argument() {
-        final EntityWithMoneyDao co1 = co(EntityWithMoney.class);
-        final EntityWithMoneyDao co2 = co1.co(EntityWithMoney.class);
+        final EntityWithMoneyDao co1 = co$(EntityWithMoney.class);
+        final EntityWithMoneyDao co2 = co1.co$(EntityWithMoney.class);
 
         assertTrue(co1 == co2);
     }
 
     @Test
     public void co_API_caches_companion_instances() {
-        final EntityWithMoneyDao co = co(EntityWithMoney.class);
-        final EntityWithDynamicCompositeKeyDao co1 = co.co(EntityWithDynamicCompositeKey.class);
-        final EntityWithDynamicCompositeKeyDao co2 = co.co(EntityWithDynamicCompositeKey.class);
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        final EntityWithDynamicCompositeKeyDao co1 = co.co$(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKeyDao co2 = co.co$(EntityWithDynamicCompositeKey.class);
 
         assertTrue(co1 == co2);
     }

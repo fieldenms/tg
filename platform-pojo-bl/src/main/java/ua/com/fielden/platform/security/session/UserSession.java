@@ -21,14 +21,13 @@ import ua.com.fielden.platform.security.user.User;
  * <p>
  * User session information is volatile. It gets updated each time a new request comes in, session records may get removed completely.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IUserSession.class)
 @MapEntityTo
 public class UserSession extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

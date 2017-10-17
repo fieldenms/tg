@@ -8,7 +8,7 @@ import ua.com.fielden.platform.dao.AbstractEntityMetadata;
 import ua.com.fielden.platform.dao.ModelledEntityMetadata;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSource;
 import ua.com.fielden.platform.entity.query.generation.elements.TypeBasedSource;

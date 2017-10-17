@@ -11,9 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -40,6 +44,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
+    private final boolean isCritOnly;
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
 
@@ -54,9 +59,10 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.editors = new Pair<>(editors[0].markAsCriterionEditor(), null);
+        this.isCritOnly = StringUtils.isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
+        this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
-            this.editors.setValue(editors[1].markAsCriterionEditor());
+            this.editors.setValue(editors[1]);
         }
     }
 
@@ -68,14 +74,15 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final List<AbstractWidget> editors = editors0();
         final DomElement[] editorsDOM = new DomElement[editors.size()];
         for (int editorIndex = 0; editorIndex < editors.size(); editorIndex++) {
-            final DomElement editorElement = editors.get(editorIndex).render();
+            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex));
             editorElement.clazz("flex", true);
-            if (editors.size() > 1 && editorIndex == 0) {
-                editorElement.style("margin-right:20px");
-            }
             editorsDOM[editorIndex] = editorElement;
         }
         return editorsDOM;
+    }
+
+    protected String getCriterionClass(final int editorIndex) {
+        return "criterion-editors";
     }
 
     public List<String> editorsImportPaths() {
@@ -105,6 +112,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         }
         attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
+        if (isCritOnly) {
+            attrs.put("crit-only", null);
+        }
         return attrs;
     }
 

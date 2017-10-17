@@ -51,7 +51,7 @@ public class UserRoleTest extends AbstractDaoTestCase {
         // move to the future and change the current user
         constants.setNow(dateTime("2016-05-17 13:36:57"));
         final User currentUser = up.getUser();
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
 
         try {
             // perform entity modification and saving
@@ -81,7 +81,7 @@ public class UserRoleTest extends AbstractDaoTestCase {
         final User user1 = save(new_(User.class, "USER_1").setBase(true));
 
         // associate the test role with user1
-        final UserRole admin = co(UserRole.class).findByKey(UNIT_TEST_ROLE);
+        final UserRole admin = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
         save(new_composite(UserAndRoleAssociation.class, user1, admin));
     }
 }

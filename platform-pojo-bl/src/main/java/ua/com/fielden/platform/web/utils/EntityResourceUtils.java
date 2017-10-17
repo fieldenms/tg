@@ -4,6 +4,8 @@ import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -40,11 +42,9 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -53,6 +53,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -209,8 +210,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Class<M> type = (Class<M>) entity.getType();
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
-        final Set<String> appliedProps = new LinkedHashSet<>();
-        final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
+        final Set<String> touchedProps = new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps"));
 
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
@@ -222,7 +222,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     logger.debug(String.format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-                    appliedProps.add(name);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
@@ -250,15 +249,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 logger.debug(String.format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
-            appliedProps.add(name);
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
         //            It is necessary in case when some property becomes required after the change of other properties.
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        disregardNotAppliedRequiredProperties(entity, appliedProps);
-        disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, appliedProps);
+        disregardUntouchedRequiredProperties(entity, touchedProps);
+        disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, touchedProps);
 
         return entity;
     }
@@ -282,12 +280,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
             final Object valueToBeApplied = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
             if (notFoundEntity(type, name, valToBeApplied, valueToBeApplied)) {
-                final String msg = String.format("No entity with key [%s] has been found.", valToBeApplied);
+                final String valueAsEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, name)).getKey();
+                final String msg = format("%s [%s] was not found.", valueAsEntityTitle, valToBeApplied);
                 logger.info(msg);
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 validateAnd(() -> {
-                    enforceSet(shouldApplyOriginalValue, name, entity, valueToBeApplied);
+                    entity.getProperty(name).setValue(valueToBeApplied, shouldApplyOriginalValue);
                 }, () -> {
                     return valueToBeApplied;
                 }, () -> {
@@ -299,18 +298,18 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             validateAnd(() -> {
                 // do nothing
             }, () -> {
-                return shouldApplyOriginalValue 
-                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder) 
+                return shouldApplyOriginalValue
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder)
                                 : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
             }, () -> {
                 return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
         }
     }
-    
+
     /**
-     * Validates the property on subject of conflicts and <code>perform[s]Action</code>. 
-     * 
+     * Validates the property on subject of conflicts and <code>perform[s]Action</code>.
+     *
      * @param performAction -- the action to be performed in case of successful validation
      * @param calculateStaleNewValue -- function to lazily calculate 'staleNewValue' (heavy operation)
      * @param calculateStaleOriginalValue -- function to lazily calculate 'staleOriginalValue' (heavy operation)
@@ -329,7 +328,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Object freshValue = entity.get(name);
             final Object staleNewValue = calculateStaleNewValue.get();
             if (EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
-                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction) 
+                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
                     logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
@@ -387,10 +386,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
         processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
-    
+
     /**
      * Validates the unmodified (untouched) property value for 'changed by other user' warning.
-     * 
+     *
      * @param type
      * @param name
      * @param valAndOrigVal
@@ -403,38 +402,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Sets the value for the entity property.
-     *
-     * @param enforce - indicates whether to use 'enforced mutation'
-     * @param name
-     * @param entity
-     * @param newValue
-     */
-    private static <M extends AbstractEntity<?>> void enforceSet(final boolean enforce, final String name, final M entity, final Object newValue) {
-        if (enforce) {
-            final MetaProperty<Object> metaProperty = entity.getProperty(name);
-            final boolean currEnforceMutator = metaProperty.isEnforceMutator();
-            metaProperty.setEnforceMutator(true);
-            try {
-                entity.set(name, newValue);
-            } finally {
-                metaProperty.setEnforceMutator(currEnforceMutator);
-            }
-        } else {
-            entity.set(name, newValue);
-        }
-    }
-
-    /**
-     * Disregards the 'required' errors for those properties, that were not 'applied' (for both criteria and simple entities).
+     * Disregards the 'required' errors for those properties, that were not 'touched' directly by the user (for both criteria and simple entities).
      *
      * @param entity
-     * @param appliedProps
-     *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
+     * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardNotAppliedRequiredProperties(final M entity, final Set<String> appliedProps) {
-        entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !appliedProps.contains(mp.getName())).forEach(mp -> {
+    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+        entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(Result.successful(entity));
         });
 
@@ -445,13 +420,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
      * @param entity
-     * @param appliedProps
-     *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
+     * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> appliedProps) {
+    public static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
         if (!entity.isPersisted()) {
-            entity.nonProxiedProperties().filter(mp -> mp.isRequired() && appliedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
+            entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(Result.successful(entity));
             });
         }
@@ -487,7 +461,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     private static <M extends AbstractEntity<?>> boolean notFoundEntity(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
-        return reflectedValue != null && newValue == null && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
+        return reflectedValue != null && newValue == null && isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
 
     /**
@@ -550,7 +524,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             } else if (reflectedValueId.isPresent()) {
                 logger.debug(String.format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                 // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
                 return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
                 logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
@@ -560,7 +534,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 /*      */model();
                 final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
                 try {
-                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType).uninstrumented();
+                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
                     return propertyCompanion.getEntity(qem);
                 } catch (final UnexpectedNumberOfReturnedEntities e) {
                     return null;
@@ -577,7 +551,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     key = keys[0];
                 }
 
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
                 return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
@@ -596,6 +570,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     isStringElem ? item.toString() : extractLongValueFrom(item)
             );
             return stream.collect(Collectors.toCollection(isSet ? LinkedHashSet::new : ArrayList::new));
+        } else if (PropertyTypeDeterminator.isMap(type, propertyName)) {
+            return reflectedValue;
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
@@ -605,9 +581,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (EntityUtils.isDate(propertyType)) {
             return reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue);
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
-            final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
-            final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
+            final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, type, propertyName);
+            final CritOnly critOnly = getPropertyAnnotation(CritOnly.class, type, propertyName);
+            final Integer propertyScale = isProperty != null && isProperty.scale() >= 0 ? ((int) isProperty.scale())
                     : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
 
             if (reflectedValue instanceof Integer) {

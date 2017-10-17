@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import static java.math.RoundingMode.HALF_EVEN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -7,22 +8,34 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -146,4 +159,112 @@ public class EntityUtilsTest {
         assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).value());
         assertEquals("Incorrect collectional entity link property", "user", AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).linkProperty());
     }
+    
+    @Test
+    public void two_nulls_are_comparible_and_equal() {
+        assertEquals(0, EntityUtils.compare(null, null));
+    }
+    
+    @Test
+    public void null_is_smaller_than_non_null() {
+        assertTrue(EntityUtils.compare(null, factory.newEntity(Entity.class)) < 0);
+    }
+    
+    @Test
+    public void non_null_is_greater_than_null() {
+        assertTrue(EntityUtils.compare(factory.newEntity(Entity.class), null) > 0);
+    }
+    
+    @Test
+    public void the_result_of_comparing_two_non_nulls_matches_the_result_of_comparing_them_with_compareTo() {
+        final Entity entity1 = factory.newByKey(Entity.class, "1");
+        final Entity entity2 = factory.newByKey(Entity.class, "2");
+        
+        assertEquals(entity1.compareTo(entity2), EntityUtils.compare(entity1, entity2));
+        assertEquals(entity2.compareTo(entity1), EntityUtils.compare(entity2, entity1));
+        assertEquals(entity1.compareTo(entity1), EntityUtils.compare(entity1, entity1));
+    }
+    
+    @Test
+    public void non_persistent_and_non_synthetic_and_non_union_entities_are_recognised_as_such() {
+        assertFalse(isPersistedEntityType(Entity.class));
+        assertFalse(isSyntheticEntityType(Entity.class));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(Entity.class));
+        assertFalse(isUnionEntityType(Entity.class));
+    }
+    
+    @Test 
+    public void union_entity_is_recognised_as_such() {
+        assertFalse(isPersistedEntityType(UnionEntity.class));
+        assertFalse(isSyntheticEntityType(UnionEntity.class));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(UnionEntity.class));
+        assertTrue(isUnionEntityType(UnionEntity.class));
+    }
+    
+    @Test 
+    public void persistent_entity_is_recognised_as_such() {
+        assertTrue(isPersistedEntityType(TgAuthor.class));
+        assertFalse(isSyntheticEntityType(TgAuthor.class));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(TgAuthor.class));
+        assertFalse(isUnionEntityType(TgAuthor.class));
+    }
+
+    @Test 
+    public void synthetic_entity_is_recognised_as_such() {
+        assertFalse(isPersistedEntityType(TgAverageFuelUsage.class));
+        assertTrue(isSyntheticEntityType(TgAverageFuelUsage.class));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(TgAverageFuelUsage.class));
+        assertFalse(isUnionEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test 
+    public void synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() {
+        assertFalse(isPersistedEntityType(TgReVehicleModel.class));
+        assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
+        assertTrue(isSyntheticBasedOnPersistentEntityType(TgReVehicleModel.class));
+        assertFalse(isUnionEntityType(TgReVehicleModel.class));
+    }
+    
+    @Test 
+    public void null_does_not_belong_to_any_of_entity_type_classiciations() {
+        assertFalse(isPersistedEntityType(null));
+        assertFalse(isSyntheticEntityType(null));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(null));
+        assertFalse(isUnionEntityType(null));
+    }
+    
+    @Test
+    public void equalsEx_correctly_compares_instances_of_BigDecimal() {
+        assertTrue(equalsEx(new BigDecimal("0.42"), new BigDecimal("0.42")));
+        assertTrue(equalsEx(new BigDecimal("42.00"), new BigDecimal("42.0")));
+        assertTrue(equalsEx(new BigDecimal("0.00"), BigDecimal.ZERO));
+        assertTrue(equalsEx(new BigDecimal("42.00").setScale(1, HALF_EVEN), new BigDecimal("42.01").setScale(1, HALF_EVEN)));
+        assertFalse(equalsEx(new BigDecimal("42.00"), new BigDecimal("42.01")));
+    }
+
+    @Test
+    public void coalesce_returns_first_value_if_it_is_non_null() {
+        assertEquals("first", coalesce("first", "second"));
+    }
+
+    @Test
+    public void coalesce_returns_second_non_null_value_if_the_first_is_null() {
+        assertEquals("second", coalesce(null, "second"));
+    }
+
+    @Test
+    public void coalesce_returns_the_first_non_null_value() {
+        assertEquals("third", coalesce(null, null, "third"));
+    }
+    
+    @Test(expected = NoSuchElementException.class)
+    public void coalesce_throws_exception_if_all_values_are_null() {
+        coalesce(null, null, null, null);
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
+        coalesce(null, null, null /*this is an array argument*/);
+    }
+
 }

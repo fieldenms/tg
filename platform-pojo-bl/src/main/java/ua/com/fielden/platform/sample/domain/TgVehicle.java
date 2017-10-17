@@ -76,8 +76,8 @@ public class TgVehicle extends AbstractEntity<String> {
     @Title("Fuel usages")
     private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
 
-    @IsProperty
-    @MapTo(length = 10, precision = 10, scale = 3)
+    @IsProperty(precision = 10, scale = 3)
+    @MapTo
     @Title("Last meter reading")
     private BigDecimal lastMeterReading;
 
@@ -85,13 +85,13 @@ public class TgVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Last fuel usage")
     private TgFuelUsage lastFuelUsage;
-    private static final ExpressionModel lastFuelUsage_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
+    protected static final ExpressionModel lastFuelUsage_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
 
     @IsProperty
     @Calculated
     @Title("Const value prop")
     private Integer constValueProp;
-    private static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
+    protected static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
 
     @IsProperty
     @Calculated("price.amount + purchasePrice.amount")
@@ -102,44 +102,44 @@ public class TgVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Last fuel usage qty")
     private BigDecimal lastFuelUsageQty;
-    private static final ExpressionModel lastFuelUsageQty_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel lastFuelUsageQty_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
     @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount")
     @PersistentType(userType = ISimpleMoneyType.class)
     private Money sumOfPrices;
-    private static final ExpressionModel sumOfPrices_ = expr().val(1).mult().prop("price.amount").add().prop("purchasePrice.amount").model();
+    protected static final ExpressionModel sumOfPrices_ = expr().val(1).mult().prop("price.amount").add().prop("purchasePrice.amount").model();
 
     @IsProperty
     @Calculated
     @Title("Calc2")
     private BigDecimal calc2;
-    private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
     @Title("Calc3")
     private BigDecimal calc3;
-    private static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
     @Title("Calc4")
     private BigDecimal calc4;
-    private static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
     @Title("Calc5")
     private BigDecimal calc5;
-    private static final ExpressionModel calc5_ = expr().prop("sumOfPrices").mult().val(2).model();
+    protected static final ExpressionModel calc5_ = expr().prop("sumOfPrices").mult().val(2).model();
 
     @IsProperty
     @Calculated
     @Title("Calc6")
     private BigDecimal calc6;
-    private static final ExpressionModel calc6_ = expr().prop("sumOfPrices").div().prop("calc3").model();
+    protected static final ExpressionModel calc6_ = expr().prop("sumOfPrices").div().prop("calc3").model();
 
     @IsProperty
     @Calculated
@@ -152,7 +152,7 @@ public class TgVehicle extends AbstractEntity<String> {
         return this;
     }
 
-    private static final ExpressionModel calcModel_ = expr().prop("model").model();
+    protected static final ExpressionModel calcModel_ = expr().prop("model").model();
 
 
     @IsProperty

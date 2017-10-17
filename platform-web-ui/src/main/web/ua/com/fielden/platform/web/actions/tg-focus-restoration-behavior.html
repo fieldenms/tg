@@ -24,7 +24,6 @@
                 }
                 var self = this;
                 console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
-                console.trace();
                 _previousActiveElements.push({
                     initiator: self,
                     elem: focusingCallback ? focusingCallback : document.activeElement
@@ -40,7 +39,6 @@
                     if (last.initiator === this) {
                         var _previousActiveElementAndInitiator = _previousActiveElements.pop();
                         console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
-                        console.trace();
                         if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem === 'function') {
                             _previousActiveElementAndInitiator.elem();
                         } else if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {

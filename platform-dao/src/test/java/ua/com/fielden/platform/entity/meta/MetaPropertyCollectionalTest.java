@@ -44,7 +44,7 @@ public class MetaPropertyCollectionalTest extends AbstractDaoTestCase {
     @Before
     public void setUp() {
         entity = new_(TgCollectionalSerialisationParent.class, "key", "description");
-        savedEntity = co(TgCollectionalSerialisationParent.class).findByKeyAndFetch(fetch(TgCollectionalSerialisationParent.class).with("collProp"), "saved_key");
+        savedEntity = co$(TgCollectionalSerialisationParent.class).findByKeyAndFetch(fetch(TgCollectionalSerialisationParent.class).with("collProp"), "saved_key");
     }
     
     private static MetaProperty<Set<TgCollectionalSerialisationChild>> prop(final TgCollectionalSerialisationParent entity) {
@@ -175,7 +175,7 @@ public class MetaPropertyCollectionalTest extends AbstractDaoTestCase {
     @Test
     public void original_value_is_set_for_retrieved_entity() {
         final Set<TgCollectionalSerialisationChild> expected = new HashSet<>();
-        expected.add(co(TgCollectionalSerialisationChild.class).findByKeyAndFetch(fetchAll(TgCollectionalSerialisationChild.class), savedEntity, "0"));
+        expected.add(co$(TgCollectionalSerialisationChild.class).findByKeyAndFetch(fetchAll(TgCollectionalSerialisationChild.class), savedEntity, "0"));
         
         assertEquals(expected, prop(savedEntity).getOriginalValue());
         assertFalse(prop(savedEntity).isChangedFromOriginal());
@@ -188,7 +188,7 @@ public class MetaPropertyCollectionalTest extends AbstractDaoTestCase {
     @Test
     public void prev_value_is_set_for_retrieved_entity() {
         final Set<TgCollectionalSerialisationChild> expected = new HashSet<>();
-        expected.add(co(TgCollectionalSerialisationChild.class).findByKeyAndFetch(fetchAll(TgCollectionalSerialisationChild.class), savedEntity, "0"));
+        expected.add(co$(TgCollectionalSerialisationChild.class).findByKeyAndFetch(fetchAll(TgCollectionalSerialisationChild.class), savedEntity, "0"));
         
         assertEquals(expected, prop(savedEntity).getPrevValue());
         assertFalse(prop(savedEntity).isChangedFromPrevious());

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import org.apache.log4j.Logger;
+import java.util.function.Consumer;
 
 import com.google.inject.Inject;
 
@@ -27,7 +27,6 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @EntityType(CentreConfigUpdater.class)
 public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements ICentreConfigUpdater {
-    private final Logger logger = Logger.getLogger(getClass());
     private final EntityFactory factory;
     
     @Inject
@@ -38,33 +37,48 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     
     @Override
     @SessionRequired
-    // @Authorise(UserRoleSaveToken.class)
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
-        final CentreConfigUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getSortingProperties(), this, factory, String.class);
+        final CentreConfigUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getCustomisableColumns(), this, factory, String.class);
+        actionToSave.getProperty("sortingVals").setOriginalValue(action.getProperty("sortingVals").getOriginalValue());
         
-        // after all validations have passed -- the association changes could be saved:
+        // retrieve criteria entity
         final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = (EnhancedCentreEntityQueryCriteria) action.refetchedMasterEntity();
-        // final Map<Object, SortingProperty> availableSortingProperties = AbstractFunctionalEntityForCollectionModificationProducer.mapById(action.getSortingProperties(), String.class);
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = (ICentreDomainTreeManagerAndEnhancer) criteriaEntityBeingUpdated.freshCentreSupplier().get();
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
-        for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
-            if (Ordering.ASCENDING == orderedProperty.getValue()) {
-                cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-            }
-            cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-        }
+        final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster = criteriaEntityBeingUpdated.centreAdjuster();
         
-        for (final String sortingVal: action.getSortingVals()) {
-            final String[] splitted = sortingVal.split(":");
-            final String name = splitted[0].equals("this") ? "" : splitted[0];
-            cdtmae.getSecondTick().toggleOrdering(root, name);
-            if ("desc".equals(splitted[1])) {
-                cdtmae.getSecondTick().toggleOrdering(root, name);
+        // use centreAdjuster to update all centre managers ('fresh', 'saved' and 'previouslyRun') with columns visibility / order / sorting information; also commit them to the database
+        centreAdjuster.accept(centreManager -> {
+            // remove sorting information
+            final List<Pair<String, Ordering>> currOrderedProperties = new ArrayList<>(centreManager.getSecondTick().orderedProperties(root));
+            for (final Pair<String, Ordering> orderedProperty: currOrderedProperties) {
+                if (Ordering.ASCENDING == orderedProperty.getValue()) {
+                    centreManager.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+                }
+                centreManager.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
             }
-        }
-        
-        // after the association changes were successfully saved, the action should also be saved:
+            
+            // remove usage information
+            final List<String> currUsedProperties = centreManager.getSecondTick().usedProperties(root);
+            for (final String currUsedProperty: currUsedProperties) {
+                centreManager.getSecondTick().use(root, currUsedProperty, false);
+            }
+            
+            // apply usage information
+            for (final String chosenId : action.getChosenIds()) {
+                centreManager.getSecondTick().use(root, treeName(chosenId), true);
+            }
+            
+            // apply sorting information
+            for (final String sortingVal: action.getSortingVals()) {
+                final String[] splitted = sortingVal.split(":");
+                final String name = treeName(splitted[0]);
+                centreManager.getSecondTick().toggleOrdering(root, name);
+                if ("desc".equals(splitted[1])) {
+                    centreManager.getSecondTick().toggleOrdering(root, name);
+                }
+            }
+        });
+        actionToSave.setSortingChanged(actionToSave.getProperty("sortingVals").isChangedFromOriginal());
         return super.save(actionToSave);
     }
 }
