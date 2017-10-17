@@ -44,7 +44,6 @@ import ua.com.fielden.platform.types.Money;
 @DescTitle(value = "Desc", desc = "Some desc description")
 @DisplayDescription
 public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
-
     @IsProperty
     @MapTo
     @Title(value = "Integer prop", desc = "Integer prop desc")

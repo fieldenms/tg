@@ -5,10 +5,9 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 /**
  * Master entity object.
@@ -20,8 +19,6 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @KeyTitle(value = "Export Functional Entity", desc = "Export Functional Entity description")
 @CompanionObject(ITgExportFunctionalEntity.class)
 public class TgExportFunctionalEntity extends AbstractFunctionalEntityWithCentreContext<String> {
-    private static final long serialVersionUID = 1L;
-
     @IsProperty
     @Title(value = "Parent Entity", desc = "Master entity for this functional entity")
     private TgPersistentEntityWithProperties parentEntity;
@@ -33,6 +30,21 @@ public class TgExportFunctionalEntity extends AbstractFunctionalEntityWithCentre
     @IsProperty
     @Title(value = "Chosen property", desc = "A master entity property that is related to this action instance.")
     private String actionProperty;
+    
+    @IsProperty
+    @Title("Master Entity")
+    @SkipEntityExistsValidation
+    private TgPersistentEntityWithProperties masterEntity;
+
+    @Observable
+    public TgExportFunctionalEntity setMasterEntity(final TgPersistentEntityWithProperties masterEntity) {
+        this.masterEntity = masterEntity;
+        return this;
+    }
+
+    public TgPersistentEntityWithProperties getMasterEntity() {
+        return masterEntity;
+    }
 
     @Observable
     public TgExportFunctionalEntity setActionProperty(final String actionProperty) {

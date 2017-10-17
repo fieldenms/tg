@@ -14,6 +14,8 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
+import ua.com.fielden.platform.entity.EntityExportActionDao;
+import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -71,6 +73,8 @@ import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
+import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
+import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -107,10 +111,8 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
-        bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
@@ -133,6 +135,12 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
-
+        
+        // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
+        bind(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
+        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
+        bind(IEntityExportAction.class).to(EntityExportActionDao.class);
+        bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
+        bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
     }
 }

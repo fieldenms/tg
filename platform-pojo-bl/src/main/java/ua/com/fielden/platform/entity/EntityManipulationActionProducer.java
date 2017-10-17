@@ -4,8 +4,6 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -21,13 +19,12 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
 
     @Override
     protected T provideDefaultValues(final T entity) {
-        if (entity.getContext() != null) {
-            final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) entity.getContext();
-            final AbstractEntity<?> currEntity = context.getSelectedEntities().isEmpty() ? null : context.getCurrEntity();
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
-            final Class<AbstractEntity<?>> entityType =                     
-                context.getComputation().map( computation -> {
-                        final Object computed = computation.apply(entity);
+        if (contextNotEmpty()) {
+            final AbstractEntity<?> currEntity = currentEntity();
+            final EnhancedCentreEntityQueryCriteria<?, ?> selCrit = selectionCrit();
+            final Class<AbstractEntity<?>> entityType = 
+                computation().map( computation -> {
+                        final Object computed = computation.apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext());
                         // it is by convention that a computational context may return custom entity type of tg-entity-master to be displayed
                         // if the type of the result if either Class or T2 representing a tuple of Type (Class) and ID (Long)
                         if (computed instanceof Class) {
@@ -59,8 +56,8 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
      * @param selCrit
      * @return
      */
-    private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit) {
-        return selCrit != null ? selCrit.getEntityClass() :
+    private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
+        return selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() :
                currEntity != null ? getOriginalType(currEntity.getType()) : null;
     }
 }

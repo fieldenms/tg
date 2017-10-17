@@ -2,7 +2,7 @@ package ua.com.fielden.platform.security.user;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
+import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;

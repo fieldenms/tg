@@ -18,21 +18,18 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -47,6 +44,7 @@ import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
+import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
@@ -66,14 +64,19 @@ import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -788,6 +791,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(new EntityMaster<TgCentreInvokerWithCentreContext>(
                         TgCentreInvokerWithCentreContext.class,
+                        TgCentreInvokerWithCentreContextProducer.class,
                         new MasterWithCentreBuilder<TgCentreInvokerWithCentreContext>().forEntityWithSaveOnActivate(TgCentreInvokerWithCentreContext.class).withCentre(detailsCentre).done(),
                         injector())).
                 addMaster(new EntityMaster<TgPersistentCompositeEntity>(
@@ -803,22 +807,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(new EntityMaster<TgStatusActivationFunctionalEntity>(
                         TgStatusActivationFunctionalEntity.class,
+                        TgStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgISStatusActivationFunctionalEntity>(
                         TgISStatusActivationFunctionalEntity.class,
+                        TgISStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgIRStatusActivationFunctionalEntity>(
                         TgIRStatusActivationFunctionalEntity.class,
+                        TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
+                        TgONStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(new EntityMaster<TgSRStatusActivationFunctionalEntity>(
                         TgSRStatusActivationFunctionalEntity.class,
+                        TgSRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 done();
@@ -985,7 +994,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
 
         return action(EntityNewAction.class).
-                withContext(context().withSelectionCrit().withComputation(entity -> entityType).build()).
+                withContext(context().withSelectionCrit().withComputation((entity, context) -> entityType).build()).
                 icon(icon).
                 withStyle(style).
                 shortDesc(format("Add new %s", entityTitle)).
@@ -1182,34 +1191,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
-        private final EntityFactory entityFactory;
-        private final IWebUiConfig webUiConfig;
-        private final ICompanionObjectFinder companionFinder;
-        private final IServerGlobalDomainTreeManager serverGdtm;
-        private final IUserProvider userProvider;
-        private final ICriteriaGenerator critGenerator;
-
-        @Inject
-        public DetailsCentreQueryEnhancer(final EntityFactory entityFactory, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
-            this.entityFactory = entityFactory;
-            this.webUiConfig = webUiConfig;
-            this.companionFinder = companionFinder;
-            this.serverGdtm = serverGdtm;
-            this.userProvider = userProvider;
-            this.critGenerator = critGenerator;
-        }
+        private final Logger logger = Logger.getLogger(getClass());
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            System.out.println("DetailsCentreQueryEnhancer: computation function == " + context.get().getComputation());
-            if (context.get().getMasterEntity() != null) {
-                System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
-                final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
-            }
+            logger.debug("computation function == " + context.get().getComputation());
+            logger.debug("master entity holder == " + context.get().getMasterEntity());
+            final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
+            logger.debug("restored masterEntity: " + funcEntity);
+            logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getCritOnlyBigDecimalPropCriterion());
+            logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getBigDecimalPropFromCriterion());
             return where.val(1).eq().val(1);
         }
     }
@@ -1296,8 +1287,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     action(TgCentreInvokerWithCentreContext.class)
                             .withContext(context().withSelectionCrit().withSelectedEntities().build())
                             .icon("assignment-ind")
-                            .shortDesc("Function 4")
-                            .longDesc("Functional context-dependent action 4")
+                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
+                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
                             .prefDimForView(mkDim("document.body.clientWidth / 4 + 'px'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build()
@@ -1313,7 +1304,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 preAction(yesNo("Are you sure you want to proceed?")).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
-                                //longDesc("Functional context-dependent action 1").
+                                longDesc("Functional context-dependent action 1 (TgFunctionalEntityWithCentreContext)").
                                 prefDimForView(mkDim(300, 200)).
                                 build()
                 )
@@ -1323,7 +1314,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withSelectedEntities().build()).
                                 icon("assignment-returned").
                                 shortDesc("Function 2").
-                                longDesc("Functional context-dependent action 2").
+                                longDesc("Functional context-dependent action 2 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
                 .also()
@@ -1332,7 +1323,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withCurrentEntity().build()).
                                 icon("assignment").
                                 shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3").
+                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
                 .also()
@@ -1367,7 +1358,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/ withComputation(entity -> 3).build())
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/ withComputation((entity, context) -> 3).build())
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
@@ -1481,7 +1472,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
                         shortDesc("Function 5").
-                        longDesc("Functional context-dependent action 5").
+                        longDesc("Functional context-dependent action 5 (TgFunctionalEntityWithCentreContext)").
                         build())
 
                 .also();
@@ -1597,9 +1588,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .icon("editor:mode-edit")
                                 .withStyle("color: green")
                                 .shortDesc("Edit entity")
-                                .longDesc("Opens master for editing this entity").build()).
-                        // withNoParentCentreRefresh().
-                                //build());
+                                .longDesc("Opens master for editing this entity")
+                                .withNoParentCentreRefresh()
+                                .build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1607,11 +1598,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
                 //                                shortDesc("Function 2.5").
-                //                                longDesc("Functional context-dependent action 2.5").
+                //                                longDesc("Functional context-dependent action 2.5 (TgFunctionalEntityWithCentreContext)").
                 //                                build()
 
                 //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
-                        also()
+                        .also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
@@ -1633,16 +1624,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withSelectedEntities().build()).
                                 icon("assignment-turned-in").
                                 shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3").
+                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
                 .also()
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
                                 icon("attachment").
                                 shortDesc("Function 4").
-                                longDesc("Functional context-dependent action 4").
+                                longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 );
                 final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
@@ -1650,7 +1641,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
         if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation(entity -> 5).build());
+            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation((entity, context) -> 5).build());
         } else {
             afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }

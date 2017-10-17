@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,19 +26,22 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ICentreContextHolder.class)
 public class CentreContextHolder extends AbstractEntity<String> {
-    private static final long serialVersionUID = -1062648037823353306L;
-
+    
     @IsProperty(Object.class)
     @Title(value = "Custom object", desc = "Custom object")
-    private final Map<String, Object> customObject = new HashMap<String, Object>();
+    private final Map<String, Object> customObject = new HashMap<>();
 
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
-    private final Map<String, Object> modifHolder = new HashMap<String, Object>();
+    private final Map<String, Object> modifHolder = new HashMap<>();
+    
+    @IsProperty
+    @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
+    private AbstractEntity<?> originallyProducedEntity;
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Selected entities", desc = "Selected entities")
-    private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<AbstractEntity<?>>();
+    private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Master entity", desc = "Master entity")
@@ -72,8 +78,18 @@ public class CentreContextHolder extends AbstractEntity<String> {
         return this;
     }
 
-    public ArrayList<AbstractEntity<?>> getSelectedEntities() {
-        return /* Collections.unmodifiableList( */selectedEntities /* ) */;
+    public List<AbstractEntity<?>> getSelectedEntities() {
+        return unmodifiableList(selectedEntities);
+    }
+
+    @Observable
+    public CentreContextHolder setOriginallyProducedEntity(final AbstractEntity<?> originallyProducedEntity) {
+        this.originallyProducedEntity = originallyProducedEntity;
+        return this;
+    }
+
+    public AbstractEntity<?> getOriginallyProducedEntity() {
+        return originallyProducedEntity;
     }
 
     @Observable

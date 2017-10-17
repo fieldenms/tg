@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -13,15 +17,16 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
+import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
@@ -30,13 +35,14 @@ import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
  *
  */
 public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceUtils<CONTEXT> utils;
+    private final Logger logger = Logger.getLogger(getClass());
     private final Class<CONTEXT> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;
     private final IValueMatcherWithContext<CONTEXT, T> valueMatcher;
     private final ICompanionObjectFinder coFinder;
-    private final Logger logger = Logger.getLogger(getClass());
+    private final IEntityDao<CONTEXT> companion;
+    private final IEntityProducer<CONTEXT> producer;
 
     public EntityAutocompletionResource(
             final Class<CONTEXT> entityType,
@@ -51,12 +57,13 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final Response response) {
         init(context, request, response);
 
-        utils = new EntityResourceUtils<CONTEXT>(entityType, entityProducer, entityFactory, companionFinder);
         this.entityType = entityType;
         this.propertyName = propertyName;
         this.valueMatcher = valueMatcher;
         this.restUtil = restUtil;
         this.coFinder = companionFinder;
+        this.companion = companionFinder.<IEntityDao<CONTEXT>, CONTEXT> find(this.entityType);
+        this.producer = entityProducer;
     }
 
     /**
@@ -65,13 +72,15 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     @Post
     @Override
     public Representation post(final Representation envelope) {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during entity searching.");
-            final CentreContextHolder centreContextHolder = WebUiResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
-            final CONTEXT context = utils.constructEntity(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>()).getKey();
+            final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>();
+            final CONTEXT originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (CONTEXT) centreContextHolder.getOriginallyProducedEntity() : null;
+            final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, originallyProducedEntity, companion, producer, coFinder).getKey();
             logger.debug("context = " + context);
 
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder

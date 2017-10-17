@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,7 +116,7 @@ public class CriteriaResource extends ServerResource {
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
@@ -129,9 +132,9 @@ public class CriteriaResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             return createCriteriaValidationEnvelope(
-                    WebUiResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil), 
+                    restoreModifiedPropertiesHolderFrom(envelope, restUtil), 
                     centre.getMenuItemType(), 
                     ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), 
                     restUtil, 
@@ -214,12 +217,12 @@ public class CriteriaResource extends ServerResource {
     @Put
     @Override
     public Representation put(final Representation envelope) {
-        return WebUiResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_RESOURCE: run started.");
             //            // NOTE: the following line can be the example how 'centre running' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre running.");
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-            final CentreContextHolder centreContextHolder = WebUiResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
 
@@ -380,6 +383,7 @@ public class CriteriaResource extends ServerResource {
             return Optional.of(new Pair<>(
                     queryEnhancerConfig.get().getKey(),
                     CentreResourceUtils.createCentreContext(
+                            true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
                             webUiConfig,
                             companionFinder,
                             serverGdtm,
@@ -388,7 +392,9 @@ public class CriteriaResource extends ServerResource {
                             entityFactory,
                             centreContextHolder,
                             criteriaEntity,
-                            queryEnhancerConfig.get().getValue())//
+                            queryEnhancerConfig.get().getValue(),
+                            null /* chosenProperty is not applicable in queryEnhancer context */
+                            )//
             ));
         } else {
             return Optional.empty();

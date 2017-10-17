@@ -63,14 +63,15 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap0("    enabledStates: [%s],", enabledStatesString()) + //
                 wrap0("    preAction: function() {") + //
 
-                wrap0("        var functionalEntity = {id:null, version:0};") + //
+                wrap0("        const functionalEntity = {id:null, version:0};") + //
 
-                wrap0("        var reflector = self._reflector();") + //
-                wrap0("        var savingInfoHolder = reflector.newEntity('ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder');") + //
+                wrap0("        const reflector = self._reflector();") + //
+                wrap0("        const savingInfoHolder = reflector.newEntity('ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder');") + //
                 wrap0("        savingInfoHolder.id = null;") + //
-                wrap0("        savingInfoHolder['key'] = 'savingInfoHolder_key';") + //
+                wrap0("        savingInfoHolder['key'] = 'NO_KEY';") + //
                 wrap0("        savingInfoHolder['desc'] = 'savingInfoHolder description';") + //
                 wrap0("        savingInfoHolder['modifHolder'] = functionalEntity;") + //
+                wrap0("        savingInfoHolder['originallyProducedEntity'] = null;") + //
 
                 wrap0("        var masterEntity = self._currEntity;") + //
                 wrap0("        functionalEntity.key = { val: 'NoMatter', origVal: null };") + //
@@ -81,11 +82,11 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap0("        return savingInfoHolder;") + //
                 wrap0("    },") + //
                 wrap0("    postAction: function(entity) {") + //
-                wrap0("        console.log('postAction entity', entity);") + //
+                wrap0("        console.debug('postAction entity', entity);") + //
                 wrap1("        %s", postAction, () -> this.postAction.build().toString()) + //
                 wrap0("    },") + //
                 wrap0("    postActionError: function(resultWithError) {") + //
-                wrap0("        console.log('postActionError resultWithError', resultWithError);") + //
+                wrap0("        console.debug('postActionError resultWithError', resultWithError);") + //
                 wrap1("        %s", postActionError, () -> postActionError.build().toString()) + //
                 wrap0("    }") + //
                 wrap0("};" + //

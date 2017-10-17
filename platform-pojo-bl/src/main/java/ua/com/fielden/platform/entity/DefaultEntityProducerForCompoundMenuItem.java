@@ -1,7 +1,5 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
@@ -12,7 +10,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  * @param <T>
  */
-public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> > extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
+public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> > extends DefaultEntityProducerWithContext<T> {
     
     public DefaultEntityProducerForCompoundMenuItem(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         super(factory, entityType, companionFinder);
@@ -20,7 +18,7 @@ public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunction
 
     @Override
     protected T provideDefaultValues(final T entity) {
-        final AbstractEntity<?> openCompoundMasterAction = getMasterEntity();
+        final AbstractEntity<?> openCompoundMasterAction = masterEntity();
         
         if (openCompoundMasterAction == null) {
             throw new IllegalStateException("Upper level functional entity (for compound master opening) cannot be null.");

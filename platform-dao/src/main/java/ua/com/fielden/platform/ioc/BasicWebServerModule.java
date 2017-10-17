@@ -22,11 +22,9 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
-import ua.com.fielden.platform.entity.EntityExportActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
 import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
-import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
@@ -92,12 +90,8 @@ import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
-import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web_api.GraphQLService;
@@ -212,7 +206,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
-        bind(IEntityExportAction.class).to(EntityExportActionDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
@@ -222,10 +215,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
 
-        bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);

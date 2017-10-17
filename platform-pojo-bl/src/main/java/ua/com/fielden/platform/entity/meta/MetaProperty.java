@@ -223,6 +223,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [getValueChangeCount] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    public void setValueChangeCount(final int valueChangeCount) {
+        throw new StrictProxyException(format("Invalid call [setValueChangeCount] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
     public T getPrevValue() {
         throw new StrictProxyException(format("Invalid call [getPrevValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }

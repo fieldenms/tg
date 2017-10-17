@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
  * Serialiser for {@link Result} type.
+ * <p>
+ * Serialises information about concrete {@link Result}'s subtype, message, exception and instance with its type.
  *
  * @author TG Team
  *

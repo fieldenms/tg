@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
@@ -13,7 +12,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgExportFunctionalEntity> implements IEntityProducer<TgExportFunctionalEntity> {
+public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgExportFunctionalEntity> {
 
     @Inject
     public TgExportFunctionalEntityProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -22,8 +21,11 @@ public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithC
 
     @Override
     protected TgExportFunctionalEntity provideDefaultValues(final TgExportFunctionalEntity entity) {
-        if (entity.getChosenProperty() != null) {
-            entity.setActionProperty(entity.getChosenProperty());
+        if (masterEntityNotEmpty()) {
+            entity.setMasterEntity(masterEntity(TgPersistentEntityWithProperties.class));
+        }
+        if (chosenPropertyNotEmpty()) {
+            entity.setActionProperty(chosenProperty());
         }
         return entity;
     }

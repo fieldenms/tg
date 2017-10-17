@@ -8,6 +8,8 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.entity.EntityExportActionDao;
+import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -15,9 +17,15 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
+import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
 import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
+import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
+import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * This interface defines <code>Web UI</code> specific IoC binding contract,
@@ -51,7 +59,14 @@ public interface IBasicWebApplicationServerModule {
         bindType(ISourceController.class).to(SourceControllerImpl.class).in(Scopes.SINGLETON);
 
         // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IServerGlobalDomainTreeManager and IUserProvider
-        bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON); //
+        bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON);
+        
+        // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
+        bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
+        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
+        bindType(IEntityExportAction.class).to(EntityExportActionDao.class);
+        bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
+        bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
     }
 
     /**
