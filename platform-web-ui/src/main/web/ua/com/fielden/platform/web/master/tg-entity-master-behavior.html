@@ -844,16 +844,16 @@
              */
             canLeave: function () {
                 // check all the child nodes with canLeave contract if they can be left...
-                var nodesWithCanLeave = this.querySelectorAll('.canLeave');
+                const nodesWithCanLeave = this.querySelectorAll('.canLeave');
                 if (nodesWithCanLeave.length > 0) {
-                    for (var index = 0; index < nodesWithCanLeave.length; index++) {
-                        var reason = nodesWithCanLeave[index].canLeave();
-                        if (reason !== undefined) {
+                    for (let index = 0; index < nodesWithCanLeave.length; index++) {
+                        const reason = nodesWithCanLeave[index].canLeave();
+                        if (reason) {
                             return reason;
                         }
                     }
                 }
-
+                
                 if (this.classList.contains('canLeave')) {
                     // The master should remain open in case where there are some modifications and the entity is persisted. 
                     // Refer to _bindingEntityModified property of tg-entity-binder-behavior for more information.
@@ -866,7 +866,7 @@
                 }
                 return undefined;
             },
-
+            
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             _saverLoadingChanged: function (newValue, oldValue) {
                 console.log("_saverLoadingChanged:", newValue, oldValue);

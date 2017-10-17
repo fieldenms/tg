@@ -306,8 +306,8 @@
                 //Try to close children first.
                 canClose = this._closeChildren();
                 if (canClose && this._lastElement.classList.contains('canLeave')) {
-                    var reason = this._lastElement.canLeave();
-                    if (reason !== undefined) {
+                    const reason = this._lastElement.canLeave();
+                    if (reason) {
                         canClose = false;
                         // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
                         // for example, when closing a master for a functional entity, the reason states the need to save changes,
@@ -333,7 +333,7 @@
                 this._childDialogs.slice().forEach(function (dialog) {
                     dialog.closeDialog();
                     if (dialog.opened) {
-                        canClose = false
+                        canClose = false;
                         if (dialog._childDialogs.length === 0) {
                             dialog._focusDialogWithInput();
                         }

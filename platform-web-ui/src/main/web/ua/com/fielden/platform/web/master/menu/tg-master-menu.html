@@ -394,29 +394,38 @@
         },
         
         _routeChanged: function (newRoute, oldRoute) {
-        	if (this.route !== this.sectionRoute) {
-	        	var section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-	        	var cannotLeaveReason = section === undefined ? undefined : section.canLeave(); 
-	        	if (section === undefined || cannotLeaveReason === undefined) {        	
-	        		this.sectionRoute = newRoute;
-	        	} else {
-	        		this.route = this.sectionRoute;
-	        		this.parent._openToastForError('Cannot leave "' + section.sectionTitle + '".', cannotLeaveReason.msg);
-	        	} 
-        	}
- 		},
- 		
- 		/** Used by the master, which incorporates this menu to check if it can be closed. */
- 		canLeave: function () {
- 			var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
- 			var reason = section.canLeave();
- 			if (reason) {
- 				if (reason.isNew === true && this.route === this.defaultRoute) {
- 					return undefined; // allow closing for new entity on the default route... i.e. like Main
- 				}
- 			}
- 			return reason;
- 		},
+            if (this.route !== this.sectionRoute) {
+                const section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                const cannotLeaveReason = section === undefined ? undefined : section.canLeave();
+                if (!cannotLeaveReason) {
+                    if (section && this.route === this.defaultRoute /* TODO check this condition */) {
+                        const sectionElement = section._element;
+                        if (sectionElement && sectionElement.masterWithMaster === true
+                            && sectionElement.$.loader
+                            && sectionElement.$.loader.loadedElement
+                        ) {
+                            const embeddedMaster = sectionElement.$.loader.loadedElement;
+                            if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+                                this.route = this.sectionRoute;
+                                this.parent._openToastForError('Cannot leave "' + section.sectionTitle + '".', 'A new entity is being created. Please save your changes.');
+                                return;
+                            }
+                        }
+                    } 
+                    
+                    this.sectionRoute = newRoute;
+                } else {
+                    this.route = this.sectionRoute;
+                    this.parent._openToastForError('Cannot leave "' + section.sectionTitle + '".', cannotLeaveReason.msg);
+                }
+            }
+        },
+        
+        /** Used by the master, which incorporates this menu to check if it can be closed. */
+        canLeave: function () {
+            const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
+            return section.canLeave();
+        },
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
             var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
