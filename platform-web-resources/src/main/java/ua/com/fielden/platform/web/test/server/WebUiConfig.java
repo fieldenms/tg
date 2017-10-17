@@ -1191,7 +1191,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
-        private final Logger logger = Logger.getLogger(getClass());
+        private static final Logger logger = Logger.getLogger(DetailsCentreQueryEnhancer.class);
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
