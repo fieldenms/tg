@@ -38,7 +38,6 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.

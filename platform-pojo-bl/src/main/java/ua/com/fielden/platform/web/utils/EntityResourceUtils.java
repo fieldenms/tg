@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -633,7 +634,9 @@ public class EntityResourceUtils {
 
     /**
      * Determines the entity type for which criteria entity will be generated.
+     *
      * @param miType
+     * @return
      */
     public static <T extends AbstractEntity<?>> Class<T> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
@@ -642,7 +645,7 @@ public class EntityResourceUtils {
         }
         return (Class<T>) entityTypeAnnotation.value();
     }
-    
+
     /**
      * Determines the miType for which criteria entity was generated.
      *
@@ -652,7 +655,7 @@ public class EntityResourceUtils {
     public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
         final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
         if (annotation == null) {
-            throw new IllegalStateException(String.format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
+            throw new IllegalStateException(format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
         }
         return annotation.value();
     }

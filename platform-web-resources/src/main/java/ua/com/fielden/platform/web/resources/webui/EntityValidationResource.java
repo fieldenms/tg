@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 
 /**
  * The web resource for entity validation serves as a back-end mechanism of changing entity properties and validating that changes.
