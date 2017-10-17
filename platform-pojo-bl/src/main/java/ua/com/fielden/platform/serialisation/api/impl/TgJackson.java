@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
@@ -71,7 +71,6 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     public final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
         entityTypeInfoGetter = new EntityTypeInfoGetter();
@@ -206,7 +205,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         return factory;
     }
 
-    public LinkedHashMap<String, EntityType> getTypeTable() {
+    public Map<String, EntityType> getTypeTable() {
         return entityTypeInfoGetter.getTypeTable();
     }
     

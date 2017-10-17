@@ -1,6 +1,11 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
+
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -10,9 +15,9 @@ import org.apache.log4j.Logger;
  * @author TG Team
  *
  */
-public class EntityTypeInfoGetter {
-    private final LinkedHashMap<String, EntityType> typeTable = new LinkedHashMap<>();
-    private final Logger logger = Logger.getLogger(getClass());
+public final class EntityTypeInfoGetter {
+    private final Map<String, EntityType> typeTable = new LinkedHashMap<>();
+    private static final Logger logger = Logger.getLogger(EntityTypeInfoGetter.class);
 
     public EntityType get(final String typeName) {
         return typeTable.get(typeName);
@@ -28,9 +33,9 @@ public class EntityTypeInfoGetter {
             typeTable.put(entityType.getKey(), entityType);
             entityType.endInitialising();
 
-            logger.debug(String.format("Registering new type with name [%s] = %s", entityType.getKey(), entityType));
+            logger.debug(format("Registering new type with name [%s] = %s", entityType.getKey(), entityType));
         } else {
-            logger.warn(String.format("Is trying to register already registered new type [%s]. Has disregarded.", entityType.getKey()));
+            logger.warn(format("Is trying to register already registered new type [%s]. Has disregarded.", entityType.getKey()));
         }
         return typeTable.get(entityType.getKey());
     }
@@ -40,7 +45,7 @@ public class EntityTypeInfoGetter {
      *
      * @return
      */
-    public LinkedHashMap<String, EntityType> getTypeTable() {
-        return typeTable;
+    public Map<String, EntityType> getTypeTable() {
+        return unmodifiableMap(typeTable);
     }
 }
