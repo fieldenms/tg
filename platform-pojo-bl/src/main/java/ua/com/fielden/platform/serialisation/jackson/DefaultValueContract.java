@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static java.lang.Boolean.FALSE;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.util.Optional;
@@ -15,7 +20,6 @@ import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -40,9 +44,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isPrevValueDefault(final MetaProperty<Object> metaProperty) {
-        if (metaProperty.isEntity() && (
-            isIdOnlyProxiedEntity(metaProperty.getPrevValue()) || isIdOnlyProxiedEntity(metaProperty.getOriginalValue())
-        )) {
+        if (metaProperty.isEntity() && (isIdOnlyProxiedEntity(metaProperty.getPrevValue()) || isIdOnlyProxiedEntity(metaProperty.getOriginalValue()))) {
             return false;
         }
         return equalsEx(metaProperty.getPrevValue(), metaProperty.getOriginalValue());
@@ -158,9 +160,9 @@ public class DefaultValueContract {
             // Also changedFromOriginal flag should be computed based on ids, because original call 'metaProperty.isChangedFromOriginal()' returns always 'false' triggering StrictProxyException.
             final Long valueId = valueId(metaProperty.getValue());
             final Long origValueId = valueId(metaProperty.getOriginalValue());
-            return T2.t2(false, Optional.of(T2.t2(valueId, origValueId)));
+            return t2(false, of(t2(valueId, origValueId)));
         }
-        return T2.t2(equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault()), Optional.empty());
+        return t2(equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault()), empty());
     }
     
     private static boolean isIdOnlyProxiedEntity(final Object value) {
@@ -257,7 +259,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEntityTitleDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityTitle) {
-        return equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
+        return equalsEx(entityTitle, getDefaultEntityTitleAndDesc(entityType).getKey());
     }
 
     /**
@@ -266,7 +268,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEntityDescDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityDesc) {
-        return equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
+        return equalsEx(entityDesc, getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 
     /**
@@ -385,7 +387,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isExclusiveDefault(final Boolean exclusive) {
-        return exclusive == null || Boolean.FALSE.equals(exclusive);
+        return exclusive == null || FALSE.equals(exclusive);
     }
 
     /**
@@ -394,7 +396,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isExclusive2Default(final Boolean exclusive2) {
-        return exclusive2 == null || Boolean.FALSE.equals(exclusive2);
+        return exclusive2 == null || FALSE.equals(exclusive2);
     }
 
     /**
@@ -403,7 +405,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isOrNullDefault(final Boolean orNull) {
-        return orNull == null || Boolean.FALSE.equals(orNull);
+        return orNull == null || FALSE.equals(orNull);
     }
 
     /**
@@ -412,7 +414,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isNotDefault(final Boolean not) {
-        return not == null || Boolean.FALSE.equals(not);
+        return not == null || FALSE.equals(not);
     }
 
     /**
