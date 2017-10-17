@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;

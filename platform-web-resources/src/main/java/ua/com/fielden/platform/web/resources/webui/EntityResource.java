@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.resources.webui;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
@@ -13,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -52,8 +52,8 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
-import ua.com.fielden.platform.web.utils.WebUiResourceUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -259,43 +259,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final IUserProvider userProvider,
         final IEntityDao<T> companion
     ) {
-                EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
-
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
-        return potentiallySavedWithException;
-    /**
-     * Restores the entity from {@link SavingInfoHolder} and tries to save it.
-     * 
-     * @param savingInfoHolder
-     * @param entityType
-     * @param entityFactory
-     * @param companionFinder
-     * @param critGenerator
-     * @param webUiConfig
-     * @param serverGdtm
-     * @param userProvider
-     * @param companion
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> tryToSave(
-        final SavingInfoHolder savingInfoHolder,
-        final Class<T> entityType,
-        final EntityFactory entityFactory,
-        final ICompanionObjectFinder companionFinder,
-        final ICriteriaGenerator critGenerator,
-        final IWebUiConfig webUiConfig,
-        final IServerGlobalDomainTreeManager serverGdtm,
-        final IUserProvider userProvider,
-        final IEntityDao<T> companion
-    ) {
         final List<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
                 EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.save(applied, continuations, companion);
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
         return potentiallySavedWithException;
     }
 

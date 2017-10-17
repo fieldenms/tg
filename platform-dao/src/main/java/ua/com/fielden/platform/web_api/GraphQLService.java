@@ -34,6 +34,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
+import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -302,6 +303,8 @@ public class GraphQLService implements IGraphQLService {
             // TODO return TgScalars.GraphQLColour;
         } else if (EntityUtils.isEntityType(type)) {
             return Optional.of(new GraphQLTypeReference(type.getSimpleName()));
+        } else if (NoKey.class.isAssignableFrom(type)) {
+            return Optional.empty();
         } else {
             throw new UnsupportedOperationException(String.format("Field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }
@@ -344,6 +347,8 @@ public class GraphQLService implements IGraphQLService {
             // TODO return TgScalars.GraphQLColour;
         } else if (EntityUtils.isEntityType(type)) {
             return Optional.of(Scalars.GraphQLString);
+        } else if (NoKey.class.isAssignableFrom(type)) {
+            return Optional.empty();
         } else {
             throw new UnsupportedOperationException(String.format("Mutation input argument field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }

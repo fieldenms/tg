@@ -634,52 +634,15 @@ public class EntityResourceUtils {
     /**
      * Determines the entity type for which criteria entity will be generated.
      * @param miType
+     */
     public static <T extends AbstractEntity<?>> Class<T> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
         if (entityTypeAnnotation == null) {
             throw new IllegalStateException(format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
         }
         return (Class<T>) entityTypeAnnotation.value();
-     * Determines the miType for which criteria entity was generated.
-     * @param miType
-    public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
-        if (annotation == null) {
-            throw new IllegalStateException(format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
-        }
-        return annotation.value();
-     * Determines the master type for which criteria entity was generated.
-     * @param criteriaType
-    public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        return getEntityType(getMiType(criteriaType));
-    }
-
-    /**
-     * Determines the property name of the property from which the criteria property was generated. This is only applicable for entity typed properties.
-     *
-     * @param propertyName
-     * @return
-     */
-    public static String getOriginalPropertyName(final Class<?> criteriaClass, final String propertyName) {
-        return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
-    }
-
-    /**
-     * Determines the managed (in cdtmae) counter-part for master type for which criteria entity was generated.
-     *
-     * @param criteriaType
-     * @param cdtmae
-     * @return
-     */
-    public static Class<?> getOriginalManagedType(final Class<? extends AbstractEntity<?>> criteriaType, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
-        return cdtmae.getEnhancer().getManagedType(getOriginalType(criteriaType));
     }
     
-    public static String tabs(final int tabCount) {
-        final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tabCount; i++) {
-            sb.append("  ");
-
     /**
      * Determines the miType for which criteria entity was generated.
      *
@@ -691,7 +654,7 @@ public class EntityResourceUtils {
         if (annotation == null) {
             throw new IllegalStateException(String.format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
         }
-        return sb.toString();
+        return annotation.value();
     }
 
     /**
