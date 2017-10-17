@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,7 +30,7 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
-    private final Map<String, Object> modifHolder = new HashMap<String, Object>();
+    private final Map<String, Object> modifHolder = new HashMap<>();
     
     @IsProperty
     @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
@@ -52,8 +55,8 @@ public class SavingInfoHolder extends AbstractEntity<String> {
         return this;
     }
 
-    public ArrayList<String> getContinuationProperties() {
-        return /* Collections.unmodifiableList( */ continuationProperties /* ) */;
+    public List<String> getContinuationProperties() {
+        return unmodifiableList(continuationProperties);
     }
     
     @Observable
@@ -63,8 +66,8 @@ public class SavingInfoHolder extends AbstractEntity<String> {
         return this;
     }
 
-    public ArrayList<IContinuationData> getContinuations() {
-        return /* Collections.unmodifiableList( */ continuations /* ) */;
+    public List<IContinuationData> getContinuations() {
+        return unmodifiableList(continuations);
     }
 
     @Observable
@@ -95,6 +98,6 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     }
 
     public Map<String, Object> getModifHolder() {
-        return Collections.unmodifiableMap(modifHolder);
+        return unmodifiableMap(modifHolder);
     }
 }
