@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -26,11 +29,11 @@ public class CentreContextHolder extends AbstractEntity<String> {
     
     @IsProperty(Object.class)
     @Title(value = "Custom object", desc = "Custom object")
-    private final Map<String, Object> customObject = new HashMap<String, Object>();
+    private final Map<String, Object> customObject = new HashMap<>();
 
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
-    private final Map<String, Object> modifHolder = new HashMap<String, Object>();
+    private final Map<String, Object> modifHolder = new HashMap<>();
     
     @IsProperty
     @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
@@ -38,7 +41,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Selected entities", desc = "Selected entities")
-    private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<AbstractEntity<?>>();
+    private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Master entity", desc = "Master entity")
@@ -75,8 +78,8 @@ public class CentreContextHolder extends AbstractEntity<String> {
         return this;
     }
 
-    public ArrayList<AbstractEntity<?>> getSelectedEntities() {
-        return /* Collections.unmodifiableList( */selectedEntities /* ) */;
+    public List<AbstractEntity<?>> getSelectedEntities() {
+        return unmodifiableList(selectedEntities);
     }
 
     @Observable
