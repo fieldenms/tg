@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -131,12 +132,12 @@ public class EntityResourceUtils {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    logger.debug(String.format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                    logger.debug(format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    logger.debug(String.format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                    logger.debug(format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 }
             }
@@ -149,7 +150,7 @@ public class EntityResourceUtils {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                logger.debug(String.format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                logger.debug(format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             } else { // this is unmodified property
                 // IMPORTANT:
@@ -157,7 +158,7 @@ public class EntityResourceUtils {
                 //  even unmodified ones.
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
-                logger.debug(String.format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                logger.debug(format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
         }
@@ -242,11 +243,11 @@ public class EntityResourceUtils {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
-                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
+                    logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, CONFLICT_WARNING));
                 } else {
-                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + String.format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                    logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
                 }
             } else {
                 performAction.run();
@@ -378,27 +379,27 @@ public class EntityResourceUtils {
     /**
      * Determines property type.
      * <p>
-     * The exception from standard logic is only for "collection modification func action", where the type of "chosenIds", "addedIds" and "removedIds" properties
-     * determines from the second type parameter of the func action type. This is done due to generic nature of that types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
+     * The exception from standard logic is only for "collection modification func action", where the type of <code>chosenIds</code>, <code>addedIds</code> and <code>removedIds</code> properties
+     * is determined from the second type parameter of the func action type. This is required due to the generic nature of those types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
      *
      * @param type
      * @param propertyName
      * @return
      */
-    private static Class determinePropertyType(final Class<?> type, final String propertyName) {
-        final Class propertyType;
+    private static Class<?> determinePropertyType(final Class<?> type, final String propertyName) {
+        final Class<?> propertyType;
         if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) && AbstractFunctionalEntityForCollectionModification.isCollectionOfIds(propertyName)) {
             if (type.getAnnotatedSuperclass() == null) {
-                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
             }
             if (!(type.getAnnotatedSuperclass().getType() instanceof ParameterizedType)) {
-                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
             }
             final ParameterizedType parameterizedEntityType = (ParameterizedType) type.getAnnotatedSuperclass().getType();
             if (parameterizedEntityType.getActualTypeArguments().length != 1 || !(parameterizedEntityType.getActualTypeArguments()[0] instanceof Class)) {
-                throw Result.failure(new IllegalStateException(String.format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
             }
-            propertyType = (Class) parameterizedEntityType.getActualTypeArguments()[0];
+            propertyType = (Class<?>) parameterizedEntityType.getActualTypeArguments()[0];
         } else {
             propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
         }
@@ -406,7 +407,7 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Converts <code>reflectedValue</code>, which could be a string, a number, a boolean or a null, into a value of appropriate type (the type of the actual property).
+     * Converts <code>reflectedValue</code>, which could be a string, a number, a boolean or a null, to a value of appropriate type (the type of the actual property).
      *
      * @param type
      * @param propertyName
@@ -424,7 +425,7 @@ public class EntityResourceUtils {
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
-                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+                throw new UnsupportedOperationException(format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
             }
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
@@ -433,12 +434,12 @@ public class EntityResourceUtils {
                 final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
                 return extractPropertyDescriptor((String) reflectedValue, enclosingEntityType).orElse(null);
             } else if (reflectedValueId.isPresent()) {
-                logger.debug(String.format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
+                logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                 // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
                 final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
                 return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+                logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
                 final String compositeKeyAsString = buildSearchByValue(propertyType, entityPropertyType, (String) reflectedValue);
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
                 /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList(compositeKeyAsString))).//
@@ -451,7 +452,7 @@ public class EntityResourceUtils {
                     return null;
                 }
             } else {
-                logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+                logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
                 final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
                 final String key;
                 if (keys.length > 1) {
@@ -473,7 +474,7 @@ public class EntityResourceUtils {
             final boolean isStringElem = String.class.isAssignableFrom(propertyType);
             final boolean isLongElem = Long.class.isAssignableFrom(propertyType);
             if (!isSet && !isList || !isStringElem && !isLongElem) {
-                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of collectional type [%s] with [%s] elements. Only [Set / List] of [String / Long] elements are supported.", propertyName, type.getSimpleName(), reflectedValue, collectionType.getSimpleName(), propertyType.getSimpleName()));
+                throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of collectional type [%s] with [%s] elements. Only [Set / List] of [String / Long] elements are supported.", propertyName, type.getSimpleName(), reflectedValue, collectionType.getSimpleName(), propertyType.getSimpleName()));
             }
             final List<Object> list = (ArrayList<Object>) reflectedValue;
             final Stream<Object> stream = list.stream().map(
@@ -540,7 +541,7 @@ public class EntityResourceUtils {
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else {
-            throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
+            throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }
     }
 
@@ -558,7 +559,7 @@ public class EntityResourceUtils {
         } else if (reflectedValue instanceof BigInteger) {
             return ((BigInteger) reflectedValue).longValue();
         } else {
-            throw new IllegalStateException(String.format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
+            throw new IllegalStateException(format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
         }
     }
 
@@ -640,7 +641,7 @@ public class EntityResourceUtils {
     public static <T extends AbstractEntity<?>> Class<T> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
         if (entityTypeAnnotation == null) {
-            throw new IllegalStateException(String.format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
+            throw new IllegalStateException(format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
         }
         return (Class<T>) entityTypeAnnotation.value();
     }
@@ -654,7 +655,7 @@ public class EntityResourceUtils {
     public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
         final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
         if (annotation == null) {
-            throw new IllegalStateException(String.format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
+            throw new IllegalStateException(format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
         }
         return annotation.value();
     }
