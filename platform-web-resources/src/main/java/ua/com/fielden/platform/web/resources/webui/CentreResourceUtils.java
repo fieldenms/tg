@@ -579,7 +579,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
             final AbstractEntity<?> masterContext,
-            final ArrayList<AbstractEntity<?>> selectedEntities,
+            final List<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
             final String chosenProperty

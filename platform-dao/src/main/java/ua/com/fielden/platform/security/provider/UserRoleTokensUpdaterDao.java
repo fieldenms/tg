@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.entity.CollectionModificationUtils.mapById;
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.toMapByKey;
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
 
 import java.util.LinkedHashSet;
@@ -55,7 +55,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
         
         // after all validations have passed -- the association changes could be saved:
         final UserRole userRoleBeingUpdated = actionAndUserRoleBeingUpdated._2;
-        final Map<Object, SecurityTokenInfo> availableTokens = mapById(actionToSave.getTokens(), String.class);
+        final Map<Object, SecurityTokenInfo> availableTokens = toMapByKey(actionToSave.getTokens());
         
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final String addedId : actionToSave.getAddedIds()) {

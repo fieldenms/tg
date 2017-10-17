@@ -201,7 +201,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             emptyOriginallyProducedEntity,
                             CentreResourceUtils.createCentreContext(
                                     masterEntity, /* master context */
-                                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
+                                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                                     CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, serverGdtm, userProvider, webUiConfig, factory),
                                     actionConfig,
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
@@ -391,7 +391,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
                     masterContext,
-                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
+                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                     criteriaEntity,
                     actionConfig,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null

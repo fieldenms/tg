@@ -18,8 +18,6 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -61,7 +59,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final ObjectMapper mapper;
     private final Field versionField;
     private final Class<T> type;
-    private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
     private final boolean propertyDescriptorType;
