@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.security.user;
 
+import static java.util.stream.Collectors.toCollection;
+
 import java.util.LinkedHashSet;
-import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -37,7 +38,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
     @Authorise(UserReviewToken.class)
     protected UserRolesUpdater provideCurrentlyAssociatedValues(final UserRolesUpdater entity, final User masterEntity) {
         controller.setAvailableItems(entity, controller.refetchAvailableItems(masterEntity));
-        entity.setChosenIds(new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList())));
+        entity.setChosenIds(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(toCollection(LinkedHashSet::new)));
         return entity;
     }
     
