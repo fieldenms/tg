@@ -270,7 +270,7 @@ public class GraphQLService implements IGraphQLService {
             return Optional.of(Scalars.GraphQLString);
         } else if (EntityUtils.isBoolean(type)) {
             return Optional.of(Scalars.GraphQLBoolean);
-        } else if (EntityUtils.isDecimal(type)) {
+        } else if (EntityUtils.isDecimal(type) || Double.class.isAssignableFrom(type)) {
             return Optional.of(Scalars.GraphQLBigDecimal);
             // TODO remove return TgScalars.GraphQLBigDecimal;
         } else if (Long.class.isAssignableFrom(type)) {
@@ -312,7 +312,7 @@ public class GraphQLService implements IGraphQLService {
             return Optional.of(Scalars.GraphQLString);
         } else if (EntityUtils.isBoolean(type)) {
             return Optional.of(Scalars.GraphQLBoolean);
-        } else if (EntityUtils.isDecimal(type)) {
+        } else if (EntityUtils.isDecimal(type) || Double.class.isAssignableFrom(type)) {
             return Optional.of(Scalars.GraphQLBigDecimal);
             // TODO remove return TgScalars.GraphQLBigDecimal;
         } else if (Long.class.isAssignableFrom(type)) {
