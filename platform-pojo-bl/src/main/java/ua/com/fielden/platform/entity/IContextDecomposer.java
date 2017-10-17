@@ -31,7 +31,8 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * However, accessors return <code>null</code> if the requested context part is not present.
  * <p>
  * The context master entity (returned from {@link #masterEntity()}) may be context-aware.
- * All methods that contain <code>*OfMasterEntity*</code> in their name, represent API to work with the context of a master entity.
+ * Decomposition of the master entity's context should start with obtaining an instance of {@link ContextOfMasterEntity} using method {@link #ofMasterEntity()}.
+ * All methods that contain <code>*OfMasterEntity*</code> in their name, represent API to work with the context of a master entity or its master entity.
  * 
  * @author TG Team
  *
@@ -398,201 +399,217 @@ public interface IContextDecomposer {
     
     ////////////////////////////////// CONTEXT DECOMPOSITION API [SECOND LEVEL] //////////////////////////////////
     
-    // CONTEXT AS A WHOLE:
+    default ContextOfMasterEntity ofMasterEntity() {
+        return new ContextOfMasterEntity(this);
+    }
+    
     /**
-     * Returns <code>true</code> if the masterEntity's context is present, <code>false</code> otherwise.
-     * 
-     * @return
+     * Second level decomposition API where all calls pertain to the context of a master entity.
+     *
      */
-    default boolean contextOfMasterEntityNotEmpty() {
-        if (masterEntityNotEmpty()) {
-            final AbstractEntity<?> masterEntity = masterEntity();
-            if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
-                return ((AbstractFunctionalEntityWithCentreContext<?>) masterEntity).context() != null;
-            }
+    static final class ContextOfMasterEntity {
+    
+        private final IContextDecomposer decomposer;
+        
+        private ContextOfMasterEntity(IContextDecomposer decomposer) {
+            this.decomposer = decomposer;
         }
-        return false;
-    }
-    
-    /**
-     * Returns <code>true</code> if the masterEntity's context is not present, <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    default boolean contextOfMasterEntityEmpty() {
-        return !contextOfMasterEntityNotEmpty();
-    }
-    
-    /**
-     * Returns the masterEntity's context. This call may result in value <code>null</code> or NPE if the master entity is not present.
-     * 
-     * @return
-     */
-    default CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> contextOfMasterEntity() {
-        return ((AbstractFunctionalEntityWithCentreContext) masterEntity()).context();
-    }
-    
-    // MASTER ENTITY:
-    /**
-     * Returns <code>true</code> if the masterEntity's master entity is an instance of the specified <code>type</code>, <code>false</code> otherwise.
-     * 
-     * @param type
-     * @return
-     */
-    default <M extends AbstractEntity<?>> boolean masterEntityOfMasterEntityInstanceOf(final Class<M> type) {
-        return contextOfMasterEntityNotEmpty() && decompose(contextOfMasterEntity()).masterEntityInstanceOf(type);
-    }
-    
-    /**
-     * Returns the masterEntity's master entity, which could be <code>null</code>.
-     * 
-     * @return
-     */
-    default AbstractEntity<?> masterEntityOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).masterEntity();
-    }
-    
-    /**
-     * Returns the masterEntity's master entity, type casted to the specified <code>type</code>.
-     * 
-     * @param type
-     * @return
-     */
-    default <M extends AbstractEntity<?>> M masterEntityOfMasterEntity(final Class<M> type) {
-        return decompose(contextOfMasterEntity()).masterEntity(type);
-    }
-    
-    // MASTER ENTITY'S KEY:
-    /**
-     * Returns <code>true</code> if the key of the masterEntity's master entity is an instance of the specified <code>type</code>, <code>false</code> otherwise.
-     * 
-     * @param type
-     * @return
-     */
-    default <M extends AbstractEntity<?>> boolean keyOfMasterEntityOfMasterEntityInstanceOf(final Class<M> type) {
-        return contextOfMasterEntityNotEmpty() && decompose(contextOfMasterEntity()).keyOfMasterEntityInstanceOf(type);
-    }
-    
-    /**
-     * Returns the masterEntity's master entity key, type-casted to the specified <code>type</code>.
-     * 
-     * @param type
-     * @return
-     */
-    default <M extends AbstractEntity<?>> M keyOfMasterEntityOfMasterEntity(final Class<M> type) {
-        return decompose(contextOfMasterEntity()).keyOfMasterEntity(type);
-    }
-    
-    // MASTER ENTITY'S SELECTION CRIT:
-    /**
-     * Returns selection criteria of the masterEntity's master entity. Could return <code>null</code> and even throw NPE.
-     * 
-     * @return
-     */
-    default EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntityOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).selectionCritOfMasterEntity();
-    }
-    
-    // CHOSEN PROPERTY:
-    /**
-     * Returns the value of chosen property of masterEntity, which is relevant for master property editor actions and centre column actions:
-     * <ul>
-     * <li> <code>null</code> if the chosen property is not present
-     * <li> empty string ("") if the chosen property represents <code>this</code>
-     * <li> a non-empty string that corresponds to some property name
-     * </ul>
-     * 
-     * @return
-     */
-    default String chosenPropertyOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).chosenProperty();
-    }
-    
-    // CURRENT ENTITY:
-    /**
-     * Returns <code>true</code> if the masterEntity's current entity is not present, <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    default boolean currentEntityOfMasterEntityEmpty() {
-        return contextOfMasterEntityEmpty() || decompose(contextOfMasterEntity()).currentEntityEmpty();
-    }
-    
-    /**
-     * Returns <code>true</code> if the masterEntity's current entity is present, <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    default boolean currentEntityOfMasterEntityNotEmpty() {
-        return !currentEntityOfMasterEntityEmpty();
-    }
-    
-    /**
-     * Returns the masterEntity's current entity. May return <code>null</code> and even throw NPE.
-     * 
-     * @return
-     */
-    default AbstractEntity<?> currentEntityOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).currentEntity();
-    }
-    
-    /**
-     * Returns <code>true</code> if the masterEntity's current entity is an instance of the specified <code>type</code>, <code>false</code> otherwise.
-     * 
-     * @param type
-     * @return
-     */
-    default <M extends AbstractEntity<?>> boolean currentEntityOfMasterEntityInstanceOf(final Class<M> type) {
-        return contextOfMasterEntityNotEmpty() && decompose(contextOfMasterEntity()).currentEntityInstanceOf(type);
-    }
-    
-    /**
-     * Returns the masterEntity's current entity, type-casted to the specified <code>type</code>.
-     * 
-     * @param type
-     * @return
-     */
-    default <M extends AbstractEntity<?>> M currentEntityOfMasterEntity(final Class<M> type) {
-        return decompose(contextOfMasterEntity()).currentEntity(type);
-    }
-    
-    // SELECTION CRITERIA:
-    /**
-     * Returns <code>true</code> if the masterEntity's selection criteria entity is present, <code>false</code> otherwise.
-     * 
-     * @return
-     */
-    default boolean selectionCritOfMasterEntityNotEmpty() {
-        return contextOfMasterEntityNotEmpty() && decompose(contextOfMasterEntity()).selectionCritNotEmpty();
-    }
-    
-    /**
-     * Returns the masterEntity's selection criteria entity. May return <code>null</code>
-     * 
-     * @return
-     */
-    default EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).selectionCrit();
-    }
-    
-    // SELECTED ENTITIES:
-    /**
-     * Returns masterEntity's selected entities. An empty list is returned if there are no entities selected.
-     * 
-     * @return
-     */
-    default List<AbstractEntity<?>> selectedEntitiesOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).selectedEntities();
-    }
-    
-    // COMPUTATION:
-    /**
-     * Returns an optional computation aspect of the masterEntity's context.
-     * 
-     * @return
-     */
-    default Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computationOfMasterEntity() {
-        return decompose(contextOfMasterEntity()).computation();
-    }
-    
+        
+        // CONTEXT AS A WHOLE:
+        /**
+         * Returns <code>true</code> if the masterEntity's context is present, <code>false</code> otherwise.
+         * 
+         * @return
+         */
+        public boolean contextNotEmpty() {
+            if (decomposer.masterEntityNotEmpty()) {
+                final AbstractEntity<?> masterEntity = decomposer.masterEntity();
+                if (AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(masterEntity.getClass())) {
+                    return ((AbstractFunctionalEntityWithCentreContext<?>) masterEntity).context() != null;
+                }
+            }
+            return false;
+        }
+        
+        /**
+         * Returns <code>true</code> if the masterEntity's context is not present, <code>false</code> otherwise.
+         * 
+         * @return
+         */
+        public boolean contextEntityEmpty() {
+            return !contextNotEmpty();
+        }
+        
+        /**
+         * Returns the masterEntity's context. This call may result in value <code>null</code> or NPE if the master entity is not present.
+         * 
+         * @return
+         */
+        public CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context() {
+            return ((AbstractFunctionalEntityWithCentreContext) decomposer.masterEntity()).context();
+        }
+        
+        // MASTER ENTITY:
+        /**
+         * Returns <code>true</code> if the masterEntity's master entity is an instance of the specified <code>type</code>, <code>false</code> otherwise.
+         * 
+         * @param type
+         * @return
+         */
+        public <M extends AbstractEntity<?>> boolean masterEntityInstanceOf(final Class<M> type) {
+            return contextNotEmpty() && decompose(context()).masterEntityInstanceOf(type);
+        }
+        
+        /**
+         * Returns the masterEntity's master entity, which could be <code>null</code>.
+         * 
+         * @return
+         */
+        public AbstractEntity<?> masterEntity() {
+            return decompose(context()).masterEntity();
+        }
+        
+        /**
+         * Returns the masterEntity's master entity, type casted to the specified <code>type</code>.
+         * 
+         * @param type
+         * @return
+         */
+        public <M extends AbstractEntity<?>> M masterEntity(final Class<M> type) {
+            return decompose(context()).masterEntity(type);
+        }
+        
+        // MASTER ENTITY'S KEY:
+        /**
+         * Returns <code>true</code> if the key of the masterEntity's master entity is an instance of the specified <code>type</code>, <code>false</code> otherwise.
+         * 
+         * @param type
+         * @return
+         */
+        public <M extends AbstractEntity<?>> boolean keyOfMasterEntityInstanceOf(final Class<M> type) {
+            return contextNotEmpty() && decompose(context()).keyOfMasterEntityInstanceOf(type);
+        }
+        
+        /**
+         * Returns the masterEntity's master entity key, type-casted to the specified <code>type</code>.
+         * 
+         * @param type
+         * @return
+         */
+        public <M extends AbstractEntity<?>> M keyOfMasterEntity(final Class<M> type) {
+            return decompose(context()).keyOfMasterEntity(type);
+        }
+        
+        // MASTER ENTITY'S SELECTION CRIT:
+        /**
+         * Returns selection criteria of the masterEntity's master entity. Could return <code>null</code> and even throw NPE.
+         * 
+         * @return
+         */
+        public EnhancedCentreEntityQueryCriteria<?, ?> selectionCritOfMasterEntity() {
+            return decompose(context()).ofMasterEntity().selectionCrit();
+        }
+        
+        // CHOSEN PROPERTY:
+        /**
+         * Returns the value of chosen property of masterEntity, which is relevant for master property editor actions and centre column actions:
+         * <ul>
+         * <li> <code>null</code> if the chosen property is not present
+         * <li> empty string ("") if the chosen property represents <code>this</code>
+         * <li> a non-empty string that corresponds to some property name
+         * </ul>
+         * 
+         * @return
+         */
+        public String chosenProperty() {
+            return decompose(context()).chosenProperty();
+        }
+        
+        // CURRENT ENTITY:
+        /**
+         * Returns <code>true</code> if the masterEntity's current entity is not present, <code>false</code> otherwise.
+         * 
+         * @return
+         */
+        public boolean currentEntityEmpty() {
+            return contextEntityEmpty() || decompose(context()).currentEntityEmpty();
+        }
+        
+        /**
+         * Returns <code>true</code> if the masterEntity's current entity is present, <code>false</code> otherwise.
+         * 
+         * @return
+         */
+        public boolean currentEntityNotEmpty() {
+            return !currentEntityEmpty();
+        }
+        
+        /**
+         * Returns the masterEntity's current entity. May return <code>null</code> and even throw NPE.
+         * 
+         * @return
+         */
+        public AbstractEntity<?> currentEntity() {
+            return decompose(context()).currentEntity();
+        }
+        
+        /**
+         * Returns <code>true</code> if the masterEntity's current entity is an instance of the specified <code>type</code>, <code>false</code> otherwise.
+         * 
+         * @param type
+         * @return
+         */
+        public <M extends AbstractEntity<?>> boolean currentEntityInstanceOf(final Class<M> type) {
+            return contextNotEmpty() && decompose(context()).currentEntityInstanceOf(type);
+        }
+        
+        /**
+         * Returns the masterEntity's current entity, type-casted to the specified <code>type</code>.
+         * 
+         * @param type
+         * @return
+         */
+        public <M extends AbstractEntity<?>> M currentEntity(final Class<M> type) {
+            return decompose(context()).currentEntity(type);
+        }
+        
+        // SELECTION CRITERIA:
+        /**
+         * Returns <code>true</code> if the masterEntity's selection criteria entity is present, <code>false</code> otherwise.
+         * 
+         * @return
+         */
+        public boolean selectionCritNotEmpty() {
+            return contextNotEmpty() && decompose(context()).selectionCritNotEmpty();
+        }
+        
+        /**
+         * Returns the masterEntity's selection criteria entity. May return <code>null</code>
+         * 
+         * @return
+         */
+        public EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit() {
+            return decompose(context()).selectionCrit();
+        }
+        
+        // SELECTED ENTITIES:
+        /**
+         * Returns masterEntity's selected entities. An empty list is returned if there are no entities selected.
+         * 
+         * @return
+         */
+        public List<AbstractEntity<?>> selectedEntities() {
+            return decompose(context()).selectedEntities();
+        }
+        
+        // COMPUTATION:
+        /**
+         * Returns an optional computation aspect of the masterEntity's context.
+         * 
+         * @return
+         */
+        public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation() {
+            return decompose(context()).computation();
+        }
+    }    
 }
