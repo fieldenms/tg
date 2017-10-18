@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -15,6 +20,22 @@ public final class CollectionUtil {
     private CollectionUtil() {
     }
 
+    @SafeVarargs
+    public static <T> HashSet<T> setOf(final T ... elements) {
+        return new HashSet<T>(Arrays.asList(elements));
+    }
+    
+    @SafeVarargs
+    public static <T> LinkedHashSet<T> linkedSetOf(final T ... elements) {
+        return new LinkedHashSet<T>(Arrays.asList(elements));
+    }
+    
+    @SafeVarargs
+    public static <T> List<T> listOf(final T ... elements) {
+        return new ArrayList<T>(Arrays.asList(elements));
+    }
+
+    
     /**
      * Converts collection to a string separating the elements with a provided separator.
      * <p>
