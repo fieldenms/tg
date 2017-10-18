@@ -1,14 +1,16 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -366,7 +368,7 @@ public interface IContextDecomposer {
      * @return
      */
     default Set<Long> selectedEntityIds() {
-        return selectedEntities().stream().map(ent -> ent.getId()).collect(toSet());
+        return selectedEntities().stream().map(ent -> ent.getId()).collect(toCollection(LinkedHashSet::new));
     }
     
     /**
