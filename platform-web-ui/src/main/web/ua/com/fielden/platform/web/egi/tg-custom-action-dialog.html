@@ -416,7 +416,7 @@
             },
 
             _handleCloseEvent: function (data, envelope) {
-                if (data.canClose === true && ( (data.role === 'refresh' && !data.id) || (data.role !== 'refresh') ) ) {
+                if (data.canClose === true) {
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },
