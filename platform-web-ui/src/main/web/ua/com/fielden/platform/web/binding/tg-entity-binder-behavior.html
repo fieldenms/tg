@@ -156,11 +156,11 @@
                 },
                 
                 /**
-                 * Returns indication whether SAVE button should be enabled for the entity (AND canLeave should be false). Returns true in following cases:
+                 * Returns indication whether SAVE button should be enabled for the entity. Returns true in following cases:
                  *
-                 * 1) the entity is not persistent (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
-                 * 2) the entity is persistent but is not persisted yet (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
-                 * 3) the entity is persistent, is persisted but and it is modified (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons).
+                 * 1) the entity is not persistent (SAVE is enabled always);
+                 * 2) the entity is persistent but is not persisted yet (SAVE is enabled always);
+                 * 3) the entity is persistent, is persisted but and it is modified (SAVE is enabled always).
                  *
                  * Please, note that this property (analogously to _bindingEntityModified) recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
                  */
@@ -812,11 +812,11 @@
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
                 
                 self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
-                console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
+                // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
                 self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() || 
                                                                            !self._currBindingEntity.isPersisted()         ||
                                                                            self._bindingEntityModified;
-                console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
+                // console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;
