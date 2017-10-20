@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -156,8 +157,8 @@ public class SerialisationTestResource extends ServerResource {
                     return Result.failure(format("e1 [%s] type [%s] does not equal to e2 [%s] type [%s].", e1, e1.getType(), e2, e2.getType()));
                 }
                 if (EntityUtils.isPropertyDescriptor(e1.getType())) {
-                    final PropertyDescriptor pd1 = (PropertyDescriptor) e1;
-                    final PropertyDescriptor pd2 = (PropertyDescriptor) e2;
+                    final PropertyDescriptor<?> pd1 = (PropertyDescriptor<?>) e1;
+                    final PropertyDescriptor<?> pd2 = (PropertyDescriptor<?>) e2;
                     if (!equalsEx(pd1.getEntityType(), pd2.getEntityType())) {
                         return Result.failure(format("PropertyDescriptors equality: pd1 [%s] entityType [%s] does not equal to pd2 [%s] entityType [%s].", pd1, pd1.getEntityType(), pd2, pd2.getEntityType()));
                     }
@@ -232,15 +233,14 @@ public class SerialisationTestResource extends ServerResource {
     }
     
     private static Result deepEqualsForTestingForPropValues(
-        final AbstractEntity<?> e1, 
-        final AbstractEntity<?> e2, 
-        final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, 
-        final Object value1, 
-        final Object value2, 
-        final Class<?> propType,
-        final String propName,
-        final String valuePrefix
-    ) {
+            final AbstractEntity<?> e1, 
+            final AbstractEntity<?> e2, 
+            final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, 
+            final Object value1, 
+            final Object value2, 
+            final Class<?> propType,
+            final String propName,
+            final String valuePrefix) {
         if (EntityUtils.isEntityType(propType)) {
             final Result eq = deepEqualsForTesting((AbstractEntity<?>) value1, (AbstractEntity<?>) value2, setOfCheckedEntities);
             if (!eq.isSuccessful()) {
@@ -350,27 +350,25 @@ public class SerialisationTestResource extends ServerResource {
     private static boolean resultsAreExpected(final Result validationResult, final Result validationResult2) {
         if (validationResult == null) {
             return validationResult2 == null;
+        } else if (validationResult2 == null) {
+            return false;
         } else {
-            if (validationResult2 == null) {
+            if (!equalsEx(validationResult.getClass(), validationResult2.getClass())) {
                 return false;
-            } else {
-                if (!equalsEx(validationResult.getClass(), validationResult2.getClass())) {
-                    return false;
-                }
-                if (!equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
-                    return false;
-                }
-                if (validationResult.getEx() == null) {
-                    return validationResult2.getEx() == null;
-                }
-                if (!equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
-                    return false;
-                }
-                if (!equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
-                    return false;
-                }
-                return true;
             }
+            if (!equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
+                return false;
+            }
+            if (validationResult.getEx() == null) {
+                return validationResult2.getEx() == null;
+            }
+            if (!equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
+                return false;
+            }
+            if (!equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
+                return false;
+            }
+            return true;
         }
     }
 
@@ -383,7 +381,8 @@ public class SerialisationTestResource extends ServerResource {
     }
 
     private static List<AbstractEntity<?>> createEntities(final RestServerUtil restUtil, final FactoryForTestingEntities factory) {
-        return Arrays.asList(factory.createNullEmptyEntity(),
+        return asList(
+                factory.createNullEmptyEntity(),
                 factory.createSimpleEmptyEntity(),
                 factory.createEmptyEntityWithNoId(),
                 factory.createEmptyEntityWithNoKey(),
@@ -440,15 +439,14 @@ public class SerialisationTestResource extends ServerResource {
                 createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
                 factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())), // here idOnlyProxy instance really goes into lastInvalidValue due to EntityExistsValidator. It is worthwhile not to remove this weird case for additional checking.
                 createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
-                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser())
-                );
+                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()));
     }
     
-    private static AbstractEntity createAndSetIdOnlyProxy(final AbstractEntity entity, final ISerialiser serialiser) {
+    private static AbstractEntity<?> createAndSetIdOnlyProxy(final AbstractEntity<?> entity, final ISerialiser serialiser) {
         return entity.beginInitialising().set("prop", createIdOnlyProxy(serialiser)).endInitialising();
     }
     
-    private static AbstractEntity createIdOnlyProxy(final ISerialiser serialiser) {
+    private static AbstractEntity<?> createIdOnlyProxy(final ISerialiser serialiser) {
         final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
         final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = tgJackson.idOnlyProxiedEntityTypeCache;
         return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), 189L);

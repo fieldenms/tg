@@ -35,7 +35,7 @@ import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
  *
  */
 public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends ServerResource {
-    private final Logger logger = Logger.getLogger(getClass());
+    private static final Logger logger = Logger.getLogger(EntityAutocompletionResource.class);
     private final Class<CONTEXT> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;

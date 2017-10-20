@@ -75,6 +75,8 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesPro
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
+import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -349,6 +351,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("remove-circle-outline").
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
+                        build())
+                .also()
+                .addTopAction(action(TgSelectedEntitiesExampleAction.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("select-all").
+                        shortDesc("Selected Entities Example").
+                        longDesc("Selected Entities Example").
+                        withNoParentCentreRefresh().
                         build())
                 .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptor.class).also()
                 .addCrit("propertyDescriptor").asMulti().autocompleter((Class<PropertyDescriptor<TgPersistentEntityWithProperties>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"))
@@ -778,6 +788,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
                     injector())).
+            addMaster(EntityMaster.noUiFunctionalMaster(
+                    TgSelectedEntitiesExampleAction.class,
+                    TgSelectedEntitiesExampleActionProducer.class,
+                    injector())).
             addMaster(userWebUiConfig.master).
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
@@ -1191,7 +1205,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
-        private final Logger logger = Logger.getLogger(getClass());
+        private static final Logger logger = Logger.getLogger(DetailsCentreQueryEnhancer.class);
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {

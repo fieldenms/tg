@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
@@ -248,16 +250,15 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> tryToSave(
-        final SavingInfoHolder savingInfoHolder,
-        final Class<T> entityType,
-        final EntityFactory entityFactory,
-        final ICompanionObjectFinder companionFinder,
-        final ICriteriaGenerator critGenerator,
-        final IWebUiConfig webUiConfig,
-        final IServerGlobalDomainTreeManager serverGdtm,
-        final IUserProvider userProvider,
-        final IEntityDao<T> companion
-    ) {
+            final SavingInfoHolder savingInfoHolder,
+            final Class<T> entityType,
+            final EntityFactory entityFactory,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator,
+            final IWebUiConfig webUiConfig,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final IEntityDao<T> companion) {
         final List<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
@@ -445,12 +446,11 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 throw new IllegalStateException(e);
             }
             final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
-            actionConfig = Optional.of(master.actionConfig(
+            actionConfig = of(master.actionConfig(
                                 FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
-                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
-                            )));
+                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber"))));
         } else {
-            actionConfig = Optional.empty();
+            actionConfig = empty();
         }
         return actionConfig;
     }
@@ -473,9 +473,5 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             logger.error(message, e);
             throw new IllegalStateException(e);
         }
-    }
-
-    public static Logger logger() {
-        return logger;
     }
 }
