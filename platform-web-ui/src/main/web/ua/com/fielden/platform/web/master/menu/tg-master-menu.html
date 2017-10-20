@@ -398,7 +398,7 @@
                 const section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                 const cannotLeaveReason = section === undefined ? undefined : section.canLeave();
                 if (!cannotLeaveReason) {
-                    if (section && this.route === this.defaultRoute /* TODO check this condition */) {
+                    if (section && this.sectionRoute === this.defaultRoute) {
                         const sectionElement = section._element;
                         if (sectionElement && sectionElement.masterWithMaster === true
                             && sectionElement.$.loader
