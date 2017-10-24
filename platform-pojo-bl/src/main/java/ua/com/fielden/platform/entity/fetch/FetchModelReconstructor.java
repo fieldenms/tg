@@ -49,11 +49,11 @@ public class FetchModelReconstructor {
         // declare data structures for DFS
         final Deque<AbstractEntity<?>> frontier = new LinkedList<>(); // to be used on LIFO mode
         // the set of explored entities utilises object identities in memory to differentiate equal entities represented by different objects
-        final Set<Integer> explored = new HashSet<>();
+        final Set<String> explored = new HashSet<>();
         // a helper structure to keep fetch models for already explored property values
         // uses object identity instead of actual objects due to the fact that there could be several equal entities
         // but fetched with different fetch models
-        final Map<Integer, fetch<?>> exploredFetchModels = new HashMap<>();
+        final Map<String, fetch<?>> exploredFetchModels = new HashMap<>();
 
         // initialize data structures
         frontier.push(entity);
@@ -71,14 +71,14 @@ public class FetchModelReconstructor {
      */
     private static fetch<?> explore(
             final Deque<AbstractEntity<?>> frontier,
-            final Set<Integer> explored,
-            final Map<Integer, fetch<?>> exploredFetchModels) {
+            final Set<String> explored,
+            final Map<String, fetch<?>> exploredFetchModels) {
         if (frontier.isEmpty()) {
             throw new IllegalStateException("There is nothing to process.");
         }
 
         final AbstractEntity<?> entity = frontier.pop();
-        final int identity = System.identityHashCode(entity);
+        final String identity = getEntityIdentity(entity);
         if (explored.contains(identity)) {
             return exploredFetchModels.get(identity);
         }
@@ -117,5 +117,9 @@ public class FetchModelReconstructor {
         }
 
         return fetchModel;
+    }
+
+    private static String getEntityIdentity(final AbstractEntity<?> entity) {
+        return entity.getType().getName() + System.identityHashCode(entity);
     }
 }
