@@ -89,6 +89,8 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.MoneyCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.MoneySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointBuilder;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -894,43 +896,34 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating insertion point actions...");
 
-        final List<FunctionalActionElement> insertionPointActionsElements = new ArrayList<>();
-        final Optional<List<EntityActionConfig>> insertionPointActions = this.dslDefaultConfig.getInsertionPointActions();
-        if (insertionPointActions.isPresent()) {
-            for (int index = 0; index < insertionPointActions.get().size(); index++) {
-                final FunctionalActionElement el = new FunctionalActionElement(insertionPointActions.get().get(index), index, FunctionalActionKind.INSERTION_POINT);
+        final List<InsertionPointBuilder> insertionPointActionsElements = new ArrayList<>();
+        final Optional<List<InsertionPointConfig>> insertionPointConfigs = this.dslDefaultConfig.getInsertionPointConfigs();
+        if (insertionPointConfigs.isPresent()) {
+            for (int index = 0; index < insertionPointConfigs.get().size(); index++) {
+                final InsertionPointBuilder el = new InsertionPointBuilder(insertionPointConfigs.get().get(index), index);
                 insertionPointActionsElements.add(el);
             }
         }
 
         final DomContainer insertionPointActionsDom = new DomContainer();
         final StringBuilder insertionPointActionsObjects = new StringBuilder();
-        for (final FunctionalActionElement el : insertionPointActionsElements) {
+        for (final InsertionPointBuilder el : insertionPointActionsElements) {
             importPaths.add(el.importPath());
-            insertionPointActionsDom.add(el.render().clazz("insertion-point-action").attr("hidden", null));
-            insertionPointActionsObjects.append(prefix + createActionObject(el));
+            insertionPointActionsDom.add(el.renderInsertionPointAction());
+            insertionPointActionsObjects.append(prefix + el.code());
         }
         importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
-        for (final FunctionalActionElement el : insertionPointActionsElements) {
-            final DomElement insertionPoint = new DomElement("tg-entity-centre-insertion-point")
-                    .attr("id", "ip" + el.numberOfAction)
-                    .attr("short-desc", el.conf().shortDesc.orElse(""))
-                    .attr("long-desc", el.conf().longDesc.orElse(""))
-                    .attr("selection-criteria-entity", "[[selectionCriteriaEntity]]")
-                    .attr("is-centre-running", "[[_triggerRun]]")
-                    .attr("retrieved-entities", "{{retrievedEntities}}")
-                    .attr("retrieved-totals", "{{retrievedTotals}}")
-                    .attr("centre-selection", "[[centreSelection]]")
-                    .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
-            if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
+        for (final InsertionPointBuilder el : insertionPointActionsElements) {
+            final DomElement insertionPoint = el.render();
+            if (el.whereToInsert() == InsertionPoints.LEFT) {
                 leftInsertionPointsDom.add(insertionPoint);
-            } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
+            } else if (el.whereToInsert() == InsertionPoints.RIGHT) {
                 rightInsertionPointsDom.add(insertionPoint);
-            } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
+            } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");

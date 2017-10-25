@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -374,11 +375,22 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
 
+        @Override
+        public IInsertionPoints<T> addInsertionPointWithPagination(EntityActionConfig actionConfig, InsertionPoints whereToInsertView) {
+            return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
+        }
+
     }
 
     @Override
     public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointActions.add(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView));
+        this.builder.insertionPointConfigs.add(new InsertionPointConfig(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView)));
+        return this;
+    }
+
+    @Override
+    public IInsertionPoints<T> addInsertionPointWithPagination(EntityActionConfig actionConfig, InsertionPoints whereToInsertView) {
+        this.builder.insertionPointConfigs.add(new InsertionPointConfig(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView), true));
         return this;
     }
 

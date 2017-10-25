@@ -17,6 +17,7 @@
 
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="/resources/centre/tg-entity-centre-styles.html">
 
 <style is="custom-style">
     .insertion-point-dialog > #insertionPointContent {
@@ -32,7 +33,7 @@
         text-overflow: ellipsis;
     }
     #insertionPointContent .title-bar {
-        padding: 0 16px;
+        padding: 0 2px 0 16px;
         height: 44px;
         min-height: 44px;
         font-size: 18px;
@@ -43,11 +44,6 @@
         -ms-user-select: none;
         user-select: none;
         background-color: var(--paper-light-blue-600);
-    }
-    #insertionPointContent paper-icon-button {
-        width: 22px;
-        height: 22px;
-        padding: 0px;
     }
     #insertionPointContent paper-icon-button.expand-colapse-button {
         stroke: var(--paper-grey-100);
@@ -62,6 +58,7 @@
 </style>
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
+        <style include="tg-entity-centre-styles"></style>
         <style>
             .truncate {
                 white-space: nowrap;
@@ -69,7 +66,7 @@
                 text-overflow: ellipsis;
             }
             .title-bar {
-                padding: 0 16px;
+                padding: 0 2px 0 16px;
                 height: 44px;
                 min-height: 44px;
                 font-size: 18px;
@@ -81,10 +78,8 @@
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
             }
-            paper-icon-button {
-                width: 22px;
-                height: 22px;
-                padding: 0px;
+            paper-icon-button.reverse {
+                
             }
             paper-icon-button.expand-colapse-button {
                 stroke: var(--paper-grey-100);
@@ -98,10 +93,15 @@
             }
         </style>
         <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
+            <div hidden>
+                <content select=":not(text):not(template)" id="custom_actions_content"></content>
+            </div>
             <div id="insertionPointContent" class="layout vertical flex">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                </div>
+                <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
                 </div>
                 <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
@@ -178,6 +178,12 @@
                     observer: '_centreSelectionChanged'
                 },
                 /**
+                 * Actions provided by entity centre for this insertion point
+                 */
+                customActions: {
+                    type: Array,
+                },
+                /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
                  * consistent with the order of columns.
                  *
@@ -202,6 +208,21 @@
 
             ready: function () {
                 this.triggerElement = this.$.insertionPointContent;
+                //Initialising the custom actions' list.
+                const customActionsList = [];
+                Array.prototype.forEach.call(Polymer.dom(this.$.custom_actions_content).getDistributedNodes(), function (item) {
+                    customActionsList.push(item);
+                }.bind(this));
+                this.customActions = customActionsList;
+            },
+            
+            attached: function () {
+                this.async(function () {
+                    if (this.customActions) {
+                        this.customActions.forEach(elem  => Polymer.dom(this.$.custom_actions_container).appendChild(elem));
+                        Polymer.dom.flush();
+                    }
+                }, 1);
             },
 
             /**
