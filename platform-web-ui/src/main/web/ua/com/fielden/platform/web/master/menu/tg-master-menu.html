@@ -395,30 +395,46 @@
         
         _routeChanged: function (newRoute, oldRoute) {
             if (this.route !== this.sectionRoute) {
-                const section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-                const cannotLeaveReason = section === undefined ? undefined : section.canLeave();
-                if (!cannotLeaveReason) {
-                    if (section && this.sectionRoute === this.defaultRoute) {
-                        const sectionElement = section._element;
-                        if (sectionElement && sectionElement.masterWithMaster === true
-                            && sectionElement.$.loader
-                            && sectionElement.$.loader.loadedElement
-                        ) {
-                            const embeddedMaster = sectionElement.$.loader.loadedElement;
-                            if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
-                                this.route = this.sectionRoute;
-                                this.parent._openToastForError('Cannot leave "' + section.sectionTitle + '".', 'A new entity is being created. Please save your changes.');
-                                return;
-                            }
-                        }
-                    } 
-                    
-                    this.sectionRoute = newRoute;
+                if (this.sectionRoute !== undefined) {
+                    const currentSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    if (!currentSection) {
+                        throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
+                    }
+                    const cannotLeaveReason = currentSection.canLeave();
+                    const cannotLeaveMessage = cannotLeaveReason
+                        ? cannotLeaveReason.msg
+                        : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
+                    if (cannotLeaveMessage) {
+                        this.route = this.sectionRoute;
+                        this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
+                    } else {
+                        this.sectionRoute = newRoute;
+                    }
                 } else {
-                    this.route = this.sectionRoute;
-                    this.parent._openToastForError('Cannot leave "' + section.sectionTitle + '".', cannotLeaveReason.msg);
+                    this.sectionRoute = newRoute;
                 }
             }
+        },
+        
+        /**
+         * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+         * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
+         *
+         * @param section
+         */
+        isMasterWithMasterAndNonPersisted: function (section) {
+            if (section
+                && section._element
+                && section._element.masterWithMaster
+                && section._element.$.loader
+                && section._element.$.loader.loadedElement
+            ) {
+                const embeddedMaster = section._element.$.loader.loadedElement;
+                if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+                    return true;
+                }
+            }
+            return false;
         },
         
         /** Used by the master, which incorporates this menu to check if it can be closed. */
