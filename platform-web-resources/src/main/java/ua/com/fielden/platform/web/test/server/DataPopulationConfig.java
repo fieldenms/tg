@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import com.google.inject.Injector;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -11,7 +12,6 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration} to be used for creation and population of the target development database

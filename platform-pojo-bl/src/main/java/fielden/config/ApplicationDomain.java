@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.test.config;
+package fielden.config;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -56,6 +56,13 @@ import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcess
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
+import ua.com.fielden.platform.sample.domain.TgCloseLeaveExample;
+import ua.com.fielden.platform.sample.domain.OpenTgCloseLeaveExampleMasterAction;
+import ua.com.fielden.platform.sample.domain.TgCloseLeaveExampleMaster_OpenMain_MenuItem;
+import ua.com.fielden.platform.sample.domain.TgCloseLeaveExampleMaster_OpenDetail_MenuItem;
+import ua.com.fielden.platform.sample.domain.TgCloseLeaveExampleDetail;
+import ua.com.fielden.platform.sample.domain.TgCloseLeaveExampleDetailUnpersisted;
+import ua.com.fielden.platform.sample.domain.TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -127,6 +134,13 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgBogie.class);
         add(TgWagonClass.class);
         add(TgSelectedEntitiesExampleAction.class);
+        add(TgCloseLeaveExample.class);
+        add(OpenTgCloseLeaveExampleMasterAction.class);
+        add(TgCloseLeaveExampleMaster_OpenMain_MenuItem.class);
+        add(TgCloseLeaveExampleMaster_OpenDetail_MenuItem.class);
+        add(TgCloseLeaveExampleDetail.class);
+        add(TgCloseLeaveExampleDetailUnpersisted.class);
+        add(TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem.class);
     }
 
     @Override
