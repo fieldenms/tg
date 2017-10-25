@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
+import static ua.com.fielden.platform.utils.EntityUtils.getEntityIdentity;
 
 import java.lang.reflect.Field;
 import java.util.Deque;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  *
@@ -119,7 +121,4 @@ public class FetchModelReconstructor {
         return fetchModel;
     }
 
-    private static String getEntityIdentity(final AbstractEntity<?> entity) {
-        return entity.getType().getName() + System.identityHashCode(entity);
-    }
 }
