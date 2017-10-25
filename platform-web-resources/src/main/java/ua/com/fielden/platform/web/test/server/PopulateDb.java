@@ -19,6 +19,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
+import fielden.close_leave.TgCloseLeaveExample;
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -57,7 +59,6 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -193,7 +194,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
         save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
-
+        
+        save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
+        save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
+        save(new_(TgCloseLeaveExample.class, "KEY3").setDesc("desc 3"));
+        save(new_(TgCloseLeaveExample.class, "KEY4").setDesc("desc 4"));
+        save(new_(TgCloseLeaveExample.class, "KEY5").setDesc("desc 5"));
+        
         logger.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {

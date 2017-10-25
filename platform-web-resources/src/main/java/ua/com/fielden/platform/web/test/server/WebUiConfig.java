@@ -22,6 +22,8 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
+import fielden.main.menu.close_leave.MiTgCloseLeaveExample;
+import fielden.webapp.config.close_leave.TgCloseLeaveExampleWebUiConfig;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -262,6 +264,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         TgEntityWithTimeZoneDatesWebUiConfig.register(injector(), configApp());
         TgGeneratedEntityWebUiConfig.register(injector(), configApp());
+        TgCloseLeaveExampleWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
@@ -908,6 +911,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
+                /*  */.addMenuItem("Close Leave Example").description("Close Leave Example").centre(configApp().getCentre(MiTgCloseLeaveExample.class).get()).done()
                 /*  */.addMenuItem("Custom group").description("Custom group")
                 /*    */.addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
                 /*    */.addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
