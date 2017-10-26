@@ -9,6 +9,8 @@
 
 <body>
     <script>
+        WCT._config.mochaOptions.timeout = 20000;
+        
         WCT.loadSuites([
         'app/test/tg-menu-list-changes-test.html',
         'reflection/test/tg-reflector.html',
@@ -20,6 +22,7 @@
         'master/test/tg-entity-master-editors-touching.html',
         'master/test/tg-entity-master-layout-binding.html',
         'centre/test/tg-entity-centre.html',
+        'centre/test/tg-entity-centre-context.html',
         'centre/test/tg-entity-centre-selection.html',
         'centre/test/tg-entity-centre-query-param.html',
         'centre/test/tg-entity-centre-filtering.html',

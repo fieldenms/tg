@@ -2,19 +2,15 @@ package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * An entity representing a generic edit action.
+ * An entity representing a generic <code>edit</code> action.
  *
  * @author TG Team
  *
  */
-@KeyType(String.class)
-@KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IEntityEditAction.class)
 public class EntityEditAction extends AbstractEntityManipulationAction {
 

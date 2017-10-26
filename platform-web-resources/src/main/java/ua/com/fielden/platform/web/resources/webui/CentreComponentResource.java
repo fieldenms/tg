@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+
 import java.io.ByteArrayInputStream;
 
 import org.restlet.Context;
@@ -14,7 +16,6 @@ import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * Represents web server resource that returns entity centre component for the specified 'miType' to the client.
@@ -45,7 +46,7 @@ public class CentreComponentResource extends DeviceProfileDifferentiatorResource
 
     @Override
     protected Representation get() {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             final String source = sourceController().loadSource("/centre_ui/" + this.mitypeString, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil());

@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector1;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector2;
@@ -25,12 +27,12 @@ class EntityCentreContextSelector1_2_4_function_done<T extends AbstractEntity<?>
     private final boolean withAllSelectedEntities;
     private final boolean withSelectionCrit;
     private final boolean withMasterEntity;
-    private final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation;
+    private final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation;
 
     public EntityCentreContextSelector1_2_4_function_done(
             final boolean withCurrentEntity, final boolean withAllSelectedEntities,
             final boolean withSelectionCrit, final boolean withMasterEntity,
-            final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+            final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         this.withCurrentEntity = withCurrentEntity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
@@ -70,7 +72,7 @@ class EntityCentreContextSelector1_2_4_function_done<T extends AbstractEntity<?>
     }
 
     @Override
-    public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+    public IEntityCentreContextSelectorDone<T> withComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         if (computation == null) {
             throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
         }

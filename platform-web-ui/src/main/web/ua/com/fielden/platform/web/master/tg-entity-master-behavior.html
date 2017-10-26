@@ -142,11 +142,13 @@
                 },
 
                 /**
-                 * In case when this master represents a compound master and a new main entity has been just persisted, there is a need to augment the context of this master (i.e. this.savingContext) to be able to refresh the same context, but with just persisted entity (instead of only id).
+                 * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+                 * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
+                 * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
                  *
-                 * @param compoundMasterEntityId -- the id of just persisted main entity to be promoted into the context
+                 * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
                  */
-                augmentContextWithSavedEntity: {
+                augmentCompoundMasterOpenerWith: {
                     type: Function
                 },
 
@@ -265,6 +267,15 @@
                 },
                 
                 /**
+                 * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
+                 * It is updated everytime when refresh process successfully completes.
+                 */
+                _originallyProducedEntity: {
+                    type: Object,
+                    value: null
+                },
+                
+                /**
                  * Indicates whether saving process has been initiated by using CTRL+S key or tapping on SAVE button (or even programatically).
                  * Strictly speaking it becomes 'true' when 'save' function gets functioned.
                  *
@@ -315,7 +326,7 @@
                                 null, null, forContinuations ? (this.getMasterEntity ? this.getMasterEntity : null) : null
                             );
                             this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._reset(holder), masterTypeCarrier, this._continuations);
+                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
                         }.bind(this);
 
                         var contextHolder = this._reflector().createContextHolder(
@@ -359,6 +370,14 @@
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
                         newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
+                        
+                        if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
+                            this._originallyProducedEntity = null;
+                        } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        }
                     }
 
                     // custom external action
@@ -375,7 +394,7 @@
                         this._createContextHolderForEmbeddedViews = (function () {
                             var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                             this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext, this._continuations);
+                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
                         }).bind(this);
                     }
                     
@@ -547,10 +566,38 @@
                         }, 50);
                     });
                 }).bind(self);
-
-                self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
-                    this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
-                    console.log("augmentContextWithSavedEntity", compoundMasterEntityId);
+                
+                self._makeKeyUnmodifiedIfItIsModified = (function () {
+                    const value = this._currBindingEntity['key'];
+                    const originalValue = this._originalBindingEntity['key'];
+                    if (!this._reflector().equalsEx(value, originalValue)) {
+                        this._originalBindingEntity['key'] = value;
+                        this._originalBindingEntity['@key_id'] = this._currBindingEntity['@key_id'];
+                    }
+                }).bind(self);
+                
+                self.augmentCompoundMasterOpenerWith = (function (savedEntityId) {
+                    // Ensure that key property is touched to be able to invoke its definers, which should update sectionTitle accordingly (setAndRegisterPropertyTouch invocation).
+                    // After that need to provide ID to facilitate server-side reconstruction of entity-typed key using ID-based strategy instead of KEY-based.
+                    // Method setAndRegisterPropertyTouch removes '@key_id' value if it has existed previously (if not -- we are providing '@key_id' for the first time).
+                    if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && savedEntityId === this._currBindingEntity['@key_id']) { // main or detail entity with the same id (compound master) has been saved
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
+                        this._currBindingEntity['@key_id'] = savedEntityId;
+                        this._makeKeyUnmodifiedIfItIsModified(); // this is necessary to enforce mutation for touched property due to the need to invoke key's definer in case of 'new' compound master (with saved instance) is operated on.
+                    } else if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && savedEntityId !== this._currBindingEntity['@key_id']) { // detail entity (compound master) with different id has been saved
+                        // This is a rare scenario but provided for additional safety -- id of detail entity is not equal to id of main entity.
+                        // In real life examples all detail entities has key of the type of main entity.
+                        // TODO Please check ReVehicleCostSummary of Vehicle compound master in Parc.
+                        const prevCompoundMasterEntityId = this._currBindingEntity['@key_id'];
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
+                        this._currBindingEntity['@key_id'] = prevCompoundMasterEntityId;
+                        this._makeKeyUnmodifiedIfItIsModified(); // this is necessary to enforce mutation for touched property due to the need to invoke key's definer in case of 'new' compound master (with saved instance) is operated on.
+                    } else { // main entity (compound master) has been saved (for the first time)
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
+                        this._currBindingEntity['@key_id'] = savedEntityId;
+                    }
+                    
+                    console.debug(':MASTER: augmentCompoundMasterOpenerWith |savedEntityId = ', savedEntityId, '|master.is = ', this.is);
                 }).bind(self);
 
                 self._postSaverLoadingFinished = (function () {
@@ -743,20 +790,25 @@
 
             //////////////////////////////////////// VALIDATION ////////////////////////////////////////
             /**
-             * Overridden to reuse this.savingContext. It is not empty for tg-ui-action's functional entities, which is assigned in its method _onExecuted.
+             * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria.
              */
             _validateForDescendants: function (preparedModifHolder) {
-                if (this.getMasterEntity && !this.savingContext) {
-                    var contextHolder = this._reflector().createContextHolder(
-                        null, null, 'true',
-                        null, null, this.getMasterEntity);
-
-                    return this._validator().validate(preparedModifHolder, contextHolder);
+                return this._validator().validate(this._originallyProducedEntity, preparedModifHolder);
+            },
+            
+            /**
+             * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
+             */
+            _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+                Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+                
+                if (entity.id === null) {
+                    this._originallyProducedEntity = entity;
                 } else {
-                    return this._validator().validate(preparedModifHolder, this.savingContext);
+                    this._originallyProducedEntity = null;
                 }
             },
-
+            
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
@@ -777,15 +829,12 @@
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
             _saveModifiedProperties: function (modifiedPropertiesHolder) {
-                if (this.getMasterEntity && !this.savingContext) {
-                    var contextHolder = this._reflector().createContextHolder(
-                        null, null, 'true',
-                        null, null, this.getMasterEntity);
-
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder, this._continuations)));
-                } else {
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext, this._continuations)));
-                }
+                const idNumber = modifiedPropertiesHolder.id;
+                const originallyProducedEntity = this._reflector()._validateOriginallyProducedEntity(this._originallyProducedEntity, idNumber);
+                console.debug(':MASTER:SAVE1', '|type', this.entityType, '|id', idNumber);
+                console.debug(':MASTER:SAVE2', '|mph', modifiedPropertiesHolder);
+                console.debug(':MASTER:SAVE3', '|ope', originallyProducedEntity);
+                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder, null, this._continuations)));
                 return this._ajaxSaver().generateRequest().completes;
             },
 

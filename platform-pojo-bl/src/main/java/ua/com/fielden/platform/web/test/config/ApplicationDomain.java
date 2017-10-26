@@ -55,6 +55,7 @@ import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
+import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -125,6 +126,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgWagon.class);
         add(TgBogie.class);
         add(TgWagonClass.class);
+        add(TgSelectedEntitiesExampleAction.class);
     }
 
     @Override

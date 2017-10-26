@@ -1,10 +1,17 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static java.lang.Boolean.FALSE;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
@@ -13,8 +20,8 @@ import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -28,6 +35,54 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class DefaultValueContract {
     private DefaultValueContract() {
     }
+    
+    ///////////////////////////////////////////////// prevValue /////////////////////////////////////////////////
+    /**
+     * Returns <code>true</code> if the value of <code>prevValue</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static boolean isPrevValueDefault(final MetaProperty<Object> metaProperty) {
+        if (metaProperty.isEntity() && (isIdOnlyProxiedEntity(metaProperty.getPrevValue()) || isIdOnlyProxiedEntity(metaProperty.getOriginalValue()))) {
+            return false;
+        }
+        return equalsEx(metaProperty.getPrevValue(), metaProperty.getOriginalValue());
+    }
+
+    ///////////////////////////////////////////////// lastInvalidValue /////////////////////////////////////////////////
+    /**
+     * Returns <code>true</code> if the value of <code>lastInvalidValue</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static boolean isLastInvalidValueDefault(final MetaProperty<Object> metaProperty) {
+        if (metaProperty.isEntity() && isIdOnlyProxiedEntity(metaProperty.getLastInvalidValue())) {
+            return false;
+        }
+        return equalsEx(metaProperty.getLastInvalidValue(), null);
+    }
+
+    ///////////////////////////////////////////////// valueChangeCount /////////////////////////////////////////////////
+    /**
+     * Returns the default value of <code>valueChangeCount</code> property.
+     *
+     * @return
+     */
+    public static int getValueChangeCountDefault() {
+        return 0;
+    }
+    
+    /**
+     * Returns <code>true</code> if the value of <code>valueChangeCount</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public static boolean isValueChangeCountDefault(final MetaProperty<Object> metaProperty) {
+        return equalsEx(metaProperty.getValueChangeCount(), getValueChangeCountDefault());
+    }
 
     ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
     /**
@@ -40,23 +95,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>editable</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean getEditable(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getEditableDefault() : metaProperty.isEditable();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>editable</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
-        return equalsEx(getEditable(metaProperty), getEditableDefault());
+        return equalsEx(metaProperty.isEditable(), getEditableDefault());
     }
 
     /**
@@ -102,36 +147,29 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>isChangedFromOriginal</code> meta-property attribute, defaulting to {@link #isChangedFromOriginalDefault()} if <code>metaProperty</code> is null.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean isChangedFromOriginal(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? isChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
-    }
-
-    /**
-     * Returns the value of <code>originalValue</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> M getOriginalValue(final MetaProperty<M> metaProperty) {
-        if (metaProperty == null) {
-            throw new IllegalStateException("If the meta property does not exist -- original value population is unsupported.");
-        }
-        return metaProperty.getOriginalValue();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>changedFromOriginal</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
-    public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(isChangedFromOriginal(metaProperty), isChangedFromOriginalDefault());
+    public static <M> T2<Boolean, Optional<T2<Long, Long>>> isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
+        if (metaProperty.isEntity() && (
+            isIdOnlyProxiedEntity(metaProperty.getOriginalValue()) || isIdOnlyProxiedEntity(metaProperty.getValue())
+        )) {
+            // In this special case where one of values (current or original) is id-only-proxy we need to serialise both values.
+            // Also changedFromOriginal flag should be computed based on ids, because original call 'metaProperty.isChangedFromOriginal()' returns always 'false' triggering StrictProxyException.
+            final Long valueId = valueId(metaProperty.getValue());
+            final Long origValueId = valueId(metaProperty.getOriginalValue());
+            return t2(false, of(t2(valueId, origValueId)));
+        }
+        return t2(equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault()), empty());
+    }
+    
+    private static boolean isIdOnlyProxiedEntity(final Object value) {
+        return value != null && ((AbstractEntity<?>) value).isIdOnlyProxy();
+    }
+    private static Long valueId(final Object value) {
+        return value != null ? ((AbstractEntity<?>) value).getId() : null;
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
@@ -145,23 +183,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>required</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean getRequired(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getRequiredDefault() : metaProperty.isRequired();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>required</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static <M> boolean isRequiredDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(getRequired(metaProperty), getRequiredDefault());
+        return equalsEx(metaProperty.isRequired(), getRequiredDefault());
     }
 
     ///////////////////////////////////////////////// VISIBLE /////////////////////////////////////////////////
@@ -175,23 +203,13 @@ public class DefaultValueContract {
     }
 
     /**
-     * Returns the value of <code>visible</code> property.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean getVisible(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getVisibleDefault() : metaProperty.isVisible();
-    }
-
-    /**
      * Returns <code>true</code> if the value of <code>visible</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
     public static <M> boolean isVisibleDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(getVisible(metaProperty), getVisibleDefault());
+        return equalsEx(metaProperty.isVisible(), getVisibleDefault());
     }
 
     ///////////////////////////////////////////////// VALIDATION RESULT /////////////////////////////////////////////////
@@ -211,10 +229,6 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> Result getValidationResult(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getValidationResultDefault() : validationResult(metaProperty);
-    }
-
-    private static <M> Result validationResult(final MetaProperty<M> metaProperty) {
         return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstWarning();
     }
 
@@ -245,7 +259,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEntityTitleDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityTitle) {
-        return equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
+        return equalsEx(entityTitle, getDefaultEntityTitleAndDesc(entityType).getKey());
     }
 
     /**
@@ -254,7 +268,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isEntityDescDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityDesc) {
-        return equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
+        return equalsEx(entityDesc, getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 
     /**
@@ -373,7 +387,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isExclusiveDefault(final Boolean exclusive) {
-        return exclusive == null || Boolean.FALSE.equals(exclusive);
+        return exclusive == null || FALSE.equals(exclusive);
     }
 
     /**
@@ -382,7 +396,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isExclusive2Default(final Boolean exclusive2) {
-        return exclusive2 == null || Boolean.FALSE.equals(exclusive2);
+        return exclusive2 == null || FALSE.equals(exclusive2);
     }
 
     /**
@@ -391,7 +405,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isOrNullDefault(final Boolean orNull) {
-        return orNull == null || Boolean.FALSE.equals(orNull);
+        return orNull == null || FALSE.equals(orNull);
     }
 
     /**
@@ -400,7 +414,7 @@ public class DefaultValueContract {
      * @return
      */
     public static boolean isNotDefault(final Boolean not) {
-        return not == null || Boolean.FALSE.equals(not);
+        return not == null || FALSE.equals(not);
     }
 
     /**
