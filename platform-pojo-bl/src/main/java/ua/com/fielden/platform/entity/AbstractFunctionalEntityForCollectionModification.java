@@ -15,7 +15,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  * A base class for functional entities that are intended to modify entity (master entity) collectional association properties. The master entity, whose collection modifies,
  * needs to have persistent nature.
  * <p>
- * Implementors should implement producer that is descendant of {@link AbstractFunctionalEntityProducerForCollectionModification} -- this producer will assign the key for this functional entity and will do other preparation job.
+ * Implementors should implement producer that is descendant of {@link AbstractFunctionalEntityForCollectionModificationProducer} -- this producer will assign the key for this functional entity and will do other preparation job.
  * <p>
  * Concrete implementors need to be persistent (do not forget to annotate with @MapEntityTo annotation).
  * <p>
@@ -29,27 +29,37 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  */
 @KeyType(Long.class)
 public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<Long> {
-    /**
-     * This is to be used for internal validation for versioning -- this is not needed to be send to the client application, that is why it was made as non-property (no {@link IsProperty} annotation).
-     */
-    private AbstractEntity<?> refetchedMasterEntity;
     
-    @IsProperty(value = Long.class) 
+    @IsProperty(Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
-    private Set<ID_TYPE> chosenIds = new LinkedHashSet<>();
+    private LinkedHashSet<ID_TYPE> chosenIds = new LinkedHashSet<>();
     
-    @IsProperty(value = Long.class)
+    @IsProperty(Long.class)
     @Title(value = "Added ids", desc = "IDs of added entities")
-    private Set<ID_TYPE> addedIds = new LinkedHashSet<>();
+    private LinkedHashSet<ID_TYPE> addedIds = new LinkedHashSet<>();
     
-    @IsProperty(value = Long.class)
+    @IsProperty(Long.class)
     @Title(value = "Removed ids", desc = "IDs of removed entities")
-    private Set<ID_TYPE> removedIds = new LinkedHashSet<>();
+    private LinkedHashSet<ID_TYPE> removedIds = new LinkedHashSet<>();
     
     @IsProperty
     @MapTo
-    @Title(value = "Surrogate Version", desc = "Surrogate Version (used also as the property to mark this entity as dirty for saving purposes)")
+    @Title(value = "Surrogate Version", desc = "Surrogate version, which is used to hold previously persisted action version to validate on conflicts; also used to mark this entity as dirty for saving purposes.")
     private Long surrogateVersion;
+    
+    @IsProperty
+    @Title(value = "Master entity", desc = "Master entity instance that is set during producing of this functional action.")
+    private AbstractEntity<?> masterEntity;
+
+    @Observable
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setMasterEntity(final AbstractEntity<?> masterEntity) {
+        this.masterEntity = masterEntity;
+        return this;
+    }
+
+    public AbstractEntity<?> getMasterEntity() {
+        return masterEntity;
+    }
 
     @Observable
     public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setSurrogateVersion(final Long surrogateVersion) {
@@ -62,7 +72,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final LinkedHashSet<ID_TYPE> addedIds) {
         this.addedIds.clear();
         this.addedIds.addAll(addedIds);
         return this;
@@ -73,7 +83,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final LinkedHashSet<ID_TYPE> removedIds) {
         this.removedIds.clear();
         this.removedIds.addAll(removedIds);
         return this;
@@ -84,7 +94,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setChosenIds(final Set<ID_TYPE> chosenIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setChosenIds(final LinkedHashSet<ID_TYPE> chosenIds) {
         this.chosenIds.clear();
         this.chosenIds.addAll(chosenIds);
         return this;
@@ -115,12 +125,4 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
         }
     }
     
-    void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
-        // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
-        this.refetchedMasterEntity = refetchedMasterEntity;
-    }
-    
-    public AbstractEntity<?> refetchedMasterEntity() {
-        return refetchedMasterEntity;
-    }
 }

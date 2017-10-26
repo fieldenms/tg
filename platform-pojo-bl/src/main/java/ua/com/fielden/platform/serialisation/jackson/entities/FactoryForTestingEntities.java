@@ -2,6 +2,8 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.error.Result.warning;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
+import ua.com.fielden.platform.utils.DefinersExecutor;
+import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -186,7 +190,48 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithString() {
         return finalise(createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay"));
     }
-
+    
+    public EntityWithMetaProperty createEntityMetaPropForNewEntity() {
+        return factory.newEntity(EntityWithMetaProperty.class, null);
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithFailure() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.setProp("Ok");
+        DefinersExecutor.execute(entity);
+        
+        return entity.setProp("Not Ok");
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithoutFailure() {
+        return createEntityMetaPropWithFailure().setProp("Ok Ok");
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithWarning() {
+        return createEntityMetaPropWithoutFailure().setProp("Ok Ok Warn");
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropWithWarningAndBecameRequired() {
+        final EntityWithMetaProperty entity = createEntityMetaPropWithWarning();
+        entity.getProperty("prop").setRequired(true);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropThatBecameRequiredAndWasMadeEmpty() {
+        return createEntityMetaPropWithWarningAndBecameRequired().setProp(null);
+    }
+    
+    public EntityWithMetaProperty createEntityMetaPropThatBecameNonRequiredAgain() {
+        final EntityWithMetaProperty entity = createEntityMetaPropThatBecameRequiredAndWasMadeEmpty();
+        entity.getProperty("prop").setRequired(false);
+        return entity;
+    }
+    
+    public EntityWithOtherEntity createEntityMetaPropWithIdOnlyProxyValues() {
+        return factory.newEntity(EntityWithOtherEntity.class, 1L);
+    }
+    
     public EntityWithString createEntityWithStringNonEditable() {
         final EntityWithString ent = createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay");
         ent.getProperty("prop").setEditable(false);
@@ -198,6 +243,48 @@ public class FactoryForTestingEntities {
         entity.setProp("okay");
         entity.getProperty("prop").setVisible(false);
         return finalise(entity);
+    }
+    
+    public EntityWithMetaProperty createRequiredMetaPropThatBecameNonRequired() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("requiredProp", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.getProperty("requiredProp").setRequired(false);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createNonEditableMetaPropThatBecameEditable() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("nonEditableProp", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.getProperty("nonEditableProp").setEditable(true);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createNonVisibleMetaPropThatBecameVisible() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("nonVisibleProp", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.getProperty("nonVisibleProp").setVisible(true);
+        return entity;
+    }
+    
+    public EntityWithMetaProperty createNonDefaultChangeCountMetaPropThatBecameDefault() {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+        entity.beginInitialising();
+        entity.set("propWithValueChangeCount", "Ok");
+        DefinersExecutor.execute(entity);
+        
+        entity.set("propWithValueChangeCount", "Ok Ok"); // value change count becomes 1
+        
+        entity.getProperty("propWithValueChangeCount").setValueChangeCount(0); // make it default afterwards
+        return entity;
     }
     
     public AbstractEntity createUninstrumentedEntity(final boolean proxiedType, final Class entityType) {
@@ -246,10 +333,31 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
 
-    public EntityWithString createEntityWithStringAndResult() {
+    public EntityWithString createEntityWithStringAndFailure() {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
         entity.getProperty("prop").setRequiredValidationResult(new Result(entity, new Exception("Exception.")));
+        return finalise(entity);
+    }
+
+    public EntityWithString createEntityWithStringAndPropertyConflict() {
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setDomainValidationResult(new PropertyConflict(entity, "Exception."));
+        return finalise(entity);
+    }
+
+    public EntityWithString createEntityWithStringAndWarning() {
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setDomainValidationResult(warning(entity, "Warning."));
+        return finalise(entity);
+    }
+
+    public EntityWithString createEntityWithStringAndSuccessfulResult() {
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setDomainValidationResult(successful(entity));
         return finalise(entity);
     }
 
@@ -299,6 +407,15 @@ public class FactoryForTestingEntities {
         final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
         entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
         return finalise(entity);
+    }
+    
+    public EntityWithSameEntity createEntityWithSameEntityThatIsChangedFromOriginal() {
+        final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
+        entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
+        final EntityWithSameEntity finalisedEntity = finalise(entity);
+        
+        finalisedEntity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 3L, "key3", "description")));
+        return finalisedEntity;
     }
 
     public EntityWithSameEntity createEntityWithSameEntityCircularlyReferencingItself() {

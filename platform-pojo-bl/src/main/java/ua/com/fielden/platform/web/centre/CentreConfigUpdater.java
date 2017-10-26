@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 @CompanionObject(ICentreConfigUpdater.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
+    
     @IsProperty(CustomisableColumn.class)
     @Title("Customisable Columns")
     private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
@@ -34,7 +36,21 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @IsProperty
     @Title(value = "Sorting Changed", desc = "Indicates whether successful saving of this entity actually changed centre sorting")
     private boolean sortingChanged;
-
+    
+    @IsProperty
+    @Title(value = "Master Entity Holder", desc = "Master entity's holder that is set during producing of this functional action and is used to restore master entity in companion object.")
+    private CentreContextHolder masterEntityHolder;
+    
+    @Observable
+    public CentreConfigUpdater setMasterEntityHolder(final CentreContextHolder masterEntityHolder) {
+        this.masterEntityHolder = masterEntityHolder;
+        return this;
+    }
+    
+    public CentreContextHolder getMasterEntityHolder() {
+        return masterEntityHolder;
+    }
+    
     @Observable
     public CentreConfigUpdater setSortingChanged(final boolean sortingChanged) {
         this.sortingChanged = sortingChanged;

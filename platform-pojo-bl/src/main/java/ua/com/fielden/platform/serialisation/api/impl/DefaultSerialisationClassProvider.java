@@ -33,6 +33,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithHyperlin
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicAEProp;
@@ -216,6 +217,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 EntityWithBigDecimal.class,
                 EntityWithInteger.class,
                 EntityWithString.class,
+                EntityWithMetaProperty.class,
                 EntityWithBoolean.class,
                 EntityWithDate.class,
                 EntityWithOtherEntity.class,

@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
@@ -32,8 +30,6 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -53,26 +49,26 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     private final Logger logger = Logger.getLogger(getClass());
     private final String newUsername = "NEW_USER";
     
-    private CentreConfigUpdater createUpdaterWithoutMasterEntity() {
-        final CentreConfigUpdaterProducer producer = getInstance(CentreConfigUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> centreContext = new CentreContext<>();
-        producer.setCentreContext(centreContext);
+    private UserRolesUpdater createUpdaterWithoutMasterEntity() {
+        final UserRolesUpdaterProducer producer = getInstance(UserRolesUpdaterProducer.class);
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        producer.setContext(context);
         return producer.newEntity();
     }
     
     private UserRolesUpdater createUpdater(final User user) {
         final UserRolesUpdaterProducer producer = getInstance(UserRolesUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> centreContext = new CentreContext<>();
-        centreContext.setMasterEntity(user);
-        producer.setCentreContext(centreContext);
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        context.setMasterEntity(user);
+        producer.setContext(context);
         return producer.newEntity();
     }
     
     private UserRoleTokensUpdater createUpdater(final UserRole userRole) {
         final UserRoleTokensUpdaterProducer producer = getInstance(UserRoleTokensUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> centreContext = new CentreContext<>();
-        centreContext.setMasterEntity(userRole);
-        producer.setCentreContext(centreContext);
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        context.setMasterEntity(userRole);
+        producer.setContext(context);
         return producer.newEntity();
     }
     
@@ -151,17 +147,13 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserAndRoleAssociation userToRole2 = save(new_composite(UserAndRoleAssociation.class, user, role2));
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
-        final UserRolesUpdater originalUpdater = createUpdater(user);
-        final Set<Long> removedIds = setOf(role2.getId());
-        originalUpdater.setRemovedIds(removedIds);
+        final UserRolesUpdater updater = createUpdater(user);
+        final LinkedHashSet<Long> removedIds = linkedSetOf(role2.getId());
+        updater.setRemovedIds(removedIds);
         
         // removal of available entity
         this.<IUserAndRoleAssociation, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(setOf(userToRole2));
         co$(UserRole.class).batchDelete(listOf(role2.getId()));
-
-        // starting the process of saving: a) produce it first (should be successfull) b) save
-        final UserRolesUpdater updater = createUpdater(user);
-        updater.setRemovedIds(removedIds);
         
         try {
             save(updater);
@@ -181,16 +173,12 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role2));
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
-        final UserRolesUpdater originalUpdater = createUpdater(user);
-        final Set<Long> addedIds = setOf(role1.getId());
-        originalUpdater.setAddedIds(addedIds);
+        final UserRolesUpdater updater = createUpdater(user);
+        final LinkedHashSet<Long> addedIds = linkedSetOf(role1.getId());
+        updater.setAddedIds(addedIds);
         
         // removal of available entity
         co$(UserRole.class).batchDelete(listOf(role1.getId()));
-
-        // starting the process of saving: a) produce it first (should be successfull) b) save
-        final UserRolesUpdater updater = createUpdater(user);
-        updater.setAddedIds(addedIds);
         
         try {
             save(updater);
@@ -212,7 +200,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater originalUpdater = createUpdater(user);
-        final Set<Long> addedIds = setOf(role1.getId());
+        final LinkedHashSet<Long> addedIds = linkedSetOf(role1.getId());
         originalUpdater.setAddedIds(addedIds);
         
         // simultaneous collection modification
@@ -240,8 +228,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         save(new_composite(UserAndRoleAssociation.class, user, role3));
         
         final UserRolesUpdater updater = createUpdater(user);
-        updater.setAddedIds(setOf(role1.getId()));
-        updater.setRemovedIds(setOf(role2.getId()));
+        updater.setAddedIds(linkedSetOf(role1.getId()));
+        updater.setRemovedIds(linkedSetOf(role2.getId()));
         save(updater);
         
         final UserRolesUpdater newUpdater = createUpdater(user);
@@ -262,8 +250,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRolesUpdater updater = createUpdater(user);
         assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(updater.getRoles()));
         
-        updater.setAddedIds(setOf(role1.getId()));
-        updater.setRemovedIds(setOf(role2.getId()));
+        updater.setAddedIds(linkedSetOf(role1.getId()));
+        updater.setRemovedIds(linkedSetOf(role2.getId()));
         assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(updater.getRoles()));
         
         save(updater);
@@ -291,7 +279,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             userRoleReview, userRoleDelete, userRoleSave
         ), new ArrayList<>(updater.getTokens()));
         
-        updater.setAddedIds(setOf(userDelete.getKey(), userRoleSave.getKey()));
+        updater.setAddedIds(linkedSetOf(userDelete.getKey(), userRoleSave.getKey()));
         assertEquals(listOf(
             alwaysAccessible,
             userReview, userDelete, userSave,

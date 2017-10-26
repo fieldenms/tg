@@ -135,11 +135,6 @@
         is: 'tg-master-menu',
 
         properties: {
-        	menuTitle: {
-        		type: String,
-        		value: '[[menuTitle]]'
-        	},
-        	
         	sectionTitle: {
         		type: String,
         		value: '[[sectionTitle]]',
@@ -236,11 +231,13 @@
             }, 
             
             /**
-             * In case when the new entity has been just saved, there is a need to augment the context of this compound master functional entity to take into account newly created main entity.
+             * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+             * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
+             * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
              *
-             * @param compoundMasterEntityId -- the id of just saved main entity to be promoted into the the context of this compound master functional entity
+             * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
              */
-            augmentContextWithSavedEntity: {
+            augmentCompoundMasterOpenerWith: {
             	type: Function
             },
             
@@ -337,9 +334,9 @@
         _refreshCompoundMaster: function (data, envelope) {
         	this._isRefreshCycle = true;
         	
-        	var context = this.getMasterEntity();
-        	if (context.modifHolder.forNew.origVal === true && envelope.topic === 'save.post.success') {
-        		this.augmentContextWithSavedEntity(data.id);
+        	// promotes saved entity (main or detail) id into compound master "opener" in case of successful save
+        	if (envelope.topic === 'save.post.success') {
+        		this.augmentCompoundMasterOpenerWith(data.id);
         	}
         	
         	this.refreshCompoundMaster();
@@ -348,9 +345,9 @@
         _getMasterEntityChanged: function (newValue, oldValue) {
         	console.log('_getMasterEntityChanged', newValue);
         	
-        	var context = newValue();
-        	this.menuTitle = context.modifHolder.menuTitle.origVal;
-        	this.sectionTitle = context.modifHolder.sectionTitle.origVal; 
+        	const context = newValue();
+        	const sectionTitleValues = context.modifHolder.sectionTitle;
+        	this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal; 
         	
  			if (this._isRefreshCycle === false) {      	
 	        	if (this.route !== this.defaultRoute) {

@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.sample.domain.mixin.TgSRStatusActivationFunctionalEntityMixin;
 
 import com.google.inject.Inject;
+
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
  * DAO implementation for companion object {@link ITgSRStatusActivationFunctionalEntity}.
@@ -18,8 +17,6 @@ import com.google.inject.Inject;
  */
 @EntityType(TgSRStatusActivationFunctionalEntity.class)
 public class TgSRStatusActivationFunctionalEntityDao extends CommonEntityDao<TgSRStatusActivationFunctionalEntity> implements ITgSRStatusActivationFunctionalEntity {
-
-    private final TgSRStatusActivationFunctionalEntityMixin mixin;
     private final ITgPersistentEntityWithProperties masterEntityCo;
     private final ITgPersistentStatus statusCo;
 
@@ -29,18 +26,14 @@ public class TgSRStatusActivationFunctionalEntityDao extends CommonEntityDao<TgS
 
         this.masterEntityCo = masterEntityCo;
         this.statusCo = statusCo;
-
-        mixin = new TgSRStatusActivationFunctionalEntityMixin(this);
     }
 
     @Override
     @SessionRequired
     public TgSRStatusActivationFunctionalEntity save(final TgSRStatusActivationFunctionalEntity entity) {
-        for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) { // should be only single instance
-            final TgPersistentEntityWithProperties selected = masterEntityCo.findById(selectedEntity.getId(), fetchAll(TgPersistentEntityWithProperties.class));
-            selected.setStatus(statusCo.findByKeyAndFetch(fetchAll(TgPersistentStatus.class), "SR"));
-            masterEntityCo.save(selected);
-        }
+        final TgPersistentEntityWithProperties selected = masterEntityCo.findById(entity.getSelectedEntityId(), fetchAll(TgPersistentEntityWithProperties.class));
+        selected.setStatus(statusCo.findByKeyAndFetch(fetchAll(TgPersistentStatus.class), "SR"));
+        masterEntityCo.save(selected);
         return super.save(entity);
     }
 

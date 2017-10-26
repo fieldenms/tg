@@ -1,6 +1,4 @@
-package ua.com.fielden.platform.dao;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
+package ua.com.fielden.platform.entity;
 
 /**
  * A contract to be implemented for uniform instantiation of entities of a certain type. The original intention of this interface is its use in {@link UmCustomEntityCentre},

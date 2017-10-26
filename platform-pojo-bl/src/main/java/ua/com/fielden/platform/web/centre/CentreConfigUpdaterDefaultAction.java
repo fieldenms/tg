@@ -25,7 +25,7 @@ public class CentreConfigUpdaterDefaultAction extends AbstractFunctionalEntityWi
     
     @IsProperty(String.class) 
     @Title(value = "Default Visible Properties", desc = "Ordered set of visible properties from default centre configuration")
-    private Set<String> defaultVisibleProperties = new LinkedHashSet<>();
+    private LinkedHashSet<String> defaultVisibleProperties = new LinkedHashSet<>();
     
     @IsProperty(String.class) 
     @Title(value = "Default Sorting Values", desc = "Ordered set of pairs between property name and its 'asc' or 'desc' sorting value separated by colon")
@@ -43,7 +43,7 @@ public class CentreConfigUpdaterDefaultAction extends AbstractFunctionalEntityWi
     }
     
     @Observable
-    public CentreConfigUpdaterDefaultAction setDefaultVisibleProperties(final Set<String> defaultVisibleProperties) {
+    public CentreConfigUpdaterDefaultAction setDefaultVisibleProperties(final LinkedHashSet<String> defaultVisibleProperties) {
         this.defaultVisibleProperties.clear();
         this.defaultVisibleProperties.addAll(defaultVisibleProperties);
         return this;

@@ -1,39 +1,41 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Master entity object.
+ * An abstract entity that is used as a common super type for generic entities {@link EntityEditAction} and {@link EntityNewAction}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
-@KeyType(String.class)
-@KeyTitle(value = "Key", desc = "Some key description")
-public abstract class AbstractEntityManipulationAction extends AbstractFunctionalEntityWithCentreContext<String> {
-
-    private static final long serialVersionUID = 1L;
-
+@KeyType(NoKey.class)
+public abstract class AbstractEntityManipulationAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+    
     @IsProperty
     @MapTo
-    @Title(value = "Entity Type", desc = "Entity type")
+    @Title("Entity Type")
     private String entityType;
 
     @IsProperty
     @MapTo
-    @Title(value = "Import URI", desc = "Import uri")
+    @Title("Import URI")
     private String importUri;
 
     @IsProperty
     @MapTo
-    @Title(value = "Element Name", desc = "Element name")
+    @Title("Element Name")
     private String elementName;
 
+    protected AbstractEntityManipulationAction() {
+        setKey(NO_KEY);
+    }
+    
     @Observable
     public AbstractEntityManipulationAction setElementName(final String elementName) {
         this.elementName = elementName;

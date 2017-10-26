@@ -17,7 +17,7 @@
     <script>
         (function () {
             var dialogModel = document.createElement('template', 'dom-bind');
-            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled" on-iron-overlay-opened="dialogOpened" on-iron-overlay-closed="dialogClosed">' +
+            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled" on-iron-overlay-opened="dialogOpened" on-iron-overlay-closed="dialogClosed">' +
                 '<div style="padding: 20px;" inner-h-t-m-l="[[message]]"></div>' +
                 '<div class="buttons">' +
                 '<template is="dom-repeat" items="[[buttons]]">' +
