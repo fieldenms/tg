@@ -269,10 +269,10 @@
                                 <template is="dom-repeat" items="[[columns]]" as="column">
                                     <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                         <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
-                                            <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
-                                            <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
-                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
+                                            <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
+                                            <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
+                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
                                         </template>
                                     </div>
                                 </template>
@@ -360,10 +360,10 @@
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column">
                                             <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
-                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
-                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
-                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
+                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
+                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
+                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
                                             </div>
                                         </template>
                                     </div>
@@ -699,7 +699,10 @@
                     type: Boolean,
                     value: false
                 },
-                renderingHints: Array,
+                renderingHints: {
+                    type: Array,
+                    observer: "_renderingHintsChanged"
+                },
                 /**
                  * Defines the number of visible rows.
                  */
@@ -847,10 +850,9 @@
                 //Initialising the egi model .
                 this.egiModel = [];
 
-                //initialising the arrays for selected entites and entities those were opened.
+                //initialising the arrays for selected entites.
                 this.selectedAll = false;
                 this.selectedEntities = [];
-                this.openedEntities = [];
 
                 //Initialise columns
                 this.allColumns = [];
@@ -908,6 +910,13 @@
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
+                }
+            },
+            
+            setRenderingHints: function (entity, property, renderingHints) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0) {
+                    this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
@@ -1377,30 +1386,37 @@
              * Observs the changes to entities property.
              */
             _entitiesChanged: function (newValue, oldValue) {
-                var tempEgiModel = [],
-                    self = this;
+                const tempEgiModel = [];
+                const self = this;
                 newValue.forEach(function (newEntity) {
-                    var selectEntInd = _findEntity(newEntity, self.selectedEntities),
-                        openedEntInd = _findEntity(newEntity, self.openedEntities);
+                    const selectEntInd = _findEntity(newEntity, self.selectedEntities);
                     if (selectEntInd >= 0) {
                         self.selectedEntities[selectEntInd] = newEntity;
-                    }
-                    if (openedEntInd >= 0) {
-                        self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
                 newValue.forEach(function (newEntity) {
                     const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
+                    const oldIndex = _findEntity(newEntity, oldValue);
+                    const newRendHints = oldIndex < 0 ? {} : self.renderingHints[oldIndex] || {};
                     const egiEntity = {
                         selected: isSelected,
-                        opened: self.openedEntities.indexOf(newEntity) > -1,
-                        entity: newEntity
-                    }
+                        entity: newEntity,
+                        renderingHints: newRendHints
+                    };
                     tempEgiModel.push(egiEntity);
                 });
                 updateSelectAll(this, tempEgiModel);
                 self.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
+            },
+            
+            _renderingHintsChanged: function (newValue, oldValue) {
+                if (this.egiModel) {
+                    this.egiModel.forEach((egiEntity, index) => {
+                        egiEntity.renderingHints = (newValue && newValue[index]) || {};
+                    });
+                    this._updateTableSizeAsync();
+                }
             },
 
             _columnDomChanged: function (addedColumns, removedColumns) {
@@ -1633,11 +1649,12 @@
             /**
              * Calculates the style for cell that represents rendering hints.
              */
-            _calcBackgroundRenderingHintsStyle: function (entity, entityIndex, property) {
-                var style = "opacity: 0.3;";
-                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || {};
+            _calcBackgroundRenderingHintsStyle: function (change, entityIndex, property) {
+                const renderingHints = change.base;
+                let style = "opacity: 0.3;";
+                let rendHints = (renderingHints && renderingHints[property]) || {};
                 rendHints = rendHints.backgroundStyles || rendHints;
-                for (var property in rendHints) {
+                for (let property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
                     }
@@ -1647,10 +1664,11 @@
             /**
              * Calculates the style for cell that contains the property value.
              */
-            _calcValueRenderingHintsStyle: function (entity, entityIndex, property, isBoolean) {
-                var style = isBoolean === 'true' ? "" : "width: 100%;";
-                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property] && this.renderingHints[entityIndex][property].valueStyles) || {};
-                for (var property in rendHints) {
+            _calcValueRenderingHintsStyle: function (change, entityIndex, property, isBoolean) {
+                const renderingHints = change.base;
+                let style = isBoolean === 'true' ? "" : "width: 100%;";
+                let rendHints = (renderingHints && renderingHints[property] && renderingHints[property].valueStyles) || {};
+                for (let property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
                     }
