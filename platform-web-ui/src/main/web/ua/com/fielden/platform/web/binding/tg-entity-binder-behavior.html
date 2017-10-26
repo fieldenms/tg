@@ -306,6 +306,21 @@
                  */
                 _editedPropsExist: {
                     type: Boolean
+                },
+                
+                /**
+                 * Indicates whether retrieval process has been initiated by using CTRL+R key or tapping on CANCEL/REFRESH button (or even programatically).
+                 * Strictly speaking it becomes 'true' when 'retrieve' function gets functioned.
+                 *
+                 * _retrievalInitiated is needed to disable master view only once during debouncing of multiple retrieval requests, which in turn will be turned into single ajax request,
+                 * and thus only single 'view enablement' action.
+                 *
+                 * Debouncing of retrieval actions is needed to avoid multiple concurrent retrieval requests. However it adds additional debouncing 50-second delay similarly
+                 * as in validation.
+                 */
+                _retrievalInitiated: {
+                    type: Boolean,
+                    value: false
                 }
     		},
     		
@@ -477,22 +492,45 @@
                     console.log("do not validate");
                 }).bind(self);
                 
-                self.retrieve = (function (context) {
-                    this.disableView();
-                    // cancel previous validation before starting refreshing process!
-                    this._validator().abortValidationIfAny();
-                    
+                self._createRetrievalPromise = function (context) {
                     this._reflector()._validateRetrievalContext(context, this.entityId);
                     if (context) {
                         console.debug(':MASTER:RETRIEVE1', '|type', this.entityType, '|id', this.entityId);
                         console.debug(':MASTER:RETRIEVE2', '|cch or sih', context);
-                        var ser = this._serialiser().serialise(context);
+                        const ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
                     } else {
                         console.debug(':MASTER:RETRIEVE', '|type', this.entityType, '|id', this.entityId);
                         this._ajaxRetriever().body = null;
                     }
                     return this._ajaxRetriever().generateRequest().completes;
+                }.bind(self);
+                
+                self.retrieve = (function (context) {
+                    const slf = this;
+                    if (!slf._retrievalInitiated) {
+                        slf._retrievalInitiated = true;
+                        slf.disableView();
+                    }
+                    
+                    return new Promise(function (resolve, reject) {
+                        slf.debounce('invoke-retrieval', function () {
+                            // cancel the 'invoke-retrieval' debouncer if there is any active one:
+                            slf.cancelDebouncer('invoke-retrieval');
+                            
+                            // cancel previous validation requests except the last one -- if it exists then retrieval process will be chained on top of that last validation process, 
+                            // otherwise -- retrieval process will simply start immediately
+                            const lastValidationPromise = slf._validator().abortValidationExceptLastOne();
+                            if (lastValidationPromise !== null) {
+                                console.warn("Retrieval is chained to the last validation promise...");
+                                return resolve(lastValidationPromise
+                                    .then(function () {
+                                        return slf._createRetrievalPromise(context);
+                                    }));
+                            }
+                            return resolve(slf._createRetrievalPromise(context));
+                        }, 50);
+                    });
                 }).bind(self);
                 
                 // calbacks, that will potentially be augmented by tg-action child elements:
@@ -517,6 +555,7 @@
                     console.timeEnd('loading-all');
                     
                     this.enableView();
+                    this._retrievalInitiated = false;
                     return true;
                 }).bind(self);
                 
@@ -534,7 +573,8 @@
                 	if (this.postRetrievedError) {
 	                    this.postRetrievedError(errorResult);
                     }
-                	this.enableView();
+                    this.enableView();
+                    this._retrievalInitiated = false;
                 }).bind(self);
              	// 				validation:
                 self._postValidatedDefault = (function (entityAndCustomObject) {
