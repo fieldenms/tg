@@ -27,30 +27,21 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.restlet.Response;
-import org.restlet.data.Status;
-import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
-import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -63,113 +54,26 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.ui.menu.MiType;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.EntityResource;
-import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 
 /**
- * This utility class contains the methods that are shared across {@link EntityResource} and {@link EntityValidationResource}.
+ * This utility class contains the methods that are shared across EntityResource and EntityValidationResource.
  *
  * @author TG Team
  *
  */
-public class EntityResourceUtils<T extends AbstractEntity<?>> {
+public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
-    private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
-    private final Class<T> entityType;
-    private final IEntityDao<T> co;
-    private final IEntityProducer<T> entityProducer;
-    private final ICompanionObjectFinder companionFinder;
-
-    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final ICompanionObjectFinder companionFinder) {
-        this.entityType = entityType;
-        this.companionFinder = companionFinder;
-        this.co = companionFinder.<IEntityDao<T>, T> find(this.entityType);
-
-        this.entityFactory = entityFactory;
-        this.entityProducer = entityProducer;
-    }
-
-    /**
-     * Initialises the entity for retrieval.
-     *
-     * @param id
-     *            -- entity identifier
-     * @return
-     */
-    public T createValidationPrototype(final Long id) {
-        final T entity;
-        if (id != null) {
-            entity = co.findById(id, co.getFetchProvider().fetchModel());
-        } else {
-            entity = entityProducer.newEntity();
-        }
-        return entity;
-    }
-
-    /**
-     * Initialises the functional entity for centre-context-dependent retrieval.
-     *
-     * @param centreContext
-     *            the context for functional entity creation
-     *
-     * @return
-     */
-    public T createValidationPrototypeWithContext(
-            final Long id,
-            final CentreContext<T, AbstractEntity<?>> centreContext,
-            final String chosenProperty,
-            final Long compoundMasterEntityId,
-            final AbstractEntity<?> masterContext) {
-        if (id != null) {
-            return co.findById(id, co.getFetchProvider().fetchModel());
-        } else {
-            final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) entityProducer;
-            defProducer.setCentreContext(centreContext);
-            defProducer.setChosenProperty(chosenProperty);
-            defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
-            defProducer.setMasterEntity(masterContext);
-            return defProducer.newEntity();
-        }
-    }
-
-    /**
-     * Resets the context for the entity to <code>null</code> in case where the entity is {@link AbstractFunctionalEntityWithCentreContext} descendant.
-     * <p>
-     * This is necessary to be done just before sending the entity to the client application (retrieval, validation and saving actions). It should not be done in producer
-     * because the validation prototype's context could be used later (during application of modified properties, or in DAO save method etc.).
-     *
-     * @param entity
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> T resetContextBeforeSendingToClient(final T entity) {
-        if (entity instanceof AbstractFunctionalEntityWithCentreContext && ((AbstractFunctionalEntityWithCentreContext) entity).getContext() != null) {
-            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-            funcEntity.setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-            funcEntity.getProperty("context").resetState();
-        }
-        return entity;
-    }
-
-    public Class<T> getEntityType() {
-        return entityType;
-    }
-
-    public ICompanionObjectFinder getCompanionFinder() {
-        return companionFinder;
-    }
-
+    
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
-            final Class<? extends AbstractEntity<?>> originalType = CentreUtils.getOriginalType(entityType);
-            final String originalPropertyName = CentreUtils.getOriginalPropertyName(entityType, propertyName);
+            final Class<? extends AbstractEntity<?>> originalType = EntityResourceUtils.getOriginalType(entityType);
+            final String originalPropertyName = EntityResourceUtils.getOriginalPropertyName(entityType, propertyName);
 
             final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
             return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider() : fetchForPropertyOrDefault(coFinder, originalType, originalPropertyName);
@@ -228,12 +132,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    logger.debug(String.format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                    logger.debug(format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    logger.debug(String.format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                    logger.debug(format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 }
             }
@@ -246,7 +150,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                logger.debug(String.format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                logger.debug(format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             } else { // this is unmodified property
                 // IMPORTANT:
@@ -254,7 +158,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 //  even unmodified ones.
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
-                logger.debug(String.format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
+                logger.debug(format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
         }
@@ -339,11 +243,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
-                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
+                    logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, CONFLICT_WARNING));
                 } else {
-                    logger.info(String.format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + String.format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                    logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
                 }
             } else {
                 performAction.run();
@@ -431,7 +335,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
         if (!entity.isPersisted()) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(Result.successful(entity));
@@ -446,7 +350,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @param entity
      */
-    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
+    private static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
@@ -475,27 +379,27 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     /**
      * Determines property type.
      * <p>
-     * The exception from standard logic is only for "collection modification func action", where the type of "chosenIds", "addedIds" and "removedIds" properties
-     * determines from the second type parameter of the func action type. This is done due to generic nature of that types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
+     * The exception from standard logic is only for "collection modification func action", where the type of <code>chosenIds</code>, <code>addedIds</code> and <code>removedIds</code> properties
+     * is determined from the second type parameter of the func action type. This is required due to the generic nature of those types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
      *
      * @param type
      * @param propertyName
      * @return
      */
-    private static Class determinePropertyType(final Class<?> type, final String propertyName) {
-        final Class propertyType;
+    private static Class<?> determinePropertyType(final Class<?> type, final String propertyName) {
+        final Class<?> propertyType;
         if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) && AbstractFunctionalEntityForCollectionModification.isCollectionOfIds(propertyName)) {
             if (type.getAnnotatedSuperclass() == null) {
-                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
             }
             if (!(type.getAnnotatedSuperclass().getType() instanceof ParameterizedType)) {
-                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
             }
             final ParameterizedType parameterizedEntityType = (ParameterizedType) type.getAnnotatedSuperclass().getType();
             if (parameterizedEntityType.getActualTypeArguments().length != 1 || !(parameterizedEntityType.getActualTypeArguments()[0] instanceof Class)) {
-                throw Result.failure(new IllegalStateException(String.format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
             }
-            propertyType = (Class) parameterizedEntityType.getActualTypeArguments()[0];
+            propertyType = (Class<?>) parameterizedEntityType.getActualTypeArguments()[0];
         } else {
             propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
         }
@@ -503,7 +407,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Converts <code>reflectedValue</code>, which could be a string, a number, a boolean or a null, into a value of appropriate type (the type of the actual property).
+     * Converts <code>reflectedValue</code>, which could be a string, a number, a boolean or a null, to a value of appropriate type (the type of the actual property).
      *
      * @param type
      * @param propertyName
@@ -521,7 +425,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
-                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+                throw new UnsupportedOperationException(format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
             }
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
@@ -530,12 +434,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
                 return extractPropertyDescriptor((String) reflectedValue, enclosingEntityType).orElse(null);
             } else if (reflectedValueId.isPresent()) {
-                logger.debug(String.format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
+                logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                 // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
                 final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
                 return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+                logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
                 final String compositeKeyAsString = buildSearchByValue(propertyType, entityPropertyType, (String) reflectedValue);
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
                 /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList(compositeKeyAsString))).//
@@ -548,7 +452,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     return null;
                 }
             } else {
-                logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+                logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
                 final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
                 final String key;
                 if (keys.length > 1) {
@@ -570,7 +474,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final boolean isStringElem = String.class.isAssignableFrom(propertyType);
             final boolean isLongElem = Long.class.isAssignableFrom(propertyType);
             if (!isSet && !isList || !isStringElem && !isLongElem) {
-                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of collectional type [%s] with [%s] elements. Only [Set / List] of [String / Long] elements are supported.", propertyName, type.getSimpleName(), reflectedValue, collectionType.getSimpleName(), propertyType.getSimpleName()));
+                throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of collectional type [%s] with [%s] elements. Only [Set / List] of [String / Long] elements are supported.", propertyName, type.getSimpleName(), reflectedValue, collectionType.getSimpleName(), propertyType.getSimpleName()));
             }
             final List<Object> list = (ArrayList<Object>) reflectedValue;
             final Stream<Object> stream = list.stream().map(
@@ -637,7 +541,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else {
-            throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
+            throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }
     }
 
@@ -655,7 +559,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (reflectedValue instanceof BigInteger) {
             return ((BigInteger) reflectedValue).longValue();
         } else {
-            throw new IllegalStateException(String.format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
+            throw new IllegalStateException(format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
         }
     }
 
@@ -729,163 +633,69 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Restores the holder of modified properties into the map [propertyName; webEditorSpecificValue].
+     * Determines the entity type for which criteria entity will be generated.
      *
-     * @param envelope
+     * @param miType
      * @return
      */
-    public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
-    }
-
-    /**
-     * Restores the holder of context and criteria entity.
-     *
-     * @param envelope
-     * @return
-     */
-    public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
-    }
-
-    /**
-     * Restores the {@link Result} from JSON envelope.
-     *
-     * @param envelope
-     * @return
-     */
-    public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONResult(envelope);
-    }
-
-    /**
-     * Restores the holder of saving information (modified props + centre context, if any).
-     *
-     * @param envelope
-     * @return
-     */
-    public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
-    }
-
-    /**
-     * Just saves the entity.
-     *
-     * @param entity
-     * @param continuations -- continuations of the entity to be used during saving
-     *
-     * @return
-     */
-    public T save(final T entity, final Map<String, IContinuationData> continuations) {
-        return EntityResourceContinuationsHelper.saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
-    }
-
-
-
-    /**
-     * Deletes the entity.
-     *
-     * @param entityId
-     */
-    public void delete(final Long entityId) {
-        co.delete(entityFactory.newEntity(entityType, entityId));
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @param envelope
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototype(id), getCompanionFinder());
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @param envelope
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public Pair<T, Map<String, Object>> constructEntity(
-            final Map<String, Object> modifiedPropertiesHolder,
-            final CentreContext<T, AbstractEntity<?>> centreContext,
-            final String chosenProperty,
-            final Long compoundMasterEntityId,
-            final AbstractEntity<?> masterContext, final int tabCount) {
-
-        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: started.");
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
-        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext);
-        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
-        final Pair<T, Map<String, Object>> constructed = constructEntity(modifiedPropertiesHolder, validationPrototypeWithContext, getCompanionFinder());
-        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: finished.");
-        return constructed;
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
-        return new Pair<>(apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
-    }
-
-    /**
-     * Constructs the entity from the client envelope.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder) {
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
-        return constructEntity(modifiedPropertiesHolder, id);
-    }
-
-    public EntityFactory entityFactory() {
-        return entityFactory;
-    }
-
-    /**
-     * This method wraps the function of representation creation to handle properly <b>undesired</b> server errors.
-     * <p>
-     * Please note that all <b>expected</b> exceptional situations should be handled inside the respective 'representationCreator' and one should not rely on this method for such
-     * errors.
-     *
-     * @param representationCreator
-     * @return
-     */
-    public static Representation handleUndesiredExceptions(final Response response, final Supplier<Representation> representationCreator, final RestServerUtil restUtil) {
-        try {
-            return representationCreator.get();
-        } catch (final Exception undesiredEx) {
-            logger.error(undesiredEx.getMessage(), undesiredEx);
-            response.setStatus(Status.SERVER_ERROR_INTERNAL);
-            return restUtil.errorJSONRepresentation(undesiredEx);
+    public static <T extends AbstractEntity<?>> Class<T> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
+        if (entityTypeAnnotation == null) {
+            throw new IllegalStateException(format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
         }
+        return (Class<T>) entityTypeAnnotation.value();
+    }
+
+    /**
+     * Determines the miType for which criteria entity was generated.
+     *
+     * @param miType
+     * @return
+     */
+    public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
+        final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
+        if (annotation == null) {
+            throw new IllegalStateException(format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
+        }
+        return annotation.value();
+    }
+
+    /**
+     * Determines the master type for which criteria entity was generated.
+     *
+     * @param criteriaType
+     * @return
+     */
+    public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
+        return getEntityType(getMiType(criteriaType));
+    }
+
+    /**
+     * Determines the property name of the property from which the criteria property was generated. This is only applicable for entity typed properties.
+     *
+     * @param propertyName
+     * @return
+     */
+    public static String getOriginalPropertyName(final Class<?> criteriaClass, final String propertyName) {
+        return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
+    }
+
+    /**
+     * Determines the managed (in cdtmae) counter-part for master type for which criteria entity was generated.
+     *
+     * @param criteriaType
+     * @param cdtmae
+     * @return
+     */
+    public static Class<?> getOriginalManagedType(final Class<? extends AbstractEntity<?>> criteriaType, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+        return cdtmae.getEnhancer().getManagedType(getOriginalType(criteriaType));
+    }
+
+    public static String tabs(final int tabCount) {
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < tabCount; i++) {
+            sb.append("  ");
+        }
+        return sb.toString();
     }
 }

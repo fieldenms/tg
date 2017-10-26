@@ -100,6 +100,7 @@ import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
@@ -181,7 +182,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         this.injector = injector;
         this.miType = miType;
-        this.entityType = CentreUtils.getEntityType(miType);
+        this.entityType = EntityResourceUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
     }
@@ -1230,7 +1231,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
         final Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> matchers = dslDefaultConfig.getValueMatchersForSelectionCriteria();
 
-        final String originalPropertyName = CentreUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
+        final String originalPropertyName = EntityResourceUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
         final String dslProp = dslName(originalPropertyName);
         logger.debug("createValueMatcherAndContextConfig: propertyName = " + criterionPropertyName + " originalPropertyName = " + dslProp);
         final Class<? extends IValueMatcherWithCentreContext<V>> matcherType = matchers.isPresent() && matchers.get().containsKey(dslProp) ?
@@ -1239,7 +1240,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (matcherType != null) {
             matcherAndContextConfig = new Pair<>(injector.getInstance(matcherType), matchers.get().get(dslProp).getValue());
         } else {
-            matcherAndContextConfig = createDefaultValueMatcherAndContextConfig(CentreUtils.getOriginalType(criteriaType), originalPropertyName, coFinder);
+            matcherAndContextConfig = createDefaultValueMatcherAndContextConfig(EntityResourceUtils.getOriginalType(criteriaType), originalPropertyName, coFinder);
         }
         return matcherAndContextConfig;
     }

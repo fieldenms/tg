@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,10 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -23,18 +20,12 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  * @param <T>
  */
-public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T> {
-
+public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
     private final EntityFactory factory;
     protected final Class<T> entityType;
     private final Optional<IEntityDao<T>> companion;
-    
-    // optional centre context for context-dependent entity producing logic
-    private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
-    private AbstractEntity<?> masterEntity;
-    private Long compoundMasterEntityId;
-    private String chosenProperty;
-
+    // optional context for context-dependent entity producing logic
+    private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> co$Cache = new HashMap<>();
@@ -45,7 +36,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         this.coFinder = companionFinder;
         this.companion = Optional.ofNullable(coFinder.find(entityType));
     }
-
     
     /**
      * A convenient way to obtain companion instances by the types of corresponding entities, which read uninstrumented entities.
@@ -82,8 +72,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     @Override
     public final T newEntity() {
         final T producedEntity;
-        if (getMasterEntity() != null && EntityEditAction.class.isAssignableFrom(getMasterEntity().getClass())) {
-            final EntityEditAction entityEditAction = (EntityEditAction) getMasterEntity();
+        if (masterEntityInstanceOf(EntityEditAction.class)) {
+            final EntityEditAction entityEditAction = masterEntity(EntityEditAction.class);
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
@@ -92,12 +82,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
                 
-                if (centreContext != null) {
-                    funcEntity.setContext(centreContext);
-                }
-                
-                if (chosenProperty != null) {
-                    funcEntity.setChosenProperty(chosenProperty);
+                if (context != null) {
+                    funcEntity.setContext(context);
                 }
                 
                 if (String.class.isAssignableFrom(entity.getKeyType())) {
@@ -105,8 +91,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
                 }
             }
             
-            if (getMasterEntity() != null && EntityNewAction.class.isAssignableFrom(getMasterEntity().getClass())) {
-                producedEntity = provideDefaultValuesForStandardNew(entity, (EntityNewAction) getMasterEntity());
+            if (masterEntityInstanceOf(EntityNewAction.class)) {
+                producedEntity = provideDefaultValuesForStandardNew(entity, masterEntity(EntityNewAction.class));
             } else {
                 producedEntity = provideDefaultValues(entity);
             }
@@ -149,7 +135,30 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected T provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
-        return companion.map(co -> co.findById(entityId, co.getFetchProvider().fetchModel())).get();
+        return refetchInstrumentedEntityById(entityId);
+    }
+    
+    /**
+     * Refetches entity by its <code>entityId</code> using default fetch provider. Returns instrumented entity
+     * that could be potentially used for those producers that return refetched instrumented entities instead 
+     * of returning produced instances (dual-purpose producers).
+     * 
+     * @param entityId
+     * @return
+     */
+    protected final T refetchInstrumentedEntityById(final Long entityId) {
+        return companion.get().findById(entityId, companion.get().getFetchProvider().fetchModel());
+    }
+    
+    /**
+     * Re-fetches entity using <code>property</code>'s fetch provider for the entity type behind this producer.
+     * Returns uninstrumented instance.
+     * 
+     * @param entity
+     * @return
+     */
+    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
+        return co((Class<M>) entity.getType()).findById(entity.getId(), companion.get().getFetchProvider().<M>fetchFor(property).fetchModel());
     }
     
     /**
@@ -175,33 +184,14 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected EntityFactory factory() {
         return factory;
     }
-
-    /**
-     * Use this method in case when the master context (as functional entity) is required for entity instantiation.
-     *
-     * @return
-     */
-    protected AbstractEntity<?> getMasterEntity() {
-        return masterEntity;
+    
+    @Override
+    public CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext() {
+        return context;
     }
-
-    public void setMasterEntity(final AbstractEntity<?> masterEntity) {
-        this.masterEntity = masterEntity;
-    }
-
-    public void setCentreContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext) {
-        this.centreContext = centreContext;
-    }
-
-    public void setChosenProperty(final String chosenProperty) {
-        this.chosenProperty = chosenProperty;
-    }
-
-    protected Long getCompoundMasterEntityId() {
-        return compoundMasterEntityId;
-    }
-
-    public void setCompoundMasterEntityId(final Long compoundMasterEntityId) {
-        this.compoundMasterEntityId = compoundMasterEntityId;
+    
+    @Override
+    public void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
+        this.context = context;
     }
 }

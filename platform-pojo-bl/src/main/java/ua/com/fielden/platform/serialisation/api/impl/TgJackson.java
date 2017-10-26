@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
@@ -26,7 +26,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -35,8 +34,6 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
-import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
-import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArrayListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArraysArrayListJsonDeserialiser;
@@ -51,7 +48,6 @@ import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSeria
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -75,7 +71,6 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     public final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
         entityTypeInfoGetter = new EntityTypeInfoGetter();
@@ -98,9 +93,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
-        this.module.addDeserializer(Result.class, new ResultJsonDeserialiser<Result>(this));
-        this.module.addSerializer(Warning.class, new ResultJsonSerialiser(this));
-        this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
+        this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));
 
         this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, serialisationTypeEncoder));
         this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this, serialisationTypeEncoder));
@@ -157,10 +150,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             }, getTypeFactory(), serialisationTypeEncoder);
 
             EntitySerialiser.getContext().reset();
-            final T val = readValue(contentString, concreteType);
-            
-            executeDefiners();
-            return val;
+            return readValue(contentString, concreteType);
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
@@ -197,9 +187,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public byte[] serialise(final Object obj) {
         try {
-            //            EntitySerialiser.getContext().reset();
-            //            logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|."); // TODO remove
-
+            // EntitySerialiser.getContext().reset();
+            // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|.");
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
             logger.debug("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
@@ -216,35 +205,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         return factory;
     }
 
-    /**
-     * All entity instances are cached during deserialisation.
-     *
-     * Once serialisation is completed it is necessary to execute respective definers for all cached instances.
-     *
-     * Definers cannot be executed inside {@link EntitySerialiser} due to the use of cache in conjunction with sub-requests issued by some of the definers leasing to an incorrect
-     * deserialisation (specifically, object identifiers in cache get mixed up with the ones from newly obtained stream of data).
-     *
-     */
-    private void executeDefiners() {
-        final JacksonContext context = EntitySerialiser.getContext();
-        final References references = (References) context.get(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
-        if (references != null) {
-            // references is thread local variable, which gets reset if a nested deserialisation happens
-            // therefore need to make a local cache of the present in references entities
-            
-            final List<AbstractEntity<?>> deserialisedEntities = references.getDeserialisedEntities();
-
-            // explicit reset in order to make the reason for the above snippet more explicit
-            references.reset();
-            
-            if (!deserialisedEntities.isEmpty()) {
-                // iterate through all locally cached entity instances and execute respective definers
-                DefinersExecutor.execute(deserialisedEntities);
-            }
-        }
-    }
-
-    public LinkedHashMap<String, EntityType> getTypeTable() {
+    public Map<String, EntityType> getTypeTable() {
         return entityTypeInfoGetter.getTypeTable();
     }
     

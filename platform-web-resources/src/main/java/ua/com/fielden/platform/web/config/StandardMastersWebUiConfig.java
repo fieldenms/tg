@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.web.config;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
-
-import static java.lang.String.format;
 
 import java.util.Optional;
 
@@ -17,9 +15,11 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -86,7 +86,7 @@ public class StandardMastersWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
 
-        return new EntityMaster<>(EntityExportAction.class, masterConfig, injector);
+        return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
     }
     
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:

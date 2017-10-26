@@ -5,8 +5,8 @@ package ua.com.fielden.platform.entity;
  * 
  * @author TG Team
  *
- * @param <K>
+ * @param <K> -- primary entity type for compound master
  */
-public abstract class AbstractFunctionalEntityForCompoundMenuItem<K extends Comparable<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
-    private static final long serialVersionUID = 1L;
+public abstract class AbstractFunctionalEntityForCompoundMenuItem<K extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
+    
 }

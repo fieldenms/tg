@@ -691,6 +691,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     @Override
+    public final void setValueChangeCount(final int valueChangeCount) {
+        this.valueChangeCount = valueChangeCount;
+    }
+
+    @Override
     public final T getPrevValue() {
         return prevValue;
     }

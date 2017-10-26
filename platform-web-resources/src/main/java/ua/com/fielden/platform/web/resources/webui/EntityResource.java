@@ -1,16 +1,20 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -26,14 +30,14 @@ import org.restlet.resource.ServerResource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
 import ua.com.fielden.platform.entity.IContinuationData;
+import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -45,13 +49,12 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -67,7 +70,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceUtils<T> utils;
     private final RestServerUtil restUtil;
     private final Long entityId;
     private final EntityIdKind entityIdKind;
@@ -78,6 +80,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private final IWebUiConfig webUiConfig;
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
+    private final Class<T> entityType;
+    private final IEntityDao<T> companion;
+    private final IEntityProducer<T> producer;
+    private final EntityFactory factory;
 
     public enum EntityIdKind {
         NEW("new"), ID("id"), FIND_OR_NEW("find_or_new");
@@ -112,11 +118,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
         this.companionFinder = companionFinder;
         this.critGenerator = critGenerator;
-        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, this.companionFinder);
         this.restUtil = restUtil;
         this.webUiConfig = webUiConfig;
         this.serverGdtm = serverGdtm;
         this.userProvider = userProvider;
+        this.entityType = entityType;
+        this.companion = companionFinder.<IEntityDao<T>, T> find(this.entityType);
+        this.producer = entityProducer;
+        this.factory = entityFactory;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
 
@@ -138,7 +147,11 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Post
     public Representation save(final Representation envelope) {
         logger.debug("ENTITY_RESOURCE: save started.");
-        final Representation result = EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToSave(envelope), restUtil);
+        final Representation result = handleUndesiredExceptions(getResponse(), () -> {
+            final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
+            final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, serverGdtm, userProvider, companion);
+            return restUtil.singleJSONRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
+        }, restUtil);
         logger.debug("ENTITY_RESOURCE: save finished.");
         return result;
     }
@@ -148,11 +161,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     @Put
     public Representation retrieve(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("ENTITY_RESOURCE: retrieve started.");
+            // originallyProducedEntity is always empty during retrieval to kick in creation through producer
+            final T emptyOriginallyProducedEntity = null;
             if (envelope != null) {
                 if (FIND_OR_NEW == entityIdKind) {
-                    final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+                    final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
 
                     final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
                     try {
@@ -160,41 +175,48 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     } catch (final ClassNotFoundException e) {
                         throw new IllegalStateException(e);
                     }
-                    final AbstractEntity<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-                    final T entity = utils.createValidationPrototypeWithContext(null, null, null, null, funcEntity);
+                    final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
+                            null, 
+                            emptyOriginallyProducedEntity, 
+                            CentreResourceUtils.createCentreContext(
+                                    funcEntity, /* only master context, the rest should be empty */
+                                    new ArrayList<AbstractEntity<?>>(),
+                                    null,
+                                    Optional.empty(),
+                                    null 
+                            ),
+                            companion, 
+                            producer
+                            );
                     logger.debug("ENTITY_RESOURCE: retrieve finished.");
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
-                    final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+                    final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
-                    final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder, 0);
-                    final Optional<EntityActionConfig> actionConfig = EntityResource.restoreActionConfig(webUiConfig, centreContextHolder);
+                    final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, factory, centreContextHolder, 0);
+                    final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
-                    final T entity = utils.createValidationPrototypeWithContext(
+                    final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
+                            emptyOriginallyProducedEntity,
                             CentreResourceUtils.createCentreContext(
-                                    webUiConfig,
-                                    companionFinder,
-                                    serverGdtm,
-                                    userProvider,
-                                    critGenerator,
-                                    utils.entityFactory(),
-                                    masterEntity,
-                                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
-                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator),
-                                    actionConfig
+                                    masterEntity, /* master context */
+                                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
+                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, serverGdtm, userProvider, webUiConfig, factory),
+                                    actionConfig,
+                                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
                             ),
-                            !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                            null /* compound master entity id */,
-                            masterEntity /* master context */
+                            companion, 
+                            producer
                             );
                     logger.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(entity));
+                    return restUtil.rawListJSONRepresentation(entity);
                 }
             } else {
                 logger.debug("ENTITY_RESOURCE: retrieve finished.");
-                return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
+                return restUtil.rawListJSONRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
             }
         }, restUtil);
     }
@@ -202,7 +224,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Delete
     @Override
     public Representation delete() {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             if (entityId == null) {
                 final String message = String.format("New entity was not persisted and thus can not be deleted. Actually this error should be prevented at the client-side.");
                 logger.error(message);
@@ -212,31 +234,39 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             return delete(entityId);
         }, restUtil);
     }
-
+    
     /**
-     * Tries to save the changes for the entity and returns it in JSON format.
-     *
-     * @param envelope
+     * Restores the entity from {@link SavingInfoHolder} and tries to save it.
+     * 
+     * @param savingInfoHolder
+     * @param entityType
+     * @param entityFactory
+     * @param companionFinder
+     * @param critGenerator
+     * @param webUiConfig
+     * @param serverGdtm
+     * @param userProvider
+     * @param companion
      * @return
      */
-    private Representation tryToSave(final Representation envelope) {
-        final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+    public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> tryToSave(
+            final SavingInfoHolder savingInfoHolder,
+            final Class<T> entityType,
+            final EntityFactory entityFactory,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator,
+            final IWebUiConfig webUiConfig,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final IEntityDao<T> companion) {
         final List<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
-                createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+                EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
+        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations);
-        return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
-    }
-
-    private Map<String, IContinuationData> createContinuationsMap(final List<IContinuationData> continuations, final List<String> continuationProperties) {
-        final Map<String, IContinuationData> map = new LinkedHashMap<>();
-        for (int index = 0; index < continuations.size(); index++) {
-            map.put(continuationProperties.get(index), continuations.get(index));
-        }
-        return map;
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
+        return potentiallySavedWithException;
     }
 
     /**
@@ -246,6 +276,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context
      * deserialisation.
      *
+     * @param disregardOriginallyProducedEntities -- indicates whether it is necessary to disregard originallyProducedEntity while restoring this entity and its parent functional entities
      * @param savingInfoHolder
      *            -- the actual holder of information about functional entity
      * @param functionalEntityType
@@ -260,6 +291,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
+            final boolean disregardOriginallyProducedEntities,
             final SavingInfoHolder savingInfoHolder,
             final Class<T> functionalEntityType,
             final EntityFactory entityFactory,
@@ -276,18 +308,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master.");
         final IEntityProducer<T> entityProducer = master.createEntityProducer();
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): producer.");
-        final EntityResourceUtils<T> utils = new EntityResourceUtils<T>(functionalEntityType, entityProducer, entityFactory, companionFinder);
+        final IEntityDao<T> companion = companionFinder.<IEntityDao<T>, T> find(functionalEntityType);
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): utils.");
-        final Map<String, Object> modifHolder = savingInfoHolder.getModifHolder();
-
-        final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
-        final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
-        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder, tabCount + 1);
+        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1);
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity has been restored.");
-        final T restored = restoreEntityFrom(webUiConfig, serverGdtm, userProvider, savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator, funcEntity /* master context */, tabCount + 1);
+        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, serverGdtm, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, gdtm, critGenerator, funcEntity /* master context */, tabCount + 1);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -295,6 +322,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     public static AbstractEntity<?> restoreMasterFunctionalEntity(
+            final boolean disregardOriginallyProducedEntities,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
             final IServerGlobalDomainTreeManager serverGdtm,
@@ -320,7 +348,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             }
 
             if (entityType != null) {
-                entity = EntityResource.restoreEntityFrom(outerContext, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, tabCount + 1);
+                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, tabCount + 1);
             }
         }
         final DateTime end = new DateTime();
@@ -330,21 +358,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         return entity;
     }
 
-    public static String tabs(final int tabCount) {
-        final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tabCount; i++) {
-            sb.append("  ");
-        }
-        return sb.toString();
-    }
-
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
+            final boolean disregardOriginallyProducedEntities,
             final IWebUiConfig webUiConfig,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
             final SavingInfoHolder savingInfoHolder,
-            final EntityResourceUtils<T> utils,
-            final Long entityId,
+            final EntityFactory entityFactory,
+            final Class<T> entityType,
+            final IEntityDao<T> companion,
+            final IEntityProducer<T> producer,
             final ICompanionObjectFinder companionFinder,
             final IGlobalDomainTreeManager gdtm,
             final ICriteriaGenerator critGenerator,
@@ -352,114 +375,43 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final int tabCount) {
         logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
+        final T originallyProducedEntity = disregardOriginallyProducedEntities ? null : // in case where full context should be used for entity restoration -- originallyProducedEntity will be disregarded
+            (!savingInfoHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) savingInfoHolder.getOriginallyProducedEntity() : null);
         final T applied;
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         if (centreContextHolder == null) {
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-            applied = utils.constructEntity(modifiedPropertiesHolder, entityId).getKey();
+            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, originallyProducedEntity, companion, producer, companionFinder).getKey();
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         } else {
-            final Object compoundMasterEntityIdRaw = centreContextHolder.getCustomObject().get("@@compoundMasterEntityId");
-            final Long compoundMasterEntityId = compoundMasterEntityIdRaw == null ? null : Long.parseLong(compoundMasterEntityIdRaw.toString());
-
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started.");
-            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity = CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, gdtm, critGenerator);
-
-            // if criteriaEntity is present then need to initiate the query runner for data export
-            if (criteriaEntity != null) {
-                criteriaEntity.setExportQueryRunner(customObject -> stream(customObject, criteriaEntity, centreContextHolder, critGenerator, companionFinder, serverGdtm, userProvider, webUiConfig, utils));
-            }
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity = CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, gdtm, critGenerator, serverGdtm, userProvider, webUiConfig, entityFactory);
 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. criteriaEntity.");
             final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
-                    webUiConfig,
-                    companionFinder,
-                    serverGdtm,
-                    userProvider,
-                    critGenerator,
-                    utils.entityFactory(),
                     masterContext,
-                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<AbstractEntity<?>>(),
+                    !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                     criteriaEntity,
-                    actionConfig);
+                    actionConfig,
+                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
+                    );
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
-            applied = utils.constructEntity(
+            
+            applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
+                    originallyProducedEntity,
                     centreContext,
-                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                    compoundMasterEntityId,
-                    masterContext, tabCount + 1
+                    tabCount + 1,
+                    companion,
+                    producer,
+                    companionFinder
                     ).getKey();
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder finished.");
         }
         logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): finished.");
         return applied;
-    }
-
-    /**
-     * A method to stream entities based on the centre query, including various transformations such as custom properties etc.
-     * It is used as part of initialisation for an export query runner.
-     * 
-     * @param adhocParams
-     * @param criteriaEntity
-     * @param centreContextHolder
-     * @param critGenerator
-     * @param companionFinder
-     * @param serverGdtm
-     * @param userProvider
-     * @param webUiConfig
-     * @param utils
-     * @return
-     */
-    private static <T extends AbstractEntity<?>> Stream<AbstractEntity<?>> stream(
-            final Map<String, Object> adhocParams, 
-            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
-            final CentreContextHolder centreContextHolder, 
-            final ICriteriaGenerator critGenerator, 
-            final ICompanionObjectFinder companionFinder, 
-            final IServerGlobalDomainTreeManager serverGdtm, 
-            final IUserProvider userProvider, 
-            final IWebUiConfig webUiConfig, 
-            final EntityResourceUtils<T> utils) {
-        final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
-        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
-        adhocParams.putAll(centreContextHolder.getCustomObject());
-        // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
-        // if the export() invocation occurs on the centre that warrants data generation
-        // then for an entity centre configuration check if a generator was provided
-        final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
-
-        final Stream<AbstractEntity<?>> stream =
-                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithStream(
-                        adhocParams,
-                        appliedCriteriaEntity,
-                        centre.getAdditionalFetchProvider(),
-                        centre.getAdditionalFetchProviderForTooltipProperties(),
-                        CriteriaResource.createQueryEnhancerAndContext(
-                                webUiConfig,
-                                companionFinder,
-                                serverGdtm,
-                                userProvider,
-                                critGenerator,
-                                utils.entityFactory(),
-                                centreContextHolder,
-                                centre.getQueryEnhancerConfig(),
-                                appliedCriteriaEntity),
-                        // There could be cases where the generated data and the queried data would have different types.
-                        // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
-                        // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
-                        // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
-                        // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                        createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
-
-        return CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(
-                centre, 
-                centre.getCustomPropertiesDefinitions(), 
-                centre.getCustomPropertiesAsignmentHandler(), 
-                stream);
     }
 
     /**
@@ -494,43 +446,15 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 throw new IllegalStateException(e);
             }
             final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
-            actionConfig = Optional.of(master.actionConfig(
+            actionConfig = of(master.actionConfig(
                                 FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
-                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
-                            )));
+                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber"))));
         } else {
-            actionConfig = Optional.empty();
+            actionConfig = empty();
         }
         return actionConfig;
     }
-
-    /**
-     * Performs DAO saving of <code>validatedEntity</code>.
-     * <p>
-     * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its concrete companion object (for example VehicleStatusChangeDao) or in
-     * {@link CommonEntityDao} saving methods -- still that entity instance will be returned in case of exceptional situation and will be bound to respective entity master. The
-     * toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
-     *
-     * @param validatedEntity
-     * @param continuations -- continuations of the entity to be used during saving
-     *
-     * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
-     *         appropriate entity master) and thrown exception (to be shown in toast message)
-     */
-    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Map<String, IContinuationData> continuations) {
-        T savedEntity;
-        try {
-            // try to save the entity with its companion 'save' method
-            savedEntity = utils.save(validatedEntity, continuations);
-        } catch (final Exception exception) {
-            // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
-            // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving
-            return Pair.pair(validatedEntity, Optional.of(exception));
-        }
-
-        return Pair.pair(savedEntity, Optional.empty());
-    }
-
+    
     /**
      * Tries to delete the entity with <code>entityId</code> and returns result. If successful -- result instance is <code>null</code>, otherwise -- result instance is also
      * <code>null</code> (not-deletable entity should exist at the client side, no need to send it many times).
@@ -542,16 +466,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation delete(final Long entityId) {
         try {
-            utils.delete(entityId);
+            companion.delete(factory.newEntity(entityType, entityId));
             return restUtil.resultJSONRepresentation(Result.successful(null));
         } catch (final Exception e) {
-            final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, utils.getEntityType().getSimpleName());
+            final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, entityType.getSimpleName());
             logger.error(message, e);
             throw new IllegalStateException(e);
         }
-    }
-
-    public static Logger logger() {
-        return logger;
     }
 }

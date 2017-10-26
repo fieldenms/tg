@@ -58,6 +58,8 @@ public class DefinersExecutor {
     /**
      * The same as {@link #execute(AbstractEntity)}, but for a list of entities.
      * 
+     * @param entities -- instances to finalise the initialisation for.
+     * 
      * @return
      */
     public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
@@ -131,7 +133,7 @@ public class DefinersExecutor {
                 .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()))
                 .collect(Collectors.partitioningBy(field -> isValueProxied(entity, field)));
 
-        // process properties that have id-only-proxy value if the entity is instrumented and persisted
+        // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted
         if (isInstrumented && isEntityPersisted) {
             final List<Field> idOnlyProxyPropFields = propFieldsToProcess.get(true);
             for (final Field propField : idOnlyProxyPropFields) {

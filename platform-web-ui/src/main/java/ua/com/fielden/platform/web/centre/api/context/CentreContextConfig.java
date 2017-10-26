@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.context;
 
 import java.util.Optional;
-import java.util.function.Function;
-
+import java.util.function.BiFunction;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -18,14 +18,14 @@ public final class CentreContextConfig {
     public final Boolean withAllSelectedEntities;
     public final Boolean withSelectionCrit;
     public final Boolean withMasterEntity;
-    public final Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation;
+    public final Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation;
 
     public CentreContextConfig(
             final boolean withCurrentEtity,
             final boolean withAllSelectedEntities,
             final boolean withSelectionCrit,
             final boolean withMasterEntity,
-            final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation
+            final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation
             ) {
         this.withCurrentEtity = withCurrentEtity;
         this.withAllSelectedEntities = withAllSelectedEntities;
