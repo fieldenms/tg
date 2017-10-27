@@ -423,6 +423,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _onKeyBindingEvent: function(keyBindings, event) {
+        console.log(event);
         if (this.stopKeyboardEventPropagation) {
           event.stopPropagation();
         }

@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dom.CssElement;
 import ua.com.fielden.platform.dom.CssStyles;
@@ -42,7 +45,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public List<String> getAvailableShortcuts() {
-        return Arrays.asList("ctrl+e", "ctrl+down", "ctrl+left", "ctrl+right", "ctrl+up", "f5");
+        return Stream.of(configShortcut(), paginationShortcut(), refreshShortcut()).flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     public static DomElement configButton() {
@@ -53,6 +56,10 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("on-tap", "_activateSelectionCriteriaView")
                 .attr("disabled$", "[[isRunning]]")
                 .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
+    }
+
+    public static List<String> configShortcut() {
+        return Arrays.asList("ctrl+e");
     }
     
     public static DomElement pagination() {
@@ -88,6 +95,14 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("on-tap", "lastPage")
                         .attr("disabled$", "[[canNotLast(pageNumber, pageCount, isRunning)]]")
                         .attr("tooltip-text", "Last page"));
+    }
+
+    public static List<String> paginationShortcut() {
+        return Arrays.asList( "ctrl+down", "ctrl+left", "ctrl+right", "ctrl+up");
+    }
+
+    public static List<String> refreshShortcut () {
+        return Arrays.asList( "f5");
     }
 
     public static DomElement refreshButton() {

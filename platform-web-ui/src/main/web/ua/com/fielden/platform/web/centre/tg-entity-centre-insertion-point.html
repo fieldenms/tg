@@ -99,7 +99,7 @@
             <div hidden>
                 <content select=":not(text):not(template)" id="custom_actions_content"></content>
             </div>
-            <div id="insertionPointContent" class="layout vertical flex relative">
+            <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                     <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
@@ -120,12 +120,12 @@
 
             is: "tg-entity-centre-insertion-point",
 
-            behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
 
             listeners: {
                 'iron-resize': '_onIronResize'
             },
-
+            
             properties: {
                 activated: {
                     type: Boolean,
@@ -187,6 +187,13 @@
                     type: Array,
                 },
                 /**
+                 * Provides custom key bindings.
+                 */
+                customShortcuts: {
+                    type: String,
+                    observer: "_customShortcutsChanged"
+                },
+                /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
                  * consistent with the order of columns.
                  *
@@ -197,6 +204,14 @@
                     observer: '_updateElementWithColumnPropertiesMapper',
                     notify: true
                 },
+                
+                keyEventTarget: {
+                    type: Object,
+                    value: function (){
+                        return this.$.insertionPointContent
+                    }
+                },
+                
                 _element: {
                     type: Object,
                     value: null
@@ -227,6 +242,11 @@
                     }
                 }, 1);
             },
+            
+            _customShortcutsChanged: function (newValue, oldValue) {
+                this.removeOwnKeyBindings();
+                this.addOwnKeyBinding(newValue, "_shortcutPressed");
+            },
 
             /**
              * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
@@ -254,6 +274,7 @@
                 Polymer.dom(document.body).appendChild(this._dialog);
                 Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
+                this.$.insertionPointContent.focus();
             },
 
             _closeDialog: function () {
@@ -261,6 +282,7 @@
                 this.detached = false;
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
+                this.$.insertionPointContent.focus();
                 this.notifyResize();
             },
 
@@ -403,7 +425,11 @@
             
             _hasTitleBar: function (shortDesc) {
                 return !!shortDesc;
-            }
+            },
+            
+            _shortcutPressed: function (e) {
+                this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
+            },
         });
     })();
 </script>

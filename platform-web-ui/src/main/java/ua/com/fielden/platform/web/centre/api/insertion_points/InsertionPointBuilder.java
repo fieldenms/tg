@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
+import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.pagination;
+import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.paginationShortcut;
+
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -30,7 +36,8 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
         if (insertionPointConfig.hasPaginationButtons()) {
-            insertionPointDom.add(CentreToolbar.pagination());
+            insertionPointDom.add(pagination());
+            insertionPointDom.attr("custom-shortcuts", join(paginationShortcut(), " "));
         }
         return insertionPointDom;
     }
