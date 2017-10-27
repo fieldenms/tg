@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -47,6 +48,22 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @SkipEntityExistsValidation(skipActiveOnly = true)
     private TgCategory thirdCategory;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Forth Cat", desc = "Desc")
+    @SkipActivatableTracking
+    private TgCategory forthCat;
+
+    @Observable
+    public TgSystem setForthCat(final TgCategory forthCat) {
+        this.forthCat = forthCat;
+        return this;
+    }
+
+    public TgCategory getForthCat() {
+        return forthCat;
+    }
+    
     @Observable
     public TgSystem setThirdCategory(final TgCategory thirdCategory) {
         this.thirdCategory = thirdCategory;
