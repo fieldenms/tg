@@ -55,6 +55,12 @@
         fill: var(--paper-grey-300);
         color: var(--paper-grey-300);
     }
+    #insertionPointContent #custom_actions_container {
+        position: absolute;
+        background-color: white;
+        top: 44px;
+        right: 0;
+    }
 </style>
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
@@ -78,9 +84,6 @@
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
             }
-            paper-icon-button.reverse {
-                
-            }
             paper-icon-button.expand-colapse-button {
                 stroke: var(--paper-grey-100);
                 fill: var(--paper-grey-100);
@@ -96,15 +99,15 @@
             <div hidden>
                 <content select=":not(text):not(template)" id="custom_actions_content"></content>
             </div>
-            <div id="insertionPointContent" class="layout vertical flex">
+            <div id="insertionPointContent" class="layout vertical flex relative">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                     <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
-                <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
-                </div>
                 <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
+                </div>
+                <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
                 </div>
             </div>
         </paper-material>
