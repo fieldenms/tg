@@ -2,6 +2,7 @@ package ua.com.fielden.platform.companion.helper;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -32,10 +34,18 @@ public class ActivatableEntityRetrospectionHelper {
      * @param prop
      * @return
      */
-    public static boolean isNotSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
-        return !AbstractPersistentEntity.CREATED_BY.equals(prop.getName()) && 
-               !AbstractPersistentEntity.LAST_UPDATED_BY.equals(prop.getName());
+    public static boolean isNotSpecialActivatableToBeSkipped(final Field propField) {
+        return !AbstractPersistentEntity.CREATED_BY.equals(propField.getName()) && 
+               !AbstractPersistentEntity.LAST_UPDATED_BY.equals(propField.getName()) &&
+               !propField.isAnnotationPresent(SkipActivatableTracking.class);
     }
+    
+    public static boolean isNotSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
+        final Field propField = Finder.findFieldByName(prop.getEntity().getType(), prop.getName());
+        return isNotSpecialActivatableToBeSkipped(propField);
+    }
+    
+    
 
     /**
      * A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
@@ -90,7 +100,7 @@ public class ActivatableEntityRetrospectionHelper {
                     .collect(Collectors.toSet());
         } else {
             return Finder.streamRealProperties(entity.getType(), MapTo.class)
-                    .filter(field -> ActivatableAbstractEntity.class.isAssignableFrom(field.getType()))
+                    .filter(field -> ActivatableAbstractEntity.class.isAssignableFrom(field.getType()) && isNotSpecialActivatableToBeSkipped(field))
                     .map(field -> t2(field.getName(), (Class<ActivatableAbstractEntity<?>>) field.getType()))
                     .collect(Collectors.toSet());
         }
