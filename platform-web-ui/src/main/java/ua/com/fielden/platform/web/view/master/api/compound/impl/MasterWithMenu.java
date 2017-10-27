@@ -113,7 +113,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                 .replace("//@ready-callback",
                         format("            self.menuItemActions = [%s];\n"
                              + "            self.$.menu.parent = self;\n"
-                             + "            self.canLeave = self.$.menu.canClose.bind(self.$.menu);\n"
+                             + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
                              + "                return ['key', 'sectionTitle'].indexOf(propertyName) !== -1; \n"

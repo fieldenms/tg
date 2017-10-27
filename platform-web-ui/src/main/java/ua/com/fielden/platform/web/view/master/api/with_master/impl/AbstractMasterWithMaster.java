@@ -36,12 +36,11 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "}).bind(this);\n")
                 .replace("//@attached-callback",
                           "this.canLeave = function () {"
-                        + "    var embeddedMaster = this.$.loader.loadedElement;\n"
+                        + "    const embeddedMaster = this.$.loader.loadedElement;\n"
                         + "    if (embeddedMaster && embeddedMaster.classList.contains('canLeave')) {\n"
                         + "        return embeddedMaster.canLeave();\n"
-                        + "    } else {\n"
-                        + "        return undefined;\n"
                         + "    }\n"
+                        + "    return undefined;\n"
                         + "}.bind(this);\n"
                         + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n")
                 .replace("@prefDim", "null")

@@ -216,6 +216,15 @@
             },
             
             /**
+             * Postal subscription to 'refresh.post.success' events of embedded masters from master-with-master menu items.
+             * It gets populated in attached callback only once, even though the same master instance gets used several time.
+             */
+            _dialogClosingRedirector: {
+                type: Object,
+                value: null
+            },
+            
+            /**
              * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
              */
             refreshCompoundMaster: {
@@ -323,6 +332,22 @@
                     }
                 });
             }
+            if (self._dialogClosingRedirector === null) {
+                const embeddedMasterCancelChannel = self.uuid;
+                const compoundMasterCancelChannel = self.centreUuid;
+                const cancelTopic = 'refresh.post.success';
+                self._dialogClosingRedirector = postal.subscribe({
+                    channel: embeddedMasterCancelChannel,
+                    topic: cancelTopic,
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: compoundMasterCancelChannel,
+                            topic: cancelTopic,
+                            data: data
+                        });
+                    }
+                });
+            }
             //Needed to set the dynamic title
             this.fire('tg-dynamic-title-changed', this.sectionTitle);
         },
@@ -369,29 +394,54 @@
         },
         
         _routeChanged: function (newRoute, oldRoute) {
-        	if (this.route !== this.sectionRoute) {
-	        	var section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-	        	var cannotLeaveReason = section === undefined ? undefined : section.canLeave(); 
-	        	if (section === undefined || cannotLeaveReason === undefined) {        	
-	        		this.sectionRoute = newRoute;
-	        	} else {
-	        		this.route = this.sectionRoute;
-	        		this.parent._openToastForError('Cannot leave "' + section.sectionTitle + '".', cannotLeaveReason.msg);
-	        	} 
-        	}
- 		},
- 		
- 		/** Used by the master, which incorporates this menu to check if it can be closed. */
- 		canClose: function () {
- 			var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
- 			var reason = section.canLeave();
- 			if (reason) {
- 				if (reason.isNew === true && this.route === this.defaultRoute) {
- 					return undefined; // allow closing for new entity on the default route... i.e. like Main
- 				}
- 			}
- 			return reason;
- 		},
+            if (this.route !== this.sectionRoute) {
+                if (this.sectionRoute !== undefined) {
+                    const currentSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    if (!currentSection) {
+                        throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
+                    }
+                    const cannotLeaveReason = currentSection.canLeave();
+                    const cannotLeaveMessage = cannotLeaveReason
+                        ? cannotLeaveReason.msg
+                        : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
+                    if (cannotLeaveMessage) {
+                        this.route = this.sectionRoute;
+                        this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
+                    } else {
+                        this.sectionRoute = newRoute;
+                    }
+                } else {
+                    this.sectionRoute = newRoute;
+                }
+            }
+        },
+        
+        /**
+         * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+         * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
+         *
+         * @param section
+         */
+        isMasterWithMasterAndNonPersisted: function (section) {
+            if (section
+                && section._element
+                && section._element.masterWithMaster
+                && section._element.$.loader
+                && section._element.$.loader.loadedElement
+            ) {
+                const embeddedMaster = section._element.$.loader.loadedElement;
+                if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        
+        /** Used by the master, which incorporates this menu to check if it can be closed. */
+        canLeave: function () {
+            const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
+            return section.canLeave();
+        },
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
             var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
