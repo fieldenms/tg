@@ -158,10 +158,11 @@
                 },
 
                 canLeave: function () {
-                    var elementToLoad = this.$$("#elementToLoad");
+                    const elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
                         return elementToLoad.loadedElement.canLeave();
                     }
+                    return undefined;
                 }
             });
         })();

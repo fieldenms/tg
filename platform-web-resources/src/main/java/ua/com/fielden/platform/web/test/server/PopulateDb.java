@@ -19,6 +19,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
+import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -193,7 +194,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
         save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
-
+        
+        save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
+        save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
+        save(new_(TgCloseLeaveExample.class, "KEY3").setDesc("desc 3"));
+        save(new_(TgCloseLeaveExample.class, "KEY4").setDesc("desc 4"));
+        save(new_(TgCloseLeaveExample.class, "KEY5").setDesc("desc 5"));
+        
         logger.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {

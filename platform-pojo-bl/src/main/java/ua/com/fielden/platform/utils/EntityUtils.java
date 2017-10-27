@@ -1240,4 +1240,18 @@ public class EntityUtils {
                 }
             });
     }
+    
+    /**
+     * A bijective function between entity instances as Java objects and their synthesised identifier.
+     * For the same Java object it returns the same code.
+     * The implementation of this function is based on {@link System#identityHashCode(Object)}, which is not always produce unique values.
+     * Thus, the computed identity hash code is prepended with full entity type name to further reduce a chance for collision.  
+     * 
+     * @param entity
+     * @return
+     */
+    public static String getEntityIdentity(final AbstractEntity<?> entity) {
+        return entity.getType().getName() + System.identityHashCode(entity);
+    }
+
 }

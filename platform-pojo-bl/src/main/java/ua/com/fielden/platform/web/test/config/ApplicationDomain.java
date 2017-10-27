@@ -6,6 +6,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import fielden.test_app.close_leave.OpenTgCloseLeaveExampleMasterAction;
+import fielden.test_app.close_leave.TgCloseLeaveExample;
+import fielden.test_app.close_leave.TgCloseLeaveExampleDetail;
+import fielden.test_app.close_leave.TgCloseLeaveExampleDetailUnpersisted;
+import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem;
+import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenDetail_MenuItem;
+import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -44,6 +51,7 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
 import ua.com.fielden.platform.sample.domain.TgPolygonMap;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
@@ -55,7 +63,6 @@ import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -127,6 +134,13 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgBogie.class);
         add(TgWagonClass.class);
         add(TgSelectedEntitiesExampleAction.class);
+        add(TgCloseLeaveExample.class);
+        add(OpenTgCloseLeaveExampleMasterAction.class);
+        add(TgCloseLeaveExampleMaster_OpenMain_MenuItem.class);
+        add(TgCloseLeaveExampleMaster_OpenDetail_MenuItem.class);
+        add(TgCloseLeaveExampleDetail.class);
+        add(TgCloseLeaveExampleDetailUnpersisted.class);
+        add(TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem.class);
     }
 
     @Override

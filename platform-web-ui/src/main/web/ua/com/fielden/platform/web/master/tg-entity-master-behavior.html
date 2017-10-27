@@ -844,36 +844,29 @@
              */
             canLeave: function () {
                 // check all the child nodes with canLeave contract if they can be left...
-                var nodesWithCanLeave = this.querySelectorAll('.canLeave');
+                const nodesWithCanLeave = this.querySelectorAll('.canLeave');
                 if (nodesWithCanLeave.length > 0) {
-                    for (var index = 0; index < nodesWithCanLeave.length; index++) {
-                        var reason = nodesWithCanLeave[index].canLeave();
-                        if (reason !== undefined) {
+                    for (let index = 0; index < nodesWithCanLeave.length; index++) {
+                        const reason = nodesWithCanLeave[index].canLeave();
+                        if (reason) {
                             return reason;
                         }
                     }
                 }
-
+                
                 if (this.classList.contains('canLeave')) {
-                    // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
-                    // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
-                    if (this._editedPropsExist || this._bindingEntityNotPersistentOrNotPersistedOrModified) {
-                        if (this._currBindingEntity.get('id') === null) {
-                            return {
-                                isNew: true,
-                                msg: "A new entity is being created. Please save your changes."
-                            };
-                        } else {
-                            return {
-                                isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
-                                msg: "Please save or cancel your changes."
-                            };
-                        }
+                    // The master should remain open in case where there are some modifications and the entity is persisted. 
+                    // Refer to _bindingEntityModified property of tg-entity-binder-behavior for more information.
+                    if ((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) {
+                        return {
+                            isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
+                            msg: "Please save or cancel your changes."
+                        };
                     }
                 }
                 return undefined;
             },
-
+            
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             _saverLoadingChanged: function (newValue, oldValue) {
                 console.log("_saverLoadingChanged:", newValue, oldValue);
