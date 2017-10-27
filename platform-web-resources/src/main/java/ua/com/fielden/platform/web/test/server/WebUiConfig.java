@@ -22,8 +22,8 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
-import fielden.main.menu.close_leave.MiTgCloseLeaveExample;
-import fielden.webapp.config.close_leave.TgCloseLeaveExampleWebUiConfig;
+import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
+import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
