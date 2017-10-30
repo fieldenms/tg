@@ -376,7 +376,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IInsertionPoints<T> addInsertionPointWithPagination(EntityActionConfig actionConfig, InsertionPoints whereToInsertView) {
+        public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
         }
 
@@ -389,7 +389,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IInsertionPoints<T> addInsertionPointWithPagination(EntityActionConfig actionConfig, InsertionPoints whereToInsertView) {
+    public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         this.builder.insertionPointConfigs.add(new InsertionPointConfig(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView), true));
         return this;
     }

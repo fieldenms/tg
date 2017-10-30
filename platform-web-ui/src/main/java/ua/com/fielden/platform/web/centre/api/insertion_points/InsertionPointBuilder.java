@@ -25,7 +25,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
     private final InsertionPointConfig insertionPointConfig;
     private final FunctionalActionElement insertionPointActionElement;
 
-    public InsertionPointBuilder(final InsertionPointConfig insertionPointConfig, int numberOfAction) {
+    public InsertionPointBuilder(final InsertionPointConfig insertionPointConfig, final int numberOfAction) {
         this.insertionPointConfig = insertionPointConfig;
         this.insertionPointActionElement = new FunctionalActionElement(insertionPointConfig.getInsertionPointAction(), numberOfAction, FunctionalActionKind.INSERTION_POINT);
     }
