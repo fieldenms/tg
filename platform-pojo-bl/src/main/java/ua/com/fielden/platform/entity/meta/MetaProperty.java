@@ -77,14 +77,16 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
         
         // let's identify whether property represents an activatable entity in the current context
-        final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
-        boolean skipActiveOnly;
-        if (seevAnnotation != null) {
-            skipActiveOnly = seevAnnotation.skipActiveOnly();
+        // a property of an ativatable entity type is considered "activatable" only if annotation SkipEntityExistsValidation is not present or
+        // it is present with attribute skipActiveOnly == true
+        // There is also annotation SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
+        if (!ActivatableAbstractEntity.class.isAssignableFrom(type)) {
+            this.activatable = false;
         } else {
-            skipActiveOnly = false;
+            final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;        
+            this.activatable = !skipActiveOnly;
         }
-        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
     }
 
     public Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {

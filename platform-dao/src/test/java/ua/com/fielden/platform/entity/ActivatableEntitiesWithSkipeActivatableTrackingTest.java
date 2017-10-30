@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.EXISTS_BUT_NOT_ACTIVE_ERR;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -38,7 +41,6 @@ public class ActivatableEntitiesWithSkipeActivatableTrackingTest extends Abstrac
         final MetaProperty<?> propFirthCat = sys.getProperty("forthCat");
         assertFalse(propFirthCat.isValid());
         assertEquals(propFirthCat.getFirstFailure().getMessage(), format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, cat1));
-        
     }
     
     @Test
@@ -51,7 +53,6 @@ public class ActivatableEntitiesWithSkipeActivatableTrackingTest extends Abstrac
         } catch (Exception ex) {
             fail("Saving of deactivated category should have been successful.");
         }
-        
     }
 
     @Test
@@ -73,5 +74,17 @@ public class ActivatableEntitiesWithSkipeActivatableTrackingTest extends Abstrac
         assertEquals(Integer.valueOf(0), co(TgCategory.class).findByKey("Cat1").getRefCount());
     }
  
-    
+
+    @Test
+    public void activating_entity_referencing_inactive_values_in_properties_with_SkipActivatableTracking_is_permitted() {
+        final TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(false));
+        assertEquals(Integer.valueOf(0), cat1.getRefCount());
+        
+        final TgSystem sys2 = save(new_(TgSystem.class, "Sys2").setActive(false).setForthCat(cat1));
+        
+        final TgSystem activatedSys2 = sys2.setActive(true);
+        assertNull(activatedSys2.getProperty(ACTIVE).getFirstFailure());
+        save(activatedSys2);
+    }
+
 }
