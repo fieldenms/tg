@@ -42,7 +42,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void inactive_activatable_should_not_become_active_due_to_references_to_other_inactive_activatables_validation_test() {
+    public void making_inactive_activatable_entity_referencing_inactive_activatables_active_again_does_not_pass_property_validation() {
         final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
         assertFalse(cat4.getParent().isActive());
 
@@ -54,7 +54,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void inactive_activatable_should_not_become_active_due_to_references_to_other_inactive_activatables_save_test() {
+    public void inactive_activatable_entity_referencing_inactive_activatables_with_attempt_to_become_active_again_cannot_be_save() {
         final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
         cat4.setActive(true);
         assertTrue(cat4.isValid().isSuccessful());
@@ -69,6 +69,31 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         }
     }
 
+    @Test
+    public void activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_true_is_permitted() {
+        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+        assertFalse(cat4.isActive());
+
+        final TgSystem inactiveSys3 = save(new_(TgSystem.class, "Sys3").setActive(false).setThirdCategory(cat4));
+        
+        final TgSystem activatedSys3 = inactiveSys3.setActive(true);
+        assertNull(activatedSys3.getProperty(ACTIVE).getFirstFailure());
+        save(activatedSys3);
+    }
+
+    @Test
+    public void activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_false_is_not_permitted() {
+        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+        assertFalse(cat4.isActive());
+        
+        final TgSystem inactiveSys3 = save(new_(TgSystem.class, "Sys3").setActive(false).setSecondCategory(cat4));
+        
+        final TgSystem sys3 = inactiveSys3.setActive(true);
+        assertNotNull(sys3.getProperty(ACTIVE).getFirstFailure());
+        assertEquals("Property [Second Cat] in Tg System [Sys3] references inactive Tg Category [Cat4].", sys3.getProperty(ACTIVE).getFirstFailure().getMessage());
+    }
+
+    
     @Test
     public void deactivation_and_saving_of_self_referenced_activatable_should_be_permissible_and_not_decrement_its_ref_count() {
         final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");

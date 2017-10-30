@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.companion.helper;
+package ua.com.fielden.platform.reflection;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**

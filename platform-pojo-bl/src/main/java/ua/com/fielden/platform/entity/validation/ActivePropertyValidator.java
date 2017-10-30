@@ -2,10 +2,13 @@ package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -16,6 +19,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 
@@ -59,7 +63,8 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
                 return Result.failure(count, format("%s [%s] has active dependencies (%s).", entityTitle, entity, count));
             }
-        } else { // entity is being activated, but could be referencing inactive activatables
+        } else { 
+            // entity is being activated, but could be referencing inactive activatables
             // we could not rely on the fact that all activatable are fetched
             // so, we should only perform so-called soft validation
             // where validation would occur strictly against fetched values
@@ -88,20 +93,13 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
      * @return
      */
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
-        final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
-        
-        entity.nonProxiedProperties()
-        .forEach(mp -> {
-            final Object value = mp.getValue();
-            if (value != null && 
-                ActivatableAbstractEntity.class.isAssignableFrom(mp.getType()) &&
-                !((AbstractEntity<?>) value).isIdOnlyProxy() &&
-                !entity.equals(value)) {
-                
-                result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) mp);
-            }
-        });
-        
-        return result;
+        return entity.nonProxiedProperties()
+               .filter(mp -> mp.getValue() != null &&                           
+                             mp.isActivatable() &&
+                             isNotSpecialActivatableToBeSkipped(mp) &&
+                             !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
+                             !entity.equals(mp.getValue()))
+               .map(mp -> (MetaProperty<? extends ActivatableAbstractEntity<?>>) mp)
+               .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
