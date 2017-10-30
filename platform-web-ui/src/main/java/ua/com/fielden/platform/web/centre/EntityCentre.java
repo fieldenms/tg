@@ -909,7 +909,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer insertionPointActionsDom = new DomContainer();
         final StringBuilder insertionPointActionsObjects = new StringBuilder();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
-            importPaths.add(el.importPath());
+            importPaths.addAll(el.importPaths());
             insertionPointActionsDom.add(el.renderInsertionPointAction());
             insertionPointActionsObjects.append(prefix + el.code());
         }
