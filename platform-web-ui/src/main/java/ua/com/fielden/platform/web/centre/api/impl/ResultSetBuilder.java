@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.util.Optional;
 
@@ -384,13 +387,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointConfigs.add(new InsertionPointConfig(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView), false));
+        this.builder.insertionPointConfigs.add(configInsertionPoint(mkInsertionPoint(actionConfig, whereToInsertView)));
         return this;
     }
 
     @Override
     public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointConfigs.add(new InsertionPointConfig(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView), true));
+        this.builder.insertionPointConfigs.add(configInsertionPointWithPagination(mkInsertionPoint(actionConfig, whereToInsertView)));
         return this;
     }
 
