@@ -44,7 +44,8 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}")
                 .attr("centre-selection", "[[centreSelection]]")
-                .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
+                .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
+                .attr("context-retriever", "[[insertionPointContextRetriever]]");
         if (insertionPointConfig.hasPaginationButtons()) {
             insertionPointDom.add(pagination());
             insertionPointDom.attr("custom-shortcuts", join(paginationShortcut(), " "));

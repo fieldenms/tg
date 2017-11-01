@@ -212,6 +212,10 @@
                     }
                 },
                 
+                contextRetriever: {
+                    type: Function
+                },
+                
                 _element: {
                     type: Object,
                     value: null
@@ -282,7 +286,9 @@
                 this.detached = false;
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
-                this.$.insertionPointContent.focus();
+                if (this.contextRetriever) {
+                    this.contextRetriever().$.egi.$.elementToFocus.focus();    
+                }
                 this.notifyResize();
             },
 
