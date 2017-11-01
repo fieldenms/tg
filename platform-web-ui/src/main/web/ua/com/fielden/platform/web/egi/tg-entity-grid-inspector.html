@@ -160,6 +160,9 @@
             position: relative;
             overflow: hidden;
         }
+        .grid-toolbar-content::content > * {
+            margin-top: 8px;
+        }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
         }
@@ -222,10 +225,10 @@
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
-                    <div class="layout horizontal center">
+                    <div class="grid-toolbar-content layout horizontal center">
                         <content id="top_action_selctor" select=".entity-specific-action"></content>
                     </div>
-                    <div class="layout horizontal center" style="margin-left:auto">
+                    <div class="grid-toolbar-content layout horizontal center" style="margin-left:auto">
                         <content select=".standart-action"></content>
                     </div>
                 </div>
