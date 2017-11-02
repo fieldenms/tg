@@ -172,6 +172,13 @@
                     type: Function,
                     observer: '_getMasterEntityAssigned'
                 },
+                
+                /**
+                 * Returns the context for insertion point
+                 */
+                insertionPointContextRetriever: {
+                    type: Function,
+                },
 
                 /**
                  * Custom callback that will be invoked after successfull retrieval of selection criteria entity.
@@ -594,6 +601,12 @@
                  */
                 self.updateProgress = (function (percentage, clazz, isVisible) {
                     this.$.egi.updateProgress(percentage, clazz, isVisible);
+                }).bind(self);
+                /**
+                 * Context retriever for insertion point
+                 */
+                self.insertionPointContextRetriever = (function () {
+                    return this;
                 }).bind(self);
                 
                 /**

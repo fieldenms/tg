@@ -17,6 +17,7 @@
 
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="/resources/centre/tg-entity-centre-styles.html">
 
 <style is="custom-style">
     .insertion-point-dialog > #insertionPointContent {
@@ -32,7 +33,7 @@
         text-overflow: ellipsis;
     }
     #insertionPointContent .title-bar {
-        padding: 0 16px;
+        padding: 0 2px 0 16px;
         height: 44px;
         min-height: 44px;
         font-size: 18px;
@@ -44,11 +45,6 @@
         user-select: none;
         background-color: var(--paper-light-blue-600);
     }
-    #insertionPointContent paper-icon-button {
-        width: 22px;
-        height: 22px;
-        padding: 0px;
-    }
     #insertionPointContent paper-icon-button.expand-colapse-button {
         stroke: var(--paper-grey-100);
         fill: var(--paper-grey-100);
@@ -59,9 +55,16 @@
         fill: var(--paper-grey-300);
         color: var(--paper-grey-300);
     }
+    #insertionPointContent #custom_actions_container {
+        position: absolute;
+        background-color: white;
+        top: 44px;
+        right: 0;
+    }
 </style>
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
+        <style include="tg-entity-centre-styles"></style>
         <style>
             .truncate {
                 white-space: nowrap;
@@ -69,7 +72,7 @@
                 text-overflow: ellipsis;
             }
             .title-bar {
-                padding: 0 16px;
+                padding: 0 2px 0 16px;
                 height: 44px;
                 min-height: 44px;
                 font-size: 18px;
@@ -80,11 +83,6 @@
                 -ms-user-select: none;
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
-            }
-            paper-icon-button {
-                width: 22px;
-                height: 22px;
-                padding: 0px;
             }
             paper-icon-button.expand-colapse-button {
                 stroke: var(--paper-grey-100);
@@ -98,13 +96,18 @@
             }
         </style>
         <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
-            <div id="insertionPointContent" class="layout vertical flex">
+            <div hidden>
+                <content select=":not(text):not(template)" id="custom_actions_content"></content>
+            </div>
+            <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
                 <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
+                </div>
+                <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
                 </div>
             </div>
         </paper-material>
@@ -117,12 +120,12 @@
 
             is: "tg-entity-centre-insertion-point",
 
-            behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
 
             listeners: {
                 'iron-resize': '_onIronResize'
             },
-
+            
             properties: {
                 activated: {
                     type: Boolean,
@@ -178,6 +181,19 @@
                     observer: '_centreSelectionChanged'
                 },
                 /**
+                 * Actions provided by entity centre for this insertion point
+                 */
+                customActions: {
+                    type: Array,
+                },
+                /**
+                 * Provides custom key bindings.
+                 */
+                customShortcuts: {
+                    type: String,
+                    observer: "_customShortcutsChanged"
+                },
+                /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
                  * consistent with the order of columns.
                  *
@@ -188,6 +204,18 @@
                     observer: '_updateElementWithColumnPropertiesMapper',
                     notify: true
                 },
+                
+                keyEventTarget: {
+                    type: Object,
+                    value: function (){
+                        return this.$.insertionPointContent
+                    }
+                },
+                
+                contextRetriever: {
+                    type: Function
+                },
+                
                 _element: {
                     type: Object,
                     value: null
@@ -202,6 +230,26 @@
 
             ready: function () {
                 this.triggerElement = this.$.insertionPointContent;
+                //Initialising the custom actions' list.
+                const customActionsList = [];
+                Array.prototype.forEach.call(Polymer.dom(this.$.custom_actions_content).getDistributedNodes(), function (item) {
+                    customActionsList.push(item);
+                }.bind(this));
+                this.customActions = customActionsList;
+            },
+            
+            attached: function () {
+                this.async(function () {
+                    if (this.customActions) {
+                        this.customActions.forEach(elem  => Polymer.dom(this.$.custom_actions_container).appendChild(elem));
+                        Polymer.dom.flush();
+                    }
+                }, 1);
+            },
+            
+            _customShortcutsChanged: function (newValue, oldValue) {
+                this.removeOwnKeyBindings();
+                this.addOwnKeyBinding(newValue, "_shortcutPressed");
             },
 
             /**
@@ -230,6 +278,7 @@
                 Polymer.dom(document.body).appendChild(this._dialog);
                 Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
+                this.$.insertionPointContent.focus();
             },
 
             _closeDialog: function () {
@@ -237,6 +286,9 @@
                 this.detached = false;
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
+                if (this.contextRetriever) {
+                    this.contextRetriever().$.egi.$.elementToFocus.focus();    
+                }
                 this.notifyResize();
             },
 
@@ -379,7 +431,11 @@
             
             _hasTitleBar: function (shortDesc) {
                 return !!shortDesc;
-            }
+            },
+            
+            _shortcutPressed: function (e) {
+                this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
+            },
         });
     })();
 </script>

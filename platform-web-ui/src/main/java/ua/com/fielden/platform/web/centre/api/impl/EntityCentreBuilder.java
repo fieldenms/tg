@@ -32,6 +32,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
@@ -54,7 +55,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected Optional<String> currGroup = Optional.empty();
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
-    protected final List<EntityActionConfig> insertionPointActions = new ArrayList<>();
+    protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
@@ -164,7 +165,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 pageCapacity,
                 visibleRowsCount,
                 topLevelActions,
-                insertionPointActions,
+                insertionPointConfigs,
                 selectionCriteria,
                 defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
                 defaultMultiValueAssignersForBooleanSelectionCriteria,
