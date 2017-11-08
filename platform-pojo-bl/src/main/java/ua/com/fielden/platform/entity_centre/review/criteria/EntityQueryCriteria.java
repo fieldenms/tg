@@ -219,7 +219,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Creates completed query for that can be augmented with yield instructions.
+     * Generates an EQL model to the stage of {@link ICompleted}, which can be conveniently complemented with custom yield instructions.
      *
      * @return
      */
@@ -228,7 +228,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns the parameter map for query
+     * Returns the parameter map for query.
      *
      * @return
      */
