@@ -29,7 +29,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -62,12 +61,12 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         }
     }
 
-    public YieldDetailsType getYieldDetailType() {
-        if (aggregatedExpression) {
-            return YieldDetailsType.AGGREGATED_EXPRESSION;
-        }
-        return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
-    }
+//    public YieldDetailsType getYieldDetailType() {
+//        if (aggregatedExpression) {
+//            return YieldDetailsType.AGGREGATED_EXPRESSION;
+//        }
+//        return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
+//    }
 
     public boolean affectsMapping() {
         return type.affectsMappings();

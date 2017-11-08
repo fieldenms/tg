@@ -7,7 +7,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 public class EntityRawResultConverter<E extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;

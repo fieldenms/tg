@@ -1,19 +1,13 @@
 package ua.com.fielden.platform.entity.query;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.Query;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityBatchDeleteByQueryModelOperation {
@@ -33,14 +27,15 @@ public class EntityBatchDeleteByQueryModelOperation {
     }
 
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        final AggregatedResultQueryModel finalModel = select(model.getResultType()).as(TABLE_ALIAS).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
-        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, null, null, executionContext.getUniversalConstants());
-        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(finalModel, null, finalModel.getResultType(), null, paramValues);
-        final String tableName = ((PersistedEntityMetadata<AbstractEntity<?>>) domainMetadataAnalyser.getEntityMetadata(model.getResultType())).getTable();
-        final String selectionSql = entQuery.sql();
-        final String deletionSql = produceDeletionSql(selectionSql, tableName);
-        final Map<String, Object> sqlParamValues = entQuery.getValuesForSqlParams();
-        return new DeletionModel(deletionSql, sqlParamValues);
+//        final AggregatedResultQueryModel finalModel = select(model.getResultType()).as(TABLE_ALIAS).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
+//        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, null, null, executionContext.getUniversalConstants());
+//        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(finalModel, null, finalModel.getResultType(), null, paramValues);
+//        final String tableName = ((PersistedEntityMetadata<AbstractEntity<?>>) domainMetadataAnalyser.getEntityMetadata(model.getResultType())).getTable();
+//        final String selectionSql = entQuery.sql();
+//        final String deletionSql = produceDeletionSql(selectionSql, tableName);
+//        final Map<String, Object> sqlParamValues = entQuery.getValuesForSqlParams();
+//        return new DeletionModel(deletionSql, sqlParamValues);
+        throw new EqlException("Not fixed yet (awaiting EQL3 completion).");
     }
     
     private String produceDeletionSql(final String selectionSql, final String tableName) {

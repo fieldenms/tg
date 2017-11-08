@@ -1,14 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
@@ -20,11 +17,7 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
-import ua.com.fielden.platform.entity.query.generation.elements.Yield;
-import ua.com.fielden.platform.entity.query.generation.elements.Yields;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
@@ -127,24 +120,25 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryExecutionModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
-        final IRetrievalModel<E> fm = qem.getFetchModel() == null ? //
-        (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null
-                : new EntityRetrievalModel<E>(fetch(qem.getQueryModel().getResultType()), domainMetadataAnalyser))
-                : // 
-                (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(qem.getFetchModel(), domainMetadataAnalyser)
-                        : new EntityRetrievalModel<E>(qem.getFetchModel(), domainMetadataAnalyser));
-
-        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getQueryModel().getResultType(), fm, qem.getParamValues());
-        final String sql = entQuery.sql();
-        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
+//        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
+//        final IRetrievalModel<E> fm = qem.getFetchModel() == null ? //
+//        (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null
+//                : new EntityRetrievalModel<E>(fetch(qem.getQueryModel().getResultType()), domainMetadataAnalyser))
+//                : // 
+//                (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(qem.getFetchModel(), domainMetadataAnalyser)
+//                        : new EntityRetrievalModel<E>(qem.getFetchModel(), domainMetadataAnalyser));
+//
+//        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getQueryModel().getResultType(), fm, qem.getParamValues());
+//        final String sql = entQuery.sql();
+//        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
+        throw new EqlException("Not fixed yet (awaiting EQL3 completion).");
     }
 
-    private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
-        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
-        for (final Yield yield : model.getYields()) {
-            result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
-        }
-        return result;
-    }
+//    private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
+//        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
+//        for (final Yield yield : model.getYields()) {
+//            result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
+//        }
+//        return result;
+//    }
 }

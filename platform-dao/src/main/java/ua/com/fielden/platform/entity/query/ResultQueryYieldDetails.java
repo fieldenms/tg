@@ -1,10 +1,8 @@
-package ua.com.fielden.platform.entity.query.generation.elements;
+package ua.com.fielden.platform.entity.query;
+
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import org.hibernate.type.Type;
-
-import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetails> {
 

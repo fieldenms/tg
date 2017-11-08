@@ -6,8 +6,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
-
 /**
  * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain COMPOSITE VALUE OBJECT
  * 

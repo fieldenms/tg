@@ -6,8 +6,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
+import ua.com.fielden.platform.entity.query.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;

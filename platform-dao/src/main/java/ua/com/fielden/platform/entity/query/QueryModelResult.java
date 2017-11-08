@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.SortedSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public final class QueryModelResult<T extends AbstractEntity<?>> {
