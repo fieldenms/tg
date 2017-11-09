@@ -534,9 +534,12 @@
                     sc._validator().abortValidationIfAny();
 
                     this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
-                    return this._ajaxSaver().generateRequest().completes.then(function () {
-                        self._actionInProgress = false;
-                    });
+                    return this._ajaxSaver().generateRequest().completes.then(
+                        function () {
+                            self._actionInProgress = false;
+                        }, function (error) {
+                            self._actionInProgress = false;
+                        });
                 }).bind(self);
 
                 self.discard = (function () {
@@ -551,9 +554,12 @@
                     var customObject = {};
                     customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
-                    return this._ajaxDiscarder().generateRequest().completes.then(function () {
-                        self._actionInProgress = false;
-                    });
+                    return this._ajaxDiscarder().generateRequest().completes.then(
+                        function () {
+                            self._actionInProgress = false;
+                        }, function (error) {
+                            self._actionInProgress = false;
+                        });
                 }).bind(self);
 
                 self.run = (function (isSortingAction) {
@@ -565,9 +571,11 @@
                     self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run(isSortingAction)
-                        .then(function () {
+                    return self.$.selection_criteria.run(isSortingAction).then(
+                        function () {
                             self.runInsertionPointActions();
+                            self._actionInProgress = false;
+                        }, function (error) {
                             self._actionInProgress = false;
                         });
                 }).bind(self);
