@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
@@ -11,6 +12,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VA
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -123,6 +125,7 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
         }
     }
 
+    @Override
     public void add(final TokenCategory cat, final Object value) {
         if (child != null) {
             child.add(cat, value);
@@ -309,7 +312,7 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
     protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
         final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
 
-        TokenCategory singleCat;
+        final TokenCategory singleCat;
 
         switch (cat) {
         case ANY_OF_PROPS:
@@ -318,12 +321,9 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
             break;
         case ANY_OF_PARAMS:
         case ALL_OF_PARAMS:
-            singleCat = PARAM;
-            break;
         case ANY_OF_IPARAMS:
         case ALL_OF_IPARAMS:
-            singleCat = IPARAM;
-            break;
+            throw new EqlStage1ProcessingException(format("Param related token [%s] processing should be moved to stage 3.", cat));
         case ANY_OF_VALUES:
         case ALL_OF_VALUES:
             singleCat = VAL;
@@ -333,16 +333,11 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
             singleCat = EQUERY_TOKENS;
             break;
         default:
-            throw new RuntimeException("Unrecognised token category for MultipleOperand: " + cat);
+            throw new EqlStage1ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
         }
 
         for (final Object singleValue : (List<Object>) value) {
-            if (singleCat == PARAM || singleCat == IPARAM) {
-                throw new UnsupportedOperationException("Operations with params not yet supported");
-                //result.addAll(getModelForArrayParam(singleCat, singleValue));
-            } else {
-                result.add(getModelForSingleOperand(singleCat, singleValue));
-            }
+            result.add(getModelForSingleOperand(singleCat, singleValue));
         }
 
         return result;
