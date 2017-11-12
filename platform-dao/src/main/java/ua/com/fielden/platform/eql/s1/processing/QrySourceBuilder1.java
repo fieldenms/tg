@@ -50,7 +50,7 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
         final Class<AbstractEntity<?>> resultType = (Class) firstValue();
         final AbstractEntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
         if (entityMetadata instanceof PersistedEntityMetadata) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource1((PersistedEntityMetadata) entityMetadata, (String) secondValue()));
+            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource1(resultType, (String) secondValue()));
         } else {
             final List<QueryModel> readyModels = new ArrayList<QueryModel>();
             readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
