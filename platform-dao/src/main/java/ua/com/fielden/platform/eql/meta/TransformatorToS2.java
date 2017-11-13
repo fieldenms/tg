@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -33,16 +34,14 @@ public class TransformatorToS2 {
     private List<Map<ISource1<? extends ISource2>, SourceInfo>> sourceMap = new ArrayList<>();
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata;
     private final Map<String, Object> paramValues = new HashMap<>();
-    private final DomainMetadata domainData;
     private final IFilter filter;
     private final String username;
     private final EntQueryGenerator1 entQueryGenerator1;
 
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final DomainMetadata domainData, final IFilter filter, final String username, final EntQueryGenerator1 entQueryGenerator1) {
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator1 entQueryGenerator1) {
         this.metadata = metadata;
         sourceMap.add(new HashMap<ISource1<? extends ISource2>, SourceInfo>());
         this.paramValues.putAll(paramValues);
-        this.domainData = domainData;
         this.filter = filter;
         this.username = username;
         this.entQueryGenerator1 = entQueryGenerator1;
@@ -110,7 +109,7 @@ public class TransformatorToS2 {
     /** Ensures that values of boolean types are converted properly. */
     private Object convertValue(final Object value) {
         if (value instanceof Boolean) {
-            return domainData.getBooleanValue((Boolean) value);
+            return getBooleanValue((Boolean) value);
         }
         return value;
     }
@@ -145,19 +144,19 @@ public class TransformatorToS2 {
     }
 
     public TransformatorToS2 produceBasedOn() {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
         result.sourceMap.addAll(sourceMap);
 
         return result;
     }
 
     public TransformatorToS2 produceNewOne() {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
         return result;
     }
 
     public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
         for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourceMap) {
             for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
                 if (mapItem.getValue().source.equals(source)) {
