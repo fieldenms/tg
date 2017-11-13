@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -152,8 +153,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             } catch (final DomainTreeException e) {
                 return null;
             }
-        } catch (final ClassNotFoundException e) {
-            throw new IllegalStateException(e);
+        } catch (final ClassNotFoundException ex) {
+            // there are situation where menu items could have been renamed or replaced with some other type
+            // in such cases can only "pretend" that all is good and return null...
+            // however, the situation needs to be logged in case further problems arise and some analysis would be required
+            logger.error(format("Unsuccessful attempt to load menu item type [%s].", miTypeName), ex);
+            //throw new IllegalStateException(e);
+            return null;
         }
     }
 
