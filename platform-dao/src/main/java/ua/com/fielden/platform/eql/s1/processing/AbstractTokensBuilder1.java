@@ -41,7 +41,7 @@ import ua.com.fielden.platform.utils.Pair;
 public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
     private final ITokensBuilder1 parent;
     private ITokensBuilder1 child;
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
     private final EntQueryGenerator1 queryBuilder;
 
     protected AbstractTokensBuilder1(final AbstractTokensBuilder1 parent, final EntQueryGenerator1 queryBuilder) {

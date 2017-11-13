@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.eql.s1.processing;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,20 +25,20 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
         super(parent, queryBuilder);
     }
 
-    private boolean isEntityTypeAsSourceTest() {
-        return getSize() == 2 && TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
+    private boolean isEntityTypeAsSource() {
+        return getSize() == 2 && ENTITY_TYPE_AS_QRY_SOURCE == firstCat() && QRY_SOURCE_ALIAS == secondCat();
     }
 
-    private boolean isEntityTypeAsSourceWithoutAliasTest() {
-        return getSize() == 1 && TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat());
+    private boolean isEntityTypeAsSourceWithoutAlias() {
+        return getSize() == 1 && ENTITY_TYPE_AS_QRY_SOURCE == firstCat();
     }
 
-    private boolean isEntityModelAsSourceTest() {
-        return getSize() == 2 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
+    private boolean isQueryModelAsSource() {
+        return getSize() == 2 && QRY_MODELS_AS_QRY_SOURCE == firstCat() && QRY_SOURCE_ALIAS == secondCat();
     }
 
-    private boolean isEntityModelAsSourceWithoutAliasTest() {
-        return getSize() == 1 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat());
+    private boolean isQueryModelAsSourceWithoutAlias() {
+        return getSize() == 1 && QRY_MODELS_AS_QRY_SOURCE == firstCat();
     }
 
     @Override
@@ -43,14 +48,15 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
 
     @Override
     public boolean canBeClosed() {
-        return isEntityTypeAsSourceTest() || isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest() || isEntityTypeAsSourceWithoutAliasTest();
+        return isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias() ||
+               isQueryModelAsSource() || isQueryModelAsSourceWithoutAlias();
     }
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
         final Class<AbstractEntity<?>> resultType = (Class) firstValue();
         final AbstractEntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
         if (entityMetadata instanceof PersistedEntityMetadata) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource1(resultType, (String) secondValue()));
+            return new Pair<TokenCategory, Object>(QRY_SOURCE, new TypeBasedSource1(resultType, (String) secondValue()));
         } else {
             final List<QueryModel> readyModels = new ArrayList<QueryModel>();
             readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
@@ -67,14 +73,14 @@ public class QrySourceBuilder1 extends AbstractTokensBuilder1 {
             queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, resultType));
         }
 
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource1(alias, queries.toArray(new EntQuery1[] {})));
+        return new Pair<TokenCategory, Object>(QRY_SOURCE, new QueryBasedSource1(alias, queries.toArray(new EntQuery1[] {})));
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        if (isEntityTypeAsSourceTest() || isEntityTypeAsSourceWithoutAliasTest()) {
+        if (isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias()) {
             return getResultForEntityTypeAsSource();
-        } else if (isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest()) {
+        } else if (isQueryModelAsSource() || isQueryModelAsSourceWithoutAlias()) {
             return getResultForEntityModelAsSource(null, null, null);
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
