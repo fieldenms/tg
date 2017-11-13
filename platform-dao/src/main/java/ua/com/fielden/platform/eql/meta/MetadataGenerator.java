@@ -28,9 +28,9 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.s1.elements.Expression1;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
-import ua.com.fielden.platform.eql.s1.processing.StandAloneExpressionBuilder1;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
+import ua.com.fielden.platform.eql.stage1.elements.Expression1;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -48,12 +48,12 @@ public class MetadataGenerator {
 //
 //    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 //
-    protected final EntQueryGenerator1 qb;// = new EntQueryGenerator1(null); //DOMAIN_METADATA_ANALYSER
+    protected final EntQueryGenerator qb;// = new EntQueryGenerator1(null); //DOMAIN_METADATA_ANALYSER
 //    
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
     
-    public MetadataGenerator(final EntQueryGenerator1 qb) {
+    public MetadataGenerator(final EntQueryGenerator qb) {
         this.qb = qb;
     }
 
@@ -110,7 +110,7 @@ public class MetadataGenerator {
     }
 
     private Expression1 entQryExpression(final ExpressionModel exprModel) {
-        return (Expression1) new StandAloneExpressionBuilder1(qb, exprModel).getResult().getValue();
+        return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
     }
 
     

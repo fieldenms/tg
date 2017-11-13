@@ -31,17 +31,17 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.s1.elements.EntParam1;
-import ua.com.fielden.platform.eql.s1.elements.EntProp1;
-import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
-import ua.com.fielden.platform.eql.s1.elements.EntValue1;
-import ua.com.fielden.platform.eql.s1.elements.Expression1;
-import ua.com.fielden.platform.eql.s1.elements.ISingleOperand1;
-import ua.com.fielden.platform.eql.s1.elements.OperandsBasedSet1;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
-import ua.com.fielden.platform.eql.s1.processing.StandAloneExpressionBuilder1;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.s2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
+import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
+import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
+import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
+import ua.com.fielden.platform.eql.stage1.elements.Expression1;
+import ua.com.fielden.platform.eql.stage1.elements.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.elements.OperandsBasedSet1;
+import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -108,7 +108,7 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    protected static final EntQueryGenerator1 qb = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER);
+    protected static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER);
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
@@ -132,7 +132,7 @@ public class BaseEntQueryTCase1 {
     //    }
 
     protected static Expression1 entQryExpression(final ExpressionModel exprModel) {
-        return (Expression1) new StandAloneExpressionBuilder1(qb, exprModel).getResult().getValue();
+        return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
     }
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel) {

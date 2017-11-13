@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
-import ua.com.fielden.platform.eql.s1.elements.Expression1;
+import ua.com.fielden.platform.eql.stage1.elements.Expression1;
 
 public abstract class AbstractPropInfo implements IResolvable {
     private final String name;

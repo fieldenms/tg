@@ -13,22 +13,22 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.eql.s1.elements.EntParam1;
-import ua.com.fielden.platform.eql.s1.elements.EntProp1;
-import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
-import ua.com.fielden.platform.eql.s1.elements.EntValue1;
-import ua.com.fielden.platform.eql.s1.elements.ISource1;
-import ua.com.fielden.platform.eql.s1.elements.QueryBasedSource1;
-import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource1;
-import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
-import ua.com.fielden.platform.eql.s2.elements.EntProp2;
-import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.s2.elements.EntValue2;
-import ua.com.fielden.platform.eql.s2.elements.Expression2;
-import ua.com.fielden.platform.eql.s2.elements.ISource2;
-import ua.com.fielden.platform.eql.s2.elements.QueryBasedSource2;
-import ua.com.fielden.platform.eql.s2.elements.TypeBasedSource2;
-import ua.com.fielden.platform.eql.s2.elements.Yield2;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
+import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
+import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
+import ua.com.fielden.platform.eql.stage1.elements.ISource1;
+import ua.com.fielden.platform.eql.stage1.elements.QueryBasedSource1;
+import ua.com.fielden.platform.eql.stage1.elements.TypeBasedSource1;
+import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
+import ua.com.fielden.platform.eql.stage2.elements.Expression2;
+import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource2;
+import ua.com.fielden.platform.eql.stage2.elements.TypeBasedSource2;
+import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
     private List<Map<ISource1<? extends ISource2>, SourceInfo>> sourceMap = new ArrayList<>();
@@ -36,9 +36,9 @@ public class TransformatorToS2 {
     private final Map<String, Object> paramValues = new HashMap<>();
     private final IFilter filter;
     private final String username;
-    private final EntQueryGenerator1 entQueryGenerator1;
+    private final EntQueryGenerator entQueryGenerator1;
 
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator1 entQueryGenerator1) {
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
         this.metadata = metadata;
         sourceMap.add(new HashMap<ISource1<? extends ISource2>, SourceInfo>());
         this.paramValues.putAll(paramValues);
@@ -283,7 +283,7 @@ public class TransformatorToS2 {
         return username;
     }
 
-    public EntQueryGenerator1 getEntQueryGenerator1() {
+    public EntQueryGenerator getEntQueryGenerator1() {
         return entQueryGenerator1;
     }
 }

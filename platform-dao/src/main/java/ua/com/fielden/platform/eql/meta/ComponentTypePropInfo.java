@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
-import ua.com.fielden.platform.eql.s1.elements.Expression1;
+import ua.com.fielden.platform.eql.stage1.elements.Expression1;
 
 public class ComponentTypePropInfo extends AbstractPropInfo {
     private final EntityInfo propEntityInfo;
