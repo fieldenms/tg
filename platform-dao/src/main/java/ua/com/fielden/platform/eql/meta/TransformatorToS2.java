@@ -20,7 +20,7 @@ import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.ISource1;
 import ua.com.fielden.platform.eql.stage1.elements.QueryBasedSource1;
-import ua.com.fielden.platform.eql.stage1.elements.TypeBasedSource1;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
@@ -173,8 +173,8 @@ public class TransformatorToS2 {
     }
 
     private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
-        if (originalSource instanceof TypeBasedSource1) {
-            final TypeBasedSource1 source = (TypeBasedSource1) originalSource;
+        if (originalSource instanceof QrySource1BasedOnPersistentType) {
+            final QrySource1BasedOnPersistentType source = (QrySource1BasedOnPersistentType) originalSource;
             return new TypeBasedSource2(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
         } else {
             final QueryBasedSource1 source = (QueryBasedSource1) originalSource;

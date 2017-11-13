@@ -4,19 +4,22 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EN
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.AbstractEntityMetadata;
-import ua.com.fielden.platform.dao.ModelledEntityMetadata;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage1.elements.QueryBasedSource1;
-import ua.com.fielden.platform.eql.stage1.elements.TypeBasedSource1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourceBuilder extends AbstractTokensBuilder {
@@ -54,13 +57,15 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
         final Class<AbstractEntity<?>> resultType = (Class) firstValue();
-        final AbstractEntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
-        if (entityMetadata instanceof PersistedEntityMetadata) {
-            return new Pair<TokenCategory, Object>(QRY_SOURCE, new TypeBasedSource1(resultType, (String) secondValue()));
+        if (isPersistedEntityType(resultType)) {
+            return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue()));
+        } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
+//            final List<QueryModel> readyModels = new ArrayList<QueryModel>();
+//            readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
+//            return getResultForEntityModelAsSource(readyModels, (String) secondValue(), resultType);
+            return pair(QRY_SOURCE, new QrySource1BasedOnSyntheticType(resultType, (String) secondValue()));
         } else {
-            final List<QueryModel> readyModels = new ArrayList<QueryModel>();
-            readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
-            return getResultForEntityModelAsSource(readyModels, (String) secondValue(), resultType);
+            throw new EqlStage1ProcessingException("Not yet.");
         }
     }
 

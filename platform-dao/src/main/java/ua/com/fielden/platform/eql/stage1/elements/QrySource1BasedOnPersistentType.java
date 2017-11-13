@@ -5,10 +5,10 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingExcept
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.TypeBasedSource2;
 
-public class TypeBasedSource1 extends AbstractSource1<TypeBasedSource2> {
+public class QrySource1BasedOnPersistentType extends AbstractSource1<TypeBasedSource2> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public TypeBasedSource1(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+    public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
         super(alias);
         if (sourceType == null) {
             throw new EqlStage1ProcessingException("Source type is required.");
@@ -45,11 +45,11 @@ public class TypeBasedSource1 extends AbstractSource1<TypeBasedSource2> {
             return false;
         }
 
-        if (!(obj instanceof TypeBasedSource1)) {
+        if (!(obj instanceof QrySource1BasedOnPersistentType)) {
             return false;
         }
 
-        final TypeBasedSource1 other = (TypeBasedSource1) obj;
+        final QrySource1BasedOnPersistentType other = (QrySource1BasedOnPersistentType) obj;
         if (!sourceType.equals(other.sourceType)) {
             return false;
         }

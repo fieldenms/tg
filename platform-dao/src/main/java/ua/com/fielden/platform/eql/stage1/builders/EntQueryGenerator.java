@@ -21,7 +21,7 @@ import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.ISource1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.Sources1;
-import ua.com.fielden.platform.eql.stage1.elements.TypeBasedSource1;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.ISource2;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -95,7 +95,7 @@ public class EntQueryGenerator {
 
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
             final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator generator) {
-        if (mainSource instanceof TypeBasedSource1 && filter != null) {
+        if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition == null) {
                 return originalConditions;

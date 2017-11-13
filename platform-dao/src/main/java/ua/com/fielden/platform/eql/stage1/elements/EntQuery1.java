@@ -54,7 +54,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
             final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator generator) {
-        if (mainSource instanceof TypeBasedSource1 && filter != null) {
+        if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition == null) {
                 return originalConditions;
