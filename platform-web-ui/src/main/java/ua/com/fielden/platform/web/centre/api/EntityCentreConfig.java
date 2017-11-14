@@ -31,6 +31,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
@@ -76,7 +77,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * They do not have visual representation (such as an icon or a button) and are used only to instantiate insertion point views (action per view) and execute their own logic
      * (method <code>save</code> of a corresponding functional entity).
      */
-    private final List<EntityActionConfig> insertionPointActions = new ArrayList<>();
+    private final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
     /////////////////////////////////////////////
     ////////////// SELECTION CRIT ///////////////
@@ -308,7 +309,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final int visibleRowsCount,
 
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
-            final List<EntityActionConfig> insertionPointActions,
+            final List<InsertionPointConfig> insertionPointConfigs,
             final List<String> selectionCriteria,
             final Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>> defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
             final Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>> defaultMultiValueAssignersForBooleanSelectionCriteria,
@@ -369,7 +370,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.visibleRowsCount = visibleRowsCount;
 
         this.topLevelActions.addAll(topLevelActions);
-        this.insertionPointActions.addAll(insertionPointActions);
+        this.insertionPointConfigs.addAll(insertionPointConfigs);
         this.selectionCriteria.addAll(selectionCriteria);
         this.defaultMultiValueAssignersForEntityAndStringSelectionCriteria.putAll(defaultMultiValueAssignersForEntityAndStringSelectionCriteria);
         this.defaultMultiValueAssignersForBooleanSelectionCriteria.putAll(defaultMultiValueAssignersForBooleanSelectionCriteria);
@@ -724,10 +725,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .collect(Collectors.toList())
                     .get(actionNumber);
         } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
-            if (!getInsertionPointActions().isPresent()) {
+            if (!getInsertionPointConfigs().isPresent()) {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
-            return getInsertionPointActions().get().get(actionNumber);
+            return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
@@ -739,11 +740,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableList(topLevelActions));
     }
 
-    public Optional<List<EntityActionConfig>> getInsertionPointActions() {
-        if (insertionPointActions.isEmpty()) {
+    public Optional<List<InsertionPointConfig>> getInsertionPointConfigs() {
+        if (insertionPointConfigs.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableList(insertionPointActions));
+        return Optional.of(Collections.unmodifiableList(insertionPointConfigs));
     }
 
     public Optional<String> getSseUri() {

@@ -22,14 +22,13 @@ import ua.com.fielden.platform.reflection.Reflector;
 @KeyType(String.class)
 @CompanionObject(IEntityAggregates.class)
 public class EntityAggregates extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     private transient final Map<String, Object> aggregates = new HashMap<String, Object>();
 
     @IsProperty(value = String.class, linkProperty = "--stub-link-property--")
     private List<String> groupKeys = new ArrayList<String>();
     @IsProperty(value = AbstractEntity.class, linkProperty = "--stub-link-property--")
-    private List<AbstractEntity> groupValues = new ArrayList<AbstractEntity>();
+    private List<AbstractEntity<?>> groupValues = new ArrayList<>();
 
     @IsProperty(value = String.class, linkProperty = "--stub-link-property--")
     private List<String> aggrKeys = new ArrayList<String>();
@@ -97,7 +96,7 @@ public class EntityAggregates extends AbstractEntity<String> {
         return groupKeys;
     }
 
-    public List<AbstractEntity> getGroupValues() {
+    public List<AbstractEntity<?>> getGroupValues() {
         return groupValues;
     }
 
@@ -115,7 +114,7 @@ public class EntityAggregates extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setGroupValues(final List<AbstractEntity> groupValues) {
+    public void setGroupValues(final List<AbstractEntity<?>> groupValues) {
         this.groupValues = groupValues;
     }
 
@@ -147,22 +146,22 @@ public class EntityAggregates extends AbstractEntity<String> {
     }
 
     @Override
-    public Object get(final String propertyName) {
+    public <T> T get(final String propertyName) {
         try {
             final String[] parts = propertyName.split(Reflector.DOT_SPLITTER);
 
             if (!getAggregates().containsKey(parts[0])) {
                 // trying to find in root entity if such discovered
-                final AbstractEntity rootEntity = findRootEntity();
+                final AbstractEntity<?> rootEntity = findRootEntity();
                 if (rootEntity != null) {
                     try {
                         // TODO alias should become useful and ultimately required in case of many root entities discovered.
-                        return rootEntity.get(propertyName);
+                        return (T) rootEntity.get(propertyName);
                     }  catch (final StrictProxyException e1) {
                         throw e1;
                     }  catch (final Exception e2) {
                         try {
-                            return rootEntity.get(propertyName.substring(propertyName.indexOf(".") + 1));
+                            return (T) rootEntity.get(propertyName.substring(propertyName.indexOf(".") + 1));
                         } catch (final Exception e1) {
                         }
                     }
@@ -172,14 +171,14 @@ public class EntityAggregates extends AbstractEntity<String> {
                 return super.get(propertyName);
             }
 
-            final Object root = getAggregates().get(parts[0]);
+            final T root = (T) getAggregates().get(parts[0]);
 
             // skip going deeper if null is found instead of data
             if (root == null) {
                 return null;
             }
 
-            return parts.length == 1 ? root : ((AbstractEntity) root).get(propertyName.substring(propertyName.indexOf(".") + 1));
+            return parts.length == 1 ? root : ((AbstractEntity<?>) root).get(propertyName.substring(propertyName.indexOf(".") + 1));
         } catch (final Exception e) {
             throw new IllegalArgumentException("Could not get the value for property " + propertyName + " for instance " + this, e);
         }
