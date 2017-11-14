@@ -19,15 +19,15 @@ import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.ISource1;
-import ua.com.fielden.platform.eql.stage1.elements.QueryBasedSource1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.ISource2;
-import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
@@ -132,7 +132,7 @@ public class TransformatorToS2 {
         final ISource2 transformedSource = transformSource(source);
         if (EntityAggregates.class.equals(transformedSource.sourceType())) {
             final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class, null);
-            for (final Yield2 yield : ((QueryBasedSource2) transformedSource).getYields().getYields()) {
+            for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
                 final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType()) ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, metadata.get(yield.javaType()), null)
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType(), null);
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
@@ -177,13 +177,13 @@ public class TransformatorToS2 {
             final QrySource1BasedOnPersistentType source = (QrySource1BasedOnPersistentType) originalSource;
             return new QrySource2BasedOnPersistentType(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
         } else {
-            final QueryBasedSource1 source = (QueryBasedSource1) originalSource;
+            final QrySource1BasedOnSubqueries source = (QrySource1BasedOnSubqueries) originalSource;
             final List<EntQuery2> transformed = new ArrayList<>();
             for (final EntQuery1 entQuery : source.getModels()) {
                 transformed.add(entQuery.transform(produceNewOne()));
             }
 
-            return new QueryBasedSource2(originalSource.getAlias(), transformed.toArray(new EntQuery2[] {}));
+            return new QrySource2BasedOnSubqueries(originalSource.getAlias(), transformed);
         }
     }
 

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
-import ua.com.fielden.platform.eql.stage1.elements.QueryBasedSource1;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourceBuilder extends AbstractTokensBuilder {
@@ -78,7 +78,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, resultType));
         }
 
-        return new Pair<TokenCategory, Object>(QRY_SOURCE, new QueryBasedSource1(alias, queries.toArray(new EntQuery1[] {})));
+        return new Pair<TokenCategory, Object>(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries));
     }
 
     @Override

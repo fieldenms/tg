@@ -2,9 +2,9 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource2;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 
-public class QrySource1BasedOnSyntheticType extends AbstractSource1<QueryBasedSource2> {
+public class QrySource1BasedOnSyntheticType extends AbstractSource1<QrySource2BasedOnSubqueries> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
     public QrySource1BasedOnSyntheticType(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {

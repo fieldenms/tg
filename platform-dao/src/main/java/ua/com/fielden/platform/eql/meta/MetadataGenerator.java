@@ -139,14 +139,14 @@ public class MetadataGenerator {
         return null;
     }
     
-    private void addProps(final EntityInfo entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo> allEntitiesInfo) throws Exception {
+    private void addProps(final EntityInfo<?> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo> allEntitiesInfo) throws Exception {
         final PrimTypePropInfo idProp = generateIdPropertyMetadata(entityInfo.javaType(), entityInfo);
         if (idProp != null) {
             entityInfo.getProps().put(idProp.getName(), idProp);
         }
         
         for (final Field field : getRealProperties(entityInfo.javaType())) {
-            final Class javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+            final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
                 entityInfo.getProps().put(field.getName(), new EntityTypePropInfo(field.getName(), entityInfo, allEntitiesInfo.get(javaType/*field.getType()*/), getExpression(entityInfo.javaType(), field)));

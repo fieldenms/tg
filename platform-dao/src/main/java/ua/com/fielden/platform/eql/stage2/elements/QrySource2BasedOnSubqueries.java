@@ -1,30 +1,30 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class QueryBasedSource2 extends AbstractSource2 {
-    private final List<EntQuery2> models;
-    private final Map<String, List<Yield2>> yieldsMatrix = new HashMap<String, List<Yield2>>();
+public class QrySource2BasedOnSubqueries extends AbstractSource2 {
+    private final List<EntQuery2> models = new ArrayList<>();
+    private final Map<String, List<Yield2>> yieldsMatrix;
 
     private EntQuery2 firstModel() {
         return models.get(0);
     }
 
-    public QueryBasedSource2(final String alias, final EntQuery2... models) {
-        if (models == null || models.length == 0) {
+    public QrySource2BasedOnSubqueries(final String alias, final List<EntQuery2> models) {
+        if (models == null || models.isEmpty()) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
 
-        this.models = Arrays.asList(models);
-        populateYieldMatrixFromQueryModels(models);
+        this.models.addAll(models);
+        this.yieldsMatrix = populateYieldMatrixFromQueryModels(models);
         validateYieldsMatrix();
     }
 
-    private void populateYieldMatrixFromQueryModels(final EntQuery2... models) {
+    private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels(final List<EntQuery2> models) {
+        final Map<String, List<Yield2>> yieldsMatrix = new HashMap<>();
         for (final EntQuery2 entQuery : models) {
             for (final Yield2 yield : entQuery.getYields().getYields()) {
                 final List<Yield2> foundYields = yieldsMatrix.get(yield.getAlias());
@@ -37,6 +37,7 @@ public class QueryBasedSource2 extends AbstractSource2 {
                 }
             }
         }
+        return yieldsMatrix;
     }
 
     //    private boolean getYieldNullability(final String yieldAlias) {
@@ -82,10 +83,10 @@ public class QueryBasedSource2 extends AbstractSource2 {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof QueryBasedSource2)) {
+        if (!(obj instanceof QrySource2BasedOnSubqueries)) {
             return false;
         }
-        final QueryBasedSource2 other = (QueryBasedSource2) obj;
+        final QrySource2BasedOnSubqueries other = (QrySource2BasedOnSubqueries) obj;
         if (models == null) {
             if (other.models != null) {
                 return false;

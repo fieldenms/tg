@@ -1,66 +1,66 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
-import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource2;
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 
-public class QueryBasedSource1 extends AbstractSource1<QueryBasedSource2> {
-    private final List<EntQuery1> models;
-    private final Map<String, List<Yield1>> yieldsMatrix = new HashMap<String, List<Yield1>>();
+public class QrySource1BasedOnSubqueries extends AbstractSource1<QrySource2BasedOnSubqueries> {
+    private final List<EntQuery1> models = new ArrayList<>();
+    private final Map<String, List<Yield1>> yieldsMatrix;
 
-    private EntQuery1 firstModel() {
-        return models.get(0);
-    }
-
-    public QueryBasedSource1(final String alias, final EntQuery1... models) {
+    public QrySource1BasedOnSubqueries(final String alias, final List<EntQuery1> models) {
         super(alias);
-        if (models == null || models.length == 0) {
+        if (models == null || models.isEmpty()) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
 
-        this.models = Arrays.asList(models);
-        populateYieldMatrixFromQueryModels(models);
+        this.models.addAll(models);
+        this.yieldsMatrix = populateYieldMatrixFromQueryModels(this.models);
         validateYieldsMatrix();
     }
-
-    private void populateYieldMatrixFromQueryModels(final EntQuery1... models) {
+    
+    private static Map<String, List<Yield1>> populateYieldMatrixFromQueryModels(final List<EntQuery1> models) {
+        final Map<String, List<Yield1>> yieldsMatrix = new HashMap<>();        
         for (final EntQuery1 entQuery : models) {
             for (final Yield1 yield : entQuery.getYields().getYields()) {
                 final List<Yield1> foundYields = yieldsMatrix.get(yield.getAlias());
                 if (foundYields != null) {
                     foundYields.add(yield);
                 } else {
-                    final List<Yield1> newList = new ArrayList<Yield1>();
+                    final List<Yield1> newList = new ArrayList<>();
                     newList.add(yield);
                     yieldsMatrix.put(yield.getAlias(), newList);
                 }
             }
         }
+        return yieldsMatrix;
     }
-
-    private boolean getYieldNullability(final String yieldAlias) {
-        final boolean result = false;
-        for (final Yield1 yield : yieldsMatrix.get(yieldAlias)) {
-            //	    if (yield.getInfo().isNullable()) {
-            return true;
-            //	    }
-        }
-        return result;
-    }
-
+    
     private void validateYieldsMatrix() {
         for (final Map.Entry<String, List<Yield1>> entry : yieldsMatrix.entrySet()) {
             if (entry.getValue().size() != models.size()) {
-                throw new IllegalStateException("Incorrect models used as query source - their result types are different!");
+                throw new EqlStage1ProcessingException("Incorrect models used as query source - their result types are different!");
             }
         }
     }
-
+    private boolean getYieldNullability(final String yieldAlias) {
+        final boolean result = false;
+        for (final Yield1 yield : yieldsMatrix.get(yieldAlias)) {
+            //      if (yield.getInfo().isNullable()) {
+            return true;
+            //      }
+        }
+        return result;
+    }
+   
+    private EntQuery1 firstModel() {
+        return models.get(0);
+    }
+    
     @Override
     public Class sourceType() {
         return firstModel().type();
@@ -82,10 +82,10 @@ public class QueryBasedSource1 extends AbstractSource1<QueryBasedSource2> {
         if (!super.equals(obj)) {
             return false;
         }
-        if (!(obj instanceof QueryBasedSource1)) {
+        if (!(obj instanceof QrySource1BasedOnSubqueries)) {
             return false;
         }
-        final QueryBasedSource1 other = (QueryBasedSource1) obj;
+        final QrySource1BasedOnSubqueries other = (QrySource1BasedOnSubqueries) obj;
         if (models == null) {
             if (other.models != null) {
                 return false;
