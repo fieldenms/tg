@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 
@@ -62,7 +63,7 @@ public class QrySource1BasedOnSubqueries extends AbstractSource1<QrySource2Based
     }
     
     @Override
-    public Class sourceType() {
+    public Class<? extends AbstractEntity<?>> sourceType() {
         return firstModel().type();
     }
 

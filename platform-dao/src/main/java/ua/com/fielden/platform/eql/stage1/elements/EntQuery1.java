@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -23,7 +24,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     private final GroupBys1 groups;
     private final OrderBys1 orderings;
 
-    private final Class resultType;
+    private final Class<? extends AbstractEntity<?>> resultType;
     private final QueryCategory category;
 
     private final boolean filterable;
@@ -32,7 +33,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
         return QueryCategory.SUB_QUERY.equals(category);
     }
 
-    public Class type() {
+    public Class<? extends AbstractEntity<?>> type() {
         return resultType;
     }
 
