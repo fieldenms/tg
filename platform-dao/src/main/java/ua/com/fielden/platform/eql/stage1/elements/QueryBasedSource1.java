@@ -28,16 +28,6 @@ public class QueryBasedSource1 extends AbstractSource1<QueryBasedSource2> {
         validateYieldsMatrix();
     }
 
-    @Override
-    public QueryBasedSource2 transform(final TransformatorToS2 resolver) {
-        return (QueryBasedSource2) resolver.getTransformedSource(this);
-        //	final List<ua.com.fielden.platform.eql.stage2.elements.EntQuery> transformed = new ArrayList<>();
-        //	for (final EntQuery entQuery : models) {
-        //	    transformed.add(entQuery.transform(resolver));
-        //	}
-        //	return new ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource(alias, getDomainMetadataAnalyser(), transformed.toArray(new ua.com.fielden.platform.eql.stage2.elements.EntQuery[]{}));
-    }
-
     private void populateYieldMatrixFromQueryModels(final EntQuery1... models) {
         for (final EntQuery1 entQuery : models) {
             for (final Yield1 yield : entQuery.getYields().getYields()) {

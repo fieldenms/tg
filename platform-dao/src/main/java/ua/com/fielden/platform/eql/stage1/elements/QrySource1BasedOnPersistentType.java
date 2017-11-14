@@ -2,10 +2,9 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
-import ua.com.fielden.platform.eql.stage2.elements.TypeBasedSource2;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 
-public class QrySource1BasedOnPersistentType extends AbstractSource1<TypeBasedSource2> {
+public class QrySource1BasedOnPersistentType extends AbstractSource1<QrySource2BasedOnPersistentType> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
     public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
@@ -15,11 +14,6 @@ public class QrySource1BasedOnPersistentType extends AbstractSource1<TypeBasedSo
         }
 
         this.sourceType = sourceType;
-    }
-
-    @Override
-    public TypeBasedSource2 transform(final TransformatorToS2 resolver) {
-        return (TypeBasedSource2) resolver.getTransformedSource(this);
     }
 
     @Override

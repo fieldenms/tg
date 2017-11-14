@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource2;
 
 public class QrySource1BasedOnSyntheticType extends AbstractSource1<QueryBasedSource2> {
@@ -15,11 +14,6 @@ public class QrySource1BasedOnSyntheticType extends AbstractSource1<QueryBasedSo
         }
 
         this.sourceType = sourceType;
-    }
-
-    @Override
-    public QueryBasedSource2 transform(final TransformatorToS2 resolver) {
-        return (QueryBasedSource2) resolver.getTransformedSource(this);
     }
 
     @Override

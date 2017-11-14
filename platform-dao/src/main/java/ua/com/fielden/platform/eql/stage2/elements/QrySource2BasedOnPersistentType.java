@@ -2,10 +2,10 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class TypeBasedSource2 extends AbstractSource2 {
+public class QrySource2BasedOnPersistentType extends AbstractSource2 {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public TypeBasedSource2(final Class<? extends AbstractEntity<?>> sourceType) {
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType) {
         this.sourceType = sourceType;
     }
 
@@ -30,10 +30,10 @@ public class TypeBasedSource2 extends AbstractSource2 {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof TypeBasedSource2)) {
+        if (!(obj instanceof QrySource2BasedOnPersistentType)) {
             return false;
         }
-        final TypeBasedSource2 other = (TypeBasedSource2) obj;
+        final QrySource2BasedOnPersistentType other = (QrySource2BasedOnPersistentType) obj;
         if (sourceType == null) {
             if (other.sourceType != null) {
                 return false;

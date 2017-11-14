@@ -27,7 +27,7 @@ import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.ISource2;
 import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSource2;
-import ua.com.fielden.platform.eql.stage2.elements.TypeBasedSource2;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
@@ -175,7 +175,7 @@ public class TransformatorToS2 {
     private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
         if (originalSource instanceof QrySource1BasedOnPersistentType) {
             final QrySource1BasedOnPersistentType source = (QrySource1BasedOnPersistentType) originalSource;
-            return new TypeBasedSource2(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
+            return new QrySource2BasedOnPersistentType(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
         } else {
             final QueryBasedSource1 source = (QueryBasedSource1) originalSource;
             final List<EntQuery2> transformed = new ArrayList<>();
