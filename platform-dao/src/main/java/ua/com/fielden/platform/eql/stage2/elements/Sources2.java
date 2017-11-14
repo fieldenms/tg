@@ -3,19 +3,19 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class Sources2 implements IElement2 {
-    private final ISource2 main;
+    private final IQrySource2 main;
     private final List<CompoundSource2> compounds;
 
-    public Sources2(final ISource2 main, final List<CompoundSource2> compounds) {
+    public Sources2(final IQrySource2 main, final List<CompoundSource2> compounds) {
         super();
         this.main = main;
         this.compounds = compounds;
     }
 
-    public Sources2(final ISource2 main) {
+    public Sources2(final IQrySource2 main) {
         super();
         this.main = main;
         this.compounds = new ArrayList<CompoundSource2>();
@@ -36,7 +36,7 @@ public class Sources2 implements IElement2 {
         return sb.toString();
     }
 
-    public ISource2 getMain() {
+    public IQrySource2 getMain() {
         return main;
     }
 
@@ -44,8 +44,8 @@ public class Sources2 implements IElement2 {
         return compounds;
     }
 
-    public List<ISource2> getAllSources() {
-        final List<ISource2> result = new ArrayList<ISource2>();
+    public List<IQrySource2> getAllSources() {
+        final List<IQrySource2> result = new ArrayList<IQrySource2>();
         result.add(main);
         for (final CompoundSource2 compound : compounds) {
             result.add(compound.getSource());

@@ -6,7 +6,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.CompoundSource1;
-import ua.com.fielden.platform.eql.stage1.elements.ISource1;
+import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.Sources1;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -45,7 +45,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
             finaliseChild();
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-        final ISource1 mainSource = (ISource1) iterator.next().getValue();
+        final IQrySource1 mainSource = (IQrySource1) iterator.next().getValue();
         final List<CompoundSource1> otherSources = new ArrayList<CompoundSource1>();
         for (; iterator.hasNext();) {
             final CompoundSource1 subsequentSource = (CompoundSource1) iterator.next().getValue();

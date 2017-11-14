@@ -18,20 +18,20 @@ import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
-import ua.com.fielden.platform.eql.stage1.elements.ISource1;
+import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.Expression2;
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
-    private List<Map<ISource1<? extends ISource2>, SourceInfo>> sourceMap = new ArrayList<>();
+    private List<Map<IQrySource1<? extends IQrySource2>, SourceInfo>> sourceMap = new ArrayList<>();
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata;
     private final Map<String, Object> paramValues = new HashMap<>();
     private final IFilter filter;
@@ -40,7 +40,7 @@ public class TransformatorToS2 {
 
     public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
         this.metadata = metadata;
-        sourceMap.add(new HashMap<ISource1<? extends ISource2>, SourceInfo>());
+        sourceMap.add(new HashMap<IQrySource1<? extends IQrySource2>, SourceInfo>());
         this.paramValues.putAll(paramValues);
         this.filter = filter;
         this.username = username;
@@ -48,12 +48,12 @@ public class TransformatorToS2 {
     }
 
     static class SourceInfo {
-        private final ISource2 source;
+        private final IQrySource2 source;
         private final EntityInfo entityInfo;
         private final boolean aliasingAllowed;
         private final String alias;
 
-        public SourceInfo(final ISource2 source, final EntityInfo entityInfo, final boolean aliasingAllowed, final String alias) {
+        public SourceInfo(final IQrySource2 source, final EntityInfo entityInfo, final boolean aliasingAllowed, final String alias) {
             this.source = source;
             this.entityInfo = entityInfo;
             this.aliasingAllowed = aliasingAllowed;
@@ -117,7 +117,7 @@ public class TransformatorToS2 {
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
-        for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourceMap) {
+        for (final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item : sourceMap) {
             sb.append("-----------------------------\n");
             for (final SourceInfo subitem : item.values()) {
                 sb.append("---");
@@ -128,8 +128,8 @@ public class TransformatorToS2 {
         return sb.toString();
     }
 
-    public void addSource(final ISource1<? extends ISource2> source) {
-        final ISource2 transformedSource = transformSource(source);
+    public void addSource(final IQrySource1<? extends IQrySource2> source) {
+        final IQrySource2 transformedSource = transformSource(source);
         if (EntityAggregates.class.equals(transformedSource.sourceType())) {
             final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
@@ -155,12 +155,12 @@ public class TransformatorToS2 {
         return result;
     }
 
-    public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
+    public TransformatorToS2 produceOneForCalcPropExpression(final IQrySource2 source) {
         final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
-        for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourceMap) {
-            for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
+        for (final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item : sourceMap) {
+            for (final Entry<IQrySource1<? extends IQrySource2>, SourceInfo> mapItem : item.entrySet()) {
                 if (mapItem.getValue().source.equals(source)) {
-                    final Map<ISource1<? extends ISource2>, SourceInfo> newMap = new HashMap<>();
+                    final Map<IQrySource1<? extends IQrySource2>, SourceInfo> newMap = new HashMap<>();
                     newMap.put(mapItem.getKey(), mapItem.getValue().produceNewWithoutAliasing());
                     result.sourceMap.add(newMap);
                     return result;
@@ -172,7 +172,7 @@ public class TransformatorToS2 {
         throw new IllegalStateException("Should not reach here!");
     }
 
-    private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
+    private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> originalSource) {
         if (originalSource instanceof QrySource1BasedOnPersistentType) {
             final QrySource1BasedOnPersistentType source = (QrySource1BasedOnPersistentType) originalSource;
             return new QrySource2BasedOnPersistentType(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
@@ -187,22 +187,22 @@ public class TransformatorToS2 {
         }
     }
 
-    private Map<ISource1<? extends ISource2>, SourceInfo> getCurrentQueryMap() {
+    private Map<IQrySource1<? extends IQrySource2>, SourceInfo> getCurrentQueryMap() {
         return sourceMap.get(0);
     }
 
-    public ISource2 getTransformedSource(final ISource1<? extends ISource2> originalSource) {
+    public IQrySource2 getTransformedSource(final IQrySource1<? extends IQrySource2> originalSource) {
         return getCurrentQueryMap().get(originalSource).source;
     }
 
     public EntProp2 getTransformedProp(final EntProp1 originalProp) {
-        final Iterator<Map<ISource1<? extends ISource2>, SourceInfo>> it = sourceMap.iterator();
+        final Iterator<Map<IQrySource1<? extends IQrySource2>, SourceInfo>> it = sourceMap.iterator();
         if (originalProp.isExternal()) {
             it.next();
         }
 
         for (; it.hasNext();) {
-            final Map<ISource1<? extends ISource2>, SourceInfo> item = it.next();
+            final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item = it.next();
             final PropResolution resolution = resolveProp(item.values(), originalProp);
             if (resolution != null) {
                 return generateTransformedProp(resolution);
@@ -229,7 +229,7 @@ public class TransformatorToS2 {
     public static class PropResolution {
         private final boolean aliased;
 
-        public PropResolution(final boolean aliased, final ISource2 source, final AbstractPropInfo resolution, final EntProp1 entProp) {
+        public PropResolution(final boolean aliased, final IQrySource2 source, final AbstractPropInfo resolution, final EntProp1 entProp) {
             super();
             this.aliased = aliased;
             this.source = source;
@@ -237,7 +237,7 @@ public class TransformatorToS2 {
             this.entProp = entProp;
         }
 
-        private final ISource2 source;
+        private final IQrySource2 source;
         private final AbstractPropInfo resolution;
         private final EntProp1 entProp;
     }

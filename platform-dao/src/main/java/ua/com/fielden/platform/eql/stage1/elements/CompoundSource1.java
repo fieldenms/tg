@@ -3,14 +3,14 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class CompoundSource1 implements IElement1<CompoundSource2> {
-    private final ISource1<? extends ISource2> source;
+    private final IQrySource1<? extends IQrySource2> source;
     private final JoinType joinType;
     private final Conditions1 joinConditions;
 
-    public CompoundSource1(final ISource1<? extends ISource2> source, final JoinType joinType, final Conditions1 joinConditions) {
+    public CompoundSource1(final IQrySource1<? extends IQrySource2> source, final JoinType joinType, final Conditions1 joinConditions) {
         super();
         this.source = source;
         this.joinType = joinType;
@@ -27,7 +27,7 @@ public class CompoundSource1 implements IElement1<CompoundSource2> {
         return joinType + " " + source + " ON " + joinConditions;
     }
 
-    public ISource1<? extends ISource2> getSource() {
+    public IQrySource1<? extends IQrySource2> getSource() {
         return source;
     }
 

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 
 public class EntQuery2 implements ISingleOperand2 {
@@ -9,15 +10,15 @@ public class EntQuery2 implements ISingleOperand2 {
     private final Yields2 yields;
     private final GroupBys2 groups;
     private final OrderBys2 orderings;
-    private final Class resultType;
+    private final Class<? extends AbstractEntity<?>> resultType;
     private final QueryCategory category;
 
     @Override
-    public Class type() {
+    public Class<? extends AbstractEntity<?>> type() {
         return resultType;
     }
 
-    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class resultType, final QueryCategory category) {
+    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category) {
         this.category = category;
         this.sources = queryBlocks.getSources();
         this.conditions = queryBlocks.getConditions();

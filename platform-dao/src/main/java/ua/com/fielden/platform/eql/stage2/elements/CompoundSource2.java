@@ -3,11 +3,11 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 
 public class CompoundSource2 implements IElement2 {
-    private final ISource2 source;
+    private final IQrySource2 source;
     private final JoinType joinType;
     private final Conditions2 joinConditions;
 
-    public CompoundSource2(final ISource2 source, final JoinType joinType, final Conditions2 joinConditions) {
+    public CompoundSource2(final IQrySource2 source, final JoinType joinType, final Conditions2 joinConditions) {
         super();
         this.source = source;
         this.joinType = joinType;
@@ -19,7 +19,7 @@ public class CompoundSource2 implements IElement2 {
         return joinType + " " + source + " ON " + joinConditions;
     }
 
-    public ISource2 getSource() {
+    public IQrySource2 getSource() {
         return source;
     }
 

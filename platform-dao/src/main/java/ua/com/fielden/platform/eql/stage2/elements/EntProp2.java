@@ -4,11 +4,11 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 
 public class EntProp2 implements ISingleOperand2 {
     private final String name;
-    private final ISource2 source;
+    private final IQrySource2 source;
     private final AbstractPropInfo resolution;
     private final Expression2 expression;
 
-    public EntProp2(final String name, final ISource2 source, final AbstractPropInfo resolution, final Expression2 expression) {
+    public EntProp2(final String name, final IQrySource2 source, final AbstractPropInfo resolution, final Expression2 expression) {
         this.name = name;
         this.source = source;
         this.resolution = resolution;

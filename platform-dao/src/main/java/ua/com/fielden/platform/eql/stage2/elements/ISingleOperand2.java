@@ -7,5 +7,5 @@ public interface ISingleOperand2 extends IElement2 {
      * 
      * @return
      */
-    Class type();
+    Class<?> type();
 }

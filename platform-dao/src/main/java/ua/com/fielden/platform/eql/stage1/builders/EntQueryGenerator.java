@@ -18,11 +18,11 @@ import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage1.elements.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.elements.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
-import ua.com.fielden.platform.eql.stage1.elements.ISource1;
+import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.Sources1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
@@ -94,7 +94,7 @@ public class EntQueryGenerator {
     }
 
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
-            final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator generator) {
+            final String username, final IQrySource1<? extends IQrySource2> mainSource, final EntQueryGenerator generator) {
         if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition == null) {

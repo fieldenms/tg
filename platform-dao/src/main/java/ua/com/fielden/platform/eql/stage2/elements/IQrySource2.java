@@ -2,7 +2,10 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.List;
 
-public interface ISource2 {
+import ua.com.fielden.platform.entity.AbstractEntity;
+
+public interface IQrySource2 {
+    
     void addProp(EntProp2 prop);
 
     List<EntProp2> props();
@@ -13,5 +16,5 @@ public interface ISource2 {
      * 
      * @return
      */
-    Class sourceType();
+    Class<? extends AbstractEntity<?>> sourceType();
 }

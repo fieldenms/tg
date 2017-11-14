@@ -2,9 +2,9 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
-public interface ISource1<S2 extends ISource2> {
+public interface IQrySource1<S2 extends IQrySource2> {
     /**
      * Represents business alias of the query source
      * 

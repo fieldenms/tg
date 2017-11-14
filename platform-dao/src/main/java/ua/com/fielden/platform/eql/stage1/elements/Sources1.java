@@ -6,13 +6,13 @@ import java.util.List;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class Sources1 implements IElement1<Sources2> {
-    private final ISource1<? extends ISource2> main;
+    private final IQrySource1<? extends IQrySource2> main;
     private final List<CompoundSource1> compounds;
 
-    public Sources1(final ISource1<? extends ISource2> main, final List<CompoundSource1> compounds) {
+    public Sources1(final IQrySource1<? extends IQrySource2> main, final List<CompoundSource1> compounds) {
         super();
         this.main = main;
         this.compounds = compounds;
@@ -38,7 +38,7 @@ public class Sources1 implements IElement1<Sources2> {
         return sb.toString();
     }
 
-    public ISource1<? extends ISource2> getMain() {
+    public IQrySource1<? extends IQrySource2> getMain() {
         return main;
     }
 
@@ -46,8 +46,8 @@ public class Sources1 implements IElement1<Sources2> {
         return compounds;
     }
 
-    public List<ISource1<? extends ISource2>> getAllSources() {
-        final List<ISource1<? extends ISource2>> result = new ArrayList<>();
+    public List<IQrySource1<? extends IQrySource2>> getAllSources() {
+        final List<IQrySource1<? extends IQrySource2>> result = new ArrayList<>();
         result.add(main);
         for (final CompoundSource1 compound : compounds) {
             result.add(compound.getSource());

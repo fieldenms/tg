@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneConditionBuilder;
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
@@ -54,7 +54,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     }
 
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
-            final String username, final ISource1<? extends ISource2> mainSource, final EntQueryGenerator generator) {
+            final String username, final IQrySource1<? extends IQrySource2> mainSource, final EntQueryGenerator generator) {
         if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition == null) {
@@ -74,7 +74,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     public EntQuery2 transform(final TransformatorToS2 resolver) {
         final TransformatorToS2 localResolver = resolver.produceBasedOn();
 
-        for (final ISource1<? extends ISource2> source : sources.getAllSources()) {
+        for (final IQrySource1<? extends IQrySource2> source : sources.getAllSources()) {
             localResolver.addSource(source);
         }
 

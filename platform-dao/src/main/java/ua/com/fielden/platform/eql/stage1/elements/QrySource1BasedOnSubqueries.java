@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 
-public class QrySource1BasedOnSubqueries extends AbstractSource1<QrySource2BasedOnSubqueries> {
+public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
     private final List<EntQuery1> models = new ArrayList<>();
     private final Map<String, List<Yield1>> yieldsMatrix;
 

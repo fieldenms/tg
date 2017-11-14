@@ -3,9 +3,9 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.stage2.elements.ISource2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
-public abstract class AbstractSource2 implements ISource2 {
+public abstract class AbstractQrySource2 implements IQrySource2 {
 
     public List<EntProp2> props = new ArrayList<>();
 

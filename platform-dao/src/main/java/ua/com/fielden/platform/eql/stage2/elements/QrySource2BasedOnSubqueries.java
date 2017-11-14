@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class QrySource2BasedOnSubqueries extends AbstractSource2 {
+import ua.com.fielden.platform.entity.AbstractEntity;
+
+public class QrySource2BasedOnSubqueries extends AbstractQrySource2 {
     private final List<EntQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
 
@@ -59,7 +61,7 @@ public class QrySource2BasedOnSubqueries extends AbstractSource2 {
     }
 
     @Override
-    public Class sourceType() {
+    public Class<? extends AbstractEntity<?>> sourceType() {
         return firstModel().type();
     }
 
