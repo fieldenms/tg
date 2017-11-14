@@ -53,7 +53,7 @@
                         bubbles: true,
                         cancelable: true
                     });
-                    this._tgMap.dispatchEvent(event);
+                    this._tgMap.getCustomEventTarget().dispatchEvent(event);
                 }
             }
         }
@@ -73,7 +73,7 @@
                 bubbles: true,
                 cancelable: true
             });
-            this._tgMap.dispatchEvent(event);
+            this._tgMap.getCustomEventTarget().dispatchEvent(event);
         }
 
         Select.prototype._silentlySelectById = function (layerId) {

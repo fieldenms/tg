@@ -372,6 +372,7 @@
                                 self.columnPropertiesMapper = this.columnPropertiesMapper;
                             });
                             self._element.columnPropertiesMapper = self.columnPropertiesMapper;
+                            self._element.customEventTarget = self;
 
                             var promise = customAction._onExecuted(null, element, null);
                             if (promise) {
