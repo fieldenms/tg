@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
@@ -176,6 +178,8 @@ public class TransformatorToS2 {
         if (originalSource instanceof QrySource1BasedOnPersistentType) {
             final QrySource1BasedOnPersistentType source = (QrySource1BasedOnPersistentType) originalSource;
             return new QrySource2BasedOnPersistentType(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
+        } if (originalSource instanceof QrySource1BasedOnSyntheticType) {
+            throw new EqlStage1ProcessingException("Not yet supported!");
         } else {
             final QrySource1BasedOnSubqueries source = (QrySource1BasedOnSubqueries) originalSource;
             final List<EntQuery2> transformed = new ArrayList<>();
