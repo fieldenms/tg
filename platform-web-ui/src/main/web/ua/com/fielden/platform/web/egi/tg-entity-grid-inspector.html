@@ -1148,6 +1148,7 @@
                     rowCount = this.entities.length + this._totalsRowCount;
                     height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
                 }
+                const previousHeight = this.$.baseContainer.style[propertyToSet];
                 this.$.baseContainer.style.removeProperty(propertyToRemove);
                 this.$.scrollContainer.style.removeProperty(propertyToRemove);
                 this.$.baseContainer.style[propertyToSet] = height;
@@ -1155,6 +1156,9 @@
                 this.$.lockContainer.style.bottom = bottomPosition + "px";
                 this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                 this._handleScrollEvent();
+                if (previousHeight !== height) {
+                    this.fire("tg-egi-resizied", height);
+                }
             },
 
             _updateShadows: function () {
