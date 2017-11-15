@@ -63,7 +63,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
         this.isCritOnly = isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
-        this.mnemonicsVisible = isEmpty(propertyName) || PropertyTypeDeterminator.isMappedOrCalculated(root,  propertyName);
+        this.mnemonicsVisible = !this.isCritOnly;
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
