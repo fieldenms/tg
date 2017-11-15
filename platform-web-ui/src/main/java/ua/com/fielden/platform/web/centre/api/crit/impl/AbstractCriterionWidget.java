@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
@@ -16,6 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -40,13 +42,14 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private static final String sufixYes = " (Yes)";
     private static final String sufixNo = " (No)";
 
-    private final Class<?> root;
+    private final Class<? extends AbstractEntity<?>> root;
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
     private final boolean isCritOnly;
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
+    private final boolean mnemonicsVisible;
 
     /**
      * Creates {@link AbstractCriterionWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -54,12 +57,13 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      * @param criteriaType
      * @param propertyName
      */
-    public AbstractCriterionWidget(final Class<?> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+    public AbstractCriterionWidget(final Class<? extends AbstractEntity<?>> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
         this.root = root;
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.isCritOnly = StringUtils.isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
+        this.isCritOnly = isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
+        this.mnemonicsVisible = isEmpty(propertyName) || PropertyTypeDeterminator.isMappedOrCalculated(root,  propertyName);
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
@@ -114,6 +118,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         attrs.put("validation-callback", "[[validate]]");
         if (isCritOnly) {
             attrs.put("crit-only", null);
+        }
+        if (mnemonicsVisible) {
+            attrs.put("mnemonics-visible", null);
         }
         return attrs;
     }

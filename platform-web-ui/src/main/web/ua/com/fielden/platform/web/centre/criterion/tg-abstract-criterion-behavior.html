@@ -50,6 +50,14 @@
                 value: false
             },
 
+            /**
+             * Indicates whether mnemonics should be visible or not.
+             */
+             mnemonicsVisible: {
+                type: Boolean,
+                value: false
+            },
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +252,7 @@
          * Returns 'true' if the icon button of this criterion editor should be visible, 'false' otherwise.
          */
         _iconButtonVisible: function () {
-            return !this.critOnly;
+            return this.mnemonicsVisible;
         },
 
         /**
