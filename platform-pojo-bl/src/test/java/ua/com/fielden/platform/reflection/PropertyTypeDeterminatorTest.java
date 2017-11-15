@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMap;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 
 import java.lang.ref.Reference;
@@ -304,5 +304,22 @@ public class PropertyTypeDeterminatorTest {
     public void map_properties_should_be_recognized_well() {
         assertTrue(isMap(EntityWithMap.class, "mapProperty"));
     }
-
+    
+    @Test
+    public void isMappedOrCalculated_returns_true_for_mapped_or_calculated_properties() {
+        assertTrue(isMappedOrCalculated(Entity.class, "observablePropertyInitialisedAsNull"));
+        assertTrue(isMappedOrCalculated(Entity.class, "firstProperty"));
+    }
+    
+    @Test
+    public void isMappedOrCalculated_returns_false_for_invalid_propety_names() {
+        assertFalse(isMappedOrCalculated(Entity.class, "invalid property name"));
+        assertFalse(isMappedOrCalculated(Entity.class, ""));
+    }
+    
+    @Test
+    public void isMappedOrCalculated_returns_false_for_not_mappped_or_calculated_properties() {
+        assertFalse(isMappedOrCalculated(Entity.class, "monitoring"));
+        assertFalse(isMappedOrCalculated(Entity.class, "observableProperty"));
+    }
 }
