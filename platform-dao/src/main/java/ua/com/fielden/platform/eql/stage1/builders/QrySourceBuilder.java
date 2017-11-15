@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
@@ -18,10 +19,16 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * This builder is responsible for converting EQL tokens (effectively an AST of sorts) starting with the part that represents FROM or JOIN, and completing at the level of ALIAS (which could be absent).
+ * 
+ * @author TG Team
+ *
+ */
 public class QrySourceBuilder extends AbstractTokensBuilder {
 
     protected QrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
@@ -36,11 +43,11 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         return getSize() == 1 && ENTITY_TYPE_AS_QRY_SOURCE == firstCat();
     }
 
-    private boolean isQueryModelAsSource() {
+    private boolean isSubqueriesAsSource() {
         return getSize() == 2 && QRY_MODELS_AS_QRY_SOURCE == firstCat() && QRY_SOURCE_ALIAS == secondCat();
     }
 
-    private boolean isQueryModelAsSourceWithoutAlias() {
+    private boolean isSubqueriesAsSourceWithoutAlias() {
         return getSize() == 1 && QRY_MODELS_AS_QRY_SOURCE == firstCat();
     }
 
@@ -52,11 +59,11 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     @Override
     public boolean canBeClosed() {
         return isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias() ||
-               isQueryModelAsSource() || isQueryModelAsSourceWithoutAlias();
+               isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias();
     }
 
-    private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
-        final Class<AbstractEntity<?>> resultType = (Class) firstValue();
+    private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
+        final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
             return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue()));
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
@@ -69,24 +76,23 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         }
     }
 
-    private Pair<TokenCategory, Object> getResultForEntityModelAsSource(final List<QueryModel> readyModels, final String readyAlias, final Class readyResultType) {
-        final List<QueryModel> models = readyModels != null ? readyModels : (List<QueryModel>) firstValue();
-        final String alias = readyAlias != null ? readyAlias : (String) secondValue();
-        final Class resultType = readyResultType != null ? readyResultType : null;
-        final List<EntQuery1> queries = new ArrayList<EntQuery1>();
-        for (final QueryModel qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, resultType));
+    private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
+        final List<EntQuery1> queries = new ArrayList<>();
+        final String alias = secondValue();
+        final List<QueryModel<AbstractEntity<?>>> models = firstValue();
+        for (final QueryModel<AbstractEntity<?>> qryModel : models) {
+            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, /*resultType = */ Optional.empty()));
         }
 
-        return new Pair<TokenCategory, Object>(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries));
+        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries));
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
         if (isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias()) {
-            return getResultForEntityTypeAsSource();
-        } else if (isQueryModelAsSource() || isQueryModelAsSourceWithoutAlias()) {
-            return getResultForEntityModelAsSource(null, null, null);
+            return buildResultForQrySourceBasedOnEntityType();
+        } else if (isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias()) {
+            return buildResultForQrySourceBasedOnSubqueries();
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }

@@ -192,16 +192,16 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return tokens.size() < 3 ? null : tokens.get(2).getKey();
     }
 
-    public Object firstValue() {
-        return tokens.size() < 1 ? null : tokens.get(0).getValue();
+    public <V> V firstValue() {
+        return tokens.size() < 1 ? null : (V) tokens.get(0).getValue();
     }
 
-    public Object secondValue() {
-        return tokens.size() < 2 ? null : tokens.get(1).getValue();
+    public <V> V secondValue() {
+        return tokens.size() < 2 ? null : (V) tokens.get(1).getValue();
     }
 
-    public Object thirdValue() {
-        return tokens.size() < 3 ? null : tokens.get(2).getValue();
+    public <V> V thirdValue() {
+        return tokens.size() < 3 ? null : (V) tokens.get(2).getValue();
     }
 
     public List<Pair<TokenCategory, Object>> getTokens() {

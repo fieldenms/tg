@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage1.builders;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -20,8 +21,8 @@ import ua.com.fielden.platform.eql.stage1.elements.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.elements.Sources1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.Sources1;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -36,7 +37,7 @@ public class EntQueryGenerator {
         return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), QueryCategory.RESULT_QUERY);
     }
 
-    public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Class resultType) {
+    public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Optional<Class<?>> resultType) {
         return generateEntQuery(qryModel, null, resultType, null, QueryCategory.SOURCE_QUERY);
     }
 
@@ -112,13 +113,13 @@ public class EntQueryGenerator {
 
     private EntQuery1 generateEntQuery(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
-            final Class resultType, //
+            final Optional<Class<?>> resultType, //
             final fetch fetchModel, //
             final QueryCategory category) {
 
         return new EntQuery1( //
         parseTokensIntoComponents(qryModel, orderModel, fetchModel), //
-        resultType != null ? resultType : qryModel.getResultType(), //
+        resultType.orElse(qryModel.getResultType()), //
         category, //
         qryModel.isFilterable());
     }

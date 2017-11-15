@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -124,7 +125,7 @@ public class BaseEntQueryTCase1 {
     //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, null);
+        return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty());
     }
 
     //    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
