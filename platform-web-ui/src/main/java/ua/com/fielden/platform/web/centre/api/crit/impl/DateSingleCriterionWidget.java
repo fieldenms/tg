@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 
@@ -17,7 +18,7 @@ public class DateSingleCriterionWidget extends AbstractSingleCriterionWidget {
      * @param criteriaType
      * @param propertyName
      */
-    public DateSingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public DateSingleCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),

@@ -17,8 +17,12 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -368,6 +372,21 @@ public class PropertyTypeDeterminator {
         return Map.class.isAssignableFrom(field.getType());
     }
 
+    /**
+     * Identifies whether the specified property is defined as mapped or calculated.
+     * The main intent for such information is to identify properties that are query-able.
+     * For example, plain properties and {@link CritOnly} properties are not.
+     * 
+     * @param entitType
+     * @param dotNotationExp
+     * @return
+     */
+    public static boolean isMappedOrCalculated(final Class<? extends AbstractEntity<?>> entitType, final String dotNotationExp) {
+        return Finder.findFieldByNameOptionally(entitType, dotNotationExp)
+               .map(field -> field.isAnnotationPresent(IsProperty.class) && (field.isAnnotationPresent(MapTo.class) || field.isAnnotationPresent(Calculated.class)))
+               .orElse(false);
+    }
+    
     /**
      * Identifies whether property <code>doNotationExp</code> has a type, which is recognized as representing a numeric value such as decimal, money, long or integer.
      *

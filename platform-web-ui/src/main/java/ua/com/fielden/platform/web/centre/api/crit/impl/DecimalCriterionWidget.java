@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 
 /**
@@ -16,7 +17,7 @@ public class DecimalCriterionWidget extends AbstractRangeCriterionWidget {
      * @param criteriaType
      * @param propertyName
      */
-    public DecimalCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public DecimalCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, "centre/criterion/multi/range/tg-range-criterion", propertyName,
                 new DecimalWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),

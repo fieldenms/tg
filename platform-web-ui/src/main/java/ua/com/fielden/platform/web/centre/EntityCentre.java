@@ -758,7 +758,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         importPaths.add(layout.importPath());
 
-        final Class<?> root = this.entityType;
+        final Class<? extends AbstractEntity<?>> root = this.entityType;
 
         logger.debug("Initiating criteria widgets...");
 
@@ -1135,7 +1135,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param root
      * @return
      */
-    private List<AbstractCriterionWidget> createCriteriaWidgets(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root) {
+    private List<AbstractCriterionWidget> createCriteriaWidgets(final ICentreDomainTreeManagerAndEnhancer centre, final Class<? extends AbstractEntity<?>> root) {
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
         for (final String critProp : centre.getFirstTick().checkedProperties(root)) {
