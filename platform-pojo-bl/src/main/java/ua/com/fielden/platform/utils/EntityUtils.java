@@ -26,12 +26,11 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -51,6 +50,7 @@ import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
@@ -58,7 +58,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
@@ -709,7 +708,7 @@ public class EntityUtils {
     public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
         if (isEntityType(keyType)) {
-            return isPersistedEntityType((Class<? extends AbstractEntity<?>>) keyType);
+            return isPersistedEntityType(keyType);
         } else {
             return false;
         }
@@ -812,7 +811,7 @@ public class EntityUtils {
                 result.add((EntityResultQueryModel<T>) value);
                 return result;
             } else {
-                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].", 
+                throw new EqlException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].", 
                                                      entityType.getSimpleName(), exprField.getType().getSimpleName()));
             }
         } catch (final NoSuchFieldException | IllegalAccessException ex) {
@@ -827,7 +826,7 @@ public class EntityUtils {
                 result.addAll((List<EntityResultQueryModel<T>>) exprField.get(null));
                 return result;
             } else {            
-                throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
+                throw new EqlException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
             }
         } catch (final NoSuchFieldException | IllegalAccessException ex) {
             logger.debug(ex);
