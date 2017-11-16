@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -27,14 +26,9 @@ import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
-    private final DomainMetadataAnalyser domainMetadataAnalyser;
-
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser) {
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
-    }
 
     public EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<?, ?> qem) {
-        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), QueryCategory.RESULT_QUERY);
+        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), Optional.empty(), qem.getFetchModel(), QueryCategory.RESULT_QUERY);
     }
 
     public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Optional<Class<?>> resultType) {
@@ -42,7 +36,7 @@ public class EntQueryGenerator {
     }
 
     public EntQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
-        return generateEntQuery(qryModel, null, null, null, QueryCategory.SUB_QUERY);
+        return generateEntQuery(qryModel, null, Optional.empty(), null, QueryCategory.SUB_QUERY);
     }
 
     public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
@@ -144,9 +138,5 @@ public class EntQueryGenerator {
             }
         }
         return orderBy.getModel();
-    }
-
-    public DomainMetadataAnalyser getDomainMetadataAnalyser() {
-        return domainMetadataAnalyser;
     }
 }

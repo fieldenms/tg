@@ -109,7 +109,7 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    protected static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER);
+    protected static final EntQueryGenerator qb = new EntQueryGenerator();
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
