@@ -133,7 +133,7 @@ public class MetadataGenerator {
     
     private Expression1 getExpression(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
         if (AnnotationReflector.isAnnotationPresent(field, Calculated.class)) {
-            throw new EqlException("To be yet modified according to the EQL3 approach.");
+            throw new EqlException("Expression parsing for calculated properties yet to be modified according to the EQL3 approach.");
             //return entQryExpression(dmeg.extractExpressionModelFromCalculatedProperty(entityType, field));
         }
         return null;

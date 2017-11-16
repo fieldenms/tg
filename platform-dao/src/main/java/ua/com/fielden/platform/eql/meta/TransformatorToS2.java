@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
+import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,11 +16,9 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
-import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
@@ -135,7 +137,8 @@ public class TransformatorToS2 {
         if (EntityAggregates.class.equals(transformedSource.sourceType())) {
             final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
-                final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType()) ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, metadata.get(yield.javaType()), null)
+                final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
+                        ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, metadata.get(yield.javaType()), null)
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType(), null);
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
             }
@@ -174,21 +177,29 @@ public class TransformatorToS2 {
         throw new IllegalStateException("Should not reach here!");
     }
 
-    private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> originalSource) {
-        if (originalSource instanceof QrySource1BasedOnPersistentType) {
-            final QrySource1BasedOnPersistentType source = (QrySource1BasedOnPersistentType) originalSource;
-            return new QrySource2BasedOnPersistentType(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
-        } if (originalSource instanceof QrySource1BasedOnSyntheticType) {
-            throw new EqlStage1ProcessingException("Not yet supported!");
+    private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
+        if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
+            final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
+            return new QrySource2BasedOnPersistentType(qrySource.sourceType());
+        } else if (qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
+            final QrySource1BasedOnSyntheticType qrySource = (QrySource1BasedOnSyntheticType) qrySourceStage1;
+            return new QrySource2BasedOnSyntheticType(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(qrySource.sourceType()));
         } else {
-            final QrySource1BasedOnSubqueries source = (QrySource1BasedOnSubqueries) originalSource;
-            final List<EntQuery2> transformed = new ArrayList<>();
-            for (final EntQuery1 entQuery : source.getModels()) {
-                transformed.add(entQuery.transform(produceNewOne()));
-            }
-
-            return new QrySource2BasedOnSubqueries(originalSource.getAlias(), transformed);
+            final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
+            return new QrySource2BasedOnSubqueries(qrySourceStage1.getAlias(), extractQueryModels(qrySource));
         }
+    }
+
+    private <T extends AbstractEntity<?>> List<EntQuery2> extractQueryModels(final Class<T> sourceType) {
+        final EntQueryGenerator gen = new EntQueryGenerator();
+        return getEntityModelsOfQueryBasedEntityType(sourceType).stream()
+                .map(q -> gen.generateEntQueryAsSourceQuery(q, empty()))
+                .map(q -> q.transform(produceNewOne()))
+                .collect(toList());
+    }
+
+    private List<EntQuery2> extractQueryModels(final QrySource1BasedOnSubqueries qrySource) {
+        return qrySource.getModels().stream().map(q -> q.transform(produceNewOne())).collect(toList());
     }
 
     private Map<IQrySource1<? extends IQrySource2>, SourceInfo> getCurrentQueryMap() {

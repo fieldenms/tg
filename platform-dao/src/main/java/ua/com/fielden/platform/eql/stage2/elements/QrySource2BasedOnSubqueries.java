@@ -11,10 +11,6 @@ public class QrySource2BasedOnSubqueries extends AbstractQrySource2 {
     private final List<EntQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
 
-    private EntQuery2 firstModel() {
-        return models.get(0);
-    }
-
     public QrySource2BasedOnSubqueries(final String alias, final List<EntQuery2> models) {
         if (models == null || models.isEmpty()) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
@@ -40,6 +36,10 @@ public class QrySource2BasedOnSubqueries extends AbstractQrySource2 {
             }
         }
         return yieldsMatrix;
+    }
+
+    private EntQuery2 firstModel() {
+        return models.get(0);
     }
 
     //    private boolean getYieldNullability(final String yieldAlias) {

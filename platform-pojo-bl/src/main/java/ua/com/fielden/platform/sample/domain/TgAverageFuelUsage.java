@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -11,13 +13,11 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(TgVehicle.class)
 @CompanionObject(ITgAverageFuelUsage.class)
 public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
     // TODO support make property being entity key (KeyType(TgVehicleMake))
-    private static final long serialVersionUID = 1L;
 
     private static String from(final String param) {
         return param + ".from";
@@ -27,7 +27,7 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
         return param + ".to";
     }
 
-    private static final EntityResultQueryModel<TgAverageFuelUsage> model_ = //
+    protected static final EntityResultQueryModel<TgAverageFuelUsage> model_ = //
     select(TgFuelUsage.class). //
     where(). //
     prop("date").gt().iParam(from("datePeriod")).and(). //

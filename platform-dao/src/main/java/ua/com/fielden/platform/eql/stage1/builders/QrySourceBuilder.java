@@ -67,9 +67,6 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         if (isPersistedEntityType(resultType)) {
             return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue()));
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
-//            final List<QueryModel> readyModels = new ArrayList<QueryModel>();
-//            readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
-//            return getResultForEntityModelAsSource(readyModels, (String) secondValue(), resultType);
             return pair(QRY_SOURCE, new QrySource1BasedOnSyntheticType(resultType, (String) secondValue()));
         } else {
             throw new EqlStage1ProcessingException("Not yet.");
