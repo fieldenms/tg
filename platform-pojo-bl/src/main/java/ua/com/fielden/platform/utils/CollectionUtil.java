@@ -3,12 +3,15 @@ package ua.com.fielden.platform.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
@@ -35,6 +38,14 @@ public final class CollectionUtil {
         return new ArrayList<T>(Arrays.asList(elements));
     }
 
+    @SafeVarargs
+    public static <K, V> Map<K, V> mapOf(final T2<K, V>... tupples) {
+        final Map<K, V> map = new HashMap<>();
+        for (final T2<K, V> t2 : tupples) {
+            map.put(t2._1, t2._2);
+        }
+        return map;
+    }
     
     /**
      * Converts collection to a string separating the elements with a provided separator.
