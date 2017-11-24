@@ -76,6 +76,7 @@
                                  on-iron-overlay-canceled="_resultCanceled" 
                                  retrieve-container-sizes="[[_retrieveContainerSizes]]" 
                                  on-tap="_entitySelected"
+                                 on-dblclick="_done"
                                  on-keydown="_onKeydown"></tg-entity-editor-result>
 
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
@@ -583,9 +584,9 @@
             },
             
             _entitySelected: function () {
-                if (!this.multi) {
-                    this._done();
-                }
+				if (!this.multi) {
+					this._done();
+				}
             },
             
             /* This method handles an explicit user action for accepting selected values from an autocompleted list.
