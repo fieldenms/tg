@@ -68,13 +68,13 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result" 
-                                 tabindex="-1" 
-                                 no-auto-focus 
-                                 on-iron-overlay-opened="_resultOpened" 
-                                 on-iron-overlay-closed="_resultClosed" 
-                                 on-iron-overlay-canceled="_resultCanceled" 
-                                 retrieve-container-sizes="[[_retrieveContainerSizes]]" 
+        <tg-entity-editor-result id="result"
+                                 tabindex="-1"
+                                 no-auto-focus
+                                 on-iron-overlay-opened="_resultOpened"
+                                 on-iron-overlay-closed="_resultClosed"
+                                 on-iron-overlay-canceled="_resultCanceled"
+                                 retrieve-container-sizes="[[_retrieveContainerSizes]]"
                                  on-tap="_entitySelected"
                                  on-dblclick="_done"
                                  on-keydown="_onKeydown"></tg-entity-editor-result>
@@ -110,7 +110,7 @@
              ********************************************************
              ********************************************************/
             properties: {
-                /* Indicates whether a search is in progress. This property controls visibility of the progress indecator. 
+                /* Indicates whether a search is in progress. This property controls visibility of the progress indecator.
                  * It is bound to iron-ajax property loading, which basicaly controlls spinner visibility. */
                 searching: {
                     type: Boolean,
@@ -202,7 +202,7 @@
                 createModifiedPropertiesHolder: {
                     type: Function
                 },
-                
+
                 /**
                  * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
                  * It is updated everytime when refresh process successfully completes.
@@ -210,7 +210,7 @@
                 originallyProducedEntity: {
                     type: Object
                 },
-                
+
                 /**
                  * Determines whether the selection criteria entity are required to be send inside the centre context.
                  *
@@ -360,7 +360,7 @@
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
-                    
+
                     // check whether relatedTarget has anything to do with this.$.result
                     // if it is then there is no need to cancel the overlay, which is this.$.result
                     var parent = e.relatedTarget;
@@ -403,7 +403,7 @@
                 return str;
             },
 
-            /* Invokes _search with '*' as the default search value, so than when nothing was typed, but 
+            /* Invokes _search with '*' as the default search value, so than when nothing was typed, but
              * the search button has been pressed then the search happens as if wildcard has been typed. */
             _searchOnTap: function (e) {
                 // need to execute the tap action on async to ensure committing of any uncommitted
@@ -553,7 +553,7 @@
 
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
-                if (this.$.input === activeElement || /* if the autocompleter in focus */ 
+                if (this.$.input === activeElement || /* if the autocompleter in focus */
                     document.body === activeElement   /* or no other input or button in focus then show found values */) {
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
@@ -564,7 +564,7 @@
             },
 
             _resultClosed: function (e) {
-                // property this.opened controls whether overlay on-close event should 
+                // property this.opened controls whether overlay on-close event should
                 // perfrom on-change event handler that does all the validation megic
                 if (this.opened === true) {
                     this.opened = false;
@@ -576,19 +576,19 @@
                 	Polymer.dom.flush();
                 }
             },
-            
+
             _resultCanceled : function (event, detail) {
                 if (detail.keyCode && detail.keyCode === 27) {
                     this._focusInput();
                 }
             },
-            
+
             _entitySelected: function () {
-				if (!this.multi) {
-					this._done();
-				}
+                if (!this.multi) {
+                    this._done();
+                }
             },
-            
+
             /* This method handles an explicit user action for accepting selected values from an autocompleted list.
              * However, there is no guarantee that there are actually selected values.
              */
