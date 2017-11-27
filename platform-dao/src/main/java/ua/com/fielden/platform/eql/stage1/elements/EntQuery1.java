@@ -9,11 +9,11 @@ import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneConditionBuilder;
+import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class EntQuery1 implements ISingleOperand1<EntQuery2> {
@@ -74,11 +74,13 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     public EntQuery2 transform(final TransformatorToS2 resolver) {
         final TransformatorToS2 localResolver = resolver.produceBasedOn();
 
+        // TODO Need to resolve joinConditions of each CompoundSource as soon as it is added to resolver.  
         for (final IQrySource1<? extends IQrySource2> source : sources.getAllSources()) {
             localResolver.addSource(source);
         }
 
         final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
+        // TODO As part of transforming sources need to retrieve already resolved joinConditions, that happened while invoking addSource method (refer TODO above).
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), enhancedConditions.transform(localResolver), //
         yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
