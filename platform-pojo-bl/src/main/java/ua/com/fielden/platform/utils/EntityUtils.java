@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Stream.concat;
@@ -9,7 +10,10 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isContextual;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -42,6 +46,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -53,11 +58,14 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
@@ -1253,4 +1261,43 @@ public class EntityUtils {
         return entity.getType().getName() + System.identityHashCode(entity);
     }
 
+    
+    /**
+     * Constructs an EQL expression model for a field representing a calculated property.
+     * 
+     * @param entityType
+     * @param calculatedPropfield
+     * @return
+     */
+    public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {
+        final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
+        if (!"".equals(calcAnnotation.value())) {
+            return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
+        } else {
+            final String fieldName = calculatedPropfield.getName() + "_";
+            final Field exprField = getFieldByName(entityType, fieldName);
+            exprField.setAccessible(true);
+            try {
+                return (ExpressionModel) exprField.get(null);
+            } catch (final IllegalArgumentException | IllegalAccessException e) {
+                throw new ReflectionException(format("Could not access field [%s] in [%s].", fieldName, entityType));
+            }
+        }
+    }
+
+    private static ExpressionText2ModelConverter createExpressionText2ModelConverter(final Class<? extends AbstractEntity<?>> entityType, final Calculated calcAnnotation) {
+        if (isContextual(calcAnnotation)) {
+            return new ExpressionText2ModelConverter(getRootType(calcAnnotation), calcAnnotation.contextPath(), calcAnnotation.value());
+        } else {
+            return new ExpressionText2ModelConverter(entityType, calcAnnotation.value());
+        }
+    }
+
+    private static Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) {
+        try {
+            return (Class<? extends AbstractEntity<?>>) getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
+        } catch (final ClassNotFoundException e) {
+            throw new ReflectionException(format("Could not load class [%s] for attribute rootTypeName in annotation @Calculated.", calcAnnotation.rootTypeName()));
+        }
+    }
 }
