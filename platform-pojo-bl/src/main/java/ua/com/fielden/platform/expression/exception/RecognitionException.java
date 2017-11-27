@@ -8,8 +8,10 @@ import ua.com.fielden.platform.expression.IExpressionErrorPosition;
  * 
  * @author TG Team
  */
-public abstract class RecognitionException extends Exception implements IExpressionErrorPosition {
+public abstract class RecognitionException extends RuntimeException implements IExpressionErrorPosition {
 
+    private static final long serialVersionUID = 1L;
+    
     private final Integer errorPosition;
 
     public RecognitionException(final String msg, final Integer errorPosition) {

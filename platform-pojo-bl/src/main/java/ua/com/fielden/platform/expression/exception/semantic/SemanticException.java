@@ -11,7 +11,9 @@ import ua.com.fielden.platform.expression.Token;
  * @author TG Team
  * 
  */
-public abstract class SemanticException extends Exception implements IExpressionErrorPosition, IExpressionOffendingToken {
+public abstract class SemanticException extends RuntimeException implements IExpressionErrorPosition, IExpressionOffendingToken {
+
+    private static final long serialVersionUID = 1L;
 
     private final Integer errorPosition;
     private final Token token;
