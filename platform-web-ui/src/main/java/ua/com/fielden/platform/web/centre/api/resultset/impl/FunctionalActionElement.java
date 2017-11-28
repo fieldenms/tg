@@ -229,7 +229,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.append("},\n");
 
-        attrs.append("postActionSuccess: function (functionalEntity) {\n");
+        attrs.append("postActionSuccess: function (functionalEntity, action) {\n");
         attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().successPostAction.isPresent()) {
             attrs.append(conf().successPostAction.get().build().toString());
@@ -246,7 +246,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.append("},\n");
 
-        attrs.append("postActionError: function (functionalEntity) {\n");
+        attrs.append("postActionError: function (functionalEntity, action) {\n");
         attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().errorPostAction.isPresent()) {
             attrs.append(conf().errorPostAction.get().build().toString());

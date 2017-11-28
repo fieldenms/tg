@@ -416,7 +416,7 @@
             },
 
             _handleCloseEvent: function (data, envelope) {
-                if (data.canClose === true) {
+                if (data.canClose === true || this._lastAction.continuous) {
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },

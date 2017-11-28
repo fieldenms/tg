@@ -92,7 +92,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
             final Object entityKeyObject = values.size() == 1 ? values.get(0) : values;
             final Object result = cacheForType.get(entityKeyObject);
             if (values.size() == 1 && values.get(0) != null && result == null) {
-                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values.get(0));
+                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: [" + values.get(0) + "]");
             }
             if (values.size() > 1 && !containsOnlyNull(values) && result == null) {
                 System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);

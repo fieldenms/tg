@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +78,10 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final EntityEditAction entityEditAction = masterEntity(EntityEditAction.class);
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
+            // let's be a more bit protective and try to provide a meaningful exception in cases where entity could not be found instead of the inevitable NPE downstream
+            if (producedEntity == null) {
+                throw new EntityProducingException(format("Could not find entity of type [%s] with ID [%s].", entityEditAction.getEntityType(), entityEditAction.getEntityId()));
+            }
         } else {
             final T entity = new_();
             

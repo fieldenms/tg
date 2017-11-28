@@ -489,11 +489,11 @@
                     
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                     	if (self.postActionSuccess) {
-	                        self.postActionSuccess(potentiallySavedOrNewEntity);
+	                        self.postActionSuccess(potentiallySavedOrNewEntity, self);
                     	}
                     } else {
                     	if (self.postActionError) {
-	                        self.postActionError(potentiallySavedOrNewEntity);
+	                        self.postActionError(potentiallySavedOrNewEntity, self);
                     	}
                     }
                     
