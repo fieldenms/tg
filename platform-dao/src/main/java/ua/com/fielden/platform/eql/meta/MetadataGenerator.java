@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -10,6 +12,7 @@ import static ua.com.fielden.platform.eql.meta.EntityCategory.UNION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -191,17 +195,23 @@ public class MetadataGenerator {
      */
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> createYieldAllQueryModel(final Class<T> entityType) {
         final IFromAlias<T> qryStart = select(entityType);
-        final Optional<ISubsequentCompletedAndYielded<T>> yield = Optional.empty();
+        return streamRealProperties(entityType)
+                .reduce(empty(), yieldAnother(entityType, qryStart), (o1, o2) -> o2)
+                .get().modelAsEntity(entityType);
+    }
 
-        for (final Field field : streamRealProperties(entityType).collect(toList())) {
+    private <T extends AbstractEntity<?>> BiFunction<Optional<ISubsequentCompletedAndYielded<T>>, Field, Optional<ISubsequentCompletedAndYielded<T>>> yieldAnother(
+            final Class<T> entityType,
+            final IFromAlias<T> qryStart) {
+
+        return (yield, field) -> {
             if (field.isAnnotationPresent(MapTo.class)) {
-                //yield = yield.map(y -> y.yield(field.getName()).as(field.getName())).
+                return of(yield.map(y -> y.yield().prop(field.getName()).as(field.getName())).orElseGet(() -> qryStart.yield().prop(field.getName()).as(field.getName())));
             } else if (field.isAnnotationPresent(Calculated.class)) {
-
+                return of(yield.map(y -> y.yield().expr(extractExpressionModelFromCalculatedProperty(entityType, field)).as(field.getName())).orElseGet(() -> qryStart.yield().expr(extractExpressionModelFromCalculatedProperty(entityType, field)).as(field.getName())));
+            } else {
+                return yield;
             }
-        }
-
-        return null;
-
+        };
     }
 }
