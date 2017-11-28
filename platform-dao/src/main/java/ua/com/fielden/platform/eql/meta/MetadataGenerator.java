@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTED;
@@ -196,7 +195,7 @@ public class MetadataGenerator {
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> createYieldAllQueryModel(final Class<T> entityType) {
         final IFromAlias<T> qryStart = select(entityType);
         return streamRealProperties(entityType)
-                .reduce(empty(), yieldAnother(entityType, qryStart), (o1, o2) -> o2)
+                .reduce(empty(), yieldAnother(entityType, qryStart), (o1, o2) -> {throw new EqlException("Parallel reduction is not supported.");})
                 .get().modelAsEntity(entityType);
     }
 
