@@ -3,6 +3,7 @@ package ua.com.fielden.platform.dao;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator.getVirtualKeyPropForEntityWithCompositeKey;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.dao.EntityCategory.PURE;
 import static ua.com.fielden.platform.dao.EntityCategory.QUERY_BASED;
@@ -29,7 +30,6 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -509,13 +509,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) throws Exception {
-        final List<Field> keyMembers = getKeyMembers(entityType);
-        final List<Pair<Field, Boolean>> keyMembersWithOptionality = new ArrayList<>();
-        for (final Field field : keyMembers) {
-            keyMembersWithOptionality.add(new Pair<>(field, getCompositeKeyMemberOptionalityInfo(entityType, field.getName())));
-        }
-
-        return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder("key", String.class, true).expression(getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
     }
 
     //    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {

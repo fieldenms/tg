@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isContextual;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -1299,5 +1300,15 @@ public class EntityUtils {
         } catch (final ClassNotFoundException e) {
             throw new ReflectionException(format("Could not load class [%s] for attribute rootTypeName in annotation @Calculated.", calcAnnotation.rootTypeName()));
         }
+    }
+    
+    /**
+     * Identifies whether a persistent entity has at least one explicitly defined or implicitly (such as composite key string representation) calculated property in its hierarchy.
+     * 
+     * @param entityType
+     * @return
+     */
+    public static boolean hasCalcProps(final Class<? extends AbstractEntity<?>> entityType) {
+        return isPersistedEntityType(entityType) && (isCompositeEntity(entityType) || streamRealProperties(entityType, Calculated.class).findFirst().isPresent());
     }
 }

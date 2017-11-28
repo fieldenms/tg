@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator.getVirtualKeyPropForEntityWithCompositeKey;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTED;
@@ -14,6 +16,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.utils.EntityUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -30,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -192,14 +196,15 @@ public class MetadataGenerator {
      * @param entityType
      * @return
      */
-    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> createYieldAllQueryModel(final Class<T> entityType) {
+    public static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createYieldAllQueryModel(final Class<T> entityType) {
         final IFromAlias<T> qryStart = select(entityType);
         return streamRealProperties(entityType)
                 .reduce(empty(), yieldAnother(entityType, qryStart), (o1, o2) -> {throw new EqlException("Parallel reduction is not supported.");})
+                .map(y -> isCompositeEntity(entityType) ? y.yield().expr(getVirtualKeyPropForEntityWithCompositeKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)).as(KEY) : y)
                 .get().modelAsEntity(entityType);
     }
 
-    private <T extends AbstractEntity<?>> BiFunction<Optional<ISubsequentCompletedAndYielded<T>>, Field, Optional<ISubsequentCompletedAndYielded<T>>> yieldAnother(
+    private static <T extends AbstractEntity<?>> BiFunction<Optional<ISubsequentCompletedAndYielded<T>>, Field, Optional<ISubsequentCompletedAndYielded<T>>> yieldAnother(
             final Class<T> entityType,
             final IFromAlias<T> qryStart) {
 

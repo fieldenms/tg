@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.dao;
 
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
+import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
 
 import java.lang.reflect.Field;
 import java.util.Iterator;
@@ -16,7 +20,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -51,11 +54,12 @@ public class DomainMetadataExpressionsGenerator {
 //        return expressionModelInProgress.end().model();
 //    }
 
-    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
-        return composeExpression(keyMembers, Reflector.getKeyMemberSeparator(entityType));
+    public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
+        final List<Pair<Field, Boolean>> keyMembers = getKeyMembers(entityType).stream().map(f -> Pair.pair(f, isRequiredByDefinition(f, entityType))).collect(toList());
+        return composeExpression(keyMembers, getKeyMemberSeparator(entityType));
     }
 
-    private String getKeyMemberConcatenationExpression(final Field keyMember) {
+    private static String getKeyMemberConcatenationExpression(final Field keyMember) {
         if (PropertyDescriptor.class != keyMember.getType() && EntityUtils.isEntityType(keyMember.getType())) {
             return keyMember.getName() + ".key";
         } else {
@@ -63,7 +67,7 @@ public class DomainMetadataExpressionsGenerator {
         }
     }
 
-    private ExpressionModel composeExpression(final List<Pair<Field, Boolean>> original, final String separator) {
+    private static ExpressionModel composeExpression(final List<Pair<Field, Boolean>> original, final String separator) {
         ExpressionModel currExp = null;
         Boolean currExpIsOptional = null;
 
@@ -75,11 +79,11 @@ public class DomainMetadataExpressionsGenerator {
         return currExp;
     }
 
-    private ExpressionModel concatTwo(final ExpressionModel first, final String secondPropName, final String separator) {
+    private static ExpressionModel concatTwo(final ExpressionModel first, final String secondPropName, final String separator) {
         return expr().concat().expr(first).with().val(separator).with().prop(secondPropName).end().model();
     }
 
-    private ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final Pair<Field, Boolean> second, final String separator) {
+    private static ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final Pair<Field, Boolean> second, final String separator) {
         final ExpressionModel firstModel = first.getKey();
         final Boolean firstIsOptional = first.getValue();
 

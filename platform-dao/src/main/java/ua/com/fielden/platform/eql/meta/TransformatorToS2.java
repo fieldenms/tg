@@ -12,16 +12,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentTypeWithCalcProps;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
@@ -30,6 +33,7 @@ import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTypeWithCalcProps;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
@@ -181,23 +185,26 @@ public class TransformatorToS2 {
         if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
             final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
             return new QrySource2BasedOnPersistentType(qrySource.sourceType());
+        } else if (qrySourceStage1 instanceof QrySource1BasedOnPersistentTypeWithCalcProps) {
+            final QrySource1BasedOnPersistentTypeWithCalcProps qrySource = (QrySource1BasedOnPersistentTypeWithCalcProps) qrySourceStage1;
+            return new QrySource2BasedOnPersistentTypeWithCalcProps(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(Stream.of(MetadataGenerator.createYieldAllQueryModel(qrySource.sourceType()))).get(0));
         } else if (qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
             final QrySource1BasedOnSyntheticType qrySource = (QrySource1BasedOnSyntheticType) qrySourceStage1;
-            return new QrySource2BasedOnSyntheticType(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(qrySource.sourceType()));
+            return new QrySource2BasedOnSyntheticType(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(getEntityModelsOfQueryBasedEntityType(qrySource.sourceType()).stream()));
         } else {
             final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
             return new QrySource2BasedOnSubqueries(qrySourceStage1.getAlias(), extractQueryModels(qrySource));
         }
     }
 
-    private <T extends AbstractEntity<?>> List<EntQuery2> extractQueryModels(final Class<T> sourceType) {
+    private <T extends AbstractEntity<?>> List<EntQuery2> extractQueryModels(final Stream<EntityResultQueryModel<T>> stream) {
         final EntQueryGenerator gen = new EntQueryGenerator();
-        return getEntityModelsOfQueryBasedEntityType(sourceType).stream()
+        return stream
                 .map(q -> gen.generateEntQueryAsSourceQuery(q, empty()))
                 .map(q -> q.transform(produceNewOne()))
                 .collect(toList());
     }
-
+    
     private List<EntQuery2> extractQueryModels(final QrySource1BasedOnSubqueries qrySource) {
         return qrySource.getModels().stream().map(q -> q.transform(produceNewOne())).collect(toList());
     }
@@ -245,7 +252,6 @@ public class TransformatorToS2 {
         private final boolean aliased;
 
         public PropResolution(final boolean aliased, final IQrySource2 source, final AbstractPropInfo resolution, final EntProp1 entProp) {
-            super();
             this.aliased = aliased;
             this.source = source;
             this.resolution = resolution;
