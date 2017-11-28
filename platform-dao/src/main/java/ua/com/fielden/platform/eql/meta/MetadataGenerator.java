@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.UNION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
@@ -17,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -25,7 +29,10 @@ import ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
@@ -36,23 +43,22 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MetadataGenerator {
-//    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
-//    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
-//
-//    static {
-//        hibTypeDefaults.put(Date.class, DateTimeType.class);
-//        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-//    }
-//
-//    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
-//
-//    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-//
+    //    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+    //    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
+    //
+    //    static {
+    //        hibTypeDefaults.put(Date.class, DateTimeType.class);
+    //        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+    //    }
+    //
+    //    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+    //
+    //    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
+    //
     protected final EntQueryGenerator qb;// = new EntQueryGenerator1(null); //DOMAIN_METADATA_ANALYSER
-//    
+    //    
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
-    
     public MetadataGenerator(final EntQueryGenerator qb) {
         this.qb = qb;
     }
@@ -113,11 +119,11 @@ public class MetadataGenerator {
         return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
     }
 
-    
     private PrimTypePropInfo generateIdPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityInfo entityInfo) {
         switch (entityInfo.getCategory()) {
         case PERSISTED:
-            return isOneToOne(entityType) ? new PrimTypePropInfo(AbstractEntity.ID, entityInfo, Long.class, null) : new PrimTypePropInfo(AbstractEntity.ID, entityInfo, Long.class, null)/*(entityType)*/;
+            return isOneToOne(entityType) ? new PrimTypePropInfo(AbstractEntity.ID, entityInfo, Long.class, null)
+                    : new PrimTypePropInfo(AbstractEntity.ID, entityInfo, Long.class, null)/*(entityType)*/;
         case QUERY_BASED:
             if (isEntityType(getKeyType(entityType))) {
                 return new PrimTypePropInfo(AbstractEntity.ID, entityInfo, Long.class, entQryExpression(expr().prop("key").model()));
@@ -130,7 +136,7 @@ public class MetadataGenerator {
             return null;
         }
     }
-    
+
     private Expression1 getExpression(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
         if (AnnotationReflector.isAnnotationPresent(field, Calculated.class)) {
             throw new EqlException("Expression parsing for calculated properties yet to be modified according to the EQL3 approach.");
@@ -138,13 +144,13 @@ public class MetadataGenerator {
         }
         return null;
     }
-    
+
     private void addProps(final EntityInfo<?> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo> allEntitiesInfo) throws Exception {
         final PrimTypePropInfo idProp = generateIdPropertyMetadata(entityInfo.javaType(), entityInfo);
         if (idProp != null) {
             entityInfo.getProps().put(idProp.getName(), idProp);
         }
-        
+
         for (final Field field : getRealProperties(entityInfo.javaType())) {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
@@ -169,5 +175,33 @@ public class MetadataGenerator {
             //		}
             //	    }
         }
+    }
+
+    /**
+     * Creates an EQL model for an entity that yields all yield-able properties.
+     * <ul>
+     * <li>persistent properties,
+     * <li>explicitly calculated properties (with <code>@Calculated</code>),
+     * <li>implicitly calculated properties (their formulae are created and added during EQL metadata creation and available only at EQL processing level; e.g. composite key as
+     * string).
+     * </ul>
+     * 
+     * @param entityType
+     * @return
+     */
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> createYieldAllQueryModel(final Class<T> entityType) {
+        final IFromAlias<T> qryStart = select(entityType);
+        final Optional<ISubsequentCompletedAndYielded<T>> yield = Optional.empty();
+
+        for (final Field field : streamRealProperties(entityType).collect(toList())) {
+            if (field.isAnnotationPresent(MapTo.class)) {
+                //yield = yield.map(y -> y.yield(field.getName()).as(field.getName())).
+            } else if (field.isAnnotationPresent(Calculated.class)) {
+
+            }
+        }
+
+        return null;
+
     }
 }
