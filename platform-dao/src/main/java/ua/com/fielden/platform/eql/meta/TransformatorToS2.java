@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static com.google.common.cache.CacheBuilder.newBuilder;
 import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
+import static ua.com.fielden.platform.eql.meta.MetadataGenerator.createYieldAllQueryModel;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 
 import java.util.ArrayList;
@@ -13,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
+
+import com.google.common.cache.Cache;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -40,14 +45,20 @@ import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
     private List<Map<IQrySource1<? extends IQrySource2>, SourceInfo>> sourceMap = new ArrayList<>();
-    private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata;
+    private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
+    private final Cache<IQrySource1<? extends IQrySource2>, IQrySource2> sourcesCache;
     private final Map<String, Object> paramValues = new HashMap<>();
     private final IFilter filter;
     private final String username;
     private final EntQueryGenerator entQueryGenerator1;
 
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
-        this.metadata = metadata;
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
+        this(newBuilder().build(), domainInfo, paramValues, filter, username, entQueryGenerator1);
+    }
+
+    protected TransformatorToS2(final Cache<IQrySource1<? extends IQrySource2>, IQrySource2> sourcesCache, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
+        this.sourcesCache = sourcesCache; //must reference the passed-in argument in order to update the referenced cache if necessary.
+        this.domainInfo = new HashMap<>(domainInfo);
         sourceMap.add(new HashMap<IQrySource1<? extends IQrySource2>, SourceInfo>());
         this.paramValues.putAll(paramValues);
         this.filter = filter;
@@ -57,11 +68,11 @@ public class TransformatorToS2 {
 
     static class SourceInfo {
         private final IQrySource2 source;
-        private final EntityInfo entityInfo;
+        private final EntityInfo<?> entityInfo;
         private final boolean aliasingAllowed;
         private final String alias;
 
-        public SourceInfo(final IQrySource2 source, final EntityInfo entityInfo, final boolean aliasingAllowed, final String alias) {
+        public SourceInfo(final IQrySource2 source, final EntityInfo<?> entityInfo, final boolean aliasingAllowed, final String alias) {
             this.source = source;
             this.entityInfo = entityInfo;
             this.aliasingAllowed = aliasingAllowed;
@@ -139,33 +150,33 @@ public class TransformatorToS2 {
     public void addSource(final IQrySource1<? extends IQrySource2> source) {
         final IQrySource2 transformedSource = transformSource(source);
         if (EntityAggregates.class.equals(transformedSource.sourceType())) {
-            final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class, null);
+            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
                 final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
-                        ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, metadata.get(yield.javaType()), null)
+                        ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, domainInfo.get(yield.javaType()), null)
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType(), null);
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
             }
             getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, true, source.getAlias()));
         } else {
-            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, metadata.get(transformedSource.sourceType()), true, source.getAlias()));
+            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, domainInfo.get(transformedSource.sourceType()), true, source.getAlias()));
         }
     }
 
     public TransformatorToS2 produceBasedOn() {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
         result.sourceMap.addAll(sourceMap);
 
         return result;
     }
 
     public TransformatorToS2 produceNewOne() {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
         return result;
     }
 
     public TransformatorToS2 produceOneForCalcPropExpression(final IQrySource2 source) {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
         for (final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item : sourceMap) {
             for (final Entry<IQrySource1<? extends IQrySource2>, SourceInfo> mapItem : item.entrySet()) {
                 if (mapItem.getValue().source.equals(source)) {
@@ -182,29 +193,32 @@ public class TransformatorToS2 {
     }
 
     private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
-        if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
-            final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
-            return new QrySource2BasedOnPersistentType(qrySource.sourceType());
-        } else if (qrySourceStage1 instanceof QrySource1BasedOnPersistentTypeWithCalcProps) {
-            final QrySource1BasedOnPersistentTypeWithCalcProps qrySource = (QrySource1BasedOnPersistentTypeWithCalcProps) qrySourceStage1;
-            return new QrySource2BasedOnPersistentTypeWithCalcProps(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(Stream.of(MetadataGenerator.createYieldAllQueryModel(qrySource.sourceType()))).get(0));
-        } else if (qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
-            final QrySource1BasedOnSyntheticType qrySource = (QrySource1BasedOnSyntheticType) qrySourceStage1;
-            return new QrySource2BasedOnSyntheticType(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(getEntityModelsOfQueryBasedEntityType(qrySource.sourceType()).stream()));
-        } else {
-            final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
-            return new QrySource2BasedOnSubqueries(qrySourceStage1.getAlias(), extractQueryModels(qrySource));
-        }
+        return ofNullable(sourcesCache.getIfPresent(qrySourceStage1)).orElseGet(() -> {
+            final IQrySource2 result;
+            if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
+                final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
+                result = new QrySource2BasedOnPersistentType(qrySource.sourceType());
+            } else if (qrySourceStage1 instanceof QrySource1BasedOnPersistentTypeWithCalcProps) {
+                final QrySource1BasedOnPersistentTypeWithCalcProps qrySource = (QrySource1BasedOnPersistentTypeWithCalcProps) qrySourceStage1;
+                sourcesCache.put(qrySourceStage1, new QrySource2BasedOnPersistentType(qrySource.sourceType()));
+                result = new QrySource2BasedOnPersistentTypeWithCalcProps(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(Stream.of(createYieldAllQueryModel(qrySource.sourceType()))).get(0));
+            } else if (qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
+                final QrySource1BasedOnSyntheticType qrySource = (QrySource1BasedOnSyntheticType) qrySourceStage1;
+                result = new QrySource2BasedOnSyntheticType(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(getEntityModelsOfQueryBasedEntityType(qrySource.sourceType()).stream()));
+            } else {
+                final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
+                result = new QrySource2BasedOnSubqueries(qrySourceStage1.getAlias(), extractQueryModels(qrySource));
+            }
+            sourcesCache.put(qrySourceStage1, result);
+            return result;
+        });
     }
 
     private <T extends AbstractEntity<?>> List<EntQuery2> extractQueryModels(final Stream<EntityResultQueryModel<T>> stream) {
         final EntQueryGenerator gen = new EntQueryGenerator();
-        return stream
-                .map(q -> gen.generateEntQueryAsSourceQuery(q, empty()))
-                .map(q -> q.transform(produceNewOne()))
-                .collect(toList());
+        return stream.map(q -> gen.generateEntQueryAsSourceQuery(q, empty())).map(q -> q.transform(produceNewOne())).collect(toList());
     }
-    
+
     private List<EntQuery2> extractQueryModels(final QrySource1BasedOnSubqueries qrySource) {
         return qrySource.getModels().stream().map(q -> q.transform(produceNewOne())).collect(toList());
     }

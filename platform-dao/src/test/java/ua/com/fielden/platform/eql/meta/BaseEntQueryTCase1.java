@@ -94,8 +94,8 @@ public class BaseEntQueryTCase1 {
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
     protected static final TypeResolver typeResolver = new TypeResolver();
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
-    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
+    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
+    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
 
 
     protected static Type hibtype(final String name) {

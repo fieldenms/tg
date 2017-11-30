@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
@@ -40,28 +43,14 @@ public class DomainMetadataExpressionsGenerator {
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-//    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
-//        final Iterator<Pair<Field, Boolean>> iterator = keyMembers.iterator();
-//        final Pair<Field, Boolean> firstMember = iterator.next();
-//        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = firstMember.getValue() ? //
-//        expr().concat().prop(getKeyMemberConcatenationExpression(firstMember.getKey()))
-//                :
-//                expr().concat().prop(getKeyMemberConcatenationExpression(firstMember.getKey()));
-//        for (; iterator.hasNext();) {
-//            expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
-//            expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next().getKey()));
-//        }
-//        return expressionModelInProgress.end().model();
-//    }
-
     public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<Pair<Field, Boolean>> keyMembers = getKeyMembers(entityType).stream().map(f -> Pair.pair(f, isRequiredByDefinition(f, entityType))).collect(toList());
+        final List<Pair<Field, Boolean>> keyMembers = getKeyMembers(entityType).stream().map(f -> Pair.pair(f, !isRequiredByDefinition(f, entityType))).collect(toList());
         return composeExpression(keyMembers, getKeyMemberSeparator(entityType));
     }
 
     private static String getKeyMemberConcatenationExpression(final Field keyMember) {
         if (PropertyDescriptor.class != keyMember.getType() && EntityUtils.isEntityType(keyMember.getType())) {
-            return keyMember.getName() + ".key";
+            return format("%s.%s", keyMember.getName(), KEY);
         } else {
             return keyMember.getName();
         }
@@ -116,7 +105,7 @@ public class DomainMetadataExpressionsGenerator {
 
 
     private PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
-        return select(entityType).where().prop(propName).eq().extProp("id").yield().countAll().modelAsPrimitive();
+        return select(entityType).where().prop(propName).eq().extProp(ID).yield().countAll().modelAsPrimitive();
     }
 
     ExpressionModel getReferencesCountPropForEntity(final Set<Pair<Class<? extends AbstractEntity<?>>, String>> references) {
@@ -133,5 +122,4 @@ public class DomainMetadataExpressionsGenerator {
         }
         return expressionModelInProgress.model();
     }
-
 }

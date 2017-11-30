@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EN
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
+import static ua.com.fielden.platform.utils.EntityUtils.hasCalcProps;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentTy
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentTypeWithCalcProps;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -67,7 +67,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
-            if (EntityUtils.hasCalcProps(resultType)) {
+            if (hasCalcProps(resultType)) {
                 return pair(QRY_SOURCE, new QrySource1BasedOnPersistentTypeWithCalcProps(resultType, (String) secondValue()));    
             } else {
                 return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue()));    
