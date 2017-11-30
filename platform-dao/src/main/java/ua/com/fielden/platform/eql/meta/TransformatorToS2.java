@@ -257,9 +257,7 @@ public class TransformatorToS2 {
     }
 
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
-        final AbstractPropInfo propInfo = resolution.resolution;
-        final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.source)) : null;
-        return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.resolution, expr);
+        return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.resolution);
     }
 
     public static class PropResolution {

@@ -24,6 +24,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -72,7 +74,9 @@ public class MetadataGenerator {
     }
 
     public final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> generate(final Set<Class<? extends AbstractEntity<?>>> entities) throws Exception {
-        final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = entities.stream().collect(toMap(k -> k, k -> new EntityInfo<>(k, determineCategory(k))));
+        final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = entities.stream()
+                .filter(t -> isPersistedEntityType(t) || isSyntheticEntityType(t) || isSyntheticBasedOnPersistentEntityType(t) || isUnionEntityType(t))
+                .collect(toMap(k -> k, k -> new EntityInfo<>(k, determineCategory(k))));
         result.values().stream().forEach(ei -> addProps(ei, result));
         return result;
     }

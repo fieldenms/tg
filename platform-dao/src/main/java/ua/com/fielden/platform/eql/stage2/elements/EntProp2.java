@@ -6,13 +6,11 @@ public class EntProp2 implements ISingleOperand2 {
     private final String name;
     private final IQrySource2 source;
     private final AbstractPropInfo resolution;
-    private final Expression2 expression;
 
-    public EntProp2(final String name, final IQrySource2 source, final AbstractPropInfo resolution, final Expression2 expression) {
+    public EntProp2(final String name, final IQrySource2 source, final AbstractPropInfo resolution) {
         this.name = name;
         this.source = source;
         this.resolution = resolution;
-        this.expression = expression;
         source.addProp(this);
     }
 
@@ -39,7 +37,6 @@ public class EntProp2 implements ISingleOperand2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((expression == null) ? 0 : expression.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((resolution == null) ? 0 : resolution.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
@@ -58,13 +55,6 @@ public class EntProp2 implements ISingleOperand2 {
             return false;
         }
         final EntProp2 other = (EntProp2) obj;
-        if (expression == null) {
-            if (other.expression != null) {
-                return false;
-            }
-        } else if (!expression.equals(other.expression)) {
-            return false;
-        }
         if (name == null) {
             if (other.name != null) {
                 return false;
