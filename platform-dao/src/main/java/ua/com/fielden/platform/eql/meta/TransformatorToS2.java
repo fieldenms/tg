@@ -144,7 +144,13 @@ public class TransformatorToS2 {
 
     public void addSource(final IQrySource1<? extends IQrySource2> source) {
         final IQrySource2 transformedSource = transformSource(source);
-        if (EntityAggregates.class.equals(transformedSource.sourceType())) {
+        getCurrentQueryMap().put(source, new SourceInfo(transformedSource, produceEntityInfoFrom(transformedSource), source.getAlias()));
+    }
+
+    private EntityInfo<?> produceEntityInfoFrom(final IQrySource2 transformedSource) {
+        if (!EntityAggregates.class.equals(transformedSource.sourceType())) {
+            return domainInfo.get(transformedSource.sourceType());
+        } else {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
                 final AbstractPropInfo<?, ?> aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
@@ -152,16 +158,13 @@ public class TransformatorToS2 {
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType());
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
             }
-            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, source.getAlias()));
-        } else {
-            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, domainInfo.get(transformedSource.sourceType()), source.getAlias()));
+            return entAggEntityInfo;
         }
     }
 
     public TransformatorToS2 produceBasedOn() {
         final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
         result.sourceMap.addAll(sourceMap);
-
         return result;
     }
 
