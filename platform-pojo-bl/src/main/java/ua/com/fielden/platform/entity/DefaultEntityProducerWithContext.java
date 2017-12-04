@@ -197,7 +197,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
     
     @Override
-    public void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
+    public DefaultEntityProducerWithContext<T> setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
         this.context = context;
+        return this;
     }
 }

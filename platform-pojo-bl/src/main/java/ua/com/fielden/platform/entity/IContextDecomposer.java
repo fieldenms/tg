@@ -67,8 +67,9 @@ public interface IContextDecomposer {
             }
             
             @Override
-            public void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
+            public IContextDecomposer setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
                 this.context = context;
+                return this;
             }
         };
         contextDecomposer.setContext((CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>>) context);
@@ -97,7 +98,7 @@ public interface IContextDecomposer {
     }
     
     CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext();
-    void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context);
+    IContextDecomposer setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context);
     
     // MASTER ENTITY:
     /**
