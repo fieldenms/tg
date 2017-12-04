@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends AbstractPropInfo<T, PARENT> {
     private final Class<T> propType;
 
-    public PrimTypePropInfo(final String name, final EntityInfo<PARENT> parent, final Class<T> propType) {
+    public PrimTypePropInfo(final String name, final Class<T> propType, final EntityInfo<PARENT> parent) {
         super(name, parent);
         this.propType = propType;
     }

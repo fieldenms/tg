@@ -127,16 +127,16 @@ public class MetadataGenerator {
         switch (entityInfo.getCategory()) {
         case PERSISTED:
             //TODO Need to handle expression for one-2-one case.
-            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class)
-                    : new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class)/*(entityType)*/); 
+            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)
+                    : new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)); 
         case QUERY_BASED:
             if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
                 if (isEntityType(getKeyType(entityType))) {
                     throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persystent type with an entity-typed key. This is not supported.", entityType.getName()));
                 }
-                return of(new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class));
+                return of(new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo));
             } else if (isEntityType(getKeyType(entityType))) {
-                return of(new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
+                return of(new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
             } else {
                 return empty();
             }
@@ -149,15 +149,15 @@ public class MetadataGenerator {
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
         generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.addProp(id));
-        entityInfo.addProp(new PrimTypePropInfo<Long, T>(VERSION, entityInfo, Long.class));
+        entityInfo.addProp(new PrimTypePropInfo<Long, T>(VERSION, Long.class, entityInfo));
         
         for (final Field field : getRealProperties(entityInfo.javaType())) {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
-                entityInfo.addProp(new EntityTypePropInfo(field.getName(), entityInfo, allEntitiesInfo.get(javaType/*field.getType()*/)));
+                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo));
             } else {
-                entityInfo.addProp(new PrimTypePropInfo(field.getName(), entityInfo, javaType/*field.getType()*/));
+                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, entityInfo));
             }
             //	    if (!result.containsKey(field.getName())) {
             //		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {

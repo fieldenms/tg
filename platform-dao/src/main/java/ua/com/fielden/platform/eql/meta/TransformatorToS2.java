@@ -154,8 +154,8 @@ public class TransformatorToS2 {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
                 final AbstractPropInfo<?, ?> aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
-                        ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, domainInfo.get(yield.javaType()))
-                        : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType());
+                        ? new EntityTypePropInfo(yield.getAlias(), domainInfo.get(yield.javaType()), entAggEntityInfo)
+                        : new PrimTypePropInfo(yield.getAlias(), yield.javaType(), entAggEntityInfo);
                 entAggEntityInfo.addProp(aep);
             }
             return entAggEntityInfo;

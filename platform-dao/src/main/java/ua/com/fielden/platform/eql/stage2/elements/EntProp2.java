@@ -5,9 +5,9 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 public class EntProp2 implements ISingleOperand2 {
     private final String name;
     private final IQrySource2 source;
-    private final AbstractPropInfo resolution;
+    private final AbstractPropInfo<?, ?> resolution;
 
-    public EntProp2(final String name, final IQrySource2 source, final AbstractPropInfo resolution) {
+    public EntProp2(final String name, final IQrySource2 source, final AbstractPropInfo<?, ?> resolution) {
         this.name = name;
         this.source = source;
         this.resolution = resolution;
@@ -29,7 +29,7 @@ public class EntProp2 implements ISingleOperand2 {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return resolution.javaType();
     }
 
