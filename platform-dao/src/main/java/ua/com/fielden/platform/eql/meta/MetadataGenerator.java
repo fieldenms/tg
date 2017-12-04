@@ -148,16 +148,16 @@ public class MetadataGenerator {
     }
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
-        generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.getProps().put(id.getName(), id));
-        entityInfo.getProps().put(VERSION, new PrimTypePropInfo<Long, T>(VERSION, entityInfo, Long.class));
+        generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.addProp(id));
+        entityInfo.addProp(new PrimTypePropInfo<Long, T>(VERSION, entityInfo, Long.class));
         
         for (final Field field : getRealProperties(entityInfo.javaType())) {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
-                entityInfo.getProps().put(field.getName(), new EntityTypePropInfo(field.getName(), entityInfo, allEntitiesInfo.get(javaType/*field.getType()*/)));
+                entityInfo.addProp(new EntityTypePropInfo(field.getName(), entityInfo, allEntitiesInfo.get(javaType/*field.getType()*/)));
             } else {
-                entityInfo.getProps().put(field.getName(), new PrimTypePropInfo(field.getName(), entityInfo, javaType/*field.getType()*/));
+                entityInfo.addProp(new PrimTypePropInfo(field.getName(), entityInfo, javaType/*field.getType()*/));
             }
             //	    if (!result.containsKey(field.getName())) {
             //		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {

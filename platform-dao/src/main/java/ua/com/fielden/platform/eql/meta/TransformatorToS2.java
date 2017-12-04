@@ -156,7 +156,7 @@ public class TransformatorToS2 {
                 final AbstractPropInfo<?, ?> aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
                         ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, domainInfo.get(yield.javaType()))
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType());
-                entAggEntityInfo.getProps().put(yield.getAlias(), aep);
+                entAggEntityInfo.addProp(aep);
             }
             return entAggEntityInfo;
         }
