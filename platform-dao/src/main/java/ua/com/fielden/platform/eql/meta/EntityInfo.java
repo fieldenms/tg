@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractPropInfo> props = new TreeMap<>();
+    private final SortedMap<String, AbstractPropInfo<?, ?>> props = new TreeMap<>();
     private final EntityCategory category;
 
     public EntityInfo(final Class<T> javaType, final EntityCategory category) {
@@ -18,13 +18,13 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     }
 
     @Override
-    public AbstractPropInfo resolve(final String dotNotatedPropName) {
+    public AbstractPropInfo<?, ?> resolve(final String dotNotatedPropName) {
         final Pair<String, String> parts = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-        final AbstractPropInfo foundPart = props.get(parts.getKey());
+        final AbstractPropInfo<?, ?> foundPart = props.get(parts.getKey());
         return foundPart == null ? null : foundPart.resolve(parts.getValue());
     }
 
-    protected SortedMap<String, AbstractPropInfo> getProps() {
+    protected SortedMap<String, AbstractPropInfo<?, ?>> getProps() {
         return props;
     }
 

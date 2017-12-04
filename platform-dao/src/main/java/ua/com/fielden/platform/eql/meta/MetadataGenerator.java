@@ -123,20 +123,20 @@ public class MetadataGenerator {
         return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
     }
 
-    private Optional<PrimTypePropInfo> generateIdPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityInfo<?> entityInfo) {
+    private <T extends AbstractEntity<?>> Optional<PrimTypePropInfo<?,?>> generateIdPropertyMetadata(final Class<T> entityType, final EntityInfo<T> entityInfo) {
         switch (entityInfo.getCategory()) {
         case PERSISTED:
             //TODO Need to handle expression for one-2-one case.
-            return of(isOneToOne(entityType) ? new PrimTypePropInfo(ID, entityInfo, Long.class)
-                    : new PrimTypePropInfo(ID, entityInfo, Long.class)/*(entityType)*/); 
+            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class)
+                    : new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class)/*(entityType)*/); 
         case QUERY_BASED:
             if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
                 if (isEntityType(getKeyType(entityType))) {
                     throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persystent type with an entity-typed key. This is not supported.", entityType.getName()));
                 }
-                return of(new PrimTypePropInfo(ID, entityInfo, Long.class));
+                return of(new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class));
             } else if (isEntityType(getKeyType(entityType))) {
-                return of(new PrimTypePropInfo(ID, entityInfo, Long.class)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
+                return of(new PrimTypePropInfo<Long, T>(ID, entityInfo, Long.class)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
             } else {
                 return empty();
             }
@@ -147,9 +147,9 @@ public class MetadataGenerator {
         }
     }
 
-    private void addProps(final EntityInfo<?> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
+    private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
         generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.getProps().put(id.getName(), id));
-        entityInfo.getProps().put(VERSION, new PrimTypePropInfo(VERSION, entityInfo, Long.class));
+        entityInfo.getProps().put(VERSION, new PrimTypePropInfo<Long, T>(VERSION, entityInfo, Long.class));
         
         for (final Field field : getRealProperties(entityInfo.javaType())) {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;

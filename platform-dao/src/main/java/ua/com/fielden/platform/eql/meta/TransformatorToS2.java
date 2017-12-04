@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static com.google.common.cache.CacheBuilder.newBuilder;
+import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -22,6 +23,7 @@ import com.google.common.cache.Cache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
@@ -145,7 +147,7 @@ public class TransformatorToS2 {
         if (EntityAggregates.class.equals(transformedSource.sourceType())) {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
-                final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
+                final AbstractPropInfo<?, ?> aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
                         ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, domainInfo.get(yield.javaType()))
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType());
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
@@ -221,7 +223,7 @@ public class TransformatorToS2 {
             }
         }
 
-        throw new IllegalStateException("Can't resolve property [" + originalProp.getName() + "].");
+        throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", originalProp.getName()));
     }
 
     public EntValue2 getTransformedParamToValue(final EntParam1 originalParam) {
@@ -238,30 +240,28 @@ public class TransformatorToS2 {
 
     public static class PropResolution {
         private final boolean aliased;
+        private final IQrySource2 source;
+        private final AbstractPropInfo<?, ?> resolution;
+        private final EntProp1 entProp;
 
-        public PropResolution(final boolean aliased, final IQrySource2 source, final AbstractPropInfo resolution, final EntProp1 entProp) {
+        public PropResolution(final boolean aliased, final IQrySource2 source, final AbstractPropInfo<?, ?> resolution, final EntProp1 entProp) {
             this.aliased = aliased;
             this.source = source;
             this.resolution = resolution;
             this.entProp = entProp;
         }
-
-        private final IQrySource2 source;
-        private final AbstractPropInfo resolution;
-        private final EntProp1 entProp;
     }
 
     private PropResolution resolvePropAgainstSource(final SourceInfo source, final EntProp1 entProp) {
-        final AbstractPropInfo asIsResolution = source.entityInfo.resolve(entProp.getName());
+        final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo.resolve(entProp.getName());
         if (source.alias != null && entProp.getName().startsWith(source.alias + ".")) {
             final String aliasLessPropName = entProp.getName().substring(source.alias.length() + 1);
-            final AbstractPropInfo aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
+            final AbstractPropInfo<?, ?> aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
             if (aliasLessResolution != null) {
                 if (asIsResolution == null) {
                     return new PropResolution(true, source.source, aliasLessResolution, entProp);
                 } else {
-                    throw new IllegalStateException("Ambiguity while resolving prop [" + entProp.getName() + "]. Both [" + entProp.getName() + "] and [" + aliasLessPropName
-                            + "] are resolvable against given source.");
+                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", entProp.getName(), entProp.getName(), aliasLessPropName));
                 }
             }
         }
@@ -278,7 +278,7 @@ public class TransformatorToS2 {
         }
 
         if (result.size() > 1) {
-            throw new IllegalStateException("Ambiguity while resolving prop [" + entProp.getName() + "]");
+            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.getName()));
         }
 
         return result.size() == 1 ? result.get(0) : null;
