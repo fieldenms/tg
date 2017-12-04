@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public class QrySource2BasedOnPersistentTypeWithCalcProps extends QrySource2BasedOnSubqueries {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public QrySource2BasedOnPersistentTypeWithCalcProps(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final EntQuery2 model) {
-        super(alias, listOf(model));
+    public QrySource2BasedOnPersistentTypeWithCalcProps(final Class<? extends AbstractEntity<?>> sourceType, final EntQuery2 model) {
+        super(listOf(model));
         this.sourceType = sourceType;
     }
 

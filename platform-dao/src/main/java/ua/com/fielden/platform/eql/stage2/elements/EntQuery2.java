@@ -63,6 +63,7 @@ public class EntQuery2 implements ISingleOperand2 {
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
         return result;
     }
 
@@ -114,6 +115,14 @@ public class EntQuery2 implements ISingleOperand2 {
                 return false;
             }
         } else if (!yields.equals(other.yields)) {
+            return false;
+        }
+
+        if (orderings == null) {
+            if (other.orderings != null) {
+                return false;
+            }
+        } else if (!orderings.equals(other.orderings)) {
             return false;
         }
         return true;

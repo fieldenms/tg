@@ -30,6 +30,7 @@ import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTypeWithCalcProps;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
@@ -61,7 +62,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().or().prop("surname").eq().iVal(null).model();
         final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, new SimpleUserFilter(), null, qb));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class);
+        final EntQuery2 authorSourceQry = entResultQry2(MetadataGenerator.createYieldAllQueryModel(TgAuthor.class), new TransformatorToS2(metadata, Collections.EMPTY_MAP, new SimpleUserFilter(), null, qb));
+        final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(TgAuthor.class, authorSourceQry);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
 
         final List<List<ICondition2>> allConditions1 = new ArrayList<>();
@@ -84,7 +86,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY);
-
+        System.out.println(qry2.getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getYields().equals(exp.getYields()));
+        System.out.println(qry2.getSources().equals(exp.getSources()));
+        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
         assertEquals(qry2, exp);
     }
 

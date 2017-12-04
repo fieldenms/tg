@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public class QrySource2BasedOnSyntheticType extends QrySource2BasedOnSubqueries {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public QrySource2BasedOnSyntheticType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final List<EntQuery2> models) {
-        super(alias, models);
+    public QrySource2BasedOnSyntheticType(final Class<? extends AbstractEntity<?>> sourceType, final List<EntQuery2> models) {
+        super(models);
         this.sourceType = sourceType;
     }
 

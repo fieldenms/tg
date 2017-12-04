@@ -35,7 +35,6 @@ import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticTyp
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
-import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTypeWithCalcProps;
@@ -69,18 +68,12 @@ public class TransformatorToS2 {
     static class SourceInfo {
         private final IQrySource2 source;
         private final EntityInfo<?> entityInfo;
-        private final boolean aliasingAllowed;
         private final String alias;
 
-        public SourceInfo(final IQrySource2 source, final EntityInfo<?> entityInfo, final boolean aliasingAllowed, final String alias) {
+        public SourceInfo(final IQrySource2 source, final EntityInfo<?> entityInfo, final String alias) {
             this.source = source;
             this.entityInfo = entityInfo;
-            this.aliasingAllowed = aliasingAllowed;
             this.alias = alias;
-        }
-
-        SourceInfo produceNewWithoutAliasing() {
-            return new SourceInfo(source, entityInfo, false, alias);
         }
     }
 
@@ -153,13 +146,13 @@ public class TransformatorToS2 {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
                 final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
-                        ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, domainInfo.get(yield.javaType()), null)
-                        : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType(), null);
+                        ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, domainInfo.get(yield.javaType()))
+                        : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType());
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
             }
-            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, true, source.getAlias()));
+            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, source.getAlias()));
         } else {
-            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, domainInfo.get(transformedSource.sourceType()), true, source.getAlias()));
+            getCurrentQueryMap().put(source, new SourceInfo(transformedSource, domainInfo.get(transformedSource.sourceType()), source.getAlias()));
         }
     }
 
@@ -175,23 +168,6 @@ public class TransformatorToS2 {
         return result;
     }
 
-    public TransformatorToS2 produceOneForCalcPropExpression(final IQrySource2 source) {
-        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
-        for (final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item : sourceMap) {
-            for (final Entry<IQrySource1<? extends IQrySource2>, SourceInfo> mapItem : item.entrySet()) {
-                if (mapItem.getValue().source.equals(source)) {
-                    final Map<IQrySource1<? extends IQrySource2>, SourceInfo> newMap = new HashMap<>();
-                    newMap.put(mapItem.getKey(), mapItem.getValue().produceNewWithoutAliasing());
-                    result.sourceMap.add(newMap);
-                    return result;
-                }
-            }
-
-        }
-
-        throw new IllegalStateException("Should not reach here!");
-    }
-
     private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
         return ofNullable(sourcesCache.getIfPresent(qrySourceStage1)).orElseGet(() -> {
             final IQrySource2 result;
@@ -201,13 +177,13 @@ public class TransformatorToS2 {
             } else if (qrySourceStage1 instanceof QrySource1BasedOnPersistentTypeWithCalcProps) {
                 final QrySource1BasedOnPersistentTypeWithCalcProps qrySource = (QrySource1BasedOnPersistentTypeWithCalcProps) qrySourceStage1;
                 sourcesCache.put(qrySourceStage1, new QrySource2BasedOnPersistentType(qrySource.sourceType()));
-                result = new QrySource2BasedOnPersistentTypeWithCalcProps(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(Stream.of(createYieldAllQueryModel(qrySource.sourceType()))).get(0));
+                result = new QrySource2BasedOnPersistentTypeWithCalcProps(qrySource.sourceType(), extractQueryModels(Stream.of(createYieldAllQueryModel(qrySource.sourceType()))).get(0));
             } else if (qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
                 final QrySource1BasedOnSyntheticType qrySource = (QrySource1BasedOnSyntheticType) qrySourceStage1;
-                result = new QrySource2BasedOnSyntheticType(qrySource.sourceType(), qrySourceStage1.getAlias(), extractQueryModels(getEntityModelsOfQueryBasedEntityType(qrySource.sourceType()).stream()));
+                result = new QrySource2BasedOnSyntheticType(qrySource.sourceType(), extractQueryModels(getEntityModelsOfQueryBasedEntityType(qrySource.sourceType()).stream()));
             } else {
                 final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
-                result = new QrySource2BasedOnSubqueries(qrySourceStage1.getAlias(), extractQueryModels(qrySource));
+                result = new QrySource2BasedOnSubqueries(extractQueryModels(qrySource));
             }
             sourcesCache.put(qrySourceStage1, result);
             return result;
@@ -277,7 +253,7 @@ public class TransformatorToS2 {
 
     private PropResolution resolvePropAgainstSource(final SourceInfo source, final EntProp1 entProp) {
         final AbstractPropInfo asIsResolution = source.entityInfo.resolve(entProp.getName());
-        if (source.alias != null && source.aliasingAllowed && entProp.getName().startsWith(source.alias + ".")) {
+        if (source.alias != null && entProp.getName().startsWith(source.alias + ".")) {
             final String aliasLessPropName = entProp.getName().substring(source.alias.length() + 1);
             final AbstractPropInfo aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
             if (aliasLessResolution != null) {

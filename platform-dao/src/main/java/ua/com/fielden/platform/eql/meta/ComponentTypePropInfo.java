@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.meta;
 
-import ua.com.fielden.platform.eql.stage1.elements.Expression1;
-
 public class ComponentTypePropInfo extends AbstractPropInfo {
     private final EntityInfo propEntityInfo;
 
@@ -10,8 +8,8 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
         return super.toString() + ": " + propEntityInfo;
     }
 
-    public ComponentTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo, final Expression1 expression) {
-        super(name, parent, expression);
+    public ComponentTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo) {
+        super(name, parent);
         this.propEntityInfo = propEntityInfo;
     }
 
