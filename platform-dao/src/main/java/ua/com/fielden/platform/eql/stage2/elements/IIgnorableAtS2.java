@@ -1,5 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-public interface IElement2 {
+public interface IIgnorableAtS2 {
     boolean ignore();
 }

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.List;
 
-public class OrderBys2 implements IElement2 {
+public class OrderBys2 implements IIgnorableAtS2 {
     private final List<OrderBy2> models;
 
     public OrderBys2(final List<OrderBy2> models) {

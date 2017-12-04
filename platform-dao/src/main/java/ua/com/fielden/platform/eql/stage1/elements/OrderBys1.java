@@ -7,7 +7,7 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 
-public class OrderBys1 implements IElement1<OrderBys2> {
+public class OrderBys1 implements ITransformableToS2<OrderBys2> {
     private final List<OrderBy1> models;
 
     public OrderBys1(final List<OrderBy1> models) {

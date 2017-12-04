@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class Yields2 implements IElement2 {
+public class Yields2 implements IIgnorableAtS2 {
     private final SortedMap<String, Yield2> yields = new TreeMap<String, Yield2>();
 
     public Yields2() {

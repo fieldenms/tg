@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.List;
 
-public class GroupBys2 implements IElement2 {
+public class GroupBys2 implements IIgnorableAtS2 {
     private final List<GroupBy2> groups;
 
     public GroupBys2(final List<GroupBy2> groups) {

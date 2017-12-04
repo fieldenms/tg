@@ -8,7 +8,7 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 
-public class GroupBys1 implements IElement1<GroupBys2> {
+public class GroupBys1 implements ITransformableToS2<GroupBys2> {
     private final List<GroupBy1> groups;
 
     public GroupBys1(final List<GroupBy1> groups) {

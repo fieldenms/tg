@@ -8,7 +8,7 @@ import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 
-public class Sources1 implements IElement1<Sources2> {
+public class Sources1 implements ITransformableToS2<Sources2> {
     private final IQrySource1<? extends IQrySource2> main;
     private final List<CompoundSource1> compounds;
 

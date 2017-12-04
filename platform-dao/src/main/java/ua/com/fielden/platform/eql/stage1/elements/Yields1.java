@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 
-public class Yields1 implements IElement1<Yields2> {
+public class Yields1 implements ITransformableToS2<Yields2> {
     private final SortedMap<String, Yield1> yields = new TreeMap<String, Yield1>();
 
     public Yields1() {

@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.stage2.elements.IElement2;
+import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
 
-abstract class ZeroOperandFunction1<S2 extends IElement2> extends AbstractFunction1<S2> {
+abstract class ZeroOperandFunction1<S2 extends IIgnorableAtS2> extends AbstractFunction1<S2> {
 
     private final String functionName;
 
