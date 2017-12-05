@@ -74,7 +74,7 @@ public class Result extends RuntimeException {
      * @return
      */
     public static Result failure(final Object instance, final String reason) {
-        return new Result(instance, new RuntimeException(reason));
+        return new Result(instance, new Exception(reason));
     }
 
     /**
@@ -96,7 +96,7 @@ public class Result extends RuntimeException {
      * @return
      */
     public static Result failure(final String reason) {
-        return new Result(null, new RuntimeException(reason));
+        return new Result(null, new Exception(reason));
     }
 
     ///////////////////////////////////////////////
