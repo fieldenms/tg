@@ -324,6 +324,7 @@
                     channel: embeddedMasterPostSaveChannel,
                     topic: centreRefreshTopic,
                     callback: function (data, envelope) {
+                        console.debug('CENTRE_EVENTS [PUBLISH, REDIRECT]: channel = [' + compoundMasterCentreRefreshChannel + ']', 'topic = ', '[detail.saved]');
                         postal.publish({
                             channel: compoundMasterCentreRefreshChannel,
                             topic: centreRefreshTopic,

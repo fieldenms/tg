@@ -476,6 +476,7 @@
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                     //this.focusFirstInput();
                     
+                    console.debug('CENTRE_EVENTS [PUBLISH]: channel = [centre_' + this.centreUuid + ']', 'topic = ', '[detail.saved]');
                     postal.publish({
                         channel: "centre_" + this.centreUuid,
                         topic: "detail.saved",
