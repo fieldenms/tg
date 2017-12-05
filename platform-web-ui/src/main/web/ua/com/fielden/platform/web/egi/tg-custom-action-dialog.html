@@ -11,6 +11,7 @@
 <link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -93,10 +94,10 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
-                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext"></paper-icon-button>
+                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog" tooltip-text="Expand"></paper-icon-button>
+                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog" tooltip-text="Collapse"></paper-icon-button>
+                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
+                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
         </div>
         <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
@@ -118,7 +119,7 @@
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.error;
 
+import java.util.function.Consumer;
+
 /**
  * Represents a result (an error or success) of some custom logic. That could been the result of some validation or application of some other business rules.
  * <p>
@@ -161,7 +163,38 @@ public class Result extends RuntimeException {
     public boolean isSuccessful() {
         return ex == null;
     }
+    
+    /**
+     * A convenient construct to perform some action for a result that represents a failure.
+     * For example, it could be used to throw an exception as it often happens in case of unsuccessful validations.
+     * 
+     * @param consumer
+     */
+    public void ifFailure(final Consumer<? super Exception> consumer) {
+        if (!isSuccessful()) {
+            consumer.accept(ex);
+        }
+    }
 
+    /**
+     * A convenient method that returns the passed in <code>ex</code> if it is of type {@link Result}, or wraps it into a <code>failure</code> of type {@link Result}.
+     * 
+     * @param ex
+     * @return
+     */
+    public static RuntimeException asRuntime(final Exception ex) {
+        return ex instanceof RuntimeException ? (RuntimeException) ex : failure(ex); 
+    }
+    
+    /**
+     * A convenient method to throw a runtime exception that is obtained by passing <code>ex</code> into {@link asRuntime}.
+     * 
+     * @param ex
+     */
+    public static void throwRuntime(final Exception ex) {
+        throw asRuntime(ex);
+    }
+    
     /**
      * Returns true if this {@link Result} is not {@link Warning} instance and is successful.
      *

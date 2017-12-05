@@ -76,7 +76,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     }
 
     @SuppressWarnings("unchecked")
-	public void setSelectedEntities(final List<T> selectedEntities) {
+	public CentreContext<T,M> setSelectedEntities(final List<T> selectedEntities) {
         this.selectedEntities.clear();
         if (selectedEntities != null) {
             for (final AbstractEntity<?> el: selectedEntities) {
@@ -94,6 +94,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
                 this.selectedEntities.add((T) el.copy(EntityProxyContainer.proxy(originalType, propsToBeProxied)));
             }
         }
+        return this;
     }
 
     public EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> getSelectionCrit() {
@@ -123,8 +124,9 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
             + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty);
     }
 
-    public void setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
+    public CentreContext<T,M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         this.computation = Optional.of(computation);
+        return this;
     }
 
     public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> getComputation() {
