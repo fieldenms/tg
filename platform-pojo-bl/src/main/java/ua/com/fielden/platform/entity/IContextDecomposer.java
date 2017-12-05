@@ -369,7 +369,7 @@ public interface IContextDecomposer {
      * @return
      */
     default Set<Long> selectedEntityIds() {
-        return selectedEntities().stream().map(ent -> ent.getId()).collect(toCollection(LinkedHashSet::new));
+        return selectedEntities().stream().map(AbstractEntity::getId).collect(toCollection(LinkedHashSet::new));
     }
     
     /**
