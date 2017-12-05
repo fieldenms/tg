@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-import java.util.List;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public interface IQrySource2 {

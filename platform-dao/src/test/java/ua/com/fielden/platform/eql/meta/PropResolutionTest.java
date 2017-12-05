@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.Collections.EMPTY_MAP;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,21 +54,21 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     private EntQuery2 transform(final EntityResultQueryModel qry) {
-        return entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, null, null, qb));
+        return entResultQry2(qry, new TransformatorToS2(metadata, emptyMap(), null, null, qb));
     }
 
     private EntQuery2 transform(final AggregatedResultQueryModel qry) {
-        return entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, null, null, qb));
+        return entResultQry2(qry, new TransformatorToS2(metadata, emptyMap(), null, null, qb));
     }
 
     @Test
     public void test_q1() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().or().prop("surname").eq().iVal(null).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, new SimpleUserFilter(), null, qb));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, emptyMap(), new SimpleUserFilter(), null, qb));
 
-        final EntQuery2 authorSourceQry = entResultQry2(MetadataGenerator.createYieldAllQueryModel(TgAuthor.class), new TransformatorToS2(metadata, Collections.EMPTY_MAP, new SimpleUserFilter(), null, qb));
+        final EntQuery2 authorSourceQry = entResultQry2(MetadataGenerator.createYieldAllQueryModel(TgAuthor.class), new TransformatorToS2(metadata, emptyMap(), new SimpleUserFilter(), null, qb));
         final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(TgAuthor.class, authorSourceQry);
-        final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
+        final Sources2 sources = new Sources2(source, emptyList());
 
         final List<List<ICondition2>> allConditions1 = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup1 = new ArrayList<>();
@@ -84,8 +88,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, QueryCategory.RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(emptyList()), new OrderBys2(null));
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
         System.out.println(qry2.getConditions().equals(exp.getConditions()));
         System.out.println(qry2.getGroups().equals(exp.getGroups()));
         System.out.println(qry2.getYields().equals(exp.getYields()));

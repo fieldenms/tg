@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import java.util.ArrayList;
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableCollection;
+
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
@@ -15,12 +15,8 @@ import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 public class Yields1 implements ITransformableToS2<Yields2> {
     private final SortedMap<String, Yield1> yields = new TreeMap<String, Yield1>();
 
-    public Yields1() {
-    }
-
     @Override
     public Yields2 transform(final TransformatorToS2 resolver) {
-        final List<Yield2> transformed = new ArrayList<>();
         final Yields2 result = new Yields2();
         for (final Yield1 yield : yields.values()) {
             result.addYield(new Yield2(yield.getOperand().transform(resolver), yield.getAlias(), yield.isRequiredHint()));
@@ -30,22 +26,9 @@ public class Yields1 implements ITransformableToS2<Yields2> {
 
     public void addYield(final Yield1 yield) {
         if (yields.containsKey(yield.getAlias())) {
-            throw new IllegalStateException("Query contains duplicate yields for alias [" + yield.getAlias() + "]");
+            throw new EqlStage1ProcessingException(format("Query contains duplicate yields for alias [%s].", yield.getAlias()));
         }
         yields.put(yield.getAlias(), yield);
-    }
-
-    public void removeYield(final Yield1 yield) {
-        if (!yields.containsKey(yield.getAlias())) {
-            throw new IllegalStateException("Query does not contain the following yield [" + yield + "]");
-        }
-        yields.remove(yield.getAlias());
-    }
-
-    public void removeYields(final Set<Yield1> toBeRemoved) {
-        for (final Yield1 yield : toBeRemoved) {
-            removeYield(yield);
-        }
     }
 
     public Yield1 getFirstYield() {
@@ -57,7 +40,7 @@ public class Yields1 implements ITransformableToS2<Yields2> {
     }
 
     public Collection<Yield1> getYields() {
-        return Collections.unmodifiableCollection(yields.values());
+        return unmodifiableCollection(yields.values());
     }
 
     public void clear() {

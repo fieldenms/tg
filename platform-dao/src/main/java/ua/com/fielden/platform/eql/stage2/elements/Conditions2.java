@@ -18,7 +18,7 @@ public class Conditions2 extends AbstractCondition2 {
 
     @Override
     public boolean ignore() {
-        return allConditions.size() == 0;
+        return allConditions.isEmpty();
     }
 
     @Override

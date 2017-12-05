@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +65,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
             }
             //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
             final List<CompoundCondition1> others = new ArrayList<>();
-            others.add(new CompoundCondition1(LogicalOperator.AND, originalConditions));
+            others.add(new CompoundCondition1(AND, originalConditions));
             final Conditions1 filteringConditions = new StandAloneConditionBuilder(generator, filteringCondition, false).getModel();
             return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
         } else {
@@ -81,8 +84,12 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
         final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
         // TODO As part of transforming sources need to retrieve already resolved joinConditions, that happened while invoking addSource method (refer TODO above).
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), enhancedConditions.transform(localResolver), //
-        yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
+                sources.transform(localResolver), 
+                enhancedConditions.transform(localResolver), 
+                yields.transform(localResolver), 
+                groups.transform(localResolver), 
+                orderings.transform(localResolver));
 
         return new EntQuery2(entQueryBlocks, resultType, category);
     }
@@ -97,7 +104,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
         this.groups = queryBlocks.getGroups();
         this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;
-        if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
+        if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
         }
     }
