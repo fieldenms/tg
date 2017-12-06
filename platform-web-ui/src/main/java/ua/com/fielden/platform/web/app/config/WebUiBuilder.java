@@ -141,7 +141,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         }
         
         if (openMasterActions.containsKey(entityType)) {
-            throw new WebUiBuilderException(format("An open master action config is already present for entity [%s].", entityType.getName()));
+            throw new WebUiBuilderException(format("An open-master action config is already present for entity [%s].", entityType.getName()));
         }
         
         openMasterActions.putIfAbsent(entityType, openMasterActionConfig);
@@ -151,7 +151,12 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     @Override
     public <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType) {
-        return () -> Optional.ofNullable(openMasterActions.get(entityType));
+        return () -> {
+            if (openMasterActions.containsKey(entityType)) {
+                return Optional.of(openMasterActions.get(entityType));
+            }
+            throw new WebUiBuilderException(format("An attempt is made to obtain open-master action configuration for entity [%s], but none is found. Please register a corresonding action configuration by using WebUiBuilder.registerOpenMasterAction.", entityType.getName()));
+        };
     }
 
     @Override
@@ -161,7 +166,7 @@ public class WebUiBuilder implements IWebUiBuilder {
             if (centreOptional.get() != centre) {
                 throw new WebUiBuilderException(String.format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.info(String.format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                logger.info(format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
