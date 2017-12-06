@@ -6,6 +6,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.eql.meta.MetadataGenerator.createYieldAllQueryModel;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 
@@ -23,10 +24,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.builders.StandAloneConditionBuilder;
+import ua.com.fielden.platform.eql.stage1.elements.CompoundCondition1;
+import ua.com.fielden.platform.eql.stage1.elements.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
+import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
@@ -35,6 +41,7 @@ import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
@@ -168,8 +175,7 @@ public class TransformatorToS2 {
     }
 
     public TransformatorToS2 produceNewOne() {
-        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
-        return result;
+        return new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
     }
 
     private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
@@ -235,11 +241,48 @@ public class TransformatorToS2 {
     public EntValue2 getTransformedValue(final EntValue1 originalValue) {
         return new EntValue2(preprocessValue(originalValue.getValue()), originalValue.isIgnoreNull());
     }
-
+    
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
         return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.resolution);
     }
 
+    public EntQuery2 getTransformedQuery(final EntQuery1 originalQuery) {
+        final TransformatorToS2 localResolver = originalQuery.isSubQuery() ? produceBasedOn() : produceNewOne();
+
+        // TODO Need to resolve joinConditions of each CompoundSource as soon as it is added to resolver.  
+        for (final IQrySource1<? extends IQrySource2> source : originalQuery.getSources().getAllSources()) {
+            localResolver.addSource(source);
+        }
+
+        final Conditions1 enhancedConditions = originalQuery.isFilterable() ? enhanceConditions(originalQuery.getConditions(), filter, username, originalQuery.getSources().getMain(), entQueryGenerator1) : originalQuery.getConditions();
+        // TODO As part of transforming sources need to retrieve already resolved joinConditions, that happened while invoking addSource method (refer TODO above).
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
+                originalQuery.getSources().transform(localResolver), 
+                enhancedConditions.transform(localResolver), 
+                originalQuery.getYields().transform(localResolver), 
+                originalQuery.getGroups().transform(localResolver), 
+                originalQuery.getOrderings().transform(localResolver));
+
+        return new EntQuery2(entQueryBlocks, originalQuery.type(), originalQuery.getCategory());
+    }
+    
+    private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
+            final String username, final IQrySource1<? extends IQrySource2> mainSource, final EntQueryGenerator generator) {
+        if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+            if (filteringCondition == null) {
+                return originalConditions;
+            }
+            //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
+            final List<CompoundCondition1> others = new ArrayList<>();
+            others.add(new CompoundCondition1(AND, originalConditions));
+            final Conditions1 filteringConditions = new StandAloneConditionBuilder(generator, filteringCondition, false).getModel();
+            return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
+        } else {
+            return originalConditions;
+        }
+    }
+    
     public static class PropResolution {
         private final boolean aliased;
         private final IQrySource2 source;

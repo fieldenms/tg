@@ -1,25 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
-import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.builders.StandAloneConditionBuilder;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
-public class EntQuery1 implements ISingleOperand1<EntQuery2> {
+public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2<EntQuery2> {
 
     private final Sources1 sources;
     private final Conditions1 conditions;
@@ -32,7 +21,22 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     private final boolean filterable;
 
-    private boolean isSubQuery() {
+    public EntQuery1(final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
+            final boolean filterable) {
+       this.filterable = filterable;
+       this.category = category;
+       this.sources = queryBlocks.getSources();
+       this.conditions = queryBlocks.getConditions();
+       this.yields = queryBlocks.getYields();
+       this.groups = queryBlocks.getGroups();
+       this.orderings = queryBlocks.getOrderings();
+       this.resultType = resultType;
+       if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned
+           throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
+       }
+   }
+    
+    public boolean isSubQuery() {
         return QueryCategory.SUB_QUERY.equals(category);
     }
 
@@ -41,72 +45,8 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     }
 
     @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(isSubQuery() ? "(" : "");
-        sb.append("SELECT ");
-        sb.append(yields);
-        sb.append("\nFROM ");
-        sb.append(sources);
-        sb.append("\nWHERE ");
-        sb.append(conditions);
-        sb.append(groups);
-        sb.append(isSubQuery() ? ")" : "");
-        sb.append(orderings);
-        return sb.toString();
-    }
-
-    private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
-            final String username, final IQrySource1<? extends IQrySource2> mainSource, final EntQueryGenerator generator) {
-        if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
-            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-            if (filteringCondition == null) {
-                return originalConditions;
-            }
-            //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-            final List<CompoundCondition1> others = new ArrayList<>();
-            others.add(new CompoundCondition1(AND, originalConditions));
-            final Conditions1 filteringConditions = new StandAloneConditionBuilder(generator, filteringCondition, false).getModel();
-            return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
-        } else {
-            return originalConditions;
-        }
-    }
-
-    @Override
     public EntQuery2 transform(final TransformatorToS2 resolver) {
-        final TransformatorToS2 localResolver = resolver.produceBasedOn();
-
-        // TODO Need to resolve joinConditions of each CompoundSource as soon as it is added to resolver.  
-        for (final IQrySource1<? extends IQrySource2> source : sources.getAllSources()) {
-            localResolver.addSource(source);
-        }
-
-        final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
-        // TODO As part of transforming sources need to retrieve already resolved joinConditions, that happened while invoking addSource method (refer TODO above).
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
-                sources.transform(localResolver), 
-                enhancedConditions.transform(localResolver), 
-                yields.transform(localResolver), 
-                groups.transform(localResolver), 
-                orderings.transform(localResolver));
-
-        return new EntQuery2(entQueryBlocks, resultType, category);
-    }
-
-    public EntQuery1(final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-             final boolean filterable) {
-        this.filterable = filterable;
-        this.category = category;
-        this.sources = queryBlocks.getSources();
-        this.conditions = queryBlocks.getConditions();
-        this.yields = queryBlocks.getYields();
-        this.groups = queryBlocks.getGroups();
-        this.orderings = queryBlocks.getOrderings();
-        this.resultType = resultType;
-        if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned
-            throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
-        }
+        return resolver.getTransformedQuery(this);
     }
 
     public Sources1 getSources() {
@@ -127,6 +67,14 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     public OrderBys1 getOrderings() {
         return orderings;
+    }
+
+    public QueryCategory getCategory() {
+        return category;
+    }
+    
+    public boolean isFilterable() {
+        return filterable;
     }
 
     @Override
