@@ -295,6 +295,15 @@
                 _savingInitiated: {
                     type: Boolean,
                     value: false
+                },
+                
+                /**
+                 * Postal subscription to 'detail.saved' events that redirects such events further to parent channels (centreUuid).
+                 * It gets populated in attached callback only once, even though the same master instance gets used several time.
+                 */
+                _centreRefreshRedirector: {
+                    type: Object,
+                    value: null
                 }
             },
 
@@ -900,6 +909,31 @@
             /** A helper method to assist in making the caching decision. Used as an optimisation technique. */
             canBeCached: function () {
                 return typeof this._currBindingEntity['skipUi'] === 'undefined';
+            },
+            
+            /**
+             * 
+             */
+            registerCentreRefreshRedirector: function () {
+                const self = this;
+                if (self._centreRefreshRedirector === null) {
+                    self._centreRefreshRedirector = postal.subscribe({
+                        channel: 'centre_' + self.uuid,
+                        topic: 'detail.saved',
+                        callback: function (data, envelope) {
+                            if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this reduces unnecessary events flow
+                                console.debug('CENTRE_REFRESH XXX [PUBLISHED, REDIRECT]: channel = [centre_' + self.centreUuid + ']', 'host = ', self.is);
+                                // provide empty selectedEntitiesInContext -- this will ensure that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
+                                const newData = { savingException: data.savingException, entity: data.entity, shouldRefreshParentCentreAfterSave: data.shouldRefreshParentCentreAfterSave, selectedEntitiesInContext: [] };
+                                postal.publish({
+                                    channel: 'centre_' + self.centreUuid,
+                                    topic: 'detail.saved',
+                                    data: newData
+                                });
+                            }
+                        }
+                    });
+                }
             }
         };
 

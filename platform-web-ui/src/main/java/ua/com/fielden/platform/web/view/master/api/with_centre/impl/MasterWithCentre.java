@@ -66,25 +66,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "self.masterWithCentre = true;\n" +
                         "self.classList.remove('canLeave');")
                 .replace("//@attached-callback", format("this.$.loader.attrs = %s;\n", attributes)
-                    + "if (!self._centreRefreshRedirector) {\n"
-                    + "  const embeddedMasterPostSaveChannel = 'centre_' + self.uuid;\n"
-                    + "  const compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;\n"
-                    + "  const centreRefreshTopic = 'detail.saved';\n"
-                    + "  self._centreRefreshRedirector = postal.subscribe({\n"
-                    + "     channel: embeddedMasterPostSaveChannel,\n"
-                    + "     topic: centreRefreshTopic,\n"
-                    + "     callback: function (data, envelope) {\n"
-                    + "         console.debug('CENTRE_EVENTS XXX [PUBLISH, REDIRECT]: channel = [' + compoundMasterCentreRefreshChannel + ']', 'topic = ', '[detail.saved]');\n"
-                    + "         // provide empty selectedEntitiesInContext -- this will ensure that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior \n"
-                    + "         const newData = { savingException: data.savingException, entity: data.entity, shouldRefreshParentCentreAfterSave: data.shouldRefreshParentCentreAfterSave, selectedEntitiesInContext: [] };\n"
-                    + "         postal.publish({\n"
-                    + "             channel: compoundMasterCentreRefreshChannel,\n"
-                    + "             topic: centreRefreshTopic,\n"
-                    + "             data: newData\n"
-                    + "         });\n"
-                    + "     }\n"
-                    + "  });\n"
-                    + "}\n"
+                    + "self.registerCentreRefreshRedirector();\n"
                 )
                 .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
                 .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))

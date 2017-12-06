@@ -276,6 +276,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                       + actionBarLayout.code().toString() + "\n"
                       + entityActionsStr.toString() + "\n"
                       + propertyActionsStr.toString())
+                .replace("//@attached-callback", "self.registerCentreRefreshRedirector();\n")
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))

@@ -652,7 +652,7 @@
                 }
 
                 ///////////////////////// Detail postSaved listener //////////////////////////////////////
-                console.debug('CENTRE_EVENTS [SUBSCRIBE]: channel = [centre_' + self.$.selection_criteria.uuid + ']', 'topic = ', '[detail.saved]');
+                // console.debug('CENTRE_EVENTS [SUBSCRIBE]: channel = [centre_' + self.$.selection_criteria.uuid + ']', 'topic = ', '[detail.saved]');
                 this.masterSavedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
