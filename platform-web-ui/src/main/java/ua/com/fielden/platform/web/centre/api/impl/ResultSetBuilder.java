@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionP
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -67,7 +67,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
-    private EntityActionConfig entityActionConfig;
+    private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -90,7 +90,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -141,7 +141,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -169,7 +169,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = actionConfig;
+        this.entityActionConfig = () -> Optional.of(actionConfig);
+        completePropIfNeeded();
+        return this;
+    }
+
+    @Override
+    public IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+        if (actionConfigSupplier == null) {
+            throw new IllegalArgumentException("Property action configuration supplier should not be null.");
+        }
+
+        this.entityActionConfig = actionConfigSupplier;
         completePropIfNeeded();
         return this;
     }
@@ -315,7 +326,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
     }
 
     @Override

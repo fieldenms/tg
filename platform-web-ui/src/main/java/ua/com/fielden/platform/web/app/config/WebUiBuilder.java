@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.web.app.config;
 
+import static java.lang.String.format;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -10,7 +14,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -42,6 +48,8 @@ public class WebUiBuilder implements IWebUiBuilder {
      * Holds the map between entity centre's menu item type and entity centre.
      */
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
+    
+    private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
 
     /**
      * Holds the map between custom view name and custom view instance.
@@ -124,6 +132,26 @@ public class WebUiBuilder implements IWebUiBuilder {
     public <T extends AbstractEntity<?>> Optional<EntityMaster<T>> getMaster(final Class<T> entityType) {
         final EntityMaster<T> master = (EntityMaster<T>) mastersMap.get(entityType); // could be 'null', and type casting will not throw any exception in that case
         return Optional.ofNullable(master);
+    }
+
+    @Override
+    public <T extends AbstractEntity<?>> IWebUiBuilder registerOpenMasterAction(final Class<T> entityType, final EntityActionConfig openMasterActionConfig) {
+        if (entityType == null || openMasterActionConfig == null) {
+            throw new WebUiBuilderException("None of the arguments to register open master actions can be null.");
+        }
+        
+        if (openMasterActions.containsKey(entityType)) {
+            throw new WebUiBuilderException(format("An open master action config is already present for entity [%s].", entityType.getName()));
+        }
+        
+        openMasterActions.putIfAbsent(entityType, openMasterActionConfig);
+        return this;
+    }
+    
+
+    @Override
+    public <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType) {
+        return () -> Optional.ofNullable(openMasterActions.get(entityType));
     }
 
     @Override
