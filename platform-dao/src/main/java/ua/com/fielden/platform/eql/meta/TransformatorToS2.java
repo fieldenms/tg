@@ -263,7 +263,7 @@ public class TransformatorToS2 {
                 originalQuery.getGroups().transform(localResolver), 
                 originalQuery.getOrderings().transform(localResolver));
 
-        return new EntQuery2(entQueryBlocks, originalQuery.type(), originalQuery.getCategory());
+        return new EntQuery2(entQueryBlocks, originalQuery.type(), originalQuery.getCategory(), originalQuery.getFetchModel());
     }
     
     private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //

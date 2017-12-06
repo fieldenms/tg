@@ -138,9 +138,9 @@ public class BaseEntQueryTCase1 {
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model(), null);
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
@@ -148,22 +148,22 @@ public class BaseEntQueryTCase1 {
 
     protected static EntQuery2 entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model(), null).transform(transformator);
         }
         throw new IllegalStateException("Not implemented yet");
     }
 
     protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
+        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model(), null);
     }
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model(), null);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model(), null);
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }

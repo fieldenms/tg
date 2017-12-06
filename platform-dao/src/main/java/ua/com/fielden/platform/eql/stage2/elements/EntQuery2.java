@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 
 public class EntQuery2 implements ISingleOperand2 {
@@ -12,13 +13,14 @@ public class EntQuery2 implements ISingleOperand2 {
     private final OrderBys2 orderings;
     private final Class<? extends AbstractEntity<?>> resultType;
     private final QueryCategory category;
+    private final IRetrievalModel fetchModel;
 
     @Override
     public Class<? extends AbstractEntity<?>> type() {
         return resultType;
     }
 
-    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category) {
+    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category, final IRetrievalModel fetchModel) {
         this.category = category;
         this.sources = queryBlocks.getSources();
         this.conditions = queryBlocks.getConditions();
@@ -26,6 +28,7 @@ public class EntQuery2 implements ISingleOperand2 {
         this.groups = queryBlocks.getGroups();
         this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;
+        this.fetchModel = fetchModel;
     }
 
     @Override

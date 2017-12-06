@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
@@ -20,9 +21,10 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
     private final QueryCategory category;
 
     private final boolean filterable;
+    private final IRetrievalModel fetchModel;
 
     public EntQuery1(final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-            final boolean filterable) {
+            final boolean filterable, final IRetrievalModel fetchModel) {
        this.filterable = filterable;
        this.category = category;
        this.sources = queryBlocks.getSources();
@@ -30,6 +32,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
        this.yields = queryBlocks.getYields();
        this.groups = queryBlocks.getGroups();
        this.orderings = queryBlocks.getOrderings();
+       this.fetchModel = fetchModel;
        this.resultType = resultType;
        if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned
            throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
@@ -77,6 +80,10 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
         return filterable;
     }
 
+    public IRetrievalModel getFetchModel() {
+        return fetchModel;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -88,6 +95,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+        result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
         return result;
     }
 
@@ -127,6 +135,14 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
         } else if (!orderings.equals(other.orderings)) {
             return false;
         }
+        if (fetchModel == null) {
+            if (other.fetchModel != null) {
+                return false;
+            }
+        } else if (!fetchModel.equals(other.fetchModel)) {
+            return false;
+        }
+
         if (resultType == null) {
             if (other.resultType != null) {
                 return false;
