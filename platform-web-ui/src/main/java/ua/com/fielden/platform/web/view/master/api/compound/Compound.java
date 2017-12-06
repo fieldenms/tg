@@ -86,7 +86,7 @@ public class Compound {
                 .icon(icon)
                 .shortDesc(shortDesc)
                 .longDesc(longDesc)
-                .withNoParentCentreRefresh() // TODO
+                .withNoParentCentreRefresh()
                 .build();
     }
 

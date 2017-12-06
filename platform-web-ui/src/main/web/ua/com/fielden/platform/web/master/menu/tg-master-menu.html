@@ -324,7 +324,6 @@
                     channel: embeddedMasterPostSaveChannel,
                     topic: centreRefreshTopic,
                     callback: function (data, envelope) {
-                        if (data.shouldRefreshParentCentreAfterSave === true) {console.debug('CENTRE_REFRESH [PUBLISHED, REDIRECT]: channel = [' + compoundMasterCentreRefreshChannel + ']', 'host = ', self.is);}
                         postal.publish({
                             channel: compoundMasterCentreRefreshChannel,
                             topic: centreRefreshTopic,

@@ -652,19 +652,11 @@
                 }
 
                 ///////////////////////// Detail postSaved listener //////////////////////////////////////
-                // console.debug('CENTRE_EVENTS [SUBSCRIBE]: channel = [centre_' + self.$.selection_criteria.uuid + ']', 'topic = ', '[detail.saved]');
                 this.masterSavedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
                         self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
-                        
-                        //console.debug('CENTRE_EVENTS [PUBLISH, REDIRECT XXX]: channel = [' + self.uuid + ']', 'topic = ', '[detail.saved]');
-                        //postal.publish({
-                        //    channel: self.centreUuid,
-                        //    topic: 'detail.saved',
-                        //    data: data
-                        //});
                     }
                 });
 

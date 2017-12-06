@@ -912,7 +912,19 @@
             },
             
             /**
+             * Registers _centreRefreshRedirector if not registered yet.
              * 
+             * In case where 'centre refresh' postal event occurs in entity master there is a need to generate similar event and pass it further to parent component in hierarchy.
+             * In this case the 'chain reaction' of such events will occur which will trigger 'centre refresh' in all centres in hierarchy of components up to top standalone centre.
+             *
+             * There are two cases:
+             *  1. master-with-centre 'embedded centre invoker' functional entity master will trigger postal event up;
+             *  2. simple master will trigger postal event up.
+             * 
+             * master-with-master employs its own mechanism through the use of the same 'postSaved' / 'postSavedError' callbacks for embedded and wrapping masters,
+             * that is why there is no need to use 'centre refresh' redirection for it.
+             *
+             * Please also note similar redirection inside tg-master-menu.
              */
             registerCentreRefreshRedirector: function () {
                 const self = this;
@@ -921,10 +933,13 @@
                         channel: 'centre_' + self.uuid,
                         topic: 'detail.saved',
                         callback: function (data, envelope) {
-                            if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this reduces unnecessary events flow
-                                console.debug('CENTRE_REFRESH XXX [PUBLISHED, REDIRECT]: channel = [centre_' + self.centreUuid + ']', 'host = ', self.is);
-                                // provide empty selectedEntitiesInContext -- this will ensure that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
-                                const newData = { savingException: data.savingException, entity: data.entity, shouldRefreshParentCentreAfterSave: data.shouldRefreshParentCentreAfterSave, selectedEntitiesInContext: [] };
+                            if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
+                                const newData = { 
+                                    savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
+                                    entity: data.entity,
+                                    shouldRefreshParentCentreAfterSave: true,
+                                    selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
+                                };
                                 postal.publish({
                                     channel: 'centre_' + self.centreUuid,
                                     topic: 'detail.saved',

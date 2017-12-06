@@ -476,7 +476,6 @@
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                     //this.focusFirstInput();
                     
-                    if (this.shouldRefreshParentCentreAfterSave === true) {console.debug('CENTRE_REFRESH [PUBLISH]: channel = [centre_' + this.centreUuid + ']', 'host = ', this.is);}
                     postal.publish({
                         channel: "centre_" + this.centreUuid,
                         topic: "detail.saved",
