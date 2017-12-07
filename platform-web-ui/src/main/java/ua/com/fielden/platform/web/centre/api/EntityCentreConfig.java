@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -194,15 +196,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
-        public final Optional<EntityActionConfig> propAction;
+        public final Supplier<Optional<EntityActionConfig>> propAction;
         public final int width;
         public final boolean isFlexible;
 
-        public static ResultSetProp propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final EntityActionConfig propAction) {
+        public static ResultSetProp propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
             return new ResultSetProp(propName, width, isFlexible, tooltipProp, null, propAction);
         }
 
-        public static ResultSetProp propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final EntityActionConfig propAction) {
+        public static ResultSetProp propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
             return new ResultSetProp(null, width, isFlexible, tooltipProp, propDef, propAction);
         }
 
@@ -212,14 +214,18 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final boolean isFlexible,
                 final String tooltipProp,
                 final PropDef<?> propDef,
-                final EntityActionConfig propAction) {
+                final Supplier<Optional<EntityActionConfig>> propAction) {
 
             if (propName != null && propDef != null) {
-                throw new IllegalArgumentException("Only one of property name or property definition should be provided.");
+                throw new WebUiBuilderException("Only one of property name or property definition should be provided.");
+            }
+            
+            if (propAction == null) {
+                throw new WebUiBuilderException("Property action suppplier cannot be null.");
             }
 
             if (StringUtils.isEmpty(propName) && propDef == null) {
-                throw new IllegalArgumentException("Either property name or property definition should be provided.");
+                throw new WebUiBuilderException("Either property name or property definition should be provided.");
             }
 
             this.propName = Optional.ofNullable(propName);
@@ -227,7 +233,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.isFlexible = isFlexible;
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
-            this.propAction = Optional.ofNullable(propAction);
+            this.propAction = propAction;
         }
 
     }
@@ -720,8 +726,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No result-set property exists.");
             }
             return getResultSetProperties().get().stream()
-                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
-                    .map(resultSetProp -> resultSetProp.propAction.get())
+                    .filter(resultSetProp -> resultSetProp.propAction.get().isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get().get())
                     .collect(Collectors.toList())
                     .get(actionNumber);
         } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {

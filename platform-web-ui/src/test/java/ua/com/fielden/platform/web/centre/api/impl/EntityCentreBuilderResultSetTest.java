@@ -88,11 +88,11 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
 
         assertEquals(2, config.getResultSetProperties().get().size());
-        assertTrue(config.getResultSetProperties().get().get(0).propAction.isPresent());
-        assertTrue(config.getResultSetProperties().get().get(0).propAction.get().longDesc.isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).propAction.isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).propAction.get().longDesc.isPresent());
-        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).propAction.get().longDesc.get());
+        assertTrue(config.getResultSetProperties().get().get(0).propAction.get().isPresent());
+        assertTrue(config.getResultSetProperties().get().get(0).propAction.get().get().longDesc.isPresent());
+        assertTrue(config.getResultSetProperties().get().get(1).propAction.get().isPresent());
+        assertTrue(config.getResultSetProperties().get().get(1).propAction.get().get().longDesc.isPresent());
+        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).propAction.get().get().longDesc.get());
     }
 
     @Test(expected = IllegalArgumentException.class)

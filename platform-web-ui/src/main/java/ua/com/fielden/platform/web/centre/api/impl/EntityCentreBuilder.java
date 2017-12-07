@@ -157,10 +157,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
-        return new EntityCentreConfig<T>(
-        		hideCheckboxes,
+        return new EntityCentreConfig<>(
+        		    hideCheckboxes,
                 toolbarConfig,
-        		hideToolbar,
+        		    hideToolbar,
                 scrollConfig,
                 pageCapacity,
                 visibleRowsCount,
