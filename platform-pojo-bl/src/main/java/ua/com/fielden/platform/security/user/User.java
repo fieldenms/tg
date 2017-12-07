@@ -77,7 +77,7 @@ public class User extends ActivatableAbstractEntity<String> {
     }
     
     public static final String SECRET_RESET_UUID_SEPERATOR = "-";
-    public static final String USER_NAME_REGEX = "^[^-]+$"; // SECRET_RESET_UUID_SEPERATOR should not be permitted for user names
+    public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
     
     @IsProperty
     @MapTo
