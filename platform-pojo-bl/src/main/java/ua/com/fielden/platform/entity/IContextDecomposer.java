@@ -527,6 +527,14 @@ public interface IContextDecomposer {
             return decompose(context()).chosenProperty();
         }
         
+        public boolean chosenPropertyEmpty() {
+            return chosenProperty() == null;
+        }
+
+        public boolean chosenPropertyNotEmpty() {
+            return !chosenPropertyEmpty();
+        }
+
         // CURRENT ENTITY:
         /**
          * Returns <code>true</code> if the masterEntity's current entity is not present, <code>false</code> otherwise.

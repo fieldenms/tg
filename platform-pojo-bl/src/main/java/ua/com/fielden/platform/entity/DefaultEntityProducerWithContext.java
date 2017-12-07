@@ -79,18 +79,15 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final EntityEditAction entityEditAction = masterEntity(EntityEditAction.class);
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             
-            // the entity producer for the "wrapped" into EntityEditAction case does not have a meanigful context
-            // thus, let's at least pass the context associated with EntityEditAction into this producer, so that it (cache) could be used in case a custom entity producer is at play...
-            setContext((CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>>) entityEditAction.context());
-            
             // let's try the default behaviour... which may return a null either due to a programming error (most likely) or a case of chosen property being clicked, but ID is from a corresponding master entity
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
             
             // let's be a more bit protective and try to provide a meaningful exception in cases where entity could not be found instead of the inevitable NPE downstream
             if (producedEntity == null) {
-                // before bailing out and throwing an exception, let's try to handle the case of edit-action being invoked on a chosen property for the current entity... 
-                if (currentEntityNotEmpty() && !chosenPropertyEmpty()) {
-                    return Optional.ofNullable(currentEntity().get(chosenProperty()))
+                // before bailing out and throwing an exception, let's try to handle the case of edit-action being invoked on a chosen property for the current entity...
+                // need to use ofMasterEntity() here as the useful context is only present in the EntityEditAction instance itself 
+                if (ofMasterEntity().currentEntityNotEmpty() && ofMasterEntity().chosenPropertyNotEmpty()) {
+                    return Optional.ofNullable(ofMasterEntity().currentEntity().get(ofMasterEntity().chosenProperty()))
                             .filter(v -> v instanceof AbstractEntity)
                             .map(v -> ((AbstractEntity<?>) v).getId())
                             .map(id -> refetchInstrumentedEntityById(id))
