@@ -36,7 +36,9 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
 
     @Override
     public IAlsoCentreTopLevelActions<T> addTopAction(final EntityActionConfig actionConfig) {
-        builder.topLevelActions.add(new Pair<>(actionConfig, builder.currGroup));
+        if (actionConfig != null) {
+            builder.topLevelActions.add(new Pair<>(actionConfig, builder.currGroup));
+        }
         return this;
     }
 

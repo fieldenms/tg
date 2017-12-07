@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.web.app.config;
+package ua.com.fielden.platform.web.app.exceptions;
+
+import ua.com.fielden.platform.web.app.config.WebUiBuilder;
 
 /**
  * Exception for {@link WebUiBuilder}.

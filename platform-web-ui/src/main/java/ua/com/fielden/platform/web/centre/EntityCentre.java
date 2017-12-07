@@ -786,8 +786,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
                 final Optional<FunctionalActionElement> action;
-                if (resultProp.propAction.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
+                final Optional<EntityActionConfig> actionConfig = resultProp.propAction.get();
+                if (actionConfig.isPresent()) {
+                    action = Optional.of(new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName));
                     actionIndex += 1;
                 } else {
                     action = Optional.empty();

@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -179,6 +180,17 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public Result getFirstFailure() {
         throw new StrictProxyException(format("Invalid call [getFirstFailure] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+    
+    /**
+     * A convenient method to obtain the last validation result.
+     * May return either a failure, a warning or a successful result, and never <code>null</code>.
+     * <p>
+     * A successful result is returned in case no validation took place.
+     * @return
+     */
+    public Result validationResult() {
+        throw new StrictProxyException(format("Invalid call [validationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public int numberOfValidators() {
