@@ -170,7 +170,7 @@
                     var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
                     var msgPar = domBind.content.ownerDocument.createElement('p');
                     Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
-                    Polymer.dom(msgPar).innerHTML = this._msgText;
+                    Polymer.dom(msgPar).textContent = this._msgText;
                     Polymer.dom(paperDialogScrollable).appendChild(msgPar);
                     
                     var buttonsDiv = domBind.content.ownerDocument.createElement('div');
@@ -182,7 +182,7 @@
                     Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
                     
                     var textSpan = domBind.content.ownerDocument.createElement('span');
-                    Polymer.dom(textSpan).innerHTML = 'Close';
+                    Polymer.dom(textSpan).textContent = 'Close';
                     Polymer.dom(buttons).appendChild(textSpan);
                     
                     Polymer.dom(buttonsDiv).appendChild(buttons);
