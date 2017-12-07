@@ -116,7 +116,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
-                             + "                return ['key', 'sectionTitle'].indexOf(propertyName) !== -1; \n"
+                             + "                return ['key', 'sectionTitle', 'menuToOpen'].indexOf(propertyName) !== -1; \n"
                              + "            }; \n",
                                 jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")

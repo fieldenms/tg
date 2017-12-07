@@ -28,6 +28,11 @@
         	&& (typeof result.ex !== 'undefined');
     };
     
+    const _simpleClassName = function (fullClassName) {
+        const index = fullClassName.lastIndexOf('.') + 1;
+        return fullClassName.substring(index);
+    };
+    
     var _isContinuationError0 = function (result) {
         return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
     }
@@ -710,8 +715,7 @@
          *
          */
         EntityType.prototype._simpleClassName = function () {
-            var ind = this.fullClassName().lastIndexOf(".") + 1;
-            return this.fullClassName().substring(ind);
+            return _simpleClassName(this.fullClassName());
         }
 
         /**
@@ -1483,6 +1487,13 @@
          */
         isDotNotated: function(propertyName) {
             return propertyName.indexOf(".") > -1;
+        },
+        
+        /**
+         * Extracts simple class name from full class name (removes package from it).
+         */
+        simpleClassName: function (fullClassName) {
+            return _simpleClassName(fullClassName);
         },
         
         /**
