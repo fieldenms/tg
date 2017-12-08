@@ -81,7 +81,7 @@
 <script>
   (function() {
     function containsRestictedTags(htmlText) {
-      const offensiveTag = new RegExp('<script|<img|<a', 'mi');
+      const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
       return offensiveTag.exec(htmlText) !== null;
     }
 
