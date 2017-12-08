@@ -80,6 +80,11 @@
 
 <script>
   (function() {
+    function containsRestictedTags(htmlText) {
+      const offensiveTag = new RegExp('<script|<img|<a', 'mi');
+      return offensiveTag.exec(htmlText) !== null;
+    }
+
     Polymer({
       // attributes="msgHeading -- TODO was this ever needed?"
 
@@ -173,7 +178,11 @@
           var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
           var msgPar = domBind.content.ownerDocument.createElement('p');
           Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
-          Polymer.dom(msgPar).innerHTML = this._msgText;
+          if (containsRestictedTags(this._msgText) === true) {
+            Polymer.dom(msgPar).textContent = this._msgText;
+          } else {
+            Polymer.dom(msgPar).innerHTML = this._msgText;
+          }
           Polymer.dom(paperDialogScrollable).appendChild(msgPar);
 
           var buttonsDiv = domBind.content.ownerDocument.createElement('div');
