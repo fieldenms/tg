@@ -368,21 +368,28 @@
         },
         
         _getMasterEntityChanged: function (newValue, oldValue) {
-        	console.log('_getMasterEntityChanged', newValue);
-        	
-        	const context = newValue();
-        	const sectionTitleValues = context.modifHolder.sectionTitle;
-        	this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal; 
-        	
- 			if (this._isRefreshCycle === false) {      	
-	        	if (this.route !== this.defaultRoute) {
-	        		this.route = this.defaultRoute;
-	        	} else {
-	        		this._sectionRouteChanged(this.defaultRoute, this.route);
-	        	}
- 			}
- 			
- 			this._isRefreshCycle = false;
+            const context = newValue();
+            const sectionTitleValues = context.modifHolder.sectionTitle;
+            const menuToOpenValues = context.modifHolder.menuToOpen;
+            this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal; 
+            const menuToOpen = (typeof menuToOpenValues.val !== 'undefined') ? menuToOpenValues.val : menuToOpenValues.origVal;
+            if (menuToOpen !== null) {
+                // If menuToOpen was explicitly specified in 'open compound master producer' (according to some domain rules),
+                //  we need to override default menu item -- domain-specific menu item takes precedence.
+                // Please note that default menu item is always the first menu item (Main),
+                //  unless 'CompoundMasterBuilder.andDefaultItemNumber' API method was used with item number different than zero.
+                this.defaultRoute = this.$.reflector.simpleClassName(menuToOpen);
+            }
+            
+            if (this._isRefreshCycle === false) {      	
+                if (this.route !== this.defaultRoute) {
+                    this.route = this.defaultRoute;
+                } else {
+                    this._sectionRouteChanged(this.defaultRoute, this.route);
+                }
+            }
+            
+            this._isRefreshCycle = false;
         },
         
         /**
