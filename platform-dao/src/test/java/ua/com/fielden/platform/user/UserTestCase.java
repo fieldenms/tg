@@ -15,11 +15,13 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -45,7 +47,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String value = format("USER%s1", User.SECRET_RESET_UUID_SEPERATOR);
         user.setKey(value);
         assertFalse(user.getProperty(KEY).isValid());
-        assertEquals(format(StringValidator.validationErrorTemplate, value, KEY, User.class.getSimpleName()), user.getProperty("key").getFirstFailure().getMessage());
+        assertEquals(format(StringValidator.validationErrorTemplate, user.getProperty(KEY).getTitle(), TitlesDescsGetter.getEntityTitleAndDesc(User.class).getKey()), user.getProperty("key").validationResult().getMessage());
     }
 
     @Test
