@@ -40,11 +40,11 @@ public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> 
     /**
      * Returns <code>true</code> in case if regeneration of generated (and modified by user) data should occur, otherwise <code>false</code>.
      *
-     * @param customObject
+     * @param params - parameters of centre running action or {@link IGenerator#gen(Class, Map)} method's <code>params</code>
      * @return
      */
-    public static boolean forceRegeneration(final Map<String, ?> customObject) {
-        return customObject.containsKey(FORCE_REGENERATION_KEY);
+    public static boolean forceRegeneration(final Map<String, ?> params) {
+        return params.containsKey(FORCE_REGENERATION_KEY);
     }
     
 }

@@ -263,7 +263,7 @@ public class CriteriaResource extends ServerResource {
                 
                 // create and execute a generator instance
                 final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final LinkedHashMap<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
                         (final MetaProperty<?> mp) -> mp.getName(), 
                         (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
                 if (forceRegeneration(customObject)) {
