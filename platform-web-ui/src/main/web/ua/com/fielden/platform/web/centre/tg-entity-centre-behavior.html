@@ -337,6 +337,7 @@
                  * Starts the process of centre run.
                  *
                  * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
+                 * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
                  */
                 run: {
                     type: Function
@@ -562,7 +563,7 @@
                         });
                 }).bind(self);
 
-                self.run = (function (isSortingAction) {
+                self.run = (function (isSortingAction, forceRegeneration) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
@@ -571,7 +572,7 @@
                     self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run(isSortingAction).then(
+                    return self.$.selection_criteria.run(isSortingAction, forceRegeneration).then(
                         function (detail) {
                             const sc = self.$.selection_criteria;
                             const deserialisedResult = sc._serialiser().deserialise(detail.response);

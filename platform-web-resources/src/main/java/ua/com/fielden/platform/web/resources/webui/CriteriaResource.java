@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.forceRegeneration;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
@@ -259,10 +261,13 @@ public class CriteriaResource extends ServerResource {
                 
                 // create and execute a generator instance
                 final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Result generationResult = generator.gen(generatorEntityType,
-                        freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                                (final MetaProperty<?> mp) -> mp.getName(), 
-                                (final MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
+                final LinkedHashMap<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                        (final MetaProperty<?> mp) -> mp.getName(), 
+                        (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
+                if (forceRegeneration(customObject)) {
+                    params.put("@@forceRegeneration", ofNullable(true));
+                }
+                final Result generationResult = generator.gen(generatorEntityType, params);
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
                 // otherwise, proceed with the request handling further to actually query the data
                 // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
