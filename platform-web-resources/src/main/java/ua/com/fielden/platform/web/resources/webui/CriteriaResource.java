@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
+import static ua.com.fielden.platform.data.generator.IGenerator.forceRegeneration;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.forceRegeneration;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
@@ -265,7 +267,7 @@ public class CriteriaResource extends ServerResource {
                         (final MetaProperty<?> mp) -> mp.getName(), 
                         (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
                 if (forceRegeneration(customObject)) {
-                    params.put("@@forceRegeneration", ofNullable(true));
+                    params.put(FORCE_REGENERATION_KEY, of(true));
                 }
                 final Result generationResult = generator.gen(generatorEntityType, params);
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result

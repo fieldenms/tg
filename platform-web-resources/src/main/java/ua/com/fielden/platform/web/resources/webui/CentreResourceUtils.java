@@ -149,16 +149,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> in case if regeneration of generated (and modified by user) data should occur, otherwise <code>false</code>.
-     *
-     * @param customObject
-     * @return
-     */
-    public static boolean forceRegeneration(final Map<String, Object> customObject) {
-        return customObject.containsKey("@@forceRegeneration");
-    }
-
-    /**
      * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
      * inside).
      *
