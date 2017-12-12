@@ -102,6 +102,7 @@ import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
@@ -154,6 +155,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
     private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
     private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+    // generic custom code
+    private final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
+    private final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
 
 
     private final Logger logger = Logger.getLogger(getClass());
@@ -166,6 +170,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final ICompanionObjectFinder coFinder;
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private ICentreDomainTreeManagerAndEnhancer defaultCentre;
+    private Optional<JsCode> customCode = Optional.empty();
+    private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
@@ -1000,7 +1006,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
-                replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString());
+                replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
+                replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
+                replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override
@@ -1311,5 +1319,29 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     @SuppressWarnings("rawtypes")
     public IGenerator createGeneratorInstance(final Class<?> generatorType) {
         return (IGenerator) injector.getInstance(generatorType);
+    }
+
+    /**
+     * Injects custom JavaScript code into centre implementation. This code will be executed after
+     * centre component creation.
+     *
+     * @param customCode
+     * @return
+     */
+    public EntityCentre<T> injectCustomCode(final JsCode customCode) {
+        this.customCode = Optional.of(customCode);
+        return this;
+    }
+
+    /**
+     * Injects custom JavaScript code into centre implementation. This code will be executed every time
+     * centre component is attached to client application's DOM.
+     *
+     * @param customCode
+     * @return
+     */
+    public EntityCentre<T> injectCustomCodeOnAttach(final JsCode customCode) {
+        this.customCodeOnAttach = Optional.of(customCode);
+        return this;
     }
 }
