@@ -6,14 +6,16 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 
-public class QrySource2BasedOnSubqueries extends AbstractQrySource2 {
+public class QrySource2BasedOnSubqueries implements IQrySource2 {
     private final List<EntQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
 
     public QrySource2BasedOnSubqueries(final List<EntQuery2> models) {
         if (models == null || models.isEmpty()) {
-            throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
+            throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
 
         this.models.addAll(models);
@@ -97,5 +99,9 @@ public class QrySource2BasedOnSubqueries extends AbstractQrySource2 {
             return false;
         }
         return true;
+    }
+
+    public List<EntQuery2> getModels() {
+        return models;
     }
 }

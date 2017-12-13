@@ -11,7 +11,6 @@ public class EntProp2 implements ISingleOperand2 {
         this.name = name;
         this.source = source;
         this.resolution = resolution;
-        source.addProp(this);
     }
 
     @Override

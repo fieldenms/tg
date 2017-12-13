@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class QrySource2BasedOnPersistentType extends AbstractQrySource2 {
+public class QrySource2BasedOnPersistentType implements IQrySource2 {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
     public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType) {
