@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.eql.meta.MetadataGenerator.createYieldAllQueryModel;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,6 +50,7 @@ import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTy
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class TransformatorToS2 {
     private List<Map<IQrySource1<? extends IQrySource2>, SourceInfo>> sourceMap = new ArrayList<>();
@@ -159,7 +161,7 @@ public class TransformatorToS2 {
         } else {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : ((QrySource2BasedOnSubqueries) transformedSource).getYields().getYields()) {
-                final AbstractPropInfo<?, ?> aep = AbstractEntity.class.isAssignableFrom(yield.javaType())
+                final AbstractPropInfo<?, ?> aep = isEntityType(yield.javaType())
                         ? new EntityTypePropInfo(yield.getAlias(), domainInfo.get(yield.javaType()), entAggEntityInfo)
                         : new PrimTypePropInfo(yield.getAlias(), yield.javaType(), entAggEntityInfo);
                 entAggEntityInfo.addProp(aep);
