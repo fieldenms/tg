@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,10 +16,7 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
     private final ICondition1<? extends ICondition2> firstCondition;
     private final List<CompoundCondition1> otherConditions = new ArrayList<>();
 
-    //private final List<List<ICondition1<? extends ICondition2>>> allConditions = new ArrayList<>();
-
     public Conditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
-        //this.allConditions.addAll(formConditionIntoLogicalGroups(firstCondition, otherConditions));
         this.firstCondition = firstCondition;
         this.otherConditions.addAll(otherConditions);
         this.negated = negated;
@@ -36,49 +35,41 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
         return firstCondition == null;
     }
 
-    private List<List<ICondition1<? extends ICondition2>>> formConditionIntoLogicalGroups() {
-        final List<List<ICondition1<? extends ICondition2>>> result = new ArrayList<>();
-        List<ICondition1<? extends ICondition2>> currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
+    private List<List<ICondition1<? extends ICondition2>>> formDnf() {
+        final List<List<ICondition1<? extends ICondition2>>> dnf = new ArrayList<>();
+        List<ICondition1<? extends ICondition2>> andGroup = new ArrayList<ICondition1<? extends ICondition2>>();
 
         if (firstCondition != null) {
-            currGroup.add(firstCondition);
+            andGroup.add(firstCondition);
         }
 
         for (final CompoundCondition1 compoundCondition : otherConditions) {
             if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
-                currGroup.add(compoundCondition.getCondition());
+                andGroup.add(compoundCondition.getCondition());
             } else {
-                if (currGroup.size() > 0) {
-                    result.add(currGroup);
+                if (!andGroup.isEmpty()) {
+                    dnf.add(andGroup);
                 }
 
-                currGroup = new ArrayList<ICondition1<? extends ICondition2>>();
-                currGroup.add(compoundCondition.getCondition());
+                andGroup = new ArrayList<ICondition1<? extends ICondition2>>();
+                andGroup.add(compoundCondition.getCondition());
             }
         }
 
-        if (currGroup.size() > 0) {
-            result.add(currGroup);
+        if (!andGroup.isEmpty()) {
+            dnf.add(andGroup);
         }
 
-        return result;
+        return dnf;
     }
 
     @Override
     public Conditions2 transform(final TransformatorToS2 resolver) {
-        final List<List<ICondition2>> transformed = new ArrayList<>();
-        for (final List<ICondition1<? extends ICondition2>> conditionGroup : formConditionIntoLogicalGroups()) {
-            final List<ICondition2> transformedGroup = new ArrayList<>();
-            for (final ICondition1<? extends ICondition2> condition : conditionGroup) {
-                final ICondition2 transformedCondition = condition.transform(resolver);
-                if (!transformedCondition.ignore()) {
-                    transformedGroup.add(transformedCondition);
-                }
-            }
-            if (transformedGroup.size() > 0) {
-                transformed.add(transformedGroup);
-            }
-        }
+        final List<List<? extends ICondition2>> transformed = formDnf().stream()
+                .map(andGroup -> andGroup.stream().map(cond -> cond.transform(resolver)).filter(cond -> !cond.ignore()).collect(toList()))
+                .filter(andGroup -> !andGroup.isEmpty())
+                .collect(toList());
+        
         return new Conditions2(negated, transformed);
     }
 
