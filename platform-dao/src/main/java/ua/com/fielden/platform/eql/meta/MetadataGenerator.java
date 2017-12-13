@@ -151,7 +151,8 @@ public class MetadataGenerator {
         generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.addProp(id));
         entityInfo.addProp(new PrimTypePropInfo<Long, T>(VERSION, Long.class, entityInfo));
         
-        for (final Field field : getRealProperties(entityInfo.javaType())) {
+        EntityUtils.getRealProperties(entityInfo.javaType()).stream()
+        .filter(f -> f.isAnnotationPresent(MapTo.class) || f.isAnnotationPresent(Calculated.class)).forEach(field -> {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
@@ -159,22 +160,34 @@ public class MetadataGenerator {
             } else {
                 entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, entityInfo));
             }
-            //	    if (!result.containsKey(field.getName())) {
-            //		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {
-            //		    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
-            //		} else if (field.isAnnotationPresent(Calculated.class)) {
-            //		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
-            //		} else if (field.isAnnotationPresent(MapTo.class)) {
-            //		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
-            //		} else if (Finder.isOne2One_association(entityType, field.getName())) {
-            //		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-            //		} else if (!field.isAnnotationPresent(CritOnly.class)) {
-            //		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
-            //		} else {
-            //		    //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
-            //		}
-            //	    }
-        }
+
+        });
+       
+        
+//        for (final Field field : getRealProperties(entityInfo.javaType())) {
+//            final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+//
+//            if (AbstractEntity.class.isAssignableFrom(javaType)) {
+//                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo));
+//            } else {
+//                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, entityInfo));
+//            }
+//            //	    if (!result.containsKey(field.getName())) {
+//            //		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {
+//            //		    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
+//            //		} else if (field.isAnnotationPresent(Calculated.class)) {
+//            //		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
+//            //		} else if (field.isAnnotationPresent(MapTo.class)) {
+//            //		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
+//            //		} else if (Finder.isOne2One_association(entityType, field.getName())) {
+//            //		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
+//            //		} else if (!field.isAnnotationPresent(CritOnly.class)) {
+//            //		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
+//            //		} else {
+//            //		    //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
+//            //		}
+//            //	    }
+//        }
     }
 
     /**
