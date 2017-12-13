@@ -9,9 +9,6 @@ import java.util.TreeMap;
 public class Yields2 implements IIgnorableAtS2 {
     private final SortedMap<String, Yield2> yields = new TreeMap<String, Yield2>();
 
-    public Yields2() {
-    }
-
     public void addYield(final Yield2 yield) {
         if (yields.containsKey(yield.getAlias())) {
             throw new IllegalStateException("Query contains duplicate yields for alias [" + yield.getAlias() + "]");

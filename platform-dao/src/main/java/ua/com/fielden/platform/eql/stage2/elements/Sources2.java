@@ -18,7 +18,7 @@ public class Sources2 implements IIgnorableAtS2 {
     public Sources2(final IQrySource2 main) {
         super();
         this.main = main;
-        this.compounds = new ArrayList<CompoundSource2>();
+        this.compounds = new ArrayList<>();
     }
 
     @Override

@@ -70,4 +70,8 @@ public class Expression2 implements ISingleOperand2 {
         // TODO EQL
         return BigDecimal.class;
     }
+
+    public ISingleOperand2 getFirst() {
+        return first;
+    }
 }

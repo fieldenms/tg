@@ -1,12 +1,19 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import static java.util.Collections.emptyList;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class GroupBys2 implements IIgnorableAtS2 {
-    private final List<GroupBy2> groups;
+    private final List<GroupBy2> groups = new ArrayList<>();
 
     public GroupBys2(final List<GroupBy2> groups) {
-        this.groups = groups;
+        this.groups.addAll(groups);
+    }
+
+    public GroupBys2() {
+        this(emptyList());
     }
 
     @Override
@@ -22,7 +29,7 @@ public class GroupBys2 implements IIgnorableAtS2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + groups.hashCode();
         return result;
     }
 
@@ -47,4 +54,6 @@ public class GroupBys2 implements IIgnorableAtS2 {
         }
         return true;
     }
+
+
 }

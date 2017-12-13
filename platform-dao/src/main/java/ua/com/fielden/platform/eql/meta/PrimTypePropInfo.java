@@ -28,4 +28,34 @@ public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends Abstr
     public String toString() {
         return super.toString() + ": " + propType.getSimpleName();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((propType == null) ? 0 : propType.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof PrimTypePropInfo)) {
+            return false;
+        }
+        final PrimTypePropInfo other = (PrimTypePropInfo) obj;
+        if (propType == null) {
+            if (other.propType != null) {
+                return false;
+            }
+        } else if (!propType.equals(other.propType)) {
+            return false;
+        }
+        return true;
+    }
 }

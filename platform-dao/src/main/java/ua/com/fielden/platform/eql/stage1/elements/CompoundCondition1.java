@@ -7,10 +7,6 @@ public class CompoundCondition1 {
     private final LogicalOperator logicalOperator;
     private final ICondition1<? extends ICondition2> condition;
 
-    //    public String sql() {
-    //	return " " + logicalOperator + " " + condition.sql();
-    //    }
-
     public CompoundCondition1(final LogicalOperator logicalOperator, final ICondition1<? extends ICondition2> condition) {
         this.logicalOperator = logicalOperator;
         this.condition = condition;

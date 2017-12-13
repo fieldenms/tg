@@ -43,4 +43,34 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
     public String toString() {
         return super.toString() + ": " + propEntityInfo.javaType().getSimpleName();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((propEntityInfo == null) ? 0 : propEntityInfo.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof EntityTypePropInfo)) {
+            return false;
+        }
+        final EntityTypePropInfo other = (EntityTypePropInfo) obj;
+        if (propEntityInfo == null) {
+            if (other.propEntityInfo != null) {
+                return false;
+            }
+        } else if (!propEntityInfo.equals(other.propEntityInfo)) {
+            return false;
+        }
+        return true;
+    }
 }
