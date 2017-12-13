@@ -104,10 +104,10 @@
 		<tg-reflector id="reflector"></tg-reflector>
 		<content id="menuItemActions" select=".menu-item-action"></content>        
 		
-        <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
+        <paper-drawer-panel id="paperDrawerPanel" disable-swipe force-narrow>
 
             <!-- Drawer Scroll Header Panel -->
-            <paper-scroll-header-panel drawer fixed id="drawer">
+            <paper-scroll-header-panel drawer id="drawer"> <!-- fixed -->
 
                 <!-- Drawer Content -->
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
@@ -116,8 +116,8 @@
             </paper-scroll-header-panel>
 
             <!-- Main Area -->
-            <paper-scroll-header-panel main fixed class="relative">
-
+            <paper-scroll-header-panel main> <!-- fixed class="relative" -->
+                <paper-icon-button id="menuButton" style="z-index:1000;" icon="menu" tooltip-text="Compound master menu (tap or hit FX to invoke)." on-tap="_togglePanel"></paper-icon-button>
                 <!-- Main Content -->
                 <div>
                     <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
@@ -352,6 +352,10 @@
             this.fire('tg-dynamic-title-changed', this.sectionTitle);
         },
         
+        _togglePanel: function (e, detail, source) {
+            this.$.paperDrawerPanel.togglePanel();
+        },
+        
         _sectionTitleChanged: function (newValue, oldValue) {
             this.fire('tg-dynamic-title-changed', newValue);
         },
@@ -368,6 +372,10 @@
         },
         
         _getMasterEntityChanged: function (newValue, oldValue) {
+            if (desktop) {
+                this.$.paperDrawerPanel.selected = 'drawer';
+            }
+            
             const context = newValue();
             const sectionTitleValues = context.modifHolder.sectionTitle;
             const menuToOpenValues = context.modifHolder.menuToOpen;
@@ -451,6 +459,10 @@
         },
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
+            if (!desktop) {
+                this.$.paperDrawerPanel.selected = 'main';
+            }
+            
             var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
             
