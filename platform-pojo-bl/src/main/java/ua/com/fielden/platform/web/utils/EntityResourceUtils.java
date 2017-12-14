@@ -177,7 +177,7 @@ public class EntityResourceUtils {
      * Validates / applies the property value against the entity.
      *
      * @param apply - indicates whether property application should be performed; if <code>false</code> then only validation will be performed
-     * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied (with 'enforced mutation') or 'val' (with simple mutation)
+     * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied or 'val'
      * @param type
      * @param name
      * @param valAndOrigVal
@@ -198,7 +198,13 @@ public class EntityResourceUtils {
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 validateAnd(() -> {
-                    entity.getProperty(name).setValue(valueToBeApplied, shouldApplyOriginalValue);
+                    // Value application should be enforced.
+                    // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
+                    // This is necessary because without enforcement property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
+                    // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
+                    // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
+                    // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
+                    entity.getProperty(name).setValue(valueToBeApplied, true);
                 }, () -> {
                     return valueToBeApplied;
                 }, () -> {
