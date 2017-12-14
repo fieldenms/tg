@@ -177,7 +177,7 @@ public class EntityResourceUtils {
      * Validates / applies the property value against the entity.
      *
      * @param apply - indicates whether property application should be performed; if <code>false</code> then only validation will be performed
-     * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied (with 'enforced mutation') or 'val' (with simple mutation)
+     * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied or 'val'
      * @param type
      * @param name
      * @param valAndOrigVal
