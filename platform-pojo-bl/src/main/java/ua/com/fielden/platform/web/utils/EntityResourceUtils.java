@@ -151,7 +151,7 @@ public class EntityResourceUtils {
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
                 logger.debug(format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
-                applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                applyModifiedPropertyValueWithEnforcing(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             } else { // this is unmodified property
                 // IMPORTANT:
                 // Unlike to the case of untouched properties, all touched properties should be applied,
@@ -185,7 +185,7 @@ public class EntityResourceUtils {
      * @param companionFinder
      * @param isEntityStale
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final boolean enforceApplication, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
         if (apply) {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
             final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
@@ -198,7 +198,7 @@ public class EntityResourceUtils {
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 validateAnd(() -> {
-                    entity.getProperty(name).setValue(valueToBeApplied, shouldApplyOriginalValue);
+                    entity.getProperty(name).setValue(valueToBeApplied, enforceApplication ? true : shouldApplyOriginalValue);
                 }, () -> {
                     return valueToBeApplied;
                 }, () -> {
@@ -270,6 +270,10 @@ public class EntityResourceUtils {
             return Optional.of(extractLongValueFrom(reflectedValueId));
         }
     }
+    
+    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValueWithEnforcing(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        processPropertyValue(true, false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
 
     /**
      * Applies the modified (touched / untouched) property value ('val') against the entity.
@@ -282,7 +286,7 @@ public class EntityResourceUtils {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        processPropertyValue(true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(true, false, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
 
     /**
@@ -296,7 +300,7 @@ public class EntityResourceUtils {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(true, true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
 
     /**
@@ -310,7 +314,7 @@ public class EntityResourceUtils {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+        processPropertyValue(false, true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
     }
 
     /**
