@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
-import static ua.com.fielden.platform.data.generator.IGenerator.forceRegeneration;
+import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -266,7 +266,7 @@ public class CriteriaResource extends ServerResource {
                 final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
                         (final MetaProperty<?> mp) -> mp.getName(), 
                         (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-                if (forceRegeneration(customObject)) {
+                if (shouldForceRegeneration(customObject)) {
                     params.put(FORCE_REGENERATION_KEY, of(true));
                 }
                 final Result generationResult = generator.gen(generatorEntityType, params);

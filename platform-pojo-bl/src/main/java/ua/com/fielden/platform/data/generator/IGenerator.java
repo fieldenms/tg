@@ -43,7 +43,7 @@ public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> 
      * @param params - parameters of centre running action or {@link IGenerator#gen(Class, Map)} method's <code>params</code>
      * @return
      */
-    public static boolean forceRegeneration(final Map<String, ?> params) {
+    public static boolean shouldForceRegeneration(final Map<String, ?> params) {
         return params.containsKey(FORCE_REGENERATION_KEY);
     }
     

@@ -15,17 +15,17 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
  * @author TG Team
  *
  */
-public class ForceCentreRegenerationPostAction implements IPostAction {
+public class GuardCentreRegenerationPostAction implements IPostAction {
     private final String forceRegenerationExceptionMessage;
     private final String confirmationQuestion;
     
     /**
-     * Creates standard {@link ForceCentreRegenerationPostAction} with custom <code>confirmationQuestion</code> and <code>forceRegenerationExceptionMessage</code>.
+     * Creates standard {@link GuardCentreRegenerationPostAction} with custom <code>confirmationQuestion</code> and <code>forceRegenerationExceptionMessage</code>.
      * 
      * @param forceRegenerationExceptionMessage -- exception message while trying to regenerate already modified data (this appears as toast)
      * @param confirmationQuestion -- this appears as dialog's message (to confirm or reject data regeneration) and is provided with 'Yes' and 'No' buttons
      */
-    public ForceCentreRegenerationPostAction(final String forceRegenerationExceptionMessage, final String confirmationQuestion) {
+    public GuardCentreRegenerationPostAction(final String forceRegenerationExceptionMessage, final String confirmationQuestion) {
         this.forceRegenerationExceptionMessage = forceRegenerationExceptionMessage;
         this.confirmationQuestion = confirmationQuestion;
     }
