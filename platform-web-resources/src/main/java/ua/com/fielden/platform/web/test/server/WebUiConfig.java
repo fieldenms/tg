@@ -692,26 +692,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final IMaster<TgEntityWithPropertyDependency> masterConfigForPropDependencyExample = new SimpleMasterBuilder<TgEntityWithPropertyDependency>()
             .forEntity(TgEntityWithPropertyDependency.class)
             .addProp("property").asSinglelineText()
-            .also()
-            .addProp("dependentProp").asSinglelineText()
-            .also()
-            .addProp("roles").asSinglelineText()
-            .also()
-            .addProp("key").asSinglelineText()
+            .also().addProp("dependentProp").asSinglelineText()
+            .also().addProp("roles").asSinglelineText()
+            .also().addProp("key").asSinglelineText()
+            .also().addProp("propX").asSinglelineText()
+            .also().addProp("propY").asSinglelineText()
+            .also().addProp("prop1").asSinglelineText()
+            .also().addProp("prop2").asSinglelineText()
             .also()
             .addAction(MasterActions.REFRESH)
-            //      */.icon("trending-up") SHORT-CUT
-            /*      */.shortDesc("CANCEL")
-            /*      */.longDesc("Cancel action")
+                .shortDesc("CANCEL")
+                .longDesc("Cancel action")
             .addAction(MasterActions.VALIDATE)
             .addAction(MasterActions.SAVE)
             .addAction(MasterActions.EDIT)
             .addAction(MasterActions.VIEW)
 
             .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                    format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
+                format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                     "['padding:20px', "
+                    + format("[[%s], [%s], [%s], ['flex']], ", fmr, fmr, fmr)
                     + format("[[%s], [%s], [%s], ['flex']]", fmr, fmr, fmr)
                     + "]"))
             .done();

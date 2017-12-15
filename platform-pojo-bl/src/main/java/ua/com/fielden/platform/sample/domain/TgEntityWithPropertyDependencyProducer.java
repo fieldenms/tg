@@ -23,6 +23,8 @@ public class TgEntityWithPropertyDependencyProducer extends DefaultEntityProduce
     @Override
     protected TgEntityWithPropertyDependency provideDefaultValuesForStandardNew(final TgEntityWithPropertyDependency entity, final EntityNewAction masterEntity) {
         entity.setKey("DUMMY");
+        entity.setProp1("val0"); // initial value to be able to change property back, reproducing the edge-cases for property value application (#960)
+        entity.setProp2(null); // remove 'value0' that was populated through prop1 definer
         return entity;
     }
 }
