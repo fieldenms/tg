@@ -1,21 +1,19 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-
 public class EntProp2 implements ISingleOperand2 {
     private final String name;
     private final IQrySource2 source;
-    private final AbstractPropInfo<?, ?> resolution;
+    private final Class<?> type;
 
-    public EntProp2(final String name, final IQrySource2 source, final AbstractPropInfo<?, ?> resolution) {
+    public EntProp2(final String name, final IQrySource2 source, final Class<?> type) {
         this.name = name;
         this.source = source;
-        this.resolution = resolution;
+        this.type = type;
     }
 
     @Override
     public String toString() {
-        return " name = " + name + ";\n source = " + source + ";\n resolution = " + resolution;
+        return " name = " + name + ";\n source = " + source + ";\n type = " + type;
     }
 
     @Override
@@ -29,7 +27,7 @@ public class EntProp2 implements ISingleOperand2 {
 
     @Override
     public Class<?> type() {
-        return resolution.javaType();
+        return type;
     }
 
     @Override
@@ -37,7 +35,7 @@ public class EntProp2 implements ISingleOperand2 {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((resolution == null) ? 0 : resolution.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
         return result;
     }
@@ -61,11 +59,11 @@ public class EntProp2 implements ISingleOperand2 {
         } else if (!name.equals(other.name)) {
             return false;
         }
-        if (resolution == null) {
-            if (other.resolution != null) {
+        if (type == null) {
+            if (other.type != null) {
                 return false;
             }
-        } else if (!resolution.equals(other.resolution)) {
+        } else if (!type.equals(other.type)) {
             return false;
         }
         if (source == null) {

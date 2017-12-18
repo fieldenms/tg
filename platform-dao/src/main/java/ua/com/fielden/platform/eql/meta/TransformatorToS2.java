@@ -50,7 +50,6 @@ import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTy
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class TransformatorToS2 {
     private List<Map<IQrySource1<? extends IQrySource2>, SourceInfo>> sourceMap = new ArrayList<>();
@@ -245,7 +244,7 @@ public class TransformatorToS2 {
     }
     
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
-        return new EntProp2(resolution.entProp.getName(), resolution.source, resolution.resolution);
+        return new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType());
     }
 
     public EntQuery2 getTransformedQuery(final EntQuery1 originalQuery) {
@@ -285,20 +284,6 @@ public class TransformatorToS2 {
         }
     }
     
-    public static class PropResolution {
-        private final boolean aliased;
-        private final IQrySource2 source;
-        private final AbstractPropInfo<?, ?> resolution;
-        private final EntProp1 entProp;
-
-        public PropResolution(final boolean aliased, final IQrySource2 source, final AbstractPropInfo<?, ?> resolution, final EntProp1 entProp) {
-            this.aliased = aliased;
-            this.source = source;
-            this.resolution = resolution;
-            this.entProp = entProp;
-        }
-    }
-
     private PropResolution resolvePropAgainstSource(final SourceInfo source, final EntProp1 entProp) {
         final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo.resolve(entProp.getName());
         if (source.alias != null && entProp.getName().startsWith(source.alias + ".")) {
@@ -306,13 +291,13 @@ public class TransformatorToS2 {
             final AbstractPropInfo<?, ?> aliasLessResolution = source.entityInfo.resolve(aliasLessPropName);
             if (aliasLessResolution != null) {
                 if (asIsResolution == null) {
-                    return new PropResolution(true, source.source, aliasLessResolution, entProp);
+                    return new PropResolution(aliasLessPropName, source.source, aliasLessResolution.javaType());
                 } else {
                     throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", entProp.getName(), entProp.getName(), aliasLessPropName));
                 }
             }
         }
-        return asIsResolution != null ? new PropResolution(false, source.source, asIsResolution, entProp) : null;
+        return asIsResolution != null ? new PropResolution(entProp.getName(), source.source, asIsResolution.javaType()) : null;
     }
 
     private PropResolution resolveProp(final Collection<SourceInfo> sources, final EntProp1 entProp) {
