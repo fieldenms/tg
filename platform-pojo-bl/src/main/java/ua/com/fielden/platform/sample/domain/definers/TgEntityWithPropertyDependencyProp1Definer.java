@@ -19,10 +19,11 @@ public class TgEntityWithPropertyDependencyProp1Definer implements IAfterChangeE
         final TgEntityWithPropertyDependency entity = (TgEntityWithPropertyDependency) property.getEntity();
         final String otherPropName = "prop2";
         if (!property.getEntity().isInitialising()) {
+            // to support proper data flow in all edge-cases we need to enforce data propagation by using setter enforcement
             if (equalsEx(newValue, "val0")) {
-                entity.set(otherPropName, "value0");
+                entity.getProperty(otherPropName).setValue("value0", true);
             } else if (equalsEx(newValue, "val1")) {
-                entity.set(otherPropName, "value1");
+                entity.getProperty(otherPropName).setValue("value1", true);
             }
         }
     }
