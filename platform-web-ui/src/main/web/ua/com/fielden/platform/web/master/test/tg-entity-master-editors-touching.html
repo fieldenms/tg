@@ -243,6 +243,126 @@
                 
                 master.retrieve();
             });
+            
+            /**
+             * Returns promise instance that resolves after 'propName' property was changed to 'propValue' in 'master'.
+             */
+            const _changePropertyAndValidate = function (master, propName, propValue) {
+                return new Promise(function (resolve, reject) {
+                    master._validationPromiseChanged = function (newValidationPromise) {
+                        resolve(newValidationPromise);
+                    };
+                    const masterEditor = master.$['editor_4_' + propName];
+                    masterEditor._editingValue = '' + propValue; // change the value and commit
+                    masterEditor.commit();
+                });
+            };
+            
+            const _propValue = function (master, propName) {
+                return master._currEntity.get(propName);
+            };
+            
+            test('touched modified: property prop1, that holds val1 value derived from propX, invokes its definer when changing value to val1 through explicit touch', function (done) {
+                master.postRetrieved = function () {
+                    _changePropertyAndValidate(master, 'propX', 'v1').then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'prop2', 'XXX');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'XXX');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'prop1', 'val0');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'prop1', 'val1');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                        done();
+                    });
+                };
+                master.retrieve();
+            });
+            
+            test('untouched modified: property prop1, that holds val0 value derived from propX, invokes its definer when changing value to val0 (ORIGINAL) through another property propY', function (done) {
+                master.postRetrieved = function () {
+                    _changePropertyAndValidate(master, 'propX', 'v0').then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'prop2', 'XXX');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'XXX');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'propY', 'v1');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                        assert.strictEqual(_propValue(master, 'propY'), 'v1');
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'propY', 'v0');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                        assert.strictEqual(_propValue(master, 'propY'), 'v0');
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                        done();
+                    });
+                };
+                master.retrieve();
+            });
+            
+            test('untouched unmodified: property prop1, that holds val1 value derived from propX, invokes its definer when changing value to val1 (NON-ORIGINAL) through another property propY', function (done) {
+                master.postRetrieved = function () {
+                    _changePropertyAndValidate(master, 'propX', 'v1').then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'prop2', 'XXX');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), null);
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'XXX');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'propY', 'v0');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), 'v0');
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                    }).then(function () {
+                        return _changePropertyAndValidate(master, 'propY', 'v1');
+                    }).then(function () {
+                        assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                        assert.strictEqual(_propValue(master, 'propY'), 'v1');
+                        assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                        assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                        done();
+                    });
+                };
+                master.retrieve();
+            });
         });
     </script>
 </body>
