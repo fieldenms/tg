@@ -19,11 +19,10 @@ public class TgEntityWithPropertyDependencyPropXAndPropYDefiner implements IAfte
         final TgEntityWithPropertyDependency entity = (TgEntityWithPropertyDependency) property.getEntity();
         final String otherPropName = "prop1";
         if (!property.getEntity().isInitialising()) {
-            // to support proper data flow in all edge-cases we need to enforce data propagation by using setter enforcement
             if (equalsEx(newValue, "v0")) {
-                entity.getProperty(otherPropName).setValue("val0", true);
+                entity.set(otherPropName, "val0");
             } else if (equalsEx(newValue, "v1")) {
-                entity.getProperty(otherPropName).setValue("val1", true);
+                entity.set(otherPropName, "val1");
             }
         }
     }
