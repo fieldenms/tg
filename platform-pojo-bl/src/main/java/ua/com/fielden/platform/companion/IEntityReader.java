@@ -2,7 +2,6 @@ package ua.com.fielden.platform.companion;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -20,7 +19,7 @@ import ua.com.fielden.platform.pagination.IPage;
  *
  * @param <T>
  */
-public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T> {
+public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T>, IEntityStreamer<T> {
 
     /**
      * Returns default {@link FetchProvider} for the entity.
@@ -187,25 +186,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
         return Optional.ofNullable(getEntity(model));
     }
     
-    /**
-     * Returns a non-parallel stream with the data based on the provided query.
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     * 
-     * @param qem -- EQL model
-     * @param fetchSize -- a batch size for retrieve the next lot of data to feed the stream
-     * @return
-     */
-    Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize);
-    
-    /**
-     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default fetch size. 
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     * 
-     * @param qem
-     * @return
-     */
-    Stream<T> stream(final QueryExecutionModel<T, ?> qem);
-
     /**
      * Should return true if the passed entity exists in the persistent state.
      *
