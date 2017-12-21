@@ -42,6 +42,24 @@
             border-radius: 2px;
             overflow: hidden;
         }
+        .splitter {
+            padding-top: 10px;
+            width: 9px;
+        }
+        .arrow-left {
+            width: 0; 
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-right: 5px solid black;
+        }
+        .arrow-right {
+            width: 0; 
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 5px solid black;
+        }
     </style>
 
     <template>
@@ -75,12 +93,18 @@
                     <div class="layout vertical start">
                         <content select=".left-insertion-point"></content>
                     </div>
-
+                    <div class="splitter">
+                        <div class="arrow-left"></div>
+                        <div class="arrow-right"></div>
+                    </div>
                     <div class="layout vertical flex" style="min-width:0">
                         <content select=".custom-egi"></content>
                         <content select=".bottom-insertion-point"></content>
                     </div>
-
+                    <div class="splitter">
+                        <div class="arrow-left"></div>
+                        <div class="arrow-right"></div>
+                    </div>
                     <div class="layout vertical start">
                         <content select=".right-insertion-point"></content>
                     </div>
