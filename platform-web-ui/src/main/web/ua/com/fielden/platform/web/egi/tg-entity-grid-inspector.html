@@ -270,7 +270,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]">
                                         <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                             <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
                                             <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
@@ -362,7 +362,7 @@
                                             </div>
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column">
-                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
                                                 <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                 <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
@@ -1281,33 +1281,47 @@
 
             _getTooltip: function (entity, column, action) {
                 try {
-                    var property = entity.prop(column.property);
-                    var validationResult = property.validationResult();
-                    var value;
-                    var tooltip = "";
-                    if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                        tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
-                    } else if (column.tooltipProperty) {
-                        value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                        tooltip = value && ("<b>" + value + "</b>");
-                    } else if (this.$.reflector.findTypeByName(column.type)) {
-                        tooltip = this._generateEntityTooltip(entity, column);
-                    } else {
-                        value = this._getValue(entity, column.property, column.type).toString();
-                        tooltip = value && ("<b>" + value + "</b>");
-                    }
-                    if (column.columnDesc) {
-                        tooltip += (tooltip && "<br><br>") + column.columnDesc;
-                    }
-                    if (action && (action.shortDesc || action.longDesc)) {
-                        tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
-                    }
-                    return tooltip;
+                    let tooltip = this.getValueTooltip(entity, column);
+                    const columnDescPart = this.getDescTooltip(entity, column);
+                    const actionDescPart = this.getActionTooltip(entity, column, action);
+                    tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
+                    tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
+                    return  tooltip;
                 } catch (e) {
                     return '';
                 }
             },
-
+            
+            getValueTooltip: function(entity, column) {
+                const validationResult = entity.prop(column.property).validationResult();
+                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                    return validationResult.message && ("<b>" + validationResult.message + "</b>");
+                } else if (column.tooltipProperty) {
+                    const value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                    return value && ("<b>" + value + "</b>");
+                } else if (this.$.reflector.findTypeByName(column.type)) {
+                    return this._generateEntityTooltip(entity, column);
+                } else {
+                    const value = this._getValue(entity, column.property, column.type).toString();
+                    return value && ("<b>" + value + "</b>");
+                }
+                return "";
+            },
+            
+            getDescTooltip: function (entity, column) {
+                if (column.columnDesc) {
+                    return column.columnDesc;
+                }
+                return "";
+            },
+            
+            getActionTooltip: function (entity, column, action) {
+                if (action && (action.shortDesc || action.longDesc)) {
+                    return this._generateActionTooltip(action);
+                }
+                return "";
+            },
+            
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
@@ -1864,7 +1878,7 @@
             },
 
             /** Identifies if there is a column action for the specified entity and column. */
-            _hasAction: function (entity, column) {
+            hasAction: function (entity, column) {
                 return column.customAction || this._isHyperlinkProp(entity, column) === true;
             },
 
@@ -1872,12 +1886,12 @@
              * Tap action on data column. TODO: implement this.
              */
             _tapAction: function (e, detail) {
-                this.tap(this.entities[e.model.entityIndex], this.columns[e.model.index].property, this.columns[e.model.index]);
+                this.tap(this.entities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
             },
 
-            tap: function (entity, property, column) {
+            tap: function (entity, index, column) {
                 if (column.runAction(entity) === false) {
-                    // if the property is a hyperlink and there was no custom action associted with it
+                    // if the clicked property is a hyperlink and there was no custom action associted with it
                     // then let's open the linked resources
                     if (this._isHyperlinkProp(entity, column) === true) {
                         var url = this._getValue(entity, column.property, column.type);
