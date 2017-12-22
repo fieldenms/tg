@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 /**
  * An entity representing a generic <code>new</code> action.
  *
- * @author TG Air
+ * @author TG Team
  *
  */
 @CompanionObject(IEntityNewAction.class)
