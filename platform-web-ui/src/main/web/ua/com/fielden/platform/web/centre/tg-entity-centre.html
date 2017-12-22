@@ -42,6 +42,18 @@
             border-radius: 2px;
             overflow: hidden;
         }
+		paper-spinner {
+	        position: absolute;
+	        top: 0px;
+	        padding: 2px;
+	        margin: 0px;
+	        width: 24px;
+	    		height: 24px;
+	        --paper-spinner-layer-1-color: var(--paper-blue-500);
+	        --paper-spinner-layer-2-color: var(--paper-blue-500);
+	        --paper-spinner-layer-3-color: var(--paper-blue-500);
+	    		--paper-spinner-layer-4-color: var(--paper-blue-500);
+	    }        
     </style>
 
     <template>
@@ -64,7 +76,11 @@
                             </div>
                             <div class="layout horizontal">
                                 <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
-                                <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">Run</paper-button>
+                                <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">
+                                		<paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style$="[[_runSpinnerStyle]]" alt="in progress">
+            							</paper-spinner>
+            							<span>Run</span>
+                                </paper-button>
                             </div>
                         </div>
                     </tg-selection-view>
@@ -116,6 +132,7 @@
             _discarderDisabled: Boolean,
             _runnerDisabled: Boolean,
             _viewerDisabled: Boolean,
+            _runSpinnerStyle: String,
             save: Function,
             discard: Function,
             run: Function,

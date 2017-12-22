@@ -266,6 +266,11 @@
                     type: Boolean,
                     value: false
                 },
+                
+                _runSpinnerStyle: {
+                    type: String,
+                    computed: '_computeRunSpinnerStyle(_triggerRun, _actionInProgress)'
+                },
 
                 _saverDisabled: {
                     type: Boolean,
@@ -280,7 +285,7 @@
                     type: Boolean,
                     computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
                 },
-
+                
                 _viewerDisabled: {
                     type: Boolean,
                     computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
@@ -402,7 +407,30 @@
                     }
                 }
             },
-
+            
+            _computeRunSpinnerStyle: function(_triggerRun, _actionInProgress) {
+                console.log("_computeRunSpinnerStyle: ", "_triggerRun=", _triggerRun, "_actionInProgress=", _actionInProgress);
+                console.log("_computeRunSpinnerStyle details: ", this);
+            		if (_actionInProgress === false || _triggerRun === false) {
+            		    return "visibility = 'hidden'";
+            		} else {
+            		    return "visibility = 'visible'";
+            		    /* const self = this;
+            		    if (self._startSpinnerTimer) {
+            		        clearTimeout(this._startSpinnerTimer);
+            		    }
+            		    
+            		    self._startSpinnerTimer = setTimeout(() => {
+                         // Position and make spinner visible
+                         //this.$.spinner.style.left = (this.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+                         //this.$.spinner.style.top = (this.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+                         //self.$.spinner.style.visibility = 'visible';
+                         console.log("make spinner visible")
+                         self._runSpinnerStyle = "visibility = 'visible'";
+					}, 2000); */
+            		}
+            },
+            
             _computeSaverDisabled: function (_centreChanged, _actionInProgress) {
                 return _actionInProgress === true || !this.canSave(_centreChanged);
             },
@@ -435,8 +463,8 @@
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
-                var self = this;
-
+                const self = this;
+				
                 self._selectedView = 0;
                 self._showProgress = false;
 
@@ -568,10 +596,11 @@
                         throw "Cannot run centre (not initialised criteria).";
                     }
 
-                    var self = this;
+                    const self = this;
                     self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self._triggerRun = true;
+                    
                     return self.$.selection_criteria.run(isSortingAction, forceRegeneration).then(
                         function (detail) {
                             const sc = self.$.selection_criteria;
