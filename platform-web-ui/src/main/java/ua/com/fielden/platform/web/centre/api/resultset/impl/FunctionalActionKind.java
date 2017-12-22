@@ -7,7 +7,8 @@ public enum FunctionalActionKind {
     SECONDARY_RESULT_SET("secondaryActions"), 
     PROP("propActions"), 
     INSERTION_POINT("insertionPointActions"),
-    MENU_ITEM("menuItemActions");
+    MENU_ITEM("menuItemActions"),
+    CHILD("childActions");
 
     public final String holderName;
 

@@ -28,6 +28,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final String chosenProperty;
     /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
     private boolean forMaster = false;
+    private final String childName;
+    private final String parentElementAlias;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -35,7 +37,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @param entityActionConfig
      */
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String chosenProperty) {
-        this(entityActionConfig, numberOfAction, FunctionalActionKind.PROP, chosenProperty);
+        this(entityActionConfig, numberOfAction, FunctionalActionKind.PROP, chosenProperty, null, null);
     }
 
     /**
@@ -44,7 +46,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @param entityActionConfig
      */
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
-        this(entityActionConfig, numberOfAction, functionalActionKind, null);
+        this(entityActionConfig, numberOfAction, functionalActionKind, null, null, null);
     }
 
     /**
@@ -68,17 +70,21 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @return
      */
     public static FunctionalActionElement newPropertyActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction, final String propName) {
-        final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET, propName);
+        final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET, propName, null, null);
         el.setForMaster(true);
         return el;
     }
-
+    
+    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String childName, final String parentElementAlias) {
+        this(entityActionConfig, numberOfAction, FunctionalActionKind.CHILD, null, childName, parentElementAlias);
+    }
+    
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
      *
      * @param entityActionConfig
      */
-    private FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind, final String chosenProperty) {
+    private FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind, final String chosenProperty, final String childName, final String parentElementAlias) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
@@ -86,6 +92,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.functionalActionKind = functionalActionKind;
 
         this.chosenProperty = chosenProperty;
+        this.childName = childName;
+        this.parentElementAlias = parentElementAlias;
+    }
+    
+    private String getElementName() {
+        return "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
+    }
+    
+    public String getElementAlias() {
+        return getElementName() + "_" + numberOfAction + "_" + functionalActionKind;
     }
 
     /**
@@ -116,11 +132,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
-        final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
+        final String elementName = getElementName();
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
         attrs.put("action-kind", functionalActionKind);
-        attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        attrs.put("element-alias", getElementAlias());
 
         // in case of an menu item action show-dialog assignment happens within tg-master-menu
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
@@ -155,7 +171,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selected-entities", "null");
             attrs.put("require-master-entity", "null");
         }
-
+        
+        if (FunctionalActionKind.CHILD == functionalActionKind) {
+            attrs.put("child-name", childName);
+            attrs.put("parent-element-alias", parentElementAlias);
+        }
+        
         return attrs;
     }
 

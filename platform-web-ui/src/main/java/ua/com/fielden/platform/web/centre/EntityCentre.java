@@ -136,11 +136,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String EGI_ACTIONS = "//generatedActionObjects";
     private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
     private final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
+    private final String EGI_CHILD_ACTIONS = "//generatedChildActions";
     private final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
     private final String EGI_DOM = "<!--@egi_columns-->";
     private final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    private final String EGI_CHILD_ACTIONS_DOM = "<!--@child_actions-->";
     //Toolbar related
     private final String TOOLBAR_DOM = "<!--@toolbar-->";
     private final String TOOLBAR_JS = "//toolbarGeneratedFunction";
@@ -778,7 +780,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String prefix = ",\n";
 
         logger.debug("Initiating property columns...");
-
+        
+        int childActionIndex = 0;
+        final List<FunctionalActionElement> childActions = new ArrayList<>();
+        
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
@@ -796,6 +801,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 if (actionConfig.isPresent()) {
                     action = Optional.of(new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName));
                     actionIndex += 1;
+                    
+                    for (final Entry<String, EntityActionConfig> nameAndChild: action.get().entityActionConfig.childActions().entrySet()) {
+                        childActions.add(createChildActionElement(action.get().getElementAlias(), childActionIndex, nameAndChild));
+                        childActionIndex += 1;
+                    }
                 } else {
                     action = Optional.empty();
                 }
@@ -832,6 +842,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             if (column.getAction().isPresent()) {
                 importPaths.add(column.getAction().get().importPath());
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
+                
+                // generate child actions
+                //column.getAction().get().entityActionConfig;
             }
             egiColumns.add(column.render());
         });
@@ -880,6 +893,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             importPaths.add(el.importPath());
             primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
+            
+            for (final Entry<String, EntityActionConfig> nameAndChild: el.entityActionConfig.childActions().entrySet()) {
+                childActions.add(createChildActionElement(el.getElementAlias(), childActionIndex, nameAndChild));
+                childActionIndex += 1;
+            }
         }
 
         //////////////////// Primary result-set action [END] //////////////
@@ -891,7 +909,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
                 final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
                 secondaryActionElements.add(el);
+                
+                for (final Entry<String, EntityActionConfig> nameAndChild: el.entityActionConfig.childActions().entrySet()) {
+                    childActions.add(createChildActionElement(el.getElementAlias(), childActionIndex, nameAndChild));
+                    childActionIndex += 1;
+                }
             }
+        }
+        
+        final DomContainer childActionsDom = new DomContainer();
+        final StringBuilder childActionsObjects = new StringBuilder();
+        for (final FunctionalActionElement childAction: childActions) {
+            importPaths.add(childAction.importPath());
+            childActionsDom.add(childAction.render().clazz("child-action").attr("hidden", null));
+            childActionsObjects.append(prefix + createActionObject(childAction));
         }
 
         final DomContainer secondaryActionsDom = new DomContainer();
@@ -956,7 +987,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         ///////////////////////////////////////
         final String funcActionString = functionalActionsObjects.toString();
-        final String secondaryActionString = secondaryActionsObjects.toString();
+        final String secondaryActionsString = secondaryActionsObjects.toString();
+        final String childActionsString = childActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
         final String propActionsString = propActionsObject.toString();
@@ -991,7 +1023,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
-                replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
+                replace(EGI_SECONDARY_ACTIONS, secondaryActionsString.length() > prefixLength ? secondaryActionsString.substring(prefixLength) : secondaryActionsString).
+                replace(EGI_CHILD_ACTIONS, childActionsString.length() > prefixLength ? childActionsString.substring(prefixLength) : childActionsString).
                 replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
                         : insertionPointActionsString).
                 replace(EGI_PRIMARY_ACTION, primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
@@ -1003,6 +1036,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString()).
                 replace(EGI_PRIMARY_ACTION_DOM, primaryActionDom.toString()).
                 replace(EGI_SECONDARY_ACTIONS_DOM, secondaryActionsDom.toString()).
+                replace(EGI_CHILD_ACTIONS_DOM, childActionsDom.toString()).
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
@@ -1018,6 +1052,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    private FunctionalActionElement createChildActionElement(final String parentElementAlias, final int childActionIndex, final Entry<String, EntityActionConfig> nameAndAction) {
+        return new FunctionalActionElement(nameAndAction.getValue(), childActionIndex, nameAndAction.getKey(), parentElementAlias);
     }
 
     /**

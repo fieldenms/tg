@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
+import static java.util.Collections.unmodifiableMap;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -32,6 +36,7 @@ public final class EntityActionConfig {
     public final Optional<InsertionPoints> whereToInsertView;
 	public final boolean shouldRefreshParentCentreAfterSave;
 	public final UI_ROLE role;
+	private final Map<String, EntityActionConfig> childActions = new LinkedHashMap<>();
 
 	public enum UI_ROLE {
 	    ICON, BUTTON;
@@ -228,6 +233,20 @@ public final class EntityActionConfig {
         result = prime * result + ((successPostAction == null) ? 0 : successPostAction.hashCode());
         result = prime * result + ((whereToInsertView == null) ? 0 : whereToInsertView.hashCode());
         return result;
+    }
+    
+    /**
+     * Returns child actions mapped to some user-defined name.
+     *  
+     * @return
+     */
+    public Map<String, EntityActionConfig> childActions() {
+        return unmodifiableMap(childActions);
+    }
+    
+    public EntityActionConfig addChildAction(final String name, final EntityActionConfig action) {
+        childActions.put(name, action);
+        return this;
     }
 
     @Override

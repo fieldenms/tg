@@ -18,11 +18,14 @@ import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
 
 public class Compound {
+    private static final IPreAction EMPTY_PRE_ACTION = () -> new JsCode("");
 
     protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
             final Class<MENU_ITEM> menuItemType,
@@ -107,7 +110,7 @@ public class Compound {
             final String longDesc,
             final PrefDim prefDim) {
         // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
-        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
+        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withSelectionCrit().build(), EMPTY_PRE_ACTION);
     }
 
     /**
@@ -128,7 +131,7 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, icon, of(iconStyle), shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
+        return open(openCompoundMasterActionType, icon, of(iconStyle), shortDesc, longDesc, prefDim, context().withSelectionCrit().build(), EMPTY_PRE_ACTION);
     }
 
     /**
@@ -148,7 +151,7 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withMasterEntity().build());
+        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withMasterEntity().build(), EMPTY_PRE_ACTION);
     }
 
     /**
@@ -163,7 +166,7 @@ public class Compound {
             final Class<OPEN_ACTION> openCompoundMasterActionType,
             final String shortDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, null, empty(), shortDesc, null, prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType, null, empty(), shortDesc, null, prefDim, context().withCurrentEntity().build(), EMPTY_PRE_ACTION);
     }
 
     /**
@@ -180,7 +183,7 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, null, empty(), shortDesc, longDesc, prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType, null, empty(), shortDesc, longDesc, prefDim, context().withCurrentEntity().build(), EMPTY_PRE_ACTION);
     }
 
     /**
@@ -199,7 +202,17 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withCurrentEntity().build(), EMPTY_PRE_ACTION);
+    }
+    
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final IPreAction preAction,
+            final String icon,
+            final String shortDesc,
+            final String longDesc,
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, icon, empty(), shortDesc, longDesc, prefDim, context().withCurrentEntity().build(), preAction);
     }
 
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
@@ -209,12 +222,14 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim,
-            final CentreContextConfig centreContextConfig
+            final CentreContextConfig centreContextConfig,
+            final IPreAction preAction
             ) {
         if (icon != null) {
             if (StringUtils.isEmpty(longDesc)) {
                 return action(openCompoundMasterActionType)
                         .withContext(centreContextConfig)
+                        .preAction(preAction)
                         .icon(icon)
                         .withStyle(iconStyle.orElse(null))
                         .shortDesc(shortDesc)
@@ -225,6 +240,7 @@ public class Compound {
             } else {
                 return action(openCompoundMasterActionType)
                         .withContext(centreContextConfig)
+                        .preAction(preAction)
                         .icon(icon)
                         .withStyle(iconStyle.orElse(null))
                         .shortDesc(shortDesc)
@@ -238,6 +254,7 @@ public class Compound {
             if (StringUtils.isEmpty(longDesc)) {
                 return action(openCompoundMasterActionType)
                         .withContext(centreContextConfig)
+                        .preAction(preAction)
                         .shortDesc(shortDesc)
                         .shortcut("alt+n")
                         .prefDimForView(prefDim)
@@ -246,6 +263,7 @@ public class Compound {
             } else {
                 return action(openCompoundMasterActionType)
                         .withContext(centreContextConfig)
+                        .preAction(preAction)
                         .shortDesc(shortDesc)
                         .longDesc(longDesc)
                         .shortcut("alt+n")

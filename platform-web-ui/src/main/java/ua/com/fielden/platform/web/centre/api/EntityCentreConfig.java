@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -735,6 +736,38 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
             return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
+        } else if (FunctionalActionKind.CHILD == actionKind) {
+            final List<EntityActionConfig> list = new ArrayList<>();
+            
+            final Optional<List<ResultSetProp>> resultProps = getResultSetProperties();
+            if (resultProps.isPresent()) {
+                for (final ResultSetProp resultProp : resultProps.get()) {
+                    final Optional<EntityActionConfig> actionConfig = resultProp.propAction.get();
+                    if (actionConfig.isPresent()) {
+                        for (final Entry<String, EntityActionConfig> nameAndChild: actionConfig.get().childActions().entrySet()) {
+                            list.add(nameAndChild.getValue());
+                        }
+                    }
+                }
+            }
+            
+            final Optional<EntityActionConfig> resultSetPrimaryEntityAction = getResultSetPrimaryEntityAction();
+            if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
+                for (final Entry<String, EntityActionConfig> nameAndChild: resultSetPrimaryEntityAction.get().childActions().entrySet()) {
+                    list.add(nameAndChild.getValue());
+                }
+            }
+            
+            final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = getResultSetSecondaryEntityActions();
+            if (resultSetSecondaryEntityActions.isPresent()) {
+                for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
+                    for (final Entry<String, EntityActionConfig> nameAndChild: resultSetSecondaryEntityActions.get().get(i).childActions().entrySet()) {
+                        list.add(nameAndChild.getValue());
+                    }
+                }
+            }
+            
+            return list.get(actionNumber);
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
