@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
@@ -11,9 +12,7 @@
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
-
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
 
 <dom-module id="tg-entity-centre">
@@ -22,9 +21,7 @@
             background-color: #0288D1;
             color: #fff;
             @apply(--layout-horizontal);
-
-@apply(--layout-center-justified);
-
+            @apply(--layout-center-justified);
         }
         .selection-criteria {
             background-color: white;
@@ -43,8 +40,15 @@
             overflow: hidden;
         }
         .splitter {
+            @apply(--layout-vertical);
+            @apply(--layout-center);
+            background: var(--paper-grey-400);
             padding-top: 10px;
             width: 9px;
+        }
+        .splitter:hover {
+            cursor: col-resize;
+            background: var(--paper-light-blue-100);
         }
         .arrow-left {
             width: 0; 
@@ -53,12 +57,20 @@
             border-bottom: 5px solid transparent;
             border-right: 5px solid black;
         }
+        .arrow-left:hover {
+            cursor: pointer;
+            border-right: 5px solid var(--paper-grey-600);
+        }
         .arrow-right {
             width: 0; 
             height: 0;
             border-top: 5px solid transparent;
             border-bottom: 5px solid transparent;
             border-left: 5px solid black;
+        }
+        .arrow-right:hover {
+            cursor: pointer;
+            border-left: 5px solid var(--paper-grey-600);
         }
     </style>
 
@@ -88,28 +100,25 @@
                     </tg-selection-view>
                 </paper-material>
             </div>
-            <div class="fit">
-                <div class="layout horizontal justified">
-                    <div class="layout vertical start">
-                        <content select=".left-insertion-point"></content>
-                    </div>
-                    <div class="splitter">
-                        <div class="arrow-left"></div>
-                        <div class="arrow-right"></div>
-                    </div>
-                    <div class="layout vertical flex" style="min-width:0">
-                        <content select=".custom-egi"></content>
-                        <content select=".bottom-insertion-point"></content>
-                    </div>
-                    <div class="splitter">
-                        <div class="arrow-left"></div>
-                        <div class="arrow-right"></div>
-                    </div>
-                    <div class="layout vertical start">
-                        <content select=".right-insertion-point"></content>
-                    </div>
+            <div class="fit layout horizontal justified">
+                <div class="layout vertical start">
+                    <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
-
+                <div class="splitter" hidden$="[[!leftInsertionPointPresent]]">
+                    <div class="arrow-left"></div>
+                    <div class="arrow-right"></div>
+                </div>
+                <div class="layout vertical flex" style="min-width:0">
+                    <content select=".custom-egi"></content>
+                    <content select=".bottom-insertion-point"></content>
+                </div>
+                <div class="splitter" hidden$="[[!rightInsertionPointPresent]]">
+                    <div class="arrow-left"></div>
+                    <div class="arrow-right"></div>
+                </div>
+                <div class="layout vertical start">
+                    <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
+                </div>
             </div>
         </iron-pages>
     </template>
@@ -151,6 +160,11 @@
         },
 
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+        
+        ready: function () {
+            this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].length > 0;
+            this.rightInsertionPointPresent = Polymer.dom(this.$.rightInsertionPointContent).getDistributedNodes()[0].length > 0;
+        },
 
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
             console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
