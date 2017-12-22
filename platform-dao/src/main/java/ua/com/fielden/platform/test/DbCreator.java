@@ -26,6 +26,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
  * This is an abstraction that capture the logic for the initial test case related db creation and its re-creation from a generated script for all individual tests in the same test case.
@@ -35,8 +36,8 @@ import ua.com.fielden.platform.dao.PersistedEntityMetadata;
  * @author TG Team
  *
  */
-public class DbCreator {
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+public final class DbCreator {
+    private final Logger logger = Logger.getLogger(DbCreator.class);
 
     private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> dataScripts = CacheBuilder.newBuilder().weakKeys().build();
     private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> truncateScripts = CacheBuilder.newBuilder().weakKeys().build();
@@ -244,17 +245,19 @@ public class DbCreator {
     }
 
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
-        final Statement st = conn.createStatement();
-        for (final String stmt : statements) {
-            st.execute(stmt);
+        try (final Statement st = conn.createStatement()) {
+            for (final String stmt : statements) {
+                st.execute(stmt);
+            }
         }
-        st.close();
     }
 
-    public final void clearData(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) throws Exception {
+    public final void clearData(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
         try (final Connection conn = createConnection(defaultDbProps)) {
             exec(truncateScripts.getIfPresent(testCaseType), conn);
             logger.debug("Executing tables truncation script.");
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException("Could not clear data.", ex);
         }
     }
 
