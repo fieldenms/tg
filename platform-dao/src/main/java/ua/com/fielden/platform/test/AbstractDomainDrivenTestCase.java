@@ -6,14 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -206,7 +204,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
      * @return
      */
     @Override
-    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
         entity.setKey(key);
         entity.setDesc(desc);
@@ -221,7 +219,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
      * @return
      */
     @Override
-    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key) {
         final T entity = new_(entityClass);
         entity.setKey(key);
         return entity;
@@ -260,7 +258,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
      * @return
      */
     @Override
-    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass) {
         final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }
