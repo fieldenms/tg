@@ -77,7 +77,7 @@
                             <div class="layout horizontal">
                                 <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
                                 <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">
-                                		<paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style$="[[_runSpinnerStyle]]" alt="in progress">
+									<paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
             							</paper-spinner>
             							<span>Run</span>
                                 </paper-button>
@@ -132,7 +132,6 @@
             _discarderDisabled: Boolean,
             _runnerDisabled: Boolean,
             _viewerDisabled: Boolean,
-            _runSpinnerStyle: String,
             save: Function,
             discard: Function,
             run: Function,
