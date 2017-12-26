@@ -50,6 +50,8 @@ import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -1249,10 +1251,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createDefaultValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> originalType, final String originalPropertyName, final ICompanionObjectFinder coFinder) {
-        final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
-        final Class<V> propertyType = (Class<V>) (isEntityItself ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName));
-        final IEntityDao<V> co = coFinder.find(propertyType);
-        return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
+        final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
+                                   .map(propertyType -> (Class<V>) propertyType)
+                                   .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName)));
+
+        final IEntityDao<V> co = coFinder.find(propType);
+        final IValueMatcherWithCentreContext<V> matcher = new FallbackValueMatcherWithCentreContext<>(co);
+        final fetch<V> fetch = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
+                                .map(Pair::getKey)
+                                .reduce(EntityQueryUtils.fetchKeyAndDescOnly(propType), (f, propName) -> f.with(propName), (f1, f2) -> {throw new UnsupportedOperationException("Parallelisation is not supported.");});
+        
+        matcher.setFetch(fetch);
+
+        return pair(matcher, Optional.empty());
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
