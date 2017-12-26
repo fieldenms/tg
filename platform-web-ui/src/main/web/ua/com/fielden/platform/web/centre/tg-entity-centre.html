@@ -101,22 +101,22 @@
                 </paper-material>
             </div>
             <div class="fit layout horizontal justified">
-                <div class="layout vertical start">
+                <div id="leftInsertionPointContainer" class="layout vertical start">
                     <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
-                <div class="splitter" hidden$="[[!leftInsertionPointPresent]]">
-                    <div class="arrow-left"></div>
-                    <div class="arrow-right"></div>
+                <div class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-track="_changeLeftInsertionPointSize">
+                    <div class="arrow-left" tooltip-text="collapse insertion point" on-tap="_collapseLeftInsertionPoint"></div>
+                    <div class="arrow-right" tooltip-text="expand insertion point" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
                 <div class="layout vertical flex" style="min-width:0">
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
-                <div class="splitter" hidden$="[[!rightInsertionPointPresent]]">
-                    <div class="arrow-left"></div>
-                    <div class="arrow-right"></div>
+                <div class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-track="_changeRightInsertionPointSize">
+                    <div class="arrow-left" tooltip-text="expand insertion point" on-tap="_expandRightInsertionPoint"></div>
+                    <div class="arrow-right" tooltip-text="collapse insertion point" on-tap="_collapseRightInsertionPoint"></div>
                 </div>
-                <div class="layout vertical start">
+                <div id="rightInsertionPointContainer" class="layout vertical start">
                     <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
                 </div>
             </div>
@@ -162,10 +162,44 @@
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
         
         ready: function () {
-            this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].length > 0;
-            this.rightInsertionPointPresent = Polymer.dom(this.$.rightInsertionPointContent).getDistributedNodes()[0].length > 0;
+            this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].children.length > 0;
+            this.rightInsertionPointPresent = Polymer.dom(this.$.rightInsertionPointContent).getDistributedNodes()[0].children.length > 0;
+        },
+        
+        //Splitter functionality
+        _expandLeftInsertionPoint: function () {
+            this._expandContainer(this.$.leftInsertionPointContainer);
+        },
+        
+        _collapseLeftInsertionPoint: function () {
+            this._collapseContainer(this.$.leftInsertionPointContainer);
         },
 
+        _expandRightInsertionPoint: function () {
+            this._expandContainer(this.$.rightInsertionPointContainer);
+        },
+        
+        _collapseRightInsertionPoint:function () {
+            this._collapseContainer(this.$.rightInsertionPointContainer);
+        },
+        
+        _changeLeftInsertionPointSize: function (e) {
+            
+        },
+        
+        _changeRightInsertionPointSize: function (e) {
+            
+        },
+        
+        _expandContainer: function (element) {
+            element.style.removeProperty("width");
+            element.style.removeProperty("display");
+        },
+        
+        _collapseContainer: function (element) {
+            element.style.display = 'none';
+        },
+        
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
             console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
         },
