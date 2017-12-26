@@ -48,7 +48,6 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final Class<CONTEXT> entityType,
             final String propertyName,
             final IEntityProducer<CONTEXT> entityProducer,
-            final EntityFactory entityFactory,
             final IValueMatcherWithContext<CONTEXT, T> valueMatcher,
             final ICompanionObjectFinder companionFinder,
             final RestServerUtil restUtil,
@@ -74,8 +73,6 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     public Representation post(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
-            //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
-            //            throw new IllegalStateException("Illegal state during entity searching.");
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>();
