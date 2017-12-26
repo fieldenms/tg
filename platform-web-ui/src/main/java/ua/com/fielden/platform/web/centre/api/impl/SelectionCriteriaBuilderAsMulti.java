@@ -46,6 +46,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
             throw new WebUiBuilderException(format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
         }
 
+        builder.providedTypesForAutocompletedSelectionCriteria.put(propPath, type);
         return new SelectionCriteriaBuilderAsMultiString<>(builder, selectionCritBuilder);
     }
 
@@ -71,7 +72,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         }
 
-        return new SelectionCriteriaBuilderAsMultiBool<T>(builder, selectionCritBuilder);
+        return new SelectionCriteriaBuilderAsMultiBool<>(builder, selectionCritBuilder);
     }
 
 }

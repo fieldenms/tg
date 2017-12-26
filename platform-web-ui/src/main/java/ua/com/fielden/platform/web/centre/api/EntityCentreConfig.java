@@ -141,6 +141,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * autocompleters to be displayed as part of the autocompletion result list.
      */
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
+    
+    /**
+     * A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to <code>.autocompleter(type)</code>.
+     */
+    private final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
     /**
      * Represents the layout settings for selection criteria.
@@ -347,6 +352,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
             final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
+            final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
             final boolean runAutomatically,
             final boolean enforcePostSaveRefresh,
@@ -408,6 +414,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
         this.additionalPropsForAutocompleter.putAll(additionalPropsForAutocompleter);
+        this.providedTypesForAutocompletedSelectionCriteria.putAll(providedTypesForAutocompletedSelectionCriteria);
 
         this.selectionCriteriaLayout = selectionCriteriaLayout;
         this.resultsetCollapsedCardLayout = resultsetCollapsedCardLayout;
@@ -520,6 +527,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public List<Pair<String, Boolean>> getAdditionalPropsForAutocompleter(final String critName) {
         final List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
         return props != null ? props : new ArrayList<>();
+    }
+    
+    public Optional<Class<? extends AbstractEntity<?>>> getProvidedTypeForAutocompletedSelectionCriterion(final String critName) {
+        return Optional.ofNullable(providedTypesForAutocompletedSelectionCriteria.get(StringUtils.isEmpty(critName) ? "this" : critName));
     }
 
     public Optional<List<String>> getSelectionCriteria() {
