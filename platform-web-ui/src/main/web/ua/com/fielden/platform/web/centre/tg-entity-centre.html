@@ -10,6 +10,7 @@
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/centre/tg-selection-view.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
@@ -46,7 +47,8 @@
             padding-top: 10px;
             width: 9px;
         }
-        .splitter:hover {
+        .splitter:hover,
+        .splitter-resizing {
             cursor: col-resize;
             background: var(--paper-light-blue-100);
         }
@@ -71,6 +73,12 @@
         .arrow-right:hover {
             cursor: pointer;
             border-left: 5px solid var(--paper-grey-600);
+        }
+        .centre-result-container {
+            min-height: fit-content;
+        }
+        .insertion-point-slot {
+            overflow: hidden;
         }
     </style>
 
@@ -100,15 +108,15 @@
                     </tg-selection-view>
                 </paper-material>
             </div>
-            <div class="fit layout horizontal justified">
-                <div id="leftInsertionPointContainer" class="layout vertical start">
+            <div id="centreResultContainer" class="centre-result-container fit layout horizontal justified">
+                <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
                 <div class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-track="_changeLeftInsertionPointSize">
                     <div class="arrow-left" tooltip-text="collapse insertion point" on-tap="_collapseLeftInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="expand insertion point" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
-                <div class="layout vertical flex" style="min-width:0">
+                <div class="insertion-point-slot layout vertical flex" style="min-width:0">
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
@@ -116,7 +124,7 @@
                     <div class="arrow-left" tooltip-text="expand insertion point" on-tap="_expandRightInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="collapse insertion point" on-tap="_collapseRightInsertionPoint"></div>
                 </div>
-                <div id="rightInsertionPointContainer" class="layout vertical start">
+                <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
                 </div>
             </div>
@@ -164,6 +172,8 @@
         ready: function () {
             this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].children.length > 0;
             this.rightInsertionPointPresent = Polymer.dom(this.$.rightInsertionPointContent).getDistributedNodes()[0].children.length > 0;
+            this._leftInsertionPointCalculator = this._leftInsertionPointCalculator.bind(this);
+            this._rightInsertionPointCalculator = this._rightInsertionPointCalculator.bind(this);
         },
         
         //Splitter functionality
@@ -184,11 +194,86 @@
         },
         
         _changeLeftInsertionPointSize: function (e) {
-            
+            this._changeInsertionPointSize(e, this._leftInsertionPointCalculator);
         },
         
         _changeRightInsertionPointSize: function (e) {
-            
+            this._changeInsertionPointSize(e, this._rightInsertionPointCalculator);
+        },
+        
+        _leftInsertionPointCalculator: function(delta, splitterWidth, containerWidth) {
+            this._changeInsertionPointWidth(this.$.leftInsertionPointContainer, delta, splitterWidth, this.$.rightInsertionPointContainer.offsetWidth, containerWidth, 0);
+        },
+        
+        _rightInsertionPointCalculator: function(delta, splitterWidth, containerWidth) {
+            this._changeInsertionPointWidth(this.$.rightInsertionPointContainer, -delta, splitterWidth, this.$.leftInsertionPointContainer.offsetWidth, containerWidth, 0);
+        },
+        
+        _changeInsertionPointWidth(insertionPointContainer, delta, splitterWidth, opositeInsertionPointContainerWidth, resultContainerWidth, minEgiContainerWidth) {
+            const oldWidth = insertionPointContainer.offsetWidth;
+            let newWidth = oldWidth + delta;
+            if (newWidth < 0) {
+                newWidth = 0
+            } else if (newWidth > resultContainerWidth - opositeInsertionPointContainerWidth - 2 * splitterWidth - minEgiContainerWidth) {
+                newWidth = resultContainerWidth - opositeInsertionPointContainerWidth - 2 * splitterWidth - minEgiContainerWidth;
+            }
+            if (oldWidth !== newWidth) {
+                if (insertionPointContainer.offsetParent === null) {
+                    insertionPointContainer.style.removeProperty("display");
+                }
+                insertionPointContainer.style.width = "" + newWidth + "px";
+            }
+        },
+        
+        _changeInsertionPointSize: function(e, widthCalculator) {
+            switch (e.detail.state) {
+            case 'start':
+                this._startInsertionPointResizing(e);
+                break;
+            case 'track':
+                this._trackInsertionPointSize(e, widthCalculator);
+                break;
+            case 'end':
+                this._endInsertionPointResizing(e);
+                break;
+            }
+            if (e.stopPropagation) e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+            e.cancelBubble = true;
+            e.returnValue = false;
+        },
+        
+        _startInsertionPointResizing: function (e) {
+            //Change the style to visualise insertion point resizing.
+            e.target.classList.toggle("splitter-resizing", true);
+        },
+        
+        _trackInsertionPointSize: function (e, widthCalculator) {
+            const resultContainerWidth = this.$.centreResultContainer.offsetWidth;
+            const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
+            let delta = 0;
+            if (mousePos.x < 0) {
+                if (e.detail.ddx <= 0) {
+                    delta = -2; //default increment if insertion point container width is not at extreme position
+                } else {
+                    delta = e.detail.ddx;
+                }
+            } else if (mousePos.x > resultContainerWidth) {
+                if (e.detail.ddx >= 0) {
+                    delta = 2//default increment if insertion point container width is not at extreme position
+                } else {
+                    delta = e.detail.ddx;
+                }
+            }
+            else {
+                delta = e.detail.ddx;
+            }
+            widthCalculator(delta, e.target.offsetWidth, resultContainerWidth);
+        },
+        
+        _endInsertionPointResizing: function (e) {
+            //Reset the style of splitter.
+            e.target.classList.toggle("splitter-resizing", false);
         },
         
         _expandContainer: function (element) {

@@ -11,13 +11,29 @@
      * The intention was made for the cases, where some additional DOM manipulation is needed, and in such cases
      * flush() call could be efficiently done after all DOM manipulation once.
      */
-    var _removeAllLightDOMChildrenFrom = function (element) {
-        var childNodes = Polymer.dom(element).childNodes;
-        for (var index = 0; index < childNodes.length; index++) {
-            var child = childNodes[index];
+    const _removeAllLightDOMChildrenFrom = function (element) {
+        const childNodes = Polymer.dom(element).childNodes;
+        for (let index = 0; index < childNodes.length; index++) {
+            const child = childNodes[index];
             if (Polymer.dom(child).parentNode === element) {
                 Polymer.dom(element).removeChild(child);
             }
         }
+    };
+    /**
+     * Returns the x and y coordinates relatively to specified container
+     */
+    const getRelativePos = function (x, y, container) {
+        let reference = container;
+        let newPos = {
+            x: x,
+            y: y
+        }
+        while (reference) {
+            newPos.x -= reference.offsetLeft;
+            newPos.y -= reference.offsetTop;
+            reference = reference.offsetParent;
+        }
+        return newPos;
     };
 </script>
