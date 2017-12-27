@@ -75,8 +75,17 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return el;
     }
     
-    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String childName, final String parentElementAlias) {
-        this(entityActionConfig, numberOfAction, FunctionalActionKind.CHILD, null, childName, parentElementAlias);
+    /**
+     * Factory method that creates {@link FunctionalActionKind#CHILD}-typed {@link FunctionalActionElement} instance.
+     * 
+     * @param entityActionConfig
+     * @param numberOfAction
+     * @param childName
+     * @param parentElementAlias
+     * @return
+     */
+    public static FunctionalActionElement createChildActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String childName, final String parentElementAlias) {
+        return new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.CHILD, null, childName, parentElementAlias);
     }
     
     /**

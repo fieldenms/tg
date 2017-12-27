@@ -143,17 +143,6 @@
     	is: 'tg-ui-action',
     	
         properties: {
-            
-            childName: {
-                type: String,
-                value: null
-            },
-            parentElementAlias: {
-                type: String,
-                value: null
-            },
-            
-        
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +212,23 @@
              */
             elementAlias: {
             	type: String
+            },
+            
+            /**
+             * In case where this action represents child action of some other action, this property contains unique identifier in parent action's namespace.
+             */
+            childName: {
+                type: String,
+                value: null
+            },
+            
+            /**
+             * In case where this action represents child action of some other action, this property contains parent action's elementAlias.
+             * This property uniquely identifies parent between all other sibling actions.
+             */
+            parentElementAlias: {
+                type: String,
+                value: null
             },
             
             /**

@@ -786,8 +786,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating property columns...");
         
+        // current global index of all child actions
         int childActionIndex = 0;
-        final List<FunctionalActionElement> childActions = new ArrayList<>();
+        // gathers all child actions from all 1) prop 2) primary 3) secondary actions; they can be differentiated by 'parentElementAlias' property and end-developer-defined 'childName'
+        final List<FunctionalActionElement> childActions = new ArrayList<>(); 
         
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
@@ -804,11 +806,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final Optional<FunctionalActionElement> action;
                 final Optional<EntityActionConfig> actionConfig = resultProp.propAction.get();
                 if (actionConfig.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName));
+                    final FunctionalActionElement actionElement = new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName);
+                    action = Optional.of(actionElement);
                     actionIndex += 1;
                     
-                    for (final Entry<String, EntityActionConfig> nameAndChild: action.get().entityActionConfig.childActions().entrySet()) {
-                        childActions.add(createChildActionElement(action.get().getElementAlias(), childActionIndex, nameAndChild));
+                    // adds all child actions from currently processed PROP action with appropriate indexing
+                    for (final Entry<String, EntityActionConfig> nameAndChild: actionElement.entityActionConfig.childActions().entrySet()) {
+                        childActions.add(createChildActionElement(actionElement.getElementAlias(), childActionIndex, nameAndChild));
                         childActionIndex += 1;
                     }
                 } else {
@@ -847,9 +851,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             if (column.getAction().isPresent()) {
                 importPaths.add(column.getAction().get().importPath());
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
-                
-                // generate child actions
-                //column.getAction().get().entityActionConfig;
             }
             egiColumns.add(column.render());
         });
@@ -893,14 +894,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder primaryActionObject = new StringBuilder();
 
         if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
-            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+            final FunctionalActionElement actionElement = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
-            importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
-            primaryActionObject.append(prefix + createActionObject(el));
+            importPaths.add(actionElement.importPath());
+            primaryActionDom.add(actionElement.render().clazz("primary-action").attr("hidden", null));
+            primaryActionObject.append(prefix + createActionObject(actionElement));
             
-            for (final Entry<String, EntityActionConfig> nameAndChild: el.entityActionConfig.childActions().entrySet()) {
-                childActions.add(createChildActionElement(el.getElementAlias(), childActionIndex, nameAndChild));
+            // adds all child actions from currently processed PRIMARY action with appropriate indexing
+            for (final Entry<String, EntityActionConfig> nameAndChild: actionElement.entityActionConfig.childActions().entrySet()) {
+                childActions.add(createChildActionElement(actionElement.getElementAlias(), childActionIndex, nameAndChild));
                 childActionIndex += 1;
             }
         }
@@ -912,16 +914,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
         if (resultSetSecondaryEntityActions.isPresent()) {
             for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
-                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
-                secondaryActionElements.add(el);
+                final FunctionalActionElement actionElement = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
+                secondaryActionElements.add(actionElement);
                 
-                for (final Entry<String, EntityActionConfig> nameAndChild: el.entityActionConfig.childActions().entrySet()) {
-                    childActions.add(createChildActionElement(el.getElementAlias(), childActionIndex, nameAndChild));
+                // adds all child actions from currently processed SECONDARY action with appropriate indexing
+                for (final Entry<String, EntityActionConfig> nameAndChild: actionElement.entityActionConfig.childActions().entrySet()) {
+                    childActions.add(createChildActionElement(actionElement.getElementAlias(), childActionIndex, nameAndChild));
                     childActionIndex += 1;
                 }
             }
         }
         
+        // gathers DOM element and action objects to be used for generation
         final DomContainer childActionsDom = new DomContainer();
         final StringBuilder childActionsObjects = new StringBuilder();
         for (final FunctionalActionElement childAction: childActions) {
@@ -929,7 +933,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             childActionsDom.add(childAction.render().clazz("child-action").attr("hidden", null));
             childActionsObjects.append(prefix + createActionObject(childAction));
         }
-
+        
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
         for (final FunctionalActionElement el : secondaryActionElements) {
@@ -1059,8 +1063,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
+    /**
+     * Creates {@link FunctionalActionElement} with type {@link FunctionalActionKind#CHILD}.
+     * 
+     * @param parentElementAlias -- unique identifier of generated parent action element
+     * @param childActionIndex -- number of child action in context of all other child actions
+     * @param nameAndAction -- user-defined string key of action and action object itself
+     * @return
+     */
     private FunctionalActionElement createChildActionElement(final String parentElementAlias, final int childActionIndex, final Entry<String, EntityActionConfig> nameAndAction) {
-        return new FunctionalActionElement(nameAndAction.getValue(), childActionIndex, nameAndAction.getKey(), parentElementAlias);
+        return FunctionalActionElement.createChildActionElement(nameAndAction.getValue(), childActionIndex, nameAndAction.getKey(), parentElementAlias);
     }
 
     /**

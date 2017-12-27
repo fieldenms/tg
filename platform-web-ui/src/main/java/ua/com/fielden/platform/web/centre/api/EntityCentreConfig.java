@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -712,6 +713,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     /**
      * Returns action configuration for concrete action kind and its number in that kind's space.
+     * <p>
+     * Currently, this method is very tightly integrated with centre elements generation in {@link EntityCentre#createRenderableRepresentation} method.
+     * Please continue to keep these methods in sync or, perhaps, develop better approach in action numbering.
      *
      * @param actionKind
      * @param actionNumber
@@ -748,37 +752,34 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
             return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
         } else if (FunctionalActionKind.CHILD == actionKind) {
-            final List<EntityActionConfig> list = new ArrayList<>();
-            
+            // gather all child actions in original order (EntityCentre class) to preserve numbers
+            final List<EntityActionConfig> childActions = new ArrayList<>();
             final Optional<List<ResultSetProp>> resultProps = getResultSetProperties();
             if (resultProps.isPresent()) {
                 for (final ResultSetProp resultProp : resultProps.get()) {
                     final Optional<EntityActionConfig> actionConfig = resultProp.propAction.get();
                     if (actionConfig.isPresent()) {
                         for (final Entry<String, EntityActionConfig> nameAndChild: actionConfig.get().childActions().entrySet()) {
-                            list.add(nameAndChild.getValue());
+                            childActions.add(nameAndChild.getValue());
                         }
                     }
                 }
             }
-            
             final Optional<EntityActionConfig> resultSetPrimaryEntityAction = getResultSetPrimaryEntityAction();
             if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
                 for (final Entry<String, EntityActionConfig> nameAndChild: resultSetPrimaryEntityAction.get().childActions().entrySet()) {
-                    list.add(nameAndChild.getValue());
+                    childActions.add(nameAndChild.getValue());
                 }
             }
-            
             final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = getResultSetSecondaryEntityActions();
             if (resultSetSecondaryEntityActions.isPresent()) {
                 for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
                     for (final Entry<String, EntityActionConfig> nameAndChild: resultSetSecondaryEntityActions.get().get(i).childActions().entrySet()) {
-                        list.add(nameAndChild.getValue());
+                        childActions.add(nameAndChild.getValue());
                     }
                 }
             }
-            
-            return list.get(actionNumber);
+            return childActions.get(actionNumber); // return child action with the specified <code>actionNumber</code>
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }

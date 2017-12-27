@@ -9,6 +9,7 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.action.pre.PolymorphicEditPreAction;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -244,6 +245,15 @@ public final class EntityActionConfig {
         return unmodifiableMap(childActions);
     }
     
+    /**
+     * Adds hidden child action to this action.
+     * <p>
+     * Such action could be used for polymorphic entities editing (see {@link PolymorphicEditPreAction} for more details).
+     * 
+     * @param name -- unique identifier of child action in the namespace of its parent
+     * @param action -- actual action configuration to be added as a child
+     * @return
+     */
     public EntityActionConfig addChildAction(final String name, final EntityActionConfig action) {
         childActions.put(name, action);
         return this;
