@@ -141,6 +141,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * autocompleters to be displayed as part of the autocompletion result list.
      */
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
+    
+    /**
+     * A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to <code>.autocompleter(type)</code>.
+     */
+    private final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
     /**
      * Represents the layout settings for selection criteria.
@@ -269,7 +274,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * This is just a helper enumeration to express result set ordering.
      */
-    public static enum OrderDirection {
+    public enum OrderDirection {
         DESC, ASC;
     }
 
@@ -347,6 +352,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
             final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
+            final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
             final boolean runAutomatically,
             final boolean enforcePostSaveRefresh,
@@ -408,6 +414,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
         this.additionalPropsForAutocompleter.putAll(additionalPropsForAutocompleter);
+        this.providedTypesForAutocompletedSelectionCriteria.putAll(providedTypesForAutocompletedSelectionCriteria);
 
         this.selectionCriteriaLayout = selectionCriteriaLayout;
         this.resultsetCollapsedCardLayout = resultsetCollapsedCardLayout;
@@ -490,14 +497,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<List<EntityActionConfig>> getResultSetSecondaryEntityActions() {
-        if (resultSetSecondaryEntityActions == null || resultSetSecondaryEntityActions.isEmpty()) {
+        if (resultSetSecondaryEntityActions.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(resultSetSecondaryEntityActions));
     }
 
     public Optional<List<ResultSetProp>> getResultSetProperties() {
-        if (resultSetProperties == null || resultSetProperties.isEmpty()) {
+        if (resultSetProperties.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(resultSetProperties));
@@ -511,7 +518,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
-        if (valueMatchersForSelectionCriteria == null || valueMatchersForSelectionCriteria.isEmpty()) {
+        if (valueMatchersForSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(valueMatchersForSelectionCriteria));
@@ -521,163 +528,167 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         final List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
         return props != null ? props : new ArrayList<>();
     }
+    
+    public Optional<Class<? extends AbstractEntity<?>>> getProvidedTypeForAutocompletedSelectionCriterion(final String critName) {
+        return Optional.ofNullable(providedTypesForAutocompletedSelectionCriteria.get(StringUtils.isEmpty(critName) ? "this" : critName));
+    }
 
     public Optional<List<String>> getSelectionCriteria() {
-        if (selectionCriteria == null || selectionCriteria.isEmpty()) {
+        if (selectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(selectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>>> getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria() {
-        if (defaultMultiValueAssignersForEntityAndStringSelectionCriteria == null || defaultMultiValueAssignersForEntityAndStringSelectionCriteria.isEmpty()) {
+        if (defaultMultiValueAssignersForEntityAndStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultMultiValueAssignersForEntityAndStringSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>>>> getDefaultRangeValueAssignersForDateSelectionCriteria() {
-        if (defaultRangeValueAssignersForDateSelectionCriteria == null || defaultRangeValueAssignersForDateSelectionCriteria.isEmpty()) {
+        if (defaultRangeValueAssignersForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultRangeValueAssignersForDateSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<Integer>, T>>>> getDefaultRangeValueAssignersForIntegerSelectionCriteria() {
-        if (defaultRangeValueAssignersForIntegerSelectionCriteria == null || defaultRangeValueAssignersForIntegerSelectionCriteria.isEmpty()) {
+        if (defaultRangeValueAssignersForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultRangeValueAssignersForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>>>> getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria() {
-        if (defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria == null || defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+        if (defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>>> getDefaultSingleValueAssignersForEntitySelectionCriteria() {
-        if (defaultSingleValueAssignersForEntitySelectionCriteria == null || defaultSingleValueAssignersForEntitySelectionCriteria.isEmpty()) {
+        if (defaultSingleValueAssignersForEntitySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForEntitySelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<String>, T>>>> getDefaultSingleValueAssignersForStringSelectionCriteria() {
-        if (defaultSingleValueAssignersForStringSelectionCriteria == null || defaultSingleValueAssignersForStringSelectionCriteria.isEmpty()) {
+        if (defaultSingleValueAssignersForStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForStringSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>>> getDefaultSingleValueAssignersForBooleanSelectionCriteria() {
-        if (defaultSingleValueAssignersForBooleanSelectionCriteria == null || defaultSingleValueAssignersForBooleanSelectionCriteria.isEmpty()) {
+        if (defaultSingleValueAssignersForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Integer>, T>>>> getDefaultSingleValueAssignersForIntegerSelectionCriteria() {
-        if (defaultSingleValueAssignersForIntegerSelectionCriteria == null || defaultSingleValueAssignersForIntegerSelectionCriteria.isEmpty()) {
+        if (defaultSingleValueAssignersForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>>> getDefaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria() {
-        if (defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria == null || defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+        if (defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>>>> getDefaultSingleValueAssignersForDateSelectionCriteria() {
-        if (defaultSingleValueAssignersForDateSelectionCriteria == null || defaultSingleValueAssignersForDateSelectionCriteria.isEmpty()) {
+        if (defaultSingleValueAssignersForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForDateSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>>> getDefaultMultiValueAssignersForBooleanSelectionCriteria() {
-        if (defaultMultiValueAssignersForBooleanSelectionCriteria == null || defaultMultiValueAssignersForBooleanSelectionCriteria.isEmpty()) {
+        if (defaultMultiValueAssignersForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultMultiValueAssignersForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, MultiCritStringValueMnemonic>> getDefaultMultiValuesForEntityAndStringSelectionCriteria() {
-        if (defaultMultiValuesForEntityAndStringSelectionCriteria == null || defaultMultiValuesForEntityAndStringSelectionCriteria.isEmpty()) {
+        if (defaultMultiValuesForEntityAndStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultMultiValuesForEntityAndStringSelectionCriteria));
     }
 
     public Optional<Map<String, MultiCritBooleanValueMnemonic>> getDefaultMultiValuesForBooleanSelectionCriteria() {
-        if (defaultMultiValuesForBooleanSelectionCriteria == null || defaultMultiValuesForBooleanSelectionCriteria.isEmpty()) {
+        if (defaultMultiValuesForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultMultiValuesForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, RangeCritDateValueMnemonic>> getDefaultRangeValuesForDateSelectionCriteria() {
-        if (defaultRangeValuesForDateSelectionCriteria == null || defaultRangeValuesForDateSelectionCriteria.isEmpty()) {
+        if (defaultRangeValuesForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultRangeValuesForDateSelectionCriteria));
     }
 
     public Optional<Map<String, RangeCritOtherValueMnemonic<Integer>>> getDefaultRangeValuesForIntegerSelectionCriteria() {
-        if (defaultRangeValuesForIntegerSelectionCriteria == null || defaultRangeValuesForIntegerSelectionCriteria.isEmpty()) {
+        if (defaultRangeValuesForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultRangeValuesForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, RangeCritOtherValueMnemonic<BigDecimal>>> getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria() {
-        if (defaultRangeValuesForBigDecimalAndMoneySelectionCriteria == null || defaultRangeValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+        if (defaultRangeValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultRangeValuesForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>> getDefaultSingleValuesForEntitySelectionCriteria() {
-        if (defaultSingleValuesForEntitySelectionCriteria == null || defaultSingleValuesForEntitySelectionCriteria.isEmpty()) {
+        if (defaultSingleValuesForEntitySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForEntitySelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<String>>> getDefaultSingleValuesForStringSelectionCriteria() {
-        if (defaultSingleValuesForStringSelectionCriteria == null || defaultSingleValuesForStringSelectionCriteria.isEmpty()) {
+        if (defaultSingleValuesForStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForStringSelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<Boolean>>> getDefaultSingleValuesForBooleanSelectionCriteria() {
-        if (defaultSingleValuesForBooleanSelectionCriteria == null || defaultSingleValuesForBooleanSelectionCriteria.isEmpty()) {
+        if (defaultSingleValuesForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<Integer>>> getDefaultSingleValuesForIntegerSelectionCriteria() {
-        if (defaultSingleValuesForIntegerSelectionCriteria == null || defaultSingleValuesForIntegerSelectionCriteria.isEmpty()) {
+        if (defaultSingleValuesForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<BigDecimal>>> getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria() {
-        if (defaultSingleValuesForBigDecimalAndMoneySelectionCriteria == null || defaultSingleValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+        if (defaultSingleValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritDateValueMnemonic>> getDefaultSingleValuesForDateSelectionCriteria() {
-        if (defaultSingleValuesForDateSelectionCriteria == null || defaultSingleValuesForDateSelectionCriteria.isEmpty()) {
+        if (defaultSingleValuesForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForDateSelectionCriteria));
@@ -688,7 +699,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<Map<String, OrderDirection>> getResultSetOrdering() {
-        if (resultSetOrdering == null || resultSetOrdering.isEmpty()) {
+        if (resultSetOrdering.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(resultSetOrdering));

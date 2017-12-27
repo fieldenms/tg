@@ -68,7 +68,9 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
-    private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    
+    private EntityResourceUtils() {}
     
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
