@@ -81,6 +81,21 @@
         .insertion-point-slot {
             overflow: hidden;
         }
+        .noselect {
+            -webkit-touch-callout: none;
+            /* iOS Safari */
+            -webkit-user-select: none;
+            /* Safari */
+            -khtml-user-select: none;
+            /* Konqueror HTML */
+            -moz-user-select: none;
+            /* Firefox */
+            -ms-user-select: none;
+            /* Internet Explorer/Edge */
+            user-select: none;
+            /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+        }
     </style>
 
     <template>
@@ -113,7 +128,7 @@
                 <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
-                <div class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-track="_changeLeftInsertionPointSize">
+                <div class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
                     <div class="arrow-left" tooltip-text="collapse insertion point" on-tap="_collapseLeftInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="expand insertion point" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
@@ -121,7 +136,7 @@
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
-                <div class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-track="_changeRightInsertionPointSize">
+                <div class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable"on-track="_changeRightInsertionPointSize">
                     <div class="arrow-left" tooltip-text="expand insertion point" on-tap="_expandRightInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="collapse insertion point" on-tap="_collapseRightInsertionPoint"></div>
                 </div>
@@ -194,6 +209,16 @@
             this._collapseContainer(this.$.rightInsertionPointContainer);
         },
         
+        _makeCentreUnselectable: function (e) {
+            this.$.centreResultContainer.classList.toggle("noselect", true);
+            document.body.style["cursor"] = "col-resize";
+        },
+
+        _makeCentreSelectable: function (e) {
+            this.$.centreResultContainer.classList.toggle("noselect", false);
+            document.body.style["cursor"] = "";
+        },
+        
         _changeLeftInsertionPointSize: function (e) {
             this._changeInsertionPointSize(e, this._leftInsertionPointCalculator);
         },
@@ -251,25 +276,19 @@
         
         _trackInsertionPointSize: function (e, widthCalculator) {
             const resultContainerWidth = this.$.centreResultContainer.offsetWidth;
+            const splitterPos = e.target.offsetLeft;
+            const splitterWidth = e.target.offsetWidth;
             const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
             let delta = 0;
             if (mousePos.x < 0) {
-                if (e.detail.ddx <= 0) {
-                    delta = -2; //default increment if insertion point container width is not at extreme position
-                } else {
-                    delta = e.detail.ddx;
-                }
-            } else if (mousePos.x > resultContainerWidth) {
-                if (e.detail.ddx >= 0) {
-                    delta = 2//default increment if insertion point container width is not at extreme position
-                } else {
-                    delta = e.detail.ddx;
-                }
+                delta = mousePos.x;
+            } else if (mousePos.x + splitterWidth > resultContainerWidth) {
+                delta = mousePos.x + splitterWidth - resultContainerWidth;
             }
             else {
-                delta = e.detail.ddx;
+                delta = mousePos.x - splitterPos;
             }
-            widthCalculator(delta, e.target.offsetWidth, resultContainerWidth);
+            widthCalculator(delta, splitterWidth, resultContainerWidth);
         },
         
         _endInsertionPointResizing: function (e) {
