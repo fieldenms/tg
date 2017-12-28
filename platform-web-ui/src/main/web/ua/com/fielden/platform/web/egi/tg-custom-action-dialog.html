@@ -94,10 +94,11 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[_maximiserOrCollapserHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:expandMin" on-tap="maximiseDialog" tooltip-text="Maximise"></paper-icon-button>
+                <paper-icon-button hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:dragVertical" on-tap="growDialog" tooltip-text="Grow"></paper-icon-button>
+                <paper-icon-button hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:expandMin" on-tap="maximiseDialog" tooltip-text="Maximise"></paper-icon-button>
                 <paper-icon-button hidden=[[!_maximised]] class="maximise-button" icon="tg-icons:collapseMin" on-tap="maximiseDialog" tooltip-text="Restore"></paper-icon-button>
                 <paper-icon-button hidden=[[!_minimised]] class="minimise-button" icon="tg-icons:expandMin" on-tap="minimiseDialog" tooltip-text="Restore"></paper-icon-button>
-                <paper-icon-button hidden=[[_maximiserOrCollapserHidden(_minimised,_maximised)]] class="minimise-button" icon="tg-icons:collapseMin" on-tap="minimiseDialog" tooltip-text="Collapse"></paper-icon-button>
+                <paper-icon-button hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="minimise-button" icon="tg-icons:collapseMin" on-tap="minimiseDialog" tooltip-text="Collapse"></paper-icon-button>
                 <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
@@ -158,6 +159,15 @@
                     type: Boolean,
                     value: false
                 },
+                
+                /**
+                 * Indicates whether dialog was resized using resizing feature (using bottom right corner). This will be reset after dialog closes.
+                 */
+                _wasResized: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /**
                  * Indicates whether dialog has been collapsed using 'Collapse' button.
                  */
@@ -306,42 +316,58 @@
                 if (!this._minimised) {
                     this.persistActiveElement();
                     this.focus();
+                    this.persistDialogLocationAndDimensions();
                 }
                 this._minimised = !this._minimised;
                 this.notifyResize();
                 if (!this._minimised) {
                     this.restoreActiveElement();
+                    this.restoreDialogLocationAndDimensions();
                 }
+            },
+            
+            growDialog: function () {
+                if (!this._wasResized) {
+                    this._wasResized = true;
+                    this.heightBeforeResizing = this.style.height;
+                    this.widthBeforeResizing = this.style.width;
+                }
+                this.style.height = (this.offsetHeight + 10) + 'px';
+                this.style.width = (this.offsetWidth + 20) + 'px';
             },
             
             maximiseDialog: function () {
                 if (!this._maximised) {
                     this.persistActiveElement();
                     this.focus();
-                    this.persistDialogLocation();
+                    this.persistDialogLocationAndDimensions();
                 }
                 this._maximised = !this._maximised;
                 this.notifyResize();
                 if (!this._maximised) {
                     this.restoreActiveElement();
-                    this.restoreDialogLocation();
+                    this.restoreDialogLocationAndDimensions();
                 }
             },
             
             /**
-             * Persists current dialog location (top, left) to be restored later.
+             * Persists current dialog location (top, left) and dimensions (height, width) to be restored later.
              */
-            persistDialogLocation: function () {
+            persistDialogLocationAndDimensions: function () {
                 this.persistedTop = this.style.top;
                 this.persistedLeft = this.style.left;
+                this.persistedHeight = this.style.height;
+                this.persistedWidth = this.style.width;
             },
             
             /**
-             * Restores previously persisted dialog location (top, left).
+             * Restores previously persisted dialog location (top, left) and dimensions (height, width).
              */
-            restoreDialogLocation: function () {
+            restoreDialogLocationAndDimensions: function () {
                 this.style.top = this.persistedTop;
                 this.style.left = this.persistedLeft;
+                this.style.height = this.persistedHeight;
+                this.style.width = this.persistedWidth;
             },
             
             closeDialog: function () {
@@ -402,9 +428,9 @@
             },
             
             /**
-             * Indicates whether maximiser / collapser button should be hidden depending on minimised / normal / maximised state of the dialog.
+             * Indicates whether maximising / collapsing / resizing interaction buttons should be hidden depending on minimised / normal / maximised state of the dialog.
              */
-            _maximiserOrCollapserHidden: function (minimised, maximised) {
+            _dialogInteractionsHidden: function (minimised, maximised) {
                 return minimised || maximised;
             },
             
@@ -715,6 +741,9 @@
                     }
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
+                    this._wasResized = false;
+                    this.style.height = this.heightBeforeResizing;
+                    this.style.width = this.widthBeforeResizing;
                     this._minimised = false;
                     this._maximised = false;
 
@@ -725,7 +754,7 @@
             },
 
             _onIronResize: function () {
-                if (!this._wasMoved && !this._minimised) {
+                if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
             }
