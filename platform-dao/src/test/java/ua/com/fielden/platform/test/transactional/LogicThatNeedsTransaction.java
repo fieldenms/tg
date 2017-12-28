@@ -78,6 +78,15 @@ class LogicThatNeedsTransaction implements ISessionEnabled {
         dao.save(threeAmount);
         throw new RuntimeException("Purposeful exception.");
     }
+    
+    @SessionRequired
+    public void transactionalInvocaionWithError(final String amountOne, final String amountTwo) {
+        singleTransactionInvocaion(amountOne, amountTwo);
+        final EntityWithMoney threeAmount = factory.newEntity(EntityWithMoney.class, "three", "third").setMoney(new Money("90.00"));
+        dao.save(threeAmount);
+        throw new Error("Purposeful error, which is throwable... not an exception...");
+    }
+
 
     @SessionRequired
     public void nestedTransactionalInvocaionWithException(final String amountOne, final String amountTwo) {
@@ -96,9 +105,7 @@ class LogicThatNeedsTransaction implements ISessionEnabled {
     @SessionRequired
     public void singleTransactionInvocaionWithExceptionInDao2() {
         final EntityWithMoney one = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
-                //new EntityWithMoney("one", "first", new Money("0.00"));
         final EntityWithMoney two = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
-                //new EntityWithMoney("one", "first", new Money("0.00"));
 
         ((EntityWithMoneyDao) dao).saveTwoWithException(one, two);
     }

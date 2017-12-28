@@ -16,6 +16,7 @@ import org.hibernate.Transaction;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 
 /**
  * Intercepts methods annotated with {@link SessionRequired} to inject Hibernate session before the actual method execution. Nested invocation of methods annotated with
@@ -52,16 +53,53 @@ public class SessionInterceptor implements MethodInterceptor {
     public Object invoke(final MethodInvocation invocation) throws Throwable {
         final ISessionEnabled invocationOwner = (ISessionEnabled) invocation.getThis();
         final Session session = sessionFactory.getCurrentSession();
-        invocationOwner.setSession(session);
         final Transaction tr = session.getTransaction();
         
-        /**
-         * This variable indicates whether transaction should be handled in this method;
-         * basically, if transaction is activated in this method then it should be committed only in this method.
-         * therefore, shouldCommit is assigned true only when transaction is activated here.
-        */
+        try {
+            // This variable indicates whether transaction commit should be handled in this method invocation.
+            // Basically, if transaction is activated in this method then it should be committed only in this method.
+            // Therefore, shouldCommit is assigned true only when transaction is activated here.
+            final boolean shouldCommit = initTransaction(invocationOwner, session, tr);
+            
+            // now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
+            final Object result = invocation.proceed();
+            
+            // if this is the invocation that activated the current transaction then we should commit it
+            // but only of the result of invocation is not a stream -- in that case closing of the session is the responsibility of that stream
+            if (shouldCommit && tr.isActive()) {
+                // if the result is a stream than the current transaction becomes associated with that stream
+                // and needs to be committed once the stream has been processed
+                if (result instanceof Stream) {
+                    ((Stream<?>) result).onClose(() -> {
+                        try {
+                            LOGGER.debug("Committing DB transaction on stream close.");
+                            commitTransactionAndCloseSession(session, tr);
+                            LOGGER.debug("Committed DB transaction on stream close.");
+                        } catch (final Exception ex) {
+                            LOGGER.fatal("Could not commit DB transaction on stream close.", ex);
+                            throw ex;
+                        }
+                    });
+                } else { // otherwise, commit the current transaction
+                    LOGGER.debug("Committing DB transaction");
+                    commitTransactionAndCloseSession(session, tr);
+                    LOGGER.debug("Committed DB transaction");
+                }
+            } else if (session.isOpen()) { 
+                // this is the case of a nested transaction
+                // should flush only if the current session is still open
+                // this check was not needed before migrating off Hibernate 3.2.6 GA
+                session.flush();
+            }
+            return result;
+        } catch (final Throwable e) {
+            throw completeTransactionWithError(session, tr, e);
+        }
+    }
+
+    private boolean initTransaction(final ISessionEnabled invocationOwner, final Session session, final Transaction tr) {
+        invocationOwner.setSession(session);
         final boolean shouldCommit = !tr.isActive();
-        // activate transaction if it not active
         if (!tr.isActive()) {
             session.setFlushMode(FlushMode.COMMIT);
             LOGGER.debug("Starting new DB transaction");
@@ -85,47 +123,60 @@ public class SessionInterceptor implements MethodInterceptor {
             invocationOwner.setTransactionGuid(guid);
         }
         
+        return shouldCommit;
+    }
+
+    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable e) {
+        LOGGER.warn(e);
+        transactionGuid.remove();
+        if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
+            LOGGER.debug("Rolling back DB transaction");
+            rollbackTransactionAndCloseSession(session, tr);
+            LOGGER.debug("Rolled back DB transaction");
+        }
+        
+        return e instanceof Exception ? (Exception) e : new TransactionRollbackDueToThrowable(e);
+    }
+
+    private void commitTransactionAndCloseSession(final Session session, final Transaction tr) {
+        try {
+            if (!tr.wasCommitted()) {
+                tr.commit();
+            }
+        } catch (final Exception ex) {
+            LOGGER.error("Could not commit transaction.", ex);
+        } finally {
+            transactionGuid.remove();
+        }
         
         try {
-            final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor
-            
-            // if this is the invocation that activated the current transaction then we should commit it
-            // but only of the result of invocation is not a stream -- in that case closing of the session is the responsibility of that stream
-            if (shouldCommit && tr.isActive()) {
-                if (result instanceof Stream) {
-                    ((Stream<?>) result).onClose(() -> {
-                        try {
-                            LOGGER.debug("Committing DB transaction on stream close.");
-                            tr.commit();
-                            LOGGER.debug("Committed DB transaction on stream close.");
-                        } catch (final Exception ex) {
-                            LOGGER.fatal("Could not commit DB transaction on stream close.", ex);
-                            throw ex;
-                        } finally {
-                            transactionGuid.remove();
-                        }
-                    });
-                } else {
-                    LOGGER.debug("Committing DB transaction");
-                    tr.commit();
-                    transactionGuid.remove();
-                    LOGGER.debug("Committed DB transaction");
-                }
-            } else if (session.isOpen()) {
-                // should flush only if the current session is still open
-                // this check was not needed before migrating off Hibernate 3.2.6 GA
-                session.flush();
+            LOGGER.debug("Closing session.");
+            if (session.isOpen()) {
+                session.close();
             }
-            return result;
-        } catch (final Exception e) {
-            LOGGER.warn(e);
-            if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
-                LOGGER.debug("Rolling back DB transaction");
+            LOGGER.debug("Closed session.");
+        } catch (final Exception ex) {
+            LOGGER.error("Could not close session.", ex);
+        }
+    }
+    
+    private static void rollbackTransactionAndCloseSession(final Session session, final Transaction tr) {
+        try {
+            if (!tr.wasRolledBack()) {
                 tr.rollback();
-                transactionGuid.remove();
-                LOGGER.debug("Rolled back DB transaction");
             }
-            throw e;
+        } catch (final Exception ex) {
+            LOGGER.error("Could not commit transaction.", ex);
+        }
+        
+        try {
+            LOGGER.debug("Closing session.");
+            if (session.isOpen()) {
+                session.close();
+            }
+            LOGGER.debug("Closed session.");
+        } catch (final Exception ex) {
+            LOGGER.error("Could not close session.", ex);
         }
     }
     
