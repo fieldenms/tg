@@ -74,14 +74,14 @@
                 fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
-            paper-icon-button.minimize-button {
+            paper-icon-button.minimise-button,.maximise-button {
                 width: 19px;
                 height: 19px;
                 stroke: var(--paper-grey-100);
                 fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
             }
-            paper-icon-button.minimize-button:hover {
+            paper-icon-button.minimise-button:hover,.maximise-button:hover {
                 stroke: var(--paper-grey-300);
                 fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
@@ -94,8 +94,10 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog" tooltip-text="Expand"></paper-icon-button>
-                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog" tooltip-text="Collapse"></paper-icon-button>
+                <paper-icon-button hidden=[[_maximiserOrCollapserHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:expandMin" on-tap="maximiseDialog" tooltip-text="Maximise"></paper-icon-button>
+                <paper-icon-button hidden=[[!_maximised]] class="maximise-button" icon="tg-icons:collapseMin" on-tap="maximiseDialog" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden=[[!_minimised]] class="minimise-button" icon="tg-icons:expandMin" on-tap="minimiseDialog" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden=[[_maximiserOrCollapserHidden(_minimised,_maximised)]] class="minimise-button" icon="tg-icons:collapseMin" on-tap="minimiseDialog" tooltip-text="Collapse"></paper-icon-button>
                 <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
@@ -156,12 +158,22 @@
                     type: Boolean,
                     value: false
                 },
-
+                /**
+                 * Indicates whether dialog has been collapsed using 'Collapse' button.
+                 */
                 _minimised: {
                     type: Boolean,
                     value: false
                 },
-
+                
+                /**
+                 * Indicates whether dialog has been maximised using 'Maximise' button.
+                 */
+                _maximised: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
                  */
@@ -211,11 +223,11 @@
                 _windowHeight: Number,
             },
             
-            observers: ["_dialogMinimised(prefDim, _minimised)"],
+            observers: ["_dialogMinimised(prefDim, _minimised, _maximised)"],
 
             keyBindings: {
                 'alt+x': 'closeDialog',
-                'alt+m': 'minimizeDialog'
+                'alt+m': 'minimiseDialog'
             },
 
             ready: function () {
@@ -290,7 +302,7 @@
                 }
             },
 
-            minimizeDialog: function () {
+            minimiseDialog: function () {
                 if (!this._minimised) {
                     this.persistActiveElement();
                     this.focus();
@@ -301,7 +313,37 @@
                     this.restoreActiveElement();
                 }
             },
-
+            
+            maximiseDialog: function () {
+                if (!this._maximised) {
+                    this.persistActiveElement();
+                    this.focus();
+                    this.persistDialogLocation();
+                }
+                this._maximised = !this._maximised;
+                this.notifyResize();
+                if (!this._maximised) {
+                    this.restoreActiveElement();
+                    this.restoreDialogLocation();
+                }
+            },
+            
+            /**
+             * Persists current dialog location (top, left) to be restored later.
+             */
+            persistDialogLocation: function () {
+                this.persistedTop = this.style.top;
+                this.persistedLeft = this.style.left;
+            },
+            
+            /**
+             * Restores previously persisted dialog location (top, left).
+             */
+            restoreDialogLocation: function () {
+                this.style.top = this.persistedTop;
+                this.style.left = this.persistedLeft;
+            },
+            
             closeDialog: function () {
                 var canClose = true;
                 //Try to close children first.
@@ -344,16 +386,28 @@
                 return canClose;
             },
 
-            _dialogMinimised: function (prefDim, minimised) {
-                var width = "";
-                var height = "";
-                if (!minimised && prefDim) {
-                    width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                    height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+            _dialogMinimised: function (prefDim, minimised, maximised) {
+                if (!minimised && !maximised && prefDim) {
+                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    this._setDialogBodyDimensions(width, height);
+                } else if (!minimised && maximised) {
+                    this.style.top = '2%';
+                    this.style.left = '2%';
+                    this.style.width = '96%';
+                    this.style.height = '96%';
+                } else {
+                    this._setDialogBodyDimensions('', '');
                 }
-                this._setDialogBodyDimensions(width, height);
             },
-
+            
+            /**
+             * Indicates whether maximiser / collapser button should be hidden depending on minimised / normal / maximised state of the dialog.
+             */
+            _maximiserOrCollapserHidden: function (minimised, maximised) {
+                return minimised || maximised;
+            },
+            
             _setDialogBodyDimensions: function (width, height) {
                 this.style.width = width;
                 // +44px - height of the title bar please see styles for .title-bar selector.
@@ -662,6 +716,7 @@
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._minimised = false;
+                    this._maximised = false;
 
                     if (this._lastAction) {
                         this._lastAction.restoreActiveElement();
