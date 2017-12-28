@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
@@ -86,6 +87,15 @@
                 fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
+            .resize-icon {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                z-index: 2; /* higher than in non-scrollable entity-master's action bar (1) */
+            }
+            .resize-icon:hover {
+                cursor: se-resize; /* nwse-resize -- bidirectional */
+            }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
             <div class="title-text layout horizontal center flex">
@@ -94,7 +104,6 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:dragVertical" on-tap="growDialog" tooltip-text="Grow"></paper-icon-button>
                 <paper-icon-button hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:expandMin" on-tap="maximiseDialog" tooltip-text="Maximise"></paper-icon-button>
                 <paper-icon-button hidden=[[!_maximised]] class="maximise-button" icon="tg-icons:collapseMin" on-tap="maximiseDialog" tooltip-text="Restore"></paper-icon-button>
                 <paper-icon-button hidden=[[!_minimised]] class="minimise-button" icon="tg-icons:expandMin" on-tap="minimiseDialog" tooltip-text="Restore"></paper-icon-button>
@@ -107,6 +116,7 @@
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
+        <iron-icon id="resizer" hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="resize-icon" icon="tg-icons:resizeBottomRight" on-track="resizeDialog" tooltip-text="Resize"></iron-icon>
     </template>
 </dom-module>
 <script>
@@ -326,14 +336,35 @@
                 }
             },
             
-            growDialog: function () {
-                if (!this._wasResized) {
-                    this._wasResized = true;
-                    this.heightBeforeResizing = this.style.height;
-                    this.widthBeforeResizing = this.style.width;
+            /**
+             * Dialog resizing handler assigned to resizing button in bottom right corner of the dialog.
+             */
+            resizeDialog: function (event) {
+                const target = event.target || event.srcElement;
+                if (target === this.$.resizer) {
+                    switch (event.detail.state) {
+                        case 'start':
+                            this.prevBodyCursor = document.body.style.cursor;
+                            document.body.style.cursor = 'se-resize';
+                            break;
+                        case 'track':
+                            if (!this._wasResized) {
+                                this._wasResized = true;
+                                this.heightBeforeResizing = this.style.height;
+                                this.widthBeforeResizing = this.style.width;
+                            }
+                            this.style.height = (this.offsetHeight + event.detail.ddy) + 'px';
+                            this.style.width = (this.offsetWidth + event.detail.ddx) + 'px';
+                            break;
+                        case 'end':
+                            document.body.style.cursor = this.prevBodyCursor;
+                            break;
+                    }
                 }
-                this.style.height = (this.offsetHeight + 10) + 'px';
-                this.style.width = (this.offsetWidth + 20) + 'px';
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             },
             
             maximiseDialog: function () {
