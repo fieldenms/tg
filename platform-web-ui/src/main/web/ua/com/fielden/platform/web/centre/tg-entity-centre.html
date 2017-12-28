@@ -16,6 +16,7 @@
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <dom-module id="tg-entity-centre">
     <style>
@@ -183,7 +184,7 @@
             }
         },
 
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+        behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
         
         ready: function () {
             this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].children.length > 0;
@@ -237,17 +238,19 @@
         
         _changeInsertionPointWidth(insertionPointContainer, delta, splitterWidth, opositeInsertionPointContainerWidth, resultContainerWidth, minEgiContainerWidth) {
             const oldWidth = insertionPointContainer.offsetWidth;
+            const splittersCount = + this.leftInsertionPointPresent + this.rightInsertionPointPresent;
             let newWidth = oldWidth + delta;
             if (newWidth < 0) {
                 newWidth = 0
-            } else if (newWidth > resultContainerWidth - opositeInsertionPointContainerWidth - 2 * splitterWidth - minEgiContainerWidth) {
-                newWidth = resultContainerWidth - opositeInsertionPointContainerWidth - 2 * splitterWidth - minEgiContainerWidth;
+            } else if (newWidth > resultContainerWidth - opositeInsertionPointContainerWidth - splittersCount * splitterWidth - minEgiContainerWidth) {
+                newWidth = resultContainerWidth - opositeInsertionPointContainerWidth - splittersCount * splitterWidth - minEgiContainerWidth;
             }
             if (oldWidth !== newWidth) {
                 if (insertionPointContainer.offsetParent === null) {
                     insertionPointContainer.style.removeProperty("display");
                 }
                 insertionPointContainer.style.width = "" + newWidth + "px";
+                this.notifyResize();
             }
         },
         
@@ -281,11 +284,10 @@
             const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
             let delta = 0;
             if (mousePos.x < 0) {
-                delta = mousePos.x;
+                delta = -splitterPos;
             } else if (mousePos.x + splitterWidth > resultContainerWidth) {
-                delta = mousePos.x + splitterWidth - resultContainerWidth;
-            }
-            else {
+                delta = resultContainerWidth - splitterWidth - splitterPos;
+            } else {
                 delta = mousePos.x - splitterPos;
             }
             widthCalculator(delta, splitterWidth, resultContainerWidth);
@@ -299,10 +301,12 @@
         _expandContainer: function (element) {
             element.style.removeProperty("width");
             element.style.removeProperty("display");
+            this.notifyResize();
         },
         
         _collapseContainer: function (element) {
             element.style.display = 'none';
+            this.notifyResize();
         },
         
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
