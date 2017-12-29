@@ -54,6 +54,15 @@
             cursor: col-resize;
             background: var(--paper-light-blue-100);
         }
+        .dummy-splitter {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 9px;
+            display: none;
+            background: var(--paper-grey-400);
+        }
         .arrow-left {
             width: 0; 
             height: 0;
@@ -129,7 +138,7 @@
                 <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
-                <div class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
+                <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
                     <div class="arrow-left" tooltip-text="collapse insertion point" on-tap="_collapseLeftInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="expand insertion point" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
@@ -137,13 +146,14 @@
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
-                <div class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable"on-track="_changeRightInsertionPointSize">
+                <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable"on-track="_changeRightInsertionPointSize">
                     <div class="arrow-left" tooltip-text="expand insertion point" on-tap="_expandRightInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="collapse insertion point" on-tap="_collapseRightInsertionPoint"></div>
                 </div>
                 <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
                 </div>
+                <div id="dummySplitter" class="dummy-splitter"></div>
             </div>
         </iron-pages>
     </template>
@@ -189,8 +199,10 @@
         ready: function () {
             this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].children.length > 0;
             this.rightInsertionPointPresent = Polymer.dom(this.$.rightInsertionPointContent).getDistributedNodes()[0].children.length > 0;
-            this._leftInsertionPointCalculator = this._leftInsertionPointCalculator.bind(this);
-            this._rightInsertionPointCalculator = this._rightInsertionPointCalculator.bind(this);
+            this._leftSplitterUpdater = this._leftSplitterUpdater.bind(this);
+            this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
+            this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
+            this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
         },
         
         //Splitter functionality
@@ -221,49 +233,66 @@
         },
         
         _changeLeftInsertionPointSize: function (e) {
-            this._changeInsertionPointSize(e, this._leftInsertionPointCalculator);
+            this._changeInsertionPointSize(e, this._leftSplitterUpdater, this._leftInsertionPointContainerUpdater);
         },
         
         _changeRightInsertionPointSize: function (e) {
-            this._changeInsertionPointSize(e, this._rightInsertionPointCalculator);
+            this._changeInsertionPointSize(e, this._rightSplitterUpdater, this._rightInsertionPointContainerUpdater);
         },
         
-        _leftInsertionPointCalculator: function(delta, splitterWidth, containerWidth) {
-            this._changeInsertionPointWidth(this.$.leftInsertionPointContainer, delta, splitterWidth, this.$.rightInsertionPointContainer.offsetWidth, containerWidth, 0);
+        _leftSplitterUpdater: function (newPos) {
+            this._updateSplitterPos(newPos, 0, 
+                                    (this.rightInsertionPointPresent ? 
+                                     this.$.rightSplitter.offsetLeft - this.$.dummySplitter.offsetWidth : 
+                                     this.$.centreResultContainer.offsetWidth - this.$.dummySplitter.offsetWidth));
         },
         
-        _rightInsertionPointCalculator: function(delta, splitterWidth, containerWidth) {
-            this._changeInsertionPointWidth(this.$.rightInsertionPointContainer, -delta, splitterWidth, this.$.leftInsertionPointContainer.offsetWidth, containerWidth, 0);
+        _rightSplitterUpdater: function (newPos) {
+            this._updateSplitterPos(newPos, 
+                                   (this.leftInsertionPointPresent ? 
+                                    this.$.leftSplitter.offsetLeft + this.$.dummySplitter.offsetWidth : 0),
+                                    this.$.centreResultContainer.offsetWidth - this.$.dummySplitter.offsetWidth);
         },
         
-        _changeInsertionPointWidth(insertionPointContainer, delta, splitterWidth, opositeInsertionPointContainerWidth, resultContainerWidth, minEgiContainerWidth) {
-            const oldWidth = insertionPointContainer.offsetWidth;
-            const splittersCount = + this.leftInsertionPointPresent + this.rightInsertionPointPresent;
-            let newWidth = oldWidth + delta;
-            if (newWidth < 0) {
-                newWidth = 0
-            } else if (newWidth > resultContainerWidth - opositeInsertionPointContainerWidth - splittersCount * splitterWidth - minEgiContainerWidth) {
-                newWidth = resultContainerWidth - opositeInsertionPointContainerWidth - splittersCount * splitterWidth - minEgiContainerWidth;
+        _updateSplitterPos(newPos, leftRange, rightRange) {
+            let updatedPos = newPos;
+            if (newPos < leftRange) {
+                updatedPos = leftRange;
+            } else if (newPos > rightRange) {
+                updatedPos = rightRange;
             }
+            this.$.dummySplitter.style.left = updatedPos + "px";
+        },
+        
+        _leftInsertionPointContainerUpdater: function (newPos) {
+            this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer);
+        },
+        
+        _rightInsertionPointContainerUpdater: function (newPos) {
+             this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.dummySplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
+        },
+        
+        _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier) {
+            const oldWidth = insertionPointContaier.offsetWidth;
             if (oldWidth !== newWidth) {
-                if (insertionPointContainer.offsetParent === null) {
-                    insertionPointContainer.style.removeProperty("display");
+                insertionPointContaier.style.width = newWidth + "px";
+                if (insertionPointContaier.offsetParent === null) {
+                    insertionPointContaier.style.removeProperty("display");
                 }
-                insertionPointContainer.style.width = "" + newWidth + "px";
                 this.notifyResize();
-            }
+            }  
         },
         
-        _changeInsertionPointSize: function(e, widthCalculator) {
+        _changeInsertionPointSize: function(e, splitterPosUpdater, insertionPointContainerUpdater) {
             switch (e.detail.state) {
             case 'start':
-                this._startInsertionPointResizing(e);
+                this._startInsertionPointResizing(e, splitterPosUpdater);
                 break;
             case 'track':
-                this._trackInsertionPointSize(e, widthCalculator);
+                this._trackInsertionPointSize(e, splitterPosUpdater);
                 break;
             case 'end':
-                this._endInsertionPointResizing(e);
+                this._endInsertionPointResizing(e, insertionPointContainerUpdater);
                 break;
             }
             if (e.stopPropagation) e.stopPropagation();
@@ -272,30 +301,25 @@
             e.returnValue = false;
         },
         
-        _startInsertionPointResizing: function (e) {
+        _startInsertionPointResizing: function (e, splitterPosUpdater) {
+            const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
             //Change the style to visualise insertion point resizing.
+            splitterPosUpdater(mousePos.x);
+            this.$.dummySplitter.style.display = "initial";
             e.target.classList.toggle("splitter-resizing", true);
         },
         
-        _trackInsertionPointSize: function (e, widthCalculator) {
-            const resultContainerWidth = this.$.centreResultContainer.offsetWidth;
-            const splitterPos = e.target.offsetLeft;
-            const splitterWidth = e.target.offsetWidth;
+        _trackInsertionPointSize: function (e, splitterPosUpdater) {
             const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
-            let delta = 0;
-            if (mousePos.x < 0) {
-                delta = -splitterPos;
-            } else if (mousePos.x + splitterWidth > resultContainerWidth) {
-                delta = resultContainerWidth - splitterWidth - splitterPos;
-            } else {
-                delta = mousePos.x - splitterPos;
-            }
-            widthCalculator(delta, splitterWidth, resultContainerWidth);
+            splitterPosUpdater(mousePos.x);
         },
         
-        _endInsertionPointResizing: function (e) {
+        _endInsertionPointResizing: function (e, insertionPointContainerUpdater) {
             //Reset the style of splitter.
             e.target.classList.toggle("splitter-resizing", false);
+            insertionPointContainerUpdater(this.$.dummySplitter.offsetLeft);
+            this.$.dummySplitter.style.removeProperty("display");
+            this.$.dummySplitter.style.removeProperty("left");
         },
         
         _expandContainer: function (element) {
