@@ -68,7 +68,9 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
-    private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    
+    private EntityResourceUtils() {}
     
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
@@ -132,13 +134,13 @@ public class EntityResourceUtils {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    logger.debug(format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                    // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    logger.debug(format("Validate untouched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                    // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
                 }
             }
         }
@@ -150,16 +152,16 @@ public class EntityResourceUtils {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                logger.debug(format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             } else { // this is unmodified property
                 // IMPORTANT:
                 // Unlike to the case of untouched properties, all touched properties should be applied,
                 //  even unmodified ones.
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
-                logger.debug(format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -172,7 +174,45 @@ public class EntityResourceUtils {
 
         return entity;
     }
-
+    
+    /**
+     * Logs property application / validation in a table form to easily debug data flow in method 'apply'.
+     * 
+     * @param actionCaption
+     * @param apply
+     * @param shortLog -- specifies shorter or wider (with 'type' and staleness) view of information
+     * @param type
+     * @param name
+     * @param isEntityStale
+     * @param valAndOrigVal
+     * @param entity
+     * @param propertiesToLogArray -- specifies what properties are interested
+     */
+    @SuppressWarnings("unused")
+    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final boolean isEntityStale, final Map<String, Object> valAndOrigVal, final M entity, final String... propertiesToLogArray) {
+        final Set<String> propertiesToLog = new LinkedHashSet<>(Arrays.asList(propertiesToLogArray));
+        if (propertiesToLog.contains(name)) {
+            final StringBuilder builder = new StringBuilder(actionCaption);
+            builder.append(":\t");
+            if (!shortLog) {
+                builder.append(format("type [%40s] ", type.getSimpleName()));
+            }
+            builder.append(format("name [%8s] ", name));
+            if (!shortLog) {
+                builder.append(format("isEntityStale [%8s] ", isEntityStale));
+            }
+            builder.append(format("val [%8s] ", valAndOrigVal.getOrDefault("val", "")));
+            builder.append(format("origVal [%8s] ", valAndOrigVal.get("origVal")));
+            if (apply) {
+                builder.append("=>\t");
+                for (final String propertyToLog: propertiesToLog) {
+                    builder.append(format("%8s = %8s ", propertyToLog, entity.get(propertyToLog)));
+                }
+            }
+            System.out.println(builder.toString()); // use logger instead of sysout if needed
+        }
+    }
+    
     /**
      * Validates / applies the property value against the entity.
      *
