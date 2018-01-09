@@ -22,7 +22,7 @@ public class ScrollableResultStream {
         // create a new stream and make sure the scrollable result set gets closed upon stream closing.
         return StreamSupport
                 .stream(spliterator, false)
-                .onClose(() -> results.close());
+                .onClose(results::close);
     }
 
     /**
