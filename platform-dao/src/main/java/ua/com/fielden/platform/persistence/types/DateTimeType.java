@@ -10,9 +10,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.MutableType;
@@ -40,6 +40,7 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
         return value != null ? new Date(value.getTime()) : null;
     }
 
+    @Override
     public Class<?> getReturnedClass() {
         return Date.class;
     }
@@ -74,10 +75,16 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
     }
 
     @Override
-    public int getHashCode(final Object x, final EntityMode entityMode) {
-        return new Long(((java.util.Date) x).getTime()).hashCode();
+    public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
+        return Long.valueOf(((java.util.Date) x).getTime()).hashCode();
     }
 
+    @Override
+    public int getHashCode(Object x) {
+        return getHashCode(x, null);
+    }
+    
+    @Override
     public String getName() {
         return "date";
     }
@@ -92,16 +99,18 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
         return new Timestamp(((java.util.Date) value).getTime());
     }
 
+    @Override
     public Date stringToObject(final String xml) throws Exception {
         return DateFormat.getDateInstance().parse(xml);
     }
 
+    @Override
     public String objectToSQLString(final Date value, final Dialect dialect) throws Exception {
         return '\'' + new Timestamp(value.getTime()).toString() + '\'';
     }
 
     @Override
-    public Object fromStringValue(final String xml) throws HibernateException {
+    public Object fromStringValue(final String xml) {
         try {
             return new SimpleDateFormat(DATE_FORMAT).parse(xml);
         } catch (final ParseException pe) {

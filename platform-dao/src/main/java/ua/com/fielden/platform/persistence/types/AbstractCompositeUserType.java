@@ -3,7 +3,7 @@ package ua.com.fielden.platform.persistence.types;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.CompositeUserType;
 
 public abstract class AbstractCompositeUserType implements CompositeUserType {

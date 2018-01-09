@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -50,7 +50,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final Object owner) throws HibernateException, SQLException {
+	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor session, final Object owner) throws SQLException {
 		final String name = resultSet.getString(names[0]);
 		Object result = null;
 		if (!resultSet.wasNull()) {
@@ -64,7 +64,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index) throws HibernateException, SQLException {
+	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SessionImplementor session) throws SQLException {
 		if (null == value) {
 			preparedStatement.setNull(index, Types.VARCHAR);
 		} else {
@@ -73,22 +73,22 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public Object assemble(final Serializable cached, final Object owner) throws HibernateException {
+	public Object assemble(final Serializable cached, final Object owner) {
 		return cached;
 	}
 
 	@Override
-	public Object deepCopy(final Object value) throws HibernateException {
+	public Object deepCopy(final Object value) {
 		return value;
 	}
 
 	@Override
-	public Serializable disassemble(final Object value) throws HibernateException {
+	public Serializable disassemble(final Object value) {
 		return (Serializable) value;
 	}
 
 	@Override
-	public boolean equals(final Object x, final Object y) throws HibernateException {
+	public boolean equals(final Object x, final Object y) {
 		if (x == y) {
 			return true;
 		}
@@ -99,7 +99,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public int hashCode(final Object x) throws HibernateException {
+	public int hashCode(final Object x) {
 		return x.hashCode();
 	}
 
@@ -109,7 +109,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public Object replace(final Object original, final Object target, final Object owner) throws HibernateException {
+	public Object replace(final Object original, final Object target, final Object owner) {
 		return original;
 	}
 }

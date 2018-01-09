@@ -15,6 +15,7 @@ import java.util.TimeZone;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.MutableType;
@@ -75,8 +76,13 @@ public class UtcDateTimeType extends MutableType implements IdentifierType<Date>
     }
 
     @Override
-    public int getHashCode(final Object x, final EntityMode entityMode) {
+    public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
         return ((java.util.Date) x).hashCode() * 31;
+    }
+    
+    @Override
+    public int getHashCode(final Object x) {
+        return getHashCode(x, null);
     }
 
     public String getName() {

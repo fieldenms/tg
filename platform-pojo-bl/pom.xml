@@ -99,11 +99,11 @@
 			<version>1.5.0-b01</version>
 		</dependency>
 
-		<!-- This is the same dependency as for Hibernate 3.6.10 -->
+		<!-- This is the same dependency as for Hibernate 4.3.11.Final -->
 		<dependency>
-			<groupId>javassist</groupId>
+			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
-			<version>3.12.0.GA</version>
+			<version>3.18.1-GA</version>
 		</dependency>
 
 		<dependency>

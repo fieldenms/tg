@@ -2,11 +2,11 @@ package ua.com.fielden.platform.test;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
-
-import junit.framework.TestCase;
 
 import org.apache.commons.lang.StringUtils;
 import org.dbunit.database.DatabaseConnection;
@@ -20,10 +20,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import com.google.inject.Injector;
+
+import junit.framework.TestCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-
-import com.google.inject.Injector;
 
 /**
  * This is base class for any db driven test case. It takes care about Hibernate configuration, session and transaction management as well as test db creation and data population.
@@ -61,7 +62,6 @@ public abstract class DbDrivenTestCase extends TestCase {
             final Class<IDbDrivenTestCaseConfiguration> type = (Class<IDbDrivenTestCaseConfiguration>) Class.forName(configClassName);
             return type.newInstance();
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -102,10 +102,6 @@ public abstract class DbDrivenTestCase extends TestCase {
             FlatDtdDataSet.write(connection.createDataSet(), new FileOutputStream(dbDtdFile));
 
             tr.commit();
-            try {
-                connection.close();
-            } catch (final SQLException e) {
-            }
         } catch (final Exception e) {
             try {
                 tr.rollback();
@@ -138,9 +134,9 @@ public abstract class DbDrivenTestCase extends TestCase {
         return new String[] {};
     }
 
-    protected static IDatabaseConnection getConnection(final Session session) throws java.lang.Exception {
-        final IDatabaseConnection dbConnection = new DatabaseConnection(session.connection());
-        return dbConnection;
+    protected static IDatabaseConnection getConnection(final Session session) throws Exception {
+        final Method getConnection = session.getClass().getDeclaredMethod("connection");
+        return new DatabaseConnection((Connection) getConnection.invoke(session));
     }
 
     /**
@@ -181,7 +177,6 @@ public abstract class DbDrivenTestCase extends TestCase {
             }
         } finally {
             localTransaction.commit();
-            connection.close();
         }
         // each test case to be executed in a separate transaction
         final Session session1 = hibernateUtil.getSessionFactory().getCurrentSession();

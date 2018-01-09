@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +11,7 @@ import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.exceptions.EntityException;
@@ -38,7 +40,7 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
     }
 
     @Override
-    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final Object owner) throws HibernateException, SQLException {
+    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor session, final Object owner) throws SQLException {
         final String propertyDescriptor = resultSet.getString(names[0]);
         Object result = null;
         if (!resultSet.wasNull()) {
@@ -67,7 +69,7 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
     }
 
     @Override
-    public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index) throws HibernateException, SQLException {
+    public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SessionImplementor session) throws SQLException {
         if (null == value) {
             preparedStatement.setNull(index, Types.VARCHAR);
         } else {
