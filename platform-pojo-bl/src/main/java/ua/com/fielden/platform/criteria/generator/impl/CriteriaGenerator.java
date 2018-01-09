@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
@@ -296,7 +297,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
             final CriteriaProperty critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class);
             final Class<T> root = entity.getEntityClass();
-            entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
+            try {
+                entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
+            } catch (final Exception ex) {
+                logger.warn(format("Could not assign crit value to [%s] in root [%s].", propertyField.getName(), root.getName()));
+            }
         }
     }
 }
