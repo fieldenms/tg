@@ -8,7 +8,7 @@ import java.util.stream.StreamSupport;
 import org.hibernate.ScrollableResults;
 
 /**
- * This is a factory class for the most primitive stream, which enables sreaming of data from {@link ScrollableResults}.
+ * This is a factory class for the most primitive stream, which enables streaming of data from {@link ScrollableResults}.
  * 
  * @author TG Team
  *
