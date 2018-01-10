@@ -364,7 +364,6 @@
                                 this._wasResized = true;
                                 this.heightBeforeResizing = this.style.height;
                                 this.widthBeforeResizing = this.style.width;
-                            
                             }
                             const resizedHeight = this.offsetHeight + event.detail.ddy;
                             if (resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */) {
@@ -798,8 +797,10 @@
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._wasResized = false;
-                    this.style.height = this.heightBeforeResizing;
-                    this.style.width = this.widthBeforeResizing;
+                    if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
+                        this.style.height = this.heightBeforeResizing;
+                        this.style.width = this.widthBeforeResizing;
+                    }
                     this._minimised = false;
                     this._maximised = false;
 
