@@ -87,13 +87,13 @@
                     color: var(--paper-grey-300);
                 };
             }
-            .resize-icon {
+            #resizer {
                 position: absolute;
                 bottom: 0;
                 right: 0;
                 z-index: 2; /* higher than in non-scrollable entity-master's action bar (1) */
             }
-            .resize-icon:hover {
+            #resizer:hover {
                 cursor: nwse-resize;
             }
         </style>
@@ -116,7 +116,7 @@
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
-        <iron-icon id="resizer" hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="resize-icon" icon="tg-icons:resizeBottomRight" on-track="resizeDialog" tooltip-text="Resize"></iron-icon>
+        <iron-icon id="resizer" hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Resize"></iron-icon>
     </template>
 </dom-module>
 <script>
