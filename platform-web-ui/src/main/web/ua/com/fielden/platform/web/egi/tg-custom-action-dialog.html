@@ -343,8 +343,7 @@
                 if (target === this.$.resizer) {
                     switch (event.detail.state) {
                         case 'start':
-                            this.prevBodyCursor = document.body.style.cursor;
-                            document.body.style.cursor = 'nwse-resize';
+                            document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                             break;
                         case 'track':
                             if (!this._wasResized) {
@@ -363,7 +362,7 @@
                             }
                             break;
                         case 'end':
-                            document.body.style.cursor = this.prevBodyCursor;
+                            document.styleSheets[0].deleteRule(0);
                             break;
                     }
                 }
@@ -663,6 +662,15 @@
                         this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
                     }
                 }
+            },
+            
+            refit: function () {
+                Polymer.IronFitBehavior.refit.call(this);
+                
+                // There is a need to reset max-width and max-height styles after every refit call.
+                // This is necessary to make dialog being able to 'maximise' to large dimensions.
+                this.style.maxWidth = 'none';
+                this.style.maxHeight = 'none';
             },
             
             /**
