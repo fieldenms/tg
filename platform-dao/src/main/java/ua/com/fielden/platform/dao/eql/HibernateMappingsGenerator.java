@@ -8,11 +8,9 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
@@ -49,7 +47,7 @@ public class HibernateMappingsGenerator {
         return result;
     }
 
-    private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName, final DbVersion dbVersion) {
+    private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName) {
         final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
         sb.append("\t\t<generator class=\"sequence-identity\">\n");
