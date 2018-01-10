@@ -104,10 +104,10 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[!_minimised]] class="minimise-button" icon="tg-icons:expandMin" on-tap="minimiseDialog" tooltip-text="Restore"></paper-icon-button>
-                <paper-icon-button hidden="[[_minimised]]" disabled=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="minimise-button" icon="tg-icons:collapseMin" on-tap="minimiseDialog" tooltip-text="Collapse"></paper-icon-button>
-                <paper-icon-button hidden="[[_maximised]]" disabled=[[_dialogInteractionsHidden(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:crop-square" on-tap="maximiseDialog" tooltip-text="Maximise"></paper-icon-button>
-                <paper-icon-button hidden=[[!_maximised]] class="maximise-button" icon="tg-icons:crop-7-5" on-tap="maximiseDialog" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden=[[!_minimised]] class="minimise-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_minimised]]" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]] class="minimise-button" icon="tg-icons:collapseMin" on-tap="_invertMinimiseState" tooltip-text="Collapse"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximised]]" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]] class="maximise-button" icon="tg-icons:crop-square" on-tap="_invertMaximiseState" tooltip-text="Maximise"></paper-icon-button>
+                <paper-icon-button hidden=[[!_maximised]] class="maximise-button" icon="tg-icons:crop-7-5" on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
                 <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
@@ -116,7 +116,7 @@
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
-        <iron-icon id="resizer" hidden=[[_dialogInteractionsHidden(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Resize"></iron-icon>
+        <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Resize"></iron-icon>
     </template>
 </dom-module>
 <script>
@@ -164,14 +164,17 @@
                 prefDim: {
                     type: Object
                 },
-
+                
+                /**
+                 * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
+                 */
                 _wasMoved: {
                     type: Boolean,
                     value: false
                 },
                 
                 /**
-                 * Indicates whether dialog was resized using resizing feature (using bottom right corner). This will be reset after dialog closes.
+                 * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
                  */
                 _wasResized: {
                     type: Boolean,
@@ -243,11 +246,11 @@
                 _windowHeight: Number,
             },
             
-            observers: ["_dialogMinimised(prefDim, _minimised, _maximised)"],
+            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
 
             keyBindings: {
                 'alt+x': 'closeDialog',
-                'alt+m': 'minimiseDialog'
+                'alt+m': '_invertMinimiseState'
             },
 
             ready: function () {
@@ -321,19 +324,29 @@
                     }
                 }
             },
-
-            minimiseDialog: function () {
-                if (!this._minimised) {
+            
+            _invertDialogState: function (stateName) {
+                if (!this[stateName]) {
                     this.persistActiveElement();
                     this.focus();
                     this.persistDialogLocationAndDimensions();
                 }
-                this._minimised = !this._minimised;
+                this[stateName] = !this[stateName];
                 this.notifyResize();
-                if (!this._minimised) {
+                if (!this[stateName]) {
                     this.restoreActiveElement();
                     this.restoreDialogLocationAndDimensions();
                 }
+            },
+            
+            _invertMinimiseState: function () {
+                if (!this._maximised) { // need to skip the action if dialog is in maximised state: this is needed for alt+m collapsing
+                    this._invertDialogState('_minimised');
+                }
+            },
+            
+            _invertMaximiseState: function () {
+                this._invertDialogState('_maximised');
             },
             
             /**
@@ -371,20 +384,6 @@
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
                 event.returnValue = false;
-            },
-            
-            maximiseDialog: function () {
-                if (!this._maximised) {
-                    this.persistActiveElement();
-                    this.focus();
-                    this.persistDialogLocationAndDimensions();
-                }
-                this._maximised = !this._maximised;
-                this.notifyResize();
-                if (!this._maximised) {
-                    this.restoreActiveElement();
-                    this.restoreDialogLocationAndDimensions();
-                }
             },
             
             /**
@@ -448,8 +447,11 @@
 
                 return canClose;
             },
-
-            _dialogMinimised: function (prefDim, minimised, maximised) {
+            
+            /**
+             * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+             */
+            _updateDialogDimensions: function (prefDim, minimised, maximised) {
                 if (!minimised && !maximised && prefDim) {
                     const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                     const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
@@ -471,9 +473,9 @@
             },
             
             /**
-             * Indicates whether maximising / collapsing / resizing interaction buttons should be hidden depending on minimised / normal / maximised state of the dialog.
+             * Indicates whether maximising / collapsing / resizing interaction buttons should be disabled (or even hidden) depending on minimised / normal / maximised state of the dialog.
              */
-            _dialogInteractionsHidden: function (minimised, maximised) {
+            _dialogInteractionsDisabled: function (minimised, maximised) {
                 return minimised || maximised;
             },
             
