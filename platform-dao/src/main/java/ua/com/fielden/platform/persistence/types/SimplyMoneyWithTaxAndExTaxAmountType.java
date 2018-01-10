@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.Type;
 
@@ -48,7 +48,7 @@ public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserT
     }
 
     @Override
-    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor implementor, final Object owner) throws SQLException {
+    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor implementor, final Object owner) throws SQLException {
         /*
          *  It is very important to call resultSet.getXXX before checking resultSet.wasNull(). Please refer {@link ResultSet#wasNull()} for more details.
          */
@@ -71,7 +71,7 @@ public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserT
     }
 
     @Override
-    public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SessionImplementor sessionImplementor) throws SQLException {
+    public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SharedSessionContractImplementor sessionImplementor) throws SQLException {
         if (value == null) {
             statement.setNull(index, BigDecimalType.INSTANCE.sqlType());
             statement.setNull(index + 1, BigDecimalType.INSTANCE.sqlType());

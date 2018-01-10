@@ -1,9 +1,13 @@
 package ua.com.fielden.platform.ioc;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
@@ -11,7 +15,6 @@ import com.google.inject.Guice;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 
@@ -61,8 +64,14 @@ public class HibernateConfigurationFactory {
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
 
         final String generatedMappings = new HibernateMappingsGenerator().generateMappings(domainMetadata);
-        cfg.addXML(generatedMappings);
-        cfgManaged.addXML(generatedMappings);
+        
+        try {
+            cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
+            cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
+        } catch (final MappingException | UnsupportedEncodingException e) {
+            throw new HibernateException("Could not add mappings.", e);
+        }
+        
     }
 
     private DbVersion determineDbVersion(final Properties props) {
@@ -85,6 +94,7 @@ public class HibernateConfigurationFactory {
 
         setSafely(cfg, "hibernate.show_sql", "false");
         setSafely(cfg, "hibernate.format_sql", "true");
+        setSafely(cfg, "hibernate.jdbc.use_get_generated_keys", "true");
 
         setSafely(cfg, "hibernate.connection.provider_class");
         setSafely(cfg, "c3p0.min_size");
@@ -110,7 +120,8 @@ public class HibernateConfigurationFactory {
 
         setSafely(cfgManaged, "hibernate.show_sql", "false");
         setSafely(cfgManaged, "hibernate.format_sql", "true");
-
+        setSafely(cfg, "hibernate.jdbc.use_get_generated_keys", "true");
+        
         setSafely(cfgManaged, "hibernate.connection.provider_class");
         setSafely(cfgManaged, "c3p0.min_size");
         setSafely(cfgManaged, "c3p0.max_size");

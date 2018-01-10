@@ -140,7 +140,7 @@ public class SessionInterceptor implements MethodInterceptor {
 
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr) {
         try {
-            if (!tr.wasCommitted()) {
+            if (tr.isActive()) {
                 tr.commit();
             }
         } catch (final Exception ex) {
@@ -162,7 +162,7 @@ public class SessionInterceptor implements MethodInterceptor {
     
     private static void rollbackTransactionAndCloseSession(final Session session, final Transaction tr) {
         try {
-            if (!tr.wasRolledBack()) {
+            if (tr.isActive()) {
                 tr.rollback();
             }
         } catch (final Exception ex) {

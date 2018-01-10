@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.sql.DriverManager;
 import java.util.ArrayList;
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.xml.DOMConfigurator;
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
@@ -121,7 +125,12 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
             final Configuration cfg = new Configuration();
-            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
+            
+            try {
+                cfg.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(domainMetadata).getBytes("UTF8")));
+            } catch (final MappingException | UnsupportedEncodingException e) {
+                throw new HibernateException("Could not add mappings.", e);
+            }
 
             hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
             hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, idOnlyProxiedEntityTypeCache);

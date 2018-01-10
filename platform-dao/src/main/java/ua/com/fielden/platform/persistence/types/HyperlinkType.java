@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -50,7 +50,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor session, final Object owner) throws SQLException {
+	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
 		final String name = resultSet.getString(names[0]);
 		Object result = null;
 		if (!resultSet.wasNull()) {
@@ -64,7 +64,7 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SessionImplementor session) throws SQLException {
+	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
 		if (null == value) {
 			preparedStatement.setNull(index, Types.VARCHAR);
 		} else {

@@ -8,9 +8,11 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
@@ -47,13 +49,11 @@ public class HibernateMappingsGenerator {
         return result;
     }
 
-    private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName) {
-        final StringBuffer sb = new StringBuffer();
+    private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName, final DbVersion dbVersion) {
+        final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        sb.append("\t\t<generator class=\"hilo\">\n");
-        sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
-        sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
-        sb.append("\t\t\t<param name=\"max_lo\">0</param>\n");
+        sb.append("\t\t<generator class=\"sequence-identity\">\n");
+        sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
         sb.append("\t\t</generator>\n");
         sb.append("\t</id>\n");
         return sb.toString();

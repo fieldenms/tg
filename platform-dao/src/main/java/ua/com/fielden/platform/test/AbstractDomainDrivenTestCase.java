@@ -119,6 +119,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
      */
     @ClassRule
     public static final ExternalResource resource = new ExternalResource() {
+        @Override
         public Statement apply(final Statement base, final Description description) {
             try {
                 // this call populates the above static map dbCreators

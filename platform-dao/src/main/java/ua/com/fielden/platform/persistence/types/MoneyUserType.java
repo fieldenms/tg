@@ -7,8 +7,7 @@ import java.sql.SQLException;
 import java.util.Currency;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.CurrencyType;
 import org.hibernate.type.Type;
@@ -31,7 +30,7 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
     }
 
     @Override
-    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor session, final Object owner) throws SQLException {
+    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         /*
          *  It is very important to call resultSet.getXXX before checking resultSet.wasNull(). Please refer {@link ResultSet#wasNull()} for more details.
          */
@@ -52,7 +51,7 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
     }
 
     @Override
-    public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SessionImplementor session) throws SQLException {
+    public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
         if (value == null) {
             
             statement.setNull(index, BigDecimalType.INSTANCE.sqlType());

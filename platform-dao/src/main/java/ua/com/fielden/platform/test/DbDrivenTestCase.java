@@ -43,7 +43,7 @@ public abstract class DbDrivenTestCase extends TestCase {
         INSERT, UPDATE;
     }
 
-    public final static IDbDrivenTestCaseConfiguration config = createConfig();
+    public static final IDbDrivenTestCaseConfiguration config = createConfig();
     private static String dbDdlFile;
     private static String dbDtdFile;
 
@@ -79,7 +79,8 @@ public abstract class DbDrivenTestCase extends TestCase {
         try {
             final IDatabaseConnection connection = getConnection(session);
             connection.getConnection().createStatement().execute("DROP ALL OBJECTS");
-
+            connection.getConnection().createStatement().execute("CREATE SEQUENCE TG_ENTITY_ID_SEQ START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;");
+            
             final List<String> ddls = config.getDdl();
             if (ddls == null || ddls.isEmpty()) {
                 connection.getConnection().createStatement().execute("RUNSCRIPT FROM '" + dbDdlFile + "'");

@@ -4,24 +4,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.LiteralType;
-import org.hibernate.type.MutableType;
-import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.persistence.types.descriptor.UtcDateTimeJavaTypeDescriptor;
+import ua.com.fielden.platform.persistence.types.descriptor.UtcTimestampSqlTypeDescriptor;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 /**
@@ -31,80 +26,34 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
  * @author TG Team
  *
  */
-public class UtcDateTimeType extends MutableType implements IdentifierType<Date>, LiteralType<Date>, IUtcDateTimeType {
+public class UtcDateTimeType extends AbstractStandardBasicType<Date> implements IdentifierType<Date>, LiteralType<Date>, IUtcDateTimeType {
     private static final long serialVersionUID = 1L;
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
+    public UtcDateTimeType() {
+        // SqlTypeDescriptor, JavaTypeDescriptor
+        super(UtcTimestampSqlTypeDescriptor.INSTANCE, UtcDateTimeJavaTypeDescriptor.INSTANCE);
+    }
+    
     @Override
-    public Object get(final ResultSet rs, final String name) throws SQLException {
+    public Object get(final ResultSet rs, final String name, final SharedSessionContractImplementor session) throws SQLException {
         final Timestamp value = rs.getTimestamp(name, Calendar.getInstance(UTC));
         return value != null ? new Date(value.getTime()) : null;
     }
 
     @Override
-    public void set(final PreparedStatement st, final Object value, final int index) throws SQLException {
-        final long millis = value instanceof Timestamp ? ((Timestamp) value).getTime() : ((java.util.Date) value).getTime();
+    public void set(final PreparedStatement st, final Date value, final int index, final SharedSessionContractImplementor session) throws SQLException {
+        final long millis = value.getTime();
         st.setTimestamp(index, new Timestamp(millis), Calendar.getInstance(UTC));
-    }
-
-    public Class<?> getReturnedClass() {
-        return Date.class;
-    }
-    
-    @Override
-    public int sqlType() {
-        return Types.TIMESTAMP;
-    }
-
-    @Override
-    public boolean isEqual(final Object x, final Object y) {
-        if (x == y) {
-            return true;
-        }
-        if (x == null || y == null) {
-            return false;
-        }
-
-        // DateTime is clever in handling Timestamp and Date, which are otherwise different objects
-        // using DateTime for equality is just a simple trick to avoid type checking
-        final DateTime xdate = new DateTime(x);
-        final DateTime ydate = new DateTime(y);
-
-        return xdate.equals(ydate);
-    }
-
-    @Override
-    public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
-        return ((java.util.Date) x).hashCode() * 31;
-    }
-    
-    @Override
-    public int getHashCode(final Object x) {
-        return getHashCode(x, null);
     }
 
     public String getName() {
         return "date";
     }
 
-    @Override
-    public String toString(final Object val) {
-        final DateFormat utcFormat = new SimpleDateFormat(DATE_FORMAT);
-        utcFormat.setTimeZone(UTC);
-        return utcFormat.format((java.util.Date) val);
-    }
-
-    @Override
-    public Object deepCopyNotNull(final Object value) {
-        return new Timestamp(((java.util.Date) value).getTime());
-    }
-
     public Date stringToObject(final String xml) throws Exception {
-        final DateFormat utcFormat = new SimpleDateFormat(DATE_FORMAT);
-        utcFormat.setTimeZone(UTC);
-        return utcFormat.parse(xml);
+        return getJavaTypeDescriptor().fromString(xml);
     }
 
     public String objectToSQLString(final Date value, final Dialect dialect) throws Exception {
@@ -112,18 +61,17 @@ public class UtcDateTimeType extends MutableType implements IdentifierType<Date>
     }
 
     @Override
-    public Object fromStringValue(final String xml) throws HibernateException {
-        try {
-            final DateFormat utcFormat = new SimpleDateFormat(DATE_FORMAT);
-            utcFormat.setTimeZone(UTC);
-            return utcFormat.parse(xml);
-        } catch (final ParseException pe) {
-            throw new HibernateException("could not parse XML", pe);
-        }
-    }
-    
-    @Override
     public Object instantiate(final Object argument, final EntityFactory factory) {
         return argument;
     }
+    
+    @Override
+    public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final boolean[] settable, final SharedSessionContractImplementor session) throws SQLException {
+        if (null == value) {
+            preparedStatement.setNull(index, getSqlTypeDescriptor().getSqlType());
+        } else {
+            set(preparedStatement, (Date) value, index, session);
+        }
+    }
+    
 }
