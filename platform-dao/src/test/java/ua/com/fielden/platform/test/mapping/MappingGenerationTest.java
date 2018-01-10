@@ -29,7 +29,7 @@ public class MappingGenerationTest {
                 + "		</generator>\n"
                 + "	</id>\n" + "	<version name=\"version\" type=\"org.hibernate.type.LongType\" access=\"field\" insert=\"false\">\n"
                 + "		<column name=\"_VERSION\" default=\"0\" />\n" + "	</version>\n"
-                + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"8000\"/>\n"
+                + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"1073741824\"/>\n"
                 + "	<many-to-one name=\"menuItem\" class=\"ua.com.fielden.platform.ui.config.MainMenuItem\" column=\"ID_MAIN_MENU\"/>\n"
                 + "	<many-to-one name=\"owner\" class=\"ua.com.fielden.platform.security.user.User\" column=\"ID_CRAFT\"/>\n"
                 + "	<property name=\"principal\" column=\"IS_PRINCIPAL\" type=\"org.hibernate.type.YesNoType\"/>\n"
