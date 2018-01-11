@@ -623,6 +623,7 @@
                     this.refit();
                 }.bind(this), 50);
                 this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
+                this.removeEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
             },
 
             /** 

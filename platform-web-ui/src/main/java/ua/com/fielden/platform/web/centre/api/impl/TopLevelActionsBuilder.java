@@ -88,7 +88,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
 
         builder.currSelectionCrit = Optional.of(propName);
         builder.selectionCriteria.add(propName);
-        return new SelectionCriteriaBuilder<T>(builder, this);
+        return new SelectionCriteriaBuilder<>(builder, this);
     }
 
     @Override

@@ -917,7 +917,7 @@
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
                 bindingView["@@origin"] = entity;
-                bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], counts: [] };
+                bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], values: [], counts: [] };
 
                 entity.traverseProperties(function (propertyName) {
                     // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');

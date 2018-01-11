@@ -71,7 +71,7 @@
             return queryParam;
         };
         const createColumnAction = function (entityCentre) {
-            
+
             const actionModel = document.createElement("tg-ui-action");
             actionModel.uiRole = 'ICON';
             actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater';
@@ -92,7 +92,7 @@
             actionModel.requireSelectionCriteria = 'true';
             actionModel.requireSelectedEntities = 'NONE';
             actionModel.requireMasterEntity = 'false';
-            
+
             return actionModel;
         };
 
@@ -172,7 +172,7 @@
                     type: Function,
                     observer: '_getMasterEntityAssigned'
                 },
-                
+
                 /**
                  * Returns the context for insertion point
                  */
@@ -264,13 +264,15 @@
                  */
                 _actionInProgress: {
                     type: Boolean,
-                    value: false
+                    value: false,
+                    observer: '_actionInProgressChanged'
                 },
 
                 _saverDisabled: {
                     type: Boolean,
                     computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
                 },
+
                 _discarderDisabled: {
                     type: Boolean,
                     computed: '_computeDiscarderDisabled(_centreChanged, _actionInProgress)'
@@ -337,6 +339,7 @@
                  * Starts the process of centre run.
                  *
                  * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
+                 * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
                  */
                 run: {
                     type: Function
@@ -380,7 +383,7 @@
                     value: 'EDIT'
                 }
             },
-            
+
             listeners: {
                 "tg-egi-column-change": "_saveColumnWidth"
             },
@@ -399,6 +402,12 @@
                     if (self.autoRun || self.queryPart) {
                         self.run();
                     }
+                }
+            },
+
+            _actionInProgressChanged: function(newValue, oldValue) {
+                if (newValue === false) {
+                  this._dom().$.spinner.style.visibility = 'hidden';
                 }
             },
 
@@ -434,7 +443,7 @@
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
-                var self = this;
+                const self = this;
 
                 self._selectedView = 0;
                 self._showProgress = false;
@@ -562,16 +571,33 @@
                         });
                 }).bind(self);
 
-                self.run = (function (isSortingAction) {
+                self.run = (function (isSortingAction, forceRegeneration) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
 
-                    var self = this;
+                    const self = this;
                     self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run(isSortingAction).then(
+
+                    // let's register a timer to kickoff a spinner if the run action is taking too long...
+                    if (self._startSpinnerTimer) {
+                      clearTimeout(self._startSpinnerTimer);
+                    }
+                    self._startSpinnerTimer = setTimeout(() => {
+                      // position and make spinner visible if action is in progress
+                      if (self._actionInProgress === true) {
+                        const runnerButton = this._dom().$.runner;
+                        const spinner = this._dom().$.spinner;
+
+                        spinner.style.left = (runnerButton.offsetWidth / 2 - spinner.offsetWidth / 2) + 'px';
+                        spinner.style.top = (runnerButton.offsetHeight / 2 - spinner.offsetHeight / 2) + 'px';
+                        spinner.style.visibility = 'visible';
+                      }
+                    }, 2000);
+
+                    return self.$.selection_criteria.run(isSortingAction, forceRegeneration).then(
                         function (detail) {
                             const sc = self.$.selection_criteria;
                             const deserialisedResult = sc._serialiser().deserialise(detail.response);
@@ -620,7 +646,7 @@
                 self.insertionPointContextRetriever = (function () {
                     return this;
                 }).bind(self);
-                
+
                 /**
                  * Adds event listener that will update egi when some entity was changed
                  */
@@ -629,14 +655,14 @@
                         e.detail.properties.forEach(prop => this.$.egi.updateEntity(entity, prop));
                     });
                 }.bind(self));
-                
+
                 /**
                  * Adds event listener fot entity selection in insertion point that will update other insertion point and also egi.
                  */
                 self.addEventListener("tg-entity-selected", function(e) {
                     this.centreSelection = e.detail;
                 }.bind(self));
-                
+
                 this._columnAction = createColumnAction(self);
 
             }, // end of ready callback
@@ -669,7 +695,7 @@
             detached: function () {
                 this.masterSavedListener.unsubscribe();
             },
-            
+
             _saveColumnWidth: function (e) {
                 const target = e.target || e.srcElement;
                 //Run save column action only for if the selection criteria is present and the even't target is centre's egi.

@@ -154,14 +154,12 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 valueMatcher.setContext(new CentreContext<>());
             }
 
-            // populate fetch model
-            valueMatcher.setFetch(EntityResourceUtils.<M, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
-
             // prepare search string
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
             final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             logger.debug(String.format("SEARCH STRING %s", searchString));
 
+            // find matches with a fetch model that should be defined at the custom matcher level or based on the fall-back logic
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
