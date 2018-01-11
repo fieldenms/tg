@@ -98,6 +98,7 @@
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+            <paper-icon-button icon="menu" tooltip-text="Compound master menu (tap or hit FX to invoke)." on-tap="_toggleMenu"></paper-icon-button> <!-- id="menuButton" style="z-index:1000;"  -->
             <div class="title-text layout horizontal center flex">
                 <span class="static-title truncate">[[staticTitle]]</span>
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
@@ -562,7 +563,7 @@
                 self.$.elementLoader.import = customAction.componentUri;
                 self.$.elementLoader.elementName = customAction.elementName;
                 self.$.elementLoader.attrs = customAction.attrs;
-                return self.$.elementLoader.reload();
+                return self.$.elementLoader.reload(); // .then(function (loadedElement) { return loadedElement; });
                 //}
             },
             
@@ -813,6 +814,13 @@
             _onIronResize: function () {
                 if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
+                }
+            },
+            
+            _toggleMenu: function (e, detail, source) {
+                const menuToggler = this.querySelector('.menu-toggler');
+                if (menuToggler) {
+                    menuToggler._toggleMenu.call(menuToggler, e, detail, source);
                 }
             }
         });

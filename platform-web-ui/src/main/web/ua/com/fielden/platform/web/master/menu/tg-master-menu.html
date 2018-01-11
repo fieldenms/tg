@@ -113,7 +113,6 @@
                 </paper-menu>
             </paper-scroll-header-panel>
             <paper-scroll-header-panel main fixed class="relative">
-                <paper-icon-button id="menuButton" style="z-index:1000;" icon="menu" tooltip-text="Compound master menu (tap or hit FX to invoke)." on-tap="_toggleMenu"></paper-icon-button>
                 <div>
                     <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
                         <content select=".menu-item-section"></content>
@@ -256,7 +255,8 @@
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
         ready: function () {
-        	var self = this;
+            const self = this;
+            self.classList.add('menu-toggler');
             self._createContextHolderForMenu = (function () {
                 var contextHolder = this.$.reflector.createContextHolder(
     				null, null, 'true',
