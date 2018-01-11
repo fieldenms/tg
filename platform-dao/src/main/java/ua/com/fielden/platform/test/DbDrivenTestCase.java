@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
@@ -23,6 +22,7 @@ import org.hibernate.Transaction;
 import com.google.inject.Injector;
 
 import junit.framework.TestCase;
+import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
@@ -66,9 +66,9 @@ public abstract class DbDrivenTestCase extends TestCase {
         }
     }
 
-    public final static EntityFactory entityFactory = config.getEntityFactory();
-    public final static Injector injector = config.getInjector();
-    public final static HibernateUtil hibernateUtil = config.getHibernateUtil();
+    public static final EntityFactory entityFactory = config.getEntityFactory();
+    public static final Injector injector = config.getInjector();
+    public static final HibernateUtil hibernateUtil = config.getHibernateUtil();
 
     private Transaction transactionForTests;
 
@@ -79,7 +79,7 @@ public abstract class DbDrivenTestCase extends TestCase {
         try {
             final IDatabaseConnection connection = getConnection(session);
             connection.getConnection().createStatement().execute("DROP ALL OBJECTS");
-            connection.getConnection().createStatement().execute("CREATE SEQUENCE TG_ENTITY_ID_SEQ START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;");
+            connection.getConnection().createStatement().execute(String.format("CREATE SEQUENCE %s START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;", HibernateMappingsGenerator.ID_SEQUENCE_NAME));
             
             final List<String> ddls = config.getDdl();
             if (ddls == null || ddls.isEmpty()) {

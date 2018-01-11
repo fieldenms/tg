@@ -50,8 +50,6 @@ public class HibernateMappingsGenerator {
     private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName) {
         final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        sb.append("\t\t<generator class=\"sequence-identity\">\n");
-        sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
         sb.append("\t\t</generator>\n");
         sb.append("\t</id>\n");
         return sb.toString();

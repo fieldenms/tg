@@ -131,8 +131,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             }
 
             return super.apply(base, description);
-        };
-        
+        }
     };
 
     @ClassRule
@@ -151,7 +150,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
                 e.printStackTrace();
             }
 
-        };
+        }
     };
     
     private final ICompanionObjectFinder provider = dbCreator(uuid()).config.getInstance(ICompanionObjectFinder.class);
@@ -177,7 +176,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     }
    
     @After
-    public final void afterTest() throws Exception {
+    public final void afterTest() {
         dbCreator(uuid()).clearData(this.getClass());
     }
 

@@ -26,6 +26,8 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  */
 public class HibernateMappingsGenerator {
     private static final Logger LOGGER = Logger.getLogger(HibernateMappingsGenerator.class);
+
+    public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     
     public String generateMappings(final DomainMetadata domainMetadata) {
         final Collection<PersistedEntityMetadata<?>> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
@@ -54,9 +56,6 @@ public class HibernateMappingsGenerator {
     private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName, final DbVersion dbVersion) {
         final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        sb.append("\t\t<generator class=\"sequence-identity\">\n");
-        sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
-        sb.append("\t\t</generator>\n");
         sb.append("\t</id>\n");
         return sb.toString();
     }
