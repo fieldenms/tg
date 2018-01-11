@@ -5,6 +5,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
@@ -17,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,6 +34,8 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.ioc.HibernateConfigurationFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -131,18 +136,24 @@ public class TableDdl {
     }
 
     private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+        final DbVersion dbVersion = HibernateConfigurationFactory.determineDbVersion(dialect.getClass().getName());
         return cols.map(col -> {
-            final StringBuilder sb = new StringBuilder();
-
+            // for now we only know how to create unique indexes for nullable column in case of SQL Server
+            if (col.nullable && MSSQL != dbVersion && POSTGRESQL != dbVersion) {
+                return null;
+            }
+            
+            // otherwise, let's create unique index with the nullable clause if required
             final String tableName = tableName(entityType);
             final String indexName = "KEY_".equals(col.name) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name);
+            final StringBuilder sb = new StringBuilder();
             sb.append(format("CREATE UNIQUE INDEX %s ON %s(%s)", indexName, tableName, col.name));
             if (col.nullable) {
                 sb.append(format(" WHERE (%s IS NOT NULL)", col.name));
             }
             sb.append(";");
             return sb.toString();
-        }).collect(toList());
+        }).filter(Objects::nonNull).collect(toList());
     }
 
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {

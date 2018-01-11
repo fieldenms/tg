@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.ioc;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -74,8 +77,14 @@ public class HibernateConfigurationFactory {
         
     }
 
-    private DbVersion determineDbVersion(final Properties props) {
-        final String dialect = props.getProperty("hibernate.dialect");
+    public static DbVersion determineDbVersion(final Properties props) {
+        return determineDbVersion(props.getProperty("hibernate.dialect"));
+    }
+
+    public static DbVersion determineDbVersion(final String dialect) {
+        if (isEmpty(dialect)) {
+            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
+        }
         if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
             return DbVersion.H2;
         } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
