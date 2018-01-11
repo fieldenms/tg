@@ -26,12 +26,11 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -65,10 +64,10 @@ import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 
 public class EntityUtils {
     private static final Logger logger = Logger.getLogger(EntityUtils.class);
-    
+
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().weakKeys().initialCapacity(512).build();
-    
+
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
     }
@@ -93,8 +92,8 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(value);
         } else if (Number.class.isAssignableFrom(valueType) || valueType == double.class) {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (valueType == Date.class || valueType == DateTime.class) {
-            final Date date = valueType == Date.class ? (Date) value : ((DateTime) value).toDate();
+        } else if (Date.class.isAssignableFrom(valueType) || DateTime.class.isAssignableFrom(valueType)) {
+            final Date date = Date.class.isAssignableFrom(valueType) ? (Date) value : ((DateTime) value).toDate();
             return new SimpleDateFormat(dateWithoutTimeFormat).format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
@@ -117,11 +116,11 @@ public class EntityUtils {
         }
         return toString(value, value.getClass());
     }
-    
+
     /**
      * This is a convenient function to get the first non-null value, similar as the COALESCE function in SQL.
      * Throws exception {@link NoSuchElementException} if there was no non-null elements.
-     * 
+     *
      * @param value
      * @param alternative
      * @param otherAlternatives
@@ -389,7 +388,7 @@ public class EntityUtils {
      *
      * Also, this method uses <code>.compareTo</code> to compate instances of {@link BigDecimal}.
      * <p>
-     * 
+     *
      * @param o1
      *            the first object to compare
      * @param o2
@@ -403,14 +402,14 @@ public class EntityUtils {
         } else if (o1 != null && o2 != null) {
             // comparison of decimals requires special handling
             if (o1 instanceof BigDecimal && o2 instanceof BigDecimal) {
-                result = ((BigDecimal) o1).compareTo((BigDecimal) o2) == 0; 
+                result = ((BigDecimal) o1).compareTo((BigDecimal) o2) == 0;
             } else {
                 result = o1.equals(o2);
             }
         } else {
             result = false;
         }
-        
+
         return result;
     }
 
@@ -483,7 +482,7 @@ public class EntityUtils {
                     : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
                 }
             } else {
-                throw Result.failure(finishSetter 
+                throw Result.failure(finishSetter
                 ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
                 : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
 
@@ -511,7 +510,7 @@ public class EntityUtils {
                     : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
                 }
             } else {
-                throw Result.failure(finishSetter 
+                throw Result.failure(finishSetter
                 ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
                 : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
             }
@@ -666,8 +665,8 @@ public class EntityUtils {
     public static boolean isEntityType(final Class<?> type) {
         return type == null ? false : AbstractEntity.class.isAssignableFrom(type);
     }
-    
-    
+
+
     /**
      * Indicates whether type represents {@link ActivatableAbstractEntity}-typed values.
      *
@@ -676,7 +675,7 @@ public class EntityUtils {
     public static boolean isActivatableEntityType(final Class<?> type) {
         return ActivatableAbstractEntity.class.isAssignableFrom(type);
     }
-    
+
 
     /**
      * Indicates whether type represents an integer value, which could be either {@link Integer} or {@link Long}.
@@ -702,14 +701,14 @@ public class EntityUtils {
 
     /**
      * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
-     * 
+     *
      * @param entityType
      * @return
      */
     public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
         if (isEntityType(keyType)) {
-            return isPersistedEntityType((Class<? extends AbstractEntity<?>>) keyType);
+            return isPersistedEntityType(keyType);
         } else {
             return false;
         }
@@ -739,12 +738,12 @@ public class EntityUtils {
     public static boolean isPersistedEntityType(final Class<?> type) {
         if (type == null) {
             return false;
-        } else { 
+        } else {
             final Boolean value = persistentTypes.getIfPresent(type);
             if (value == null) {
                 final boolean result = isEntityType(type)
                     && !isUnionEntityType(type)
-                    && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type) 
+                    && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type)
                     && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
                 persistentTypes.put(type, result);
                 return result;
@@ -753,7 +752,7 @@ public class EntityUtils {
             }
         }
     }
-    
+
     /**
      * Determines whether the provided entity type is of synthetic nature, which means that is based on an EQL model.
      *
@@ -774,11 +773,11 @@ public class EntityUtils {
             }
         }
     }
-    
+
     /**
      * Determines whether the provided entity type is of synthetic nature that at the same time is based on a persistent type.
      * This kind of entities most typically should have a model with <code>yieldAll</code> clause.
-     * 
+     *
      * @param type
      * @return
      */
@@ -786,7 +785,7 @@ public class EntityUtils {
         return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
     }
 
-    
+
     /**
      * Determines whether the provided entity type models a union-type.
      *
@@ -812,13 +811,13 @@ public class EntityUtils {
                 result.add((EntityResultQueryModel<T>) value);
                 return result;
             } else {
-                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].", 
+                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].",
                                                      entityType.getSimpleName(), exprField.getType().getSimpleName()));
             }
         } catch (final NoSuchFieldException | IllegalAccessException ex) {
             logger.debug(ex);
         }
-        
+
         try {
             final Field exprField = entityType.getDeclaredField("models_");
             exprField.setAccessible(true);
@@ -826,7 +825,7 @@ public class EntityUtils {
             if (value instanceof List<?>) { // this is a bit weak type checking due to the absence of generics reification
                 result.addAll((List<EntityResultQueryModel<T>>) exprField.get(null));
                 return result;
-            } else {            
+            } else {
                 throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
             }
         } catch (final NoSuchFieldException | IllegalAccessException ex) {
@@ -947,7 +946,7 @@ public class EntityUtils {
      * @return
      */
     public static <E extends Enum<E>> List<Class<?>> extractTypes(final Class<E> type) {
-        final List<Class<?>> result = new ArrayList<Class<?>>();
+        final List<Class<?>> result = new ArrayList<>();
         result.add(type);
         final EnumSet<E> mnemonicEnumSet = EnumSet.allOf(type);
         for (final E value : mnemonicEnumSet) {
@@ -955,7 +954,7 @@ public class EntityUtils {
         }
         return result;
     }
-    
+
     /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
      *
@@ -965,9 +964,9 @@ public class EntityUtils {
     public static Pair<String, String> splitPropByFirstDot(final String dotNotatedPropName) {
         final int firstDotIndex = dotNotatedPropName.indexOf(".");
         if (firstDotIndex != -1) {
-            return new Pair<String, String>(dotNotatedPropName.substring(0, firstDotIndex), dotNotatedPropName.substring(firstDotIndex + 1));
+            return new Pair<>(dotNotatedPropName.substring(0, firstDotIndex), dotNotatedPropName.substring(firstDotIndex + 1));
         } else {
-            return new Pair<String, String>(dotNotatedPropName, null);
+            return new Pair<>(dotNotatedPropName, null);
         }
     }
 
@@ -980,9 +979,9 @@ public class EntityUtils {
     public static Pair<String, String> splitPropByLastDot(final String dotNotatedPropName) {
         final int lastDotIndex = findLastDotInString(0, dotNotatedPropName);
         if (lastDotIndex != -1) {
-            return new Pair<String, String>(dotNotatedPropName.substring(0, lastDotIndex - 1), dotNotatedPropName.substring(lastDotIndex));
+            return new Pair<>(dotNotatedPropName.substring(0, lastDotIndex - 1), dotNotatedPropName.substring(lastDotIndex));
         } else {
-            return new Pair<String, String>(null, dotNotatedPropName);
+            return new Pair<>(null, dotNotatedPropName);
         }
     }
 
@@ -1079,7 +1078,7 @@ public class EntityUtils {
     }
 
     public static SortedSet<String> getFirstLevelProps(final Set<String> allProps) {
-        final SortedSet<String> result = new TreeSet<String>();
+        final SortedSet<String> result = new TreeSet<>();
         for (final String prop : allProps) {
             result.add(splitPropByFirstDot(prop).getKey());
         }
@@ -1154,12 +1153,12 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType, final boolean instrumented) {
         return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, instrumented);
     }
-    
+
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
         return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
     }
 
-    
+
     /**
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
      *
@@ -1182,7 +1181,7 @@ public class EntityUtils {
 
     /**
      * Tries to perform shallow copy of collectional value. If unsuccessful, throws unsuccessful {@link Result} describing the error.
-     * 
+     *
      * @param value
      * @return
      */
@@ -1203,10 +1202,10 @@ public class EntityUtils {
             throw Result.failure(String.format("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage())); // throw result indicating the failure of copying
         }
     }
-    
+
     /**
      * The most generic and most straightforward function to copy properties from instance <code>fromEntity</code> to <code>toEntity</code>.
-     * 
+     *
      * @param fromEntity
      * @param toEntity
      * @param skipProperties -- a sequence of property names, which may include ID and VERSION.
@@ -1214,7 +1213,7 @@ public class EntityUtils {
     public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
         // convert an array with property names to be skipped into a set for more efficient use
         final Set<String> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
-        
+
         // Under certain circumstances copying happens for an uninstrumented entity instance
         // In such cases there would be no meta-properties, and copying would fail.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
@@ -1225,7 +1224,7 @@ public class EntityUtils {
         realProperties.add(VERSION);
 
         // Copy each identified property, which is not proxied or skipped into a new instance.
-        realProperties.stream()                
+        realProperties.stream()
             .filter(name -> !skipPropertyName.contains(name))
             .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
             .forEach(propName -> {
@@ -1240,13 +1239,13 @@ public class EntityUtils {
                 }
             });
     }
-    
+
     /**
      * A bijective function between entity instances as Java objects and their synthesised identifier.
      * For the same Java object it returns the same code.
      * The implementation of this function is based on {@link System#identityHashCode(Object)}, which is not always produce unique values.
-     * Thus, the computed identity hash code is prepended with full entity type name to further reduce a chance for collision.  
-     * 
+     * Thus, the computed identity hash code is prepended with full entity type name to further reduce a chance for collision.
+     *
      * @param entity
      * @return
      */
