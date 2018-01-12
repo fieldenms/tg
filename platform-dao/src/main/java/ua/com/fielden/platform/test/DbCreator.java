@@ -20,13 +20,17 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.utils.DbUtils;
 
 /**
  * This is an abstraction that capture the logic for the initial test case related db creation and its re-creation from a generated script for all individual tests in the same test case.
@@ -42,20 +46,42 @@ public final class DbCreator {
     private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> dataScripts = CacheBuilder.newBuilder().weakKeys().build();
     private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> truncateScripts = CacheBuilder.newBuilder().weakKeys().build();
 
-    private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
-    public final IDomainDrivenTestCaseConfiguration config;
-    private final Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
+    private static Collection<PersistedEntityMetadata<?>> entityMetadatas;
+    public static IDomainDrivenTestCaseConfiguration config;
+    private static Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
     
-    private final String dbName;
-
-    public DbCreator(final String uuid) {
-        this.dbName = format("test_domain_db_for_%s", uuid);
-        defaultDbProps = mkDbProps();
-        config = createConfig();
-        entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
-    }
-
     public static final String baseDir = "./src/test/resources/db";
+    
+    public final String dbName;
+    
+    public DbCreator(final String dbName, final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        this.dbName = dbName;
+        if (config == null) {
+            defaultDbProps = mkDbProps();
+            config = createConfig();
+            entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
+        }
+    
+        final List<String> ddl;
+        if (maybeDdl.isEmpty()) {
+            // let's create the database...
+            final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
+            final Dialect dialect = (Dialect) dialectType.newInstance();
+
+            //System.out.println("GENERATING");
+            final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
+            ddl = dialect instanceof H2Dialect ? 
+                    DbUtils.prependDropDdlForH2(createDdl) : 
+                    DbUtils.prependDropDdlForSqlServer(createDdl);
+                    
+            maybeDdl.addAll(ddl);        
+        } else {
+            ddl = maybeDdl;
+        }
+        
+        // recreate DB structures
+        DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
+    }
 
     private IDomainDrivenTestCaseConfiguration createConfig() {
         try {
@@ -68,7 +94,7 @@ public final class DbCreator {
             defaultDbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             defaultDbProps.setProperty("hibernate.show_sql", "false");
             defaultDbProps.setProperty("hibernate.format_sql", "true");
-            defaultDbProps.setProperty("hibernate.hbm2ddl.auto", "create");
+            //defaultDbProps.setProperty("hibernate.hbm2ddl.auto", "create");
 
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
@@ -79,9 +105,6 @@ public final class DbCreator {
         }
     }
     
-    public String dbName() {
-        return dbName;
-    }
     /**
      * Creates db connectivity properties.
      * The database name is generated based on the test class name and the current thread id.
@@ -92,7 +115,7 @@ public final class DbCreator {
         final Properties dbProps = new Properties();
         // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
         //      This should be modified once correct db schema generation is implemented
-        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s/%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir, dbName()));
+        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbName));
         dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
         dbProps.setProperty("hibernate.connection.username", "sa");
         dbProps.setProperty("hibernate.connection.password", "");

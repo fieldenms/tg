@@ -2,13 +2,7 @@ package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,7 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Session;
@@ -25,15 +18,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.junit.runners.model.Statement;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
@@ -44,7 +29,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.test.runners.AbstractDomainDrivenTestCaseRunner;
 
 /**
  * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
@@ -53,110 +38,19 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
  * @author TG Team
  *
  */
-@RunWith(DomainDrivenTestCaseRunner.class)
+@RunWith(AbstractDomainDrivenTestCaseRunner.class)
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
 
+    private static DbCreator dbCreator;
+    private static ICompanionObjectFinder coFinder;
+    private static EntityFactory factory;
+    
+    private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    
     private Session session;
     private String transactionGuid;
-
-    
-    @Override
-    public Session getSession() {
-        if (session == null) {
-            throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
-        }
-        return session;
-    }
-
-    @Override
-    public void setSession(final Session session) {
-        this.session = session;
-    }
-    
-    @Override
-    public String getTransactionGuid() {
-        if (StringUtils.isEmpty(transactionGuid)) {
-            throw new EntityCompanionException("Transaction GUID is missing.");
-        }
-        return transactionGuid;
-    }
-    
-    @Override
-    public void setTransactionGuid(final String guid) {
-        this.transactionGuid = guid;
-    }
-
-    /**
-     * This static map holds references to DB related information, including data population and truncation scripts, for each test case type.
-     * It gets populated at the time of test case class loading using a <code<ClassRule</code> below. 
-     */
-    private static final Cache<String, DbCreator> dbCreators = CacheBuilder.newBuilder().build();
-    
-    /**
-     * A convenient factory/accessor method for instances of {@link DbCreator} that are associated with a passed in test case type.
-     * 
-     * @param testCaseType
-     * @return
-     */
-    public static final DbCreator dbCreator(final String uuid) {
-        if (dbCreators.getIfPresent(uuid) == null) {
-            final DbCreator dbCreator = new DbCreator(uuid);
-            dbCreators.put(uuid, dbCreator);
-        }
-        
-        return dbCreators.getIfPresent(uuid);
-    }
-
-    public static String uuid() {
-        return ManagementFactory.getRuntimeMXBean().getName() + "_" + Thread.currentThread().getId();
-    }
-    
-    /**
-     * A class rule (this is a new concept introduced in JUnit 4.x) that acts similar to <code>@BeforeClass/@AfterClass</code> by executing at the time of loading/off-loading a test case class.
-     * Its main purpose is to generate and populate a database specific for a test case with a class that is being loaded.
-     * The use of a class rule has an advantage over static method initializers by providing additional information such as a test case class.
-     * This provides a way to encapsulate test case specific database creation and population logic at the level of this base class that all other test cases inherit from. 
-     */
-    @ClassRule
-    public static final ExternalResource resource = new ExternalResource() {
-        @Override
-        public Statement apply(final Statement base, final Description description) {
-            try {
-                // this call populates the above static map dbCreators
-                // the created instance holds the data population and truncation scripts that get reused by individual test
-                // at the same time, the actual database can be created ad-hoc even on per test (method) basis if needed
-                dbCreator(uuid());
-            } catch (Exception ex) {
-                throw new DomainDriventTestException(format("Could not populate data for test case %s.", description), ex);
-            }
-
-            return super.apply(base, description);
-        }
-    };
-
-    @ClassRule
-    public static final TestWatcher watcher = new TestWatcher() {
-        @Override
-        protected void finished(final Description description) {
-            final DbCreator dbCreator = dbCreators.getIfPresent(uuid());
-            final Path rootPath = Paths.get(DbCreator.baseDir);
-            try (final Stream<Path> paths = Files.walk(rootPath)) {
-                paths
-                .filter(path -> path.getFileName().toString().contains(dbCreator.dbName()))
-                    .map(Path::toFile)
-                    .peek(file -> System.out.println(format("Removing %s", file.getName())))
-                    .forEach(File::delete);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-    };
-    
-    private final ICompanionObjectFinder provider = dbCreator(uuid()).config.getInstance(ICompanionObjectFinder.class);
-    private final EntityFactory factory = dbCreator(uuid()).config.getEntityFactory();
-    private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-    private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Should be implemented in order to provide domain driven data population.
@@ -172,24 +66,24 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
 
     @Before
     public final void beforeTest() throws Exception {
-        dbCreator(uuid()).populateOrRestoreData(this);
+        dbCreator.populateOrRestoreData(this);
     }
    
     @After
     public final void afterTest() {
-        dbCreator(uuid()).clearData(this.getClass());
+        dbCreator.clearData(this.getClass());
     }
 
    
     @Override
     public final <T> T getInstance(final Class<T> type) {
-        return dbCreator(uuid()).config.getInstance(type);
+        return dbCreator.config.getInstance(type);
     }
-
+    
     @Override
     public <T extends AbstractEntity<?>> T save(final T instance) {
         @SuppressWarnings("unchecked")
-        final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
+        final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
@@ -202,7 +96,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         IEntityDao<?> co = co$Cache.get(type);
         if (co == null) {
-            co = provider.find(type, false);
+            co = coFinder.find(type, false);
             co$Cache.put(type, co);
         }
         return (C) co;
@@ -211,7 +105,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     @SuppressWarnings("unchecked")
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
-        return (C) coCache.computeIfAbsent(type, k -> provider.find(k, true));
+        return (C) coCache.computeIfAbsent(type, k -> coFinder.find(k, true));
 
     }
 
@@ -296,4 +190,32 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }
+    
+    /////////////// @SessionRequired support ///////////////
+    @Override
+    public Session getSession() {
+        if (session == null) {
+            throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+        }
+        return session;
+    }
+
+    @Override
+    public void setSession(final Session session) {
+        this.session = session;
+    }
+    
+    @Override
+    public String getTransactionGuid() {
+        if (StringUtils.isEmpty(transactionGuid)) {
+            throw new EntityCompanionException("Transaction GUID is missing.");
+        }
+        return transactionGuid;
+    }
+    
+    @Override
+    public void setTransactionGuid(final String guid) {
+        this.transactionGuid = guid;
+    }
+
 }

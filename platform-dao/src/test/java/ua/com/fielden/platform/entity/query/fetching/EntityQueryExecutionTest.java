@@ -1808,8 +1808,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
-        
-        System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
     }
 
 }

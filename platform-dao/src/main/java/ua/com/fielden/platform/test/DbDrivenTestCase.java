@@ -15,7 +15,6 @@ import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.xml.FlatDtdDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -104,13 +103,8 @@ public abstract class DbDrivenTestCase extends TestCase {
 
             tr.commit();
         } catch (final Exception e) {
-            try {
-                tr.rollback();
-            } catch (final HibernateException ex) {
-                ex.printStackTrace();
-            }
             System.err.println("Db initialisation failed: " + e.getMessage());
-            e.printStackTrace();
+            tr.rollback();
         }
     }
 
