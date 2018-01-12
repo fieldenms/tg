@@ -370,12 +370,17 @@
                                 this.widthBeforeResizing = this.style.width;
                             }
                             const resizedHeight = this.offsetHeight + event.detail.ddy;
-                            if (resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */) {
+                            const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */;
+                            if (heightNeedsResize) {
                                 this.style.height = resizedHeight + 'px';
                             }
                             const resizedWidth = this.offsetWidth + event.detail.ddx;
-                            if (resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */) {
+                            const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */
+                            if (widthNeedsResize) {
                                 this.style.width = resizedWidth + 'px';
+                            }
+                            if (heightNeedsResize || widthNeedsResize) {
+                                this.notifyResize();
                             }
                             break;
                         case 'end':
