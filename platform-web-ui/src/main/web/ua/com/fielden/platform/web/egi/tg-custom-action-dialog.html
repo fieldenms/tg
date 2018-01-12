@@ -823,7 +823,8 @@
                     }
                     this._minimised = false;
                     this._maximised = false;
-
+                    this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
+                    
                     if (this._lastAction) {
                         this._lastAction.restoreActiveElement();
                     }
