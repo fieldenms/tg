@@ -463,7 +463,8 @@
                 if (!minimised && !maximised && prefDim) {
                     const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                     const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                    this._setDialogBodyDimensions(width, height);
+                    this.style.width = width;
+                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                     this.style.overflow = 'auto';
                 } else if (!minimised && maximised) {
                     this.style.top = '2%';
@@ -475,7 +476,8 @@
                     this.style.height = '44px';
                     this.style.overflow = 'hidden';
                 } else {
-                    this._setDialogBodyDimensions('', '');
+                    this.style.width = '';
+                    this.style.height = '';
                     this.style.overflow = 'auto';
                 }
             },
@@ -487,12 +489,6 @@
                 return minimised || maximised;
             },
             
-            _setDialogBodyDimensions: function (width, height) {
-                this.style.width = width;
-                // +44px - height of the title bar please see styles for .title-bar selector.
-                this.style.height = height && "calc(" + height + " + 44px)";
-            },
-
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
                 return !(staticTitle && dynamicTitle);
             },
