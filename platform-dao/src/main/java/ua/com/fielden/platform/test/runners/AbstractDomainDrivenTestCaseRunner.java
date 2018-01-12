@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,13 +59,18 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
             throw new IllegalArgumentException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
         }
-        // the following values should be specified in POM
-        // TODO remove default name, which is just 
-        databaseUri = System.getProperty("databaseUri");
-        if (StringUtils.isEmpty(databaseUri)) {
-            throw new IllegalArgumentException(format("Test case [%s] is missing system property \"databaseUri\".", klass.getName()));
+        
+        // databaseUri value should be specified in POM or come from the command line
+        // however, need to provide a sensible default not to force developers to specify this parameter for each test case in IDE
+        if (StringUtils.isEmpty(System.getProperty("databaseUri"))) {
+            databaseUri = "./src/test/resources/db/DEFAULT_TEST_DB";
+            // TODO change this to logging
+            //throw new IllegalArgumentException(format("Test case [%s] is missing system property \"databaseUri\".", klass.getName()));
+        } else {
+            databaseUri = System.getProperty("databaseUri");
         }
 
+        // TODO change this to logging
         System.out.println("RUNNER for type: " + klass + " and db = " + databaseUri);
         
         this.dbCreator = new DbCreator(databaseUri, ddlScript);
@@ -83,7 +87,7 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
     @Override
     protected Object createTest() throws Exception {
         final Class<?> testCaseType = getTestClass().getJavaClass();
-        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) dbCreator.config.getInstance(testCaseType);
+        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) DbCreator.config.getInstance(testCaseType);
         return testCase;
     }
     
@@ -103,9 +107,10 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
                 
                 // now let's do some clean up work...
                 final Path rootPath = Paths.get(DbCreator.baseDir);
+                final String mainDbFileName = databaseUri.substring(databaseUri.lastIndexOf(File.separatorChar) + 1);
                 try (final Stream<Path> paths = Files.walk(rootPath)) {
                     paths
-                    .filter(path -> path.getFileName().toString().contains(dbCreator.dbName))
+                        .filter(path -> path.getFileName().toString().contains(mainDbFileName))
                         .map(Path::toFile)
                         .peek(file -> System.out.println(format("Removing %s", file.getName())))
                         .forEach(File::delete);
