@@ -98,7 +98,7 @@
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
-            <paper-icon-button icon="menu" tooltip-text="Compound master menu (tap or hit FX to invoke)." on-tap="_toggleMenu"></paper-icon-button> <!-- id="menuButton" style="z-index:1000;"  -->
+            <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
             <div class="title-text layout horizontal center flex">
                 <span class="static-title truncate">[[staticTitle]]</span>
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
@@ -138,7 +138,8 @@
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed',
-                'tg-dynamic-title-changed': '_updateDynamicTitle'
+                'tg-dynamic-title-changed': '_updateDynamicTitle',
+                'tg-menu-appeared': '_updateMenuButton'
             },
 
             hostAttributes: {
@@ -492,7 +493,23 @@
             _updateDynamicTitle: function (e) {
                 this.dynamicTitle = e.detail;
             },
-
+            
+            /**
+             * 'menu-toggler' function to invoke dialog menu. It will be replaced by concrete function from loaded into dialog component in 'updateMenuButton' method.
+             */
+            _toggleMenu: function () {},
+            
+            /**
+             * Updates 'hidden' state of the menu toggler button and assigns _toogleMenu function.
+             */
+            _updateMenuButton: function (event) {
+                const appearedAndFunc = event.detail;
+                this.$.menuToggler.hidden = !appearedAndFunc.appeared;
+                if (appearedAndFunc.appeared) {
+                    this._toggleMenu = appearedAndFunc.func;
+                }
+            },
+            
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
                 if (target === this.$.titleBar) {
@@ -563,7 +580,7 @@
                 self.$.elementLoader.import = customAction.componentUri;
                 self.$.elementLoader.elementName = customAction.elementName;
                 self.$.elementLoader.attrs = customAction.attrs;
-                return self.$.elementLoader.reload(); // .then(function (loadedElement) { return loadedElement; });
+                return self.$.elementLoader.reload();
                 //}
             },
             
@@ -814,13 +831,6 @@
             _onIronResize: function () {
                 if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
-                }
-            },
-            
-            _toggleMenu: function (e, detail, source) {
-                const menuToggler = this.querySelector('.menu-toggler');
-                if (menuToggler) {
-                    menuToggler._toggleMenu.call(menuToggler, e, detail, source);
                 }
             }
         });
