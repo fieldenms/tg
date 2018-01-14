@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -19,10 +21,10 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithCentreContext<T> {
 
     private final Class<T> entityType;
-    
+
     public FallbackValueMatcherWithCentreContext(final IEntityDao<T> co) {
         super(co);
-        
+
         entityType = co.getEntityType();
     }
 
@@ -32,14 +34,17 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
     }
 
     @Override
-    protected EntityResultQueryModel<T> completeEqlBasedOnContext(
+    protected ICompoundCondition0<T> startEqlBasedOnContext(
             final CentreContext<T, ?> context,
-            final String searchString,
-            final ICompoundCondition0<T> incompleteEql) {
+            final String searchString) {
         if (EntityUtils.hasDescProperty(entityType)) {
-            return incompleteEql.or().upperCase().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model();
+            return select(entityType).where()
+                    .begin()
+                    .prop(KEY).iLike().val(searchString).or()
+                    .upperCase().prop(AbstractEntity.DESC).iLike().val("%" + searchString)
+                    .end();
         } else {
-            return incompleteEql.model();
+            return select(entityType).where().prop(KEY).iLike().val(searchString);
         }
     }
 
