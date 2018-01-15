@@ -350,6 +350,9 @@
             },
             
             _invertMaximiseState: function () {
+                if (!this.prefDim) { // define prefDim (maximise action) if it was not defined using action configuration
+                    this.prefDim = this._lastElement.makeResizable();
+                }
                 this._invertDialogState('_maximised');
             },
             
@@ -368,6 +371,9 @@
                                 this._wasResized = true;
                                 this.heightBeforeResizing = this.style.height;
                                 this.widthBeforeResizing = this.style.width;
+                                if (!this.prefDim) { // define prefDim (resize action) if it was not defined using action configuration
+                                    this.prefDim = this._lastElement.makeResizable();
+                                }
                             }
                             const resizedHeight = this.offsetHeight + event.detail.ddy;
                             const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */;
