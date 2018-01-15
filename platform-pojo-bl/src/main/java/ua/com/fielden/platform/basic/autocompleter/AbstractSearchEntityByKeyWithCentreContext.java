@@ -15,8 +15,8 @@ import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -34,7 +34,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     private fetch<T> fetchModel;
     private CentreContext<T, ?> context;
 
-    private int pageSize = 10;
+    private final int pageSize = 10;
 
 
     public AbstractSearchEntityByKeyWithCentreContext(final IEntityDao<T> companion) {
@@ -43,17 +43,29 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     }
 
     /**
-     * This method needs to be implemented to enhance the resulting query based on the provided context.
+     * This method may be overridden to create a different start of EQL.
+     *
+     * @param context
+     * @param searchString
+     * @return
+     */
+    protected ICompoundCondition0<T> startEqlBasedOnContext(final CentreContext<T, ?> context, final String searchString) {
+        return select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+    }
+
+    /**
+     * This method may be overridden to enhance the resulting query based on the provided context.
      *
      * @param incompleteEql
      * @return
      */
-    protected abstract EntityResultQueryModel<T> completeEqlBasedOnContext(final CentreContext<T, ?> context, final String searchString, final ICompoundCondition0<T> incompleteEql);
-
+    protected EntityResultQueryModel<T> completeEqlBasedOnContext(final CentreContext<T, ?> context, final String searchString, final ICompoundCondition0<T> incompleteEql) {
+        return incompleteEql.model();
+    }
 
     @Override
     public List<T> findMatches(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
@@ -62,7 +74,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
