@@ -38,8 +38,8 @@ import ua.com.fielden.platform.utils.DbUtils;
  * @author TG Team
  *
  */
-public final class DbCreator {
-    private final Logger logger = Logger.getLogger(DbCreator.class);
+public abstract class DbCreator {
+    private final Logger logger = Logger.getLogger(getClass());
 
     private final List<String> dataScripts = new ArrayList<>();
     private final List<String> truncateScripts = new ArrayList<>();
@@ -70,14 +70,8 @@ public final class DbCreator {
             // let's create the database...
             final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
             final Dialect dialect = (Dialect) dialectType.newInstance();
-
-            //System.out.println("GENERATING");
-            final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
-            ddl = dialect instanceof H2Dialect ? 
-                    DbUtils.prependDropDdlForH2(createDdl) : 
-                    DbUtils.prependDropDdlForSqlServer(createDdl);
                     
-            maybeDdl.addAll(ddl);        
+            maybeDdl.addAll(ddl = genCreateDbDdl(dialect));        
         } else {
             ddl = maybeDdl;
         }
@@ -86,6 +80,9 @@ public final class DbCreator {
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
     }
 
+    protected abstract List<String> genCreateDbDdl(final Dialect dialect);
+    
+    
     private IDomainDrivenTestCaseConfiguration createConfig() {
         try {
 

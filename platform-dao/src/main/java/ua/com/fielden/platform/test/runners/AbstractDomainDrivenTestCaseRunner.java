@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.test.DbCreator;
  * @author TG Team
  *
  */
-public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
+public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
     /** 
      * Need one DDL script for all instances of all test cases.
@@ -47,14 +48,14 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
     /**
      * The name of the database to be used for testing.
      */
-    private final String databaseUri;
+    protected final String databaseUri;
     
     private final DbCreator dbCreator;
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
 
     
-    public AbstractDomainDrivenTestCaseRunner(final Class<?> klass) throws Exception {
+    public AbstractDomainDrivenTestCaseRunner(final Class<?> klass, final Class<? extends DbCreator> dbCreatorType) throws Exception {
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
@@ -74,7 +75,9 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
         // TODO change this to logging
         System.out.println("RUNNER for type: " + klass + " and db = " + databaseUri);
         
-        this.dbCreator = new DbCreator((Class<AbstractDomainDrivenTestCase>) klass, databaseUri, ddlScript);
+        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), String.class, List.class);
+        
+        this.dbCreator = constructor.newInstance(klass, databaseUri, ddlScript);
         if (coFinder == null) {
             coFinder = DbCreator.config.getInstance(ICompanionObjectFinder.class);
             factory = DbCreator.config.getEntityFactory();
@@ -98,6 +101,13 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
     }
     
     /**
+     * A routine to clean up the database once it is no longer needed. For example, in case of H2 the database file can be deleted.
+     */
+    protected void dbCleanUp() {
+        dbCreator.closeConnetion();
+    }
+    
+    /**
      * Override to add custom logic at the very end of test case execution.
      * Mainly this is needed to do the clean up work.
      */
@@ -112,18 +122,7 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
                 defaultSt.evaluate();
                 
                 // now let's do some clean up work...
-                dbCreator.closeConnetion();
-                final Path rootPath = Paths.get(DbCreator.baseDir);
-                final String mainDbFileName = databaseUri.substring(databaseUri.lastIndexOf(File.separatorChar) + 1);
-                try (final Stream<Path> paths = Files.walk(rootPath)) {
-                    paths
-                        .filter(path -> path.getFileName().toString().contains(mainDbFileName))
-                        .map(Path::toFile)
-                        .peek(file -> System.out.println(format("Removing %s", file.getName())))
-                        .forEach(File::delete);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                dbCleanUp();
 
             };
         };
