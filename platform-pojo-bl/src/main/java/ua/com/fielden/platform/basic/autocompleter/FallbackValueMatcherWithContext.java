@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition1;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -31,10 +30,10 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
 
     private final Class<T> entityType;
     private final boolean activeOnly;
-    
+
     public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
         super(co);
-        
+
         entityType = co.getEntityType();
         this.activeOnly = activeOnly;
         if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
@@ -50,26 +49,25 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     }
 
     @Override
-    protected EntityResultQueryModel<T> completeEqlBasedOnContext(
+    protected ICompoundCondition0<T> startEqlBasedOnContext(
             final CONTEXT context,
-            final String searchString,
-            final ICompoundCondition0<T> incompleteEql) {
+            final String searchString) {
 
         final ICompoundCondition1<T> incompleteEql1 = select(companion.getEntityType()).where()
                 .begin()
                     .prop(KEY).iLike().val(searchString);
-        
+
         final ICompoundCondition0<T> condition;
         if (EntityUtils.hasDescProperty(entityType)) {
             condition = incompleteEql1.or().upperCase().prop(DESC).iLike().val("%" + searchString).end();
         } else {
             condition = incompleteEql1.end();
         }
-        
+
         if (activeOnly) {
-           return condition.and().prop(ACTIVE).eq().val(true).model();
+            return condition.and().prop(ACTIVE).eq().val(true);
         } else {
-            return condition.model();
+            return condition;
         }
 
     }
