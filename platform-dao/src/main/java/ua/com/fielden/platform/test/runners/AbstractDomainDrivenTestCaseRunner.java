@@ -2,17 +2,11 @@ package ua.com.fielden.platform.test.runners;
 
 import static java.lang.String.format;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.runner.notification.RunNotifier;

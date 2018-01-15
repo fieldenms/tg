@@ -21,7 +21,6 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 
 import com.google.common.io.Files;
 
@@ -43,23 +42,26 @@ public abstract class DbCreator {
 
     private final List<String> dataScripts = new ArrayList<>();
     private final List<String> truncateScripts = new ArrayList<>();
+    
+    public final String dbUri;
+    
+    private Connection conn; // allocated during the first data population attempt and then reused for all tests in the same test case
+    
+    private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
 
+    // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
     private static Collection<PersistedEntityMetadata<?>> entityMetadatas;
     public static IDomainDrivenTestCaseConfiguration config;
     private static Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
     
     public static final String baseDir = "./src/test/resources/db";
     
-    public final String dbName;
-    private Connection conn;
     
-    private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
-    
-    public DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final String dbName, final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        this.dbName = dbName;
+    public DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final String dbUri, final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        this.dbUri = dbUri;
         if (config == null) {
-            defaultDbProps = mkDbProps();
-            config = createConfig();
+            defaultDbProps = mkDbProps(dbUri);
+            config = createConfig(defaultDbProps);
             entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
         }
         
@@ -71,7 +73,7 @@ public abstract class DbCreator {
             final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
             final Dialect dialect = (Dialect) dialectType.newInstance();
                     
-            maybeDdl.addAll(ddl = genCreateDbDdl(dialect));        
+            maybeDdl.addAll(ddl = genDdl(dialect));        
         } else {
             ddl = maybeDdl;
         }
@@ -80,10 +82,21 @@ public abstract class DbCreator {
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
     }
 
-    protected abstract List<String> genCreateDbDdl(final Dialect dialect);
+    /**
+     * Override to implement RDBMS specific DDL script generation.
+     * 
+     * @param dialect
+     * @return
+     */
+    protected abstract List<String> genDdl(final Dialect dialect);
     
-    
-    private IDomainDrivenTestCaseConfiguration createConfig() {
+    /**
+     * A helper function to instantiate test case configuration as specified in <code>src/test/resources/test.properties</code>, property <code>config-domain</code>.
+     * 
+     * @param props
+     * @return
+     */
+    private static IDomainDrivenTestCaseConfiguration createConfig(final Properties props) {
         try {
 
             final Properties testProps = new Properties();
@@ -91,36 +104,28 @@ public abstract class DbCreator {
             testProps.load(in);
             in.close();
 
-            defaultDbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            defaultDbProps.setProperty("hibernate.show_sql", "false");
-            defaultDbProps.setProperty("hibernate.format_sql", "true");
-            //defaultDbProps.setProperty("hibernate.hbm2ddl.auto", "create");
-
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
             final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
-            return constructor.newInstance(defaultDbProps);
+            return constructor.newInstance(props);
         } catch (final Exception e) {
-            throw new IllegalStateException(format("Could not create a configuration."), e);
+            throw new DomainDriventTestException("Could not create test configuration.", e);
         }
     }
     
     /**
-     * Creates db connectivity properties.
-     * The database name is generated based on the test class name and the current thread id.
+     * Creates db connectivity properties in terms of Hibernate properties.
+     * The value for property <code>hibernate.connection.url</code> should contain <code>%s</code> as a place holder for the database location and name.
+     * For example:
+     * <ul>
+     * <li><code>jdbc:sqlserver:%s;queryTimeout=30</code>, where <code>%s</code> would be replaced with something like <code>//192.168.1.142:1433;database=TEST_DB</code>.
+     * <li><code>jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE</code>, where <code>%s</code> would be replaced with something like <code>./src/test/resources/db/TEST_DB</code>.
+     * </ul> 
+     * @param dbUri -- the database location and name
      * 
      * @return
      */
-    private final Properties mkDbProps() {
-        final Properties dbProps = new Properties();
-        // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
-        //      This should be modified once correct db schema generation is implemented
-        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbName));
-        dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-        dbProps.setProperty("hibernate.connection.username", "sa");
-        dbProps.setProperty("hibernate.connection.password", "");
-        return dbProps;
-    }
+    protected abstract Properties mkDbProps(final String dbUri);
 
     private final String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
         return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
