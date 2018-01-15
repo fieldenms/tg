@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -73,11 +74,16 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
         // TODO change this to logging
         System.out.println("RUNNER for type: " + klass + " and db = " + databaseUri);
         
-        this.dbCreator = new DbCreator(databaseUri, ddlScript);
+        this.dbCreator = new DbCreator((Class<AbstractDomainDrivenTestCase>) klass, databaseUri, ddlScript);
         if (coFinder == null) {
             coFinder = DbCreator.config.getInstance(ICompanionObjectFinder.class);
             factory = DbCreator.config.getEntityFactory();
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("dbCreator"), dbCreator);
+            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), 
+                    new Function<Class<?>, Object>() {
+                        @Override
+                        public Object apply(Class<?> type) {
+                            return dbCreator.config.getInstance(type);
+                        }});
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
         }
@@ -88,7 +94,7 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
     protected Object createTest() throws Exception {
         final Class<?> testCaseType = getTestClass().getJavaClass();
         final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) DbCreator.config.getInstance(testCaseType);
-        return testCase;
+        return testCase.setDbCreator(dbCreator);
     }
     
     /**
@@ -106,6 +112,7 @@ public class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  
                 defaultSt.evaluate();
                 
                 // now let's do some clean up work...
+                dbCreator.closeConnetion();
                 final Path rootPath = Paths.get(DbCreator.baseDir);
                 final String mainDbFileName = databaseUri.substring(databaseUri.lastIndexOf(File.separatorChar) + 1);
                 try (final Stream<Path> paths = Files.walk(rootPath)) {

@@ -23,8 +23,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
@@ -43,8 +41,8 @@ import ua.com.fielden.platform.utils.DbUtils;
 public final class DbCreator {
     private final Logger logger = Logger.getLogger(DbCreator.class);
 
-    private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> dataScripts = CacheBuilder.newBuilder().weakKeys().build();
-    private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> truncateScripts = CacheBuilder.newBuilder().weakKeys().build();
+    private final List<String> dataScripts = new ArrayList<>();
+    private final List<String> truncateScripts = new ArrayList<>();
 
     private static Collection<PersistedEntityMetadata<?>> entityMetadatas;
     public static IDomainDrivenTestCaseConfiguration config;
@@ -53,15 +51,20 @@ public final class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
     
     public final String dbName;
+    private Connection conn;
     
-    public DbCreator(final String dbName, final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
+    
+    public DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final String dbName, final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         this.dbName = dbName;
         if (config == null) {
             defaultDbProps = mkDbProps();
             config = createConfig();
             entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
         }
-    
+        
+        this.testCaseType = testCaseType;
+        
         final List<String> ddl;
         if (maybeDdl.isEmpty()) {
             // let's create the database...
@@ -135,18 +138,21 @@ public final class DbCreator {
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
 
-        final Connection conn = createConnection(defaultDbProps);
+        // this is a single place there a new DB connection is established
+        final Connection conn = currentConnection(defaultDbProps);
+        
         Optional<Exception> raisedEx = Optional.empty();
 
-        final List<String> dataScript = dataScripts.getIfPresent(testCase.getClass());
-        if (dataScript != null) {
+        if (!dataScripts.isEmpty()) {
             // apply data population script
             logger.debug("Executing data population script.");
-            exec(dataScript, conn);
+            exec(dataScripts, conn);
+            conn.commit();
         } else {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
-                    restoreDataFromFile(testCase.getClass(), conn);
+                    restoreDataFromFile(testCaseType, conn);
+                    conn.commit();
                 }
                 // need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur
                 testCase.populateDomain();
@@ -158,11 +164,11 @@ public final class DbCreator {
             // record data population statements
             if (!testCase.useSavedDataPopulationScript()) {
                 recordDataPopulationScript(testCase, conn);
+                conn.commit();
             }
         }
 
-        conn.close();
-
+        
         if (raisedEx.isPresent()) {
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
@@ -171,29 +177,26 @@ public final class DbCreator {
     }
     
     private void restoreDataFromFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Connection conn) throws Exception {
-        final List<String> dataScript = initDataScriptForTestCase(testCaseType);
-        dataScript.clear();
+        dataScripts.clear();
         final File dataPopulationScriptFile = new File(dataScriptFile(testCaseType));
         if (!dataPopulationScriptFile.exists()) {
             throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile(testCaseType)));
         }
-        dataScript.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
+        dataScripts.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
 
         
-        final List<String> truncateScript = initTruncateScriptForTestCase(testCaseType);
-        truncateScript.clear();
+        truncateScripts.clear();
         final File truncateTablesScriptFile = new File(truncateScriptFile(testCaseType));
         if (!truncateTablesScriptFile.exists()) {
             throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
         }
-        truncateScript.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
+        truncateScripts.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
 
-        exec(dataScript, conn);
+        exec(dataScripts, conn);
     }
 
     private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
-        final List<String> dataScript = initDataScriptForTestCase(testCase.getClass());
-        if (dataScript.isEmpty()) {
+        if (dataScripts.isEmpty()) {
             final Statement st = conn.createStatement();
             final ResultSet set = st.executeQuery("SCRIPT");
             while (set.next()) {
@@ -203,25 +206,24 @@ public final class DbCreator {
                         && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
                     // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
                     // that was perhaps lover cased while populateDomain() invocation was performed
-                    dataScript.add(result.replace("\n", " ").replace("\r", " "));
+                    dataScripts.add(result.replace("\n", " ").replace("\r", " "));
                 }
             }
             set.close();
             st.close();
 
             // create truncate statements
-            final List<String> truncateScript = initTruncateScriptForTestCase(testCase.getClass());
-            if (truncateScript.isEmpty()) {
+            if (truncateScripts.isEmpty()) {
                 for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-                    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
+                    truncateScripts.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
             }
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
-                try (PrintWriter out = new PrintWriter(dataScriptFile(testCase.getClass()), StandardCharsets.UTF_8.name())) {
+                try (PrintWriter out = new PrintWriter(dataScriptFile(testCaseType), StandardCharsets.UTF_8.name())) {
                     final StringBuilder builder = new StringBuilder();
-                    for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
+                    for (final Iterator<String> iter = dataScripts.iterator(); iter.hasNext();) {
                         final String line = iter.next();
                         builder.append(line);
                         if (iter.hasNext()) {
@@ -232,9 +234,9 @@ public final class DbCreator {
                 }
 
                 // flush table truncation script to file for later use
-                try (PrintWriter out = new PrintWriter(truncateScriptFile(testCase.getClass()), StandardCharsets.UTF_8.name())) {
+                try (PrintWriter out = new PrintWriter(truncateScriptFile(testCaseType), StandardCharsets.UTF_8.name())) {
                     final StringBuilder builder = new StringBuilder();
-                    for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
+                    for (final Iterator<String> iter = truncateScripts.iterator(); iter.hasNext();) {
                         final String line = iter.next();
                         builder.append(line);
                         if (iter.hasNext()) {
@@ -247,26 +249,6 @@ public final class DbCreator {
         }
     }
 
-    private List<String> initTruncateScriptForTestCase(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        final List<String> dataScript = truncateScripts.getIfPresent(testCaseType);
-        if (dataScript != null) {
-            return dataScript;
-        }
-        final List<String> newTrancateScript = new ArrayList<>();
-        truncateScripts.put(testCaseType, newTrancateScript);
-        return newTrancateScript;
-    }
-
-    private List<String> initDataScriptForTestCase(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        final List<String> dataScript = dataScripts.getIfPresent(testCaseType);
-        if (dataScript != null) {
-            return dataScript;
-        }
-        final List<String> newDataScript = new ArrayList<>();
-        dataScripts.put(testCaseType, newDataScript);
-        return newDataScript;
-    }
-
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
         try (final Statement st = conn.createStatement()) {
             for (final String stmt : statements) {
@@ -275,16 +257,31 @@ public final class DbCreator {
         }
     }
 
-    public final void clearData(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        try (final Connection conn = createConnection(defaultDbProps)) {
-            exec(truncateScripts.getIfPresent(testCaseType), conn);
+    public final void clearData() {
+        if (conn == null) {
+            throw new DomainDriventTestException("There is no db connection. Please ensure data population is invoked first, which would establish a new db connetion.");
+        }
+
+        try {
+            exec(truncateScripts, conn);
             logger.debug("Executing tables truncation script.");
+            conn.commit();
         } catch (final Exception ex) {
             throw new DomainDriventTestException("Could not clear data.", ex);
         }
     }
 
-    private Connection createConnection(final Properties props) {
+    /**
+     * Return the current DB connection, or establishes a new one if there is no current connection present.
+     * 
+     * @param props
+     * @return
+     */
+    private Connection currentConnection(final Properties props) {
+        if (conn != null) {
+            return conn;
+        }
+        System.out.println("CREATING DB CONNECTION...");
         final String url = props.getProperty("hibernate.connection.url");
         final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
         final String user = props.getProperty("hibernate.connection.username");
@@ -292,9 +289,26 @@ public final class DbCreator {
 
         try {
             Class.forName(jdbcDriver);
-            return DriverManager.getConnection(url, user, passwd);
+            conn = DriverManager.getConnection(url, user, passwd);
+            conn.setAutoCommit(false);
+            return conn;
         } catch (final Exception e) {
             throw new IllegalStateException(e);
+        }
+    }
+    
+    /**
+     * Closes the current db connection.
+     */
+    public void closeConnetion() {
+        if (conn != null) {
+            System.out.println("CLOSING DB CONNECTION...");
+            try {
+                conn.close();
+                conn = null;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 

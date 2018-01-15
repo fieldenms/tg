@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Session;
@@ -41,9 +42,10 @@ import ua.com.fielden.platform.test.runners.AbstractDomainDrivenTestCaseRunner;
 @RunWith(AbstractDomainDrivenTestCaseRunner.class)
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
 
-    private static DbCreator dbCreator;
+    private DbCreator dbCreator;
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
+    private static Function<Class<?>, Object> instantiator;
     
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -71,13 +73,17 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
    
     @After
     public final void afterTest() {
-        dbCreator.clearData(this.getClass());
+        dbCreator.clearData();
     }
-
    
+    public AbstractDomainDrivenTestCase setDbCreator(final DbCreator dbCreator) {
+        this.dbCreator = dbCreator;
+        return this;
+    }
+    
     @Override
     public final <T> T getInstance(final Class<T> type) {
-        return dbCreator.config.getInstance(type);
+        return (T) instantiator.apply(type);
     }
     
     @Override
