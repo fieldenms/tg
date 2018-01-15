@@ -127,11 +127,11 @@ public abstract class DbCreator {
      */
     protected abstract Properties mkDbProps(final String dbUri);
 
-    private final String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
+    protected String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
         return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
     }
     
-    private final String truncateScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
+    protected String truncateScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
         return format("%s/truncate-%s.script", baseDir, testCaseType.getSimpleName());
     }
 
@@ -199,27 +199,10 @@ public abstract class DbCreator {
 
     private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
         if (dataScripts.isEmpty()) {
-            final Statement st = conn.createStatement();
-            final ResultSet set = st.executeQuery("SCRIPT");
-            while (set.next()) {
-                final String result = set.getString(1).trim();
-                final String upperCasedResult = result.toUpperCase();
-                if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                        && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                    // that was perhaps lover cased while populateDomain() invocation was performed
-                    dataScripts.add(result.replace("\n", " ").replace("\r", " "));
-                }
-            }
-            set.close();
-            st.close();
-
-            // create truncate statements
-            if (truncateScripts.isEmpty()) {
-                for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-                    truncateScripts.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-                }
-            }
+            dataScripts.addAll(genInsertStmt(entityMetadatas, conn));
+            
+            truncateScripts.clear();
+            truncateScripts.addAll(genTruncStmt(entityMetadatas, conn));
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
@@ -251,7 +234,33 @@ public abstract class DbCreator {
         }
     }
 
-    private void exec(final List<String> statements, final Connection conn) throws SQLException {
+    /**
+     * Implement to generate SQL statements for deleting records from tables associated with domain entities.
+     * 
+     * @param entityMetadata
+     * @param conn
+     * @return
+     */
+    protected abstract List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn);
+
+    /**
+     * Implement to generate SQL statements for inserting records that correspond to test domain data that is present currently in the database with the specified connection.
+     * 
+     * @param entityMetadata
+     * @param conn
+     * @return
+     * @throws SQLException
+     */
+    protected abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
+    
+    /**
+     * A helper function to execute SQL statements.
+     * 
+     * @param statements
+     * @param conn
+     * @throws SQLException
+     */
+    private static void exec(final List<String> statements, final Connection conn) throws SQLException {
         try (final Statement st = conn.createStatement()) {
             for (final String stmt : statements) {
                 st.execute(stmt);
