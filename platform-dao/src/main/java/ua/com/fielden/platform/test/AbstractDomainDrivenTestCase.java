@@ -19,7 +19,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.runner.RunWith;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
@@ -30,7 +29,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.test.runners.AbstractDomainDrivenTestCaseRunner;
 
 /**
  * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
@@ -39,7 +37,6 @@ import ua.com.fielden.platform.test.runners.AbstractDomainDrivenTestCaseRunner;
  * @author TG Team
  *
  */
-@RunWith(AbstractDomainDrivenTestCaseRunner.class)
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
 
     private DbCreator dbCreator;
