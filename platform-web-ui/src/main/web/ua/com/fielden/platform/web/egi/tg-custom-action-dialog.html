@@ -336,10 +336,11 @@
                     this.persistDialogLocationAndDimensions();
                 }
                 this[stateName] = !this[stateName];
-                this.notifyResize();
+                this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
                 if (!this[stateName]) {
                     this.restoreActiveElement();
                     this.restoreDialogLocationAndDimensions();
+                    this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
                 }
             },
             
