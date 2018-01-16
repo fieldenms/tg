@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
@@ -23,6 +24,25 @@ public class H2DomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRu
 
     public H2DomainDrivenTestCaseRunner(final Class<?> klass) throws Exception {
         super(klass, H2DbCreator.class);
+    }
+
+    /**
+     * Produces a set of properties for DB connectivity based on the provided <code>dbUri</code>.
+     * The URI for H2 looks like <code>./src/test/resources/db/JUNIT_TEST_DB</code>.
+     */
+    @Override
+    protected Properties mkDbProps(final String dbUri) {
+        final Properties dbProps = new Properties();
+        // referential integrity is disabled to enable table truncation and test data re-population out of order
+        dbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbUri));
+        dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
+        dbProps.setProperty("hibernate.connection.username", "sa");
+        dbProps.setProperty("hibernate.connection.password", "");
+        dbProps.setProperty("hibernate.show_sql", "false");
+        dbProps.setProperty("hibernate.format_sql", "true");
+
+        return dbProps;
     }
 
     /**

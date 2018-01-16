@@ -28,28 +28,9 @@ import ua.com.fielden.platform.utils.DbUtils;
  */
 public class H2DbCreator extends DbCreator {
 
-    public H2DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final String dbName, final List<String> maybeDdl)
+    public H2DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Properties props, final List<String> maybeDdl)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        super(testCaseType, dbName, maybeDdl);
-    }
-
-    /**
-     * Produces a set of properties of DB connectivity based on the provided <code>dbUri</code>.
-     * The URI for H2 looks like <code>./src/test/resources/db/JUNIT_TEST_DB</code>.
-     */
-    @Override
-    protected Properties mkDbProps(final String dbUri) {
-        final Properties dbProps = new Properties();
-        // referential integrity is disabled to enable table truncation and test data re-population out of order
-        dbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbUri));
-        dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-        dbProps.setProperty("hibernate.connection.username", "sa");
-        dbProps.setProperty("hibernate.connection.password", "");
-        dbProps.setProperty("hibernate.show_sql", "false");
-        dbProps.setProperty("hibernate.format_sql", "true");
-
-        return dbProps;
+        super(testCaseType, props, maybeDdl);
     }
 
     /**

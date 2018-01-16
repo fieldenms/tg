@@ -6,9 +6,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.Statement;
@@ -26,6 +28,10 @@ import ua.com.fielden.platform.test.DbCreator;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
+    private final Logger logger = Logger.getLogger(getClass());
+    
+    private static Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
+    
     /** 
      * Need one DDL script for all instances of all test cases.
      * The intent is to create and cache it as a static variable upon instantiation of the first runner instance.
@@ -36,6 +42,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     /**
      * The data script can be cached at the runner instance level due to the fact that the same data is used by all tests in the same test case,
      * and a single runner instance is used for all those tests.
+     * 
+     * TODO: it is yet to be utilised.
      */
     private final List<String> dataScript = new ArrayList<>();
     
@@ -57,21 +65,18 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
         
         // databaseUri value should be specified in POM or come from the command line
-        // however, need to provide a sensible default not to force developers to specify this parameter for each test case in IDE
+        // however, need to provide a sensible default not to force developers to specify this parameter for each test case in IDE, assuming H2 is the default
         if (StringUtils.isEmpty(System.getProperty("databaseUri"))) {
             databaseUri = "./src/test/resources/db/DEFAULT_TEST_DB";
-            // TODO change this to logging
-            //throw new IllegalArgumentException(format("Test case [%s] is missing system property \"databaseUri\".", klass.getName()));
         } else {
             databaseUri = System.getProperty("databaseUri");
         }
 
-        // TODO change this to logging
-        System.out.println("RUNNER for type: " + klass + " and db = " + databaseUri);
+        logger.info("RUNNER for type: " + klass + " and db URI = " + databaseUri);
         
-        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), String.class, List.class);
+        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, List.class);
         
-        this.dbCreator = constructor.newInstance(klass, databaseUri, ddlScript);
+        this.dbCreator = constructor.newInstance(klass, mkDbProps(databaseUri), ddlScript);
         if (coFinder == null) {
             coFinder =dbCreator.getInstance(ICompanionObjectFinder.class);
             factory = dbCreator.getInstance(EntityFactory.class);
@@ -86,7 +91,21 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
         
     }
-    
+
+    /**
+     * Creates db connectivity properties in terms of Hibernate properties.
+     * The value for property <code>hibernate.connection.url</code> should contain <code>%s</code> as a place holder for the database location and name.
+     * For example:
+     * <ul>
+     * <li><code>jdbc:sqlserver:%s;queryTimeout=30</code>, where <code>%s</code> would be replaced with something like <code>//192.168.1.142:1433;database=TEST_DB</code>.
+     * <li><code>jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE</code>, where <code>%s</code> would be replaced with something like <code>./src/test/resources/db/TEST_DB</code>.
+     * </ul> 
+     * @param dbUri -- the database location and name
+     * 
+     * @return
+     */
+    protected abstract Properties mkDbProps(final String dbUri);
+
     @Override
     protected Object createTest() throws Exception {
         final Class<?> testCaseType = getTestClass().getJavaClass();
@@ -117,7 +136,6 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
                 
                 // now let's do some clean up work...
                 dbCleanUp();
-
             };
         };
     }

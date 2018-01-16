@@ -42,8 +42,6 @@ public abstract class DbCreator {
     private final List<String> dataScripts = new ArrayList<>();
     private final List<String> truncateScripts = new ArrayList<>();
     
-    public final String dbUri;
-    
     private final Connection conn;
     
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
@@ -51,15 +49,15 @@ public abstract class DbCreator {
     // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
     private static Collection<PersistedEntityMetadata<?>> entityMetadatas;
     private static IDomainDrivenTestCaseConfiguration config;
-    private static Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
     
     public static final String baseDir = "./src/test/resources/db";
     
     
-    public DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final String dbUri, final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        this.dbUri = dbUri;
+    public DbCreator(
+            final Class<? extends AbstractDomainDrivenTestCase> testCaseType, 
+            final Properties defaultDbProps, 
+            final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         if (config == null) {
-            defaultDbProps = mkDbProps(dbUri);
             config = createConfig(defaultDbProps);
             entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
         }
@@ -103,20 +101,6 @@ public abstract class DbCreator {
      */
     protected abstract List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect);
     
-    /**
-     * Creates db connectivity properties in terms of Hibernate properties.
-     * The value for property <code>hibernate.connection.url</code> should contain <code>%s</code> as a place holder for the database location and name.
-     * For example:
-     * <ul>
-     * <li><code>jdbc:sqlserver:%s;queryTimeout=30</code>, where <code>%s</code> would be replaced with something like <code>//192.168.1.142:1433;database=TEST_DB</code>.
-     * <li><code>jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE</code>, where <code>%s</code> would be replaced with something like <code>./src/test/resources/db/TEST_DB</code>.
-     * </ul> 
-     * @param dbUri -- the database location and name
-     * 
-     * @return
-     */
-    protected abstract Properties mkDbProps(final String dbUri);
-
     /**
      * Executes test data population logic. Should be executed before each unit test. 
      * 
