@@ -21,6 +21,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
+import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
@@ -79,7 +80,7 @@ public abstract class DbCreator {
             
             // recreate DB structures
             logger.info("CREATING DB SCHEMA...");
-            exec(maybeDdl, conn, 0);
+            execSql(maybeDdl, conn, 0);
             try {
                 conn.commit();
             } catch (final SQLException ex) {
@@ -133,7 +134,7 @@ public abstract class DbCreator {
         if (!dataScripts.isEmpty()) {
             // apply data population script
             logger.debug("Executing data population script.");
-            exec(dataScripts, conn, 100);
+            execSql(dataScripts, conn, 100);
             conn.commit();
         } else {
             try {
@@ -171,7 +172,7 @@ public abstract class DbCreator {
      */
     public final void clearData() {
         try {
-            exec(truncateScripts, conn, 100);
+            execSql(truncateScripts, conn, 100);
             logger.debug("Executing tables truncation script.");
             conn.commit();
         } catch (final Exception ex) {
@@ -202,7 +203,7 @@ public abstract class DbCreator {
             }
             truncateScripts.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
 
-            exec(dataScripts, conn, 100);
+            execSql(dataScripts, conn, 100);
         } catch (final Exception ex) {
             throw new DomainDriventTestException("Could not resotre data population and truncation scripts from files.", ex);
         }
@@ -282,29 +283,22 @@ public abstract class DbCreator {
      * @param conn
      * @param batchSize
      */
-    private static void exec(final List<String> statements, final Connection conn, final int batchSize) {
-        if (batchSize <= 0) {
-            try (final Statement st = conn.createStatement()) {
-                for (final String stmt : statements) {
-                    st.execute(stmt);
-                }
-            } catch (final Exception ex) {
-                throw new DomainDriventTestException("Could not exec SQL statements.", ex);
-            }
-        } else {
-            int count = 0;
-            try (final Statement st = conn.createStatement()) {
-                for (final String stmt : statements) {
-                    st.addBatch(stmt);
-                    count++;
-                    if (count % batchSize == 0) {
-                        st.executeBatch();
+    private static void execSql(final List<String> statements, final Connection conn, final int batchSize) {
+        try (final Statement st = conn.createStatement()) {
+            Iterators.partition(statements.iterator(), batchSize > 0 ? batchSize : 1).forEachRemaining(batch -> {
+                try {
+                    for (final String stmt : batch) {
+                        st.addBatch(stmt);
                     }
+                    st.executeBatch();
+                } catch (final Exception ex) {
+                    throw new DomainDriventTestException("Could not exec batched SQL statements.", ex);
                 }
-                st.executeBatch();
-            } catch (final Exception ex) {
-                throw new DomainDriventTestException("Could not exec batched SQL statements.", ex);
-            }
+            });
+        } catch (final DomainDriventTestException ex) {
+            throw ex;
+        } catch (final SQLException ex) {
+            throw new DomainDriventTestException("Could not create statement.", ex);
         }
     }
 
