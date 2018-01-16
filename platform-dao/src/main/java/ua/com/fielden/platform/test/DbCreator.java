@@ -9,7 +9,6 @@ import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -67,19 +66,18 @@ public abstract class DbCreator {
         
         this.testCaseType = testCaseType;
         
-        final List<String> ddl;
         if (maybeDdl.isEmpty()) {
             // let's create the database...
             final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
             final Dialect dialect = (Dialect) dialectType.newInstance();
-                    
-            maybeDdl.addAll(ddl = genDdl(dialect));        
-        } else {
-            ddl = maybeDdl;
-        }
         
-        // recreate DB structures
-        DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
+            maybeDdl.addAll(genDdl(dialect));
+            
+            // recreate DB structures
+            System.out.print("CREATING DB SCHEMA...");
+            DbUtils.execSql(maybeDdl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
+            System.out.println(" DONE!");
+        }
     }
 
     /**
@@ -165,8 +163,14 @@ public abstract class DbCreator {
 
             // record data population statements
             if (!testCase.useSavedDataPopulationScript()) {
-                recordDataPopulationScript(testCase, conn);
-                conn.commit();
+                try {
+                    recordDataPopulationScript(testCase, conn);
+                } catch (final Exception ex) {
+                    ex.printStackTrace();
+                    throw new DomainDriventTestException("Could not record data population script.");
+                } finally {
+                    conn.commit();
+                }
             }
         }
 
@@ -263,8 +267,9 @@ public abstract class DbCreator {
     private static void exec(final List<String> statements, final Connection conn) throws SQLException {
         try (final Statement st = conn.createStatement()) {
             for (final String stmt : statements) {
-                st.execute(stmt);
+                st.addBatch(stmt);
             }
+            st.executeBatch();
         }
     }
 

@@ -155,10 +155,11 @@ public class DbUtils {
     public static void execSql(final List<String> sqlStatements, final Session session) {
         final Transaction tr = session.beginTransaction();
         session.doWork(conn -> {
-            for (final String sql : sqlStatements) {
-                try (final Statement st = conn.createStatement()) {
+            try (final Statement st = conn.createStatement()) {
+                for (final String sql : sqlStatements) {
                     st.execute(sql);
                 }
+                st.executeBatch();
             }
         });
         tr.commit();
