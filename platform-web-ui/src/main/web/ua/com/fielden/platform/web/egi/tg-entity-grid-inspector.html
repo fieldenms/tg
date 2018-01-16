@@ -1418,7 +1418,7 @@
                 newValue.forEach(function (newEntity) {
                     const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
                     const oldIndex = _findEntity(newEntity, oldValue);
-                    const newRendHints = oldIndex < 0 ? {} : self.renderingHints[oldIndex] || {};
+                    const newRendHints = oldIndex < 0 ? {} : (self.renderingHints && self.renderingHints[oldIndex]) || {};
                     const egiEntity = {
                         selected: isSelected,
                         entity: newEntity,
