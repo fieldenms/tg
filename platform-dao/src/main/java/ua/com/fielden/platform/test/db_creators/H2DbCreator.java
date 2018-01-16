@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test.db_creators;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,11 +14,18 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.utils.DbUtils;
 
+/**
+ * This is a DB creator implementation for running unit tests against H2, running in file mode.
+ * 
+ * @author TG Team
+ *
+ */
 public class H2DbCreator extends DbCreator {
 
     public H2DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final String dbName, final List<String> maybeDdl)
@@ -25,12 +33,10 @@ public class H2DbCreator extends DbCreator {
         super(testCaseType, dbName, maybeDdl);
     }
 
-    @Override
-    protected List<String> genDdl(Dialect dialect) {
-        final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
-        return DbUtils.prependDropDdlForH2(createDdl);
-    }
-
+    /**
+     * Produces a set of properties of DB connectivity based on the provided <code>dbUri</code>.
+     * The URI for H2 looks like <code>./src/test/resources/db/JUNIT_TEST_DB</code>.
+     */
     @Override
     protected Properties mkDbProps(final String dbUri) {
         final Properties dbProps = new Properties();
@@ -45,26 +51,36 @@ public class H2DbCreator extends DbCreator {
 
         return dbProps;
     }
-    
+
+    /**
+     * Generates DDL for creation of a test database.
+     */
     @Override
-    protected List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
-        final List<String> trunc = new ArrayList<>();
-        // create truncate statements
-        for (final PersistedEntityMetadata<?> entry : entityMetadata) {
-            trunc.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-        }
-        
-        return trunc;
+    protected List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect) {
+        final List<String> createDdl = domainMetaData.generateDatabaseDdl(dialect);
+        return DbUtils.prependDropDdlForH2(createDdl);
     }
 
+    /**
+     * Generate the script for emptying the test database.
+     */
+    @Override
+    protected List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
+        return entityMetadata.stream().map(entry -> format("TRUNCATE TABLE %s;", entry.getTable())).collect(toList());
+    }
+
+
+    /**
+     * Scripts the test database once the test data has been populated, using H2's <code>SCRIPT</code> command.
+     */
     @Override
     protected List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
         final List<String> insert = new ArrayList<>();
 
         // create insert statements
-        try (final Statement st = conn.createStatement(); final ResultSet set = st.executeQuery("SCRIPT");) {
-            while (set.next()) {
-                final String result = set.getString(1).trim();
+        try (final Statement st = conn.createStatement(); final ResultSet rs = st.executeQuery("SCRIPT");) {
+            while (rs.next()) {
+                final String result = rs.getString(1).trim();
                 final String upperCasedResult = result.toUpperCase();
                 if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
                         && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {

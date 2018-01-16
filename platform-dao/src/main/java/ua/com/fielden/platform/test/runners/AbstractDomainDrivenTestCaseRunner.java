@@ -73,13 +73,13 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         
         this.dbCreator = constructor.newInstance(klass, databaseUri, ddlScript);
         if (coFinder == null) {
-            coFinder = DbCreator.config.getInstance(ICompanionObjectFinder.class);
-            factory = DbCreator.config.getEntityFactory();
+            coFinder =dbCreator.getInstance(ICompanionObjectFinder.class);
+            factory = dbCreator.getInstance(EntityFactory.class);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), 
                     new Function<Class<?>, Object>() {
                         @Override
                         public Object apply(Class<?> type) {
-                            return dbCreator.config.getInstance(type);
+                            return dbCreator.getInstance(type);
                         }});
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
@@ -90,7 +90,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     @Override
     protected Object createTest() throws Exception {
         final Class<?> testCaseType = getTestClass().getJavaClass();
-        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) DbCreator.config.getInstance(testCaseType);
+        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) dbCreator.getInstance(testCaseType);
         return testCase.setDbCreator(dbCreator);
     }
     

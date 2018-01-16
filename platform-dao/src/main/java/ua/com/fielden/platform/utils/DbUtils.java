@@ -157,9 +157,8 @@ public class DbUtils {
         session.doWork(conn -> {
             try (final Statement st = conn.createStatement()) {
                 for (final String sql : sqlStatements) {
-                    st.execute(sql);
+                    st.execute(sql); // batch execution is not possible due to complex scripts with variables
                 }
-                st.executeBatch();
             }
         });
         tr.commit();
