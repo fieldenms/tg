@@ -23,8 +23,8 @@ import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWoStatusRequiredField;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
  * Test the ability of the ValueMatcherFactory to correctly provide value matchers.
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.test.PlatformTestDomainTypes;
  *
  */
 @Deprecated
-public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
+public class DaoValueMatcherFactoryTest extends AbstractDaoTestCase {
     private ICompanionObjectFinder coFinder = getInstance(ICompanionObjectFinder.class);
     private EntityFactory entityFactory = getInstance(EntityFactory.class);
 

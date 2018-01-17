@@ -49,8 +49,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Hibernate;
 import org.hibernate.type.BooleanType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.StringType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
@@ -392,11 +393,11 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(Hibernate.STRING).type(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(StringType.INSTANCE).type(VIRTUAL_OVERRIDE).build();
     }
 
     private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) {
-        return new PropertyMetadata.Builder("referencesCount", Integer.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(Hibernate.INTEGER).type(EXPRESSION_COMMON).build();
+        return new PropertyMetadata.Builder("referencesCount", Integer.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(IntegerType.INSTANCE).type(EXPRESSION_COMMON).build();
     }
 
     public Set<Pair<Class<? extends AbstractEntity<?>>, String>> getReferences(final Class<? extends AbstractEntity<?>> entityType) {

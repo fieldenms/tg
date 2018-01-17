@@ -284,7 +284,7 @@ public class PropertyTypeDeterminator {
     }
 
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
-        return clazz.getName().contains("$$_javassist");
+        return clazz.getName().contains("$$_javassist") || clazz.getName().contains("_$$_");
     }
 
     /**

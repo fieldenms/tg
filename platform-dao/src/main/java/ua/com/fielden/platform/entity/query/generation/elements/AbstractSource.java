@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.Hibernate;
+import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -145,7 +145,7 @@ public abstract class AbstractSource implements ISource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
         if ((isPersistedEntityType(sourceType()) || isSyntheticBasedOnPersistentEntityType(sourceType())) && prop.getName().equalsIgnoreCase(getAlias())) {
-            final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, /*sourceType()*/Long.class, Hibernate.LONG, false || isNullable());
+            final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, /*sourceType()*/Long.class, LongType.INSTANCE, false || isNullable());
             return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
         } else {
             return null;
