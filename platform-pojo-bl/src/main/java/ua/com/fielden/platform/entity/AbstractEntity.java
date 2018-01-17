@@ -496,7 +496,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     @Override
     public String toString() {
-        return getKey() != null ? getKey().toString() : "[key is assigned]";
+        if (isIdOnlyProxy()) {
+            return format("ID = %s", getId());
+        }
+        return getKey() != null ? getKey().toString() : "[key is not assigned]";
     }
 
     /**
