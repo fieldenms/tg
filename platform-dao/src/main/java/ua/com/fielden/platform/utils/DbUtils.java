@@ -116,7 +116,7 @@ public class DbUtils {
         
         // create sequence for ID generation
         ddlWithDrop.add(format("IF EXISTS(SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'%s') AND type = 'SO') DROP SEQUENCE %s;", ID_SEQUENCE_NAME, ID_SEQUENCE_NAME));
-        ddlWithDrop.add(format("CREATE SEQUENCE %s START WITH 1 INCREMENT BY 1 MINVALUE 1 CACHE  3;", ID_SEQUENCE_NAME));
+        ddlWithDrop.add(format("CREATE SEQUENCE %s START WITH 0 INCREMENT BY 1 MINVALUE 0 CACHE 3;", ID_SEQUENCE_NAME));
         
         // now add the passed in DDL
         ddlWithDrop.addAll(ddl);
@@ -136,7 +136,7 @@ public class DbUtils {
         
         // create sequence for ID generation
         ddlWithDrop.add(format("DROP SEQUENCE IF EXISTS %s;", ID_SEQUENCE_NAME));
-        ddlWithDrop.add(format("CREATE SEQUENCE %s START WITH 1 INCREMENT BY 1 MINVALUE 1 CACHE  3;", ID_SEQUENCE_NAME));
+        ddlWithDrop.add(format("CREATE SEQUENCE %s START WITH 0 INCREMENT BY 1 MINVALUE 0 CACHE 3;", ID_SEQUENCE_NAME));
         
         // now add the passed in DDL
         ddlWithDrop.addAll(ddl);
