@@ -1,21 +1,19 @@
 package ua.com.fielden.platform.test.transactional;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
-import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.either.Either;
 
 /**
  * A test case for transaction support that reuses {@link EntityWithMoney} test entity class and {@link LogicThatNeedsTransaction} with transactional methods.
@@ -26,50 +24,83 @@ import ua.com.fielden.platform.types.either.Either;
 public class TransactionalTest extends AbstractDaoTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
-    private EntityFactory factory;
     
     @Before
     public void setUp()  {
         dao = co$(EntityWithMoney.class);
         logic = getInstance(LogicThatNeedsTransaction.class);
-        factory = getInstance(EntityFactory.class);
     }
 
     @Test
-    public void testSingleTransactionInvocaion() {
+    public void single_transacation_is_committed_resulting_in_data_saving() {
         logic.singleTransactionInvocaion("20.00", "30.00");
-        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+
+        final EntityWithMoney one = dao.findByKey("one");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
+        assertEquals(new Money("20.00"), one.getMoney());
+        
+        final EntityWithMoney two = dao.findByKey("two");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
+        assertEquals(new Money("30.00"), two.getMoney());
     }
 
     @Test
-    public void testNestedTransactionInvocaion() {
+    public void netsted_transactions_are_supported_and_all_data_is_saved_upon_commit() {
         logic.nestedTransactionInvocaion("20.00", "30.00");
-        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+        
+        final EntityWithMoney one = dao.findByKey("one");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
+        assertEquals(new Money("20.00"), one.getMoney());
+        
+        final EntityWithMoney two = dao.findByKey("two");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
+        assertEquals(new Money("30.00"), two.getMoney());
     }
 
     @Test
-    public void testTransactionalInvocaionWithException() {
+    public void nested_transactions_with_exception_rollback_all_changes() {
+        assertNull(dao.findByKey("one"));
+        assertNull(dao.findByKey("two"));
+        assertNull(dao.findByKey("three"));
+        
         try {
             logic.transactionalInvocaionWithException("20.00", "30.00");
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (rollbacked).", logic.getSession().isOpen());
+        
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
     }
 
     @Test
-    public void testNestedTransactionalInvocaionWithException() {
+    public void nested_transactions_with_error_rollbacks_all_changes() {
+        assertNull(dao.findByKey("one"));
+        assertNull(dao.findByKey("two"));
+        assertNull(dao.findByKey("three"));
+        
+        try {
+            logic.transactionalInvocaionWithError("20.00", "30.00");
+            fail("should have thrown an exception");
+        } catch (final TransactionRollbackDueToThrowable e) {
+        }
+        
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
+    }
+
+    @Test
+    public void deep_nested_transactional_invocaion_with_exception_rollbacks_all_changes() {
         try {
             logic.nestedTransactionalInvocaionWithException("20.00", "30.00");
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
         assertFalse("Transaction should have been inactive at this stage (rollbacked).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
@@ -78,44 +109,26 @@ public class TransactionalTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_single_transaction_invocaion_with_exception() {
+    public void single_transaction_invocaion_with_exception_rollbacks_all_changes() {
         try {
             logic.singleTransactionInvocaionWithExceptionInDao("20.00");
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
         assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
-        assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
     }
 
     @Test
-    public void test_single_transaction_invocaion_with_exception_for_two_entities_in_save() {
+    public void single_transaction_invocaion_with_exception_for_two_entities_to_be_saved_rollbacks_all_changes() {
         try {
             logic.singleTransactionInvocaionWithExceptionInDao2();
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
         assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
-        assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNull("It is expected that transaction was committed.", dao.findByKey("two"));
-    }
-
-    @Test
-    public void test_session_required_atomic_behaviour() {
-        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
-        try {
-            final EntityWithMoney one = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
-                    //new EntityWithMoney("one", "first", new Money("0.00"));
-            final EntityWithMoney two = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
-                    //new EntityWithMoney("one", "first", new Money("0.00"));
-
-            dao.saveTwoWithException(one, two);
-            fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
-        }
-        assertFalse("Transaction should have been inactive at this stage (committed).", dao.getSession().isOpen());
-        assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
     }
 
 }

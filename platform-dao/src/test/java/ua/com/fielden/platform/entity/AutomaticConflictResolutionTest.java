@@ -54,11 +54,12 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
     @Test
     public void concurrent_setting_of_activatable_property_should_not_lead_to_conflict_resolution_errors() {
-        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
+        assertEquals(Integer.valueOf(1), cat1.getRefCount());
 
         save(new_(TgSystem.class, "Sys2").setActive(true).setCategory(cat1));
         save(new_(TgSystem.class, "Sys3").setActive(true).setCategory(cat1));
-        assertEquals(Integer.valueOf(3), co$(TgCategory.class).findByKey("Cat1").getRefCount());
+        assertEquals(Integer.valueOf(3), co(TgCategory.class).findByKey("Cat1").getRefCount());
     }
 
 

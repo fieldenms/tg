@@ -39,15 +39,27 @@
 			<version>1.4.187</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- SQL Server JDBC drivers for convenience -->
+		<!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<version>6.2.2.jre8</version>
+			<scope>test</scope>
+		</dependency>
+	
+		
+		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>3.6.10.Final</version>
+			<version>5.2.12.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-c3p0</artifactId>
-			<version>3.6.10.Final</version>
+			<version>5.2.12.Final</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -83,12 +95,15 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
-					<forkCount>1</forkCount>
+					<forkCount>2</forkCount>
 					<reuseForks>true</reuseForks>
 					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
+					<systemPropertyVariables>
+						<databaseUri>./src/test/resources/db/TEST_DB_${surefire.forkNumber}</databaseUri>
+						<legacyTests.databaseUri>./src/test/resources/db/TEST_DB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
-
 		</plugins>
 	</build>
 </project>

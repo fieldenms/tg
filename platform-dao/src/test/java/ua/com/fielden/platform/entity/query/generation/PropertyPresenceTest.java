@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import org.hibernate.Hibernate;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
@@ -8,8 +12,6 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgModelYearCount;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class PropertyPresenceTest extends BaseEntQueryTCase {
 
@@ -21,14 +23,14 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
     public void test1() {
         final QueryModel qry = select(VEHICLE).model();
 
-        assertPropInfoEquals(qry, "id", propResInf("id", null, ppi("id", LONG, Hibernate.LONG, false)));
-        assertPropInfoEquals(qry, "key", propResInf("key", null, ppi("key", STRING, Hibernate.STRING, false)));
-        assertPropInfoEquals(qry, "desc", propResInf("desc", null, ppi("desc", STRING, Hibernate.STRING, true)));
-        assertPropInfoEquals(qry, "model", propResInf("model", null, ppi("model", MODEL, Hibernate.LONG, false)));
-        assertPropInfoEquals(qry, "model.key", propResInf("model.key", null, ppi("model.key", STRING, Hibernate.STRING, false), ppi("model", MODEL, Hibernate.LONG, false)));
-        assertPropInfoEquals(qry, "model.desc", propResInf("model.desc", null, ppi("model.desc", STRING, Hibernate.STRING, true), ppi("model", MODEL, Hibernate.LONG, false)));
-        assertPropInfoEquals(qry, "model.make.desc", propResInf("model.make.desc", null, ppi("model.make.desc", STRING, Hibernate.STRING, true), ppi("model", MODEL, Hibernate.LONG, false)));
-        assertPropInfoEquals(qry, "model.make.desc", propResInf("model.make.desc", null, ppi("model.make.desc", STRING, Hibernate.STRING, true), ppi("model", MODEL, Hibernate.LONG, false)));
+        assertPropInfoEquals(qry, "id", propResInf("id", null, ppi("id", LONG, LongType.INSTANCE, false)));
+        assertPropInfoEquals(qry, "key", propResInf("key", null, ppi("key", STRING, StringType.INSTANCE, false)));
+        assertPropInfoEquals(qry, "desc", propResInf("desc", null, ppi("desc", STRING, StringType.INSTANCE, true)));
+        assertPropInfoEquals(qry, "model", propResInf("model", null, ppi("model", MODEL, LongType.INSTANCE, false)));
+        assertPropInfoEquals(qry, "model.key", propResInf("model.key", null, ppi("model.key", STRING, StringType.INSTANCE, false), ppi("model", MODEL, LongType.INSTANCE, false)));
+        assertPropInfoEquals(qry, "model.desc", propResInf("model.desc", null, ppi("model.desc", STRING, StringType.INSTANCE, true), ppi("model", MODEL, LongType.INSTANCE, false)));
+        assertPropInfoEquals(qry, "model.make.desc", propResInf("model.make.desc", null, ppi("model.make.desc", STRING, StringType.INSTANCE, true), ppi("model", MODEL, LongType.INSTANCE, false)));
+        assertPropInfoEquals(qry, "model.make.desc", propResInf("model.make.desc", null, ppi("model.make.desc", STRING, StringType.INSTANCE, true), ppi("model", MODEL, LongType.INSTANCE, false)));
     }
 
     @Test
@@ -255,7 +257,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
     public void test20() {
         final QueryModel qry = select(FUEL_USAGE).model();
 
-        assertPropInfoEquals(qry, "id", propResInf("id", null, ppi("id", LONG, Hibernate.LONG, false)));
+        assertPropInfoEquals(qry, "id", propResInf("id", null, ppi("id", LONG, LongType.INSTANCE, false)));
         assertPropInfoEquals(qry, "vehicle", propResInf("vehicle", null, ppi("vehicle", VEHICLE, H_LONG, false)));
         assertPropInfoEquals(qry, "vehicle.model", propResInf("vehicle.model", null, ppi("vehicle.model", MODEL, H_LONG, false), ppi("vehicle", VEHICLE, H_LONG, false)));
         assertPropInfoEquals(qry, "vehicle.model.key", propResInf("vehicle.model.key", null, ppi("vehicle.model.key", STRING, H_STRING, false), ppi("vehicle", VEHICLE, H_LONG, false)));

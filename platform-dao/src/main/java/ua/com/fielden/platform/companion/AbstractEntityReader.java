@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.hibernate.Session;
+import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
@@ -134,6 +135,9 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @Override
     @SessionRequired
     public boolean entityExists(final T entity) {
+        if (entity == null) {
+            return false;
+        }
         return entityExists(entity.getId());
     }
 
@@ -143,7 +147,9 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         if (id == null) {
             return false;
         }
-        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :in_id").setLong("in_id", id).uniqueResult() != null;
+        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = ?")
+               .setParameter(0, id, LongType.INSTANCE)
+               .uniqueResult() != null;
     }
 
     @Override

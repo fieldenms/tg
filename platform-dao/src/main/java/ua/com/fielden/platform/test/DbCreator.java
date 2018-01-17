@@ -3,13 +3,10 @@ package ua.com.fielden.platform.test;
 import static java.lang.String.format;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -20,124 +17,120 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.hibernate.dialect.Dialect;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
  * This is an abstraction that capture the logic for the initial test case related db creation and its re-creation from a generated script for all individual tests in the same test case.
  * <p>
- * It is intended that each individual test case would have a static reference to an instance of this class, which would ensure that the same database is reused for all tests in the same test case to avoid computationally expensive recreation of a database.
+ * It is intended that each individual test case may reference an instance of this class to perform optimised (by means of scripting) test data population.
  * 
  * @author TG Team
  *
  */
-public class DbCreator {
-    transient private final Logger logger = Logger.getLogger(this.getClass());
-
-    private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> dataScripts = CacheBuilder.newBuilder().weakKeys().build();
-    private final Cache<Class<? extends AbstractDomainDrivenTestCase>, List<String>> truncateScripts = CacheBuilder.newBuilder().weakKeys().build();
-
-    private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
-    public final IDomainDrivenTestCaseConfiguration config;
-    private final Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
-    
-    private final String dbName;
-
-    public DbCreator(final String uuid) {
-        this.dbName = format("test_domain_db_for_%s", uuid);
-        defaultDbProps = mkDbProps();
-        config = createConfig();
-        entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
-    }
-
+public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
 
-    private IDomainDrivenTestCaseConfiguration createConfig() {
-        try {
+    private final Logger logger = Logger.getLogger(getClass());
 
-            final Properties testProps = new Properties();
-            final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
-            testProps.load(in);
-            in.close();
+    private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
+    private final Connection conn;
+    private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
 
-            defaultDbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            defaultDbProps.setProperty("hibernate.show_sql", "false");
-            defaultDbProps.setProperty("hibernate.format_sql", "true");
-            defaultDbProps.setProperty("hibernate.hbm2ddl.auto", "create");
+    private final List<String> dataScripts = new ArrayList<>();
+    private final List<String> truncateScripts = new ArrayList<>();
+    
+    
+    public DbCreator(
+            final Class<? extends AbstractDomainDrivenTestCase> testCaseType, 
+            final Properties defaultDbProps,
+            final IDomainDrivenTestCaseConfiguration config,
+            final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
-            final String configClassName = testProps.getProperty("config-domain");
-            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
-            return constructor.newInstance(defaultDbProps);
-        } catch (final Exception e) {
-            throw new IllegalStateException(format("Could not create a configuration."), e);
+        this.testCaseType = testCaseType;
+        this.entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
+
+        // this is a single place where a new DB connection is established
+        logger.info("CREATING DB CONNECTION...");
+        conn = createConnection(defaultDbProps);
+        
+        if (maybeDdl.isEmpty()) {
+            logger.info("GENERATING DDL...");
+            // let's create the database...
+            final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
+            final Dialect dialect = (Dialect) dialectType.newInstance();
+        
+            maybeDdl.addAll(genDdl(config.getDomainMetadata(), dialect));
+            
+            // recreate DB structures
+            logger.info("CREATING DB SCHEMA...");
+            execSql(maybeDdl, conn, 0);
+            try {
+                conn.commit();
+            } catch (final SQLException ex) {
+                throw new DomainDriventTestException("Could not commit transaction after creating database schema.", ex);
+            }
+            logger.info(" DONE!");
         }
     }
-    
-    public String dbName() {
-        return dbName;
-    }
+
     /**
-     * Creates db connectivity properties.
-     * The database name is generated based on the test class name and the current thread id.
+     * Override to implement RDBMS specific DDL script generation.
      * 
+     * @param domainMetaData
+     * @param dialect
      * @return
      */
-    private final Properties mkDbProps() {
-        final Properties dbProps = new Properties();
-        // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
-        //      This should be modified once correct db schema generation is implemented
-        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s/%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir, dbName()));
-        dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-        dbProps.setProperty("hibernate.connection.username", "sa");
-        dbProps.setProperty("hibernate.connection.password", "");
-        return dbProps;
-    }
-
-    private final String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
-        return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
-    }
+    protected abstract List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect);
     
-    private final String truncateScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        return format("%s/truncate-%s.script", baseDir, testCaseType.getSimpleName());
-    }
-
-    public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) throws Exception {
+    /**
+     * Executes test data population logic. Should be executed before each unit test. 
+     * 
+     * @param testCase
+     * @return
+     * @throws Exception
+     */
+    public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) throws SQLException {
         if (testCase.useSavedDataPopulationScript() && testCase.saveDataPopulationScriptToFile()) {
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
 
-        final Connection conn = createConnection(defaultDbProps);
         Optional<Exception> raisedEx = Optional.empty();
 
-        final List<String> dataScript = dataScripts.getIfPresent(testCase.getClass());
-        if (dataScript != null) {
+        if (!dataScripts.isEmpty()) {
             // apply data population script
             logger.debug("Executing data population script.");
-            exec(dataScript, conn);
+            execSql(dataScripts, conn, 100);
+            conn.commit();
         } else {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
-                    restoreDataFromFile(testCase.getClass(), conn);
+                    restoreDataFromFile(testCaseType, conn);
+                    conn.commit();
                 }
                 // need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur
                 testCase.populateDomain();
             } catch (final Exception ex) {
                 raisedEx = Optional.of(ex);
-                ex.printStackTrace();
             }
 
             // record data population statements
-            if (!testCase.useSavedDataPopulationScript()) {
-                recordDataPopulationScript(testCase, conn);
+            if (!testCase.useSavedDataPopulationScript() && dataScripts.isEmpty()) {
+                try {
+                    recordDataPopulationScript(testCase, conn);
+                } catch (final Exception ex) {
+                    throw new DomainDriventTestException("Could not record data population script.", ex);
+                } finally {
+                    conn.commit();
+                }
             }
         }
-
-        conn.close();
 
         if (raisedEx.isPresent()) {
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
@@ -146,58 +139,67 @@ public class DbCreator {
         return this;
     }
     
-    private void restoreDataFromFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Connection conn) throws Exception {
-        final List<String> dataScript = initDataScriptForTestCase(testCaseType);
-        dataScript.clear();
-        final File dataPopulationScriptFile = new File(dataScriptFile(testCaseType));
-        if (!dataPopulationScriptFile.exists()) {
-            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile(testCaseType)));
+    /**
+     * Executes the script for truncating DB tables. Should be invoked after each unit test.
+     */
+    public final void clearData() {
+        try {
+            execSql(truncateScripts, conn, 100);
+            logger.debug("Executing tables truncation script.");
+            conn.commit();
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException("Could not clear data.", ex);
         }
-        dataScript.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
-
-        
-        final List<String> truncateScript = initTruncateScriptForTestCase(testCaseType);
-        truncateScript.clear();
-        final File truncateTablesScriptFile = new File(truncateScriptFile(testCaseType));
-        if (!truncateTablesScriptFile.exists()) {
-            throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
-        }
-        truncateScript.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
-
-        exec(dataScript, conn);
     }
-
-    private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
-        final List<String> dataScript = initDataScriptForTestCase(testCase.getClass());
-        if (dataScript.isEmpty()) {
-            final Statement st = conn.createStatement();
-            final ResultSet set = st.executeQuery("SCRIPT");
-            while (set.next()) {
-                final String result = set.getString(1).trim();
-                final String upperCasedResult = result.toUpperCase();
-                if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                        && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                    // that was perhaps lover cased while populateDomain() invocation was performed
-                    dataScript.add(result.replace("\n", " ").replace("\r", " "));
-                }
+    
+    /**
+     * A helper method to restore data population and truncation scripts from files.
+     * 
+     * @param testCaseType
+     * @param conn
+     * @throws Exception
+     */
+    private void restoreDataFromFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Connection conn) {
+        try {
+            dataScripts.clear();
+            final File dataPopulationScriptFile = new File(dataScriptFile(testCaseType));
+            if (!dataPopulationScriptFile.exists()) {
+                throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile(testCaseType)));
             }
-            set.close();
-            st.close();
+            dataScripts.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
 
-            // create truncate statements
-            final List<String> truncateScript = initTruncateScriptForTestCase(testCase.getClass());
-            if (truncateScript.isEmpty()) {
-                for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-                    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-                }
+            truncateScripts.clear();
+            final File truncateTablesScriptFile = new File(truncateScriptFile(testCaseType));
+            if (!truncateTablesScriptFile.exists()) {
+                throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
             }
+            truncateScripts.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
+
+            execSql(dataScripts, conn, 100);
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException("Could not resotre data population and truncation scripts from files.", ex);
+        }
+    }
+    
+    /**
+     * A helper method for generating data population and truncation scripts with ability to save them as files if specified.
+     * 
+     * @param testCase
+     * @param conn
+     */
+    private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) {
+        try {
+            dataScripts.clear();
+            dataScripts.addAll(genInsertStmt(entityMetadatas, conn));
+
+            truncateScripts.clear();
+            truncateScripts.addAll(genTruncStmt(entityMetadatas, conn));
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
-                try (PrintWriter out = new PrintWriter(dataScriptFile(testCase.getClass()), StandardCharsets.UTF_8.name())) {
+                try (PrintWriter out = new PrintWriter(dataScriptFile(testCaseType), StandardCharsets.UTF_8.name())) {
                     final StringBuilder builder = new StringBuilder();
-                    for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
+                    for (final Iterator<String> iter = dataScripts.iterator(); iter.hasNext();) {
                         final String line = iter.next();
                         builder.append(line);
                         if (iter.hasNext()) {
@@ -208,9 +210,9 @@ public class DbCreator {
                 }
 
                 // flush table truncation script to file for later use
-                try (PrintWriter out = new PrintWriter(truncateScriptFile(testCase.getClass()), StandardCharsets.UTF_8.name())) {
+                try (PrintWriter out = new PrintWriter(truncateScriptFile(testCaseType), StandardCharsets.UTF_8.name())) {
                     final StringBuilder builder = new StringBuilder();
-                    for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
+                    for (final Iterator<String> iter = truncateScripts.iterator(); iter.hasNext();) {
                         final String line = iter.next();
                         builder.append(line);
                         if (iter.hasNext()) {
@@ -220,45 +222,65 @@ public class DbCreator {
                     out.print(builder.toString());
                 }
             }
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException("Could not generate data population script.", ex);
         }
     }
 
-    private List<String> initTruncateScriptForTestCase(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        final List<String> dataScript = truncateScripts.getIfPresent(testCaseType);
-        if (dataScript != null) {
-            return dataScript;
+    /**
+     * Implement to generate SQL statements for deleting records from tables associated with domain entities.
+     * 
+     * @param entityMetadata
+     * @param conn
+     * @return
+     */
+    protected abstract List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn);
+
+    /**
+     * Implement to generate SQL statements for inserting records that correspond to test domain data that is present currently in the database with the specified connection.
+     * 
+     * @param entityMetadata
+     * @param conn
+     * @return
+     * @throws SQLException
+     */
+    protected abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
+    
+    /**
+     * A helper function to execute SQL statements.
+     * Executes statements in batches of <code>batchSize</code>. 
+     * If <code>barchSize</code> is 0 or negative then no batching is used.
+     * 
+     * @param statements
+     * @param conn
+     * @param batchSize
+     */
+    private static void execSql(final List<String> statements, final Connection conn, final int batchSize) {
+        try (final Statement st = conn.createStatement()) {
+            Iterators.partition(statements.iterator(), batchSize > 0 ? batchSize : 1).forEachRemaining(batch -> {
+                try {
+                    for (final String stmt : batch) {
+                        st.addBatch(stmt);
+                    }
+                    st.executeBatch();
+                } catch (final Exception ex) {
+                    throw new DomainDriventTestException("Could not exec batched SQL statements.", ex);
+                }
+            });
+        } catch (final DomainDriventTestException ex) {
+            throw ex;
+        } catch (final SQLException ex) {
+            throw new DomainDriventTestException("Could not create statement.", ex);
         }
-        final List<String> newTrancateScript = new ArrayList<>();
-        truncateScripts.put(testCaseType, newTrancateScript);
-        return newTrancateScript;
     }
 
-    private List<String> initDataScriptForTestCase(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        final List<String> dataScript = dataScripts.getIfPresent(testCaseType);
-        if (dataScript != null) {
-            return dataScript;
-        }
-        final List<String> newDataScript = new ArrayList<>();
-        dataScripts.put(testCaseType, newDataScript);
-        return newDataScript;
-    }
-
-    private void exec(final List<String> statements, final Connection conn) throws SQLException {
-        final Statement st = conn.createStatement();
-        for (final String stmt : statements) {
-            st.execute(stmt);
-        }
-        st.close();
-    }
-
-    public final void clearData(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) throws Exception {
-        try (final Connection conn = createConnection(defaultDbProps)) {
-            exec(truncateScripts.getIfPresent(testCaseType), conn);
-            logger.debug("Executing tables truncation script.");
-        }
-    }
-
-    private Connection createConnection(final Properties props) {
+    /**
+     * Creates a new DB connection based on the provided properties.
+     * 
+     * @param props
+     * @return
+     */
+    private static Connection createConnection(final Properties props) {
         final String url = props.getProperty("hibernate.connection.url");
         final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
         final String user = props.getProperty("hibernate.connection.username");
@@ -266,10 +288,32 @@ public class DbCreator {
 
         try {
             Class.forName(jdbcDriver);
-            return DriverManager.getConnection(url, user, passwd);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
+            final Connection conn = DriverManager.getConnection(url, user, passwd);
+            conn.setAutoCommit(false);
+            return conn;
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException(format("Could not establish a dabase connection to [%s]", url), ex);
         }
+    }
+
+    /**
+     * Closes the current db connection.
+     */
+    public void closeConnetion() {
+        logger.info("CLOSING DB CONNECTION...");
+        try {
+            conn.close();
+        } catch (final SQLException ex) {
+            logger.fatal("Could not close DB connection.", ex);
+        }
+    }
+
+    protected String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
+        return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
+    }
+    
+    protected String truncateScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
+        return format("%s/truncate-%s.script", baseDir, testCaseType.getSimpleName());
     }
 
 }

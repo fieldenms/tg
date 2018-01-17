@@ -15,7 +15,10 @@ import java.util.Properties;
 import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
@@ -27,6 +30,7 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -58,6 +62,7 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.DbUtils;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
@@ -82,19 +87,30 @@ public class PopulateDb extends DomainDrivenDataPopulation {
     }
 
     public static void main(final String[] args) throws Exception {
+        System.out.println("Initialising...");
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
-        final FileInputStream in = new FileInputStream(configFileName);
         final Properties props = new Properties();
-        props.load(in);
-        in.close();
+        try (final FileInputStream in = new FileInputStream(configFileName)) {
+            props.load(in);
+        }
 
-        // override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
-        props.put("hibernate.show_sql", "false");
-        props.put("hibernate.format_sql", "true");
-        props.put("hibernate.hbm2ddl.auto", "create");
+        DOMConfigurator.configure(props.getProperty("log4j"));
 
-        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig(props);
-
+        System.out.println("Obtaining Hibernate dialect...");
+        final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
+        final Dialect dialect = (Dialect) dialectType.newInstance();
+        System.out.printf("Running with dialect %s...\n", dialect);
+        final DataPopulationConfig config = new DataPopulationConfig(props);
+        System.out.println("Generating DDL and running it against the target DB...");
+        
+        // use TG DDL generation or 
+        // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
+        final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
+        final List<String> ddl = dialect instanceof H2Dialect ? 
+                                 DbUtils.prependDropDdlForH2(createDdl) : 
+                                 DbUtils.prependDropDdlForSqlServer(createDdl);
+        DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
+        
         final PopulateDb popDb = new PopulateDb(config, props);
         popDb.createAndPopulate();
     }

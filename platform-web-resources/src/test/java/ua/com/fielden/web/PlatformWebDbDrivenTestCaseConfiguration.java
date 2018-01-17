@@ -1,11 +1,15 @@
 package ua.com.fielden.web;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
@@ -97,7 +101,12 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
-            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
+
+            try {
+                cfg.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(domainMetadata).getBytes("UTF8")));
+            } catch (final MappingException | UnsupportedEncodingException e) {
+                throw new HibernateException("Could not add mappings.", e);
+            }
 
             cfg.setProperty("hibernate.current_session_context_class", "thread");
             cfg.setProperty("hibernate.show_sql", "false");

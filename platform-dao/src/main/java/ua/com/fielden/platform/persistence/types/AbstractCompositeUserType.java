@@ -3,7 +3,7 @@ package ua.com.fielden.platform.persistence.types;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.CompositeUserType;
 
 public abstract class AbstractCompositeUserType implements CompositeUserType {
@@ -19,17 +19,17 @@ public abstract class AbstractCompositeUserType implements CompositeUserType {
     }
 
     @Override
-    public Serializable disassemble(final Object value, final SessionImplementor session) {
+    public Serializable disassemble(final Object value, final SharedSessionContractImplementor session) {
         return (Serializable) value;
     }
 
     @Override
-    public Object assemble(final Serializable cached, final SessionImplementor session, final Object owner) {
+    public Object assemble(final Serializable cached, final SharedSessionContractImplementor session, final Object owner) {
         return cached;
     }
 
     @Override
-    public Object replace(final Object original, final Object target, final SessionImplementor session, final Object owner) {
+    public Object replace(final Object original, final Object target, final SharedSessionContractImplementor session, final Object owner) {
         return original;
     }
 

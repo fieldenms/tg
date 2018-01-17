@@ -21,10 +21,9 @@ import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
  */
 @KeyType(String.class)
 @DescTitle("Description")
-@MapEntityTo("MONEY_CLASS_TABLE")
+@MapEntityTo("TAX_MONEY_CLASS_TABLE")
 @CompanionObject(EntityWithTaxMoneyDao.class)
 public class EntityWithTaxMoney extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo("MONEY")

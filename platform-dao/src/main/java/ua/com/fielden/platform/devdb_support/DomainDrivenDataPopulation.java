@@ -198,7 +198,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      * @return
      */
     @Override
-    public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
+    public final <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
         entity.setKey(key);
         entity.setDesc(desc);
@@ -213,7 +213,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      * @return
      */
     @Override
-    public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
+    public final <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key) {
         final T entity = new_(entityClass);
         entity.setKey(key);
         return entity;
@@ -226,7 +226,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      * @return
      */
     @Override
-    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass) {
         final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }

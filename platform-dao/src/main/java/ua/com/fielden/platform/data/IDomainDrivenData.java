@@ -26,11 +26,11 @@ public interface IDomainDrivenData {
 
     <T extends AbstractEntity<?>> T save(final T instance);
 
-    <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass);
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass);
 
-    <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key);
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key);
 
-    <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc);
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc);
 
     <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys);
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.Hibernate;
+import org.hibernate.type.StringType;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 
@@ -51,7 +51,7 @@ public class Concat extends AbstractFunction implements ISingleOperand {
 
     @Override
     public Object hibType() {
-        return Hibernate.STRING;
+        return StringType.INSTANCE;
     }
 
     @Override
