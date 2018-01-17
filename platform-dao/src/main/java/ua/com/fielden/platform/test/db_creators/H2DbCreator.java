@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.utils.DbUtils;
 
 /**
@@ -28,9 +29,9 @@ import ua.com.fielden.platform.utils.DbUtils;
  */
 public class H2DbCreator extends DbCreator {
 
-    public H2DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Properties props, final List<String> maybeDdl)
+    public H2DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Properties props, final IDomainDrivenTestCaseConfiguration config, final List<String> maybeDdl)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        super(testCaseType, props, maybeDdl);
+        super(testCaseType, props, config, maybeDdl);
     }
 
     /**

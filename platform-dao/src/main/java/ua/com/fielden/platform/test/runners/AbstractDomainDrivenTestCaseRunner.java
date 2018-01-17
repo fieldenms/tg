@@ -2,6 +2,7 @@ package ua.com.fielden.platform.test.runners;
 
 import static java.lang.String.format;
 
+import java.io.FileInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -19,6 +20,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
  * The domain test case runner that is responsible of instantiation and initialisation of domain test cases.
@@ -30,7 +33,9 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
     private final Logger logger = Logger.getLogger(getClass());
     
-    private static Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
+    // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
+    private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
+    private static IDomainDrivenTestCaseConfiguration config;
     
     /** 
      * Need one DDL script for all instances of all test cases.
@@ -73,23 +78,29 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
 
         logger.info("RUNNER for type: " + klass + " and db URI = " + databaseUri);
-        
-        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, List.class);
-        
-        this.dbCreator = constructor.newInstance(klass, mkDbProps(databaseUri), ddlScript);
-        if (coFinder == null) {
-            coFinder =dbCreator.getInstance(ICompanionObjectFinder.class);
-            factory = dbCreator.getInstance(EntityFactory.class);
+
+        // lets construct and assign test configuration
+        // this should occur only once per JVM instance as this is a computationally intensive operation
+        // hence, caching of the produced value in the static variable
+        // in the essence this is like a static initialization block that occurs during instantiation of the first test runner 
+        if (config == null) {
+            dbProps = mkDbProps(databaseUri);
+            config = createConfig(dbProps);
+            coFinder = config.getInstance(ICompanionObjectFinder.class);
+            factory = config.getInstance(EntityFactory.class);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), 
                     new Function<Class<?>, Object>() {
                         @Override
                         public Object apply(Class<?> type) {
-                            return dbCreator.getInstance(type);
+                            return config.getInstance(type);
                         }});
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
         }
-        
+
+        // get constructor for instantiation of DB creator and instantiate it 
+        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, IDomainDrivenTestCaseConfiguration.class, List.class);
+        this.dbCreator = constructor.newInstance(klass, dbProps, config, ddlScript);
     }
 
     /**
@@ -109,7 +120,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     @Override
     protected Object createTest() throws Exception {
         final Class<?> testCaseType = getTestClass().getJavaClass();
-        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) dbCreator.getInstance(testCaseType);
+        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) config.getInstance(testCaseType);
         return testCase.setDbCreator(dbCreator);
     }
     
@@ -140,6 +151,28 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         };
     }
     
+    /**
+     * A helper function to instantiate test case configuration as specified in <code>src/test/resources/test.properties</code>, property <code>config-domain</code>.
+     * 
+     * @param props
+     * @return
+     */
+    private static IDomainDrivenTestCaseConfiguration createConfig(final Properties props) {
+        try {
+            final Properties testProps = new Properties();
+            try (final FileInputStream in = new FileInputStream("src/test/resources/test.properties")) {
+                testProps.load(in);
+            }
+
+            final String configClassName = testProps.getProperty("config-domain");
+            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
+            final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
+            return constructor.newInstance(props);
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException("Could not create test configuration.", ex);
+        }
+    }
+
     /**
      * A helper function to assign value to a field.
      *  

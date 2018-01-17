@@ -3,9 +3,7 @@ package ua.com.fielden.platform.test;
 import static java.lang.String.format;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -31,38 +29,32 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 /**
  * This is an abstraction that capture the logic for the initial test case related db creation and its re-creation from a generated script for all individual tests in the same test case.
  * <p>
- * It is intended that each individual test case would have a static reference to an instance of this class, which would ensure that the same database is reused for all tests in the same test case to avoid computationally expensive recreation of a database.
+ * It is intended that each individual test case may reference an instance of this class to perform optimised (by means of scripting) test data population.
  * 
  * @author TG Team
  *
  */
 public abstract class DbCreator {
+    public static final String baseDir = "./src/test/resources/db";
+
     private final Logger logger = Logger.getLogger(getClass());
+
+    private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
+    private final Connection conn;
+    private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
 
     private final List<String> dataScripts = new ArrayList<>();
     private final List<String> truncateScripts = new ArrayList<>();
     
-    private final Connection conn;
-    
-    private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
-
-    // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
-    private static Collection<PersistedEntityMetadata<?>> entityMetadatas;
-    private static IDomainDrivenTestCaseConfiguration config;
-    
-    public static final String baseDir = "./src/test/resources/db";
-    
     
     public DbCreator(
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType, 
-            final Properties defaultDbProps, 
+            final Properties defaultDbProps,
+            final IDomainDrivenTestCaseConfiguration config,
             final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        if (config == null) {
-            config = createConfig(defaultDbProps);
-            entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
-        }
-        
+
         this.testCaseType = testCaseType;
+        this.entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
 
         // this is a single place where a new DB connection is established
         logger.info("CREATING DB CONNECTION...");
@@ -88,10 +80,6 @@ public abstract class DbCreator {
         }
     }
 
-    public final <T> T getInstance(final Class<T> type) {
-        return config.getInstance(type);
-    }
-
     /**
      * Override to implement RDBMS specific DDL script generation.
      * 
@@ -108,7 +96,7 @@ public abstract class DbCreator {
      * @return
      * @throws Exception
      */
-    public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) throws Exception {
+    public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) throws SQLException {
         if (testCase.useSavedDataPopulationScript() && testCase.saveDataPopulationScriptToFile()) {
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
@@ -308,28 +296,6 @@ public abstract class DbCreator {
         }
     }
 
-    /**
-     * A helper function to instantiate test case configuration as specified in <code>src/test/resources/test.properties</code>, property <code>config-domain</code>.
-     * 
-     * @param props
-     * @return
-     */
-    private static IDomainDrivenTestCaseConfiguration createConfig(final Properties props) {
-        try {
-            final Properties testProps = new Properties();
-            try (final FileInputStream in = new FileInputStream("src/test/resources/test.properties")) {
-                testProps.load(in);
-            }
-
-            final String configClassName = testProps.getProperty("config-domain");
-            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
-            return constructor.newInstance(props);
-        } catch (final Exception ex) {
-            throw new DomainDriventTestException("Could not create test configuration.", ex);
-        }
-    }
-    
     /**
      * Closes the current db connection.
      */
