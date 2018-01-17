@@ -58,7 +58,7 @@ public class H2DomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRu
             paths
                 .filter(path -> path.getFileName().toString().contains(mainDbFileName))
                 .map(Path::toFile)
-                .peek(file -> System.out.println(format("Removing %s", file.getName())))
+                .peek(file -> logger.info(format("Removing %s", file.getName())))
                 .forEach(File::delete);
         } catch (IOException e) {
             e.printStackTrace();

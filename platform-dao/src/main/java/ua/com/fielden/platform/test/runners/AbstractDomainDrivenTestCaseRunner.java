@@ -31,7 +31,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    private final Logger logger = Logger.getLogger(getClass());
+    protected final Logger logger = Logger.getLogger(getClass());
     
     // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
     private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
