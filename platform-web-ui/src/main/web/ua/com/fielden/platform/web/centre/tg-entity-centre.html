@@ -57,45 +57,47 @@
         .splitter {
             @apply(--layout-vertical);
             @apply(--layout-center);
-            background: var(--paper-grey-400);
+            background: var(--paper-light-blue-700);
             padding-top: 10px;
             width: 9px;
         }
         .splitter:hover,
         .splitter-resizing {
             cursor: col-resize;
-            background: var(--paper-light-blue-100);
+            background: var(--paper-light-blue-600);
         }
-        .dummy-splitter {
+        .fantom-splitter {
             position: absolute;
             top: 0;
             bottom: 0;
             left: 0;
             width: 9px;
             display: none;
-            background: var(--paper-grey-400);
+            background: var(--paper-grey-300);
         }
         .arrow-left {
-            width: 0; 
+            width: 0;
             height: 0;
-            border-top: 5px solid transparent;
-            border-bottom: 5px solid transparent;
-            border-right: 5px solid black;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-right: 7px solid white;
+            margin-top: 6px;
+            margin-bottom: 4px;
         }
         .arrow-left:hover {
             cursor: pointer;
-            border-right: 5px solid var(--paper-grey-600);
+            border-right: 7px solid white;
         }
         .arrow-right {
-            width: 0; 
+            width: 0;
             height: 0;
-            border-top: 5px solid transparent;
-            border-bottom: 5px solid transparent;
-            border-left: 5px solid black;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-left: 7px solid white;
         }
         .arrow-right:hover {
             cursor: pointer;
-            border-left: 5px solid var(--paper-grey-600);
+            border-left: 7px solid white;
         }
         .centre-result-container {
             min-height: fit-content;
@@ -155,21 +157,21 @@
                     <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
                 <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
-                    <div class="arrow-left" tooltip-text="collapse insertion point" on-tap="_collapseLeftInsertionPoint"></div>
-                    <div class="arrow-right" tooltip-text="expand insertion point" on-tap="_expandLeftInsertionPoint"></div>
+                    <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
+                    <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
                 <div class="insertion-point-slot layout vertical flex" style="min-width:0">
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
                 <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable"on-track="_changeRightInsertionPointSize">
-                    <div class="arrow-left" tooltip-text="expand insertion point" on-tap="_expandRightInsertionPoint"></div>
-                    <div class="arrow-right" tooltip-text="collapse insertion point" on-tap="_collapseRightInsertionPoint"></div>
+                    <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
+                    <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
                 </div>
                 <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
                 </div>
-                <div id="dummySplitter" class="dummy-splitter"></div>
+                <div id="fantomSplitter" class="fantom-splitter"></div>
             </div>
         </iron-pages>
     </template>
@@ -211,7 +213,7 @@
         },
 
         behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
-        
+
         ready: function () {
             this.leftInsertionPointPresent = Polymer.dom(this.$.leftInsertionPointContent).getDistributedNodes()[0].children.length > 0;
             this.rightInsertionPointPresent = Polymer.dom(this.$.rightInsertionPointContent).getDistributedNodes()[0].children.length > 0;
@@ -220,12 +222,12 @@
             this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
             this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
         },
-        
+
         //Splitter functionality
         _expandLeftInsertionPoint: function () {
             this._expandContainer(this.$.leftInsertionPointContainer);
         },
-        
+
         _collapseLeftInsertionPoint: function () {
             this._collapseContainer(this.$.leftInsertionPointContainer);
         },
@@ -233,11 +235,11 @@
         _expandRightInsertionPoint: function () {
             this._expandContainer(this.$.rightInsertionPointContainer);
         },
-        
+
         _collapseRightInsertionPoint: function () {
             this._collapseContainer(this.$.rightInsertionPointContainer);
         },
-        
+
         _makeCentreUnselectable: function (e) {
             this.$.centreResultContainer.classList.toggle("noselect", true);
             document.body.style["cursor"] = "col-resize";
@@ -247,29 +249,29 @@
             this.$.centreResultContainer.classList.toggle("noselect", false);
             document.body.style["cursor"] = "";
         },
-        
+
         _changeLeftInsertionPointSize: function (e) {
             this._changeInsertionPointSize(e, this._leftSplitterUpdater, this._leftInsertionPointContainerUpdater);
         },
-        
+
         _changeRightInsertionPointSize: function (e) {
             this._changeInsertionPointSize(e, this._rightSplitterUpdater, this._rightInsertionPointContainerUpdater);
         },
-        
+
         _leftSplitterUpdater: function (newPos) {
-            this._updateSplitterPos(newPos, 0, 
-                                    (this.rightInsertionPointPresent ? 
-                                     this.$.rightSplitter.offsetLeft - this.$.dummySplitter.offsetWidth : 
-                                     this.$.centreResultContainer.offsetWidth - this.$.dummySplitter.offsetWidth));
+            this._updateSplitterPos(newPos, 0,
+                                    (this.rightInsertionPointPresent ?
+                                     this.$.rightSplitter.offsetLeft - this.$.fantomSplitter.offsetWidth :
+                                     this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth));
         },
-        
+
         _rightSplitterUpdater: function (newPos) {
-            this._updateSplitterPos(newPos, 
-                                   (this.leftInsertionPointPresent ? 
-                                    this.$.leftSplitter.offsetLeft + this.$.dummySplitter.offsetWidth : 0),
-                                    this.$.centreResultContainer.offsetWidth - this.$.dummySplitter.offsetWidth);
+            this._updateSplitterPos(newPos,
+                                   (this.leftInsertionPointPresent ?
+                                    this.$.leftSplitter.offsetLeft + this.$.fantomSplitter.offsetWidth : 0),
+                                    this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth);
         },
-        
+
         _updateSplitterPos(newPos, leftRange, rightRange) {
             let updatedPos = newPos;
             if (newPos < leftRange) {
@@ -277,17 +279,17 @@
             } else if (newPos > rightRange) {
                 updatedPos = rightRange;
             }
-            this.$.dummySplitter.style.left = updatedPos + "px";
+            this.$.fantomSplitter.style.left = updatedPos + "px";
         },
-        
+
         _leftInsertionPointContainerUpdater: function (newPos) {
             this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer);
         },
-        
+
         _rightInsertionPointContainerUpdater: function (newPos) {
-             this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.dummySplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
+             this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
         },
-        
+
         _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier) {
             const oldWidth = insertionPointContaier.offsetWidth;
             if (oldWidth !== newWidth) {
@@ -296,9 +298,9 @@
                     insertionPointContaier.style.removeProperty("display");
                 }
                 this.notifyResize();
-            }  
+            }
         },
-        
+
         _changeInsertionPointSize: function(e, splitterPosUpdater, insertionPointContainerUpdater) {
             switch (e.detail.state) {
             case 'start':
@@ -316,39 +318,39 @@
             e.cancelBubble = true;
             e.returnValue = false;
         },
-        
+
         _startInsertionPointResizing: function (e, splitterPosUpdater) {
             const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
             //Change the style to visualise insertion point resizing.
             splitterPosUpdater(mousePos.x);
-            this.$.dummySplitter.style.display = "initial";
+            this.$.fantomSplitter.style.display = "initial";
             e.target.classList.toggle("splitter-resizing", true);
         },
-        
+
         _trackInsertionPointSize: function (e, splitterPosUpdater) {
             const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.centreResultContainer);
             splitterPosUpdater(mousePos.x);
         },
-        
+
         _endInsertionPointResizing: function (e, insertionPointContainerUpdater) {
             //Reset the style of splitter.
             e.target.classList.toggle("splitter-resizing", false);
-            insertionPointContainerUpdater(this.$.dummySplitter.offsetLeft);
-            this.$.dummySplitter.style.removeProperty("display");
-            this.$.dummySplitter.style.removeProperty("left");
+            insertionPointContainerUpdater(this.$.fantomSplitter.offsetLeft);
+            this.$.fantomSplitter.style.removeProperty("display");
+            this.$.fantomSplitter.style.removeProperty("left");
         },
-        
+
         _expandContainer: function (element) {
             element.style.removeProperty("width");
             element.style.removeProperty("display");
             this.notifyResize();
         },
-        
+
         _collapseContainer: function (element) {
             element.style.display = 'none';
             this.notifyResize();
         },
-        
+
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
             console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
         },
