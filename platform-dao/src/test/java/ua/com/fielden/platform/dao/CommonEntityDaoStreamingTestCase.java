@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
 
     @Test
+    @SessionRequired
     public void streaming_of_unconditional_query_result_with_different_fetch_size_contains_all_available_entities_at_all_times() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
         final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
@@ -55,6 +57,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void there_is_streaming_API_with_default_fetch_size() {
         try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model())) {
             assertEquals("Incorrect number of entities in the stream", 4, stream.count());
@@ -62,6 +65,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void streaming_based_on_ordered_qem_should_have_the_same_traversal_order() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
         final OrderingModel orderBy = orderBy().prop("key").asc().model();
@@ -74,6 +78,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void streaming_based_on_conditional_qem_should_contain_only_matching_entities() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class)
                 .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
@@ -86,6 +91,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void stream_should_not_be_parallel() {
         try (final Stream<EntityWithMoney> streamBy3 = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model(), 2)) {
             assertFalse("The stream should not be parallel", streamBy3.isParallel());
@@ -93,6 +99,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void stream_should_not_be_accecible_once_traversed() {
         final Either<Exception, Long> result = Try(() -> {
             try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model(), 2)) {
@@ -173,6 +180,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void streaming_of_aggregates_with_default_fetch_size_is_supported() {
         final AggregatedResultQueryModel qry = select(EntityWithMoney.class).yield().countOfDistinct().prop("desc").as("kount").modelAsAggregate();
         
@@ -186,6 +194,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void streaming_of_aggregates_with_custom_fetch_size_is_supported() {
         final AggregatedResultQueryModel qry = select(EntityWithMoney.class).
                 groupBy().prop("desc").
@@ -206,6 +215,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
     
     @Override
+    @SessionRequired
     protected void populateDomain() {
         super.populateDomain();
         

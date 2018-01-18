@@ -16,6 +16,7 @@
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/app/tg-app-config.html">
 
 <dom-module id="tg-master-menu">
     <style>
@@ -101,24 +102,17 @@
         }
     </style>
     <template>
-		<tg-reflector id="reflector"></tg-reflector>
-		<content id="menuItemActions" select=".menu-item-action"></content>        
-		
+        <tg-app-config id="appConfig"></tg-app-config>
+        <tg-reflector id="reflector"></tg-reflector>
+        <content id="menuItemActions" select=".menu-item-action"></content>
+        
         <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
-
-            <!-- Drawer Scroll Header Panel -->
             <paper-scroll-header-panel drawer fixed id="drawer">
-
-                <!-- Drawer Content -->
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
-	            	<content id="menuItems" select=".menu-item"></content>        
-	            </paper-menu>
+                    <content id="menuItems" select=".menu-item"></content>
+                </paper-menu>
             </paper-scroll-header-panel>
-
-            <!-- Main Area -->
             <paper-scroll-header-panel main fixed class="relative">
-
-                <!-- Main Content -->
                 <div>
                     <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
                         <content select=".menu-item-section"></content>
@@ -126,7 +120,7 @@
                 </div>
             </paper-scroll-header-panel>
         </paper-drawer-panel>
-
+        
     </template>
 </dom-module>
 
@@ -268,6 +262,8 @@
     				null, null, this.getMasterEntity);
                 return contextHolder;
             }).bind(self);
+            // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
+            this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
         }, // end of ready 
         
         attached: function () {
@@ -350,6 +346,32 @@
             }
             //Needed to set the dynamic title
             this.fire('tg-dynamic-title-changed', this.sectionTitle);
+            this.fire('tg-menu-appeared', {
+                appeared: true,
+                func: self._toggleMenu.bind(self)
+            });
+        },
+        
+        /**
+         * Toggles menu: hiding / showing it through animation.
+         *
+         * In desktop mode menu shifts the main content to the right during showing (and back top the left during hiding).
+         * In tablet|mobile mode menu slides on top of the main content to the right during showing (and back top the left during hiding).
+         */
+        _toggleMenu: function (e, detail, source) {
+            if (this.desktopMode()) {
+                this.$.paperDrawerPanel.forceNarrow = !this.$.paperDrawerPanel.forceNarrow;
+            } else {
+                this.$.paperDrawerPanel.togglePanel();
+            }
+        },
+        
+        /**
+         * Returns 'true' in case if application is in desktop mode, 'false' if application is in tablet / mobile mode. 
+         */
+        desktopMode: function () {
+            const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+            return viewportWidth >= this.$.appConfig.minDesktopWidth;
         },
         
         _sectionTitleChanged: function (newValue, oldValue) {
@@ -451,6 +473,10 @@
         },
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
+            if (!this.desktopMode()) {
+                this.$.paperDrawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
+            }
+            
             var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
             

@@ -54,20 +54,11 @@ public class EntityFetcher {
     
     public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         try {
-            final DateTime st = new DateTime();
-            final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
-            
-            final Stream<List<E>> stream = entityContainerFetcher
+            return new EntityContainerFetcher(executionContext)
                     .streamAndEnhanceContainers(queryModel, fetchSize)
                     .map(c -> !queryModel.isLightweight() ? setContainersToBeInstrumented(c) : c)
-                    .map(c -> instantiateFromContainers(c));
-            
-            final Period pd = new Period(st, new DateTime());
-
-            final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
-            logger.debug(format("Duration: %s m %s s %s ms. Created stream for entities of type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName));
-
-            return stream.flatMap(list -> list.stream());
+                    .map(this::instantiateFromContainers)
+                    .flatMap(List::stream);
         } catch (final Exception e) {
             logger.error(e);
             throw new EntityFetcherException("Could not stream entities.", e);

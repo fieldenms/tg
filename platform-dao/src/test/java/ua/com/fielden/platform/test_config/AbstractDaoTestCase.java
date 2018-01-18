@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.SortedSet;
 
 import org.joda.time.DateTime;
+import org.junit.runner.RunWith;
 
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
+@RunWith(H2DomainDrivenTestCaseRunner.class)
 public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
     public static final String UNIT_TEST_USER = User.system_users.UNIT_TEST_USER.name();

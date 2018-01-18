@@ -5,7 +5,8 @@ import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import org.hibernate.Hibernate;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
@@ -24,7 +25,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("finDetails");
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true). //
-        hibType(Hibernate.LONG). //
+        hibType(LongType.INSTANCE). //
         type(PropertyCategory.EXPRESSION). //
         //expression(expr().prop("id").model()). //
         expression(expr().model(select(TgVehicleFinDetails.class).where().prop("key").eq().extProp("id").model()).model()). //
@@ -44,7 +45,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final ModelledEntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateModelledEntityMetadata(TgAverageFuelUsage.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false). //
-        hibType(Hibernate.LONG). //
+        hibType(LongType.INSTANCE). //
         type(PropertyCategory.SYNTHETIC). //
         build();
         assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
@@ -55,7 +56,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final ModelledEntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateModelledEntityMetadata(TgAverageFuelUsage.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
-        hibType(Hibernate.LONG). //
+        hibType(LongType.INSTANCE). //
         type(PropertyCategory.EXPRESSION). //
         expression(expr().prop("key").model()). //
         build();
@@ -68,7 +69,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
-        hibType(Hibernate.LONG). //
+        hibType(LongType.INSTANCE). //
         type(PropertyCategory.EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id").when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model()). //
         build();
@@ -81,7 +82,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false). //
-        hibType(Hibernate.STRING). //
+        hibType(StringType.INSTANCE). //
         type(PropertyCategory.EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.key").when().prop("workshop").isNotNull().then().prop("workshop.key").otherwise().val(null).end().model()). //
         build();

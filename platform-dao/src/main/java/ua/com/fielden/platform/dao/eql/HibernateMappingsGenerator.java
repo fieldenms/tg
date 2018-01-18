@@ -48,12 +48,8 @@ public class HibernateMappingsGenerator {
     }
 
     private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        sb.append("\t\t<generator class=\"hilo\">\n");
-        sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
-        sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
-        sb.append("\t\t\t<param name=\"max_lo\">0</param>\n");
         sb.append("\t\t</generator>\n");
         sb.append("\t</id>\n");
         return sb.toString();
