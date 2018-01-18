@@ -2,6 +2,7 @@
 
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
@@ -612,19 +613,6 @@
                 });
                 return subEntity.get(key);
             });
-        };
-        const getRelativePos = function (x, y, container) {
-            let reference = container;
-            let newPos = {
-                x: x,
-                y: y
-            }
-            while (reference) {
-                newPos.x -= reference.offsetLeft;
-                newPos.y -= reference.offsetTop;
-                reference = reference.offsetParent;
-            }
-            return newPos;
         };
         const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
