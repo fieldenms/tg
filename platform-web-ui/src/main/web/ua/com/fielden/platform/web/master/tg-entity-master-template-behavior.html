@@ -36,7 +36,23 @@
                     self._masterDom().removeAttribute('with-dimensions');
                 }
             },
-
+            
+            /**
+             * Adds 'with-dimensions' attribute to this tg-entity-master to make it suitable for resizing: action bar is placed on top of scrollable editor container.
+             * Returns current dimensions with widthUnit = heightUnit = 'px'.
+             */
+            makeResizable: function () {
+                const self = this;
+                const prefDim = {
+                    width: self._masterDom().$.masterContainer.offsetWidth,
+                    height: self._masterDom().$.masterContainer.offsetHeight,
+                    widthUnit: 'px',
+                    heightUnit: 'px'
+                };
+                this._masterDom().setAttribute('with-dimensions', 'true');
+                return prefDim;
+            },
+            
             addOwnKeyBindings: function () {
                 var ownKeyBindings = this._ownKeyBindings;
                 if (this.$.loader) {
