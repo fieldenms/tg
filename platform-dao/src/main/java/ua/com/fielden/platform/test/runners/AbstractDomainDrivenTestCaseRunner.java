@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -62,7 +63,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     private static EntityFactory factory;
 
     
-    public AbstractDomainDrivenTestCaseRunner(final Class<?> klass, final Class<? extends DbCreator> dbCreatorType) throws Exception {
+    public AbstractDomainDrivenTestCaseRunner(final Class<?> klass, final Class<? extends DbCreator> dbCreatorType, final Optional<IDomainDrivenTestCaseConfiguration> testConfig) throws Exception {
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
@@ -85,7 +86,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         // in the essence this is like a static initialization block that occurs during instantiation of the first test runner 
         if (config == null) {
             dbProps = mkDbProps(databaseUri);
-            config = createConfig(dbProps);
+            config = testConfig.orElseGet(() -> createConfig(dbProps));
             coFinder = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getInstance(EntityFactory.class);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), 
@@ -118,7 +119,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     protected abstract Properties mkDbProps(final String dbUri);
 
     @Override
-    protected Object createTest() throws Exception {
+    public Object createTest() throws Exception {
         final Class<?> testCaseType = getTestClass().getJavaClass();
         final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) config.getInstance(testCaseType);
         return testCase.setDbCreator(dbCreator);

@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.db_creators.H2DbCreator;
 
 /**
@@ -23,7 +25,11 @@ import ua.com.fielden.platform.test.db_creators.H2DbCreator;
 public class H2DomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRunner {
 
     public H2DomainDrivenTestCaseRunner(final Class<?> klass) throws Exception {
-        super(klass, H2DbCreator.class);
+        super(klass, H2DbCreator.class, Optional.empty());
+    }
+    
+    public H2DomainDrivenTestCaseRunner(final Class<?> klass, final IDomainDrivenTestCaseConfiguration config) throws Exception {
+        super(klass, H2DbCreator.class, Optional.of(config));
     }
 
     /**
