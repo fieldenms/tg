@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.ioc.session;
 
+import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
 import java.util.stream.Stream;
 
@@ -60,6 +62,12 @@ public class SessionInterceptor implements MethodInterceptor {
             // Basically, if transaction is activated in this method then it should be committed only in this method.
             // Therefore, shouldCommit is assigned true only when transaction is activated here.
             final boolean shouldCommit = initTransaction(invocationOwner, session, tr);
+            
+            // if should not commit, which means the session was initiated earlier in the calls stack, 
+            // and support for nested calls is not allowed then an exception should be thrown.
+            if (!shouldCommit && !invocation.getStaticPart().getAnnotation(SessionRequired.class).allowNestedScope()) {
+                throw new SessionScopingException(format(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED, invocation.getMethod().getDeclaringClass().getName(), invocation.getMethod().getName()));
+            }
             
             // now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
             final Object result = invocation.proceed();

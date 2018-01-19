@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.test.transactional;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -129,6 +133,29 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
+    }
+
+    @Test
+    public void methods_with_disallowed_nested_scope_transactions_can_be_invoked_in_their_own_scope() {
+        logic.cannotBeInvokeWithinExistingTransaction();
+
+        final EntityWithMoney one = dao.findByKey("one");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
+        assertEquals(new Money("20.00"), one.getMoney());
+        
+        final EntityWithMoney two = dao.findByKey("two");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
+        assertEquals(new Money("30.00"), two.getMoney());
+    }
+
+    @Test
+    @SessionRequired
+    public void methods_with_disallowed_nested_scope_transactions_throw_exception_for_nested_calls() {
+        try {
+            logic.cannotBeInvokeWithinExistingTransaction();
+        } catch (final SessionScopingException ex) {
+            assertEquals(format(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED, LogicThatNeedsTransaction.class.getName(), "cannotBeInvokeWithinExistingTransaction"), ex.getMessage());
+        }
     }
 
 }

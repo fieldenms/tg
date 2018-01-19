@@ -109,4 +109,9 @@ class LogicThatNeedsTransaction implements ISessionEnabled {
 
         ((EntityWithMoneyDao) dao).saveTwoWithException(one, two);
     }
+    
+    @SessionRequired(allowNestedScope = false)
+    public void cannotBeInvokeWithinExistingTransaction() {
+        singleTransactionInvocaion("20.00", "30.00");
+    }
 }
