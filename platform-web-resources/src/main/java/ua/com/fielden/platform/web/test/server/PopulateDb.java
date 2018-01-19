@@ -115,7 +115,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
         
         final PopulateDb popDb = new PopulateDb(config, props);
-        popDb.createAndPopulate();
+        popDb.populateDomain();
     }
 
     @Override
