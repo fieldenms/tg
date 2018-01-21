@@ -87,13 +87,13 @@ public class H2DbCreator extends DbCreator {
         //            (...),\n
         //            (...);
         final String[] lines = origInsertStmt.split("\n");
-        final String insertAndValuesPart = lines[0];
+        final String insertAndValuesPart = lines[0].replace("\r", " "); // let's remove \r as a token of love for Windows users 
         
         final List<String> allInserts = new ArrayList<>();
         for (int index = 1; index < lines.length; index++) {
             final StringBuilder stmt = new StringBuilder();
             stmt.append(insertAndValuesPart);
-            final String tupleStmt = lines[index];
+            final String tupleStmt = lines[index].replace("\r", ""); // let's remove \r as a token of love for Windows users
             if (tupleStmt.endsWith(",")) {
                 stmt.append(tupleStmt.substring(0, tupleStmt.length() - 1));
                 stmt.append(";");
