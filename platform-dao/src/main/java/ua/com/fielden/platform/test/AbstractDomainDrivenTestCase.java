@@ -78,6 +78,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return this;
     }
     
+    public DbCreator getDbCreator() {
+        return dbCreator;
+    }
+    
     @Override
     public final <T> T getInstance(final Class<T> type) {
         return (T) instantiator.apply(type);

@@ -40,8 +40,8 @@ public abstract class DbCreator {
     private final Logger logger = Logger.getLogger(getClass());
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
-    private final Connection conn;
-    private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
+    public final Connection conn;
+    public final Collection<PersistedEntityMetadata<?>> entityMetadatas;
 
     private final List<String> dataScripts = new ArrayList<>();
     private final List<String> truncateScripts = new ArrayList<>();
@@ -244,7 +244,7 @@ public abstract class DbCreator {
      * @return
      * @throws SQLException
      */
-    protected abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
+    public abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
     
     /**
      * A helper function to execute SQL statements.
@@ -255,7 +255,7 @@ public abstract class DbCreator {
      * @param conn
      * @param batchSize
      */
-    private static void execSql(final List<String> statements, final Connection conn, final int batchSize) {
+    public static void execSql(final List<String> statements, final Connection conn, final int batchSize) {
         try (final Statement st = conn.createStatement()) {
             Iterators.partition(statements.iterator(), batchSize > 0 ? batchSize : 1).forEachRemaining(batch -> {
                 try {
