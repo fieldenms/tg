@@ -56,24 +56,54 @@ public class H2DbCreator extends DbCreator {
      * Scripts the test database once the test data has been populated, using H2's <code>SCRIPT</code> command.
      */
     @Override
-    protected List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
-        final List<String> insert = new ArrayList<>();
-
+    public List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
+        final List<String> inserts = new ArrayList<>();
         // create insert statements
         try (final Statement st = conn.createStatement(); final ResultSet rs = st.executeQuery("SCRIPT");) {
             while (rs.next()) {
                 final String result = rs.getString(1).trim();
                 final String upperCasedResult = result.toUpperCase();
-                if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                        && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                    // that was perhaps lover cased while populateDomain() invocation was performed
-                    insert.add(result.replace("\n", " ").replace("\r", " "));
+                // the SCRIPT command returns all the scripts to recreated the database
+                // we're interested only in INSERT statements
+                if (upperCasedResult.startsWith("INSERT")) {
+                    inserts.addAll(transformToIndividualInsertStmts(result));
+                    //inserts.add(result);
                 }
             }
         }
-        return insert;
+        return inserts;
     }
 
-
+    /**
+     * Transforms an insert statement for a single table, which H2 produces the VALUES part that takes a list of tuples for multiple rows, into a complete series of insert statements.
+     * This is necessary to better control insertion of individual records. 
+     * 
+     * @param origInsertStmt
+     * @return
+     */
+    private static List<String> transformToIndividualInsertStmts(final String origInsertStmt) {
+        // here is the expected structure of the passed in string as observed during H2 scripting analysis
+        //            INSERT ... VALUES\n
+        //            (...),\n
+        //            (...);
+        final String[] lines = origInsertStmt.split("\n");
+        final String insertAndValuesPart = lines[0];
+        
+        final List<String> allInserts = new ArrayList<>();
+        for (int index = 1; index < lines.length; index++) {
+            final StringBuilder stmt = new StringBuilder();
+            stmt.append(insertAndValuesPart);
+            final String tupleStmt = lines[index];
+            if (tupleStmt.endsWith(",")) {
+                stmt.append(tupleStmt.substring(0, tupleStmt.length() - 1));
+                stmt.append(";");
+            } else {
+                stmt.append(tupleStmt);
+            }
+            
+            allInserts.add(stmt.toString());
+        }
+        
+        return allInserts;
+    }
 }
