@@ -95,7 +95,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
-					<forkCount>4</forkCount>
+					<forkCount>2</forkCount>
 					<reuseForks>true</reuseForks>
 					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
 					<systemPropertyVariables>
