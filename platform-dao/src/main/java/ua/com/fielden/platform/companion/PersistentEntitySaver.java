@@ -502,9 +502,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // thus, a check for VIRTUAL_USER as a current user 
         if (!User.system_users.VIRTUAL_USER.name().equals(user.get().getKey())) {
             entity.set(AbstractPersistentEntity.CREATED_BY, user.get());
-            entity.set(AbstractPersistentEntity.CREATED_DATE, now.get().toDate());
-            entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, transactionGuid.get());
         }
+        
+        entity.set(AbstractPersistentEntity.CREATED_DATE, now.get().toDate());
+        entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, transactionGuid.get());
     }
     
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity, final AbstractPersistentEntity<?> persistentEntity) {
