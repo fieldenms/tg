@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.utils;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
+import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -61,5 +65,14 @@ public class StreamUtilsTest {
         final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
         assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
         assertEquals(4, expectedCurrValue.get());
+    }
+    
+    @Test
+    public void can_zip_steams_of_different_size() {
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).collect(toList()));
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
+        assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
+        assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).collect(toList()));
+        
     }
 }
