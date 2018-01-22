@@ -15,7 +15,6 @@ import java.util.Optional;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
