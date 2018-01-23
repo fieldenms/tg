@@ -41,7 +41,7 @@ public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStm
         return sb.toString();
     }
 
-    List<Object> transformValues(final ResultSet rs, final IdCache cache, final int id) throws SQLException {
+    List<Object> transformValues(final ResultSet rs, final IdCache cache, final long id) throws SQLException {
         final List<Object> result = new ArrayList<>();
         for (final Container container : getContainers()) {
             final List<Object> values = new ArrayList<>();
