@@ -44,7 +44,7 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
     }
 
     public ActivatableAbstractEntity<K> decRefCount() {
-        setRefCount(getRefCount() - 1);
+        setRefCount(getRefCount() > 0 ? getRefCount() - 1 : 0);
         return this;
     }
 
