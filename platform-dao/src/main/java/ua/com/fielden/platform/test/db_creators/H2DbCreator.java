@@ -47,7 +47,7 @@ public class H2DbCreator extends DbCreator {
      * Generate the script for emptying the test database.
      */
     @Override
-    protected List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
+    public List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
         return entityMetadata.stream().map(entry -> format("TRUNCATE TABLE %s;", entry.getTable())).collect(toList());
     }
 

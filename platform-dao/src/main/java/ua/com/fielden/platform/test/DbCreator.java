@@ -234,7 +234,7 @@ public abstract class DbCreator {
      * @param conn
      * @return
      */
-    protected abstract List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn);
+    public abstract List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn);
 
     /**
      * Implement to generate SQL statements for inserting records that correspond to test domain data that is present currently in the database with the specified connection.
