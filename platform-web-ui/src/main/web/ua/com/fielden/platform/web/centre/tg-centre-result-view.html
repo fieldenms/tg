@@ -30,34 +30,33 @@
                 'tabindex' : '0'
             },
             
-            keyBindings: {
-                'ctrl+z ctrl+y': '_shortcutPressed'
-            },
-            
             attached: function () {
-                var self = this;
-                this.async(function () {
-                    self.keyEventTarget = self._getKeyEventTarget();
-                }, 1);
+                // assign EGI shortcut keys to this result view with function _shortcutPressed as a handler
+                this.removeOwnKeyBindings();
+                this.addOwnKeyBinding(this._findParentCentre().$.egi.customShortcuts, '_shortcutPressed');
             },
             
-            _getKeyEventTarget: function () {
-                var parent = this;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-                    parent = parent.parentElement;
-                }
-                return parent || this;
-            },
-            
-            _shortcutPressed: function (e) {
+            /**
+             * Finds parent centre for this result view. It should exist, otherwise exception will be thrown.
+             */
+            _findParentCentre: function () {
                 let parent = this;
                 while (parent && !parent.classList.contains('generatedCentre')) {
                     parent = parent.parentElement;
                 }
-                if (parent) {
-                    // if parent entity centre was found, then redirect shortcut to it
-                    parent.$.egi._shortcutPressed(e);
+                if (!parent) {
+                    throw 'No parent centre exists for this result view.';
+                } else if (parent === this) {
+                    throw 'This result view somehow contains generatedCentre class.';
                 }
+                return parent;
+            },
+            
+            /**
+             * Redirects shortcut processing to parent centre's EGI.
+             */
+            _shortcutPressed: function (e) {
+                this._findParentCentre().$.egi._shortcutPressed(e);
             }
         });
     </script>
