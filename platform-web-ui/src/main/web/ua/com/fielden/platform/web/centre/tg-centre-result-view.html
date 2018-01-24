@@ -31,6 +31,7 @@
             },
             
             attached: function () {
+                this.classList.add('centreResultView');
                 // assign EGI shortcut keys to this result view with function _shortcutPressed as a handler
                 this.removeOwnKeyBindings();
                 this.addOwnKeyBinding(this._findParentCentre().$.egi.customShortcuts, '_shortcutPressed');

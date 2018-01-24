@@ -254,6 +254,13 @@
             },
             
             attached: function () {
+                if (!this.egiBindingAdded) {
+                    const resultView = this.findResultView();
+                    if (resultView) {
+                        this.addOwnKeyBinding(resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
+                        this.egiBindingAdded = true;
+                    }
+                }
                 this.async(function () {
                     if (this.customActions) {
                         this.customActions.forEach(elem  => Polymer.dom(this.$.custom_actions_container).appendChild(elem));
@@ -454,6 +461,31 @@
             _shortcutPressed: function (e) {
                 this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
             },
+            
+            _egiShortcutPressed: function (e) {
+                const resultView = this.findResultView();
+                if (resultView) {
+                    resultView._shortcutPressed(e);
+                }
+            },
+            
+            startingPoint: function () {
+                if (this.detached) {
+                    const rect = this.$.insertionPointContent.getBoundingClientRect();
+                    return document.elementFromPoint(rect.right + 1, rect.bottom + 1);
+                } else {
+                    return this;
+                }
+            },
+            
+            findResultView: function () {
+                const startingPoint = this.startingPoint();
+                let parent = startingPoint;
+                while (parent && !parent.classList.contains('centreResultView')) {
+                    parent = parent.parentElement;
+                }
+                return parent;
+            }
         });
     })();
 </script>
