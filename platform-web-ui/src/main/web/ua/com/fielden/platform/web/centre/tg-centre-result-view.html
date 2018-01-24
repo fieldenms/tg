@@ -1,0 +1,57 @@
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+
+<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
+
+<dom-module id="tg-centre-result-view">
+    <style>
+        :host {
+            min-height: fit-content;
+            @apply(--layout-horizontal);
+            @apply(--layout-justified);
+            @apply(--layout-fit);
+        }
+    </style>
+    <template>
+        <content></content>
+    </template>
+    <script>
+        Polymer({
+            is: 'tg-centre-result-view',
+            
+            behaviors: [
+                Polymer.IronA11yKeysBehavior,
+                Polymer.TgBehaviors.TgShortcutProcessingBehavior
+            ],
+            
+            hostAttributes: {
+                'tabindex' : '0'
+            },
+            
+            keyBindings: {
+                'ctrl+z ctrl+y': '_shortcutPressed'
+            },
+            
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                }, 1);
+            },
+            
+            _getKeyEventTarget: function () {
+                var parent = this;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    parent = parent.parentElement;
+                }
+                return parent || this;
+            },
+            
+            _shortcutPressed: function (e) {
+                console.log("Intercepted key event ", e);
+            }
+        });
+    </script>
+</dom-module>

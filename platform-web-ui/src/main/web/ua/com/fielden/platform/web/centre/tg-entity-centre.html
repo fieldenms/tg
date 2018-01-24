@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/components/tg-confirmation-dialog.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/centre/tg-selection-view.html">
+<link rel="import" href="/resources/centre/tg-centre-result-view.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
@@ -152,7 +153,7 @@
                     </tg-selection-view>
                 </paper-material>
             </div>
-            <div id="centreResultContainer" class="centre-result-container fit layout horizontal justified">
+            <tg-centre-result-view id="centreResultContainer">
                 <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
                     <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
                 </div>
@@ -172,7 +173,7 @@
                     <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
                 </div>
                 <div id="fantomSplitter" class="fantom-splitter"></div>
-            </div>
+            </tg-centre-result-view>
         </iron-pages>
     </template>
 </dom-module>
