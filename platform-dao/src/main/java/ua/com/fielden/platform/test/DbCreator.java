@@ -37,7 +37,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
 
-    private final Logger logger = Logger.getLogger(getClass());
+    protected final Logger logger = Logger.getLogger(getClass());
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
     public final Connection conn;
