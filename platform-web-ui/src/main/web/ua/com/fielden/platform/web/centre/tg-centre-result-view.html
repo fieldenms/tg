@@ -50,7 +50,14 @@
             },
             
             _shortcutPressed: function (e) {
-                console.log("Intercepted key event ", e);
+                let parent = this;
+                while (parent && !parent.classList.contains('generatedCentre')) {
+                    parent = parent.parentElement;
+                }
+                if (parent) {
+                    // if parent entity centre was found, then redirect shortcut to it
+                    parent.$.egi._shortcutPressed(e);
+                }
             }
         });
     </script>
