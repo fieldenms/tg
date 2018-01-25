@@ -255,9 +255,11 @@
             
             attached: function () {
                 if (!this.egiBindingAdded) {
-                    const resultView = this.findResultView();
-                    if (resultView) {
-                        this.addOwnKeyBinding(resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
+                    // cache parent result view, that contains this insertion point
+                    this.resultView = this.findResultView();
+                    if (this.resultView) {
+                        // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
+                        this.addOwnKeyBinding(this.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
                         this.egiBindingAdded = true;
                     }
                 }
@@ -462,25 +464,20 @@
                 this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
             },
             
+            /**
+             * Redirect EGI shortcut handling to parent result view which will redirect it further to EGI.
+             */
             _egiShortcutPressed: function (e) {
-                const resultView = this.findResultView();
-                if (resultView) {
-                    resultView._shortcutPressed(e);
+                if (this.resultView) {
+                    this.resultView._shortcutPressed(e);
                 }
             },
             
-            startingPoint: function () {
-                if (this.detached) {
-                    const rect = this.$.insertionPointContent.getBoundingClientRect();
-                    return document.elementFromPoint(rect.right + 1, rect.bottom + 1);
-                } else {
-                    return this;
-                }
-            },
-            
+            /**
+             * Finds parent result view for this insertion point. It should be done only in 'attached' insertion point state.
+             */
             findResultView: function () {
-                const startingPoint = this.startingPoint();
-                let parent = startingPoint;
+                let parent = this;
                 while (parent && !parent.classList.contains('centreResultView')) {
                     parent = parent.parentElement;
                 }
