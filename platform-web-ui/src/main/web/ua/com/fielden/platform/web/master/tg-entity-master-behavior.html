@@ -455,10 +455,12 @@
                             actionModel.primaryAction = self.primaryAction;
                             
                             actionModel.preAction = function (action) {
+                                delete action['success'];
                                 console.log('preAction: ' + actionDesc);
                                 return Promise.resolve(true);
                             };
                             actionModel.postActionSuccess = function (functionalEntity) {
+                                action.success = true;
                                 console.log('postActionSuccess: ' + actionDesc, functionalEntity);
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
@@ -478,7 +480,7 @@
                             var _self = this;
                             action._actionProgressStatusChanged = (function (newValue, oldValue) {
                                 old_actionProgressStatusChanged(newValue, oldValue);
-                                if (newValue === false) {
+                                if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                                     _self.enableView();
                                     _self._savingInitiated = false;
                                 }
