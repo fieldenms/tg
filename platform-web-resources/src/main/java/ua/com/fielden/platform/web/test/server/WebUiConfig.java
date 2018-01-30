@@ -117,7 +117,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -1682,37 +1681,37 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
         if (isComposite) {
-            return scl.addInsertionPoint(
-                    action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Insertion Point")
-                            .longDesc("Functional context-dependent Insertion Point")
-                            .prefDimForView(mkDim("''", "'500px'"))
-                            .withNoParentCentreRefresh()
-                            .build(),
-                    InsertionPoints.RIGHT)
-                    .addInsertionPoint(
-                            action(TgCentreInvokerWithCentreContext.class)
-                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                                    .icon("assignment-ind")
-                                    .shortDesc("Insertion Point")
-                                    .longDesc("Functional context-dependent Insertion Point")
-                                    .prefDimForView(mkDim("''", "'500px'"))
-                                    .withNoParentCentreRefresh()
-                                    .build(),
-                            InsertionPoints.RIGHT)
-                    .addInsertionPoint(
-                            action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Insertion Point")
-                            .longDesc("Functional context-dependent Insertion Point")
-                            .prefDimForView(mkDim("'350px'", "'500px'"))
-                            .withNoParentCentreRefresh()
-                            .build(),
-                    InsertionPoints.LEFT)
-                    .build();
+//            return scl.addInsertionPoint(
+//                    action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("''", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.RIGHT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                                    .icon("assignment-ind")
+//                                    .shortDesc("Insertion Point")
+//                                    .longDesc("Functional context-dependent Insertion Point")
+//                                    .prefDimForView(mkDim("''", "'500px'"))
+//                                    .withNoParentCentreRefresh()
+//                                    .build(),
+//                            InsertionPoints.RIGHT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.LEFT)
+//                    .build();
         }
         return scl.build();
     }

@@ -461,12 +461,17 @@
                     dialog.closeDialog();
                     if (dialog.opened) {
                         canClose = false;
+                        if (dialog._minimised) {
+                            dialog._invertDialogState('_minimised');
+                        }
+                        if (!dialog._maximised) {
+                            dialog.center();
+                        }
                         if (dialog._childDialogs.length === 0) {
                             dialog._focusDialogWithInput();
                         }
                     }
                 });
-
                 return canClose;
             },
             
