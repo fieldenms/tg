@@ -100,6 +100,8 @@
 					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
 					<systemPropertyVariables>
 						<databaseUri>./src/test/resources/db/TEST_DB_${surefire.forkNumber}</databaseUri>
+						<loadDdlScriptFromFile>false</loadDdlScriptFromFile>
+						<saveDdlScriptToFile>false</saveDdlScriptToFile>
 						<legacyTests.databaseUri>./src/test/resources/db/TEST_DB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
 					</systemPropertyVariables>
 				</configuration>

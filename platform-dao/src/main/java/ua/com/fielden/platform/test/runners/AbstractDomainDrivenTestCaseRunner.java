@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.test.runners;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
-import java.io.FileInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -11,7 +12,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -19,6 +19,7 @@ import org.junit.runners.model.Statement;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -46,14 +47,6 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     private static final List<String> ddlScript = new ArrayList<>();
     
     /**
-     * The data script can be cached at the runner instance level due to the fact that the same data is used by all tests in the same test case,
-     * and a single runner instance is used for all those tests.
-     * 
-     * TODO: it is yet to be utilised.
-     */
-    private final List<String> dataScript = new ArrayList<>();
-    
-    /**
      * The name of the database to be used for testing.
      */
     protected final String databaseUri;
@@ -63,7 +56,10 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     private static EntityFactory factory;
 
     
-    public AbstractDomainDrivenTestCaseRunner(final Class<?> klass, final Class<? extends DbCreator> dbCreatorType, final Optional<IDomainDrivenTestCaseConfiguration> testConfig) throws Exception {
+    public AbstractDomainDrivenTestCaseRunner(
+            final Class<?> klass, 
+            final Class<? extends DbCreator> dbCreatorType, 
+            final Optional<IDomainDrivenTestCaseConfiguration> testConfig) throws Exception {
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
@@ -72,13 +68,36 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         
         // databaseUri value should be specified in POM or come from the command line
         // however, need to provide a sensible default not to force developers to specify this parameter for each test case in IDE, assuming H2 is the default
-        if (StringUtils.isEmpty(System.getProperty("databaseUri"))) {
+        if (isEmpty(System.getProperty("databaseUri"))) {
             databaseUri = "./src/test/resources/db/DEFAULT_TEST_DB";
         } else {
             databaseUri = System.getProperty("databaseUri");
         }
+        
+        // check if loadDdlScriptFromFile is specified 
+        final boolean loadDdlScriptFromFile;
+        if (isEmpty(System.getProperty("loadDdlScriptFromFile"))) {
+            loadDdlScriptFromFile = false;
+        } else {
+            loadDdlScriptFromFile = Boolean.parseBoolean(System.getProperty("loadDdlScriptFromFile"));
+        }
+        
+        // check if saveDdlScriptToFile is specified
+        final boolean saveScriptsToFile;
+        if (isEmpty(System.getProperty("saveScriptsToFile"))) {
+            saveScriptsToFile = false;
+        } else {
+            saveScriptsToFile = Boolean.parseBoolean(System.getProperty("saveScriptsToFile"));
+        }
 
-        logger.info("RUNNER for type: " + klass + " and db URI = " + databaseUri);
+        final boolean loadDataScriptFromFile;
+        if (isEmpty(System.getProperty("loadDataScriptFromFile"))) {
+            loadDataScriptFromFile = false;
+        } else {
+            loadDataScriptFromFile = Boolean.parseBoolean(System.getProperty("loadDataScriptFromFile"));
+        }
+
+        logger.info(format("Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]", klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
 
         // lets construct and assign test configuration
         // this should occur only once per JVM instance as this is a computationally intensive operation
@@ -99,9 +118,27 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
         }
 
+        // try loading the DDL script if applicable
+        final boolean execDdslScripts = ddlScript.isEmpty();
+        if (ddlScript.isEmpty() && loadDdlScriptFromFile) {
+            logger.info(format("Loading DDL scripts from [%s]... ", ddlScriptFileName));
+            ddlScript.addAll(DbCreator.loadScriptFromFile(ddlScriptFileName));
+            logger.info(format("Loaded [%s] DDL scripts... if 0 then it will be generated...", ddlScript.size()));
+        }
+
         // get constructor for instantiation of DB creator and instantiate it 
-        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, IDomainDrivenTestCaseConfiguration.class, List.class);
-        this.dbCreator = constructor.newInstance(klass, dbProps, config, ddlScript);
+        final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, IDomainDrivenTestCaseConfiguration.class, List.class, boolean.class);
+        this.dbCreator = constructor.newInstance(klass, dbProps, config, ddlScript, execDdslScripts);
+
+        if (saveScriptsToFile) {
+            saveDdlScript();
+        }
+    }
+
+    public AbstractDomainDrivenTestCaseRunner saveDdlScript() {
+        logger.info(format("Saving [%s] DDL scripts to [%s].", ddlScript.size(), ddlScriptFileName));
+        DbCreator.saveScriptToFile(ddlScript, ddlScriptFileName);
+        return this;
     }
 
     /**
@@ -128,7 +165,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     /**
      * A routine to clean up the database once it is no longer needed. For example, in case of H2 the database file can be deleted.
      */
-    protected void dbCleanUp() {
+    public void dbCleanUp() {
         dbCreator.closeConnetion();
     }
     
@@ -160,12 +197,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
      */
     private static IDomainDrivenTestCaseConfiguration createConfig(final Properties props) {
         try {
-            final Properties testProps = new Properties();
-            try (final FileInputStream in = new FileInputStream("src/test/resources/test.properties")) {
-                testProps.load(in);
-            }
-
-            final String configClassName = testProps.getProperty("config-domain");
+            final String configClassName = props.getProperty("config.domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
             final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
             return constructor.newInstance(props);
@@ -185,5 +217,5 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         field.setAccessible(true);
         field.set(null, newValue);
      }
-
+    
 }

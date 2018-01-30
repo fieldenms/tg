@@ -22,13 +22,13 @@ import ua.com.fielden.platform.test.db_creators.H2DbCreator;
  * @author TG Team
  *
  */
-public class H2DomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRunner {
+public class H2TgDomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRunner {
 
-    public H2DomainDrivenTestCaseRunner(final Class<?> klass) throws Exception {
+    public H2TgDomainDrivenTestCaseRunner(final Class<?> klass) throws Exception {
         super(klass, H2DbCreator.class, Optional.empty());
     }
     
-    public H2DomainDrivenTestCaseRunner(final Class<?> klass, final IDomainDrivenTestCaseConfiguration config) throws Exception {
+    public H2TgDomainDrivenTestCaseRunner(final Class<?> klass, final IDomainDrivenTestCaseConfiguration config) throws Exception {
         super(klass, H2DbCreator.class, Optional.of(config));
     }
 
@@ -38,24 +38,25 @@ public class H2DomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRu
      */
     @Override
     protected Properties mkDbProps(final String dbUri) {
-        final Properties dbProps = new Properties();
+        final Properties props = new Properties();
+        props.setProperty("config.domain", "ua.com.fielden.platform.test.PlatformDomainDrivenTestCaseConfiguration");
+        props.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
         // referential integrity is disabled to enable table truncation and test data re-population out of order
-        dbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbUri));
-        dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-        dbProps.setProperty("hibernate.connection.username", "sa");
-        dbProps.setProperty("hibernate.connection.password", "");
-        dbProps.setProperty("hibernate.show_sql", "false");
-        dbProps.setProperty("hibernate.format_sql", "true");
+        props.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbUri));
+        props.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
+        props.setProperty("hibernate.connection.username", "sa");
+        props.setProperty("hibernate.connection.password", "");
+        props.setProperty("hibernate.show_sql", "false");
+        props.setProperty("hibernate.format_sql", "true");
 
-        return dbProps;
+        return props;
     }
 
     /**
      * Removes the test db file in addition to the inherited cleanup functionality, which closes db connection.
      */
     @Override
-    protected void dbCleanUp() {
+    public void dbCleanUp() {
         super.dbCleanUp();
         
         final Path rootPath = Paths.get(DbCreator.baseDir);

@@ -7,17 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 public class EntityResourceContinuationsHelper {
-    private final static Logger logger = Logger.getLogger(EntityResourceContinuationsHelper.class);
-
+    
     /**
      * Saves the <code>entity</code> with its <code>continuations</code>.
      *
@@ -42,11 +41,13 @@ public class EntityResourceContinuationsHelper {
         final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
         
         if (isValid.isSuccessful()) {
-            final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
-            if (entity.hasWarnings() && (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null)) {
-                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
-            } else if (entity.hasWarnings() && continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
-                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+            if (entity.warnings().stream().anyMatch(EntityResourceUtils::isNonConflicting)) {
+                final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
+                if (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null) {
+                    throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
+                } else if (continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
+                    entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+                }
             }
         }
 

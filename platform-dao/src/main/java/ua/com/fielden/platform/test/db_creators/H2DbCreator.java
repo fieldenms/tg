@@ -29,9 +29,14 @@ import ua.com.fielden.platform.utils.DbUtils;
  */
 public class H2DbCreator extends DbCreator {
 
-    public H2DbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Properties props, final IDomainDrivenTestCaseConfiguration config, final List<String> maybeDdl)
+    public H2DbCreator(
+            final Class<? extends AbstractDomainDrivenTestCase> testCaseType, 
+            final Properties props, 
+            final IDomainDrivenTestCaseConfiguration config, 
+            final List<String> maybeDdl,
+            final boolean execDdslScripts)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        super(testCaseType, props, config, maybeDdl);
+        super(testCaseType, props, config, maybeDdl, execDdslScripts);
     }
 
     /**
