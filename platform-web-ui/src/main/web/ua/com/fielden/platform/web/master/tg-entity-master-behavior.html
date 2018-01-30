@@ -175,21 +175,17 @@
                 },
 
                 /**
-                 * The context holder creator (SavingInfoHolder) which is used for entity and property actions in the context of non-functional entity master.
+                 * The context holder creator (SavingInfoHolder) which is used for entity / property / continuation actions in the context of entity master.
+                 *
+                 * Initially this function contained only the data that represents the entity (entity1) on this entity master.
+                 * However this was not sufficient for continuations: the parent context (masterEntity of entity1) was needed to properly restore entity1 through the chain of producer invocations.
+                 * For now we really have another example: property actions (as well as entity actions) on entity master could also be invoked from newly created entities, and this requires parent context
+                 * to be present too.
                  */
                 _createContextHolder: {
                     type: Function
                 },
                 
-                /**
-                 * The context holder creator (SavingInfoHolder) which is used for continuation actions in the context of non-functional entity master.
-                 * The difference from '_createContextHolder' is only in aspect of parent context -- it always exists for continuation master entity.
-                 */
-                _createContextHolderForContinuations: {
-                    type: Function,
-                    notify: true
-                },
-
                 /**
                  * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
                  * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
@@ -330,36 +326,31 @@
 
                 self._createActions();
 
-                self._create_createContextHolder_function = (function (forContinuations) {
-                    return (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
-                    
-                        var getThisMasterEntity = function () {
-                            var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-
-                            // @@funcEntityType is really a master entity type, which in this case is not functional!!!
-                            var masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
-                                null, null, forContinuations ? (this.getMasterEntity ? 'true' : null) : null,
-                                null, null, forContinuations ? (this.getMasterEntity ? this.getMasterEntity : null) : null
-                            );
-                            this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
-                        }.bind(this);
-
-                        var contextHolder = this._reflector().createContextHolder(
-                            null, null, requireMasterEntity,
-                            null, null, getThisMasterEntity
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+                    const getThisMasterEntity = function () {
+                        const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                        
+                        // @@funcEntityType is really a master entity type, which in this case is not functional!!!
+                        const masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
+                            null, null, this.getMasterEntity ? 'true' : null,
+                            null, null, this.getMasterEntity ? this.getMasterEntity : null
                         );
+                        this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
+                        return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
+                    }.bind(this);
                     
-                        this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
-                        this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
-                        this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    const contextHolder = this._reflector().createContextHolder(
+                        null, null, requireMasterEntity,
+                        null, null, getThisMasterEntity
+                    );
                     
-                        return contextHolder;
-                    }).bind(this);
+                    this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    
+                    return contextHolder;
                 }).bind(self);
                 
-                self._createContextHolder = self._create_createContextHolder_function(false);
-
                 // calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postSavedDefault = (function (potentiallySavedOrNewEntity) {
                     // 'potentiallySavedOrNewEntity' can have two natures:
@@ -427,9 +418,6 @@
                         
                         var action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                         if (!action) {
-                            if (!this._createContextHolderForContinuations) {
-                                this._createContextHolderForContinuations = this._create_createContextHolder_function(true);
-                            }
                             var actionModel = document.createElement('template', 'dom-bind');
                             actionModel.innerHTML = 
                                 "<tg-ui-action " +
@@ -446,7 +434,7 @@
                                      // "number-of-action='...' " + // numberOfAction is not needed (it is used directly for compound master menu items and insertion points -- no intersection with continuations)
                                      "element-alias='" + elementName + "_" + continuationProperty + "_CONTINUATION' " +
                                      "show-dialog='[[_showDialog]]' " +
-                                     "create-context-holder='[[_createContextHolderForContinuations]]' " +
+                                     "create-context-holder='[[_createContextHolder]]' " +
                                      "attrs='[[attrs]]' " +
                                      "pre-action='[[preAction]]' " +
                                      "post-action-success='[[postActionSuccess]]' " +
@@ -463,7 +451,7 @@
                             action = actionModel.$.continuationAction;
                             
                             actionModel._showDialog = self._showDialog;
-                            actionModel._createContextHolderForContinuations = self._createContextHolderForContinuations;
+                            actionModel._createContextHolder = self._createContextHolder;
                             actionModel.primaryAction = self.primaryAction;
                             
                             actionModel.preAction = function (action) {
