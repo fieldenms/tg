@@ -46,6 +46,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -83,7 +84,17 @@ public class EntityResourceUtils {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
     }
-
+    
+    /**
+     * Returns <code>true</code> in case where the <code>warning</code> does not represent special 'conflicting' warning, <code>false</code> otherwise.
+     * 
+     * @param warning
+     * @return
+     */
+    public static boolean isNonConflicting(final Warning warning) {
+        return !CONFLICT_WARNING.equals(warning.getMessage());
+    }
+    
     /**
      * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
      * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
