@@ -99,9 +99,9 @@ public class TableDdl {
     public String createTableSchema(final Dialect dialect) {
         final StringBuilder sb = new StringBuilder();
         sb.append(format("CREATE TABLE %s (", tableName(entityType)));
-        sb.append("\n");
-        sb.append(columns.stream().map(col -> "    " + col.schemaString(dialect)).collect(Collectors.joining(",\n")));
-        sb.append("\n);");
+        sb.append(" ");
+        sb.append(columns.stream().map(col -> "    " + col.schemaString(dialect)).collect(Collectors.joining(", ")));
+        sb.append(" );");
         return sb.toString();
     }
 
@@ -177,7 +177,7 @@ public class TableDdl {
         final String tableName = tableName(entityType);
         final StringBuilder sb = new StringBuilder();
         sb.append(format("ALTER TABLE %s ", tableName));
-        sb.append("\n");
+        sb.append(" ");
         sb.append(format("ADD CONSTRAINT PK_%s_ID PRIMARY KEY (_ID);", tableName));
         return sb.toString();
     }
@@ -214,7 +214,7 @@ public class TableDdl {
 
     private void fkConstraint(final Dialect dialect, final String thisTableName, final String colName, final StringBuilder sb, final String thatTableName) {
         sb.append(format("ALTER TABLE %s ", thisTableName));
-        sb.append("\n");
+        sb.append(" ");
         sb.append(format("ADD CONSTRAINT FK_%s_%s FOREIGN KEY (%s) REFERENCES %s (_ID);", thisTableName, colName, colName, thatTableName));
     }
 

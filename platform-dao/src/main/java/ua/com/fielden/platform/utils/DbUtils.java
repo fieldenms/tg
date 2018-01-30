@@ -19,13 +19,16 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
 import org.hibernate.tool.schema.TargetType;
@@ -39,6 +42,7 @@ import ua.com.fielden.platform.ddl.MetadataProvider;
  *
  */
 public class DbUtils {
+    private final static Logger LOGGER = Logger.getLogger(DbUtils.class);
     
     private DbUtils() {}
 
@@ -65,6 +69,34 @@ public class DbUtils {
             }
         };
         return session.doReturningWork(maxReturningWork).orElseThrow(() -> new HibernateException(format("Could not obtain the next value for ID based on sequence [%s].", seqName)));
+    }
+
+    
+    /**
+     * Drops and creates the specified sequence with new initial value <code>startWithValue</code>.
+     * The specified sequence must exists before using this function.
+     * 
+     * @param seqName
+     * @param startWithValue
+     * @param session
+     */
+    public static void resetSequenceGenerator(final String seqName, final int startWithValue, final Session session) {
+        final Work recreateSequence = new Work() {
+            @Override
+            public void execute(Connection connection) throws SQLException {
+                final Dialect dialect =  new StandardDialectResolver().resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(connection.getMetaData()));
+                try (final Statement st = connection.createStatement()) {
+                    // first try to drop sequence, it should already exist
+                    st.execute(dialect.getDropSequenceStrings(seqName)[0]);
+                    // then try to re-create sequence with new initial value
+                    st.execute(dialect.getCreateSequenceStrings(seqName, startWithValue, 1)[0]);
+                } catch (final Exception ex) {
+                    LOGGER.warn(format("Could not reset sequnece [%s] due to: %s", seqName, ex.getMessage()), ex);
+                    throw ex;
+                }
+            }
+        };
+        session.doWork(recreateSequence);
     }
 
     /**
