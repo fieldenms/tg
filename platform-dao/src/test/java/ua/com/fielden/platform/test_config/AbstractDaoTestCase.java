@@ -24,7 +24,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
-import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseRunner;
+import ua.com.fielden.platform.test.runners.H2TgDomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-@RunWith(H2DomainDrivenTestCaseRunner.class)
+@RunWith(H2TgDomainDrivenTestCaseRunner.class)
 public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
     public static final String UNIT_TEST_USER = User.system_users.UNIT_TEST_USER.name();
@@ -49,6 +49,8 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
      */
     @Override
     protected void populateDomain() {
+        resetIdGenerator();
+        
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(new DateTime());
 

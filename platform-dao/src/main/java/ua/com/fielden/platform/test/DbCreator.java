@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test;
 import static java.lang.String.format;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
  */
 public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
+    public static final String ddlScriptFileName = format("%s/create-db-ddl.script", DbCreator.baseDir);
 
     protected final Logger logger = Logger.getLogger(getClass());
 
@@ -51,7 +53,8 @@ public abstract class DbCreator {
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType, 
             final Properties defaultDbProps,
             final IDomainDrivenTestCaseConfiguration config,
-            final List<String> maybeDdl) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            final List<String> maybeDdl,
+            final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         this.testCaseType = testCaseType;
         this.entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
@@ -67,7 +70,9 @@ public abstract class DbCreator {
             final Dialect dialect = (Dialect) dialectType.newInstance();
         
             maybeDdl.addAll(genDdl(config.getDomainMetadata(), dialect));
-            
+        }
+        
+        if (execDdslScripts) {
             // recreate DB structures
             logger.info("CREATING DB SCHEMA...");
             execSql(maybeDdl, conn, 0);
@@ -164,19 +169,19 @@ public abstract class DbCreator {
             dataScripts.clear();
             final File dataPopulationScriptFile = new File(dataScriptFile(testCaseType));
             if (!dataPopulationScriptFile.exists()) {
-                throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile(testCaseType)));
+                throw new DomainDriventTestException(format("File %s with data population script is missing.", dataScriptFile(testCaseType)));
             }
             dataScripts.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
 
             truncateScripts.clear();
             final File truncateTablesScriptFile = new File(truncateScriptFile(testCaseType));
             if (!truncateTablesScriptFile.exists()) {
-                throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
+                throw new DomainDriventTestException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
             }
             truncateScripts.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
 
             execSql(dataScripts, conn, 100);
-        } catch (final Exception ex) {
+        } catch (final IOException ex) {
             throw new DomainDriventTestException("Could not resotre data population and truncation scripts from files.", ex);
         }
     }
@@ -197,30 +202,10 @@ public abstract class DbCreator {
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
-                try (PrintWriter out = new PrintWriter(dataScriptFile(testCaseType), StandardCharsets.UTF_8.name())) {
-                    final StringBuilder builder = new StringBuilder();
-                    for (final Iterator<String> iter = dataScripts.iterator(); iter.hasNext();) {
-                        final String line = iter.next();
-                        builder.append(line);
-                        if (iter.hasNext()) {
-                            builder.append("\n");
-                        }
-                    }
-                    out.print(builder.toString());
-                }
+                saveScriptToFile(dataScripts, dataScriptFile(testCaseType));
 
                 // flush table truncation script to file for later use
-                try (PrintWriter out = new PrintWriter(truncateScriptFile(testCaseType), StandardCharsets.UTF_8.name())) {
-                    final StringBuilder builder = new StringBuilder();
-                    for (final Iterator<String> iter = truncateScripts.iterator(); iter.hasNext();) {
-                        final String line = iter.next();
-                        builder.append(line);
-                        if (iter.hasNext()) {
-                            builder.append("\n");
-                        }
-                    }
-                    out.print(builder.toString());
-                }
+                saveScriptToFile(truncateScripts, truncateScriptFile(testCaseType));
             }
         } catch (final Exception ex) {
             throw new DomainDriventTestException("Could not generate data population script.", ex);
@@ -314,6 +299,46 @@ public abstract class DbCreator {
     
     protected String truncateScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
         return format("%s/truncate-%s.script", baseDir, testCaseType.getSimpleName());
+    }
+
+    /**
+     * A helper function to load scripts from a file.
+     * If the file does not exist then an empty list is returned (i.e. no errors or exceptions).
+     * 
+     * @param scriptFileName
+     * @return
+     * @throws IOException
+     */
+    public static List<String> loadScriptFromFile(final String scriptFileName) throws IOException {
+        final File dataPopulationScriptFile = new File(scriptFileName);
+        if (!dataPopulationScriptFile.exists()) {
+            //logger.warn(format("DDL script file [%s] is missing.", scriptFileName))
+            return new ArrayList<>();
+        }
+        return Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * A helper function for saving scripts to files.
+     * 
+     * @param scripts
+     * @param fileName
+     */
+    public static void saveScriptToFile(final List<String> scripts, final String fileName) {
+        try (final PrintWriter out = new PrintWriter(fileName, StandardCharsets.UTF_8.name())) {
+            final StringBuilder builder = new StringBuilder();
+            for (final Iterator<String> iter = scripts.iterator(); iter.hasNext();) {
+                final String line = iter.next();
+                builder.append(line);
+                if (iter.hasNext()) {
+                    builder.append("\n");
+                }
+            }
+            out.print(builder.toString());
+        } catch (final Exception ex) {
+            throw new DomainDriventTestException(format("Could not save [%s] scripts to file [%s].", scripts.size(), fileName));
+        }
+
     }
 
 }

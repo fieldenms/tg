@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
@@ -22,6 +23,7 @@ import org.junit.Before;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -29,6 +31,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.utils.DbUtils;
 
 /**
  * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
@@ -66,6 +69,11 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Before
     public final void beforeTest() throws Exception {
         dbCreator.populateOrRestoreData(this);
+    }
+    
+    @SessionRequired
+    protected void resetIdGenerator() {
+        DbUtils.resetSequenceGenerator(ID_SEQUENCE_NAME, 1000000, this.getSession());
     }
    
     @After
