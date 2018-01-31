@@ -400,9 +400,17 @@ public class EntityUtils {
         if (o1 == o2) {
             result = true;
         } else if (o1 != null && o2 != null) {
-            // comparison of decimals requires special handling
+            // comparison of decimals requires special handling and it must be the first check
             if (o1 instanceof BigDecimal && o2 instanceof BigDecimal) {
                 result = ((BigDecimal) o1).compareTo((BigDecimal) o2) == 0;
+            } else if (o1.getClass().isAssignableFrom(o2.getClass())) {
+                result = o1.equals(o2);
+            } else if (o2.getClass().isAssignableFrom(o1.getClass())) {
+                result = o2.equals(o1);
+            } else if (o1 instanceof DateTime && o2 instanceof Date) {
+                result = equalsEx(((DateTime) o1).toDate(), o2);
+            } else if (o1 instanceof Date && o2 instanceof DateTime) {
+                result = equalsEx(o1, ((DateTime) o2).toDate());
             } else {
                 result = o1.equals(o2);
             }
