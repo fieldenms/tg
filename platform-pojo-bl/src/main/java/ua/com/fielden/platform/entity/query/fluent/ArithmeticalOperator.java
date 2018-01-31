@@ -1,20 +1,39 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-public enum ArithmeticalOperator {
-    ADD("+"), SUB("-"), DIV("/"), MULT("*"), MOD("%");
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IArithmeticalOperator;
 
-    private final String value;
+abstract class ArithmeticalOperator<T> //
+		extends AbstractQueryLink //
+		implements IArithmeticalOperator<T> {
 
-    ArithmeticalOperator(final String value) {
-        this.value = value;
+    protected ArithmeticalOperator(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForArithmeticalOperator(final Tokens tokens);
 
-    public String getValue() {
-        return value;
-    }
+	@Override
+	public T add() {
+		return nextForArithmeticalOperator(getTokens().add());
+	}
 
-    @Override
-    public String toString() {
-        return value;
-    }
+	@Override
+	public T sub() {
+		return nextForArithmeticalOperator(getTokens().subtract());
+	}
+
+	@Override
+	public T mult() {
+		return nextForArithmeticalOperator(getTokens().multiply());
+	}
+
+	@Override
+	public T div() {
+		return nextForArithmeticalOperator(getTokens().divide());
+	}
+
+	@Override
+	public T mod() {
+		return nextForArithmeticalOperator(getTokens().modulo());
+	}
 }

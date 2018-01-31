@@ -1,102 +1,119 @@
 <link rel="import" href="/resources/polymer/leaflet/leaflet-lib.html">
 
 <script>
-(function() {
-    const Select = function (_map, _getLayerById, _markerFactory, tgMap) {
-        const self = this;
-        
-        self._map = _map;
-        self._getLayerById = _getLayerById;
-        self._markerFactory = _markerFactory;
-        
-        self._featureToLeafletIds = {};
-        self._prevId = null;
-        self._tgMap = tgMap;
-        
-        self._retrievedEntitySelectionHandler = function (newRetrievedEntitySelection) {
-            if (newRetrievedEntitySelection.selected) {
-                self.selectByIdTabularly(newRetrievedEntitySelection.entity.properties.layerId);
-            } else {
-                self.deselectByIdTabularly(newRetrievedEntitySelection.entity.properties.layerId);
-            }
+    (function () {
+        const Select = function (_map, _getLayerById, _markerFactory, tgMap) {
+            const self = this;
+
+            self._map = _map;
+            self._getLayerById = _getLayerById;
+            self._markerFactory = _markerFactory;
+
+            self._featureToLeafletIds = {};
+            self._prevId = null;
+            self._tgMap = tgMap;
+
+            self._centreSelectionHandler = function (newSelection) {
+                if (newSelection.entities.length == 1) {
+                    const selectionEntity = newSelection.entities[0];
+                    if (selectionEntity.select) {
+                        self._silentlySelectById(selectionEntity.entity.properties.layerId);
+                    } else {
+                        self._silentlyDeselectById(selectionEntity.entity.properties.layerId)
+                    }
+                }
+            };
+            self._tgMap.centreSelectionHandler = self._centreSelectionHandler;
         };
-        self._tgMap.retrievedEntitySelectionHandler = self._retrievedEntitySelectionHandler;
-    };
-    
-    Select.prototype._deselectVisuallyWithoutEventFiring = function (layerId) {
-        const layer = this._getLayerById(layerId);
-        // console.debug('_deselectVisuallyWithoutEventFiring: layerId =', layerId, 'layer =', layer);
-        if (layer instanceof this._markerFactory.ArrowMarker || layer instanceof this._markerFactory.CircleMarker) {
-            layer.setSelected(false);
+
+        Select.prototype.select = function (layerId) {
+            if (this._prevId !== layerId) {
+                const details = [];
+                const prevId = this._prevId;
+                //selecting entity.
+                this._silentlySelect(layerId);
+                this._prevId = layerId;
+                details.push({
+                    entity: this._getLayerById(layerId).feature,
+                    select: true
+                });
+                if (prevId !== null) {
+                    this._silentlyDeselect(prevId);
+                    details.push({
+                        entity: this._getLayerById(prevId).feature,
+                        select: false
+                    });
+                }
+                if (details.length > 0) {
+                    const event = new CustomEvent("tg-entity-selected", {
+                        detail: {
+                            shouldScrollToSelected: true,
+                            entities: details
+                        },
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    this._tgMap.getCustomEventTarget().dispatchEvent(event);
+                }
+            }
         }
-    }
-    
-    Select.prototype._selectVisuallyWithoutEventFiring = function (layerId) {
-        const layer = this._getLayerById(layerId);
-        // console.debug('_selectVisuallyWithoutEventFiring: layerId =', layerId, 'layer =', layer);
-        if (layer instanceof this._markerFactory.ArrowMarker || layer instanceof this._markerFactory.CircleMarker) {
-            this._map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)
-            layer.setSelected(true);
-        } else if (layer instanceof L.Polygon) {
-            this._map.fitBounds(layer.getBounds());
-            // map.panTo(layer.getBounds().getCenter()); // fitToBounds?
-        }
-    }
-    
-    Select.prototype._selectTabularlyWithoutEventFiring = function (layerId) {
-        // console.debug('_selectTabularlyWithoutEventFiring: layerId =', layerId);
-        const layer = this._getLayerById(layerId);
-        const feature = layer.feature;
         
-        this._tgMap.retrievedEntitySelectionHandler = function () {};
-        this._tgMap.retrievedEntitySelection = {entity: feature, selected: true};
-        this._tgMap.retrievedEntitySelectionHandler = this._retrievedEntitySelectionHandler;
-    }
-    
-    Select.prototype._deselectTabularlyWithoutEventFiring = function (layerId) {
-        // console.debug('_deselectTabularlyWithoutEventFiring: layerId =', layerId);
-        const layer = this._getLayerById(layerId);
-        const feature = layer.feature;
-        
-        // if (! (this._tgMap.retrievedEntitySelection.entity === feature && this._tgMap.retrievedEntitySelection.selected === false) ) {
-        this._tgMap.retrievedEntitySelectionHandler = function () {};
-        this._tgMap.retrievedEntitySelection = {entity: feature, selected: false};
-        this._tgMap.retrievedEntitySelectionHandler = this._retrievedEntitySelectionHandler;
-        // }
-    }
-    
-    Select.prototype.selectByIdVisually = function (layerId) {
-        // console.debug("selectByIdVisually(" + layerId + ");");
-        if (this._prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
-            this._deselectVisuallyWithoutEventFiring(this._prevId);
-            this._deselectTabularlyWithoutEventFiring(this._prevId);
+        Select.prototype._deselect = function (layerId) {
+            const layer = this._getLayerById(layerId);
+            const feature = layer.feature;
+
+            const event = new CustomEvent("tg-entity-selected", {
+                detail: {
+                    shouldScrollToSelected: true,
+                    entities: [{
+                        entity: feature,
+                        select: false
+                    }]
+                },
+                bubbles: true,
+                cancelable: true
+            });
+            this._tgMap.getCustomEventTarget().dispatchEvent(event);
         }
-        this._selectVisuallyWithoutEventFiring(layerId);
-        this._selectTabularlyWithoutEventFiring(layerId);
-        this._prevId = layerId;
-    }
-    
-    Select.prototype.selectByIdTabularly = function (layerId) {
-        const self = this;
-        // console.debug("selectByIdTabularly(" + layerId + ");");
-        if (this._prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
-            this._deselectVisuallyWithoutEventFiring(this._prevId);
-            const _prevId = this._prevId;
-            window.setTimeout(function () { // TODO can this be done more elegantly?
-                self._deselectTabularlyWithoutEventFiring(_prevId);
-            }, 1);
+
+        Select.prototype._silentlySelectById = function (layerId) {
+            if (this._prevId !== layerId) {
+                const prevId = this._prevId;
+                this._silentlySelect(layerId);
+                this._prevId = layerId;
+
+                if (prevId !== null) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
+                    this._deselect(prevId);
+                }
+            }
         }
-        this._selectVisuallyWithoutEventFiring(layerId);
-        this._prevId = layerId;
-    }
-    
-    Select.prototype.deselectByIdTabularly = function (layerId) {
-        // console.debug("deselectByIdTabularly(" + layerId + ");");
-        this._deselectVisuallyWithoutEventFiring(layerId);
-        this._prevId = null;
-    }
-    
-    L.GIS = L.GIS || {};
-    L.GIS.Select = Select;
-})();
+
+        Select.prototype._silentlyDeselectById = function (layerId) {
+            if (this._prevId === layerId) {
+                this._prevId = null;
+            }
+            this._silentlyDeselect(layerId);
+        }
+
+        Select.prototype._silentlyDeselect = function (layerId) {
+            const layer = this._getLayerById(layerId);
+            if (layer instanceof this._markerFactory.ArrowMarker || layer instanceof this._markerFactory.CircleMarker) {
+                layer.setSelected(false);
+            }
+        }
+
+        Select.prototype._silentlySelect = function (layerId) {
+            const layer = this._getLayerById(layerId);
+            if (layer instanceof this._markerFactory.ArrowMarker || layer instanceof this._markerFactory.CircleMarker) {
+                this._map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)
+                layer.setSelected(true);
+            } else if (layer instanceof L.Polygon) {
+                this._map.fitBounds(layer.getBounds());
+                // map.panTo(layer.getBounds().getCenter()); // fitToBounds?
+            }
+        }
+
+        L.GIS = L.GIS || {};
+        L.GIS.Select = Select;
+    })();
 </script>

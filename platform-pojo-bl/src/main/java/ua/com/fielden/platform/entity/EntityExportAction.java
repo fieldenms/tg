@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
@@ -22,11 +25,10 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
  * @author TG Team
  *
  */
-@KeyType(String.class)
+@KeyType(NoKey.class)
 @KeyTitle(value = "Export", desc = "Export data into file")
 @CompanionObject(IEntityExportAction.class)
-public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
-
+public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public static final String PROP_EXPORT_ALL = "exportAll";
     public static final String PROP_EXPORT_TOP = "exportTop";
     public static final String PROP_EXPORT_SELECTED = "exportSelected";
@@ -54,7 +56,39 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     @Title(value = "Export selected?", desc = "Export selected entities")
     @AfterChange(ExportActionHandler.class)
     private boolean exportSelected;
+    
+    @IsProperty
+    @Title("Context Holder")
+    private CentreContextHolder centreContextHolder;
+    
+    @IsProperty(Long.class)
+    @Title("Selected Entity IDs")
+    private Set<Long> selectedEntityIds = new HashSet<>();
 
+    public EntityExportAction() {
+        setKey(NO_KEY);
+    }
+    
+    @Observable
+    protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
+        this.selectedEntityIds.clear();
+        this.selectedEntityIds.addAll(selectedEntityIds);
+        return this;
+    }
+
+    public Set<Long> getSelectedEntityIds() {
+        return Collections.unmodifiableSet(selectedEntityIds);
+    }
+
+    @Observable
+    public EntityExportAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {
+        this.centreContextHolder = centreContextHolder;
+        return this;
+    }
+
+    public CentreContextHolder getCentreContextHolder() {
+        return centreContextHolder;
+    }
     @Observable
     public EntityExportAction setExportSelected(final boolean exportSelected) {
         this.exportSelected = exportSelected;

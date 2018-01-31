@@ -118,7 +118,8 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         final UserRole userRole2 = save(new_(UserRole.class, "nrole2", "nrole desc 2"));
         final UserRole userRole3 = save(new_(UserRole.class, "nrole3", "nrole desc 3"));
 
-        User user = save(new_(User.class, "new user", "new user desc").setPassword("new user password"));
+        final String newUserName = "new_user";
+        User user = save(new_(User.class, newUserName, "new user desc").setPassword("new user password"));
 
         Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));
@@ -130,7 +131,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         }
 
         // final checking weather the final person was saved final correctly with user final roles
-        user = coUser.findUserByKeyWithRoles("new user");
+        user = coUser.findUserByKeyWithRoles(newUserName);
         assertNotNull("Saved user should have been found.", user);
         assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user password", user.getPassword());
 
@@ -167,7 +168,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
 
     @Test
     public void test_count_association_between_user_and_token() {
-        final IUser coUser = co(User.class);
+        final IUser coUser = co$(User.class);
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));

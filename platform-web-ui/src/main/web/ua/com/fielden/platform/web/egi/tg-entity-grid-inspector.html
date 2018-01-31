@@ -2,18 +2,19 @@
 
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
+<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
-<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -157,9 +158,11 @@
         }
         .grid-toolbar {
             height: auto;
-            min-height: 4rem;
             position: relative;
             overflow: hidden;
+        }
+        .grid-toolbar-content::content > * {
+            margin-top: 8px;
         }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
@@ -223,10 +226,10 @@
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
-                    <div class="layout horizontal center">
+                    <div class="grid-toolbar-content layout horizontal center">
                         <content id="top_action_selctor" select=".entity-specific-action"></content>
                     </div>
-                    <div class="layout horizontal center" style="margin-left:auto">
+                    <div class="grid-toolbar-content layout horizontal center" style="margin-left:auto">
                         <content select=".standart-action"></content>
                     </div>
                 </div>
@@ -235,7 +238,7 @@
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                <paper-checkbox class="blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                <paper-checkbox class="all-checkbox blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="action-cell layout horizontal center no-flexible">
@@ -268,12 +271,12 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]">
                                         <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
-                                            <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
-                                            <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
-                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                            <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
+                                            <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                            <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
+                                            <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
                                         </template>
                                     </div>
                                 </template>
@@ -360,11 +363,11 @@
                                             </div>
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column">
-                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
-                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
-                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
-                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]">
+                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
+                                                <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
+                                                <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</div>
                                             </div>
                                         </template>
                                     </div>
@@ -500,7 +503,7 @@
                         <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
                             <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal table-header-row" style="top:0;left:0">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                    <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                    <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                     <div class="action-cell no-flexible">
@@ -586,27 +589,15 @@
             }
             return -1;
         };
-        const _processEntitySelection = function (selectedEntities, entity, select, egi) {
+        const _processEntitySelection = function (selectedEntities, entity, select) {
             var selectedIndex = selectedEntities.indexOf(entity);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
-                    if (egi) {
-                        egi.retrievedEntitySelection = {
-                            entity: entity,
-                            selected: true
-                        };
-                    }
                 }
             } else {
                 if (selectedIndex >= 0) {
                     selectedEntities.splice(selectedIndex, 1);
-                    if (egi) {
-                        egi.retrievedEntitySelection = {
-                            entity: entity,
-                            selected: false
-                        };
-                    }
                 }
             }
         };
@@ -623,23 +614,10 @@
                 return subEntity.get(key);
             });
         };
-        const getRelativePos = function (x, y, container) {
-            let reference = container;
-            let newPos = {
-                x: x,
-                y: y
-            }
-            while (reference) {
-                newPos.x -= reference.offsetLeft;
-                newPos.y -= reference.offsetTop;
-                reference = reference.offsetParent;
-            }
-            return newPos;
-        };
-        const calculateFixedColumnWidth = function(columns, numOfFixedColumns) {
+        const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
-        const calculateScrollableColumnWidth = function(columns, numOfFixedColumns) {
+        const calculateScrollableColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index >= numOfFixedColumns ? curr.width : 0), 0);
         }
         const calculateColumnWidthExcept = function (egi, columnIndex, columnElements, columnLength, checkboxes, primaryActions, secondaryActions) {
@@ -661,7 +639,23 @@
             }
             return columnWidth;
         };
+        const updateSelectAll = function (egi, egiModel) {
+            if (egiModel.length > 0 && egiModel.every(elem => elem.selected)) {
+                egi.selectedAll = true;
+            } else {
+                egi.selectedAll = false;
+            }
+        };
+        const removeColumn = function (column, fromColumns) {
+            const index = fromColumns.indexOf(column);
+            if (index >= 0) {
+                fromColumns.splice(index, 1);
+                return true;
+            }
+            return false;
+        };
         const sign = (value) => value < 0 ? -1 : 1;
+        const columnFilter = node => node.nodeType === Node.ELEMENT_NODE && node.tagName === "TG-PROPERTY-COLUMN";
         Polymer({
             is: "tg-entity-grid-inspector",
 
@@ -676,14 +670,6 @@
                     observer: "_columnsChanged"
                 },
                 /**
-                 * Last updated entity selection.
-                 */
-                retrievedEntitySelection: {
-                    type: Object,
-                    observer: '_retrievedEntitySelectionChanged',
-                    notify: true
-                },
-                /**
                  * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
                  * consistent with the order of columns.
                  *
@@ -693,11 +679,21 @@
                     type: Function,
                     notify: true
                 },
+                /**
+                 * Holds the entity centre selection and updates it's own selection model when it changes.
+                 */
+                centreSelection: {
+                    type: Object,
+                    observer: "_centreSelectionChanged"
+                },
                 lock: {
                     type: Boolean,
                     value: false
                 },
-                renderingHints: Array,
+                renderingHints: {
+                    type: Array,
+                    observer: "_renderingHintsChanged"
+                },
                 /**
                  * Defines the number of visible rows.
                  */
@@ -792,7 +788,7 @@
                 _lastSelectedIndex: Number
             },
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
 
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
@@ -817,47 +813,7 @@
             },
 
             _shortcutPressed: function (e) {
-                var shortcut = e.detail.combo;
-                console.debug('Master shortcut', shortcut, 'processing...');
-
-                var iconButton = this.querySelector('paper-icon-button[shortcut="' + shortcut + '"]');
-                if (iconButton) {
-                    // Respect nodes that are disabled in the UI.
-                    if (window.getComputedStyle(iconButton)['pointer-events'] !== 'none') {
-                        iconButton.focus();
-                        MockInteractions.tap(iconButton);
-                    }
-                } else {
-                    var action = this.querySelector('tg-action[shortcut="' + shortcut + '"]');
-                    if (action) {
-                        // Respect nodes that are disabled in the UI.
-                        if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                            action.$.actionButton.focus();
-                            action._asyncRun();
-                        }
-                    } else {
-                        var uiAction = this.querySelector('tg-ui-action[shortcut="' + shortcut + '"]');
-                        if (uiAction) {
-                            // Respect nodes that are disabled in the UI.
-                            if (!uiAction.isActionInProgress) {
-                                if (uiAction.isIconButton) {
-                                    uiAction.$.iActionButton.focus();
-                                } else {
-                                    uiAction.$.bActionButton.focus();
-                                }
-                                uiAction._run();
-                            }
-                        } else {
-                            console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
-                        }
-                    }
-                }
-
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
-                console.debug('Master shortcut', shortcut, 'processing... done');
+                this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
             },
 
             /**
@@ -885,10 +841,13 @@
                 //Initialising the egi model .
                 this.egiModel = [];
 
-                //initialising the arrays for selected entites and entities those were opened.
+                //initialising the arrays for selected entites.
                 this.selectedAll = false;
                 this.selectedEntities = [];
-                this.openedEntities = [];
+
+                //Initialise columns
+                this.allColumns = [];
+                this.columns = [];
 
                 //Initialising the primary action.
                 this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
@@ -902,6 +861,11 @@
 
                 //Initialising event listeners.
                 this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+                //Observe column DOM changes
+                Polymer.dom(this.$.column_selector).observeNodes(info => {
+                    this._columnDomChanged(info.addedNodes.filter(columnFilter), info.removedNodes.filter(columnFilter));
+                });
             },
 
             attached: function () {
@@ -911,26 +875,55 @@
                 if (this.customShortcuts) {
                     this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
                 }
+                //Initialising property column mappings
+                this.columnPropertiesMapper = (function (entity) {
+                    const result = [];
+                    for (let index = 0; index < this.columns.length; index++) {
+                        const column = this.columns[index];
+                        const entry = {
+                            dotNotation: column.property,
+                            value: this._getValue(entity, column.property, column.type)
+                        };
+                        result.push(entry);
+                    }
+                    return result;
+                }).bind(this);
                 this.async(function () {
                     this.keyEventTarget = this._getKeyEventTarget();
-                    //Initialising columns (property column mappings)
-                    this.allColumns = [];
-                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), (item) => this.allColumns.push(item));
-                    this.columns = this.allColumns;
-                    this._updateColumnsWidthProperties(false);
-                    this.columnPropertiesMapper = (function (entity) {
-                        const result = [];
-                        for (let index = 0; index < this.columns.length; index++) {
-                            const column = this.columns[index];
-                            const entry = {
-                                dotNotation: column.property,
-                                value: this._getValue(entity, column.property, column.type)
-                            };
-                            result.push(entry);
-                        }
-                        return result;
-                    }).bind(this);
                 }, 1)
+            },
+
+            /**
+             * Updates entity when some of the properties were changed.
+             */
+            updateEntity: function (entity, propPath) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0) {
+                    const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
+                    this.notifyPath(path, entity.get(propPath));
+                }
+            },
+            
+            setRenderingHints: function (entity, property, renderingHints) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0) {
+                    this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
+                }
+            },
+
+            selectEntity: function (entity, select) {
+                const entityIndex = _findEntity(entity, this.entities);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+                    this.set("egiModel." + entityIndex + ".selected", select);
+                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    this.fire("tg-entity-selected", {
+                        shouldScrollToSelected: false,
+                        entities: [{
+                            entity: this.entities[entityIndex],
+                            select: select
+                        }]
+                    });
+                }
             },
 
             _getKeyEventTarget: function () {
@@ -1143,6 +1136,7 @@
                     rowCount = this.entities.length + this._totalsRowCount;
                     height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
                 }
+                const previousHeight = this.$.baseContainer.style[propertyToSet];
                 this.$.baseContainer.style.removeProperty(propertyToRemove);
                 this.$.scrollContainer.style.removeProperty(propertyToRemove);
                 this.$.baseContainer.style[propertyToSet] = height;
@@ -1150,6 +1144,9 @@
                 this.$.lockContainer.style.bottom = bottomPosition + "px";
                 this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                 this._handleScrollEvent();
+                if (previousHeight !== height) {
+                    this.fire("tg-egi-resizied", height);
+                }
             },
 
             _updateShadows: function () {
@@ -1272,33 +1269,47 @@
 
             _getTooltip: function (entity, column, action) {
                 try {
-                    var property = entity.prop(column.property);
-                    var validationResult = property.validationResult();
-                    var value;
-                    var tooltip = "";
-                    if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                        tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
-                    } else if (column.tooltipProperty) {
-                        value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                        tooltip = value && ("<b>" + value + "</b>");
-                    } else if (this.$.reflector.findTypeByName(column.type)) {
-                        tooltip = this._generateEntityTooltip(entity, column);
-                    } else {
-                        value = this._getValue(entity, column.property, column.type).toString();
-                        tooltip = value && ("<b>" + value + "</b>");
-                    }
-                    if (column.columnDesc) {
-                        tooltip += (tooltip && "<br><br>") + column.columnDesc;
-                    }
-                    if (action && (action.shortDesc || action.longDesc)) {
-                        tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
-                    }
-                    return tooltip;
+                    let tooltip = this.getValueTooltip(entity, column);
+                    const columnDescPart = this.getDescTooltip(entity, column);
+                    const actionDescPart = this.getActionTooltip(entity, column, action);
+                    tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
+                    tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
+                    return  tooltip;
                 } catch (e) {
                     return '';
                 }
             },
-
+            
+            getValueTooltip: function(entity, column) {
+                const validationResult = entity.prop(column.property).validationResult();
+                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                    return validationResult.message && ("<b>" + validationResult.message + "</b>");
+                } else if (column.tooltipProperty) {
+                    const value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                    return value && ("<b>" + value + "</b>");
+                } else if (this.$.reflector.findTypeByName(column.type)) {
+                    return this._generateEntityTooltip(entity, column);
+                } else {
+                    const value = this._getValue(entity, column.property, column.type).toString();
+                    return value && ("<b>" + value + "</b>");
+                }
+                return "";
+            },
+            
+            getDescTooltip: function (entity, column) {
+                if (column.columnDesc) {
+                    return column.columnDesc;
+                }
+                return "";
+            },
+            
+            getActionTooltip: function (entity, column, action) {
+                if (action && (action.shortDesc || action.longDesc)) {
+                    return this._generateActionTooltip(action);
+                }
+                return "";
+            },
+            
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
@@ -1380,110 +1391,67 @@
                 }
             },
 
-            _retrievedEntitySelectionChanged: function (newValue, oldValue) {
-                const entityIndex = _findEntity(newValue.entity, this.entities);
-                if (entityIndex >= 0) {
-                    this.set("egiModel." + entityIndex + ".selected", newValue.selected);
-                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected);
-
-                    if (newValue.selected) { // bring to view the entity that was checked
-                        const scrollContainer = this.querySelector("#scrollContainer");
-                        if (scrollContainer) {
-                            const entityRows = scrollContainer.querySelectorAll('.table-data-row');
-                            const entityRow = entityRows[entityIndex];
-                            if (entityRow) {
-                                this._scrollTo(entityRow, scrollContainer);
-                            } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
-                                const oldAction = this._scrollContainerEntitiesStampedCustomAction;
-                                this._scrollContainerEntitiesStampedCustomAction = (function () {
-                                    oldAction();
-                                    const scrollContainer = this.querySelector("#scrollContainer");
-                                    const entityRows = scrollContainer.querySelectorAll('.table-data-row');
-                                    const entityRow = entityRows[entityIndex];
-                                    this._scrollTo(entityRow, scrollContainer);
-                                    this._scrollContainerEntitiesStampedCustomAction = oldAction;
-                                }).bind(this);
-                            }
-                        }
-                    }
-                }
-            },
-
-            /**
-             * Scrolls '' to concrete entityRow dom element.
-             *
-             * TODO 1: this function to be merged with _scrollToTarget.
-             * TODO 2: this function to support scrolling for the case where horisontal scroll bar exists (at this stage scrolled row will be hidden behind this scroll bar).
-             */
-            _scrollTo: function (entityRow, scrollContainer) {
-                const scrollContainerHeight = scrollContainer.offsetHeight;
-                const entityRowHeight = entityRow.offsetHeight;
-                const topLockPanel = this.querySelector('#topLockPanel');
-                const topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
-                const bottomLockPanel = this.querySelector('#bottomLockPanel');
-                const bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
-                const yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
-                if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
-                    // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
-                    scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
-                } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
-                    // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
-                    scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
-                }
-            },
-
             /**
              * Observs the changes to entities property.
              */
             _entitiesChanged: function (newValue, oldValue) {
-                var tempEgiModel = [],
-                    self = this;
+                const tempEgiModel = [];
+                const self = this;
                 newValue.forEach(function (newEntity) {
-                    var selectEntInd = _findEntity(newEntity, self.selectedEntities),
-                        openedEntInd = _findEntity(newEntity, self.openedEntities);
+                    const selectEntInd = _findEntity(newEntity, self.selectedEntities);
                     if (selectEntInd >= 0) {
                         self.selectedEntities[selectEntInd] = newEntity;
                     }
-                    if (openedEntInd >= 0) {
-                        self.openedEntities[openedEntInd] = newEntity;
-                    }
                 });
-                let selectedEntity = null;
                 newValue.forEach(function (newEntity) {
                     const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
-                    if (isSelected) {
-                        selectedEntity = newEntity;
-                    }
+                    const oldIndex = _findEntity(newEntity, oldValue);
+                    const newRendHints = oldIndex < 0 ? {} : (self.renderingHints && self.renderingHints[oldIndex]) || {};
                     const egiEntity = {
                         selected: isSelected,
-                        opened: self.openedEntities.indexOf(newEntity) > -1,
-                        entity: newEntity
-                    }
+                        entity: newEntity,
+                        renderingHints: newRendHints
+                    };
                     tempEgiModel.push(egiEntity);
                 });
-                if (tempEgiModel.length > 0 && tempEgiModel.every(function (elem) {
-                    return elem.selected
-                })) {
-                    this.selectedAll = true;
-                } else {
-                    this.selectedAll = false;
-                }
+                updateSelectAll(this, tempEgiModel);
                 self.egiModel = tempEgiModel;
-
-                if (selectedEntity) {
-                    self.retrievedEntitySelection = {
-                        entity: selectedEntity,
-                        selected: true
-                    };
-                }
-
-                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
+            
+            _renderingHintsChanged: function (newValue, oldValue) {
+                if (this.egiModel) {
+                    this.egiModel.forEach((egiEntity, index) => {
+                        egiEntity.renderingHints = (newValue && newValue[index]) || {};
+                    });
+                    this._updateTableSizeAsync();
+                }
+            },
 
-            _columnsChanged: function (columns, oldColumns) {
+            _columnDomChanged: function (addedColumns, removedColumns) {
+                const columnsCopy = this.columns.slice();
+                let columnsChanged = false;
+                removedColumns.forEach(col => {
+                    removeColumn(col, this.allColumns);
+                    columnsChanged = removeColumn(col, columnsCopy);
+                });
+                
+                addedColumns.forEach(col => {
+                    const index = this.allColumns.findIndex(column => column.property === col.property);
+                    if (index < 0) {
+                        this.allColumns.push(col);
+                        columnsCopy.push(col);
+                        columnsChanged = true;
+                    }
+                });
+                if (columnsChanged) {
+                    this._adjustColumns(columnsCopy.map(column => column.property));
+                }
+            },
+
+            _columnsChanged: function (newColumns, oldColumns) {
                 let summaryRowsCount = 0;
-                columns.forEach(function (item) {
+                newColumns.forEach(function (item) {
                     if (item.summary && item.summary.length > summaryRowsCount) {
                         summaryRowsCount = item.summary.length;
                     }
@@ -1493,7 +1461,7 @@
                 if (summaryRowsCount > 0) {
                     for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
                         const totalsRow = [];
-                        columns.forEach(function (item) {
+                        newColumns.forEach(function (item) {
                             if (item.summary && item.summary[summaryRowCounter]) {
                                 const total = item.summary[summaryRowCounter]
                                 totalsRow.push(true);
@@ -1508,13 +1476,11 @@
                 this._totalsRowCount = summaryRowsCount;
                 this._totalsRows = gridSummary;
             },
-            
-            _updateColumnsWidthProperties: function (triggerResize) {
+
+            _updateColumnsWidthProperties: function () {
                 this._fixedColumnWidth = calculateFixedColumnWidth(this.columns, this.numOfFixedCols);
                 this._scrollableColumnWidth = calculateScrollableColumnWidth(this.columns, this.numOfFixedCols);
-                if (triggerResize) {
-                    this._updateTableSizeAsync();
-                }
+                this._updateTableSizeAsync();
             },
 
             _updateTableSizeAsync: function () {
@@ -1522,29 +1488,81 @@
                     this._resizeEventListener();
                 }.bind(this), 1);
             },
+
+            _centreSelectionChanged: function (newSelection, oldSelection) {
+                let numOfSelected = 0;
+                let lastSelectedIndex = -1;
+                newSelection.entities.forEach(entitySelection => {
+                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
+                        this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
+                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                    }
+                    if (entitySelection.select) {
+                        numOfSelected += 1;
+                        lastSelectedIndex = entityIndex;
+                    }
+                });
+                //update selectAll parameter according to entity selection.
+                updateSelectAll(this, this.egiModel);
+                //Scroll to the selected one if it is the only one and should scroll is true.
+                if (newSelection.shouldScrollToSelected && numOfSelected === 1) {
+                    const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
+                    const entityRow = entityRows[lastSelectedIndex];
+                    if (entityRow) {
+                        this._scrollToTarget(entityRow);
+                    } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
+                        const oldAction = this._scrollContainerEntitiesStampedCustomAction;
+                        this._scrollContainerEntitiesStampedCustomAction = (function () {
+                            oldAction();
+                            const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
+                            const entityRow = entityRows[lastSelectedIndex];
+                            this._scrollToTarget(entityRow);
+                            this._scrollContainerEntitiesStampedCustomAction = oldAction;
+                        }).bind(this);
+                    }
+                }
+            },
             /**
              * Event handler for select all checkbox
              */
             _allSelectionChanged: function (e) {
-                var i;
+                const target = e.target || e.srcElement;
+                this.selectAll(target.checked);
+            },
+
+            /**
+             * Selects/unselects all entities.
+             */
+            selectAll: function (checked) {
                 if (this.egiModel) {
-                    var target = e.target || e.srcElement;
-                    for (i = 0; i < this.egiModel.length; i += 1) {
-                        this.set("egiModel." + i + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], target.checked);
+                    const selectionDetails = [];
+                    for (let i = 0; i < this.egiModel.length; i += 1) {
+                        if (this.egiModel[i].selected !== checked) {
+                            this.set("egiModel." + i + ".selected", checked);
+                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
+                            selectionDetails.push({
+                                entity: this.entities[i],
+                                select: checked
+                            });
+                        }
                     }
-                    this.selectedAll = target.checked;
-                    console.log("all ", this.getSelectedRows());
-                    this.fire("egi-selection-changed", this.getSelectedEntities());
+                    this.selectedAll = checked;
+                    if (selectionDetails.length > 0) {
+                        this.fire("tg-entity-selected", {
+                            shouldScrollToSelected: false,
+                            entities: selectionDetails
+                        });
+                    }
                 }
             },
+
             /**
              * Event handler for selecting concrete entity
              */
             _selectionChanged: function (e) {
-                var index;
                 if (this.egiModel) {
-                    index = e.model.entityIndex;
+                    const index = e.model.entityIndex;
                     var target = e.target || e.srcElement;
                     //Perform selection range selection or single selection.
                     if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
@@ -1552,6 +1570,13 @@
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
                         _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        this.fire("tg-entity-selected", {
+                            shouldScrollToSelected: false,
+                            entities: [{
+                                entity: this.entities[index],
+                                select: target.checked
+                        }]
+                        });
                     }
                     //Set up the last selection index (it will be used for range selection.)
                     if (target.checked) {
@@ -1562,28 +1587,34 @@
                     //Set up selecteAll property.
                     if (this.selectedAll && !target.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
-                        return elem.selected
-                    })) {
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(elem => elem.selected)) {
                         this.selectedAll = true;
                     }
-                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
-                console.log("single checkbox: " + index, this.getSelectedRows());
             },
 
             /**
              * Selects the range fromIndex toIndex of entities.
              */
             _selectRange: function (fromIndex, toIndex) {
-                var from = fromIndex < toIndex ? fromIndex : toIndex;
-                var to = fromIndex < toIndex ? toIndex : fromIndex;
-                var index;
-                for (index = from; index <= to; index++) {
-                    if (!this.egiModel[index].selected) {
-                        this.set("egiModel." + index + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], true);
+                const from = fromIndex < toIndex ? fromIndex : toIndex;
+                const to = fromIndex < toIndex ? toIndex : fromIndex;
+                const selectionDetails = [];
+                for (let i = from; i <= to; i++) {
+                    if (!this.egiModel[i].selected) {
+                        this.set("egiModel." + i + ".selected", true);
+                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        selectionDetails.push({
+                            entity: this.entities[i],
+                            select: true
+                        });
                     }
+                }
+                if (selectionDetails.length > 0) {
+                    this.fire("tg-entity-selected", {
+                        shouldScrollToSelected: false,
+                        entities: selectionDetails
+                    });
                 }
             },
 
@@ -1601,7 +1632,7 @@
                 if (columnGrowFactor === 0 || index < numOfFixedCols) {
                     colStyle += "flex-grow: 0;flex-shrink:0;";
                 } else {
-                    colStyle += "flex-grow: " + columnGrowFactor +";";
+                    colStyle += "flex-grow: " + columnGrowFactor + ";";
                 }
                 if (itemWidth === 0) {
                     colStyle += "display: none;";
@@ -1627,11 +1658,12 @@
             /**
              * Calculates the style for cell that represents rendering hints.
              */
-            _calcBackgroundRenderingHintsStyle: function (entity, entityIndex, property) {
-                var style = "opacity: 0.3;";
-                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || {};
+            _calcBackgroundRenderingHintsStyle: function (change, entityIndex, property) {
+                const renderingHints = change.base;
+                let style = "opacity: 0.3;";
+                let rendHints = (renderingHints && renderingHints[property]) || {};
                 rendHints = rendHints.backgroundStyles || rendHints;
-                for (var property in rendHints) {
+                for (let property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
                     }
@@ -1641,10 +1673,11 @@
             /**
              * Calculates the style for cell that contains the property value.
              */
-            _calcValueRenderingHintsStyle: function (entity, entityIndex, property, isBoolean) {
-                var style = isBoolean === 'true' ? "" : "width: 100%;";
-                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property] && this.renderingHints[entityIndex][property].valueStyles) || {};
-                for (var property in rendHints) {
+            _calcValueRenderingHintsStyle: function (change, entityIndex, property, isBoolean) {
+                const renderingHints = change.base;
+                let style = isBoolean === 'true' ? "" : "width: 100%;";
+                let rendHints = (renderingHints && renderingHints[property] && renderingHints[property].valueStyles) || {};
+                for (let property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
                     }
@@ -1660,7 +1693,7 @@
                     this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
                     this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
                 });
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -1669,7 +1702,7 @@
             _adjustColumns: function (newColumns) {
                 const resultantColumns = [];
                 newColumns.forEach(columnName => {
-                    const column = this.allColumns.find(item => item.property === (columnName === "this" ? "" : columnName));
+                    const column = this.allColumns.find(item => item.property === columnName);
                     if (column) {
                         resultantColumns.push(column);
                     }
@@ -1686,9 +1719,8 @@
                         }
                         this.fire("tg-egi-column-change", parameters);
                     }
-                    
                 }
-                this._updateColumnsWidthProperties(true);
+                this._updateColumnsWidthProperties();
             },
 
             /**
@@ -1746,6 +1778,10 @@
              */
             _getValueFromEntity: function (entity, property) {
                 return entity && entity.get(property);
+            },
+
+            _getBindedValue: function (change, property, type) {
+                return this._getValue(change.base, property, type);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
@@ -1822,7 +1858,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                if (this._getValueFromEntity(entity, property) === true) { 
+                if (this._getValueFromEntity(entity, property) === true) {
                     return "icons:check";
                 } else {
                     return "noicon";
@@ -1830,7 +1866,7 @@
             },
 
             /** Identifies if there is a column action for the specified entity and column. */
-            _hasAction: function (entity, column) {
+            hasAction: function (entity, column) {
                 return column.customAction || this._isHyperlinkProp(entity, column) === true;
             },
 
@@ -1838,12 +1874,12 @@
              * Tap action on data column. TODO: implement this.
              */
             _tapAction: function (e, detail) {
-                this.tap(this.entities[e.model.entityIndex], this.columns[e.model.index].property, this.columns[e.model.index]);
+                this.tap(this.entities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
             },
 
-            tap: function (entity, property, column) {
+            tap: function (entity, index, column) {
                 if (column.runAction(entity) === false) {
-                    // if the property is a hyperlink and there was no custom action associted with it
+                    // if the clicked property is a hyperlink and there was no custom action associted with it
                     // then let's open the linked resources
                     if (this._isHyperlinkProp(entity, column) === true) {
                         var url = this._getValue(entity, column.property, column.type);
@@ -1887,25 +1923,31 @@
              * Clears the selection on current page.
              */
             clearPageSelection: function () {
-                var i;
-                for (i = 0; i < this.egiModel.length; i++) {
-                    if (this.egiModel[i].selected) {
-                        _processEntitySelection(this.selectedEntities, this.egiModel[i].entity, false);
-                        this.set("egiModel." + i + ".selected", false);
-                    }
-                }
+                this.selectAll(false);
             },
 
             /**
              * Clears selection.
              */
             clearSelection: function () {
-                var i;
-                for (i = 0; i < this.egiModel.length; i++) {
+                for (let i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
-                this.fire("egi-selection-changed", this.getSelectedEntities());
+                this.selectedAll = false;
+                // First clear all selection and then fire event
+                const prevSelectedEntities = this.selectedEntities;
                 this.selectedEntities = [];
+                if (prevSelectedEntities.length > 0) {
+                    this.fire("tg-entity-selected", {
+                        shouldScrollToSelected: false,
+                        entities: prevSelectedEntities.map(entity => {
+                            return {
+                                entity: entity,
+                                select: false
+                            }
+                        })
+                    });
+                }
             },
             /*
              * Below are functions those are related to shadow style calculation.
@@ -2041,7 +2083,7 @@
                             this._columnResizingObject.columnParameters = columnParameters;
                         }
                         this.set("columns." + e.model.index + ".width", newWidth);
-                        this._updateColumnsWidthProperties(true);
+                        this._updateColumnsWidthProperties();
                         //scroll if needed.
                         if (e.model.index >= this.numOfFixedCols && (mousePos.x > this._columnResizingObject.containerWidth || mousePos.x < this._columnResizingObject.containerLeft)) {
                             this.$.scrollContainer.scrollLeft += newWidth - columnWidth;

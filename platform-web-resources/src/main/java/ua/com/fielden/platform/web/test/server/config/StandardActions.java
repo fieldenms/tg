@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
 
@@ -42,19 +43,19 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             return mkAction(entityType, computation, null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
             if (computation != null) {
                 contextConfig = context().withSelectionCrit().withComputation(computation);
             } else {
-                contextConfig = context().withSelectionCrit().withComputation(entity -> entityType);
+                contextConfig = context().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityNewAction.class).
@@ -81,19 +82,19 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             return mkAction(entityType, computation, null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
             if (computation != null) {
                 contextConfig = context().withMasterEntity().withSelectionCrit().withComputation(computation);
             } else {
-                contextConfig = context().withMasterEntity().withSelectionCrit().withComputation(entity -> entityType);
+                contextConfig = context().withMasterEntity().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityNewAction.class).
@@ -121,19 +122,19 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             return mkAction(entityType, computation, null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
             if (computation != null) {
                 contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(computation);
             } else {
-                contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(entity -> entityType);
+                contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityEditAction.class).
@@ -160,19 +161,19 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             return mkAction(entityType, computation, null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
             if (computation != null) {
                 contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(computation);
             } else {
-                contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(entity -> entityType);
+                contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityEditAction.class).withContext(contextConfig.build()).
@@ -189,11 +190,11 @@ public enum StandardActions {
     DELETE_ACTION {
         @Override
         public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
-            return mkAction(entityType, (Function<AbstractFunctionalEntityWithCentreContext<?>, Object>) null);
+            return mkAction(entityType, (BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>) null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
             final String desc = format("Delete selected %s entities", entityTitle);
 
@@ -201,7 +202,7 @@ public enum StandardActions {
             if (computation != null) {
                 contextConfig = context().withSelectedEntities().withComputation(computation);
             } else {
-                contextConfig = context().withSelectedEntities().withComputation(entity -> entityType);
+                contextConfig = context().withSelectedEntities().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityDeleteAction.class).withContext(contextConfig.build()).preAction(okCancel(DELETE_CONFIRMATION.msg)).icon("remove-circle-outline").shortDesc(desc).longDesc(desc).shortcut("alt+d").build();
@@ -213,7 +214,7 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             throw new ActionConfigurationException("It's imposible to set preferred dimension for noUI maser!");
         }
 
@@ -231,12 +232,12 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             return mkAction(entityType, computation, null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
             final String desc = format("Export selected %s entities", entityTitle);
 
@@ -244,7 +245,7 @@ public enum StandardActions {
             if (computation != null) {
                 contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation(computation);
             } else {
-                contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation(entity -> entityType);
+                contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityExportAction.class).
@@ -271,12 +272,12 @@ public enum StandardActions {
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
             return mkAction(entityType, computation, null);
         }
 
         @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, final PrefDim prefDim) {
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
             final String desc = format("Export selected %s entities", entityTitle);
 
@@ -284,7 +285,7 @@ public enum StandardActions {
             if (computation != null) {
                 contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation(computation);
             } else {
-                contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation(entity -> entityType);
+                contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation((entity, context) -> entityType);
             }
 
             return action(EntityExportAction.class).
@@ -301,6 +302,6 @@ public enum StandardActions {
 
     public abstract EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType);
     public abstract EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, PrefDim prefDim);
-    public abstract EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation);
-    public abstract EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation, PrefDim prefDim);
+    public abstract EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation);
+    public abstract EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, PrefDim prefDim);
 }

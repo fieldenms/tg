@@ -20,7 +20,7 @@ public class NullTest extends AbstractCondition {
         if (operand instanceof EntProp) {
             final EntProp prop = (EntProp) operand;
             if (EntityUtils.isUnionEntityType(prop.getPropType())) {
-                System.out.println(prop.getSource().sourceType() + " --- " + prop.getName());
+                //System.out.println(prop.getSource().sourceType() + " --- " + prop.getName());
                 final String propName = prop.getSource().getAlias() != null && prop.getName().startsWith(prop.getSource().getAlias() + ".") ? EntityUtils.splitPropByFirstDot(prop.getName()).getValue()
                         : prop.getName();
                 final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(prop.getSource().sourceType(), propName);

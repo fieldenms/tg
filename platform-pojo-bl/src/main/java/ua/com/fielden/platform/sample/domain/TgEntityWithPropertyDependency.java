@@ -17,6 +17,8 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.sample.domain.definers.PropDefiner;
+import ua.com.fielden.platform.sample.domain.definers.TgEntityWithPropertyDependencyProp1Definer;
+import ua.com.fielden.platform.sample.domain.definers.TgEntityWithPropertyDependencyPropXAndPropYDefiner;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 
 /** 
@@ -50,6 +52,91 @@ public class TgEntityWithPropertyDependency extends AbstractEntity<String> {
     
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
+    
+    //       propX -->___\
+    //                ___ > prop1 --> prop2 (dependency through definers: v0 -> val0 -> value0, v1 -> val1 -> value1)
+    //       propY -->   /
+    
+    // touched modified
+    // 1) propX := v1
+    // 2) prop2 := XXX
+    // 3) prop1 := val0
+    // 4) prop1 := val1 (=> prop2 == value1)
+    
+    // untouched modified
+    // 1) propX := v0
+    // 2) prop2 := XXX
+    // 3) propY := v1
+    // 4) propY := v0 (=> prop2 == value1, still does not work as expected)
+    
+    // untouched unmodified
+    // 1) propX := v1
+    // 2) prop2 := XXX
+    // 3) propY := v0
+    // 4) propY := v1 (=> prop2 == value0, does not work as expected)
+    
+    @IsProperty
+    @MapTo
+    @AfterChange(TgEntityWithPropertyDependencyPropXAndPropYDefiner.class)
+    @Title("PropX")
+    private String propX;
+    
+    @IsProperty
+    @MapTo
+    @AfterChange(TgEntityWithPropertyDependencyPropXAndPropYDefiner.class)
+    @Title("PropY")
+    private String propY;
+    
+    @IsProperty
+    @MapTo
+    @AfterChange(TgEntityWithPropertyDependencyProp1Definer.class)
+    @Title("Prop1")
+    private String prop1; // initial value 'val0'
+    
+    @IsProperty
+    @MapTo
+    @Title("Prop2")
+    private String prop2;
+    
+    @Observable
+    public TgEntityWithPropertyDependency setProp2(final String prop2) {
+        this.prop2 = prop2;
+        return this;
+    }
+    
+    public String getProp2() {
+        return prop2;
+    }
+    
+    @Observable
+    public TgEntityWithPropertyDependency setProp1(final String prop1) {
+        this.prop1 = prop1;
+        return this;
+    }
+    
+    public String getProp1() {
+        return prop1;
+    }
+    
+    @Observable
+    public TgEntityWithPropertyDependency setPropY(final String propY) {
+        this.propY = propY;
+        return this;
+    }
+    
+    public String getPropY() {
+        return propY;
+    }
+    
+    @Observable
+    public TgEntityWithPropertyDependency setPropX(final String propX) {
+        this.propX = propX;
+        return this;
+    }
+    
+    public String getPropX() {
+        return propX;
+    }
     
     @Observable
     public TgEntityWithPropertyDependency setCritOnlySingleProp(final Date dateTo) {

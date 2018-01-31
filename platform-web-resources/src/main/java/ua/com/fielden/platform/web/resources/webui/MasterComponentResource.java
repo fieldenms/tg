@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+
 import java.io.ByteArrayInputStream;
 
 import org.restlet.Context;
@@ -15,7 +17,6 @@ import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * Represents web server resource that returns entity master component for specified entity type to the client.
@@ -47,7 +48,7 @@ public class MasterComponentResource extends DeviceProfileDifferentiatorResource
 
     @Override
     protected Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             final String source = sourceController().loadSource("/master_ui/" + this.entityTypeString, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil());

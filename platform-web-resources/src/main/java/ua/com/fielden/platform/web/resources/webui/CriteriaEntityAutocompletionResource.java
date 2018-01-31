@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,11 +95,11 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     @Post
     @Override
     public Representation post(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
-            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
 
@@ -131,6 +134,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
 
             // create context, if any
             final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(
+                    true, // full context, fully-fledged restoration. This means that IValueMatcherWithCentreContext descendants (centre matchers) could use IContextDecomposer for context decomposition on deep levels.
                     webUiConfig, 
                     coFinder, 
                     serverGdtm, 
@@ -139,7 +143,9 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                     entityFactory, 
                     centreContextHolder, 
                     criteriaEntity, 
-                    contextConfig);
+                    contextConfig,
+                    criterionPropertyName
+                    );
             if (context.isPresent()) {
                 logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
                 valueMatcher.setContext(context.get());
@@ -148,14 +154,12 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 valueMatcher.setContext(new CentreContext<>());
             }
 
-            // populate fetch model
-            valueMatcher.setFetch(EntityResourceUtils.<M, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
-
             // prepare search string
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
             final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             logger.debug(String.format("SEARCH STRING %s", searchString));
 
+            // find matches with a fetch model that should be defined at the custom matcher level or based on the fall-back logic
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");

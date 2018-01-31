@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -77,14 +78,16 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
         
         // let's identify whether property represents an activatable entity in the current context
-        final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
-        boolean skipActiveOnly;
-        if (seevAnnotation != null) {
-            skipActiveOnly = seevAnnotation.skipActiveOnly();
+        // a property of an ativatable entity type is considered "activatable" only if annotation SkipEntityExistsValidation is not present or
+        // it is present with attribute skipActiveOnly == true
+        // There is also annotation SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
+        if (!ActivatableAbstractEntity.class.isAssignableFrom(type)) {
+            this.activatable = false;
         } else {
-            skipActiveOnly = false;
+            final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;        
+            this.activatable = !skipActiveOnly;
         }
-        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
     }
 
     public Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
@@ -178,6 +181,17 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public Result getFirstFailure() {
         throw new StrictProxyException(format("Invalid call [getFirstFailure] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
+    
+    /**
+     * A convenient method to obtain the last validation result.
+     * May return either a failure, a warning or a successful result, and never <code>null</code>.
+     * <p>
+     * A successful result is returned in case no validation took place.
+     * @return
+     */
+    public Result validationResult() {
+        throw new StrictProxyException(format("Invalid call [validationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
 
     public int numberOfValidators() {
         throw new StrictProxyException(format("Invalid call [numberOfValidators] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
@@ -221,6 +235,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public int getValueChangeCount() {
         throw new StrictProxyException(format("Invalid call [getValueChangeCount] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public void setValueChangeCount(final int valueChangeCount) {
+        throw new StrictProxyException(format("Invalid call [setValueChangeCount] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public T getPrevValue() {

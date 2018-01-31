@@ -38,15 +38,15 @@ import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -326,7 +326,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final ConditionModel c2 = d.eq().val(111).or().prop("bbb").isNotNull().model();
         assertEquals(expected, c2.getTokens());
 
-        System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
+        //System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
     }
 
     ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
@@ -1070,7 +1070,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect count", 1, values.size());
         assertEquals("Incorrect value", "3", values.get(0).get("aa").toString());
     }
-
+    
     @Test
     public void test12() {
         final AggregatedResultQueryModel model = select(TgVehicleModel.class). //
@@ -1713,7 +1713,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
         final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-        final TgBogieLocation location = co(TgBogieLocation.class).new_();
+        final TgBogieLocation location = co$(TgBogieLocation.class).new_();
         location.setWorkshop(workshop1);
         final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
@@ -1739,7 +1739,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
         
         final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
-        final TgBogieLocation slotLocation = co(TgBogieLocation.class).new_();
+        final TgBogieLocation slotLocation = co$(TgBogieLocation.class).new_();
         slotLocation.setWagonSlot(wagonSlot);
         save(bogie7.setLocation(slotLocation));
         
@@ -1808,8 +1808,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
-        
-        System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
     }
 
 }

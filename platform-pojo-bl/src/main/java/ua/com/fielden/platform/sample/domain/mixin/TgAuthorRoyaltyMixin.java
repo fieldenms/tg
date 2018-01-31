@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.sample.domain.mixin;
 
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.sample.domain.ITgAuthorRoyalty;
@@ -9,6 +8,8 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 /**
  * Mixin implementation for companion object {@link ITgAuthorRoyalty}.

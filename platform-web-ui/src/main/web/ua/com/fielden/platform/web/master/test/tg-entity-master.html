@@ -1226,8 +1226,63 @@
                 
                 master.retrieve();
             });
-		});
-	</script>
+            
+            test('works for multiple concurrent saving initiations', function (done) {
+                let savingCount = 0;
+                
+                master.postSaved = (function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    savingCount += 1;
+                    
+                    if (savingCount > 1) {
+                        throw 'More than one (' + savingCount + ') saving request has been fullfilled.';
+                    }
+                }).bind(master);
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // ACTUAL PROPERTY CHANGE
+                    bindingEntity.setAndRegisterPropertyTouch('stringProp', 'ok');
+                    bindingEntity.setAndRegisterPropertyTouch('requiredValidatedProp', 30);
+                    bindingEntity.setAndRegisterPropertyTouch('key', 'KEY_' + (new Date()).getTime());
+                    
+                    master.save();
+                    master.save();
+                    master.save();
+                    master.save();
+                    master.save().then(function () {
+                        done();
+                    });
+                };
+                
+                master.retrieve();
+            });
+            
+            test('through ctrls works for the case with uncommitted value in focused editor, which gets committed automatically', function (done) {
+                master.postSaved = (function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    done();
+                }).bind(master);
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    bindingEntity.setAndRegisterPropertyTouch('stringProp', 'ok');
+                    bindingEntity.setAndRegisterPropertyTouch('requiredValidatedProp', 30);
+                };
+                
+                master.retrieve().then(function () {
+                    master.$.editor_4_key.$.input.focus();
+                    master.$.editor_4_key._editingValue = 'KEY_' + (new Date()).getTime();
+                    
+                    const event = {
+                        detail: {
+                            combo: 'ctrl+s'
+                        }
+                    };
+                    master.processShortcut(event, ['tg-action']);
+                });
+            });
+            
+        });
+    </script>
 </body>
 
 </html>

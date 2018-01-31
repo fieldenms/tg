@@ -9,9 +9,9 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -33,7 +33,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityAutocompletionResourceFactory extends Restlet {
-    private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
     private final IWebUiConfig webApp;
@@ -51,7 +50,6 @@ public class EntityAutocompletionResourceFactory extends Restlet {
      */
     public EntityAutocompletionResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.webApp = webUiConfig;
-        this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
@@ -108,7 +106,6 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         entityType,
                         propertyName,
                         entityProducer,
-                        factory,
                         valueMatcher,
                         coFinder,
                         restUtil,

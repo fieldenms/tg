@@ -39,27 +39,16 @@ import ua.com.fielden.platform.types.Money;
  */
 public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
 
-    private final List<String> dataScript = new ArrayList<>();
-    private final List<String> truncateScript = new ArrayList<>();
-
     public final IDomainDrivenTestCaseConfiguration config;
-    private final Properties props;
 
     private final ICompanionObjectFinder provider;
     private final EntityFactory factory;
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private boolean domainPopulated = false;
-
     protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
-        try {
-            this.props = props;
-            this.config = config;
-            provider = config.getInstance(ICompanionObjectFinder.class);
-            factory = config.getEntityFactory();
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+        this.config = config;
+        provider = config.getInstance(ICompanionObjectFinder.class);
+        factory = config.getEntityFactory();
     }
 
     /**
@@ -74,82 +63,6 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      */
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
-    public final void removeDbSchema() {
-        domainPopulated = false;
-        dataScript.clear();
-        truncateScript.clear();
-    }
-
-    public final void createAndPopulate() throws Exception {
-        // generateSchemaScript is only supported for H2 - it uses H2-specific query "SCRIPT"
-        final boolean generateSchemaScript = config.getDomainMetadata().dbVersion == H2;
-        createAndPopulate(generateSchemaScript);
-    }
-    /**
-     * The entry point to trigger creation of the database and its population.
-     *
-     * @throws Exception
-     */
-    public final void createAndPopulate(final boolean generateSchemaScript) throws Exception {
-        final Connection conn = createConnection();
-
-        if (domainPopulated) {
-            // apply data population script
-            exec(dataScript, conn);
-        } else {
-            populateDomain();
-
-            // record data population statements
-            if (generateSchemaScript) {
-                final Statement st = conn.createStatement();
-                final ResultSet set = st.executeQuery("SCRIPT");
-                while (set.next()) {
-                    final String result = set.getString(1).toUpperCase().trim();
-                    if (!result.startsWith("INSERT INTO PUBLIC.UNIQUE_ID") && (result.startsWith("INSERT") || result.startsWith("UPDATE") || result.startsWith("DELETE"))) {
-                        dataScript.add(result);
-                    }
-                }
-                set.close();
-                st.close();
-
-                // create truncate statements
-                for (final PersistedEntityMetadata<?> entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
-                    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-                }
-            }
-            domainPopulated = true;
-        }
-
-        conn.close();
-    }
-
-    private void exec(final List<String> statements, final Connection conn) throws SQLException {
-        final Statement st = conn.createStatement();
-        for (final String stmt : statements) {
-            st.execute(stmt);
-        }
-        st.close();
-    }
-
-    public final void cleanData() throws Exception {
-        final Connection conn = createConnection();
-        exec(truncateScript, conn);
-    }
-
-    private Connection createConnection() {
-        final String url = props.getProperty("hibernate.connection.url");
-        final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
-        final String user = props.getProperty("hibernate.connection.username");
-        final String passwd = props.getProperty("hibernate.connection.password");
-
-        try {
-            Class.forName(jdbcDriver);
-            return DriverManager.getConnection(url, user, passwd);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     @Override
     public final <T> T getInstance(final Class<T> type) {
         return config.getInstance(type);
@@ -162,8 +75,13 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     }
 
     @Override
-    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type) {
         return (T) provider.find(type);
+    }
+
+    @Override
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
+        return (T) provider.find(type, true);
     }
 
     @Override
@@ -193,7 +111,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      * @return
      */
     @Override
-    public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
+    public final <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
         entity.setKey(key);
         entity.setDesc(desc);
@@ -208,7 +126,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      * @return
      */
     @Override
-    public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
+    public final <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key) {
         final T entity = new_(entityClass);
         entity.setKey(key);
         return entity;
@@ -221,8 +139,8 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
      * @return
      */
     @Override
-    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
-        final IEntityDao<T> co = co(entityClass);
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass) {
+        final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }
 

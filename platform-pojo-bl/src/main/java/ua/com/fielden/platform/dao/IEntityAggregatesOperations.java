@@ -5,11 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import ua.com.fielden.platform.companion.IEntityStreamer;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 
-public interface IEntityAggregatesOperations extends IComputationMonitor {
+public interface IEntityAggregatesOperations extends IComputationMonitor, IEntityStreamer<EntityAggregates> {
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

@@ -19,7 +19,6 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IExportAction.class)
 public class ExportAction extends AbstractFunEntityForDataExport<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

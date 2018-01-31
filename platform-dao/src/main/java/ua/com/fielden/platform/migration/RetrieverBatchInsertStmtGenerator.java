@@ -13,11 +13,11 @@ import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStmtGenerator {
-    private List<PropertyMetadata> extraFields;
+    private final List<PropertyMetadata> extraFields;
 
     public RetrieverBatchInsertStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
         super(dma, retriever);
-        this.extraFields = extractSystemFields(getEmd());
+        extraFields = extractSystemFields(getEmd());
     }
 
     @Override
@@ -63,7 +63,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         return sb.toString();
     }
 
-    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final int id) throws SQLException {
+    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final long id) throws SQLException {
         final List<Object> result = new ArrayList<>();
         for (final Container container : getContainers()) {
             final List<Object> values = new ArrayList<>();

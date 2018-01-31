@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre.api.crit.impl;
 
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
@@ -18,7 +19,7 @@ public abstract class AbstractRangeCriterionWidget extends AbstractMultiCriterio
      * @param criteriaType
      * @param propertyName
      */
-    public AbstractRangeCriterionWidget(final Class<?> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+    public AbstractRangeCriterionWidget(final Class<? extends AbstractEntity<?>> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
         super(root, widgetPath, propertyName, editors);
     }
 

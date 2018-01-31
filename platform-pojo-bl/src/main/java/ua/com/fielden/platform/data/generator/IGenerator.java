@@ -23,6 +23,7 @@ import ua.com.fielden.platform.error.Result;
  * @param <T> -- An entity type that describes the data, which needs to be generated. This information is especially useful in cases where the generated data underpins or used as one of the building blocks for some synthesized entity. 
  */
 public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> {
+    public static final String FORCE_REGENERATION_KEY = "@@forceRegeneration";
     
     /**
      * Kicks in the data generation algorithm. 
@@ -35,5 +36,15 @@ public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> 
      * @return
      */
     Result gen(final Class<T> type, final Map<String, Optional<?>> params);
-
+    
+    /**
+     * Returns <code>true</code> in case if regeneration of generated (and modified by user) data should occur, otherwise <code>false</code>.
+     *
+     * @param params - parameters of centre running action or {@link IGenerator#gen(Class, Map)} method's <code>params</code>
+     * @return
+     */
+    public static boolean shouldForceRegeneration(final Map<String, ?> params) {
+        return params.containsKey(FORCE_REGENERATION_KEY);
+    }
+    
 }

@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
@@ -11,6 +12,7 @@
 <link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -24,7 +26,6 @@
                 /* this is to make host scorable when needed */
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
                 @apply(--layout-vertical);
-
             }
             .title-bar {
                 padding: 0 16px;
@@ -58,51 +59,74 @@
                 height: 1.5em;
                 margin: 0 5px
             }
-            paper-icon-button {
+            #menuToggler {
+                color: white;
+            }
+            .close-button {
                 width: 22px;
                 height: 22px;
                 padding: 0px;
-            }
-            paper-icon-button.close-button {
                 stroke: var(--paper-grey-100);
                 fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
             }
-            paper-icon-button.close-button:hover {
+            .close-button:hover {
                 stroke: var(--paper-grey-300);
                 fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
-            paper-icon-button.minimize-button {
+            .minimise-button,.maximise-button {
                 width: 19px;
                 height: 19px;
-                stroke: var(--paper-grey-100);
-                fill: var(--paper-grey-100);
-                color: var(--paper-grey-100);
+                padding: 0px;
+                margin-bottom: 2px;
+                --paper-icon-button: {
+                    color: var(--paper-grey-100);
+                };
+                --paper-icon-button-disabled: {
+                    color: var(--paper-grey-300);
+                };
+                --paper-icon-button-hover: {
+                    color: var(--paper-grey-300);
+                };
             }
-            paper-icon-button.minimize-button:hover {
-                stroke: var(--paper-grey-300);
-                fill: var(--paper-grey-300);
-                color: var(--paper-grey-300);
+            #resizer {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                z-index: 2; /* higher than in non-scrollable entity-master's action bar (1) */
+                --iron-icon-fill-color: var(--paper-grey-600);
+            }
+            #resizer:hover {
+                cursor: nwse-resize;
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+            <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
             <div class="title-text layout horizontal center flex">
                 <span class="static-title truncate">[[staticTitle]]</span>
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
-                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext"></paper-icon-button>
+                <!-- collapse/expand buttons -->
+                <paper-icon-button hidden=[[!_minimised]]  class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_minimised]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+
+                <!-- maximize/restore buttons -->
+                <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden=[[!_maximised]]  class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
+
+                <!-- close/next buttons -->
+                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
+                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
         </div>
-        <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
+        <div id="dialogBody" class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
+        <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
     </template>
 </dom-module>
 <script>
@@ -118,12 +142,13 @@
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed',
-                'tg-dynamic-title-changed': '_updateDynamicTitle'
+                'tg-dynamic-title-changed': '_updateDynamicTitle',
+                'tg-menu-appeared': '_updateMenuButton'
             },
 
             hostAttributes: {
@@ -150,17 +175,39 @@
                 prefDim: {
                     type: Object
                 },
-
+                
+                /**
+                 * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
+                 */
                 _wasMoved: {
                     type: Boolean,
                     value: false
                 },
-
+                
+                /**
+                 * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
+                 */
+                _wasResized: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                /**
+                 * Indicates whether dialog has been collapsed using 'Collapse' button.
+                 */
                 _minimised: {
                     type: Boolean,
                     value: false
                 },
-
+                
+                /**
+                 * Indicates whether dialog has been maximised using 'Maximise' button.
+                 */
+                _maximised: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
                  */
@@ -210,11 +257,11 @@
                 _windowHeight: Number,
             },
             
-            observers: ["_dialogMinimised(prefDim, _minimised)"],
+            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
 
             keyBindings: {
                 'alt+x': 'closeDialog',
-                'alt+m': 'minimizeDialog'
+                'alt+m': '_invertMinimiseState'
             },
 
             ready: function () {
@@ -288,26 +335,106 @@
                     }
                 }
             },
-
-            minimizeDialog: function () {
-                if (!this._minimised) {
+            
+            _invertDialogState: function (stateName) {
+                if (!this[stateName]) {
                     this.persistActiveElement();
                     this.focus();
+                    this.persistDialogLocationAndDimensions();
                 }
-                this._minimised = !this._minimised;
-                this.notifyResize();
-                if (!this._minimised) {
+                this[stateName] = !this[stateName];
+                this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
+                if (!this[stateName]) {
                     this.restoreActiveElement();
+                    this.restoreDialogLocationAndDimensions();
+                    this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
                 }
             },
-
+            
+            _invertMinimiseState: function () {
+                if (!this._maximised) { // need to skip the action if dialog is in maximised state: this is needed for alt+m collapsing
+                    this._invertDialogState('_minimised');
+                }
+            },
+            
+            _invertMaximiseState: function () {
+                if (!this.prefDim) { // define prefDim (maximise action) if it was not defined using action configuration
+                    this.prefDim = this._lastElement.makeResizable();
+                }
+                this._invertDialogState('_maximised');
+            },
+            
+            /**
+             * Dialog resizing handler assigned to resizing button in bottom right corner of the dialog.
+             */
+            resizeDialog: function (event) {
+                const target = event.target || event.srcElement;
+                if (target === this.$.resizer) {
+                    switch (event.detail.state) {
+                        case 'start':
+                            document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
+                            break;
+                        case 'track':
+                            if (!this._wasResized) {
+                                this._wasResized = true;
+                                this.heightBeforeResizing = this.style.height;
+                                this.widthBeforeResizing = this.style.width;
+                                if (!this.prefDim) { // define prefDim (resize action) if it was not defined using action configuration
+                                    this.prefDim = this._lastElement.makeResizable();
+                                }
+                            }
+                            const resizedHeight = this.offsetHeight + event.detail.ddy;
+                            const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */;
+                            if (heightNeedsResize) {
+                                this.style.height = resizedHeight + 'px';
+                            }
+                            const resizedWidth = this.offsetWidth + event.detail.ddx;
+                            const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */
+                            if (widthNeedsResize) {
+                                this.style.width = resizedWidth + 'px';
+                            }
+                            if (heightNeedsResize || widthNeedsResize) {
+                                this.notifyResize();
+                            }
+                            break;
+                        case 'end':
+                            document.styleSheets[0].deleteRule(0);
+                            break;
+                    }
+                }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+            },
+            
+            /**
+             * Persists current dialog location (top, left) and dimensions (height, width) to be restored later.
+             */
+            persistDialogLocationAndDimensions: function () {
+                this.persistedTop = this.style.top;
+                this.persistedLeft = this.style.left;
+                this.persistedHeight = this.style.height;
+                this.persistedWidth = this.style.width;
+            },
+            
+            /**
+             * Restores previously persisted dialog location (top, left) and dimensions (height, width).
+             */
+            restoreDialogLocationAndDimensions: function () {
+                this.style.top = this.persistedTop;
+                this.style.left = this.persistedLeft;
+                this.style.height = this.persistedHeight;
+                this.style.width = this.persistedWidth;
+            },
+            
             closeDialog: function () {
                 var canClose = true;
                 //Try to close children first.
                 canClose = this._closeChildren();
                 if (canClose && this._lastElement.classList.contains('canLeave')) {
-                    var reason = this._lastElement.canLeave();
-                    if (reason !== undefined) {
+                    const reason = this._lastElement.canLeave();
+                    if (reason) {
                         canClose = false;
                         // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
                         // for example, when closing a master for a functional entity, the reason states the need to save changes,
@@ -333,32 +460,54 @@
                 this._childDialogs.slice().forEach(function (dialog) {
                     dialog.closeDialog();
                     if (dialog.opened) {
-                        canClose = false
+                        canClose = false;
+                        if (dialog._minimised) {
+                            dialog._invertDialogState('_minimised');
+                        }
+                        if (!dialog._maximised) {
+                            dialog.center();
+                        }
                         if (dialog._childDialogs.length === 0) {
                             dialog._focusDialogWithInput();
                         }
                     }
                 });
-
                 return canClose;
             },
-
-            _dialogMinimised: function (prefDim, minimised) {
-                var width = "";
-                var height = "";
-                if (!minimised && prefDim) {
-                    width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                    height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+            
+            /**
+             * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+             */
+            _updateDialogDimensions: function (prefDim, minimised, maximised) {
+                if (!minimised && !maximised && prefDim) {
+                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    this.style.width = width;
+                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                    this.style.overflow = 'auto';
+                } else if (!minimised && maximised) {
+                    this.style.top = '2%';
+                    this.style.left = '2%';
+                    this.style.width = '96%';
+                    this.style.height = '96%';
+                    this.style.overflow = 'auto';
+                } else if (minimised && !maximised) {
+                    this.style.height = '44px';
+                    this.style.overflow = 'hidden';
+                } else {
+                    this.style.width = '';
+                    this.style.height = '';
+                    this.style.overflow = 'auto';
                 }
-                this._setDialogBodyDimensions(width, height);
             },
-
-            _setDialogBodyDimensions: function (width, height) {
-                this.style.width = width;
-                // +44px - height of the title bar please see styles for .title-bar selector.
-                this.style.height = height && "calc(" + height + " + 44px)";
+            
+            /**
+             * Indicates whether maximising / collapsing / resizing interaction buttons should be disabled (or even hidden) depending on minimised / normal / maximised state of the dialog.
+             */
+            _dialogInteractionsDisabled: function (minimised, maximised) {
+                return minimised || maximised;
             },
-
+            
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
                 return !(staticTitle && dynamicTitle);
             },
@@ -366,7 +515,23 @@
             _updateDynamicTitle: function (e) {
                 this.dynamicTitle = e.detail;
             },
-
+            
+            /**
+             * 'menu-toggler' function to invoke dialog menu. It will be replaced by concrete function from loaded into dialog component in 'updateMenuButton' method.
+             */
+            _toggleMenu: function () {},
+            
+            /**
+             * Updates 'hidden' state of the menu toggler button and assigns _toogleMenu function.
+             */
+            _updateMenuButton: function (event) {
+                const appearedAndFunc = event.detail;
+                this.$.menuToggler.hidden = !appearedAndFunc.appeared;
+                if (appearedAndFunc.appeared) {
+                    this._toggleMenu = appearedAndFunc.func;
+                }
+            },
+            
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
                 if (target === this.$.titleBar) {
@@ -380,10 +545,12 @@
                         const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
                         if (_titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx  <= this._windowWidth - 44) {
                             this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
+                            this.persistedLeft = this.style.left;
                             this._wasMoved = true;
                         }
                         if (_titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy  <= this._windowHeight) { 
                             this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                            this.persistedTop = this.style.top;
                             this._wasMoved = true;
                         }
                         break;
@@ -416,7 +583,7 @@
             },
 
             _handleCloseEvent: function (data, envelope) {
-                if (data.canClose === true) {
+                if (data.canClose === true || this._lastAction.continuous) {
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },
@@ -539,6 +706,15 @@
                 }
             },
             
+            refit: function () {
+                Polymer.IronFitBehavior.refit.call(this);
+                
+                // There is a need to reset max-width and max-height styles after every refit call.
+                // This is necessary to make dialog being able to 'maximise' to large dimensions.
+                this.style.maxWidth = 'none';
+                this.style.maxHeight = 'none';
+            },
+            
             /**
              * Starts actual opening of the dialog: adds 'closing' subscriptions, performs refitting and invokes this.open().
              */
@@ -622,6 +798,7 @@
                     this.refit();
                 }.bind(this), 50);
                 this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
+                this.removeEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
             },
 
             /** 
@@ -659,8 +836,15 @@
                     }
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
+                    this._wasResized = false;
+                    if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
+                        this.style.height = this.heightBeforeResizing;
+                        this.style.width = this.widthBeforeResizing;
+                    }
                     this._minimised = false;
-
+                    this._maximised = false;
+                    this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
+                    
                     if (this._lastAction) {
                         this._lastAction.restoreActiveElement();
                     }
@@ -668,7 +852,7 @@
             },
 
             _onIronResize: function () {
-                if (!this._wasMoved && !this._minimised) {
+                if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
             }

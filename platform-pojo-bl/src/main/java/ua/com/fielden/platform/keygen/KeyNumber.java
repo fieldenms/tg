@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.keygen;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 @KeyType(String.class)
 @MapEntityTo(value = "NUMBERS")
 @CompanionObject(IKeyNumber.class)
-public class KeyNumber extends AbstractEntity<String> {
+public class KeyNumber extends AbstractPersistentEntity<String> {
 
     /**
      * This is bloody silly, but value is string (VARCHAR) and at the same time it is used mainly for storing integer values, which should be treated as integer.

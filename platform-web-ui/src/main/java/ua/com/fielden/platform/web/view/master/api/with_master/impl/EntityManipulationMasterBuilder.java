@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.view.master.api.with_master.IMasterWithMaster
 public class EntityManipulationMasterBuilder<T extends AbstractEntityManipulationAction> implements IMasterWithMasterBuilder<T>, IMasterWithMaster0<T>, IComplete<T> {
 
     private Class<T> type;
-    private boolean shouldRefreshParentCentreAfterSave = true;
+    protected boolean shouldRefreshParentCentreAfterSave = true;
 
     @Override
     public IMasterWithMaster0<T> forEntityWithSaveOnActivate(final Class<T> type) {
@@ -23,7 +23,7 @@ public class EntityManipulationMasterBuilder<T extends AbstractEntityManipulatio
         this.shouldRefreshParentCentreAfterSave = true;
         return this;
     }
-    
+
     @Override
     public IComplete<T> withMasterAndWithNoParentCentreRefresh(final EntityMaster<?> entityMaster) {
         this.shouldRefreshParentCentreAfterSave = false;

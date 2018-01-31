@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -48,6 +49,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StringConverter;
 
 /**
@@ -137,7 +139,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     protected IBeforeChangeEventHandler<?>[] createFinalValidator(final AbstractEntity<?> entity, final String propertyName, final Final annotation) {
-        if (!entity.isPersistent() && annotation.persistentOnly()) {
+        if (annotation.persistentOnly() && !entity.isPersistent() && !isSyntheticBasedOnPersistentEntityType(entity.getType())) {
             throw new EntityDefinitionException(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", entity.getType().getSimpleName(), propertyName));
         }
         return annotation.persistentOnly() ? persistedOnlyFinalValidator : notPersistedOnlyFinalValidator;

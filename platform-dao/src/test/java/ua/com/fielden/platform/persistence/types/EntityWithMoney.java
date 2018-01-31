@@ -42,7 +42,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @IsProperty
     @Calculated
     private BigDecimal calculatedProperty;
-    private static final ExpressionModel calculatedProperty_ = expr().prop("money.amount").add().prop("money.amount").model();
+    protected static final ExpressionModel calculatedProperty_ = expr().prop("money.amount").add().prop("money.amount").model();
 
     @IsProperty(assignBeforeSave = true)
     @MapTo("TRANS_DATE_TIME")

@@ -5,22 +5,6 @@
 
 <script>
     (function () {
-        var SimultaneousSaveException = function () {
-            Object.call(this);
-
-            this.message = "Simultaneous save exception: the save process has been already started before and not ended. Please, block UI until the save action completes.";
-        };
-        SimultaneousSaveException.prototype = Object.create(Object.prototype);
-        SimultaneousSaveException.prototype.constructor = SimultaneousSaveException;
-
-        /**
-         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-         *
-         */
-        SimultaneousSaveException.prototype.toString = function () {
-            return this.message;
-        }
-        
         var selectEnabledEditor = function (editor) {
             var selectedElement = editor.querySelector('.custom-input:not([hidden]):not([disabled])');
             return (selectedElement && selectedElement.querySelector('textarea')) || selectedElement;
@@ -158,11 +142,13 @@
                 },
 
                 /**
-                 * In case when this master represents a compound master and a new main entity has been just persisted, there is a need to augment the context of this master (i.e. this.savingContext) to be able to refresh the same context, but with just persisted entity (instead of only id).
+                 * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+                 * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
+                 * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
                  *
-                 * @param compoundMasterEntityId -- the id of just persisted main entity to be promoted into the context
+                 * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
                  */
-                augmentContextWithSavedEntity: {
+                augmentCompoundMasterOpenerWith: {
                     type: Function
                 },
 
@@ -189,21 +175,17 @@
                 },
 
                 /**
-                 * The context holder creator (SavingInfoHolder) which is used for entity and property actions in the context of non-functional entity master.
+                 * The context holder creator (SavingInfoHolder) which is used for entity / property / continuation actions in the context of entity master.
+                 *
+                 * Initially this function contained only the data that represents the entity (entity1) on this entity master.
+                 * However this was not sufficient for continuations: the parent context (masterEntity of entity1) was needed to properly restore entity1 through the chain of producer invocations.
+                 * For now we really have another example: property actions (as well as entity actions) on entity master could also be invoked from newly created entities, and this requires parent context
+                 * to be present too.
                  */
                 _createContextHolder: {
                     type: Function
                 },
                 
-                /**
-                 * The context holder creator (SavingInfoHolder) which is used for continuation actions in the context of non-functional entity master.
-                 * The difference from '_createContextHolder' is only in aspect of parent context -- it always exists for continuation master entity.
-                 */
-                _createContextHolderForContinuations: {
-                    type: Function,
-                    notify: true
-                },
-
                 /**
                  * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
                  * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
@@ -237,11 +219,17 @@
                 },
                 
                 /**
-                 * Last updated entity selection in centre that has this insertion point's element.
+                 * Last egi selection changes to bind into insertion point.
                  */
-                retrievedEntitySelection: {
-                    type: Object,
-                    notify: true
+                centreSelection: {
+                    type: Object
+                },
+                
+                /**
+                 * The event target for cutom events if this master is outside the hierarchy where event should occured.
+                 */
+                customEventTarget: {
+                    type: Object
                 },
                 
                 /**
@@ -279,6 +267,39 @@
                 
                 focusFirstInputBound: {
                     type: Function
+                },
+                
+                /**
+                 * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
+                 * It is updated everytime when refresh process successfully completes.
+                 */
+                _originallyProducedEntity: {
+                    type: Object,
+                    value: null
+                },
+                
+                /**
+                 * Indicates whether saving process has been initiated by using CTRL+S key or tapping on SAVE button (or even programatically).
+                 * Strictly speaking it becomes 'true' when 'save' function gets functioned.
+                 *
+                 * _savingInitiated is needed to disable master view only once during debouncing of multiple saving requests, which in turn will be turned into single ajax request,
+                 * and thus only single 'view enablement' action.
+                 *
+                 * Debouncing of saving actions is needed to avoid multiple concurrent saving requests. However it adds additional debouncing 50-second delay similarly
+                 * as in validation.
+                 */
+                _savingInitiated: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                /**
+                 * Postal subscription to 'detail.saved' events that redirects such events further to parent channels (centreUuid).
+                 * It gets populated in attached callback only once, even though the same master instance gets used several time.
+                 */
+                _centreRefreshRedirector: {
+                    type: Object,
+                    value: null
                 }
             },
 
@@ -305,36 +326,31 @@
 
                 self._createActions();
 
-                self._create_createContextHolder_function = (function (forContinuations) {
-                    return (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
-                    
-                        var getThisMasterEntity = function () {
-                            var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-
-                            // @@funcEntityType is really a master entity type, which in this case is not functional!!!
-                            var masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
-                                null, null, forContinuations ? (this.getMasterEntity ? 'true' : null) : null,
-                                null, null, forContinuations ? (this.getMasterEntity ? this.getMasterEntity : null) : null
-                            );
-                            this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._reset(holder), masterTypeCarrier, this._continuations);
-                        }.bind(this);
-
-                        var contextHolder = this._reflector().createContextHolder(
-                            null, null, requireMasterEntity,
-                            null, null, getThisMasterEntity
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+                    const getThisMasterEntity = function () {
+                        const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                        
+                        // @@funcEntityType is really a master entity type, which in this case is not functional!!!
+                        const masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
+                            null, null, this.getMasterEntity ? 'true' : null,
+                            null, null, this.getMasterEntity ? this.getMasterEntity : null
                         );
+                        this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
+                        return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
+                    }.bind(this);
                     
-                        this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
-                        this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
-                        this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    const contextHolder = this._reflector().createContextHolder(
+                        null, null, requireMasterEntity,
+                        null, null, getThisMasterEntity
+                    );
                     
-                        return contextHolder;
-                    }).bind(this);
+                    this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    
+                    return contextHolder;
                 }).bind(self);
                 
-                self._createContextHolder = self._create_createContextHolder_function(false);
-
                 // calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postSavedDefault = (function (potentiallySavedOrNewEntity) {
                     // 'potentiallySavedOrNewEntity' can have two natures:
@@ -360,7 +376,15 @@
                     
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
-                        newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
+                        newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
+                        
+                        if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
+                            this._originallyProducedEntity = null;
+                        } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
+                            this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                        }
                     }
 
                     // custom external action
@@ -377,7 +401,7 @@
                         this._createContextHolderForEmbeddedViews = (function () {
                             var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                             this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext, this._continuations);
+                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
                         }).bind(this);
                     }
                     
@@ -394,9 +418,6 @@
                         
                         var action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                         if (!action) {
-                            if (!this._createContextHolderForContinuations) {
-                                this._createContextHolderForContinuations = this._create_createContextHolder_function(true);
-                            }
                             var actionModel = document.createElement('template', 'dom-bind');
                             actionModel.innerHTML = 
                                 "<tg-ui-action " +
@@ -413,7 +434,7 @@
                                      // "number-of-action='...' " + // numberOfAction is not needed (it is used directly for compound master menu items and insertion points -- no intersection with continuations)
                                      "element-alias='" + elementName + "_" + continuationProperty + "_CONTINUATION' " +
                                      "show-dialog='[[_showDialog]]' " +
-                                     "create-context-holder='[[_createContextHolderForContinuations]]' " +
+                                     "create-context-holder='[[_createContextHolder]]' " +
                                      "attrs='[[attrs]]' " +
                                      "pre-action='[[preAction]]' " +
                                      "post-action-success='[[postActionSuccess]]' " +
@@ -430,14 +451,16 @@
                             action = actionModel.$.continuationAction;
                             
                             actionModel._showDialog = self._showDialog;
-                            actionModel._createContextHolderForContinuations = self._createContextHolderForContinuations;
+                            actionModel._createContextHolder = self._createContextHolder;
                             actionModel.primaryAction = self.primaryAction;
                             
                             actionModel.preAction = function (action) {
+                                delete action['success'];
                                 console.log('preAction: ' + actionDesc);
                                 return Promise.resolve(true);
                             };
                             actionModel.postActionSuccess = function (functionalEntity) {
+                                action.success = true;
                                 console.log('postActionSuccess: ' + actionDesc, functionalEntity);
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
@@ -457,19 +480,22 @@
                             var _self = this;
                             action._actionProgressStatusChanged = (function (newValue, oldValue) {
                                 old_actionProgressStatusChanged(newValue, oldValue);
-                                if (newValue === false) {
+                                if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                                     _self.enableView();
+                                    _self._savingInitiated = false;
                                 }
                             }).bind(action);
                         }
                         action._run();
                     } else if (_exceptionOccured !== null) {
                         this.enableView();
+                        this._savingInitiated = false;
                         
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after unsuccessful save due to non-continuation exception
                         this._continuations = {};
                     } else {
                         this.enableView();
+                        this._savingInitiated = false;
                     }
 
                     return potentiallySavedOrNewEntity.isValidWithoutException();
@@ -485,6 +511,7 @@
                         this.postSavedError.bind(this)(errorResult);
                     }
                     this.enableView();
+                    this._savingInitiated = false;
                 }).bind(self);
 
                 self.edit = (function () {
@@ -514,35 +541,69 @@
                 }).bind(self);
 
                 self.save = (function (newContinuation, continuationProperty) {
-                    this.disableView();
-                    var self = this;
-                    if (self._savingInProgress()) {
-                        var SimultaneousSaveException = self._getSimultaneousSaveExceptionType();
-                        throw new SimultaneousSaveException();
+                    const slf = this;
+                    if (!slf._savingInitiated) {
+                        slf._savingInitiated = true;
+                        slf.disableView();
                     }
                     
-                    // if continuation has been passed into saving function (in postSaveSuccess callback of continuation's tg-ui-action)
-                    // then it should be stored locally in _continuations map.
-                    if (newContinuation) {
-                        this._continuations[continuationProperty] = newContinuation;
-                    }
-
-                    // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
-                    // otherwise -- saving process will simply start immediately
-                    var lastValidationPromise = self._validator().abortValidationExceptLastOne();
-                    if (lastValidationPromise !== null) {
-                        console.warn("Saving is chained to the last validation promise...");
-                        return lastValidationPromise
-                            .then(function () {
-                                return self._createSavingPromise();
-                            });
-                    }
-                    return self._createSavingPromise();
+                    return new Promise(function (resolve, reject) {
+                        slf.debounce('invoke-saving', function () {
+                            // cancel the 'invoke-saving' debouncer if there is any active one:
+                            slf.cancelDebouncer('invoke-saving');
+                            
+                            // if continuation has been passed into saving function (in postSaveSuccess callback of continuation's tg-ui-action)
+                            // then it should be stored locally in _continuations map.
+                            if (newContinuation) {
+                                slf._continuations[continuationProperty] = newContinuation;
+                            }
+                            
+                            // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
+                            // otherwise -- saving process will simply start immediately
+                            const lastValidationPromise = slf._validator().abortValidationExceptLastOne();
+                            if (lastValidationPromise !== null) {
+                                console.warn("Saving is chained to the last validation promise...");
+                                return resolve(lastValidationPromise
+                                    .then(function () {
+                                        return slf._createSavingPromise();
+                                    }));
+                            }
+                            return resolve(slf._createSavingPromise());
+                        }, 50);
+                    });
                 }).bind(self);
-
-                self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
-                    this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
-                    console.log("augmentContextWithSavedEntity", compoundMasterEntityId);
+                
+                self._makeKeyUnmodifiedIfItIsModified = (function () {
+                    const value = this._currBindingEntity['key'];
+                    const originalValue = this._originalBindingEntity['key'];
+                    if (!this._reflector().equalsEx(value, originalValue)) {
+                        this._originalBindingEntity['key'] = value;
+                        this._originalBindingEntity['@key_id'] = this._currBindingEntity['@key_id'];
+                    }
+                }).bind(self);
+                
+                self.augmentCompoundMasterOpenerWith = (function (savedEntityId) {
+                    // Ensure that key property is touched to be able to invoke its definers, which should update sectionTitle accordingly (setAndRegisterPropertyTouch invocation).
+                    // After that need to provide ID to facilitate server-side reconstruction of entity-typed key using ID-based strategy instead of KEY-based.
+                    // Method setAndRegisterPropertyTouch removes '@key_id' value if it has existed previously (if not -- we are providing '@key_id' for the first time).
+                    if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && savedEntityId === this._currBindingEntity['@key_id']) { // main or detail entity with the same id (compound master) has been saved
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
+                        this._currBindingEntity['@key_id'] = savedEntityId;
+                        this._makeKeyUnmodifiedIfItIsModified(); // this is necessary to enforce mutation for touched property due to the need to invoke key's definer in case of 'new' compound master (with saved instance) is operated on.
+                    } else if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && savedEntityId !== this._currBindingEntity['@key_id']) { // detail entity (compound master) with different id has been saved
+                        // This is a rare scenario but provided for additional safety -- id of detail entity is not equal to id of main entity.
+                        // In real life examples all detail entities has key of the type of main entity.
+                        // TODO Please check ReVehicleCostSummary of Vehicle compound master in Parc.
+                        const prevCompoundMasterEntityId = this._currBindingEntity['@key_id'];
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
+                        this._currBindingEntity['@key_id'] = prevCompoundMasterEntityId;
+                        this._makeKeyUnmodifiedIfItIsModified(); // this is necessary to enforce mutation for touched property due to the need to invoke key's definer in case of 'new' compound master (with saved instance) is operated on.
+                    } else { // main entity (compound master) has been saved (for the first time)
+                        this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
+                        this._currBindingEntity['@key_id'] = savedEntityId;
+                    }
+                    
+                    console.debug(':MASTER: augmentCompoundMasterOpenerWith |savedEntityId = ', savedEntityId, '|master.is = ', this.is);
                 }).bind(self);
 
                 self._postSaverLoadingFinished = (function () {
@@ -735,20 +796,25 @@
 
             //////////////////////////////////////// VALIDATION ////////////////////////////////////////
             /**
-             * Overridden to reuse this.savingContext. It is not empty for tg-ui-action's functional entities, which is assigned in its method _onExecuted.
+             * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria.
              */
             _validateForDescendants: function (preparedModifHolder) {
-                if (this.getMasterEntity && !this.savingContext) {
-                    var contextHolder = this._reflector().createContextHolder(
-                        null, null, 'true',
-                        null, null, this.getMasterEntity);
-
-                    return this._validator().validate(preparedModifHolder, contextHolder);
+                return this._validator().validate(this._originallyProducedEntity, preparedModifHolder);
+            },
+            
+            /**
+             * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
+             */
+            _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+                Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+                
+                if (entity.id === null) {
+                    this._originallyProducedEntity = entity;
                 } else {
-                    return this._validator().validate(preparedModifHolder, this.savingContext);
+                    this._originallyProducedEntity = null;
                 }
             },
-
+            
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
@@ -769,15 +835,12 @@
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
             _saveModifiedProperties: function (modifiedPropertiesHolder) {
-                if (this.getMasterEntity && !this.savingContext) {
-                    var contextHolder = this._reflector().createContextHolder(
-                        null, null, 'true',
-                        null, null, this.getMasterEntity);
-
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder, this._continuations)));
-                } else {
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext, this._continuations)));
-                }
+                const idNumber = modifiedPropertiesHolder.id;
+                const originallyProducedEntity = this._reflector()._validateOriginallyProducedEntity(this._originallyProducedEntity, idNumber);
+                console.debug(':MASTER:SAVE1', '|type', this.entityType, '|id', idNumber);
+                console.debug(':MASTER:SAVE2', '|mph', modifiedPropertiesHolder);
+                console.debug(':MASTER:SAVE3', '|ope', originallyProducedEntity);
+                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder, null, this._continuations)));
                 return this._ajaxSaver().generateRequest().completes;
             },
 
@@ -787,41 +850,30 @@
              */
             canLeave: function () {
                 // check all the child nodes with canLeave contract if they can be left...
-                var nodesWithCanLeave = this.querySelectorAll('.canLeave');
+                const nodesWithCanLeave = this.querySelectorAll('.canLeave');
                 if (nodesWithCanLeave.length > 0) {
-                    for (var index = 0; index < nodesWithCanLeave.length; index++) {
-                        var reason = nodesWithCanLeave[index].canLeave();
-                        if (reason !== undefined) {
+                    for (let index = 0; index < nodesWithCanLeave.length; index++) {
+                        const reason = nodesWithCanLeave[index].canLeave();
+                        if (reason) {
                             return reason;
                         }
                     }
                 }
-
+                
                 if (this.classList.contains('canLeave')) {
-                    // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
-                    // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
-                    if (this._editedPropsExist || this._bindingEntityNotPersistentOrNotPersistedOrModified) {
-                        if (this._currBindingEntity.get('id') === null) {
-                            return {
-                                isNew: true,
-                                msg: "A new entity is being created. Please save your changes."
-                            };
-                        } else {
-                            return {
-                                isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
-                                msg: "Please save or cancel your changes."
-                            };
-                        }
+                    // The master should remain open in case where there are some modifications and the entity is persisted. 
+                    // Refer to _bindingEntityModified property of tg-entity-binder-behavior for more information.
+                    if ((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) {
+                        return {
+                            isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
+                            msg: "Please save or cancel your changes."
+                        };
                     }
                 }
                 return undefined;
             },
-
+            
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
-            _getSimultaneousSaveExceptionType: function () {
-                return SimultaneousSaveException;
-            },
-
             _saverLoadingChanged: function (newValue, oldValue) {
                 console.log("_saverLoadingChanged:", newValue, oldValue);
                 if (oldValue === true && newValue === false) {
@@ -847,6 +899,46 @@
             /** A helper method to assist in making the caching decision. Used as an optimisation technique. */
             canBeCached: function () {
                 return typeof this._currBindingEntity['skipUi'] === 'undefined';
+            },
+            
+            /**
+             * Registers _centreRefreshRedirector if not registered yet.
+             * 
+             * In case where 'centre refresh' postal event occurs in entity master there is a need to generate similar event and pass it further to parent component in hierarchy.
+             * In this case the 'chain reaction' of such events will occur which will trigger 'centre refresh' in all centres in hierarchy of components up to top standalone centre.
+             *
+             * There are two cases:
+             *  1. master-with-centre 'embedded centre invoker' functional entity master will trigger postal event up;
+             *  2. simple master will trigger postal event up.
+             * 
+             * master-with-master employs its own mechanism through the use of the same 'postSaved' / 'postSavedError' callbacks for embedded and wrapping masters,
+             * that is why there is no need to use 'centre refresh' redirection for it.
+             *
+             * Please also note similar redirection inside tg-master-menu.
+             */
+            registerCentreRefreshRedirector: function () {
+                const self = this;
+                if (self._centreRefreshRedirector === null) {
+                    self._centreRefreshRedirector = postal.subscribe({
+                        channel: 'centre_' + self.uuid,
+                        topic: 'detail.saved',
+                        callback: function (data, envelope) {
+                            if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
+                                const newData = { 
+                                    savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
+                                    entity: data.entity,
+                                    shouldRefreshParentCentreAfterSave: true,
+                                    selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
+                                };
+                                postal.publish({
+                                    channel: 'centre_' + self.centreUuid,
+                                    topic: 'detail.saved',
+                                    data: newData
+                                });
+                            }
+                        }
+                    });
+                }
             }
         };
 

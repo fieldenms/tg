@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
@@ -49,6 +50,8 @@ import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -89,6 +92,8 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.MoneyCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.MoneySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointBuilder;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -100,6 +105,8 @@ import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
@@ -111,6 +118,8 @@ import ua.com.fielden.snappy.DateRangeConditionEnum;
  */
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
+    private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
+    
     private final String IMPORTS = "<!--@imports-->";
     private final String FULL_ENTITY_TYPE = "@full_entity_type";
     private final String FULL_MI_TYPE = "@full_mi_type";
@@ -151,6 +160,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
     private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
     private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+    // generic custom code
+    private final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
+    private final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
 
 
     private final Logger logger = Logger.getLogger(getClass());
@@ -163,6 +175,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final ICompanionObjectFinder coFinder;
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private ICentreDomainTreeManagerAndEnhancer defaultCentre;
+    private Optional<JsCode> customCode = Optional.empty();
+    private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
@@ -181,7 +195,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         this.injector = injector;
         this.miType = miType;
-        this.entityType = CentreUtils.getEntityType(miType);
+        this.entityType = EntityResourceUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
     }
@@ -755,7 +769,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         importPaths.add(layout.importPath());
 
-        final Class<?> root = this.entityType;
+        final Class<? extends AbstractEntity<?>> root = this.entityType;
 
         logger.debug("Initiating criteria widgets...");
 
@@ -783,8 +797,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
                 final Optional<FunctionalActionElement> action;
-                if (resultProp.propAction.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
+                final Optional<EntityActionConfig> actionConfig = resultProp.propAction.get();
+                if (actionConfig.isPresent()) {
+                    action = Optional.of(new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName));
                     actionIndex += 1;
                 } else {
                     action = Optional.empty();
@@ -894,41 +909,34 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating insertion point actions...");
 
-        final List<FunctionalActionElement> insertionPointActionsElements = new ArrayList<>();
-        final Optional<List<EntityActionConfig>> insertionPointActions = this.dslDefaultConfig.getInsertionPointActions();
-        if (insertionPointActions.isPresent()) {
-            for (int index = 0; index < insertionPointActions.get().size(); index++) {
-                final FunctionalActionElement el = new FunctionalActionElement(insertionPointActions.get().get(index), index, FunctionalActionKind.INSERTION_POINT);
+        final List<InsertionPointBuilder> insertionPointActionsElements = new ArrayList<>();
+        final Optional<List<InsertionPointConfig>> insertionPointConfigs = this.dslDefaultConfig.getInsertionPointConfigs();
+        if (insertionPointConfigs.isPresent()) {
+            for (int index = 0; index < insertionPointConfigs.get().size(); index++) {
+                final InsertionPointBuilder el = new InsertionPointBuilder(insertionPointConfigs.get().get(index), index);
                 insertionPointActionsElements.add(el);
             }
         }
 
         final DomContainer insertionPointActionsDom = new DomContainer();
         final StringBuilder insertionPointActionsObjects = new StringBuilder();
-        for (final FunctionalActionElement el : insertionPointActionsElements) {
-            importPaths.add(el.importPath());
-            insertionPointActionsDom.add(el.render().clazz("insertion-point-action").attr("hidden", null));
-            insertionPointActionsObjects.append(prefix + createActionObject(el));
+        for (final InsertionPointBuilder el : insertionPointActionsElements) {
+            importPaths.addAll(el.importPaths());
+            insertionPointActionsDom.add(el.renderInsertionPointAction());
+            insertionPointActionsObjects.append(prefix + el.code());
         }
         importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
-        for (final FunctionalActionElement el : insertionPointActionsElements) {
-            final DomElement insertionPoint = new DomElement("tg-entity-centre-insertion-point")
-                    .attr("id", "ip" + el.numberOfAction)
-                    .attr("short-desc", el.conf().shortDesc.orElse(""))
-                    .attr("long-desc", el.conf().longDesc.orElse(""))
-                    .attr("retrieved-entities", "{{retrievedEntities}}")
-                    .attr("retrieved-totals", "{{retrievedTotals}}")
-                    .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
-                    .attr("column-properties-mapper", "{{columnPropertiesMapper}}");
-            if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
+        for (final InsertionPointBuilder el : insertionPointActionsElements) {
+            final DomElement insertionPoint = el.render();
+            if (el.whereToInsert() == InsertionPoints.LEFT) {
                 leftInsertionPointsDom.add(insertionPoint);
-            } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
+            } else if (el.whereToInsert() == InsertionPoints.RIGHT) {
                 rightInsertionPointsDom.add(insertionPoint);
-            } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
+            } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
@@ -1003,7 +1011,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
-                replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString());
+                replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
+                replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
+                replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override
@@ -1139,7 +1149,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param root
      * @return
      */
-    private List<AbstractCriterionWidget> createCriteriaWidgets(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root) {
+    private List<AbstractCriterionWidget> createCriteriaWidgets(final ICentreDomainTreeManagerAndEnhancer centre, final Class<? extends AbstractEntity<?>> root) {
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
         for (final String critProp : centre.getFirstTick().checkedProperties(root)) {
@@ -1211,12 +1221,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {
         final String dslProp = dslName(critProp);
-        return dslDefaultConfig.getValueMatchersForSelectionCriteria().isPresent()
-                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp) != null
-                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue() != null
-                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().isPresent()
-                ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().get()
-                : new CentreContextConfig(false, false, false, false, null);
+        return dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp)).flatMap(Pair::getValue).orElse(defaultCentreContextConfig);
     }
 
     /**
@@ -1226,20 +1231,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
-        final Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> matchers = dslDefaultConfig.getValueMatchersForSelectionCriteria();
 
-        final String originalPropertyName = CentreUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
+        final String originalPropertyName = EntityResourceUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
         final String dslProp = dslName(originalPropertyName);
-        logger.debug("createValueMatcherAndContextConfig: propertyName = " + criterionPropertyName + " originalPropertyName = " + dslProp);
-        final Class<? extends IValueMatcherWithCentreContext<V>> matcherType = matchers.isPresent() && matchers.get().containsKey(dslProp) ?
-                (Class<? extends IValueMatcherWithCentreContext<V>>) matchers.get().get(dslProp).getKey() : null;
-        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndContextConfig;
-        if (matcherType != null) {
-            matcherAndContextConfig = new Pair<>(injector.getInstance(matcherType), matchers.get().get(dslProp).getValue());
-        } else {
-            matcherAndContextConfig = createDefaultValueMatcherAndContextConfig(CentreUtils.getOriginalType(criteriaType), originalPropertyName, coFinder);
-        }
-        return matcherAndContextConfig;
+        logger.debug(String.format("createValueMatcherAndContextConfig: propertyName = %s originalPropertyName = %s", criterionPropertyName, dslProp));
+                
+        final Optional<Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> matcherConfig = dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp));
+               
+        return matcherConfig.map(p -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(p.getKey()), p.getValue()))
+                .orElse(createDefaultValueMatcherAndContextConfig(EntityResourceUtils.getOriginalType(criteriaType), originalPropertyName, coFinder));
     }
 
     /**
@@ -1251,10 +1251,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createDefaultValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> originalType, final String originalPropertyName, final ICompanionObjectFinder coFinder) {
-        final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
-        final Class<V> propertyType = (Class<V>) (isEntityItself ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName));
-        final IEntityDao<V> co = coFinder.find(propertyType);
-        return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
+        final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
+                                   .map(propertyType -> (Class<V>) propertyType)
+                                   .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName)));
+
+        final IEntityDao<V> co = coFinder.find(propType);
+        final IValueMatcherWithCentreContext<V> matcher = new FallbackValueMatcherWithCentreContext<>(co);
+        final fetch<V> fetch = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
+                                .map(Pair::getKey)
+                                .reduce(EntityQueryUtils.fetchKeyAndDescOnly(propType), (f, propName) -> f.with(propName), (f1, f2) -> {throw new UnsupportedOperationException("Parallelisation is not supported.");});
+        
+        matcher.setFetch(fetch);
+
+        return pair(matcher, Optional.empty());
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
@@ -1281,13 +1290,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
         final Set<String> tooltipProps = new LinkedHashSet<>();
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
-        resultSetProps.ifPresent(resultProps -> {
+        resultSetProps.ifPresent(resultProps -> 
             resultProps.stream().forEach(property -> {
                 if (property.tooltipProp.isPresent()) {
                     tooltipProps.add(property.tooltipProp.get());
                 }
-            });
-        });
+            }));
         return tooltipProps.isEmpty() ? Optional.empty() : Optional.of(EntityUtils.fetchNotInstrumented(entityType).with(tooltipProps));
     }
 
@@ -1314,5 +1322,29 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     @SuppressWarnings("rawtypes")
     public IGenerator createGeneratorInstance(final Class<?> generatorType) {
         return (IGenerator) injector.getInstance(generatorType);
+    }
+
+    /**
+     * Injects custom JavaScript code into centre implementation. This code will be executed after
+     * centre component creation.
+     *
+     * @param customCode
+     * @return
+     */
+    public EntityCentre<T> injectCustomCode(final JsCode customCode) {
+        this.customCode = Optional.of(customCode);
+        return this;
+    }
+
+    /**
+     * Injects custom JavaScript code into centre implementation. This code will be executed every time
+     * centre component is attached to client application's DOM.
+     *
+     * @param customCode
+     * @return
+     */
+    public EntityCentre<T> injectCustomCodeOnAttach(final JsCode customCode) {
+        this.customCodeOnAttach = Optional.of(customCode);
+        return this;
     }
 }

@@ -104,16 +104,20 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
-                        + "    augment-context-with-saved-entity='[[augmentContextWithSavedEntity]]'>\n"
+                        + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'>\n"
                         + menuItemActionsDom + "\n"
                         + menuItemsDom + "\n"
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback",
-                        format("self.menuItemActions = [%s];\n"
-                             + "self.$.menu.parent = self;\n"
-                             + "self.canLeave = self.$.menu.canClose.bind(self.$.menu);\n",
+                        format("            self.menuItemActions = [%s];\n"
+                             + "            self.$.menu.parent = self;\n"
+                             + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
+                             + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
+                             + "            self._isNecessaryForConversion = function (propertyName) { \n"
+                             + "                return ['key', 'sectionTitle', 'menuToOpen'].indexOf(propertyName) !== -1; \n"
+                             + "            }; \n",
                                 jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")

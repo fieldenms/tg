@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 
 public class CompoundCondition {
     private final LogicalOperator logicalOperator;

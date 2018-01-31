@@ -12,7 +12,6 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * Abstract {@link IMaster} implementation that represents Leaflet-based GIS component with concrete implementation.
@@ -37,7 +36,8 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .clazz("tg-map")
                 .attr("entity", "[[_currBindingEntity]]")
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
-                .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
+                .attr("centre-selection", "[[centreSelection]]")
+                .attr("custom-event-target", "[[customEventTarget]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");
 
@@ -73,7 +73,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
     public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
         return Optional.empty();
     }
-    
+
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");

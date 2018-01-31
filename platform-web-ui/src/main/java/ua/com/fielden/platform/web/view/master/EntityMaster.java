@@ -6,16 +6,16 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
-import ua.com.fielden.platform.dao.DefaultEntityProducerForCompoundMenuItem;
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.DefaultEntityProducerForCompoundMenuItem;
+import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
+import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -25,6 +25,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
@@ -59,7 +60,29 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.injector = injector;
     }
-
+    
+    /**
+     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+     * 
+     *
+     * @param entityType
+     * @param entityProducerType
+     * @param injector
+     * @param customCode -- custom JS code to be executed after master component creation.
+     * @param customCodeOnAttach -- custom JS code to be executed every time master component is attached to client application's DOM
+     * 
+     * @return
+     */
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
+            final Class<T> entityType,
+            final Class<? extends IEntityProducer<T>> entityProducerType,
+            final Injector injector,
+            final JsCode customCode, 
+            final JsCode customCodeOnAttach
+            ) {
+        return new EntityMaster<>(entityType, entityProducerType, new NoUiMaster<>(entityType, customCode, customCodeOnAttach), injector);
+    }
+    
     /**
      * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
      *
@@ -187,13 +210,19 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     private static class NoUiMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
         private final IRenderable renderable;
-
+        
         public NoUiMaster(final Class<T> entityType) {
+            this(entityType, new JsCode(""), new JsCode(""));
+        }
+
+        public NoUiMaster(final Class<T> entityType, final JsCode customCode, final JsCode customCodeOnAttach) {
             final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                     .replace("<!--@imports-->", "")
                     .replace("@entity_type", entityType.getSimpleName())
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")
+                    .replace("//@master-is-ready-custom-code", customCode.toString())
+                    .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.toString())
                     .replace("@prefDim", "null")
                     .replace("@noUiValue", "true")
                     .replace("@saveOnActivationValue", "true");

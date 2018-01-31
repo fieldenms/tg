@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.lang.String.format;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,11 +11,15 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 public class fetch<T extends AbstractEntity<?>> {
+    public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
+
     public enum FetchCategory {
-        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID, ALL_INCL_CALC
+        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID, ALL_INCL_CALC, NONE
     }
 
     private final Class<T> entityType;
@@ -60,11 +66,11 @@ public class fetch<T extends AbstractEntity<?>> {
         }
     }
 
-    private fetch<T> copy() {
-        final fetch<T> result = new fetch<T>(entityType, fetchCategory, isInstrumented());
-        result.includedPropsWithModels.putAll(includedPropsWithModels);
-        result.includedProps.addAll(includedProps);
-        result.excludedProps.addAll(excludedProps);
+    private static <T extends AbstractEntity<?>> fetch<T> copy(final fetch<T> fromFetch) {
+        final fetch<T> result = new fetch<T>(fromFetch.entityType, fromFetch.fetchCategory, fromFetch.isInstrumented());
+        result.includedPropsWithModels.putAll(fromFetch.includedPropsWithModels);
+        result.includedProps.addAll(fromFetch.includedProps);
+        result.excludedProps.addAll(fromFetch.excludedProps);
         return result;
     }
 
@@ -78,7 +84,7 @@ public class fetch<T extends AbstractEntity<?>> {
      */
     public fetch<T> with(final String propName) {
         validate(propName);
-        final fetch<T> result = copy();
+        final fetch<T> result = copy(this);
         result.includedProps.add(propName);
         return result;
     }
@@ -93,7 +99,7 @@ public class fetch<T extends AbstractEntity<?>> {
      */
     public fetch<T> without(final String propName) {
         validate(propName);
-        final fetch<T> result = copy();
+        final fetch<T> result = copy(this);
         result.excludedProps.add(propName);
         return result;
     }
@@ -108,7 +114,15 @@ public class fetch<T extends AbstractEntity<?>> {
      */
     public fetch<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         validate(propName);
-        final fetch<T> result = copy();
+        // if the entityType is not an aggregate entity then we must validate that the type of propName and the type of fetchModel match
+        if (entityType != EntityAggregates.class) {
+            final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, propName);
+            if (propType != fetchModel.entityType) {
+                throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, entityType, fetchModel.getEntityType()));
+            }
+        }
+
+        final fetch<T> result = copy(this);
         result.includedPropsWithModels.put(propName, fetchModel);
         return result;
     }

@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -32,9 +32,8 @@ public class CentreConfigUpdaterDefaultActionProducer extends DefaultEntityProdu
     
     @Override
     protected CentreConfigUpdaterDefaultAction provideDefaultValues(final CentreConfigUpdaterDefaultAction entity) {
-        if (getMasterEntity() != null) {
-            final CentreConfigUpdater masterEntity = (CentreConfigUpdater) getMasterEntity();
-            final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = masterEntity.getContext().getSelectionCrit();
+        if (ofMasterEntity().selectionCritNotEmpty()) {
+            final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = ofMasterEntity().selectionCrit();
             
             final Class<?> root = criteriaEntity.getEntityClass();
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = criteriaEntity.defaultCentreSupplier().get();

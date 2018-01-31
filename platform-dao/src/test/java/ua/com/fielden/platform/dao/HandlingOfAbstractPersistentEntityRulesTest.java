@@ -62,7 +62,7 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         // move to the future and change the current user
         constants.setNow(dateTime("2016-05-17 13:36:57"));
         final User currentUser = up.getUser();
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
 
         try {
             // perform entity modification and saving
@@ -90,7 +90,7 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2"));
         entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3"));
 
-        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        final EntityBasedOnAbstractPersistentEntityDao co = co$(EntityBasedOnAbstractPersistentEntity.class);
         List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
 
         assertEquals(3, savedEntities.stream().filter(entity -> entity.getCreatedTransactionGuid() != null).count());
@@ -104,7 +104,7 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2")).setKey("VALUE_2_"));
         entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3")).setKey("VALUE_3_"));
 
-        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        final EntityBasedOnAbstractPersistentEntityDao co = co$(EntityBasedOnAbstractPersistentEntity.class);
         final List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
 
         assertEquals(3, savedEntities.stream().filter(entity -> entity.getCreatedTransactionGuid() != null).count());
@@ -121,7 +121,7 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2")); // new
         entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3")).setKey("VALUE_3_")); // modified
 
-        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        final EntityBasedOnAbstractPersistentEntityDao co = co$(EntityBasedOnAbstractPersistentEntity.class);
         final List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
 
         assertEquals("2 out of 3 entities are updated", 2, savedEntities.stream().filter(entity -> entity.getLastUpdatedTransactionGuid() != null).count());
@@ -144,7 +144,7 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         entities2.add(save(new_(EntityBasedOnAbstractPersistentEntity2.class, "VALUE_1")).setKey("VALUE_1_")); // modified
         entities2.add(new_(EntityBasedOnAbstractPersistentEntity2.class, "VALUE_2")); // new
 
-        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        final EntityBasedOnAbstractPersistentEntityDao co = co$(EntityBasedOnAbstractPersistentEntity.class);
         final List<AbstractPersistentEntity<?>> savedEntities = co.nestedSaveWithDifferentCompanion(entities1, entities2);
 
         assertEquals("2 out of 4 entities of different types are updated", 2, savedEntities.stream().filter(entity -> entity.getLastUpdatedTransactionGuid() != null).count());
@@ -170,14 +170,14 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         // move to the future and change the current user
         constants.setNow(dateTime("2016-05-17 13:36:57"));
         final User currentUser = up.getUser();
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
 
         // perform entity fetching by excluding the last updated by group of properties, modify and save such entity
         // successful assertion ensures correct assignment of the last updated by group of properties even though those properties are excluded from fetch
         try {
             final fetch<EntityBasedOnAbstractPersistentEntity> limitedFetch = fetchOnly(EntityBasedOnAbstractPersistentEntity.class).with("key");
             
-            final EntityBasedOnAbstractPersistentEntity savedEntity = save(co(EntityBasedOnAbstractPersistentEntity.class).findById(id, limitedFetch).setKey("VALUE_1_"));
+            final EntityBasedOnAbstractPersistentEntity savedEntity = save(co$(EntityBasedOnAbstractPersistentEntity.class).findById(id, limitedFetch).setKey("VALUE_1_"));
             assertEquals("VALUE_1_", savedEntity.getKey());
             
             try {
@@ -220,14 +220,14 @@ public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTest
         // move to the future and change the current user
         constants.setNow(dateTime("2016-05-17 13:36:57"));
         final User currentUser = up.getUser();
-        up.setUser(co(User.class).findByKey("USER_1"));
+        up.setUser(co$(User.class).findByKey("USER_1"));
 
         // perform entity fetching by excluding the last updated by group of properties, modify and save such entity
         // successful assertion ensures correct assignment of the last updated by group of properties even though those properties are excluded from fetch
         try {
             final fetch<EntityBasedOnAbstractPersistentEntity> limitedFetch = fetch(EntityBasedOnAbstractPersistentEntity.class);
             
-            final EntityBasedOnAbstractPersistentEntity savedEntity = save(co(EntityBasedOnAbstractPersistentEntity.class).findById(id, limitedFetch).setKey("VALUE_1_"));
+            final EntityBasedOnAbstractPersistentEntity savedEntity = save(co$(EntityBasedOnAbstractPersistentEntity.class).findById(id, limitedFetch).setKey("VALUE_1_"));
             assertEquals("VALUE_1_", savedEntity.getKey());
             
             assertNotNull(savedEntity.getCreatedBy());

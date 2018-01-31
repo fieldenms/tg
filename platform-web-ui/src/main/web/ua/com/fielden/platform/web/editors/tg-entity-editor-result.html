@@ -246,28 +246,28 @@
             highlightMatchedParts: function () {
 				this.async(function() {
 				    this._foundSome = this._values.length > 0;
-					for (var index = 0; index < this._values.length; index++) {
+					for (let index = 0; index < this._values.length; index++) {
 						let html = '';                	
-						var v = this._values[index];
+						const v = this._values[index];
 						
 						// add key value with highlighting of matching parts
 						const descProp = 'desc';
 						const withDesc = this.additionalProperties.hasOwnProperty(descProp);
-						html = html + this._addHighlightedKeyProp(v, withDesc)
+						html = html + this._addHighlightedKeyProp(v, withDesc);
 		
 						// add values for additional properties with highlighting of matching parts if required
-						for (var propName in this.additionalProperties) {
+						for (let propName in this.additionalProperties) {
 							// interested only in the object's direct properties
 							if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
 								// should highlight?
-								var highlight = this.additionalProperties[propName];
+								const highlight = this.additionalProperties[propName];
 								html = html + this._addHighlightedPropByName(v, propName, highlight);
 							}
 						}
 						
 						// put the composed for the current item HTML into the content of paper-item
-						var id = this._makeId(index);
-						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
+						const id = this._makeId(index);
+						const paperItem = Polymer.dom(this.root).querySelector("#" + id);
 						if (paperItem) {
 							Polymer.dom(paperItem).innerHTML = html;
 						}
@@ -279,16 +279,21 @@
 			_addHighlightedKeyProp : function(v, withDesc) {
 				let html = '<div style="white-space: nowrap">';
 				
+				// let's first handle the key
 				let matchedParts = this._matchedParts(v.key, this.searchQuery);
-				for (let index = 0; index < matchedParts.length; index++) {
-					let part = matchedParts[index];
-					if (part.matched) {
-						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
-						html = html
-								+ '<span class="key-value key-value-highlighted">'
-								+ part.part + '</span>';
-					} else {
-						html = html + part.part;
+				if (matchedParts.length === 0) {
+				    html = html + v.key;
+				} else {
+					for (let index = 0; index < matchedParts.length; index++) {
+						const part = matchedParts[index];
+						if (part.matched === true) {
+							// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+							html = html
+									+ '<span class="key-value key-value-highlighted">'
+									+ part.part + '</span>';
+						} else {
+							html = html + part.part;
+						}
 					}
 				}
 				
@@ -297,17 +302,20 @@
 				    if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
 					    html = html	+ '<span style="color:#737373"> &ndash; <i>';				
 						matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
-						for (let index = 0; index < matchedParts.length; index++) {
-							let part = matchedParts[index];
-							if (part.matched) {
-								// addition style-scope and this.is (element name) styles is required to enformse custom style processing
-								html = html	+ '<span class="key-value-highlighted">' + part.part + '</span>';
-							} else {
-								html = html + part.part;
+						if (matchedParts.length === 0) {
+						    html = html + propValueAsString;
+						} else {
+							for (let index = 0; index < matchedParts.length; index++) {
+								const part = matchedParts[index];
+								if (part.matched) {
+									// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+									html = html	+ '<span class="key-value-highlighted">' + part.part + '</span>';
+								} else {
+									html = html + part.part;
+								}
 							}
-	
 						}
-						
+
 						html = html + '</i></span>';
 				    }
 				}
@@ -406,7 +414,7 @@
 				}
                 this._scrollToSelected();
             },
-            
+
             selectPrev: function () {
                 if (this._keyBoardNavigationReady === false) {
                     this._keyBoardNavigationReady = true;
@@ -427,17 +435,29 @@
                 }
                 this._scrollToSelected();
             },
-            
+
+            /** Selects the currenlty focused item in the list if none was selected.
+              * It is used to treat the focused item as if it was selected upon user's attempts to "accept" values.
+              */
+            selectCurrentIfNoneSelected: function() {
+                if (Object.keys(this.selectedValues).length === 0) {
+					this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                }
+            },
+
             _scrollToSelected: function () {
                 if (!isNaN(this._selectedIndex)) {
                     const item = this.querySelectorAll(".tg-item")[this._selectedIndex];
-                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
-                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
-                        if (item.offsetTop < this.scrollTop) {
-                            this.scrollTop = item.offsetTop;
-                        } else {
-                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
-                        }
+                    // item is going to be undefined if there are no matching values
+                    if (item) {
+	                    if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
+	                        item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
+	                        if (item.offsetTop < this.scrollTop) {
+	                            this.scrollTop = item.offsetTop;
+	                        } else {
+	                            this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
+	                        }
+	                    }
                     }
                 }
             },

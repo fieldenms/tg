@@ -11,739 +11,870 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 /**
- * Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
+ * Class for collecting all interfaces, which are part of Entity Query
+ * Progressive Interfaces.
  * 
  * @author TG Team
  * 
  */
 public interface EntityQueryProgressiveInterfaces {
 
-    interface IComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> {
-        T isNull();
+	interface IComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> {
+		T isNull();
+
+		T isNotNull();
+
+		IComparisonSetOperand<T> in();
+
+		IComparisonSetOperand<T> notIn();
+
+		IComparisonOperand<T, ET> like();
+
+		/**
+		 * Case-insensitive 'like'.
+		 * 
+		 * @return
+		 */
+		IComparisonOperand<T, ET> iLike();
+
+		IComparisonOperand<T, ET> notLike();
+
+		/**
+		 * Negated case-insensitive 'like'.
+		 * 
+		 * @return
+		 */
+		IComparisonOperand<T, ET> notILike();
+
+		/**
+		 * Equal.
+		 * 
+		 * @return
+		 */
+		IComparisonQuantifiedOperand<T, ET> eq();
+
+		/**
+		 * Not equal.
+		 * 
+		 * @return
+		 */
+		IComparisonQuantifiedOperand<T, ET> ne();
+
+		/**
+		 * Greater than.
+		 * 
+		 * @return
+		 */
+		IComparisonQuantifiedOperand<T, ET> gt();
+
+		/**
+		 * Less than.
+		 * 
+		 * @return
+		 */
+		IComparisonQuantifiedOperand<T, ET> lt();
+
+		/**
+		 * Greater or equal.
+		 * 
+		 * @return
+		 */
+		IComparisonQuantifiedOperand<T, ET> ge();
+
+		/**
+		 * Less or equal.
+		 * 
+		 * @return
+		 */
+		IComparisonQuantifiedOperand<T, ET> le();
+	}
+
+	interface IBeginCondition<T> {
+		/**
+		 * Starts new group of conditions (opens new parenthesis).
+		 * 
+		 * @return
+		 */
+		T begin();
+
+		/**
+		 * Starts new negated group of conditions (opens new parenthesis with
+		 * NOT preceding it).
+		 * 
+		 * @return
+		 */
+		T notBegin();
+	}
+
+	interface IEndCondition<T> {
+		/**
+		 * Closes parenthesis of the nearest condition group.
+		 * 
+		 * @return
+		 */
+		T end();
+	}
+
+	interface ILogicalOperator<T> {
+		T and();
+
+		T or();
+	}
 
-        T isNotNull();
+	interface ISingleOperand<T, ET extends AbstractEntity<?>> {
+		/**
+		 * Property.
+		 * 
+		 * @return
+		 */
+		T prop(String propertyName);
 
-        IComparisonSetOperand<T> in();
+		/**
+		 * Property.
+		 * 
+		 * @return
+		 */
+		T prop(Enum propertyName);
 
-        IComparisonSetOperand<T> notIn();
+		/**
+		 * External property (property from master query(ies).
+		 * 
+		 * @return
+		 */
+		T extProp(String propertyName);
 
-        IComparisonOperand<T, ET> like();
+		/**
+		 * External property (property from master query(ies).
+		 * 
+		 * @return
+		 */
+		T extProp(Enum propertyName);
 
-        IComparisonOperand<T, ET> iLike();
+		/**
+		 * Value.
+		 * 
+		 * @return
+		 */
+		T val(Object value);
 
-        IComparisonOperand<T, ET> notLike();
+		/**
+		 * Ignore value -- ignore condition with this operator if null is passed as an argument.
+		 * 
+		 * @return
+		 */
+		T iVal(Object value);
 
-        IComparisonOperand<T, ET> notILike();
+		T param(String paramName);
 
-        IComparisonQuantifiedOperand<T, ET> eq();
+		T param(Enum paramName);
 
-        IComparisonQuantifiedOperand<T, ET> ne();
+		/**
+		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
+		 * 
+		 * @return
+		 */
+		T iParam(String paramName);
 
-        IComparisonQuantifiedOperand<T, ET> gt();
+		/**
+		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
+		 * 
+		 * @return
+		 */
+		T iParam(Enum paramName);
 
-        IComparisonQuantifiedOperand<T, ET> lt();
+		T model(SingleResultQueryModel<?> model);
 
-        IComparisonQuantifiedOperand<T, ET> ge();
+		/**
+		 * Expression.
+		 * 
+		 * @return
+		 */
+		T expr(ExpressionModel Expr);
 
-        IComparisonQuantifiedOperand<T, ET> le();
-    }
+		// built-in SQL functions
+		T now();
 
-    interface IBeginCondition<T> {
-        /**
-         * Starts new group of conditions (opens new parenthesis).
-         * 
-         * @return
-         */
-        T begin();
+		IDateDiffIntervalFunction<T, ET> count();
 
-        /**
-         * Starts new negated group of conditions (opens new parenthesis with NOT preceding it).
-         * 
-         * @return
-         */
-        T notBegin();
-    }
+		IFunctionLastArgument<T, ET> upperCase();
 
-    interface IEndCondition<T> {
-        /**
-         * Closes parenthesis of the nearest condition group.
-         * 
-         * @return
-         */
-        T end();
-    }
+		IFunctionLastArgument<T, ET> lowerCase();
 
-    interface ILogicalOperator<T> {
-        T and();
+		IFunctionLastArgument<T, ET> secondOf();
 
-        T or();
-    }
+		IFunctionLastArgument<T, ET> minuteOf();
 
-    interface ISingleOperand<T, ET extends AbstractEntity<?>> {
-        T prop(String propertyName);
+		IFunctionLastArgument<T, ET> hourOf();
 
-        T prop(Enum propertyName);
+		IFunctionLastArgument<T, ET> dayOf();
 
-        T extProp(String propertyName);
+		IFunctionLastArgument<T, ET> monthOf();
 
-        T extProp(Enum propertyName);
+		IFunctionLastArgument<T, ET> yearOf();
 
-        T val(Object value);
+		IIfNullFunctionArgument<T, ET> ifNull();
 
-        T iVal(Object value);
+		IFunctionWhere0<T, ET> caseWhen();
 
-        T param(String paramName);
+		IRoundFunctionArgument<T, ET> round();
 
-        T param(Enum paramName);
+		IConcatFunctionArgument<T, ET> concat();
 
-        T iParam(String paramName);
+		IFunctionLastArgument<T, ET> absOf();
 
-        T iParam(Enum paramName);
+		IFunctionLastArgument<T, ET> dateOf();
+	}
 
-        T model(SingleResultQueryModel<?> model);
+	interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
+			extends ISingleOperand<T, ET> {
+		T anyOfProps(String... propertyNames);
 
-        T expr(ExpressionModel Expr);
+		T anyOfValues(Object... values);
 
-        // built-in SQL functions
-        T now();
+		T anyOfParams(String... paramNames);
 
-        IDateDiffIntervalFunction<T, ET> count();
+		/**
+		 * Shortcut for the group of OR-ed iParam(..) calls.
+		 * 
+		 * @return
+		 */
+		T anyOfIParams(String... paramNames);
 
-        IFunctionLastArgument<T, ET> upperCase();
+		T anyOfModels(PrimitiveResultQueryModel... models);
 
-        IFunctionLastArgument<T, ET> lowerCase();
+		T anyOfExpressions(ExpressionModel... Expressions);
 
-        IFunctionLastArgument<T, ET> secondOf();
+		T allOfProps(String... propertyNames);
 
-        IFunctionLastArgument<T, ET> minuteOf();
+		T allOfValues(Object... values);
 
-        IFunctionLastArgument<T, ET> hourOf();
+		T allOfParams(String... paramNames);
 
-        IFunctionLastArgument<T, ET> dayOf();
+		/**
+		 * Shortcut for the group of AND-ed iParam(..) calls.
+		 * 
+		 * @return
+		 */
+		T allOfIParams(String... paramNames);
 
-        IFunctionLastArgument<T, ET> monthOf();
+		T allOfModels(PrimitiveResultQueryModel... models);
 
-        IFunctionLastArgument<T, ET> yearOf();
+		T allOfExpressions(ExpressionModel... expressions);
+	}
 
-        IIfNullFunctionArgument<T, ET> ifNull();
+	interface IComparisonOperand<T, ET extends AbstractEntity<?>> //
+			extends IMultipleOperand<T, ET>, //
+			/*    */IBeginExpression<IExprOperand0<T, ET>> /*
+															 * another entry
+															 * point
+															 */ {
+	}
 
-        IFunctionWhere0<T, ET> caseWhen();
+	interface IExistenceOperator<T extends ILogicalOperator<?>> {
+		T exists(QueryModel subQuery);
 
-        IRoundFunctionArgument<T, ET> round();
+		T notExists(QueryModel subQuery);
 
-        IConcatFunctionArgument<T, ET> concat();
+		T existsAnyOf(QueryModel... subQueries);
 
-        IFunctionLastArgument<T, ET> absOf();
+		T notExistsAnyOf(QueryModel... subQueries);
 
-        IFunctionLastArgument<T, ET> dateOf();
-    }
+		T existsAllOf(QueryModel... subQueries);
 
-    interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
-    extends ISingleOperand<T, ET> {
-        T anyOfProps(String... propertyNames);
+		T notExistsAllOf(QueryModel... subQueries);
+	}
 
-        T anyOfValues(Object... values);
+	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
+			extends IMultipleOperand<T, ET> {
+		T all(SingleResultQueryModel subQuery);
 
-        T anyOfParams(String... paramNames);
+		T any(SingleResultQueryModel subQuery);
+	}
 
-        T anyOfIParams(String... paramNames);
+	interface IComparisonQuantifiedOperand<T, ET extends AbstractEntity<?>> //
+			extends IQuantifiedOperand<T, ET>, //
+			/*    */IBeginExpression<IExprOperand0<T, ET>> /*
+															 * another entry
+															 * point
+															 */ {
+	}
 
-        T anyOfModels(PrimitiveResultQueryModel... models);
+	interface IComparisonSetOperand<T> {
+		<E extends Object> T values(E... values);
 
-        T anyOfExpressions(ExpressionModel... Expressions);
+		T props(String... properties);
 
-        T allOfProps(String... propertyNames);
+		T params(String... paramNames);
 
-        T allOfValues(Object... values);
+		T iParams(String... paramNames);
 
-        T allOfParams(String... paramNames);
+		T model(SingleResultQueryModel model);
+		// beginSet();
+	}
 
-        T allOfIParams(String... paramNames);
+	interface IYieldOperand<T, ET extends AbstractEntity<?>> //
+			extends ISingleOperand<T, ET> {
+		IFunctionLastArgument<T, ET> maxOf();
 
-        T allOfModels(PrimitiveResultQueryModel... models);
+		IFunctionLastArgument<T, ET> minOf();
 
-        T allOfExpressions(ExpressionModel... expressions);
-    }
+		IFunctionLastArgument<T, ET> sumOf();
 
-    interface IComparisonOperand<T, ET extends AbstractEntity<?>> //
-    extends IMultipleOperand<T, ET>, //
-    /*    */IBeginExpression<IExprOperand0<T, ET>> /*another entry point*/{
-    }
+		IFunctionLastArgument<T, ET> countOf();
 
-    interface IExistenceOperator<T extends ILogicalOperator<?>> {
-        T exists(QueryModel subQuery);
+		IFunctionLastArgument<T, ET> avgOf();
 
-        T notExists(QueryModel subQuery);
+		T countAll();
 
-        T existsAnyOf(QueryModel... subQueries);
+		IFunctionLastArgument<T, ET> sumOfDistinct();
 
-        T notExistsAnyOf(QueryModel... subQueries);
+		IFunctionLastArgument<T, ET> countOfDistinct();
 
-        T existsAllOf(QueryModel... subQueries);
+		IFunctionLastArgument<T, ET> avgOfDistinct();
+	}
 
-        T notExistsAllOf(QueryModel... subQueries);
-    }
+	interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {
+		/**
+		 * Indicates difference between more recent date and earlier date.
+		 * 
+		 * @return
+		 */
+		IDateDiffFunctionArgument<T, ET> between();
+	}
 
-    interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
-    extends IMultipleOperand<T, ET> {
-        T all(SingleResultQueryModel subQuery);
+	interface IDateDiffIntervalFunction<T, ET extends AbstractEntity<?>> {
+		IDateDiffFunction<T, ET> seconds();
 
-        T any(SingleResultQueryModel subQuery);
-    }
+		IDateDiffFunction<T, ET> minutes();
 
-    interface IComparisonQuantifiedOperand<T, ET extends AbstractEntity<?>> //
-    extends IQuantifiedOperand<T, ET>, //
-    /*    */IBeginExpression<IExprOperand0<T, ET>> /*another entry point*/{
-    }
+		IDateDiffFunction<T, ET> hours();
 
-    interface IComparisonSetOperand<T> {
-        <E extends Object> T values(E... values);
+		IDateDiffFunction<T, ET> days();
 
-        T props(String... properties);
+		IDateDiffFunction<T, ET> months();
 
-        T params(String... paramNames);
+		IDateDiffFunction<T, ET> years();
+	}
 
-        T iParams(String... paramNames);
+	interface ICaseWhenFunction<T, ET extends AbstractEntity<?>> {
+		ICaseWhenFunctionArgument<T, ET> then();
+	}
 
-        T model(SingleResultQueryModel model);
-        // beginSet();
-    }
+	interface IDateDiffFunctionBetween<T, ET extends AbstractEntity<?>> {
+		IFunctionLastArgument<T, ET> and();
+	}
 
-    interface IYieldOperand<T, ET extends AbstractEntity<?>> //
-    extends ISingleOperand<T, ET> {
-        IFunctionLastArgument<T, ET> maxOf();
+	interface ICaseWhenFunctionEnd<T> {
+		T end();
 
-        IFunctionLastArgument<T, ET> minOf();
+		T endAsInt();
 
-        IFunctionLastArgument<T, ET> sumOf();
+		T endAsBool();
 
-        IFunctionLastArgument<T, ET> countOf();
+		T endAsStr(int length);
 
-        IFunctionLastArgument<T, ET> avgOf();
+		T endAsDecimal(int scale, int presicion);
+	}
 
-        T countAll();
+	interface ICaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
+			extends ICaseWhenFunctionEnd<T> {
+		ICaseWhenFunctionLastArgument<T, ET> otherwise();
+	}
 
-        IFunctionLastArgument<T, ET> sumOfDistinct();
+	interface ICaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> //
+			extends ICaseWhenFunctionElseEnd<T, ET> {
+		IFunctionWhere0<T, ET> when();
+	}
 
-        IFunctionLastArgument<T, ET> countOfDistinct();
+	interface IIfNullFunctionThen<T, ET extends AbstractEntity<?>> {
+		IFunctionLastArgument<T, ET> then();
+	}
 
-        IFunctionLastArgument<T, ET> avgOfDistinct();
-    }
+	interface IConcatFunctionWith<T, ET extends AbstractEntity<?>> {
+		IConcatFunctionArgument<T, ET> with();
 
-    interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {
-        /**
-         * Indicates difference between more recent date and earlier date.
-         * 
-         * @return
-         */
-        IDateDiffFunctionArgument<T, ET> between();
-    }
+		T end();
+	}
 
-    interface IDateDiffIntervalFunction<T, ET extends AbstractEntity<?>> {
-        IDateDiffFunction<T, ET> seconds();
+	interface IRoundFunctionTo<T> {
+		T to(Integer precision);
+	}
 
-        IDateDiffFunction<T, ET> minutes();
+	interface IFirstYieldedItemAlias<T> {
+		T as(String alias);
 
-        IDateDiffFunction<T, ET> hours();
+		T as(Enum alias);
 
-        IDateDiffFunction<T, ET> days();
+		T asRequired(String alias);
 
-        IDateDiffFunction<T, ET> months();
+		T asRequired(Enum alias);
 
-        IDateDiffFunction<T, ET> years();
-    }
+		<E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
 
-    interface ICaseWhenFunction<T, ET extends AbstractEntity<?>> {
-        ICaseWhenFunctionArgument<T, ET> then();
-    }
+		PrimitiveResultQueryModel modelAsPrimitive();
+	}
 
-    interface IDateDiffFunctionBetween<T, ET extends AbstractEntity<?>> {
-        IFunctionLastArgument<T, ET> and();
-    }
+	interface ISubsequentYieldedItemAlias<T> /* extends ICompletedAndYielded */ {
+		T as(String alias);
 
-    interface ICaseWhenFunctionEnd<T> {
-        T end();
+		T as(Enum alias);
 
-        T endAsInt();
+		T asRequired(String alias);
 
-        T endAsBool();
+		T asRequired(Enum alias);
+	}
 
-        T endAsStr(int length);
+	interface IArithmeticalOperator<T> {
+		T add();
 
-        T endAsDecimal(int scale, int presicion);
-    }
+		T sub();
 
-    interface ICaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
-    extends ICaseWhenFunctionEnd<T> {
-        ICaseWhenFunctionLastArgument<T, ET> otherwise();
-    }
+		T mult();
 
-    interface ICaseWhenFunctionWhen<T, ET extends AbstractEntity<?>> //
-    extends ICaseWhenFunctionElseEnd<T, ET> {
-        IFunctionWhere0<T, ET> when();
-    }
+		T div();
 
-    interface IIfNullFunctionThen<T, ET extends AbstractEntity<?>> {
-        IFunctionLastArgument<T, ET> then();
-    }
+		T mod();
+	}
 
-    interface IConcatFunctionWith<T, ET extends AbstractEntity<?>> {
-        IConcatFunctionArgument<T, ET> with();
+	interface IBeginExpression<T> {
+		T beginExpr();
+	}
 
-        T end();
-    }
+	interface IEndExpression<T> {
+		T endExpr();
+	}
 
-    interface IRoundFunctionTo<T> {
-        T to(Integer precision);
-    }
+	public interface IJoin<ET extends AbstractEntity<?>> //
+			extends IPlainJoin<ET> {
 
-    interface IFirstYieldedItemAlias<T> {
-        T as(String alias);
-        
-        T as(Enum alias);
+		<T extends AbstractEntity<?>> IJoinAlias<ET> join(final Class<T> entityType);
 
-        T asRequired(String alias);
+		<T extends AbstractEntity<?>> IJoinAlias<ET> leftJoin(final Class<T> entityType);
 
-        T asRequired(Enum alias);
+		<T extends AbstractEntity<?>> IJoinAlias<ET> join(final EntityResultQueryModel<T> model);
 
-        <E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
+		<T extends AbstractEntity<?>> IJoinAlias<ET> leftJoin(final EntityResultQueryModel<T> model);
 
-        PrimitiveResultQueryModel modelAsPrimitive();
-    }
+		IJoinAlias<ET> join(final AggregatedResultQueryModel model);
 
-    interface ISubsequentYieldedItemAlias<T> /*extends ICompletedAndYielded*/{
-        T as(String alias);
+		IJoinAlias<ET> leftJoin(final AggregatedResultQueryModel model);
 
-        T as(Enum alias);
+	}
 
-        T asRequired(String alias);
+	interface IJoinAlias<ET extends AbstractEntity<?>> //
+			extends IJoinCondition<ET> {
+		IJoinCondition<ET> as(String alias);
+	}
 
-        T asRequired(Enum alias);
-    }
+	interface IFromAlias<ET extends AbstractEntity<?>> //
+			extends IJoin<ET> {
+		IJoin<ET> as(String alias);
+	}
 
-    interface IArithmeticalOperator<T> {
-        T add();
+	public interface IPlainJoin<ET extends AbstractEntity<?>> //
+			extends ICompleted<ET> {
+		IWhere0<ET> where();
+	}
 
-        T sub();
+	public interface IJoinCondition<ET extends AbstractEntity<?>> {
+		IJoinWhere0<ET> on();
+	}
 
-        T mult();
+	public interface ICompleted<ET extends AbstractEntity<?>> //
+			extends ICompletedAndYielded<ET> {
+		IFunctionLastArgument<ICompleted<ET>, ET> groupBy();
+	}
 
-        T div();
+	public interface ICompletedAndYielded<ET extends AbstractEntity<?>> //
+			extends ICompletedCommon<ET> {
+		IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
 
-        T mod();
-    }
+		ISubsequentCompletedAndYielded<ET> yieldAll();
 
-    interface IBeginExpression<T> {
-        T beginExpr();
-    }
+		//////////////////// RETURN /////////////////////////
+		EntityResultQueryModel<ET> model();
+	}
 
-    interface IEndExpression<T> {
-        T endExpr();
-    }
+	public interface ISubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
+			extends ICompletedCommon<ET> {
+		IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
+	}
 
-    public interface IJoin<ET extends AbstractEntity<?>> //
-    extends IPlainJoin<ET> {
+	public interface ICompletedCommon<ET extends AbstractEntity<?>> {
+		//////////////////// RETURN /////////////////////////
+		<T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
 
-        <T extends AbstractEntity<?>> IJoinAlias<ET> join(final Class<T> entityType);
+		AggregatedResultQueryModel modelAsAggregate();
+	}
 
-        <T extends AbstractEntity<?>> IJoinAlias<ET> leftJoin(final Class<T> entityType);
+	// interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends
+	// ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
+	// extends IComparisonOperand<T1, ET>, //
+	// /* */IExistenceOperator<T2>, //
+	// /* */IBeginCondition<T3> {
+	// T2 condition(ConditionModel condition);
+	// }
+	interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
+			extends IWhereWithoutNesting<T1, T2, ET>, //
+			/*    */IBeginCondition<T3> {
+	}
 
-        <T extends AbstractEntity<?>> IJoinAlias<ET> join(final EntityResultQueryModel<T> model);
+	interface IWhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
+			extends IComparisonOperand<T1, ET>, //
+			/*    */IExistenceOperator<T2> {
+		T2 condition(ConditionModel condition);
 
-        <T extends AbstractEntity<?>> IJoinAlias<ET> leftJoin(final EntityResultQueryModel<T> model);
+		T2 negatedCondition(ConditionModel condition);
+	}
 
-        IJoinAlias<ET> join(final AggregatedResultQueryModel model);
+	interface ICompoundCondition<T1, T2> //
+			extends ILogicalOperator<T1>, //
+			/*    */IEndCondition<T2> {
+	}
 
-        IJoinAlias<ET> leftJoin(final AggregatedResultQueryModel model);
+	////////////////////////////////////////////////////////// ---JOIN
+	////////////////////////////////////////////////////////// ---//////////////////////////////////////////////////////////
+	interface IJoinWhere0<ET extends AbstractEntity<?>> //
+			extends IWhere<IJoinComparisonOperator0<ET>, IJoinCompoundCondition0<ET>, IJoinWhere1<ET>, ET> {
+	}
 
-    }
+	interface IJoinWhere1<ET extends AbstractEntity<?>> //
+			extends IWhere<IJoinComparisonOperator1<ET>, IJoinCompoundCondition1<ET>, IJoinWhere2<ET>, ET> {
+	}
 
-    interface IJoinAlias<ET extends AbstractEntity<?>> //
-    extends IJoinCondition<ET> {
-        IJoinCondition<ET> as(String alias);
-    }
+	interface IJoinWhere2<ET extends AbstractEntity<?>> //
+			extends IWhere<IJoinComparisonOperator2<ET>, IJoinCompoundCondition2<ET>, IJoinWhere3<ET>, ET> {
+	}
 
-    interface IFromAlias<ET extends AbstractEntity<?>> //
-    extends IJoin<ET> {
-        IJoin<ET> as(String alias);
-    }
+	interface IJoinWhere3<ET extends AbstractEntity<?>> //
+			extends IComparisonOperand<IJoinComparisonOperator3<ET>, ET>, //
+			/*    */IExistenceOperator<IJoinCompoundCondition3<ET>> {
+	}
 
-    public interface IPlainJoin<ET extends AbstractEntity<?>> //
-    extends ICompleted<ET> {
-        IWhere0<ET> where();
-    }
+	// -------------------------------------------
+	interface IJoinCompoundCondition0<ET extends AbstractEntity<?>> //
+			extends ILogicalOperator<IJoinWhere0<ET>>, //
+			/*    */IJoin<ET> {
+	}
 
-    public interface IJoinCondition<ET extends AbstractEntity<?>> {
-        IJoinWhere0<ET> on();
-    }
+	interface IJoinCompoundCondition1<ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IJoinWhere1<ET>, IJoinCompoundCondition0<ET>> {
+	}
 
-    public interface ICompleted<ET extends AbstractEntity<?>> //
-    extends ICompletedAndYielded<ET> {
-        IFunctionLastArgument<ICompleted<ET>, ET> groupBy();
-    }
+	interface IJoinCompoundCondition2<ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IJoinWhere2<ET>, IJoinCompoundCondition1<ET>> {
+	}
 
-    public interface ICompletedAndYielded<ET extends AbstractEntity<?>> //
-    extends ICompletedCommon<ET> {
-        IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
-        ISubsequentCompletedAndYielded<ET> yieldAll();
+	interface IJoinCompoundCondition3<ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IJoinWhere3<ET>, IJoinCompoundCondition2<ET>> {
+	}
 
-        //////////////////// RETURN /////////////////////////
-        EntityResultQueryModel<ET> model();
-    }
+	// -------------------------------------------
+	interface IJoinComparisonOperator0<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IJoinCompoundCondition0<ET>, ET> {
+	}
 
-    public interface ISubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
-    extends ICompletedCommon<ET> {
-        IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield();
-    }
+	interface IJoinComparisonOperator1<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IJoinCompoundCondition1<ET>, ET> {
+	}
 
-    public interface ICompletedCommon<ET extends AbstractEntity<?>> {
-        //////////////////// RETURN /////////////////////////
-        <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
+	interface IJoinComparisonOperator2<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IJoinCompoundCondition2<ET>, ET> {
+	}
 
-        AggregatedResultQueryModel modelAsAggregate();
-    }
+	interface IJoinComparisonOperator3<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IJoinCompoundCondition3<ET>, ET> {
+	}
 
-    //    interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
-    //    extends IComparisonOperand<T1, ET>, //
-    //    /*    */IExistenceOperator<T2>, //
-    //    /*    */IBeginCondition<T3> {
-    //        T2 condition(ConditionModel condition);
-    //    }
-    interface IWhere<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, T3, ET extends AbstractEntity<?>> //
-    extends IWhereWithoutNesting<T1, T2, ET>, //
-    /*    */IBeginCondition<T3> {
-    }
+	////////////////////////////////////////////////////////// ---WHERE
+	////////////////////////////////////////////////////////// ---/////////////////////////////////////////////////////////
+	interface IComparisonOperator0<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<ICompoundCondition0<ET>, ET> {
+	}
 
-    interface IWhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<T1, ET>, //
-    /*    */IExistenceOperator<T2> {
-        T2 condition(ConditionModel condition);
+	interface IComparisonOperator1<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<ICompoundCondition1<ET>, ET> {
+	}
 
-        T2 negatedCondition(ConditionModel condition);
-    }
+	interface IComparisonOperator2<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<ICompoundCondition2<ET>, ET> {
+	}
 
-    interface ICompoundCondition<T1, T2> //
-    extends ILogicalOperator<T1>, //
-    /*    */IEndCondition<T2> {
-    }
+	interface IComparisonOperator3<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<ICompoundCondition3<ET>, ET> {
+	}
 
-    //////////////////////////////////////////////////////////---JOIN ---//////////////////////////////////////////////////////////
-    interface IJoinWhere0<ET extends AbstractEntity<?>> //
-    extends IWhere<IJoinComparisonOperator0<ET>, IJoinCompoundCondition0<ET>, IJoinWhere1<ET>, ET> {
-    }
+	// -------------------------------------------
+	interface ICompoundCondition0<ET extends AbstractEntity<?>> //
+			extends ILogicalOperator<IWhere0<ET>>, ICompleted<ET> {
+	}
 
-    interface IJoinWhere1<ET extends AbstractEntity<?>> //
-    extends IWhere<IJoinComparisonOperator1<ET>, IJoinCompoundCondition1<ET>, IJoinWhere2<ET>, ET> {
-    }
+	interface ICompoundCondition1<ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IWhere1<ET>, ICompoundCondition0<ET>> {
+	}
 
-    interface IJoinWhere2<ET extends AbstractEntity<?>> //
-    extends IWhere<IJoinComparisonOperator2<ET>, IJoinCompoundCondition2<ET>, IJoinWhere3<ET>, ET> {
-    }
+	interface ICompoundCondition2<ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IWhere2<ET>, ICompoundCondition1<ET>> {
+	}
 
-    interface IJoinWhere3<ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<IJoinComparisonOperator3<ET>, ET>, //
-    /*    */IExistenceOperator<IJoinCompoundCondition3<ET>> {
-    }
+	interface ICompoundCondition3<ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IWhere3<ET>, ICompoundCondition2<ET>> {
+	}
 
-    //-------------------------------------------
-    interface IJoinCompoundCondition0<ET extends AbstractEntity<?>> //
-    extends ILogicalOperator<IJoinWhere0<ET>>, //
-    /*    */IJoin<ET> {
-    }
+	// -------------------------------------------
+	interface IWhere0<ET extends AbstractEntity<?>> //
+			extends IWhere<IComparisonOperator0<ET>, ICompoundCondition0<ET>, IWhere1<ET>, ET> /*
+																								 * Exp
+																								 * entry
+																								 * point
+																								 */ {
+	}
 
-    interface IJoinCompoundCondition1<ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IJoinWhere1<ET>, IJoinCompoundCondition0<ET>> {
-    }
+	interface IWhere1<ET extends AbstractEntity<?>> //
+			extends IWhere<IComparisonOperator1<ET>, ICompoundCondition1<ET>, IWhere2<ET>, ET> {
+	}
 
-    interface IJoinCompoundCondition2<ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IJoinWhere2<ET>, IJoinCompoundCondition1<ET>> {
-    }
+	interface IWhere2<ET extends AbstractEntity<?>> //
+			extends IWhere<IComparisonOperator2<ET>, ICompoundCondition2<ET>, IWhere3<ET>, ET> {
+	}
 
-    interface IJoinCompoundCondition3<ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IJoinWhere3<ET>, IJoinCompoundCondition2<ET>> {
-    }
+	interface IWhere3<ET extends AbstractEntity<?>> //
+			extends IComparisonOperand<IComparisonOperator3<ET>, ET>, //
+			/*    */IExistenceOperator<ICompoundCondition3<ET>> {
+	}
 
-    //-------------------------------------------
-    interface IJoinComparisonOperator0<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IJoinCompoundCondition0<ET>, ET> {
-    }
+	////////////////////////////////////////////////////////// ---FUNCTION
+	////////////////////////////////////////////////////////// ---/////////////////////////////////////////////////////////
+	interface IFunctionWhere0<T, ET extends AbstractEntity<?>> //
+			extends
+			IWhere<IFunctionComparisonOperator0<T, ET>, IFunctionCompoundCondition0<T, ET>, IFunctionWhere1<T, ET>, ET> /*
+																														 * Exp
+																														 * entry
+																														 * point
+																														 */ {
+	}
 
-    interface IJoinComparisonOperator1<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IJoinCompoundCondition1<ET>, ET> {
-    }
+	interface IFunctionWhere1<T, ET extends AbstractEntity<?>> //
+			extends
+			IWhere<IFunctionComparisonOperator1<T, ET>, IFunctionCompoundCondition1<T, ET>, IFunctionWhere2<T, ET>, ET> {
+	}
 
-    interface IJoinComparisonOperator2<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IJoinCompoundCondition2<ET>, ET> {
-    }
+	interface IFunctionWhere2<T, ET extends AbstractEntity<?>> //
+			extends
+			IWhere<IFunctionComparisonOperator2<T, ET>, IFunctionCompoundCondition2<T, ET>, IFunctionWhere3<T, ET>, ET> {
+	}
 
-    interface IJoinComparisonOperator3<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IJoinCompoundCondition3<ET>, ET> {
-    }
+	interface IFunctionWhere3<T, ET extends AbstractEntity<?>> //
+			extends IComparisonOperand<IFunctionComparisonOperator3<T, ET>, ET>, //
+			/*    */IExistenceOperator<IFunctionCompoundCondition3<T, ET>> {
+	}
 
-    //////////////////////////////////////////////////////////---WHERE ---/////////////////////////////////////////////////////////
-    interface IComparisonOperator0<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<ICompoundCondition0<ET>, ET> {
-    }
+	// -------------------------------------------
+	interface IFunctionCompoundCondition0<T, ET extends AbstractEntity<?>> //
+			extends ILogicalOperator<IFunctionWhere0<T, ET>>, //
+			/*    */ICaseWhenFunction<T, ET> {
+	}
 
-    interface IComparisonOperator1<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<ICompoundCondition1<ET>, ET> {
-    }
+	interface IFunctionCompoundCondition1<T, ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> {
+	}
 
-    interface IComparisonOperator2<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<ICompoundCondition2<ET>, ET> {
-    }
+	interface IFunctionCompoundCondition2<T, ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IFunctionWhere2<T, ET>, IFunctionCompoundCondition1<T, ET>> {
+	}
 
-    interface IComparisonOperator3<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<ICompoundCondition3<ET>, ET> {
-    }
+	interface IFunctionCompoundCondition3<T, ET extends AbstractEntity<?>> //
+			extends ICompoundCondition<IFunctionWhere3<T, ET>, IFunctionCompoundCondition2<T, ET>> {
+	}
 
-    //-------------------------------------------
-    interface ICompoundCondition0<ET extends AbstractEntity<?>> //
-    extends ILogicalOperator<IWhere0<ET>>, ICompleted<ET> {
-    }
+	// -------------------------------------------
+	interface IFunctionComparisonOperator0<T, ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IFunctionCompoundCondition0<T, ET>, ET> {
+	}
 
-    interface ICompoundCondition1<ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IWhere1<ET>, ICompoundCondition0<ET>> {
-    }
+	interface IFunctionComparisonOperator1<T, ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IFunctionCompoundCondition1<T, ET>, ET> {
+	}
 
-    interface ICompoundCondition2<ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IWhere2<ET>, ICompoundCondition1<ET>> {
-    }
+	interface IFunctionComparisonOperator2<T, ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IFunctionCompoundCondition2<T, ET>, ET> {
+	}
 
-    interface ICompoundCondition3<ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IWhere3<ET>, ICompoundCondition2<ET>> {
-    }
+	interface IFunctionComparisonOperator3<T, ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IFunctionCompoundCondition3<T, ET>, ET> {
+	}
 
-    //-------------------------------------------
-    interface IWhere0<ET extends AbstractEntity<?>> //
-    extends IWhere<IComparisonOperator0<ET>, ICompoundCondition0<ET>, IWhere1<ET>, ET> /*Exp entry point*/{
-    }
+	/////////////////////////////////////////////// ---EXPRESSION (WHERE, GROUP,
+	/////////////////////////////////////////////// ORDER)
+	/////////////////////////////////////////////// ---///////////////////////////////////////
+	interface IExprOperand<T1, T2, ET extends AbstractEntity<?>> //
+			extends ISingleOperand<T1, ET>, //
+			/*    */IBeginExpression<T2> {
+	}
 
-    interface IWhere1<ET extends AbstractEntity<?>> //
-    extends IWhere<IComparisonOperator1<ET>, ICompoundCondition1<ET>, IWhere2<ET>, ET> {
-    }
+	interface IExprOperand0<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IExprOperationOrEnd0<T, ET>, IExprOperand1<T, ET>, ET> {
+	}
 
-    interface IWhere2<ET extends AbstractEntity<?>> //
-    extends IWhere<IComparisonOperator2<ET>, ICompoundCondition2<ET>, IWhere3<ET>, ET> {
-    }
+	interface IExprOperand1<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IExprOperationOrEnd1<T, ET>, IExprOperand2<T, ET>, ET> {
+	}
 
-    interface IWhere3<ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<IComparisonOperator3<ET>, ET>, //
-    /*    */IExistenceOperator<ICompoundCondition3<ET>> {
-    }
+	interface IExprOperand2<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IExprOperationOrEnd2<T, ET>, IExprOperand3<T, ET>, ET> {
+	}
 
-    //////////////////////////////////////////////////////////---FUNCTION ---/////////////////////////////////////////////////////////
-    interface IFunctionWhere0<T, ET extends AbstractEntity<?>> //
-    extends IWhere<IFunctionComparisonOperator0<T, ET>, IFunctionCompoundCondition0<T, ET>, IFunctionWhere1<T, ET>, ET> /*Exp entry point*/{
-    }
+	interface IExprOperand3<T, ET extends AbstractEntity<?>> //
+			extends ISingleOperand<IExprOperationOrEnd3<T, ET>, ET> {
+	}
 
-    interface IFunctionWhere1<T, ET extends AbstractEntity<?>> //
-    extends IWhere<IFunctionComparisonOperator1<T, ET>, IFunctionCompoundCondition1<T, ET>, IFunctionWhere2<T, ET>, ET> {
-    }
+	// ----------------------------------------------------------------------------------------------------------------------------------------------
+	interface IExprOperationOrEnd<T1, T2, ET extends AbstractEntity<?>> //
+			extends IArithmeticalOperator<T1>, //
+			/*    */IEndExpression<T2> {
+	}
 
-    interface IFunctionWhere2<T, ET extends AbstractEntity<?>> //
-    extends IWhere<IFunctionComparisonOperator2<T, ET>, IFunctionCompoundCondition2<T, ET>, IFunctionWhere3<T, ET>, ET> {
-    }
+	interface IExprOperationOrEnd0<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IExprOperand0<T, ET>, T, ET> {
+	}
 
-    interface IFunctionWhere3<T, ET extends AbstractEntity<?>> //
-    extends IComparisonOperand<IFunctionComparisonOperator3<T, ET>, ET>, //
-    /*    */IExistenceOperator<IFunctionCompoundCondition3<T, ET>> {
-    }
+	interface IExprOperationOrEnd1<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IExprOperand1<T, ET>, IExprOperationOrEnd0<T, ET>, ET> {
+	}
 
-    //-------------------------------------------
-    interface IFunctionCompoundCondition0<T, ET extends AbstractEntity<?>> //
-    extends ILogicalOperator<IFunctionWhere0<T, ET>>, //
-    /*    */ICaseWhenFunction<T, ET> {
-    }
+	interface IExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IExprOperand2<T, ET>, IExprOperationOrEnd1<T, ET>, ET> {
+	}
 
-    interface IFunctionCompoundCondition1<T, ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> {
-    }
+	interface IExprOperationOrEnd3<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IExprOperand3<T, ET>, IExprOperationOrEnd2<T, ET>, ET> {
+	}
 
-    interface IFunctionCompoundCondition2<T, ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IFunctionWhere2<T, ET>, IFunctionCompoundCondition1<T, ET>> {
-    }
+	///////////////////////////////////////////////////// ---EXPRESSION (YIELD)
+	///////////////////////////////////////////////////// ---///////////////////////////////////////////////////
+	interface IYieldExprOperand<T1, T2, ET extends AbstractEntity<?>> //
+			extends IYieldOperand<T1, ET>, //
+			/*    */IBeginExpression<T2> {
+	}
 
-    interface IFunctionCompoundCondition3<T, ET extends AbstractEntity<?>> //
-    extends ICompoundCondition<IFunctionWhere3<T, ET>, IFunctionCompoundCondition2<T, ET>> {
-    }
+	interface IYieldExprItem0<T, ET extends AbstractEntity<?>> //
+			extends IYieldExprOperand<IYieldExprOperationOrEnd0<T, ET>, IYieldExprItem1<T, ET>, ET> {
+	}
 
-    //-------------------------------------------
-    interface IFunctionComparisonOperator0<T, ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IFunctionCompoundCondition0<T, ET>, ET> {
-    }
+	interface IYieldExprItem1<T, ET extends AbstractEntity<?>> //
+			extends IYieldExprOperand<IYieldExprOperationOrEnd1<T, ET>, IYieldExprItem2<T, ET>, ET> {
+	}
 
-    interface IFunctionComparisonOperator1<T, ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IFunctionCompoundCondition1<T, ET>, ET> {
-    }
+	interface IYieldExprItem2<T, ET extends AbstractEntity<?>> //
+			extends IYieldExprOperand<IYieldExprOperationOrEnd2<T, ET>, IYieldExprItem3<T, ET>, ET> {
+	}
 
-    interface IFunctionComparisonOperator2<T, ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IFunctionCompoundCondition2<T, ET>, ET> {
-    }
+	interface IYieldExprItem3<T, ET extends AbstractEntity<?>> //
+			extends IYieldOperand<IYieldExprOperationOrEnd3<T, ET>, ET> {
+	}
 
-    interface IFunctionComparisonOperator3<T, ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IFunctionCompoundCondition3<T, ET>, ET> {
-    }
+	// ----------------------------------------------------------------------------------------------------------------------------------------------
+	interface IYieldExprOperationOrEnd0<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IYieldExprItem0<T, ET>, T, ET> {
+	}
 
-    ///////////////////////////////////////////////---EXPRESSION (WHERE, GROUP, ORDER) ---///////////////////////////////////////
-    interface IExprOperand<T1, T2, ET extends AbstractEntity<?>> //
-    extends ISingleOperand<T1, ET>, //
-    /*    */IBeginExpression<T2> {
-    }
+	interface IYieldExprOperationOrEnd1<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IYieldExprItem1<T, ET>, IYieldExprOperationOrEnd0<T, ET>, ET> {
+	}
 
-    interface IExprOperand0<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IExprOperationOrEnd0<T, ET>, IExprOperand1<T, ET>, ET> {
-    }
+	interface IYieldExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IYieldExprItem2<T, ET>, IYieldExprOperationOrEnd1<T, ET>, ET> {
+	}
 
-    interface IExprOperand1<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IExprOperationOrEnd1<T, ET>, IExprOperand2<T, ET>, ET> {
-    }
+	interface IYieldExprOperationOrEnd3<T, ET extends AbstractEntity<?>> //
+			extends IExprOperationOrEnd<IYieldExprItem3<T, ET>, IYieldExprOperationOrEnd2<T, ET>, ET> {
+	}
 
-    interface IExprOperand2<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IExprOperationOrEnd2<T, ET>, IExprOperand3<T, ET>, ET> {
-    }
+	///////////////////////////////////////////////////// ---OTHERS
+	///////////////////////////////////////////////////// ---///////////////////////////////////////////////////
+	interface IDateDiffFunctionArgument<T, ET extends AbstractEntity<?>> //
+			extends
+			IExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> {
+	}
 
-    interface IExprOperand3<T, ET extends AbstractEntity<?>> //
-    extends ISingleOperand<IExprOperationOrEnd3<T, ET>, ET> {
-    }
+	interface ICaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET> {
+	}
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
-    interface IExprOperationOrEnd<T1, T2, ET extends AbstractEntity<?>> //
-    extends IArithmeticalOperator<T1>, //
-    /*    */IEndExpression<T2> {
-    }
+	interface ICaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> {
+	}
 
-    interface IExprOperationOrEnd0<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IExprOperand0<T, ET>, T, ET> {
-    }
+	interface IIfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> {
+	}
 
-    interface IExprOperationOrEnd1<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IExprOperand1<T, ET>, IExprOperationOrEnd0<T, ET>, ET> {
-    }
+	interface IRoundFunctionArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> {
+	}
 
-    interface IExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IExprOperand2<T, ET>, IExprOperationOrEnd1<T, ET>, ET> {
-    }
+	interface IFunctionLastArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<T, IExprOperand0<T, ET>, ET> {
+	}
 
-    interface IExprOperationOrEnd3<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IExprOperand3<T, ET>, IExprOperationOrEnd2<T, ET>, ET> {
-    }
+	interface IFunctionYieldedLastArgument<T, ET extends AbstractEntity<?>> //
+			extends IYieldExprOperand<T, IYieldExprItem0<T, ET>, ET> {
+		// ISubsequentCompletedAndYielded<ET> all();
+	}
 
-    /////////////////////////////////////////////////////---EXPRESSION (YIELD) ---///////////////////////////////////////////////////
-    interface IYieldExprOperand<T1, T2, ET extends AbstractEntity<?>> //
-    extends IYieldOperand<T1, ET>, //
-    /*    */IBeginExpression<T2> {
-    }
+	interface IConcatFunctionArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> {
+	}
 
-    interface IYieldExprItem0<T, ET extends AbstractEntity<?>> //
-    extends IYieldExprOperand<IYieldExprOperationOrEnd0<T, ET>, IYieldExprItem1<T, ET>, ET> {
-    }
+	///////////////////////////////////////////////////// ---STAND-ALONE
+	///////////////////////////////////////////////////// EXPRESSION
+	///////////////////////////////////////////////////// ---///////////////////////////////////////////////////
+	interface IStandAloneExprOperationAndClose //
+			extends IArithmeticalOperator<IStandAloneExprOperand> {
+		ExpressionModel model();
+	}
 
-    interface IYieldExprItem1<T, ET extends AbstractEntity<?>> //
-    extends IYieldExprOperand<IYieldExprOperationOrEnd1<T, ET>, IYieldExprItem2<T, ET>, ET> {
-    }
+	interface IStandAloneExprOperand //
+			extends IYieldOperand<IStandAloneExprOperationAndClose, AbstractEntity<?>> {
+	}
 
-    interface IYieldExprItem2<T, ET extends AbstractEntity<?>> //
-    extends IYieldExprOperand<IYieldExprOperationOrEnd2<T, ET>, IYieldExprItem3<T, ET>, ET> {
-    }
+	///////////////////////////////////////////////////// ---STAND-ALONE
+	///////////////////////////////////////////////////// CONDITION
+	///////////////////////////////////////////////////// ---///////////////////////////////////////////////////
+	interface IStandAloneConditionOperand<ET extends AbstractEntity<?>> //
+			extends
+			IWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> {
+	}
 
-    interface IYieldExprItem3<T, ET extends AbstractEntity<?>> //
-    extends IYieldOperand<IYieldExprOperationOrEnd3<T, ET>, ET> {
-    }
+	interface IStandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
+			extends ILogicalOperator<IStandAloneConditionOperand<ET>> {
+		ConditionModel model();
+	}
 
-    //----------------------------------------------------------------------------------------------------------------------------------------------
-    interface IYieldExprOperationOrEnd0<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IYieldExprItem0<T, ET>, T, ET> {
-    }
+	interface IStandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> //
+			extends IComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> {
+	}
 
-    interface IYieldExprOperationOrEnd1<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IYieldExprItem1<T, ET>, IYieldExprOperationOrEnd0<T, ET>, ET> {
-    }
+	///////////////////////////////////////////////////// ---ORDER BY
+	///////////////////////////////////////////////////// ---///////////////////////////////////////////////////
+	interface IOrder<T> {
+		T asc();
 
-    interface IYieldExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IYieldExprItem2<T, ET>, IYieldExprOperationOrEnd1<T, ET>, ET> {
-    }
+		T desc();
+	}
 
-    interface IYieldExprOperationOrEnd3<T, ET extends AbstractEntity<?>> //
-    extends IExprOperationOrEnd<IYieldExprItem3<T, ET>, IYieldExprOperationOrEnd2<T, ET>, ET> {
-    }
+	interface ISingleOperandOrderable //
+			extends IOrder<IOrderingItemCloseable> {
+	}
 
-    /////////////////////////////////////////////////////---OTHERS ---///////////////////////////////////////////////////
-    interface IDateDiffFunctionArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> {
-    }
+	interface IOrderingItemCloseable //
+			extends IOrderingItem {
+		OrderingModel model();
+	}
 
-    interface ICaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<ICaseWhenFunctionWhen<T, ET>, IExprOperand0<ICaseWhenFunctionWhen<T, ET>, ET>, ET> {
-    }
-
-    interface ICaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> {
-    }
-
-    interface IIfNullFunctionArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IIfNullFunctionThen<T, ET>, IExprOperand0<IIfNullFunctionThen<T, ET>, ET>, ET> {
-    }
-
-    interface IRoundFunctionArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> {
-    }
-
-    interface IFunctionLastArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<T, IExprOperand0<T, ET>, ET> {
-    }
-
-    interface IFunctionYieldedLastArgument<T, ET extends AbstractEntity<?>> //
-    extends IYieldExprOperand<T, IYieldExprItem0<T, ET>, ET> {
-        //ISubsequentCompletedAndYielded<ET> all();
-    }
-
-    interface IConcatFunctionArgument<T, ET extends AbstractEntity<?>> //
-    extends IExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> {
-    }
-
-    /////////////////////////////////////////////////////---STAND-ALONE EXPRESSION ---///////////////////////////////////////////////////
-    interface IStandAloneExprOperationAndClose //
-    extends IArithmeticalOperator<IStandAloneExprOperand> {
-        ExpressionModel model();
-    }
-
-    interface IStandAloneExprOperand //
-    extends IYieldOperand<IStandAloneExprOperationAndClose, AbstractEntity<?>> {
-    }
-
-    /////////////////////////////////////////////////////---STAND-ALONE CONDITION ---///////////////////////////////////////////////////
-    interface IStandAloneConditionOperand<ET extends AbstractEntity<?>> //
-    extends IWhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> {
-    }
-
-    interface IStandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
-    extends ILogicalOperator<IStandAloneConditionOperand<ET>> {
-        ConditionModel model();
-    }
-
-    interface IStandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> //
-    extends IComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> {
-    }
-
-    /////////////////////////////////////////////////////---ORDER BY ---///////////////////////////////////////////////////
-    interface IOrder<T> {
-        T asc();
-
-        T desc();
-    }
-
-    interface ISingleOperandOrderable //
-    extends IOrder<IOrderingItemCloseable> {
-    }
-
-    interface IOrderingItemCloseable //
-    extends IOrderingItem {
-        OrderingModel model();
-    }
-
-    interface IOrderingItem //
-    extends IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
-        ISingleOperandOrderable yield(String yieldAlias);
-    }
+	interface IOrderingItem //
+			extends
+			IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
+		ISingleOperandOrderable yield(String yieldAlias);
+	}
 }

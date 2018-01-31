@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -63,7 +67,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
-    private EntityActionConfig entityActionConfig;
+    private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -86,7 +90,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -137,7 +141,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -165,7 +169,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = actionConfig;
+        this.entityActionConfig = () -> Optional.of(actionConfig);
+        completePropIfNeeded();
+        return this;
+    }
+
+    @Override
+    public IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+        if (actionConfigSupplier == null) {
+            throw new IllegalArgumentException("Property action configuration supplier should not be null.");
+        }
+
+        this.entityActionConfig = actionConfigSupplier;
         completePropIfNeeded();
         return this;
     }
@@ -311,7 +326,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
     }
 
     @Override
@@ -374,11 +389,22 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
 
+        @Override
+        public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+            return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
+        }
+
     }
 
     @Override
     public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointActions.add(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView));
+        this.builder.insertionPointConfigs.add(configInsertionPoint(mkInsertionPoint(actionConfig, whereToInsertView)));
+        return this;
+    }
+
+    @Override
+    public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        this.builder.insertionPointConfigs.add(configInsertionPointWithPagination(mkInsertionPoint(actionConfig, whereToInsertView)));
         return this;
     }
 

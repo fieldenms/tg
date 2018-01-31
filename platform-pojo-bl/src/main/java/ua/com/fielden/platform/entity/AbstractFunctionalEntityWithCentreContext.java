@@ -1,52 +1,33 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * A base class for functional entities that are intended to be used on entity centres. The main difference with {@link AbstractEntity} is that it has property <code>context</code>
- * of type {@link CentreContext}, which represents an execution context as provided when a functional entity gets actioned.
+ * A base class for functional entities that are intended to be used on entity centres / masters.
  * <p>
- * It is assumed of course that entity companion is capable of taking advantage of the provided context information for functional entity computations.
+ * The main difference with {@link AbstractEntity} is that it gets <code>context</code> of type {@link CentreContext} during producing phase,
+ * which represents an execution context as provided when a functional entity gets actioned.
+ * <p>
+ * Entity companion is capable of taking advantage of the provided context information for functional entity computations.
+ * This information should be computed and gathered into the functional entity inside producer.
  *
  * @author TG Team
  *
  * @param <K>
  */
 public abstract class AbstractFunctionalEntityWithCentreContext<K extends Comparable<?>> extends AbstractEntity<K> {
-
-    public static final String CONTEXT = "context";
-
-    @IsProperty
-    @Title(value = "Context", desc = "Context")
-    @Invisible
+    
+    /**
+     * Private context to be used in {@link IContextDecomposer} API.
+     */
     private CentreContext<?, ?> context;
     
-    @IsProperty
-    @Title(value = "Chosen Property", desc = "Desc")
-    @Invisible
-    private String chosenProperty;
-
-    @Observable
-    public AbstractFunctionalEntityWithCentreContext<K> setChosenProperty(final String chosenProperty) {
-        this.chosenProperty = chosenProperty;
-        return this;
-    }
-
-    public String getChosenProperty() {
-        return chosenProperty;
-    }
-
-    @Observable
-    public AbstractFunctionalEntityWithCentreContext<K> setContext(final CentreContext<?, ?> context) {
-        this.context = context;
-        return this;
-    }
-
-    public CentreContext<?, ?> getContext() {
+    CentreContext<?, ?> context() {
         return context;
     }
+    
+    void setContext(final CentreContext<?, ?> context) {
+        this.context = context;
+    }
+    
 }

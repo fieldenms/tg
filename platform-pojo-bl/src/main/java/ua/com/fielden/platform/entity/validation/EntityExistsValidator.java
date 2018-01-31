@@ -5,6 +5,8 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -30,6 +32,9 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  */
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
+    public static final String WAS_NOT_FOUND_ERR = "%s [%s] was not found.";
+    public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
+    
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
 
@@ -53,10 +58,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         final AbstractEntity<?> entity = property.getEntity();
         try {
             if (newValue == null) {
-                return Result.successful(entity);
+                return successful(entity);
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
-                return Result.failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
+                return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
 
             // the notion of existence is different for activatable and non-activatable entities,
@@ -86,15 +91,15 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
-                    return Result.failure(entity, format("%s [%s] was not found.", entityTitle, newValue));
+                    return failure(entity, format(WAS_NOT_FOUND_ERR, entityTitle, newValue));
                 } else {
-                    return Result.failure(entity, format("%s [%s] exists, but is not active.", entityTitle, newValue));
+                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue));
                 }
             } else {
-                return Result.successful(entity);
+                return successful(entity);
             }
         } catch (final Exception e) {
-            return Result.failure(entity, e);
+            return failure(entity, e);
         }
     }
 

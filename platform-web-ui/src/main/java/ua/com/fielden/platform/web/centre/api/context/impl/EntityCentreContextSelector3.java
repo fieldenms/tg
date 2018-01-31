@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector1;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector3;
@@ -56,7 +57,7 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
     }
 
     @Override
-    public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+    public IEntityCentreContextSelectorDone<T> withComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         if (computation == null) {
             throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
         }

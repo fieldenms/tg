@@ -68,14 +68,15 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result" 
-                                 tabindex="-1" 
-                                 no-auto-focus 
-                                 on-iron-overlay-opened="_resultOpened" 
-                                 on-iron-overlay-closed="_resultClosed" 
-                                 on-iron-overlay-canceled="_resultCanceled" 
-                                 retrieve-container-sizes="[[_retrieveContainerSizes]]" 
+        <tg-entity-editor-result id="result"
+                                 tabindex="-1"
+                                 no-auto-focus
+                                 on-iron-overlay-opened="_resultOpened"
+                                 on-iron-overlay-closed="_resultClosed"
+                                 on-iron-overlay-canceled="_resultCanceled"
+                                 retrieve-container-sizes="[[_retrieveContainerSizes]]"
                                  on-tap="_entitySelected"
+                                 on-dblclick="_done"
                                  on-keydown="_onKeydown"></tg-entity-editor-result>
 
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
@@ -109,7 +110,7 @@
              ********************************************************
              ********************************************************/
             properties: {
-                /* Indicates whether a search is in progress. This property controls visibility of the progress indecator. 
+                /* Indicates whether a search is in progress. This property controls visibility of the progress indecator.
                  * It is bound to iron-ajax property loading, which basicaly controlls spinner visibility. */
                 searching: {
                     type: Boolean,
@@ -200,6 +201,14 @@
                  */
                 createModifiedPropertiesHolder: {
                     type: Function
+                },
+
+                /**
+                 * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
+                 * It is updated everytime when refresh process successfully completes.
+                 */
+                originallyProducedEntity: {
+                    type: Object
                 },
 
                 /**
@@ -351,7 +360,7 @@
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
-                    
+
                     // check whether relatedTarget has anything to do with this.$.result
                     // if it is then there is no need to cancel the overlay, which is this.$.result
                     var parent = e.relatedTarget;
@@ -394,7 +403,7 @@
                 return str;
             },
 
-            /* Invokes _search with '*' as the default search value, so than when nothing was typed, but 
+            /* Invokes _search with '*' as the default search value, so than when nothing was typed, but
              * the search button has been pressed then the search happens as if wildcard has been typed. */
             _searchOnTap: function (e) {
                 // need to execute the tap action on async to ensure committing of any uncommitted
@@ -477,14 +486,13 @@
              * Displays the search result.
              */
             _onFound: function (entities) {
-                var self = this;
-                var result = self.$.result;
+                const result = this.$.result;
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
 
                 result.clearSelection();
 
-                for (var index = 0; index < entities.length; index++) {
+                for (let index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
                     // This includes correct conversion of simple, composite and union entities
                     const key = this.reflector().convert(entities[index]);
@@ -494,20 +502,20 @@
 
                 // There is a need to check whether element already exists before appending it to document.body.
                 // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
-                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                const elementExists = Polymer.dom(document.body).querySelector("#result");
                 if (!elementExists) {
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-                var self = this;
+
                 this.async(function () {
                     if (result.opened) {
-                        self._resultOpened();
+                        this._resultOpened();
                     } else {
                         result.open();
                     }
                     result.notifyResize();
-                }, 100);
+                }.bind(this), 100);
             },
 
             /**
@@ -516,9 +524,15 @@
             createContextHolder: function (inputText) {
                 if (this.multi === false) {
                     if (this.asPartOfEntityMaster) {
-                        var contextHolder = this.reflector().createContextHolder(
+                        const modifHolder = this.createModifiedPropertiesHolder();
+                        const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
+                        console.debug(':MASTER:AUTOCOMPLETE1', '|type', this.autocompletionType, '|id', modifHolder.id);
+                        console.debug(':MASTER:AUTOCOMPLETE2', '|mph', modifHolder);
+                        console.debug(':MASTER:AUTOCOMPLETE3', '|ope', originallyProducedEntity);
+                        const contextHolder = this.reflector().createContextHolder(
                             "true", null, null,
-                            this.createModifiedPropertiesHolder, null, null
+                            function () { return modifHolder; }, null, null,
+                            originallyProducedEntity
                         );
                         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
                         return contextHolder;
@@ -538,22 +552,19 @@
             },
 
             _resultOpened: function (e) {
-                var self = this;
-                var activeElement = document.activeElement;
-                if (self.$.input === activeElement || /* if the autocompleter in focus */ 
+                const activeElement = document.activeElement;
+                if (this.$.input === activeElement || /* if the autocompleter in focus */
                     document.body === activeElement   /* or no other input or button in focus then show found values */) {
-                    self.opened = true;
-	                self.async(function () {
-	                    self.$.result.highlightMatchedParts();
-	                }, 100);
+                    this.opened = true;
+                    this.$.result.highlightMatchedParts();
                 } else {
-                    self.opened = true;
-                    self.$.result.cancel(e);
+                    this.opened = true;
+                    this.$.result.cancel(e);
                 }
             },
 
             _resultClosed: function (e) {
-                // property this.opened controls whether overlay on-close event should 
+                // property this.opened controls whether overlay on-close event should
                 // perfrom on-change event handler that does all the validation megic
                 if (this.opened === true) {
                     this.opened = false;
@@ -565,36 +576,40 @@
                 	Polymer.dom.flush();
                 }
             },
-            
+
             _resultCanceled : function (event, detail) {
                 if (detail.keyCode && detail.keyCode === 27) {
                     this._focusInput();
                 }
             },
-            
+
             _entitySelected: function () {
                 if (!this.multi) {
                     this._done();
                 }
             },
-            
+
             /* This method handles an explicit user action for accepting selected values from an autocompleted list.
              * However, there is no guarantee that there are actually selected values.
              */
             _done: function () {
                 console.log("_done:");
-                var input = this.decoratedInput();
-                var result = this.$.result;
-                var hasValuesToProcess = Object.keys(result.selectedValues).length > 0;
+                const input = this.decoratedInput();
+                const result = this.$.result;
+
+                // let's make sure that at least one matching value is selected if _don()
+                // this is mainly relecant for the case of multi autocompleter that has been focused, no values selected, but Enter/Accept is pressed
+                result.selectCurrentIfNoneSelected();
+                const hasValuesToProcess = Object.keys(result.selectedValues).length > 0;
 
                 // should close automatcially, but just in case let's make sure the result overlay gets closed
                 this.opened = false;
                 result.close();
 
-                // TODO implemente value accpetance logic...
+                // value accpetance logic...
                 if (hasValuesToProcess) {
                     // compose a string value, which would be a comma separated string in case of multi
-                    var selectedValuesAsStr = _.map(result.selectedValues, function (obj) {
+                    const selectedValuesAsStr = _.map(result.selectedValues, function (obj) {
                         return obj.key; // 'key' field contains converted representation of the entity
                     }).join(this.separator);
 
@@ -604,9 +619,9 @@
                     } else {
                         // in case of multi selection config things get a little more interesting
                         // as we need to insert the value into the right position of an existing text in the input field
-                        var before = this._editingValue.substring(0, this._replaceFromIndex + 1);
-                        var after = this._editingValue.substr(this._replaceToIndex);
-                        var newEditingValue = before + selectedValuesAsStr + after;
+                        const before = this._editingValue.substring(0, this._replaceFromIndex + 1);
+                        const after = this._editingValue.substr(this._replaceToIndex);
+                        const newEditingValue = before + selectedValuesAsStr + after;
 
                         this._editingValue = newEditingValue;
 
@@ -629,7 +644,7 @@
             /* This method is used to make sure the input is in focus */
             _focusInput: function () {
                 // at the end let's focus the input...
-                var input = this.decoratedInput();
+                const input = this.decoratedInput();
                 this.async(function () {
                     input.focus();
                 }, 100);

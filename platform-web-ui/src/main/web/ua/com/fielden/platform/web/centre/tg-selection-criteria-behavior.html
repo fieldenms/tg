@@ -384,7 +384,7 @@
             nextPage: function () {
                 this._openToast(null, "Loading next page", false, "", true);
                 this._validatePageCount();
-                if (!this._canNext()) {
+                if (!this._canNext()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
@@ -397,7 +397,7 @@
             prevPage: function () {
                 this._openToast(null, "Loading previous page", false, "", true);
                 this._validatePageCount();
-                if (!this._canPrev()) {
+                if (!this._canPrev()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
@@ -410,7 +410,7 @@
             firstPage: function () {
                 this._openToast(null, "Loading first page", false, "", true);
                 this._validatePageCount();
-                if (!this._canFirst()) {
+                if (!this._canFirst()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
@@ -423,7 +423,7 @@
             lastPage: function () {
                 this._openToast(null, "Loading last page", false, "", true);
                 this._validatePageCount();
-                if (!this._canLast()) {
+                if (!this._canLast()) { // TODO either delete this check or provide correct parameter values to the function
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
@@ -450,37 +450,39 @@
              * Starts the process of centre run.
              *
              * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
+             * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
              */
-            run: function (isSortingAction) {
+            run: function (isSortingAction, forceRegeneration) {
                 var self = this;
                 this._openToast(null, "Loading data", false, "", true);
-                return this._execute(RunActions.run, isSortingAction);
+                return this._execute(RunActions.run, isSortingAction, forceRegeneration);
             },
 
             /**
              * Starts the process of centre execution. It does not alter
              *
              * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
+             * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
              */
-            _execute: function (action, isSortingAction) {
+            _execute: function (action, isSortingAction, forceRegeneration) {
                 var self = this;
 
                 if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
                         .then(function () {
-                            return self._createPromise(action, isSortingAction);
+                            return self._createPromise(action, isSortingAction, forceRegeneration);
                         });
                     return self._refreshPromiseInProgress;
                 }
 
                 // let's capture the promise being created at the instance level so that it could be referenced later...
-                self._refreshPromiseInProgress = self._createPromise(action, isSortingAction);
+                self._refreshPromiseInProgress = self._createPromise(action, isSortingAction, forceRegeneration);
                 // ... and return it
                 return self._refreshPromiseInProgress;
             },
 
-            _createPromise: function (action, isSortingAction) {
+            _createPromise: function (action, isSortingAction, forceRegeneration) {
                 var self = this;
 
                 return new Promise(function (resolve, reject) {
@@ -500,6 +502,7 @@
                                 },
                                 action,
                                 isSortingAction,
+                                forceRegeneration,
                                 self.requireSelectedEntities,
                                 self.requireMasterEntity
                             )
@@ -606,12 +609,15 @@
              * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
              * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
              */
-            _createContextHolderForRunning: function (modifHolderGetter, action, isSortingAction, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolderForRunning: function (modifHolderGetter, action, isSortingAction, forceRegeneration, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
                 var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
                 if (isSortingAction) {
                     self._reflector().setCustomProperty(contextHolder, "@@sortingAction", true);
+                }
+                if (forceRegeneration) {
+                    self._reflector().setCustomProperty(contextHolder, "@@forceRegeneration", true);
                 }
                 self._reflector().setCustomProperty(contextHolder, "@@action", action);
                 self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.SortedSet;
 
 import org.joda.time.DateTime;
+import org.junit.runner.RunWith;
 
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test.runners.H2TgDomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
+@RunWith(H2TgDomainDrivenTestCaseRunner.class)
 public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
     public static final String UNIT_TEST_USER = User.system_users.UNIT_TEST_USER.name();
@@ -46,12 +49,14 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
      */
     @Override
     protected void populateDomain() {
+        resetIdGenerator();
+        
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(new DateTime());
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
-        final IUser coUser = co(User.class);
+        final IUser coUser = co$(User.class);
         final User vu = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true).setEmail(User.system_users.VIRTUAL_USER.name() + "@unit-test.software").setActive(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(vu);
@@ -69,7 +74,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         final IApplicationSettings settings = getInstance(IApplicationSettings.class);
         final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
+        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
         final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
         for (final SecurityTokenNode securityNode : topNodes) {
             alg.search(securityNode, predicate);

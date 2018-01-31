@@ -11,6 +11,7 @@ import java.util.Optional;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
@@ -107,7 +108,7 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreColumnWidthConfigUpdater> createCentreColumnWidthConfigUpdater(final Injector injector) {
-        return new EntityMaster<CentreColumnWidthConfigUpdater>(CentreColumnWidthConfigUpdater.class, null, injector);
+        return new EntityMaster<CentreColumnWidthConfigUpdater>(CentreColumnWidthConfigUpdater.class, CentreColumnWidthConfigUpdaterProducer.class, null, injector);
     }
 
     public enum CentreConfigActions {
@@ -124,7 +125,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "    if (functionalEntity.get('sortingChanged') === true) {\n"
                                     + "        return self.retrieve().then(function () { self.run(true); });\n"
                                     + "    } else {\n"
-                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds'));\n"
+                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
                                     + "    }\n"
                                     + "");
                             }

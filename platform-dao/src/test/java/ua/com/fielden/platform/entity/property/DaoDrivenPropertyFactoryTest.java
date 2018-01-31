@@ -23,8 +23,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.types.Money;
  * @author 01es
  *
  */
-public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
+public class DaoDrivenPropertyFactoryTest extends AbstractDaoTestCase {
     private final EntityWithMoneyDao dao = getInstance(EntityWithMoneyDao.class);
     private final EntityWithDynamicCompositeKeyDao daoComposite = getInstance(EntityWithDynamicCompositeKeyDao.class);
 

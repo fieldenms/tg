@@ -33,7 +33,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     private fetch<T> fetchModel;
     private CONTEXT context;
 
-    private int pageSize = 10;
+    private final int pageSize = 10;
 
 
     public AbstractSearchEntityByKeyWithContext(final IEntityDao<T> companion) {
@@ -42,17 +42,31 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     }
 
     /**
-     * This method needs to be implemented to enhance the resulting query based on the provided context.
+     * This method may be overriden to create a different start of EQL.
      *
+     * @param context
+     * @param searchString
+     * @return
+     */
+    protected ICompoundCondition0<T> startEqlBasedOnContext(final CONTEXT context, final String searchString) {
+        return select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+    }
+
+    /**
+     * This method may be overridden to enhance the resulting query based on the provided context.
+     *
+     * @param context
+     * @param searchString
      * @param incompleteEql
      * @return
      */
-    protected abstract EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final String searchString, final ICompoundCondition0<T> incompleteEql);
-
+    protected EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final String searchString, final ICompoundCondition0<T> incompleteEql) {
+        return incompleteEql.model();
+    }
 
     @Override
     public List<T> findMatches(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
@@ -61,7 +75,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().upperCase().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         queryModel.setFilterable(true);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();

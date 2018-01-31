@@ -1,19 +1,116 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-public enum ComparisonOperator {
-    NE("<>"), EQ("="), GT(">"), GE(">="), LT("<"), LE("<=");
-    private final String value;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonQuantifiedOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 
-    ComparisonOperator(final String value) {
-        this.value = value;
+abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
+		extends AbstractQueryLink //
+		implements IComparisonOperator<T, ET> {
+	
+    protected ComparisonOperator(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForComparisonOperator(final Tokens tokens);
 
-    public String getValue() {
-        return value;
-    }
+	@Override
+	public IComparisonQuantifiedOperand<T, ET> eq() {
+		return createIComparisonQuantifiedOperand(getTokens().eq());
+	}
 
-    @Override
-    public String toString() {
-        return value;
-    }
+	@Override
+	public IComparisonQuantifiedOperand<T, ET> ne() {
+		return createIComparisonQuantifiedOperand(getTokens().ne());
+	}
+
+	@Override
+	public IComparisonQuantifiedOperand<T, ET> ge() {
+		return createIComparisonQuantifiedOperand(getTokens().ge());
+	}
+
+	@Override
+	public IComparisonQuantifiedOperand<T, ET> le() {
+		return createIComparisonQuantifiedOperand(getTokens().le());
+	}
+
+	@Override
+	public IComparisonQuantifiedOperand<T, ET> gt() {
+		return createIComparisonQuantifiedOperand(getTokens().gt());
+	}
+
+	@Override
+	public IComparisonQuantifiedOperand<T, ET> lt() {
+		return createIComparisonQuantifiedOperand(getTokens().lt());
+	}
+
+	@Override
+	public IComparisonSetOperand<T> in() {
+		return createIComparisonSetOperand(getTokens().in(false));
+	}
+
+	@Override
+	public IComparisonSetOperand<T> notIn() {
+		return createIComparisonSetOperand(getTokens().in(true));
+	}
+
+	@Override
+	public IComparisonOperand<T, ET> like() {
+		return createIComparisonOperand(getTokens().like(false));
+	}
+
+	@Override
+	public IComparisonOperand<T, ET> notLike() {
+		return createIComparisonOperand(getTokens().like(true));
+	}
+
+	@Override
+	public IComparisonOperand<T, ET> iLike() {
+		return createIComparisonOperand(getTokens().iLike(false));
+	}
+
+	@Override
+	public IComparisonOperand<T, ET> notILike() {
+		return createIComparisonOperand(getTokens().iLike(true));
+	}
+
+	@Override
+	public T isNull() {
+		return nextForComparisonOperator(getTokens().isNull(false));
+	}
+
+	@Override
+	public T isNotNull() {
+		return nextForComparisonOperator(getTokens().isNull(true));
+	}
+	
+	private IComparisonOperand<T, ET> createIComparisonOperand(final Tokens tokens) {
+		return new ExpConditionalOperand<T, ET>(tokens) {
+			@Override
+			protected T nextForSingleOperand(final Tokens tokens) {
+				return ComparisonOperator.this.nextForComparisonOperator(tokens);
+			}
+		};
+	}
+
+	private IComparisonSetOperand<T> createIComparisonSetOperand(final Tokens tokens) {
+		return new SetOfOperands<T, ET>(tokens) {
+			@Override
+			protected T nextForSingleOperand(final Tokens tokens) {
+				return ComparisonOperator.this.nextForComparisonOperator(tokens);
+			}
+		};
+	}
+
+	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand(final Tokens tokens) {
+		return new ExpRightSideConditionalOperand<T, ET>(tokens) {
+			@Override
+			protected T nextForSingleOperand(final Tokens tokens) {
+				return ComparisonOperator.this.nextForComparisonOperator(tokens);
+			}
+		};
+	}
 }

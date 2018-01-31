@@ -28,6 +28,11 @@
         	&& (typeof result.ex !== 'undefined');
     };
     
+    const _simpleClassName = function (fullClassName) {
+        const index = fullClassName.lastIndexOf('.') + 1;
+        return fullClassName.substring(index);
+    };
+    
     var _isContinuationError0 = function (result) {
         return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
     }
@@ -444,27 +449,31 @@
          * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
          */
         Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value) {
-            var result = this.set(propertyName, value);
+            const result = this.set(propertyName, value);
             
-            var touched = this["@@touchedProps"];
-            var names = touched.names;
-            var counts = touched.counts;
-            var index = names.indexOf(propertyName);
+            const touched = this["@@touchedProps"];
+            const names = touched.names;
+            const values = touched.values;
+            const counts = touched.counts;
+            const index = names.indexOf(propertyName);
             if (index > -1) {
-                var prevCount = counts[index];
+                const prevCount = counts[index];
                 names.splice(index, 1);
+                values.splice(index, 1);
                 counts.splice(index, 1);
                 names.push(propertyName);
+                values.push(value);
                 counts.push(prevCount + 1);
             } else {
                 names.push(propertyName);
+                values.push(value);
                 counts.push(1);
             }
             // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
             if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
                 delete this['@' + propertyName + '_id'];
             }
-            console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
+            console.debug('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             
             return result;
         }
@@ -710,8 +719,7 @@
          *
          */
         EntityType.prototype._simpleClassName = function () {
-            var ind = this.fullClassName().lastIndexOf(".") + 1;
-            return this.fullClassName().substring(ind);
+            return _simpleClassName(this.fullClassName());
         }
 
         /**
@@ -1126,7 +1134,7 @@
             const lastDotIndex = dotNotatedProp.lastIndexOf(".");
             const rest = lastDotIndex > -1 ? dotNotatedProp.slice(lastDotIndex + 1) : dotNotatedProp;
             const firstVal = lastDotIndex > -1 ? entity.get(dotNotatedProp.slice(0, lastDotIndex)) : entity;
-            return firstVal && rest.length > 0 ? firstVal.type().prop(rest) || undefined : undefined;
+            return firstVal && rest.length > 0 ? firstVal.constructor.prototype.type.call(firstVal).prop(rest) || undefined : undefined;
          },
 
         /**
@@ -1352,6 +1360,15 @@
                 var fullValue = entity.get(propertyName);
                 this._convertFullPropertyValue(bindingView, propertyName, fullValue);
                 
+                const touchedProps = bindingView['@@touchedProps'];
+                const touchedPropIndex = touchedProps.names.indexOf(propertyName);
+                if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex])) {
+                    // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
+                    touchedProps.names.splice(touchedPropIndex, 1);
+                    touchedProps.counts.splice(touchedPropIndex, 1);
+                    touchedProps.values.splice(touchedPropIndex, 1);
+                }
+                
                 if (this.isEntity(fullValue)) {
                     bindingView["@" + propertyName + "_desc"] = this.convert(fullValue.get("desc"));
                 }
@@ -1486,13 +1503,21 @@
         },
         
         /**
+         * Extracts simple class name from full class name (removes package from it).
+         */
+        simpleClassName: function (fullClassName) {
+            return _simpleClassName(fullClassName);
+        },
+        
+        /**
          * Creates the context holder to be transferred with actions, centre autocompletion process, query enhancing process etc.
          *
-         * 
+         * @param originallyProducedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
          */
         createContextHolder: function (
         		requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
-        		createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity
+        		createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity,
+        		originallyProducedEntity
         ) {
             var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
             centreContextHolder.id = null;
@@ -1502,6 +1527,9 @@
             
             if (requireSelectionCriteria !== null) {
             	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
+            	if (originallyProducedEntity) {
+            	    centreContextHolder['originallyProducedEntity'] = originallyProducedEntity;
+            	}
             }
             if (requireSelectedEntities !== null) {
             	this.provideSelectedEntities(requireSelectedEntities, centreContextHolder, getSelectedEntities);
@@ -1525,32 +1553,39 @@
         },
         
         /**
-         * Creates the holder of modified properties and some savingContext.
+         * Creates the holder of modified properties, originallyProducedEntity and savingContext.
+         *
+         * There are three cases:
+         *    1) modifiedPropertiesHolder.id !== null and the entity will be fetched from persistent storage (in this case originallyProducedEntity is always null, savingContext is not applicable)
+         *    2) modifiedPropertiesHolder.id === null && originallyProducedEntity !== null and the entity will be deserialised from originallyProducedEntity and modifHolder applied (in this case savingContext is not applicable)
+         *    3) otherwise the entity will be produced through savingContext-dependent producer (only in this case savingContext is applicable)
+         *
+         * @param originallyProducedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
          */
-        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext, continuationsMap) {
-        	var reflector = this;
-            var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+        createSavingInfoHolder: function (originallyProducedEntity, modifiedPropertiesHolder, savingContext, continuationsMap) {
+            const savingInfoHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
-            savingInfoHolder['key'] = 'savingInfoHolder_key';
+            savingInfoHolder['key'] = 'NO_KEY';
             savingInfoHolder['desc'] = 'savingInfoHolder description';
             savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
-        	
-        	if (savingContext) { // if saving context was defined (not 'undefined'):
+            savingInfoHolder['originallyProducedEntity'] = originallyProducedEntity;
+            
+            if (savingContext) { // if saving context was defined (not 'undefined'):
                 savingInfoHolder['centreContextHolder'] = savingContext;
-        	}
-        	
-        	if (typeof continuationsMap !== 'undefined') {
-        	    var continuations = [];
-        	    var continuationProperties = [];
-        	    for (var continuationProperty in continuationsMap) {
-        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
-        	            continuations.push(continuationsMap[continuationProperty]);
-        	            continuationProperties.push(continuationProperty);
-        	        }
-        	    }
-        	    savingInfoHolder['continuations'] = continuations;
-        	    savingInfoHolder['continuationProperties'] = continuationProperties;
-        	}
+            }
+            
+            if (typeof continuationsMap !== 'undefined') {
+                var continuations = [];
+                var continuationProperties = [];
+                for (var continuationProperty in continuationsMap) {
+                    if (continuationsMap.hasOwnProperty(continuationProperty)) {
+                        continuations.push(continuationsMap[continuationProperty]);
+                        continuationProperties.push(continuationProperty);
+                    }
+                }
+                savingInfoHolder['continuations'] = continuations;
+                savingInfoHolder['continuationProperties'] = continuationProperties;
+            }
             return savingInfoHolder;
         },
         
@@ -1599,6 +1634,53 @@
         		}
         	}
         	return number;
+        },
+        
+        /**
+         * Validates the presence of originallyProducedEntity based on number representation of entity id.
+         */
+        _validateOriginallyProducedEntity: function (originallyProducedEntity, idNumber) {
+            if (idNumber === null) {
+                if (!_isEntity(originallyProducedEntity)) {
+                    throw 'For new entities (null id) originallyProducedEntity should always exist.';
+                }
+            } else if (Number.isInteger(idNumber)) {
+                if (_isEntity(originallyProducedEntity)) {
+                    throw 'For existing entities (id exists) originallyProducedEntity should always be empty.';
+                }
+            } else {
+                throw 'Unknown id number [' + idNumber + ']';
+            }
+            return originallyProducedEntity;
+        },
+        
+        /**
+         * Validates the context based on string representation of entity id during retrieval process.
+         * 
+         * For non-empty context:
+         *  1) if 'new' entity is retrieved then full context (CentreContextHolder) is necessary to be able to contextually restore the entity.
+         *  2) if 'find_or_new' entity is retrieved then only master functional entity (SavingInfoHolder) is necessary to be able to contextually restore the entity -- empty context (CentreContextHolder)
+         *     will be created on server (see EntityResource.retrieve method) and master functional entity will be set into it. This is most likely the situation of embedded master inside other master.
+         */
+        _validateRetrievalContext: function (context, idString) {
+            if (context) {
+                if (idString === 'new') {
+                    if (!_isEntity(context) || context.type()._simpleClassName() !== 'CentreContextHolder') {
+                        throw 'Non-empty context for "new" entity during retrieval should be of type CentreContextHolder. Context = ' + context;
+                    }
+                } else if (idString === 'find_or_new') {
+                    if (!_isEntity(context) || context.type()._simpleClassName() !== 'SavingInfoHolder') {
+                        throw 'Non-empty context for "find_or_new" entity during retrieval should be of type SavingInfoHolder. Context = ' + context;
+                    }
+                } else {
+                    throw 'Incorrect id string [' + idString + '] for non-empty context. Context = ' + context;
+                }
+            } else {
+                if (idString === 'find_or_new') { // this occurs, for example, when Cancel button has been pressed -- context is undefined. 'new' or '830' idString is applicable.
+                    throw 'Incorrect id string [' + idString + '] for empty context. Context = ' + context;
+                }
+            }
+            return context;
         }
     });
 })();    

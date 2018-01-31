@@ -1,6 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
+import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -112,7 +119,7 @@ public class CriteriaResource extends ServerResource {
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
@@ -128,9 +135,9 @@ public class CriteriaResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             return createCriteriaValidationEnvelope(
-                    EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil), 
+                    restoreModifiedPropertiesHolderFrom(envelope, restUtil), 
                     centre.getMenuItemType(), 
                     ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), 
                     restUtil, 
@@ -150,7 +157,7 @@ public class CriteriaResource extends ServerResource {
         return restUtil.rawListJSONRepresentation(
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME))
                 )//
         );
@@ -168,7 +175,7 @@ public class CriteriaResource extends ServerResource {
         return restUtil.rawListJSONRepresentation(
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
                         staleCriteriaMessage
                 )//
@@ -188,7 +195,7 @@ public class CriteriaResource extends ServerResource {
         return restUtil.rawListJSONRepresentation(
                 appliedCriteriaEntity,
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
                         createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator)
                 )//
@@ -213,12 +220,12 @@ public class CriteriaResource extends ServerResource {
     @Put
     @Override
     public Representation put(final Representation envelope) {
-        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+        return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_RESOURCE: run started.");
             //            // NOTE: the following line can be the example how 'centre running' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre running.");
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
 
@@ -256,10 +263,13 @@ public class CriteriaResource extends ServerResource {
                 
                 // create and execute a generator instance
                 final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Result generationResult = generator.gen(generatorEntityType,
-                        freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                                (final MetaProperty<?> mp) -> mp.getName(), 
-                                (final MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
+                final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                        (final MetaProperty<?> mp) -> mp.getName(), 
+                        (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
+                if (shouldForceRegeneration(customObject)) {
+                    params.put(FORCE_REGENERATION_KEY, of(true));
+                }
+                final Result generationResult = generator.gen(generatorEntityType, params);
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
                 // otherwise, proceed with the request handling further to actually query the data
                 // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
@@ -301,7 +311,7 @@ public class CriteriaResource extends ServerResource {
                             // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
                             // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
                             // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                            createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
+                            createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(EntityResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
             if (isRunning) {
                 updateResultantCustomObject(miType, gdtm, previouslyRunCentre, pair.getKey(), null);
             }
@@ -356,7 +366,7 @@ public class CriteriaResource extends ServerResource {
      */
     private static Map<String, Object> updateResultantCustomObject(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre, final Map<String, Object> resultantCustomObject, final String staleCriteriaMessage) {
         resultantCustomObject.put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
-        resultantCustomObject.put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));
+        resultantCustomObject.put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)));
         
         // Resultant custom object contains information whether selection criteria is stale (config button colour).
         // Such information should be updated just before returning resultant custom object to the client.
@@ -379,6 +389,7 @@ public class CriteriaResource extends ServerResource {
             return Optional.of(new Pair<>(
                     queryEnhancerConfig.get().getKey(),
                     CentreResourceUtils.createCentreContext(
+                            true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
                             webUiConfig,
                             companionFinder,
                             serverGdtm,
@@ -387,7 +398,9 @@ public class CriteriaResource extends ServerResource {
                             entityFactory,
                             centreContextHolder,
                             criteriaEntity,
-                            queryEnhancerConfig.get().getValue())//
+                            queryEnhancerConfig.get().getValue(),
+                            null /* chosenProperty is not applicable in queryEnhancer context */
+                            )//
             ));
         } else {
             return Optional.empty();

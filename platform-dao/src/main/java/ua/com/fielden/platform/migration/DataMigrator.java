@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.migration;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
+
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -81,12 +84,11 @@ public class DataMigrator {
             validateRetrievalSql(dma);
         }
 
-        final Integer initialId = getLastId();
-        final Integer finalId = batchInsert(dma, conn, initialId);
+        final long finalId = batchInsert(dma, conn, getNextId());
         final Period pd = new Period(start, new DateTime());
 
         final List<String> sql = new ArrayList<>();
-        sql.add("UPDATE UNIQUE_ID SET NEXT_VALUE = " + finalId + " WHERE _ID = 1");
+        sql.add(String.format("ALTER SEQUENCE %s RESTART WITH %s ", ID_SEQUENCE_NAME, finalId + 1));
         runSql(sql);
 
         LOGGER.info("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
@@ -134,7 +136,7 @@ public class DataMigrator {
      * @throws Exception
      */
     private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
-        
+
         final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
         boolean result = false;
         LOGGER.debug("Checking sql syntax for [" + retriever.getClass().getSimpleName() + "]");
@@ -215,27 +217,21 @@ public class DataMigrator {
 
     private void runSql(final List<String> ddl) throws SQLException {
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final Connection conn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        for (final String sql : ddl) {
-            try (final Statement st = conn.createStatement()) {
-                st.execute(sql);
+        hiberUtil.getSessionFactory().getCurrentSession().doWork(conn -> {
+            for (final String sql : ddl) {
+                try (final Statement st = conn.createStatement()) {
+                    st.execute(sql);
+                }
             }
-        }
+        });
         tr.commit();
     }
 
-    private Integer getLastId() throws SQLException {
-        Integer result = null;
+    private long getNextId() throws SQLException {
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        try (final Statement st = targetConn.createStatement();
-             final ResultSet rs = st.executeQuery("SELECT NEXT_VALUE FROM UNIQUE_ID")) {
-            rs.next();
-            result = rs.getInt(1);
-        }
+        final long result = nextIdValue(ID_SEQUENCE_NAME, hiberUtil.getSessionFactory().getCurrentSession());
         tr.commit();
         return result;
-
     }
 
     private void validateRetrievalSql(final DomainMetadataAnalyser dma) {
@@ -250,18 +246,21 @@ public class DataMigrator {
                 foundErrors = true;
             }
         }
-        
+
         if (foundErrors) {
             LOGGER.error("\n\n\n======== Validation detected errors. Pls consult the log file for details ==========\n\n\n");
         }
     }
 
-    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId) throws SQLException {
+    private long batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final long startingId) throws SQLException {
         final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
-        Integer id = startingId;
+        long id = startingId;
             for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
                 try (final Statement legacyStmt = legacyConn.createStatement();
-                     final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever))) {
+                    final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever))) {
+                // retriever.getClass().getName().contains("StPoInventoryLineRetriever");
+
+                System.out.println("Processing retriever " + retriever);
                     if (retriever.isUpdater()) {
                         performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
                     } else {
@@ -279,98 +278,112 @@ public class DataMigrator {
         final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
         final DateTime start = new DateTime();
         final Map<String, List<List<Object>>> exceptions = new HashMap<>();
-        final Map<Object, Integer> typeCache = cache.getCacheForType(rbsg.getRetriever().type());
+        final Map<Object, Long> typeCache = cache.getCacheForType(rbsg.getRetriever().type());
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        try (final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql)) {
-            int batchId = 0;
-            final List<List<Object>> batchValues = new ArrayList<>();
+        hiberUtil.getSessionFactory().getCurrentSession().doWork(targetConn -> {
+            try (final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql)) {
+                int batchId = 0;
+                final List<List<Object>> batchValues = new ArrayList<>();
 
-            while (legacyRs.next()) {
-                batchId = batchId + 1;
-                final List<Object> keyValue = new ArrayList<>();
-                for (final Integer keyIndex : indexFields) {
-                    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+                while (legacyRs.next()) {
+                    batchId = batchId + 1;
+                    final List<Object> keyValue = new ArrayList<>();
+                    for (final Integer keyIndex : indexFields) {
+                        keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+                    }
+                if (keyValue == null) {
+                    System.out.println("keyValue == null");
                 }
-                final int id = typeCache.get(keyValue.size() == 1 ? keyValue.get(0) : keyValue);
-                int index = 1;
-                final List<Object> currTransformedValues = rbsg.transformValues(legacyRs, cache, id);
-                batchValues.add(currTransformedValues);
-                for (final Object value : currTransformedValues) {
-                    insertStmt.setObject(index, value);
-                    index = index + 1;
+                final Object key = keyValue.size() == 1 ? keyValue.get(0) : keyValue;
+                if (key == null) {
+                    System.out.println("key == null");
                 }
-                insertStmt.addBatch();
+                final Long idObject = typeCache.get(key);
+                if (idObject == null) {
+                    System.out.println("idObject == null");
+                } else {
+                    final long id = idObject;
+                    int index = 1;
+                    final List<Object> currTransformedValues = rbsg.transformValues(legacyRs, cache, id);
+                    batchValues.add(currTransformedValues);
+                    for (final Object value : currTransformedValues) {
+                        insertStmt.setObject(index, value);
+                        index = index + 1;
+                    }
+                    insertStmt.addBatch();
 
-                if ((batchId % 100) == 0) {
+                    if ((batchId % 100) == 0) {
+                        repeatAction(insertStmt, batchValues, exceptions);
+                        batchValues.clear();
+                        insertStmt.clearBatch();
+                    }
+                }
+            }
+
+                if ((batchId % 100) != 0) {
                     repeatAction(insertStmt, batchValues, exceptions);
-                    batchValues.clear();
-                    insertStmt.clearBatch();
                 }
             }
-
-            if ((batchId % 100) != 0) {
-                repeatAction(insertStmt, batchValues, exceptions);
-            }
-
-            tr.commit();
-        }
+        });
+        tr.commit();
         LOGGER.info(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
 
     }
 
-    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId) throws SQLException {
+    private long performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final long startingId) throws SQLException {
         final String insertSql = rbsg.getInsertStmt();
         final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
         final DateTime start = new DateTime();
         final Map<String, List<List<Object>>> exceptions = new HashMap<>();
-        final Map<Object, Integer> typeCache = cache.getCacheForType(rbsg.getRetriever().type());
+        final Map<Object, Long> typeCache = cache.getCacheForType(rbsg.getRetriever().type());
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        try (final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql)) {
-            int batchId = 0;
-            final List<List<Object>> batchValues = new ArrayList<>();
-            Integer id = startingId;
-    
-            while (legacyRs.next()) {
-                id = id + 1;
-                batchId = batchId + 1;
-                final List<Object> keyValue = new ArrayList<>();
-                for (final Integer keyIndex : indexFields) {
-                    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+
+        final long idToReturn = hiberUtil.getSessionFactory().getCurrentSession().doReturningWork(targetConn -> {
+            try (final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql)) {
+                int batchId = 0;
+                final List<List<Object>> batchValues = new ArrayList<>();
+                Long id = startingId;
+
+                while (legacyRs.next()) {
+                    id = id + 1;
+                    batchId = batchId + 1;
+                    final List<Object> keyValue = new ArrayList<>();
+                    for (final Integer keyIndex : indexFields) {
+                        keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+                    }
+                    typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
+
+                    int index = 1;
+                    final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
+                    batchValues.add(currTransformedValues);
+                    for (final Object value : currTransformedValues) {
+                        transformIfUtcValueAndSet(rbsg.insertFields.get(index - 1), insertStmt, index, value);
+                        index = index + 1;
+                    }
+                    insertStmt.addBatch();
+
+                    if ((batchId % 100) == 0) {
+                        repeatAction(insertStmt, batchValues, exceptions);
+                        batchValues.clear();
+                        insertStmt.clearBatch();
+                    }
                 }
-                typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-    
-                int index = 1;
-                final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
-                batchValues.add(currTransformedValues);
-                for (final Object value : currTransformedValues) {
-                    transformIfUtcValueAndSet(rbsg.insertFields.get(index - 1), insertStmt, index, value);
-                    index = index + 1;
-                }
-                insertStmt.addBatch();
-    
-                if ((batchId % 100) == 0) {
+
+                if ((batchId % 100) != 0) {
                     repeatAction(insertStmt, batchValues, exceptions);
-                    batchValues.clear();
-                    insertStmt.clearBatch();
                 }
+
+                LOGGER.info(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
+                return id;
             }
-    
-            if ((batchId % 100) != 0) {
-                repeatAction(insertStmt, batchValues, exceptions);
-            }
-    
-            tr.commit();
-            
-            LOGGER.info(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
-            return id;
-        }
+        });
+        tr.commit();
+        return idToReturn;
     }
 
     /**
      * Handles assignment of date/time fields for properties with UTC markers.
-     * 
+     *
      * @param propMetadata
      * @param insertStmt
      * @param index

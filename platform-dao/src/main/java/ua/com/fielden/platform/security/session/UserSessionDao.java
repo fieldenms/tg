@@ -71,6 +71,12 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
     @Override
     @SessionRequired
+    public UserSession save(UserSession entity) {
+        return super.save(entity);
+    }
+
+    @Override
+    @SessionRequired
     public void clearSession(final UserSession session) {
         cache.invalidate(findAuthenticator(session));
         defaultDelete(session);

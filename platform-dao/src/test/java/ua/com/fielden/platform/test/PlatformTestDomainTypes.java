@@ -6,6 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
@@ -56,6 +57,8 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 
 /**
  * A class to enlist platform test domain entities. Should be replaced with runtime generation via reflection.
@@ -71,7 +74,13 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     }
 
     static {
+        // platform entities
         entityTypes.addAll(PlatformDomainTypes.types);
+        // without those which depend on Web UI infrastructure
+        entityTypes.remove(EntityExportAction.class);
+        entityTypes.remove(CentreColumnWidthConfigUpdater.class);
+        entityTypes.remove(CentreConfigUpdater.class);
+        // and test domain entities
         add(TgPerson.class);
         add(TgPersonName.class);
         add(TgAuthor.class);

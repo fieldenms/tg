@@ -3,16 +3,12 @@ package ua.com.fielden.platform.validators;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
@@ -32,7 +28,7 @@ public class CountActiveDependenciesTest extends AbstractDaoTestCase {
 
     @Test
     public void incorrect_number_of_active_dependencies_for_cat1() {
-        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
         assertNotNull(cat1);
 
         final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat1, coAggregates);
@@ -41,7 +37,7 @@ public class CountActiveDependenciesTest extends AbstractDaoTestCase {
 
     @Test
     public void incorrect_number_of_active_dependencies_for_cat2() {
-        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         assertNotNull(cat2);
 
         final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat2, coAggregates);
@@ -50,7 +46,7 @@ public class CountActiveDependenciesTest extends AbstractDaoTestCase {
 
     @Test
     public void cat3_is_referenced_twice_by_the_same_active_entity_which_should_be_counted_as_one_dependency() {
-        final TgCategory cat3 = co(TgCategory.class).findByKey("Cat3");
+        final TgCategory cat3 = co$(TgCategory.class).findByKey("Cat3");
         assertNotNull(cat3);
 
         final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat3, coAggregates);

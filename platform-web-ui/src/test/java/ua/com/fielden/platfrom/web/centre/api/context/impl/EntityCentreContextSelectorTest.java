@@ -5,14 +5,16 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.types.either.Right;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
 /**
@@ -157,7 +159,7 @@ public class EntityCentreContextSelectorTest {
 
     @Test
     public void context_referentially_identical_computation_components_are_equal() {
-       final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation = entity -> entity.getType();
+       final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation = (entity, context) -> entity.getType();
        final Either<Exception, CentreContextConfig> either = Try(() -> context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(computation).build());
        assertTrue(either instanceof Right);
        final CentreContextConfig config = ((Right<Exception, CentreContextConfig>) either).value;

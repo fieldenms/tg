@@ -30,11 +30,11 @@ import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
-public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
+public class FetchModelReconstructionTest extends AbstractDaoTestCase {
 
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
 
@@ -79,7 +79,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void fetch_model_reconstruction_recognizes_properties_of_type_AbstractUnionEntity() {
         final TgWorkshop workshop = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
-        final TgBogieLocation location = co(TgBogieLocation.class).new_().setWorkshop(workshop);
+        final TgBogieLocation location = co$(TgBogieLocation.class).new_().setWorkshop(workshop);
         final TgBogie bogie = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         assertEquals(workshop, bogie.getLocation().activeEntity());
 
