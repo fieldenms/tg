@@ -7,14 +7,12 @@ import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.AttachmentDao;
-import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
@@ -178,7 +176,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // bind attachment controllers
         bind(IAttachment.class).to(AttachmentDao.class);
-        bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
 
         // configuration menu related binding
         bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);

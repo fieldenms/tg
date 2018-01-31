@@ -43,7 +43,6 @@ import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisDomainTreeManagerSerialiser;
@@ -294,7 +293,6 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         register(SecurityRoleAssociation.class);
         register(ISecurityToken.class);
         register(Attachment.class);
-        register(EntityAttachmentAssociation.class);
         register(AnalysisResultClass.class);
         register(ICategorizer.class);
         register(LifecycleModel.class);

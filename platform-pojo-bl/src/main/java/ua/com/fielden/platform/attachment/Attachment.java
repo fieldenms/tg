@@ -33,7 +33,6 @@ import ua.com.fielden.platform.error.Result;
 @CompanionObject(IAttachment.class)
 @DisplayDescription
 public class Attachment extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     /**
      * Used purely to represent a new file being attached. Please note that this field is not a property.
