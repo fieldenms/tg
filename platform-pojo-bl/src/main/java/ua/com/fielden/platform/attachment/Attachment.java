@@ -1,109 +1,130 @@
 package ua.com.fielden.platform.attachment;
 
-import java.io.File;
-
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyReadonly;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 
 /**
- * Class representing file attachment. The convention is to use the name of the attached file as entitie's key.
+ * Entity representing a file attachment. It has a composite key, consisting of:
+ * <ul>
+ * <li><code>title</code> -- defaulted to the file name, but editable by user to provide a more relevant title;
+ * <li><code>sha1</code> -- SHA1-based checksum of the associated file.
+ * </ul>
+ * Having the combination of <code>title</code> and <code>sha1</code> as the attachment key, prevents file duplicates, but permits existence of several attachments referencing the same file.
+ * The "sameness" of files is determined by the SHA1 checksum of their content, not the file name.
+ * <p>
+ * All attachments are created as revision 1 (property <code>revNo</code>).
+ * If an attachment gets associated with some other attachment by means of assigning it to an empty property <code>prevRevision</code> of that other attachment, then the revision number for that attachment gets incremented by 1.
+ * Any attachment can only be associated once. This ensures immutable and linear hierarchy of attachment revisions.
+ * <p>
+ * Attachments with the same SHA1 cannot be in the immediate association as they represent the same file.
+ *  
  *
  * @author TG Team
  *
  */
-@KeyType(String.class)
-@KeyTitle(value = "File name", desc = "Unique name of the file attached.")
-@DescTitle(value = "Description", desc = "A comment about the attached file, which can be used for search.")
-@DescRequired
-@KeyReadonly
-@MapEntityTo("ATTACHMENTS")
-@CompanionObject(IAttachment.class)
+@KeyType(DynamicEntityKey.class)
+@DescTitle(value = "Description", desc = "A summary about the attachment, which can be used for search.")
 @DisplayDescription
-public class Attachment extends AbstractEntity<String> {
-
-    /**
-     * Used purely to represent a new file being attached. Please note that this field is not a property.
-     */
-    private File file;
+@MapEntityTo
+@CompanionObject(IAttachment.class)
+public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
-    @Title(value = "Is modified?", desc = "Indicates whether the actual attachment file was modified.")
-    private boolean modified = false;
+    @MapTo
+    @Title(value = "Title", desc = "A concenient attachment title that would indicate what it is about")
+    @CompositeKeyMember(1)
+    private String title;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "SHA1", desc = "A unique SHA1-based checksum of the file referenced by this attachment.")
+    @CompositeKeyMember(2)
+    @Readonly
+    private String sha1;
 
-    @Override
+    @IsProperty
+    @MapTo
+    @Title(value = "File Name", desc = "The file name of the file, uploading which resulted in creation of this attachment.")
+    @Readonly
+    @Required
+    private String origFileName;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Rev#", desc = "Attachment revision number.")
+    @Readonly
+    @Final(persistentOnly = false)
+    @Required
+    private Integer revNo;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Prev. Rev.", desc = "An attachment that represent the previous revision of this attachment. Could be empty.")
+    @Final
+    //@BeforeChange(CheckIfAttachmentCanBePrevRevision.class)
+    private Attachment prevRevision;
+
     @Observable
-    public Attachment setDesc(final String desc) {
-        super.setDesc(desc);
+    public Attachment setPrevRevision(final Attachment prevRevision) {
+        this.prevRevision = prevRevision;
         return this;
     }
 
-    @Override
+    public Attachment getPrevRevision() {
+        return prevRevision;
+    }
+    
     @Observable
-    public Attachment setKey(final String key) {
-        super.setKey(key);
+    public Attachment setRevNo(final Integer revNo) {
+        this.revNo = revNo;
         return this;
     }
 
-    public String getFileExtension() {
-        final String key = getKey().toString();
-        final int pos = key.lastIndexOf(".");
-
-        return key.substring(pos + 1, key.length());
-    }
-
-    public String getFileNameWithoutExtension() {
-        final String key = getKey().toString();
-        final int pos = key.lastIndexOf(".");
-
-        return key.substring(0, pos);
-    }
-
-    public File getFile() {
-        return file;
+    public Integer getRevNo() {
+        return revNo;
     }
 
     @Observable
-    public Attachment setModified(final boolean modified) {
-        this.modified = modified;
+    public Attachment setOrigFileName(final String origFileName) {
+        this.origFileName = origFileName;
         return this;
     }
 
-    public boolean isModified() {
-        return modified;
+    public String getOrigFileName() {
+        return origFileName;
     }
-
-    public Attachment setFile(final File file) {
-        this.file = file;
-        // let's assign attachment key equal to file's name if the key is empty
-        if (StringUtils.isEmpty(getKey())) {
-            setKey(file.getName());
-        }
+    
+    @Observable
+    public Attachment setSha1(final String sha1) {
+        this.sha1 = sha1;
         return this;
     }
 
-    @Override
-    protected Result validate() {
-        final Result result = super.validate();
-        if (!result.isSuccessful()) {
-            return result;
-        } else if (file == null && !isPersisted()) {
-            return new Result(this, new IllegalStateException("New attachment is missing a file."));
-        } else if (file == null && isModified()) {
-            return new Result(this, new IllegalStateException("Modified attachment is missing a file."));
-        }
-        return result;
+    public String getSha1() {
+        return sha1;
+    }
+
+    @Observable
+    public Attachment setTitle(final String title) {
+        this.title = title;
+        return this;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }
