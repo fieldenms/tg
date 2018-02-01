@@ -78,6 +78,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
     private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
     private Optional<User> createdByUserConstraint = Optional.empty();
+    private AbstractEntity<?> critOnlySinglePrototype;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
@@ -800,4 +801,28 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public ICompanionObjectFinder getControllerProvider() {
         return controllerProvider;
     }
+    
+    /**
+     * Initialises crit-only single prototype entity if it was not initialised before. Returns it as a result.
+     * 
+     * @param entityType -- the type of the prototype (only for initialisation)
+     * @param id -- id for the prototype (only for initialisation)
+     * @return
+     */
+    public AbstractEntity<?> critOnlySinglePrototypeInit(final Class<AbstractEntity<?>> entityType, final Long id) {
+        if (critOnlySinglePrototype == null) {
+            critOnlySinglePrototype = getEntityFactory().newEntity(entityType, id);
+        }
+        return critOnlySinglePrototype();
+    }
+    
+    /**
+     * Returns crit-only single prototype entity.
+     * 
+     * @return
+     */
+    public AbstractEntity<?> critOnlySinglePrototype() {
+        return critOnlySinglePrototype;
+    }
+    
 }

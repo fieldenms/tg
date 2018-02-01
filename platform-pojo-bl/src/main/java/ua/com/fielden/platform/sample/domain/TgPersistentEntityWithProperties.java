@@ -124,6 +124,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @IsProperty
     @CritOnly(Type.SINGLE)
     @Title(value = "Crit-only single date prop", desc = "Crit-only single date prop desc")
+    @BeforeChange(@Handler(DateValidator.class))
     private Date critOnlyDateProp;
 
     @IsProperty
