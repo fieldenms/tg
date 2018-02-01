@@ -38,6 +38,22 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @MapTo
     @Final
     private Integer finalProp;
+    
+    @IsProperty
+    @MapTo
+    @Final(persistentOnly = false)
+    @Title(value = "Immediately Final")
+    private Integer immediatelyFinalProp;
+
+    @Observable
+    public TgCategory setImmediatelyFinalProp(final Integer immediatelyFinalProp) {
+        this.immediatelyFinalProp = immediatelyFinalProp;
+        return this;
+    }
+
+    public Integer getImmediatelyFinalProp() {
+        return immediatelyFinalProp;
+    }
 
     @Observable
     public TgCategory setFinalProp(final Integer finalProp) {
