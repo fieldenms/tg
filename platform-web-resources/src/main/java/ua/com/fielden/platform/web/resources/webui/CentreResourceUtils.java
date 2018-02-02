@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -316,7 +318,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
         final Map<String, Object> metaValues = new LinkedHashMap<>();
 
-        if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
+        if (isDoubleCriterion(managedType(root, cdtmae), prop) && !isBooleanCriterion(managedType(root, cdtmae), prop)) {
             final Boolean exclusive = tickManager.getExclusive(root, prop);
             if (!isExclusiveDefault(exclusive)) {
                 metaValues.put("exclusive", exclusive);
@@ -367,7 +369,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final String prop = propAndMetaValues.getKey();
 
             final Map<String, Object> mValues = propAndMetaValues.getValue();
-            if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
+            if (isDoubleCriterion(managedType(root, cdtmae), prop) && !isBooleanCriterion(managedType(root, cdtmae), prop)) {
                 cdtmae.getFirstTick().setExclusive(root, prop, mValues.get("exclusive") != null ? (Boolean) mValues.get("exclusive") : null);
                 cdtmae.getFirstTick().setExclusive2(root, prop, mValues.get("exclusive2") != null ? (Boolean) mValues.get("exclusive2") : null);
             }

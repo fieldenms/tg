@@ -14,8 +14,8 @@ import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.WIDTH;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterionOrBoolean;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
@@ -399,7 +399,7 @@ public class CentreUpdater {
         final Class<?> diffManagedType = managedType(root, differencesCentre);
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
-                if (isDoubleCriterion(diffManagedType, property)) {
+                if (isDoubleCriterion(diffManagedType, property) && !isBooleanCriterion(diffManagedType, property)) {
                     if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
                         targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
                     }
@@ -430,7 +430,7 @@ public class CentreUpdater {
                 if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
                     targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
                 }
-                if (isDoubleCriterionOrBoolean(diffManagedType, property)
+                if (isDoubleCriterion(diffManagedType, property)
                         && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
                     targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
                 }
@@ -563,7 +563,7 @@ public class CentreUpdater {
 
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property)) {
-                if (isDoubleCriterion(managedType(root, differencesCentre), property)) {
+                if (isDoubleCriterion(managedType(root, differencesCentre), property) && !isBooleanCriterion(managedType(root, differencesCentre), property)) {
                     if (!equalsEx(differencesCentre.getFirstTick().getExclusive(root, property), originalCentre.getFirstTick().getExclusive(root, property))) {
                         differencesCentre.getFirstTick().markMetaValuePresent(EXCLUSIVE, root, property);
                     }
@@ -594,7 +594,7 @@ public class CentreUpdater {
                 if (!equalsEx(differencesCentre.getFirstTick().getValue(root, property), originalCentre.getFirstTick().getValue(root, property))) {
                     differencesCentre.getFirstTick().markMetaValuePresent(VALUE, root, property);
                 }
-                if (isDoubleCriterionOrBoolean(managedType(root, differencesCentre), property)) {
+                if (isDoubleCriterion(managedType(root, differencesCentre), property)) {
                     if (!equalsEx(differencesCentre.getFirstTick().getValue2(root, property), originalCentre.getFirstTick().getValue2(root, property))) {
                         differencesCentre.getFirstTick().markMetaValuePresent(VALUE2, root, property);
                     }

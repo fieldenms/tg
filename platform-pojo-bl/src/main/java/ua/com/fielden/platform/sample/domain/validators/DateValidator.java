@@ -30,6 +30,8 @@ public class DateValidator implements IBeforeChangeEventHandler<Date> {
         } else {
             if (newValue != null && new DateTime(2003, 2, 1, 6, 22).equals(new DateTime(newValue))) {
                 return Result.failure(newValue, "[1/2/3 6:22] is not acceptable for persisted entity.");
+            } else if (newValue != null && new DateTime(2003, 2, 1, 6, 23).equals(new DateTime(newValue))) {
+                return Result.warning(newValue, "[1/2/3 6:23] is warning for persisted entity.");
             }
         }
         return Result.successful(newValue);

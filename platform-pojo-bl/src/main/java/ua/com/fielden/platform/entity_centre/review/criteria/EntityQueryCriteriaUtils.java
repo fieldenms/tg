@@ -98,7 +98,7 @@ public class EntityQueryCriteriaUtils {
         final Map<String, Pair<Object, Object>> paramValues = new HashMap<String, Pair<Object, Object>>();
         for (final String propertyName : tickManager.checkedProperties(root)) {
             if (!AbstractDomainTree.isPlaceholder(propertyName)) {
-                if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
+                if (AbstractDomainTree.isDoubleCriterion(managedType, propertyName)) {
                     if (EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
                             && tickManager.getDateMnemonic(root, propertyName) != null) {
                         final Pair<Date, Date> fromAndTo = DynamicQueryBuilder.getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName));

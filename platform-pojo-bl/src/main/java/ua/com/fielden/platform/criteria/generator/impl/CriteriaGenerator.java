@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -17,6 +20,8 @@ import java.util.Optional;
 import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
@@ -63,8 +68,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * The implementation of the {@link ICriteriaGenerator} that generates {@link EntityQueryCriteria} with criteria properties.
@@ -171,7 +174,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
         final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
 
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
+        if (AbstractDomainTree.isDoubleCriterion(managedType, propertyName)) {
             generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
         } else {
             generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
@@ -204,7 +207,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             logger.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
         }
         final boolean finalHasEntityExists = hasEntityExists;
-        final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
+        final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
 
         final List<Annotation> annotations = new ArrayList<Annotation>();
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
@@ -292,16 +295,22 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param entity
      */
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {
+        logger.error(format("!synchroniseWithModel started..."));
+        final Class<T> root = entity.getEntityClass();
         final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        for (final Field propertyField : CriteriaReflector.getCriteriaProperties(entity.getType())) {
-            final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
-            final CriteriaProperty critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class);
-            final Class<T> root = entity.getEntityClass();
+        CriteriaReflector.getCriteriaProperties(entity.getType()).stream().map(propertyField -> {
+            final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
+            return t2(propertyField, getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
+        }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
+            final Field field = fieldAndVal._1;
             try {
-                entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
+                logger.error(format("\t!!synchroniseWithModel prop [%s] setting...", field.getName()));
+                entity.set(field.getName(), fieldAndVal._2);
             } catch (final Exception ex) {
-                logger.warn(format("Could not assign crit value to [%s] in root [%s].", propertyField.getName(), root.getName()));
+                logger.error(format("\t!!Could not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             }
-        }
+            logger.error(format("\t!!synchroniseWithModel prop [%s] setting...done", field.getName()));
+        });
+        logger.error(format("!synchroniseWithModel started...done"));
     }
 }

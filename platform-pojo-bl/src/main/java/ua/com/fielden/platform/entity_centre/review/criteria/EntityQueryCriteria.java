@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -746,10 +748,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), actualProperty);
 
         queryProperty.setValue(tickManager.getValue(root, actualProperty));
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(getManagedType(), actualProperty)) {
+        if (isDoubleCriterion(getManagedType(), actualProperty)) {
             queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
         }
-        if (AbstractDomainTree.isDoubleCriterion(getManagedType(), actualProperty)) {
+        if (isDoubleCriterion(getManagedType(), actualProperty) && !isBooleanCriterion(getManagedType(), actualProperty)) {
             queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
             queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
         }
