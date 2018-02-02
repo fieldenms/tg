@@ -1,0 +1,34 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+
+<!--
+-->
+<script>
+    (function () {
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgTooltipBehavior = {
+            properties: {
+
+            },
+
+            ready: function () {
+                this.addEventListener("tack", this._handleTrackEvent.bind(this));
+            },
+
+            _handleTrackEvent: function (event) {
+                switch (event.detail.state) {
+                case 'start':
+                    this._startDragFrom(event);
+                    break;
+                case 'track':
+                    this._drag(event);
+                    break;
+                case 'end':
+                    this._drop(event);
+                    break;
+                }
+                tearDownEvent(event)
+            }
+        };
+    })();
+</script>

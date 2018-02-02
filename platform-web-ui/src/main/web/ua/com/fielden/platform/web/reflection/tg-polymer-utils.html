@@ -2,12 +2,12 @@
     /**
      * Removes all Light DOM children from Polymer 'element'.
      *
-     * The need for such utility method arose from the fact that Polymer (currently 1.4 version) returns 
+     * The need for such utility method arose from the fact that Polymer (currently 1.4 version) returns
      * from Polymer.dom(element).childNodes, Polymer.dom(element).firstChild, Polymer.dom(element).firstElementChild methods
-     * not only Light DOM children, but also Local DOM children, including the elements in the template and whitespace 
+     * not only Light DOM children, but also Local DOM children, including the elements in the template and whitespace
      * nodes in the template.
      *
-     * Please, note that Polymer.dom().flush() call is needed to be done manually after this method has been used. 
+     * Please, note that Polymer.dom().flush() call is needed to be done manually after this method has been used.
      * The intention was made for the cases, where some additional DOM manipulation is needed, and in such cases
      * flush() call could be efficiently done after all DOM manipulation once.
      */
@@ -35,5 +35,15 @@
             reference = reference.offsetParent;
         }
         return newPos;
+    };
+
+    /**
+     * This method prevents event from further bubbling.
+     */
+    const tearDownEvent = function () {
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.preventDefault) e.preventDefault();
+        e.cancelBubble = true;
+        e.returnValue = false;
     };
 </script>
