@@ -1,0 +1,47 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tg-drop-to-behavior.html">
+
+<dom-module id="tg-drop-to-component-example">
+    <template>
+        <style>
+            .drop-to-rect {
+                width: 100px;
+                height: 50px;
+                background-color: red;
+            }
+        </style>
+        <div class="drop-to-rect layout vertical center-center">
+            <div>[[data.name]]</div>
+            <div>[[data.value]]</div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'tg-drop-to-component-example',
+            
+            behaviors: [Polymer.TgBehaviors.TgDropToBehavior],
+
+            properties: {
+                data: {
+                    type: Object
+                }
+            },
+            
+            ready: function () {
+                this.data = {
+                    name: "drop-to",
+                    value: 10
+                };
+            },
+            
+            canDropTo: function (data) {
+                return true;
+            },
+            
+            dropTo: function (data) {
+                this.data = data;
+            }
+        })
+    </script>
+</dom-module>

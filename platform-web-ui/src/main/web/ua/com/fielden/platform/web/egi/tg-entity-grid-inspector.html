@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-drag-from-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
@@ -260,6 +261,7 @@
                         <!-- Table body -->
                         <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                             <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                                <!--<iron-icon hidden$="[[!_isDragAnchorVisible(egiEntity.selected, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>-->
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                     <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                 </div>
@@ -788,7 +790,7 @@
                 _lastSelectedIndex: Number
             },
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior, Polymer.TgBehaviors.TgDragFromBehavior],
 
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
@@ -1655,6 +1657,12 @@
             _calcFooterRowStyle: function (summaryFixed, summaryIndex) {
                 return summaryFixed ? "visibility:hidden" : "";
             },
+            /**
+             * Calculates the visibility of drag anchor.
+             */
+//            _isDragAnchorVisible: function (isSelected, isOver) {
+//                return isSelected || isOver;
+//            },
             /**
              * Calculates the style for cell that represents rendering hints.
              */

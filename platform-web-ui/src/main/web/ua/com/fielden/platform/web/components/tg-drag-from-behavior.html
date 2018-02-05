@@ -5,30 +5,88 @@
 -->
 <script>
     (function () {
-        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-        Polymer.TgBehaviors.TgTooltipBehavior = {
-            properties: {
+        let elementToDrag = null;
+        let dataToDrag = null;
 
-            },
+        const captureMouseEvents = function (e) {
+            document.addEventListener('mouseup', releaseMouseListener, {
+                capture: true
+            });
+            document.addEventListener('mousemove', docMouseMoveListener, {
+                capture: true
+            });
+            tearDownEvent(e);
+        }
+        
+        const releaseMouseEvent = function (e) {
+            document.removeEventListener('mouseup', releaseMouseListener, {
+                capture: true
+            });
+            document.removeEventListener('mousemove', docMouseMoveListener, {
+                capture: true
+            });
+            tearDownEvent(e);
+        }
+
+        const mouseMoveListener = function (e) {
+            let bottons = e.buttons;
+            if (e.buttons === 1 && !elementToDrag) {
+                let target = e.srcElement || e.target;
+                while (target !== null && !target.hasAttribute("drag-enabled")) {
+                    target = target.parentElement;
+                }
+                if (target !== null) {
+                    elementToDrag = this.getElementToDragFrom(target);
+                    dataToDrag = this.getDataToDragFrom(target);
+                    elementToDrag.style.position = "fixed";
+                    elementToDrag.style.top = e.clientY + 10 + "px";
+                    elementToDrag.style.left = e.clientX + 10 + "px";
+                    document.styleSheets[0].insertRule('* { cursor: move !important; }', 0); // override custom cursors in all application with resizing cursor
+                    Polymer.dom(document.body).appendChild(elementToDrag);
+                    Polymer.dom.flush();
+                    captureMouseEvents(e);
+                }
+            }
+        }
+
+        const docMouseMoveListener = function (e) {
+            tearDownEvent(e);
+            elementToDrag.style.top = e.clientY + 10 + "px";
+            elementToDrag.style.left = e.clientX + 10 + "px";
+            let elementOnMouse = document.elementFromPoint(e.clientX, e.clientY);
+            while (elementOnMouse !== null && typeof elementOnMouse.canDropTo !== 'function' && typeof elementOnMouse.dropTo !== 'function') {
+                elementOnMouse = elementOnMouse.parentElement;
+            }
+            document.styleSheets[0].deleteRule(0);
+            if (elementOnMouse === null || !elementOnMouse.canDropTo(dataToDrag)) {
+                document.styleSheets[0].insertRule('* { cursor: no-drop !important; }', 0); // override custom cursors in all application with resizing cursor
+            } else {
+                document.styleSheets[0].insertRule('* { cursor: copy !important; }', 0); // override custom cursors in all application with resizing cursor
+            }
+        }
+
+        function releaseMouseListener(e) {
+            let elementOnMouse = document.elementFromPoint(e.clientX, e.clientY);
+            while (elementOnMouse !== null && typeof elementOnMouse.canDropTo !== 'function' && typeof elementOnMouse.dropTo !== 'function') {
+                elementOnMouse = elementOnMouse.parentElement;
+            }
+            if (elementOnMouse !== null && elementOnMouse.canDropTo(dataToDrag)) {
+                elementOnMouse.dropTo(dataToDrag);
+            }
+            Polymer.dom(document.body).removeChild(elementToDrag);
+            Polymer.dom.flush();
+            elementToDrag = null;
+            dataToDrag = null;
+            document.styleSheets[0].deleteRule(0);
+            releaseMouseEvent(e);
+        }
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgDragFromBehavior = {
 
             ready: function () {
-                this.addEventListener("tack", this._handleTrackEvent.bind(this));
+                this.addEventListener("mousemove", mouseMoveListener.bind(this));
             },
-
-            _handleTrackEvent: function (event) {
-                switch (event.detail.state) {
-                case 'start':
-                    this._startDragFrom(event);
-                    break;
-                case 'track':
-                    this._drag(event);
-                    break;
-                case 'end':
-                    this._drop(event);
-                    break;
-                }
-                tearDownEvent(event)
-            }
         };
     })();
 </script>
