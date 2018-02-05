@@ -1,5 +1,12 @@
 package ua.com.fielden.platform.attachment;
 
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+
+import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
+import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
+import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
+import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
+import ua.com.fielden.platform.attachment.validators.IsRevNoAlignedWithPrevRevision;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -14,8 +21,11 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Entity representing a file attachment. It has a composite key, consisting of:
@@ -36,12 +46,22 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
  * @author TG Team
  *
  */
-@KeyType(DynamicEntityKey.class)
+@KeyType(value = DynamicEntityKey.class, keyMemberSeparator = " | SHA1: ")
 @DescTitle(value = "Description", desc = "A summary about the attachment, which can be used for search.")
 @DisplayDescription
 @MapEntityTo
 @CompanionObject(IAttachment.class)
 public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
+    public static final String pn_TITLE = "title";
+    public static final String pn_SHA1 = "sha1";
+    public static final String pn_ORIG_FILE_NAME = "origFileName";
+    public static final String pn_REV_NO = "revNo";
+    public static final String pn_PREV_REVISION = "prevRevision";
+    public static final String pn_LAST_REVISION = "lastRevision";
+    
+    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Attachment.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getKey();
 
     @IsProperty
     @MapTo
@@ -54,29 +74,70 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "SHA1", desc = "A unique SHA1-based checksum of the file referenced by this attachment.")
     @CompositeKeyMember(2)
     @Readonly
+    @Final(persistentOnly = false)
     private String sha1;
 
     @IsProperty
     @MapTo
-    @Title(value = "File Name", desc = "The file name of the file, uploading which resulted in creation of this attachment.")
+    @Title(value = "File Name", desc = "The file name of the document, uploading which resulted in creation of this attachment.")
     @Readonly
     @Required
+    @Final(persistentOnly = false)
+    @AfterChange(AssignAttachmentTitle.class)
     private String origFileName;
     
     @IsProperty
     @MapTo
     @Title(value = "Rev#", desc = "Attachment revision number.")
     @Readonly
-    @Final(persistentOnly = false)
     @Required
+    @BeforeChange(@Handler(IsRevNoAlignedWithPrevRevision.class))
     private Integer revNo;
 
     @IsProperty
     @MapTo
-    @Title(value = "Prev. Rev.", desc = "An attachment that represent the previous revision of this attachment. Could be empty.")
+    @Title(value = "Prev. Rev.", desc = "An attachment that represent the previous revision of this document. Empty is there is no previous revision.")
     @Final
-    //@BeforeChange(CheckIfAttachmentCanBePrevRevision.class)
+    @BeforeChange(@Handler(CanBeUsedAsPrevAttachmentRev.class))
+    @AfterChange(UpdateAttachmentRevNo.class)
     private Attachment prevRevision;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Latest Rev.", desc = "An attachment that represents the latest revision of this document. Empty if there is no revision history. References itself is there is revision history.")
+    @Readonly
+    @BeforeChange(@Handler(CanBeUsedAsLastAttachmentRev.class))
+    private Attachment lastRevision;
+
+    /**
+     * A necessary flag to allow modification of the last revision upon revision history rewriting.
+     * The last revision should not be modifiable in any other circumstances.
+     */
+    private boolean allowLastRevisionUpdate = false;
+    
+    public boolean isLastRevisionUpdateAllowed() {
+        return allowLastRevisionUpdate;
+    }
+
+    Attachment beginLastRevisionUpdate() {
+        this.allowLastRevisionUpdate = true;
+        return this;
+    }
+
+    Attachment endLastRevisionUpdate() {
+        this.allowLastRevisionUpdate = false;
+        return this;
+    }
+
+    @Observable
+    public Attachment setLastRevision(final Attachment lastRevision) {
+        this.lastRevision = lastRevision;
+        return this;
+    }
+
+    public Attachment getLastRevision() {
+        return lastRevision;
+    }
 
     @Observable
     public Attachment setPrevRevision(final Attachment prevRevision) {

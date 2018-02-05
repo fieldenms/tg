@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.validation.annotation.Final.ERR_REASSIGNMENT;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -21,7 +22,6 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  *
  */
 public class FinalValidator implements IBeforeChangeEventHandler<Object> {
-    
     private final boolean persistentOnly;
     
     public FinalValidator(final boolean persistentOnly) {
@@ -38,7 +38,7 @@ public class FinalValidator implements IBeforeChangeEventHandler<Object> {
         }
 
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
-        return failure(entity, format("Reassigning a value for property [%s] in entity [%s] is not permitted.", property.getTitle(), entityTitle));
+        return failure(entity, format(ERR_REASSIGNMENT, property.getTitle(), entityTitle));
     }
     
     /**

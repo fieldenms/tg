@@ -6,13 +6,13 @@ import java.util.Properties;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.attachment.AttachmentDao;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
-import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;

@@ -305,8 +305,8 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /** Returns the owning entity instance. */
-    public final AbstractEntity<?> getEntity() {
-        return entity;
+    public final <A extends AbstractEntity<?>> A getEntity() {
+        return (A) entity;
     }
 
     public boolean isCollectional() {
