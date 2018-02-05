@@ -244,14 +244,28 @@
                 // Also, these properties are designed to be bound to children element properties -- it is necessary to//
                 //   populate their default values in ready callback (to have these values populated in children)!     //
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+                
                 /**
                  * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
                  */
                 _centreChanged: {
                     type: Boolean
                 },
-
+                
+                /**
+                 * The next three properties are bound from respective properties from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
+                 * They (and '_centreChanged' property) are needed for correct enabling / disabling of Save / Discard buttons.
+                 */
+                _bindingEntityNotPersistentOrNotPersistedOrModified: {
+                    type: Boolean
+                },
+                _editedPropsExist: {
+                    type: Boolean
+                },
+                _currEntity: {
+                    type: Object
+                },
+                
                 /**
                  * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
                  */
@@ -270,12 +284,12 @@
 
                 _saverDisabled: {
                     type: Boolean,
-                    computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
+                    computed: '_computeSaverDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
                 _discarderDisabled: {
                     type: Boolean,
-                    computed: '_computeDiscarderDisabled(_centreChanged, _actionInProgress)'
+                    computed: '_computeDiscarderDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
                 _runnerDisabled: {
@@ -411,12 +425,12 @@
                 }
             },
 
-            _computeSaverDisabled: function (_centreChanged, _actionInProgress) {
-                return _actionInProgress === true || !this.canSave(_centreChanged);
+            _computeSaverDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+                return _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
-            _computeDiscarderDisabled: function (_centreChanged, _actionInProgress) {
-                return _actionInProgress === true || !this.canDiscard(_centreChanged);
+            _computeDiscarderDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+                return _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
@@ -530,9 +544,6 @@
                 }).bind(self);
 
                 self.save = (function () {
-                    if (!this.canSave(this._centreChanged)) {
-                        throw "Cannot save the not modified centre.";
-                    }
                     console.log("CENTRE SAVE");
 
                     self._actionInProgress = true;
@@ -872,16 +883,25 @@
                 return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
             },
 
-            canSave: function (centreChanged) {
-                return this.canManageCentreConfig(centreChanged);
+            canSave: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                return this.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
-            canDiscard: function (centreChanged) {
-                return this.canManageCentreConfig(centreChanged);
+            canDiscard: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                return this.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
-            canManageCentreConfig: function (centreChanged) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : centreChanged === true;
+            canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                const reflector = this.$.selection_criteria._reflector();
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : 
+                    // (centreChanged === true);
+                    (_editedPropsExist
+                        ? true
+                        : (((reflector.isEntity(_currEntity) && _currEntity.isValid()) || (!reflector.isEntity(_currEntity)))
+                            ? (centreChanged === true)
+                            : _bindingEntityNotPersistentOrNotPersistedOrModified
+                          )
+                    );
             },
 
             /**

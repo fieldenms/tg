@@ -100,13 +100,14 @@
             	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
             	//   alternatively, computing function needs to be specified). 									       //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
-            	/**
-            	 * The current fully-fledged entity, that is used to create '_currBindingEntity' and '_originalBindingEntity'.
-            	 */
+                
+                /**
+                 * The current fully-fledged entity, that is used to create '_currBindingEntity' and '_originalBindingEntity'.
+                 */
   	            _currEntity: {
-  	            	type: Object,
-  	            	value: null
+  	                type: Object,
+  	                value: null,
+  	                notify: true
   	            },
   	            
   	            /**
@@ -166,9 +167,10 @@
                  */
                 _bindingEntityNotPersistentOrNotPersistedOrModified: {
                     type: Boolean,
-                    observer: '_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged'
+                    observer: '_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged',
+                    notify: true
                 },
-
+                
                 /**
                  * '_createModifiedPropertiesHolder' function, that is designated for binding.
                  */
@@ -305,7 +307,8 @@
                  * Returns true in case where there exist some properties which were edited (but not yet committed) by tg-editor-behavior.
                  */
                 _editedPropsExist: {
-                    type: Boolean
+                    type: Boolean,
+                    notify: true
                 },
                 
                 /**
