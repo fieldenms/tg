@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.inject.Inject;
 
@@ -50,7 +51,7 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
         }
 
         // now let's emulate data processing and report progress update if a corresponding subject was provided
-        int prc = -1;
+        final AtomicInteger prc = new AtomicInteger(-1);
         final double total = data.size();
         final Random rnd = new Random();
         for (int index = 0; index < data.size(); index++) {
@@ -66,17 +67,15 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
                 // instead a time based stepping function could have been used
                 final double x = index;
                 final int currPrc = (int) (x / total * 100.0);
-                if (currPrc > prc || currPrc >= 100) {
-                    prc = currPrc;
-                    entity.getEventSourceSubject().get().publish(prc);
+                if (currPrc > prc.get() || currPrc >= 100) {
+                    prc.set(currPrc);
+                    entity.getEventSourceSubject().ifPresent(ess -> ess.publish(prc.get()));
                 }
             }
         }
         
         // make sure we report 100% completion
-        if (entity.getEventSourceSubject().isPresent()) {
-            entity.getEventSourceSubject().get().publish(100);
-        }
+        entity.getEventSourceSubject().ifPresent(ess -> ess.publish(100));
 
         
         return entity.setNoOfProcessedLines(Integer.valueOf(data.size()));
