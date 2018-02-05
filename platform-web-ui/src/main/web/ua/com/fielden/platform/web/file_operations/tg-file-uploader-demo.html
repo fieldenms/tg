@@ -2,27 +2,24 @@
 <html>
 
 <head>
-<meta charset="utf-8">
-<meta name="viewport"
-	content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-<title>FileUpload Test</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+	<title>FileUpload Test</title>
 
-<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-<link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/file_operations/tg-file-upload-paper-button.html">
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<link rel="import" href="/resources/polymer/polymer/polymer.html">
+	<link rel="import" href="/resources/file_operations/tg-file-upload-paper-button.html">
 
 
-<style is="custom-style">
-
-	body {
-		font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
+	<style is="custom-style">
+		body {
+			font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
 			'sans-serif';
-		font-size: 10pt;
-		background: white;
-		-webkit-font-smoothing: antialiased;
-	}
-
-</style>
+			font-size: 10pt;
+			background: white;
+			-webkit-font-smoothing: antialiased;
+		}
+	</style>
 
 </head>
 
@@ -34,20 +31,21 @@
 </body>
 
 <script>
-    var t = document.querySelector('#t');
+	var t = document.querySelector('#t');
 
-    t.addEventListener('dom-change', function() {
-        t.$.fileUploader.processFileUploadedEvent = function() {
-            console.log("file uploaded!");
-        };
+	t.addEventListener('dom-change', function() {
+		t.$.fileUploader.processFileUploadedEvent = function() {
+			console.log("file uploaded!");
+		};
 
-        t.$.fileUploader.processResponse = function(e) {
-            console.log("file processed:", e);
-        }
+		t.$.fileUploader.processResponse = function(e) {
+			console.log("file processed:", e);
+		}
 
-        t.$.fileUploader.processError = function(e) {
-            console.log("file processing resulted in error:", e);
-        }
-    }.bind(t));
+		t.$.fileUploader.processError = function(e) {
+			console.log("file processing resulted in error:", e);
+		}
+	}.bind(t));
 </script>
+
 </html>
