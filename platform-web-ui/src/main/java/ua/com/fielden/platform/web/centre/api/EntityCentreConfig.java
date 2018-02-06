@@ -51,6 +51,7 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
  */
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
+    private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
@@ -141,7 +142,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * autocompleters to be displayed as part of the autocompletion result list.
      */
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
-    
+
     /**
      * A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to <code>.autocompleter(type)</code>.
      */
@@ -224,7 +225,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             if (propName != null && propDef != null) {
                 throw new WebUiBuilderException("Only one of property name or property definition should be provided.");
             }
-            
+
             if (propAction == null) {
                 throw new WebUiBuilderException("Property action suppplier cannot be null.");
             }
@@ -312,6 +313,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////// CONSTRUCTOR /////////////
     ///////////////////////////////////
     public EntityCentreConfig(
+            final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
@@ -374,6 +376,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
+        this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
@@ -528,7 +531,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         final List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
         return props != null ? props : new ArrayList<>();
     }
-    
+
     public Optional<Class<? extends AbstractEntity<?>>> getProvidedTypeForAutocompletedSelectionCriterion(final String critName) {
         return Optional.ofNullable(providedTypesForAutocompletedSelectionCriteria.get(StringUtils.isEmpty(critName) ? "this" : critName));
     }
@@ -770,6 +773,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldHideCheckboxes() {
         return hideCheckboxes;
+    }
+
+    public boolean isDraggable() {
+        return draggable;
     }
 
     public IToolbarConfig getToolbarConfig() {

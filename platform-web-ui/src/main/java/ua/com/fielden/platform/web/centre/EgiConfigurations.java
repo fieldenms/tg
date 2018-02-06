@@ -8,6 +8,7 @@ package ua.com.fielden.platform.web.centre;
  */
 public enum EgiConfigurations {
 
+    DRAGGABLE("can-drag-from"),
     TOOLBAR_VISIBLE("toolbar-visible"),
     CHECKBOX_VISIBLE("checkbox-visible"),
     CHECKBOX_FIXED("checkboxes-fixed"),

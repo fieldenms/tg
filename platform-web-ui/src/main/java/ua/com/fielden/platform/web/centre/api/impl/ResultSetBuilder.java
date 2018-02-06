@@ -35,6 +35,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScrol
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
@@ -421,7 +422,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> notScrollable() {
+    public IResultSetBuilder2aDraggable<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -444,7 +445,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
         return this;
     }
@@ -452,6 +453,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
         this.builder.toolbarConfig = toolbar;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> draggable() {
+        builder.draggable = true;
         return this;
     }
 }

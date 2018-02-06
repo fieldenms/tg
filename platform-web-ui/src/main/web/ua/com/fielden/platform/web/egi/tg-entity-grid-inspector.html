@@ -10,6 +10,7 @@
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
+<link rel="import" href="/resources/images/tg-icons.html">
 
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
@@ -261,7 +262,7 @@
                         <!-- Table body -->
                         <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                             <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                <!--<iron-icon hidden$="[[!_isDragAnchorVisible(egiEntity.selected, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>-->
+                                <iron-icon hidden$="[[!canDragFrom]]" style="[[_calcDargAnchorStyle(egiEntity.selected, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                     <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                 </div>
@@ -703,11 +704,16 @@
                     type: Number,
                     value: 0
                 },
-
+                
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
                     value: true
+                },
+                
+                canDragFrom: {
+                    type: Boolean,
+                    value: false
                 },
 
                 //Controls visiblity of checkboxes at the beginnig of the header and each data row.
@@ -1660,9 +1666,9 @@
             /**
              * Calculates the visibility of drag anchor.
              */
-//            _isDragAnchorVisible: function (isSelected, isOver) {
-//                return isSelected || isOver;
-//            },
+            _calcDargAnchorStyle (isSelected, isOver) {
+                return (isSelected || isOver) ? "" : "visibility:hidden";
+            },
             /**
              * Calculates the style for cell that represents rendering hints.
              */
