@@ -36,7 +36,7 @@
 					type: Function
 				},
 
-				fpErrorHanlder: {
+				fpErrorHandler: {
 					type: Function
 				},
 
@@ -250,8 +250,8 @@
 						// if the status is not success then need to call error handler
 						// otherwise, call response handler
 						if (e.currentTarget.status && e.currentTarget.status != 200) {
-						    if (this.fpErrorHanlder) {
-						        this.fpErrorHanlder(e);
+						    if (this.fpErrorHandler) {
+						        this.fpErrorHandler(e);
 						    }
 						} else if (this.fpResponseHandler) {
 							this.fpResponseHandler(e);
@@ -281,8 +281,8 @@
 					xhr.onerror = function(e) {
 						this.closeEventSource();
 
-						if (this.fpErrorHanlder) {
-							this.fpErrorHanlder(e);
+						if (this.fpErrorHandler) {
+							this.fpErrorHandler(e);
 						}
 
 						this._cleanup();

@@ -9,9 +9,9 @@ import ua.com.fielden.platform.web.sse.AbstractEventSource;
  * @author TG Team
  *
  */
-public class ProcessingProgressEventSrouce extends AbstractEventSource<Integer, ProcessingProgressSubject> {
+public class ProcessingProgressEventSource extends AbstractEventSource<Integer, ProcessingProgressSubject> {
 
-    public ProcessingProgressEventSrouce(final ProcessingProgressSubject observableKind) {
+    public ProcessingProgressEventSource(final ProcessingProgressSubject observableKind) {
         super(observableKind);
     }
 

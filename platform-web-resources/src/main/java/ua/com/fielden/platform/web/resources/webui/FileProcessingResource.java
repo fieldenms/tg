@@ -23,7 +23,7 @@ import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSrouce;
+import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 
 /**
@@ -110,7 +110,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSrouce(subject));
+        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject));
         final String baseUri = getRequest().getResourceRef().getPath(true);
         router.attach(baseUri + "/" + jobUid, eventSource);
         
