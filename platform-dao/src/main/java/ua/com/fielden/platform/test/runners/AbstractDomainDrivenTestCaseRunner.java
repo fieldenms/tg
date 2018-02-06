@@ -19,7 +19,6 @@ import org.junit.runners.model.Statement;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -33,7 +32,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    protected final Logger logger = Logger.getLogger(getClass());
+    public final Logger logger = Logger.getLogger(getClass());
     
     // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
     private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
@@ -49,7 +48,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     /**
      * The name of the database to be used for testing.
      */
-    protected final String databaseUri;
+    public final String databaseUri;
     
     private final DbCreator dbCreator;
     private static ICompanionObjectFinder coFinder;
@@ -135,7 +134,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
     }
 
-    public AbstractDomainDrivenTestCaseRunner saveDdlScript() {
+    private AbstractDomainDrivenTestCaseRunner saveDdlScript() {
         logger.info(format("Saving [%s] DDL scripts to [%s].", ddlScript.size(), ddlScriptFileName));
         DbCreator.saveScriptToFile(ddlScript, ddlScriptFileName);
         return this;
