@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXE
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAGGABLE;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAG_ANCHOR_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
@@ -131,6 +132,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String EGI_SHORTCUTS = "@customShortcuts";
     private final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
     private final String EGI_DRAGGABLE = "@canDragFrom";
+    private final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
     private final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
     private final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
     private final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
@@ -982,6 +984,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).
                 replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).
                 replace(EGI_CHECKBOX_VISIBILITY, CHECKBOX_VISIBLE.eval(!dslDefaultConfig.shouldHideCheckboxes())).
+                replace(EGI_DRAG_ANCHOR_FIXED, DRAG_ANCHOR_FIXED.eval(dslDefaultConfig.getScrollConfig().isDragAnchorFixed())).
                 replace(EGI_CHECKBOX_FIXED, CHECKBOX_FIXED.eval(dslDefaultConfig.getScrollConfig().isCheckboxesFixed())).
                 replace(EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED, CHECKBOX_WITH_PRIMARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed())).
                 replace(EGI_NUM_OF_FIXED_COLUMNS, Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).

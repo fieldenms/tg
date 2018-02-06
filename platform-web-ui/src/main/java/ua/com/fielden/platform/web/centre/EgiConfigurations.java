@@ -11,6 +11,7 @@ public enum EgiConfigurations {
     DRAGGABLE("can-drag-from"),
     TOOLBAR_VISIBLE("toolbar-visible"),
     CHECKBOX_VISIBLE("checkbox-visible"),
+    DRAG_ANCHOR_FIXED("drag-anchor-fixed"),
     CHECKBOX_FIXED("checkboxes-fixed"),
     CHECKBOX_WITH_PRIMARY_ACTION_FIXED("checkboxes-with-primary-actions-fixed"),
     SECONDARY_ACTION_FIXED("secondary-actions-fixed"),
