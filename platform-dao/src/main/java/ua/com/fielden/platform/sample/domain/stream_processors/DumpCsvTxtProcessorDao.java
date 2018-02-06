@@ -62,16 +62,16 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
             } catch (InterruptedException e) {
             }
             
-            if (entity.getEventSourceSubject().isPresent()) {
+            final double x = index;
+            entity.getEventSourceSubject().ifPresent(ess -> {
                 // in practice there is no need to report every percent completed
                 // instead a time based stepping function could have been used
-                final double x = index;
                 final int currPrc = (int) (x / total * 100.0);
                 if (currPrc > prc.get() || currPrc >= 100) {
                     prc.set(currPrc);
-                    entity.getEventSourceSubject().ifPresent(ess -> ess.publish(prc.get()));
+                    ess.publish(prc.get());
                 }
-            }
+            });
         }
         
         // make sure we report 100% completion
