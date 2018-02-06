@@ -38,6 +38,8 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
             throw failure("Input stream was not provided.");
         }
         
+        System.out.println("ORIGINAL FILE NAME: " + entity.getOrigFileName());
+        
         // lets read the data from file line by line
         final BufferedReader br = new BufferedReader(new InputStreamReader(entity.getInputStream()));
         final List<String> data = new ArrayList<>();
