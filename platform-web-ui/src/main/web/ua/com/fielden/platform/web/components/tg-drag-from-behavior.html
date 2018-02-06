@@ -41,7 +41,7 @@
                     elementToDrag.style.position = "fixed";
                     elementToDrag.style.top = e.clientY + 10 + "px";
                     elementToDrag.style.left = e.clientX + 10 + "px";
-                    document.styleSheets[0].insertRule('* { cursor: move !important; }', 0); // override custom cursors in all application with resizing cursor
+                    //document.styleSheets[0].insertRule('* { cursor: move !important; }', 0); // override custom cursors in all application with resizing cursor
                     Polymer.dom(document.body).appendChild(elementToDrag);
                     Polymer.dom.flush();
                     captureMouseEvents(e);
@@ -53,20 +53,20 @@
             tearDownEvent(e);
             elementToDrag.style.top = e.clientY + 10 + "px";
             elementToDrag.style.left = e.clientX + 10 + "px";
-            let elementOnMouse = document.elementFromPoint(e.clientX, e.clientY);
+            let elementOnMouse = e.srcElement || e.target;
             while (elementOnMouse !== null && typeof elementOnMouse.canDropTo !== 'function' && typeof elementOnMouse.dropTo !== 'function') {
                 elementOnMouse = elementOnMouse.parentElement;
             }
-            document.styleSheets[0].deleteRule(0);
+            //document.styleSheets[0].deleteRule(0);
             if (elementOnMouse === null || !elementOnMouse.canDropTo(dataToDrag)) {
-                document.styleSheets[0].insertRule('* { cursor: no-drop !important; }', 0); // override custom cursors in all application with resizing cursor
+                //document.styleSheets[0].insertRule('* { cursor: no-drop !important; }', 0); // override custom cursors in all application with resizing cursor
             } else {
-                document.styleSheets[0].insertRule('* { cursor: copy !important; }', 0); // override custom cursors in all application with resizing cursor
+                //document.styleSheets[0].insertRule('* { cursor: copy !important; }', 0); // override custom cursors in all application with resizing cursor
             }
         }
 
         function releaseMouseListener(e) {
-            let elementOnMouse = document.elementFromPoint(e.clientX, e.clientY);
+            let elementOnMouse =  e.srcElement || e.target;
             while (elementOnMouse !== null && typeof elementOnMouse.canDropTo !== 'function' && typeof elementOnMouse.dropTo !== 'function') {
                 elementOnMouse = elementOnMouse.parentElement;
             }
@@ -77,7 +77,7 @@
             Polymer.dom.flush();
             elementToDrag = null;
             dataToDrag = null;
-            document.styleSheets[0].deleteRule(0);
+            //document.styleSheets[0].deleteRule(0);
             releaseMouseEvent(e);
         }
 

@@ -282,7 +282,7 @@
                         <!-- Table body -->
                         <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                             <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                <iron-icon class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                <iron-icon drag-enabled class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
                                 <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                     <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                 </div>
@@ -379,7 +379,7 @@
                                 <!--body-->
                                 <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                     <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                        <iron-icon class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                        <iron-icon drag-enabled class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
                                         <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                             <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                         </div>
@@ -963,6 +963,21 @@
                         }]
                     });
                 }
+            },
+            
+            getElementToDragFrom: function (target) {
+                const elem = document.createElement('div');
+                const entities = this.getSelectedEntities();
+                elem.innerHTML = entities.map(entity => this._getValueFromEntity(entity, "key")).join(", ");
+                elem.style["white-space"] = "nowrap";
+                elem.style["overflow"] = "hidden";
+                elem.style["text-overflow"] = "ellipsis";
+                elem.style["width"] = "300px"
+                return elem;
+            },
+            
+            getDataToDragFrom: function (target) {
+                return this.getSelectedEntities();
             },
 
             _getKeyEventTarget: function () {
