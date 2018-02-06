@@ -69,11 +69,11 @@
             },
             
             _registerEventSourceHandlers: function () {
-                var self = this;
+                const self = this;
                 console.log("Registering EventSrouce handlers for URI ", self.uri);
                 
                 self._source = new EventSource(self.uri);
-                var source = self._source;
+                const source = self._source;
                 
                 source.addEventListener('message', function (e) {
                     self.dataHandler(e.data);
@@ -101,7 +101,7 @@
 
                     // invoke error handler if provided
                     if (self.errorHandler) {
-                        self.errorHandler();
+                        self.errorHandler(e);
                     }
                     
                 }, false);
