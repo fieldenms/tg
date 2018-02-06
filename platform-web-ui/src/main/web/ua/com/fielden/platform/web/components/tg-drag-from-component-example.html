@@ -11,7 +11,7 @@
                 background-color: blue;
             }
         </style>
-        <div class="drag-from-rect" drag-enabled></div>
+        <div class="drag-from-rect" draggable="true"></div>
     </template>
     <script>
         Polymer({
@@ -31,7 +31,7 @@
                 return elem;
             },
             
-            getDataToDragFrom: function (target) {
+            getDataToDragFrom: function () {
                 return {
                     name: "drag-from",
                     value: 12

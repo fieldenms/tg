@@ -6,13 +6,19 @@
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgDropToBehavior = {
-            
-            canDropTo: function (data) {
+
+            canDropType: function (types, type) {
+                for (var i = 0; i < types.length; ++i) {
+                    if (types[i] === type) return true;
+                }
                 return false;
             },
-            
-            dropTo: function (data) {
-            }
+
+            canDropTo: function (e) {
+                return false;
+            },
+
+            dropTo: function (e) {}
         };
     })();
 </script>
