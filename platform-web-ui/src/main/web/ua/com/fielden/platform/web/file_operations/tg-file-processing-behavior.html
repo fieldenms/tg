@@ -19,7 +19,7 @@
 					type: String,
 				},
 
-				/* The limit of data to be uploaded for processing in Kibibytes. Counts all files in case of multiple selected. */
+				/* The limit of data to be uploaded for processing in Kibibytes. */
 				uploadSizeLimitKb: {
 					type: Number,
 					value: 20480 // 20 Mebibyte
@@ -30,19 +30,6 @@
 					type: String,
 					value: '*/*',
 					observer: '_mimeTypesAcceptedChanged'
-				},
-
-				/* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing.
-				 *
-				 * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
-				 *      At some stage later there should be a support for uploading multiple files if the need arises.
-				 *      There is a need to use FormData for uploading multiple files.
-				 *      This also means that a corresponding web resource should handle FormData as the request's envelope.
-				 */
-				multi: {
-					type: Boolean,
-					value: false,
-					observer: '_multiChanged'
 				},
 
 				fpResponseHandler: {
@@ -148,15 +135,6 @@
 
 			},
 
-			_multiChanged: function(newValue, oldValue) {
-				if (newValue === true) {
-					// set empty value as the atribute is valueless
-					this._uploadInput.setAttribute('multiple', '');
-				} else {
-					this._uploadInput.removeAttribute('multiple');
-				}
-			},
-
 			_mimeTypesAcceptedChanged: function(newValue, oldValue) {
 				this._uploadInput.setAttribute('accept', newValue);
 			},
@@ -183,12 +161,21 @@
 			},
 
 			_handleFiles: function(oFiles) {
+			    if (this._fpInProgress === true) {
+			        throw new Error('File uploading is in progress...');
+			    }
+			    
+			    const nFiles = oFiles.length;
+			    if (nFiles !== 1) {
+					this._cleanup();
+					throw new Error('File list contains ' + nFiles + ' files. Exactly one file is expected for upload.');
+			    }
+			    
 				this._fpInProgress = true;
 
 				var fileNames = "";
 				var mimeTypes = "";
 				var nBytes = 0;
-				var nFiles = oFiles.length;
 				for (var nFileId = 0; nFileId < nFiles; nFileId++) {
 					var moreToCome = nFileId < nFiles - 1;
 					var file = oFiles[nFileId];
