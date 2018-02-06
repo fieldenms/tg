@@ -173,7 +173,7 @@
 			    
 				this._fpInProgress = true;
 
-				var fileNames = "";
+				let fileNames = "";
 				var mimeTypes = "";
 				var nBytes = 0;
 				for (var nFileId = 0; nFileId < nFiles; nFileId++) {
@@ -238,6 +238,8 @@
 					// which is provided to the server as a header value
 					var jobUid = this.generateUUID();
 					xhr.setRequestHeader('jobUid', jobUid);
+					// and also let's provide the original file name
+					xhr.setRequestHeader('origFileName', fileNames);
 
 					// let's add onload handler to return the element to its original look
 					// and to invoke an external response handler if provided

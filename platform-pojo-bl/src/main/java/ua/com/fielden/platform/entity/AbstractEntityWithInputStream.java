@@ -19,14 +19,24 @@ import ua.com.fielden.platform.rx.AbstractSubjectKind;
 public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> extends AbstractEntity<K> {
 
     private InputStream inputStream;
+    private String origFileName;
     
     private Optional<AbstractSubjectKind<Integer>> eventSourceSubject = Optional.empty();
 
-    public AbstractEntityWithInputStream<K> setInputStream(InputStream is) {
-        this.inputStream = is;
+    public AbstractEntityWithInputStream<K> setOrigFileName(final String origFileName) {
+        this.origFileName = origFileName;
         return this;
     }
 
+    public String getOrigFileName() {
+        return origFileName;
+    }
+    
+    public AbstractEntityWithInputStream<K> setInputStream(final InputStream is) {
+        this.inputStream = is;
+        return this;
+    }
+    
     public InputStream getInputStream() {
         return inputStream;
     }
@@ -35,8 +45,9 @@ public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> ext
         return eventSourceSubject;
     }
 
-    public void setEventSourceSubject(final AbstractSubjectKind<Integer> eventSourceSubject) {
+    public AbstractEntityWithInputStream<K> setEventSourceSubject(final AbstractSubjectKind<Integer> eventSourceSubject) {
         this.eventSourceSubject = Optional.of(eventSourceSubject);
+        return this;
     }
     
 }

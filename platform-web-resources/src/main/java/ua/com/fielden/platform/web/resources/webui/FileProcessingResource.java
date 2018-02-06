@@ -44,6 +44,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final Set<MediaType> types;
     private final Router router;
     private final String jobUid;
+    private final String origFileName;
 
     public FileProcessingResource(
             final Router router, 
@@ -70,6 +71,10 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             throw new IllegalArgumentException("jobUid is required");
         }
         
+        this.origFileName = request.getHeaders().getFirstValue("origFileName");
+        if (StringUtils.isEmpty(origFileName)) {
+            throw new IllegalArgumentException("origFileName is required");
+        }
     }
 
     /**
@@ -116,6 +121,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         
         try {
             final T entity = entityCreator.apply(factory);
+            entity.setOrigFileName(origFileName);
             entity.setInputStream(stream);
             entity.setEventSourceSubject(subject);
 
