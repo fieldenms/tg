@@ -189,6 +189,17 @@
             --iron-icon-width: 1.5rem;
             --iron-icon-height: 1.5rem;
         }
+        .drag-anchor:hover {
+            cursor: move;/* fallback if grab cursor is unsupported */
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+        }
+        .drag-anchor:active {
+            cursor: grabbing;
+            cursor: -moz-grabbing;
+            cursor: -webkit-grabbing;
+        }
         .dummy-drag-box {
             width: 1.5rem;
             height: 1.5rem;
@@ -271,7 +282,7 @@
                         <!-- Table body -->
                         <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                             <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                <iron-icon class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.selected, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                <iron-icon class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
                                 <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                     <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                 </div>
@@ -368,7 +379,7 @@
                                 <!--body-->
                                 <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                     <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                        <iron-icon class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.selected, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                        <iron-icon class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
                                         <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                             <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                         </div>
@@ -721,7 +732,7 @@
                     type: Number,
                     value: 0
                 },
-                
+
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
@@ -931,7 +942,7 @@
                     this.notifyPath(path, entity.get(propPath));
                 }
             },
-            
+
             setRenderingHints: function (entity, property, renderingHints) {
                 const entityIndex = _findEntity(entity, this.entities);
                 if (entityIndex >= 0) {
@@ -1203,7 +1214,7 @@
                 this._scrollTop = this.$.scrollContainer.scrollTop;
                 this._updateShadows();
             },
-            
+
             _isAnchorFixed: function (dargAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
                 return dargAnchorFixed || this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
             },
@@ -1215,7 +1226,7 @@
             _isCheckboxesFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
                 return checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0);
             },
-            
+
             _isDragAnchorNotFixedAndVisble: function (canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
                 return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
             },
@@ -1271,7 +1282,7 @@
             _isTopLeftPanelVisible: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed) {
                 return this._isLeftLockPanelVisble(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && headerFixed;
             },
-            
+
             _isCheckboxesVisibleAndFixed: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
                 return checkboxVisible && this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
             },
@@ -1310,13 +1321,13 @@
                     const actionDescPart = this.getActionTooltip(entity, column, action);
                     tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
                     tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
-                    return  tooltip;
+                    return tooltip;
                 } catch (e) {
                     return '';
                 }
             },
-            
-            getValueTooltip: function(entity, column) {
+
+            getValueTooltip: function (entity, column) {
                 const validationResult = entity.prop(column.property).validationResult();
                 if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
                     return validationResult.message && ("<b>" + validationResult.message + "</b>");
@@ -1331,21 +1342,21 @@
                 }
                 return "";
             },
-            
+
             getDescTooltip: function (entity, column) {
                 if (column.columnDesc) {
                     return column.columnDesc;
                 }
                 return "";
             },
-            
+
             getActionTooltip: function (entity, column, action) {
                 if (action && (action.shortDesc || action.longDesc)) {
                     return this._generateActionTooltip(action);
                 }
                 return "";
             },
-            
+
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
@@ -1455,7 +1466,7 @@
                 self.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
             },
-            
+
             _renderingHintsChanged: function (newValue, oldValue) {
                 if (this.egiModel) {
                     this.egiModel.forEach((egiEntity, index) => {
@@ -1472,7 +1483,7 @@
                     removeColumn(col, this.allColumns);
                     columnsChanged = removeColumn(col, columnsCopy);
                 });
-                
+
                 addedColumns.forEach(col => {
                     const index = this.allColumns.findIndex(column => column.property === col.property);
                     if (index < 0) {
@@ -1696,13 +1707,13 @@
              * Calculates style for the visibility of drag anchor.
              */
             _calcDragAnchorStyle: function (canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, isSelected, isOver) {
-                return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && (isSelected || isOver) ? "" : "visibility:hidden";
+                return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && isOver ? "" : "visibility:hidden";
             },
-                
-            _calcFixedDragAnchorStyle: function (canDragFrom, isSelected, isOver) {
-                return canDragFrom && (isSelected || isOver) ? "" : "visibility:hidden";
+
+            _calcFixedDragAnchorStyle: function (canDragFrom, isOver) {
+                return canDragFrom && isOver ? "" : "visibility:hidden";
             },
-                
+
             _calcSelectCheckBoxStyle: function (canDragFrom) {
                 return "width:18px; padding-left:" + (canDragFrom ? "0;" : "0.6rem;");
             },
@@ -1807,9 +1818,9 @@
             },
 
             _calculateCheckboxWidth: function (canDragFrom, checkboxVisible, fixed) {
-                return (checkboxVisible && fixed) ? "18px + " + (canDragFrom ? "0.6": "1.2") + "rem": "0px";
+                return (checkboxVisible && fixed) ? "18px + " + (canDragFrom ? "0.6" : "1.2") + "rem" : "0px";
             },
-            
+
             _calculateDragAnchorWidth: function (canDragFrom, fixed) {
                 return (fixed && canDragFrom) ? "1.5rem" : "0px";
             },
