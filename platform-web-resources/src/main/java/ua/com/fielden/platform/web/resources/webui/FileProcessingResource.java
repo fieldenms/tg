@@ -81,7 +81,6 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      * Receives a file from a client.
      *
      * @throws IOException
-     * 
      */
     @Put
     public Representation receiveFile(final Representation entity) throws IOException {
@@ -89,7 +88,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         if (entity == null) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             return restUtil.errorJSONRepresentation("There is nothing to process");
-        } else if (!types.contains(entity.getMediaType())) {
+        } else if (!isMediaTypeSupported(entity.getMediaType())) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             return restUtil.errorJSONRepresentation("Unexpected media type.");
         } else if (entity.getSize() == -1) {
@@ -104,6 +103,11 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         }
 
         return response;
+    }
+
+    private boolean isMediaTypeSupported(MediaType mediaType) {
+        // simply checking types.contains(mediaType) may not be sufficient as there could be something like IMAGE/*
+        return types.contains(mediaType);
     }
 
     /**
