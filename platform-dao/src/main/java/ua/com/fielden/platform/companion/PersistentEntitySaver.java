@@ -33,6 +33,7 @@ import org.hibernate.Session;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
@@ -423,7 +424,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         
         final Integer count = kount.apply(createQueryByKey(entityType, keyType, isFilterable.get(), entity.getKey()));
         if (count > 0) {
-            throw new EntityCompanionException(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
+            throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 
         // process transactional assignments
