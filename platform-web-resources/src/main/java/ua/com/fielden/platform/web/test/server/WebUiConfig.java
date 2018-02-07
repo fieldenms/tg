@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -1420,6 +1422,61 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
                 /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
+                //////////////////////////////////////////CRIT-ONLY SINGLE PROPERTIES (SELECTION CRITERIA VALIDATION / DEFINING #979) //////////////////////////////////////////
+                .also().addCrit("cosStaticallyRequired")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosStaticallyReadonly")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosEmptyValueProhibited")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                .also().addCrit("cosConcreteValueProhibited")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                .also().addCrit("cosStaticallyRequiredWithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                .also().addCrit("cosStaticallyReadonlyWithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                .also().addCrit("cosWithValidator")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithDependency")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithWarner")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosStaticallyRequiredWithNonEmptyDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                
+                .also().addCrit("cosWithACE1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE1Child1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE1Child2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE1WithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                .also().addCrit("cosWithACE1WithDefaultValueChild1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE1WithDefaultValueChild2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    
+                .also().addCrit("cosWithACE2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE2Child1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE2Child2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE2WithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                .also().addCrit("cosWithACE2WithDefaultValueChild1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .also().addCrit("cosWithACE2WithDefaultValueChild2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                
                 .setLayoutFor(Device.DESKTOP, Optional.empty(),
                         //                        ("[['center-justified', 'start', mrLast]]")
                         ("[['center-justified', 'start', mr, mr, mrLast]," +
@@ -1427,11 +1484,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]" +
+                                "]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
@@ -1443,6 +1515,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .setLayoutFor(Device.MOBILE, Optional.empty(),
                         ("[['center-justified', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
@@ -1715,7 +1809,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
         return scl.build();
     }
-
+    
+    private static class CosCritAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>, TgPersistentEntityWithProperties> {
+        private final ITgPersistentEntityWithProperties co;
+        
+        @Inject
+        public CosCritAssigner(final ITgPersistentEntityWithProperties co) {
+            this.co = co;
+        }
+        
+        @Override
+        public Optional<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>> getValue(final CentreContext<TgPersistentEntityWithProperties, ?> entity, final String name) {
+            if ("cosEmptyValueProhibited".equals(name) || "cosStaticallyRequiredWithDefaultValue".equals(name)) {
+                return empty();
+            } else if ("cosConcreteValueProhibited".equals(name) || "cosStaticallyReadonlyWithDefaultValue".equals(name) || "cosStaticallyRequiredWithNonEmptyDefaultValue".equals(name) || "cosWithACE1WithDefaultValue".equals(name)) {
+                return of(single().entity(TgPersistentEntityWithProperties.class).setValue(co.findByKey("KEY8")).value());
+            } else if ("cosWithACE2WithDefaultValue".equals(name)) {
+                return of(single().entity(TgPersistentEntityWithProperties.class).setValue(co.findByKey("KEY7")).value());
+            }
+            return empty();
+        }
+    }
+    
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(miType, name, entityCentreConfig, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.

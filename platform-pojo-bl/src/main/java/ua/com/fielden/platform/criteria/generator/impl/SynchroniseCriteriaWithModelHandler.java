@@ -79,17 +79,17 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         final Object currValue = isSecond    ? criteriaTick.getValue2(entityType, propName)
                                              : criteriaTick.getValue(entityType, propName);
         if (!equalsEx(currValue, newValue)) {
-            LOGGER.error(format("\t\t\t\tpropName = [%s] current -> new = [%s] -> [%s]...", propName, currValue, newValue));
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...", propName, currValue, newValue));
         } else {
-            LOGGER.error(format("\t\t\t\tpropName = [%s] current value unchanged [%s]...", propName, currValue));
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
         }
         final IAddToCriteriaTickManager v = equalsEx(currValue, newValue) ? criteriaTick : 
                isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
                                              : criteriaTick.setValue(entityType, propName, newValue);
         if (!equalsEx(currValue, newValue)) {
-            LOGGER.error(format("\t\t\t\tpropName = [%s] current -> new = [%s] -> [%s]...done", propName, currValue, newValue));
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...done", propName, currValue, newValue));
         } else {
-            LOGGER.error(format("\t\t\t\tpropName = [%s] current value unchanged [%s]...done", propName, currValue));
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...done", propName, currValue));
         }
         return v;
     }
@@ -112,14 +112,29 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             
             // the order of meta-info application is synced with EntityJsonDeserialiser; all properties are copied excluding prevValue, valueChangeCount and visible -- it is believed that these props are not relevant for critOnlySinglePrototype lifecycle 
             final Result firstFailure = metaProp.getFirstFailure();
-            criteriaMetaProp.setDomainValidationResult(firstFailure == null ? metaProp.getFirstWarning() : firstFailure); // TODO do we need to clear required validation result?
+            // TODO do we need to clear required validation result?
+            // TODO following logic is needed for 'clearing requiredness errors during validation' -- need to clarify whether such logic should be implemented
+            // TODO criteriaMetaProp.setRequiredValidationResult(successful(criteriaEntity));
+            criteriaMetaProp.setDomainValidationResult(firstFailure == null ? metaProp.getFirstWarning() : firstFailure);
             criteriaMetaProp.setOriginalValue(metaProp.getOriginalValue());
             criteriaMetaProp.setLastInvalidValue(metaProp.getLastInvalidValue());
             criteriaMetaProp.setAssigned(metaProp.isAssigned());
             criteriaMetaProp.setEditable(metaProp.isEditable());
             criteriaMetaProp.setRequired(metaProp.isRequired());
-            criteriaMetaProp.setValue(metaProp.getValue());
-            updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, getCriteriaProperty(criteriaType, criteriaPropName), metaProp.getValue(), criteriaType, criteriaPropName);
+            if (firstFailure != null) {
+                // In case where property is invalid there is a pair of values: valid and attempted.
+                // Valid value usually represents the value, that was previously set.
+                // In some cases valid and attempted values could even be the same: this occurs in case of valid->invalid @dependent property revalidation.
+                // In both cases valid value will be different from 'null' value that appears in critOnlySinglePrototype entity during its creation (values in property definitions must be NOT set).
+                // This will confuse conflict resolution mechanism.
+                // We need to sync the value with initial values in critOnlySinglePrototype.
+                criteriaMetaProp.setValue(null);
+            } else {
+                criteriaMetaProp.setValue(metaProp.getValue());
+            }
+            // It is very important to copy 'lastAttemptedValue' into centre manager, not just 'metaProp.getValue()'.
+            // This is needed to correctly assign initial values (and perform their validation) in the next round of criteriaEntity creation (this includes, for example, next selection criteria validation round-trip).
+            updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, getCriteriaProperty(criteriaType, criteriaPropName), metaProp.getLastAttemptedValue(), criteriaType, criteriaPropName);
         });
         // turn on all validations / definers again
         criteriaEntity.endInitialising();

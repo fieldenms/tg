@@ -46,6 +46,10 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
+        // need to make crit-only required props non-required before actual saving; these properties are not relevant to persistent nature of TgPersistentEntityWithProperties
+        entity.getProperty("cosStaticallyRequired").setRequired(false);
+        entity.getProperty("cosStaticallyRequiredWithDefaultValue").setRequired(false);
+        entity.getProperty("cosStaticallyRequiredWithNonEmptyDefaultValue").setRequired(false);
         if (!entity.isPersisted()) {
             final Date dateValue = entity.getDateProp();
             if (dateValue != null && new DateTime(2003, 2, 1, 6, 20).equals(new DateTime(dateValue))) {

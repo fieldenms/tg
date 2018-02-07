@@ -38,7 +38,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CritOnlyAnnotation;
@@ -48,7 +47,6 @@ import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.RequiredAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -197,7 +195,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final boolean isEntityItself = "".equals(propertyName);
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-        final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
         boolean hasEntityExists = false;
         try {
             final Method setter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
@@ -214,9 +211,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
             annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
         }
-        if (isSingle && isRequired) {
-            annotations.add(new RequiredAnnotation().newInstance());
-        }
         if (isEntity && isSingle && finalHasEntityExists) {
             annotations.add(new BeforeChangeAnnotation(
                     new Handler[] {
@@ -228,7 +222,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-
+        
+//        TODO this logic is needed for 'clearing requiredness errors during validation' -- need to clarify whether such logic should be implemented
+//        if (critOnlyAnnotation != null) {
+//            // generate CritOnly annotation exactly like in original property, from which this single criterion has been generated; this will facilitate crit-only requiredness errors clearing (EntityResourceUtils.disregardCritOnlyRequiredProperties)
+//            annotations.add(new CritOnlyAnnotation(critOnlyAnnotation.value(), critOnlyAnnotation.scale(), critOnlyAnnotation.precision()).newInstance());
+//        }
         final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
         if (newCritOnly.isPresent()) {
             annotations.add(newCritOnly.get().newInstance());
@@ -305,7 +304,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final Field field = fieldAndVal._1;
             try {
                 logger.error(format("\t!!synchroniseWithModel prop [%s] setting...", field.getName()));
-                entity.set(field.getName(), fieldAndVal._2);
+                // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
+                entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
             } catch (final Exception ex) {
                 logger.error(format("\t!!Could not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             }

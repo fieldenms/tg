@@ -146,12 +146,12 @@ public class EntityResourceUtils {
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-                    // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity, "tgPersistentEntityWithProperties_cosWithValidator", "tgPersistentEntityWithProperties_cosWithDependency" /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
                     validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-                    // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity, "tgPersistentEntityWithProperties_cosWithValidator", "tgPersistentEntityWithProperties_cosWithDependency" /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
                 }
             }
         }
@@ -164,7 +164,7 @@ public class EntityResourceUtils {
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
                 applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity, "tgPersistentEntityWithProperties_cosWithValidator", "tgPersistentEntityWithProperties_cosWithDependency" /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             } else { // this is unmodified property
                 // IMPORTANT:
                 // Unlike to the case of untouched properties, all touched properties should be applied,
@@ -172,7 +172,7 @@ public class EntityResourceUtils {
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndOrigVal, entity, "tgPersistentEntityWithProperties_cosWithValidator", "tgPersistentEntityWithProperties_cosWithDependency" /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -402,6 +402,32 @@ public class EntityResourceUtils {
         return entity;
     }
 
+//    TODO this logic is needed for 'clearing requiredness errors during validation' -- need to clarify whether such logic should be implemented
+//    /**
+//     * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types and on selection criteria (save / run will trigger requiredness later).
+//     *
+//     * @param entity
+//     */
+//    private static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
+//        logger.error("disregardCritOnlyRequiredProperties for entity " + entity);
+//        final Class<?> managedType = entity.getType();
+//        entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
+//            final String prop = mp.getName();
+//            logger.error("disregardCritOnlyRequiredProperties for prop 1 " + prop);
+//            final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
+//            if (critOnlyAnnotation != null) {
+//                logger.error("disregardCritOnlyRequiredProperties for prop 2 " + prop);
+//                if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
+//                    logger.error("disregardCritOnlyRequiredProperties for prop 3 " + prop);
+//                    mp.setRequiredValidationResult(successful(entity));
+//                } else {
+//                    logger.error("disregardCritOnlyRequiredProperties for prop 4 " + prop);
+//                    mp.setDomainValidationResult(successful(entity));
+//                    mp.setRequiredValidationResult(successful(entity));
+//                }
+//            }
+//        });
+//    }
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
      *
