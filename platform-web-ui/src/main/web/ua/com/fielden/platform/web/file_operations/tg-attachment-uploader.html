@@ -1,29 +1,31 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-progress/paper-progress.html">
 
+<link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/file_operations/tg-file-processing-behavior.html">
 
 <dom-module id="tg-attachment-uploader">
-    <template>
-    	<style>
+	<template>
+		<style>
+			:host {
+				display: inline-block;
+				position: relative;
+				box-sizing: border-box;
+				text-align: center;
+				font: inherit;
+				outline: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				-webkit-user-select: none;
+				user-select: none;
+				cursor: pointer;
+				z-index: 0;
+			}
 
-    		:host {
-		      display: inline-block;
-		      position: relative;
-		      box-sizing: border-box;
-		      text-align: center;
-		      font: inherit;
-		      outline: none;
-		      -moz-user-select: none;
-		      -ms-user-select: none;
-		      -webkit-user-select: none;
-		      user-select: none;
-		      cursor: pointer;
-		      z-index: 0;
-		    }
-
-    		.over {
+			.over {
 				background: var(--paper-green-100);
 			}
 
@@ -31,157 +33,222 @@
 				cursor: pointer;
 			}
 
-			.meter-span {
-				display: inline-block;
-			  	height: 100%;
-			  	border-top-right-radius: 2px;
-			  	border-bottom-right-radius: 2px;
-			  	border-top-left-radius: 2px;
-			  	border-bottom-left-radius: 2px;
-			  	background-color: var(--paper-blue-100);
-			  	position: absolute;
-			  	overflow: hidden;
-			  	bottom: 0;
-    			left: 0;
-    			z-index: -1;
+			#container {
+				border:1px dashed #aaaaaa;
+			}
+			
+			.labelHolder {
+				display:flex;
+				padding: 8px;
+			}
+			
+			.status {
+				padding-right: 4px;
+				text-align: left; 
+				float: left;
+				text-transform: uppercase;
+				font-weight: 700;
+				color: var(--paper-grey-400);
+			}
+			
+			.status::after {
+				content: ':';
+			}
+			
+			.fileName {
+				text-align: left;
+				overflow: hidden;
+    				text-overflow: ellipsis;
+    				white-space: nowrap;
+			}
+			
+			paper-progress {
+				width: auto;
 			}
 
-			paper-spinner {
-	            position: absolute;
-	            top: 0px;
-	            padding: 2px;
-	            margin: 0px;
-	            width: 24px;
-	            height: 24px;
-	            --paper-spinner-layer-1-color: var(--paper-blue-500);
-	            --paper-spinner-layer-2-color: var(--paper-blue-500);
-	            --paper-spinner-layer-3-color: var(--paper-blue-500);
-	            --paper-spinner-layer-4-color: var(--paper-blue-500);
-	        }
+			paper-progress.uploading {
+				--paper-progress-active-color: var(--paper-blue-700);
+				--paper-progress-secondary-color: var(--paper-blue-200);
+			}
 
-    	</style>
+			paper-progress.processing {
+				--paper-progress-active-color: var(--paper-blue-700);
+				--paper-progress-secondary-color: var(--paper-blue-200);
+			}
 
+			paper-progress.error {
+				--paper-progress-active-color: var(--paper-red-700);
+				--paper-progress-secondary-color: var(--paper-red-200);
+			}
+			
+			paper-progress.aborted {
+				--paper-progress-active-color: var(--paper-grey-700);
+				--paper-progress-secondary-color: var(--paper-grey-200);
+			}
+
+			paper-progress.completed {
+				--paper-progress-active-color: var(--paper-green-500);
+				--paper-progress-secondary-color: var(--paper-green-200);
+			}
+			
+			
+		</style>
+
+		<div id="container" on-tap='openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_fpInProgress]]">
+			<div class="labelHolder"><span class="status" tooltip-text="Current status">[[status]]</span><span class="fileName" tooltip-text$="[[fileName]]">[[fileName]]</span></div>
+			<paper-progress id="progressBar"></paper-progress>
+		</div>
+
+		<!-- content below is only needed during the development phase and will be removed once the component it completed -->
+		<br>
+		<br>
 		<paper-button raised roll="button" id="fileSelect" on-tap='openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_fpInProgress]]">
-            <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
-            </paper-spinner>
+			<span>[[status]]</span>
+		</paper-button>
 
-			<!-- instead a span based approach is used to indicate the progress -->
-	  		<span class="meter-span" id="progressBar" style="width: 0%"></span>
-			<span>[[title]]</span>
-        </paper-button>
 
 		<!-- need also support some debug information on a selected file -->
 		<template is='dom-if' if='[[debug]]'>
-			<ul style='text-align: left;overflow: scroll'>
-		    	<li>names of selected files: <span style='color: #6a1b9a'>[[_debug_fileNames]]</span></li>
+			<ul style='text-align: left; overflow: scroll'>
+				<li>names of selected files: <span style='color: #6a1b9a'>[[_debug_fileNames]]</span></li>
 				<li>number of selected files: <span style='color: #6a1b9a'>[[_debug_fileNum]]</span></li>
 				<li>total size: <span style='color: #6a1b9a'>[[_debug_fileSize]]</span></li>
 				<li>mime type(s): <span style='color: #6a1b9a'>[[_debug_mimeTypes]]</span></li>
 			</ul>
 		</template>
 
-    </template>
+	</template>
 </dom-module>
 
 <script>
-    Polymer({
-        is: 'tg-attachment-uploader',
+	Polymer({
+		is: 'tg-attachment-uploader',
 
-        behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior],
+		behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
-        properties: {
+		properties: {
 
-            title: {
-                type: String,
-                value: 'Tap or D`n`D'
-            },
+			status: {
+				type: String,
+				value: 'READY'
+			},
+			
+			fileName: {
+			    type: String,
+			    value: 'no file was provided for upload'
+			},
 
-            processResponse: {
-                type: Function
-            },
+			processResponse: {
+				type: Function
+			},
 
-            processError: {
-                type: Function
-            },
+			processError: {
+				type: Function
+			},
 
-            processFileUploadedEvent: {
-                type: Function
+			processFileUploadedEvent: {
+				type: Function
+			}
+
+		},
+		
+        updateProgress: function (percentage, stage) {
+            const progressBar = this.$.progressBar;
+            progressBar.classList.remove('error');
+            progressBar.classList.remove('aborted');
+            progressBar.classList.remove('uploading');
+            progressBar.classList.remove('processing');
+            progressBar.classList.remove('completed');
+            
+            if (percentage >= 0 && percentage <= 100) {
+                if (stage === 'processing') {
+                		progressBar.value = percentage;
+                } else if (stage === 'uploading') {
+                    progressBar.value = 0;
+                    progressBar.secondaryProgress = percentage;
+                }
             }
 
+	        progressBar.classList.add(stage);
+            progressBar.updateStyles();
         },
 
-        ready: function() {
-            this.fpResponseHandler = function(e) {
-                this.$.progressBar.style.width = '0%';
-                this.title = 'Tap or D`n`D';
 
-                if (this.processResponse) {
-                    this.processResponse(e);
-                }
-            }.bind(this);
+		ready: function() {
+			this.fpResponseHandler = function(e) {
+				this.updateProgress(100, 'completed');
+				
+				this.status = 'COMPLETED';
 
-            this.fpErrorHandler = function(e) {
-                this.title = 'Tap or D`n`D';
-                this.$.progressBar.style.width = '0%';
+				if (this.processResponse) {
+					this.processResponse(e);
+				}
+			}.bind(this);
 
-                if (this.processError) {
-                    this.processError(e);
-                }
-            }.bind(this);
+			this.fpErrorHandler = function(e) {
+				this.status = 'ERROR';
+				this.updateProgress(0, 'error');
 
-            this.fpAbortEventHandler = function(e) {
-                this.title = 'Tap or D`n`D (aborted)';
-                this.$.progressBar.style.width = '0%';
-            }.bind(this);
+				if (this.processError) {
+					this.processError(e);
+				}
+			}.bind(this);
 
-            this.fpFileUploadingProgressEventHandler = function(prc) {
-                this.title = 'Uploading...';
-                this.$.progressBar.style.width = prc + '%';
-            }.bind(this);
+			this.fpAbortEventHandler = function(e) {
+				this.status = 'ABORTED';
+				this.updateProgress(0, 'aborted');
+			}.bind(this);
 
-            this.fpFileProcessingProgressEventHandler = function(prc) {
-                this.title = "Processing...";
-                this.$.progressBar.style.width = prc + '%';
-            }
+			this.fpFileUploadingProgressEventHandler = function(prc) {
+				this.status = 'UPLOADING';
+				this.fileName = this._debug_fileNames;
+				this.updateProgress(prc, 'uploading');
+			}.bind(this);
 
-            this.fpFileUploadedEventHandler = function() {
-                if (this.processFileUploadedEvent) {
-                    this.processFileUploadedEvent();
-                }
-            }.bind(this);
+			this.fpFileProcessingProgressEventHandler = function(prc) {
+				this.status = "PROCESSING";
+				this.updateProgress(prc, 'processing');
+			}
 
-        },
+			this.fpFileUploadedEventHandler = function() {
+			    this.status = 'UPLOADED';
+				if (this.processFileUploadedEvent) {
+					this.processFileUploadedEvent();
+				}
+			}.bind(this);
 
-        _dragenter: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            this.$.fileSelect.classList.add('over');
-        },
+		},
 
-        _dragover: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            this.$.fileSelect.classList.add('over');
-        },
+		_dragenter: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			this.$.fileSelect.classList.add('over');
+		},
 
-        _dragleave: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            this.$.fileSelect.classList.remove('over');
-        },
+		_dragover: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			this.$.fileSelect.classList.add('over');
+		},
 
-        _drop: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
+		_dragleave: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			this.$.fileSelect.classList.remove('over');
+		},
 
-            var dt = e.dataTransfer;
-            var files = dt.files;
+		_drop: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
 
-            this.$.fileSelect.classList.remove('over');
+			var dt = e.dataTransfer;
+			var files = dt.files;
 
-            // _handleFiles is mixed in from TgFileProcessingBehavior
-            this._handleFiles(files);
-        }
+			this.$.fileSelect.classList.remove('over');
 
-    });
+			// _handleFiles is mixed in from TgFileProcessingBehavior
+			this._handleFiles(files);
+		}
+
+	});
 </script>

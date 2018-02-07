@@ -55,7 +55,7 @@
 				fpAbortEventHandler: {
 					type: Function
 				},
-				
+
 				/* a function to abort file upload or processing */
 				abort: {
 				    type: Function
@@ -120,7 +120,7 @@
 						this.fpFileProcessingProgressEventHandler(msg.prc);
 					}
 				}.bind(this);
-				
+
 				// let's create a dummy file input element to be used for opening a file dialog
 				this._uploadInput = document.createElement('input');
 				this._uploadInput.type = 'file';
@@ -128,7 +128,7 @@
 					this._handleFiles(this._uploadInput.files);
 				}.bind(this);
 			},
-			
+
 			attached: function() {
 				// cleanup to complete component initialisation
 				this._cleanup();
@@ -164,13 +164,13 @@
 			    if (this._fpInProgress === true) {
 			        throw new Error('File uploading is in progress...');
 			    }
-			    
+
 			    const nFiles = oFiles.length;
 			    if (nFiles !== 1) {
 					this._cleanup();
 					throw new Error('File list contains ' + nFiles + ' files. Exactly one file is expected for upload.');
 			    }
-			    
+
 				this._fpInProgress = true;
 
 				let fileNames = "";
@@ -277,7 +277,7 @@
 						}
 
 					}.bind(this);
-					
+
 					// file uploading/processing error might also need to be handled externally
 					// and to invoke an external response handler if provided
 					xhr.onerror = function(e) {

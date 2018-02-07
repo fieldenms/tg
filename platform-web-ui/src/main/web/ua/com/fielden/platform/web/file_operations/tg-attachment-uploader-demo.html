@@ -27,7 +27,7 @@
 
 	<template id="t" is="dom-bind">
 		<!-- mime-types-accepted='.csv,.txt,text/plain,text/csv' -->
-		<tg-attachment-uploader id="attachmentUploader" upload-size-limit-kb='10240' debug mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' url="/upload-attachment" style="width: 200px"></tg-attachment-uploader>
+		<tg-attachment-uploader id="attachmentUploader" style="width: 400px" upload-size-limit-kb='10240' debug mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' url="/upload-attachment"></tg-attachment-uploader>
 		<br/>
 		<paper-button raised roll="button" id="btnAbort" on-tap='abort'><span>Abort</span></paper-button>
 	</template>
