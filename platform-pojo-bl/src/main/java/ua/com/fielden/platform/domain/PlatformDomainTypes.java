@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -66,6 +67,7 @@ public class PlatformDomainTypes {
         types.add(EntityMasterConfig.class);
         types.add(EntityLocatorConfig.class);
         types.add(Attachment.class);
+        types.add(AttachmentUploader.class);
         types.add(KeyNumber.class);
         types.add(MigrationRun.class);
         types.add(MigrationHistory.class);
