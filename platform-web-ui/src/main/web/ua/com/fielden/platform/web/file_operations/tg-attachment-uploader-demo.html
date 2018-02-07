@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+	<title>Attachment Uploader Demo</title>
+
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<link rel="import" href="/resources/polymer/polymer/polymer.html">
+	<link rel="import" href="/resources/file_operations/tg-attachment-uploader.html">
+
+
+	<style is="custom-style">
+		body {
+			font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
+			'sans-serif';
+			font-size: 10pt;
+			background: white;
+			-webkit-font-smoothing: antialiased;
+		}
+	</style>
+
+</head>
+
+<body unresolved class="fullbleed">
+
+	<template id="t" is="dom-bind">
+		<!-- mime-types-accepted='.csv,.txt,text/plain,text/csv' -->
+		<tg-attachment-uploader id="attachmentUploader" upload-size-limit-kb='10240' debug mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' url="/upload-attachment" style="width: 200px"></tg-attachment-uploader>
+		<br/>
+		<paper-button raised roll="button" id="btnAbort" on-tap='abort'><span>Abort</span></paper-button>
+	</template>
+	
+</body>
+
+<script>
+	var t = document.querySelector('#t');
+
+	t.addEventListener('dom-change', function() {
+		t.$.attachmentUploader.processFileUploadedEvent = function() {
+			console.log("file uploaded!");
+		};
+
+		t.$.attachmentUploader.processResponse = function(e) {
+			console.log("file processed:", e);
+		}
+
+		t.$.attachmentUploader.processError = function(e) {
+			console.log("file processing resulted in error:", e);
+		}
+		
+		t.abort = () => console.log(t.$.attachmentUploader.abort());
+	}.bind(t));
+</script>
+
+</html>
