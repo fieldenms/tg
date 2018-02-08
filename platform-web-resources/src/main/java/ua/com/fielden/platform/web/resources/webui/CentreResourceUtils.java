@@ -389,13 +389,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Creates the validation prototype for criteria entity of concrete [miType].
      * <p>
      * The entity creation process uses rigorous generation of criteria type and the instance every time (based on cdtmae of concrete miType).
+     * <p>
+     * IMPORTANT: Both methods {@link CentreResourceUtils#createCriteriaValidationPrototype(Class, ICentreDomainTreeManagerAndEnhancer, ICriteriaGenerator, Long, IGlobalDomainTreeManager)}
+     * and {@link CentreResourceUtils#createCriteriaEntity(Map, ICompanionObjectFinder, ICriteriaGenerator, Class, IGlobalDomainTreeManager)} need synchronisation against this utility 
+     * class ({@link CentreResourceUtils}). This is needed to avoid simultaneous write access to FRESH_CENTRE_NAMEd centre manager, which could happen for quick simultaneous validation 
+     * requests (even though older validation request could be aborted on the client-side, still, the server-side continues processing).
      *
      * @param miType
      * @param gdtm
      * @param critGenerator
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
+    static synchronized <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final ICentreDomainTreeManagerAndEnhancer cdtmae,
             final ICriteriaGenerator critGenerator,
@@ -713,10 +718,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * Creates selection criteria entity from <code>modifPropsHolder</code>.
+     * <p>
+     * IMPORTANT: Both methods {@link CentreResourceUtils#createCriteriaValidationPrototype(Class, ICentreDomainTreeManagerAndEnhancer, ICriteriaGenerator, Long, IGlobalDomainTreeManager)}
+     * and {@link CentreResourceUtils#createCriteriaEntity(Map, ICompanionObjectFinder, ICriteriaGenerator, Class, IGlobalDomainTreeManager)} need synchronisation against this utility 
+     * class ({@link CentreResourceUtils}). This is needed to avoid simultaneous write access to FRESH_CENTRE_NAMEd centre manager, which could happen for quick simultaneous validation 
+     * requests (even though older validation request could be aborted on the client-side, still, the server-side continues processing).
      *
      * @return
      */
-    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+    protected static synchronized <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
