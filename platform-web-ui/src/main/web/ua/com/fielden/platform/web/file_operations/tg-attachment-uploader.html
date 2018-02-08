@@ -21,8 +21,6 @@
 				-ms-user-select: none;
 				-webkit-user-select: none;
 				user-select: none;
-				cursor: pointer;
-				z-index: 0;
 			}
 
 			.over {
@@ -98,7 +96,7 @@
 			
 		</style>
 
-		<div id="container" on-tap='openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_fpInProgress]]">
+		<div id="container" style="width:100%" disabled$="[[_fpInProgress]]">
 			<div class="labelHolder"><span class="status" tooltip-text="Current status">[[status]]</span><span class="fileName" tooltip-text$="[[fileName]]">[[fileName]]</span></div>
 			<paper-progress id="progressBar"></paper-progress>
 		</div>
@@ -147,7 +145,6 @@
 
 			status: {
 				type: String,
-				value: 'PENDING',
 				observer: '_statusChange'
 			},
 			
@@ -171,16 +168,6 @@
 		},
 		
 		_statusChange: function (newStatus, oldStatus) {
-		    // if the status becomes PENDING then progress bar should become indeterminate with appropriate styling
-			this.$.progressBar.indeterminate = newStatus === this.statuses.PENDING;
-			if (this.$.progressBar.indeterminate === true) {
-			    this.$.progressBar.classList.add('slow');
-			    this.$.progressBar.classList.add(this.statuses.PENDING);
-			    this.$.progressBar.updateStyles();
-			}
-		},
-		
-        updateProgress: function (percentage, status) {
             const progressBar = this.$.progressBar;
 
  			// let's remove any styles associated with previous statuses
@@ -189,26 +176,38 @@
                 progressBar.classList.remove(this.statuses[key]);
 	        }
             
+		    // if the status becomes PENDING then progress bar should become indeterminate with appropriate styling
+			progressBar.indeterminate = newStatus === this.statuses.PENDING;
+			if (newStatus === this.statuses.PENDING) {
+			    progressBar.classList.add('slow');
+			}
+			
+            // update styling
+            console.log("newStatus: ", newStatus);
+	        progressBar.classList.add(newStatus);
+            progressBar.updateStyles();
+
+		},
+		
+        _updateProgress: function (percentage) {
             // update progress bar if 0 <= % <= 100, which is only applicable to PROCESSING and UPLOADING statuses
             if (percentage >= 0 && percentage <= 100) {
-                if (status === this.statuses.PROCESSING) {
+            		const progressBar = this.$.progressBar;
+                if (this.status === this.statuses.PROCESSING) {
                 		progressBar.value = percentage;
-                } else if (status === this.statuses.UPLOADING) {
+                } else if (this.status === this.statuses.UPLOADING) {
                     progressBar.value = 0;
                     progressBar.secondaryProgress = percentage;
                 }
             }
-
-            // update styling
-	        progressBar.classList.add(status);
-            progressBar.updateStyles();
         },
 
-
 		ready: function() {
+		    this.status = this.statuses.PENDING;
+		    
 			this.fpResponseHandler = function(e) {
 			    this.status = this.statuses.COMPLETED;
-				this.updateProgress(100, this.status);
+				this._updateProgress(100);
 
 				if (this.processResponse) {
 					this.processResponse(e);
@@ -217,7 +216,6 @@
 
 			this.fpErrorHandler = function(e) {
 			    this.status = this.statuses.ERROR;
-				this.updateProgress(-1, this.status); // -1 not to update the progress bar
 
 				if (this.processError) {
 					this.processError(e);
@@ -226,18 +224,17 @@
 
 			this.fpAbortEventHandler = function(e) {
 			    this.status = this.statuses.ABORTED;
-				this.updateProgress(-1, this.status); // -1 not to update the progress bar
 			}.bind(this);
 
 			this.fpFileUploadingProgressEventHandler = function(prc) {
-			    this.status = this.statuses.UPLOADING;
 				this.fileName = this._debug_fileNames;
-				this.updateProgress(prc, this.status);
+			    this.status = this.statuses.UPLOADING;
+				this._updateProgress(prc);
 			}.bind(this);
 
 			this.fpFileProcessingProgressEventHandler = function(prc) {
 			    this.status = this.statuses.PROCESSING;
-				this.updateProgress(prc, this.status);
+				this._updateProgress(prc);
 			}
 
 			this.fpFileUploadedEventHandler = function() {
@@ -246,38 +243,48 @@
 					this.processFileUploadedEvent();
 				}
 			}.bind(this);
-
+		},
+		
+		upload: function(file) {
+		    if (file instanceof File) {
+		        // _handleFiles requires FileList or an array of files for legacy reasons
+		        try {
+		        		this._handleFiles([file]);
+		        } catch (error) {
+		            console.error(error);
+		            this.status = this.statuses.ERROR;
+		        }
+		    }
 		},
 
 		_dragenter: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
+
 			this.$.fileSelect.classList.add('over');
 		},
 
 		_dragover: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
+			
 			this.$.fileSelect.classList.add('over');
 		},
 
 		_dragleave: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
+			
 			this.$.fileSelect.classList.remove('over');
 		},
 
 		_drop: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
-
-			var dt = e.dataTransfer;
-			var files = dt.files;
-
 			this.$.fileSelect.classList.remove('over');
 
-			// _handleFiles is mixed in from TgFileProcessingBehavior
-			this._handleFiles(files);
+			const fileList = e.dataTransfer.files;
+			this.upload(fileList[0]);
 		}
 
 	});

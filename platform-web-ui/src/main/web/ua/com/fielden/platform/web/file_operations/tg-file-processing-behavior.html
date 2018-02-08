@@ -160,6 +160,15 @@
 				return uuid;
 			},
 
+			/**
+			 * Accepts array of files, which should contain only 1 file.
+			 * This one file gets uploaded.
+			 *
+			 * If therre is less or more than 1 file then an error if thrown.
+			 *
+			 * The use of an array instead of a file is mainly to keep backward compatibility with some older code.
+			 *
+			 */
 			_handleFiles: function(oFiles) {
 			    if (this._fpInProgress === true) {
 			        throw new Error('File uploading is in progress...');
