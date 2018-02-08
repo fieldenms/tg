@@ -90,14 +90,14 @@
 			}
 			
 			paper-progress.PENDING {
-				--paper-progress-active-color: var(--paper-amber-500);
-				--paper-progress-secondary-color: var(--paper-amber-200);
+				--paper-progress-active-color: var(--paper-grey-500);
+				--paper-progress-secondary-color: var(--paper-grey-200);
 			}
 			
 		</style>
 
 		<div id="container" style="width:100%" disabled$="[[_fpInProgress]]">
-			<div class="labelHolder"><span class="status" tooltip-text="Current status">[[status]]</span><span class="fileName" tooltip-text$="[[fileName]]">[[fileName]]</span></div>
+			<div class="labelHolder"><span class="status" tooltip-text="Current status">[[status]]</span><span class="fileName" tooltip-text$="[[_fileNameTooltip(fileName, _errorMsg)]]">[[fileName]]</span></div>
 			<paper-progress id="progressBar"></paper-progress>
 		</div>
 
@@ -123,6 +123,7 @@
 </dom-module>
 
 <script>
+(function () {
 	Polymer({
 		is: 'tg-attachment-uploader',
 
@@ -151,6 +152,11 @@
 			fileName: {
 			    type: String,
 			    value: 'no file was provided for upload'
+			},
+
+			_errorMsg: {
+				type: String,
+				value: ''
 			},
 
 			processResponse: {
@@ -183,7 +189,6 @@
 			}
 			
             // update styling
-            console.log("newStatus: ", newStatus);
 	        progressBar.classList.add(newStatus);
             progressBar.updateStyles();
 
@@ -200,6 +205,11 @@
                     progressBar.secondaryProgress = percentage;
                 }
             }
+        },
+
+        _fileNameTooltip: function (fileName, errorMsg) {
+            console.log("_fileNameTooltip: ", fileName + '<br>' + errorMsg);
+            return fileName + '<br><span>' + errorMsg + '</span>';
         },
 
 		ready: function() {
@@ -227,7 +237,6 @@
 			}.bind(this);
 
 			this.fpFileUploadingProgressEventHandler = function(prc) {
-				this.fileName = this._debug_fileNames;
 			    this.status = this.statuses.UPLOADING;
 				this._updateProgress(prc);
 			}.bind(this);
@@ -249,10 +258,15 @@
 		    if (file instanceof File) {
 		        // _handleFiles requires FileList or an array of files for legacy reasons
 		        try {
+		            this.$.progressBar.value = 0;
+		            this.$.progressBar.secondaryProgress = 0;
+		            this.fileName = file.name;
+		            this._errorMsg = '';
 		        		this._handleFiles([file]);
 		        } catch (error) {
 		            console.error(error);
 		            this.status = this.statuses.ERROR;
+		            this._errorMsg = error;
 		        }
 		    }
 		},
@@ -288,4 +302,5 @@
 		}
 
 	});
+})();
 </script>
