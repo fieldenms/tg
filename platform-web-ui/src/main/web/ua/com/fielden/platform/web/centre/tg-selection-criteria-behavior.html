@@ -277,13 +277,48 @@
                 }).bind(self);
 
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
-                    if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
-                        this.staleCriteriaMessage = customObject.staleCriteriaMessage;
-                    }
-                    this._setPropertyModel(customObject.metaValues);
-                    this._centreChanged = customObject.isCentreChanged;
-
+                    this._setInfoFrom(customObject);
                     console.log("postValidated", customObject);
+                }).bind(self);
+                
+                self.postSaved = (function (potentiallySavedEntity, bindingEntity, customObject) {
+                    this._setInfoFrom(customObject);
+                    console.log("postSaved", customObject);
+                }).bind(self);
+                
+                self._postSavedDefault = (function (entityAndCustomObject) {
+                    const potentiallySavedEntity = entityAndCustomObject[0];
+                    const customObject = this._reflector().customObject(entityAndCustomObject);
+                    
+                    const msg = this._toastMsg("Operation", potentiallySavedEntity);
+                    if (!potentiallySavedEntity.isValid()) {
+                        this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+                    }
+                    
+                    const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, false);
+                    
+                    if (potentiallySavedEntity.isValidWithoutException()) {
+                        // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
+                        newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
+                    }
+                    
+                    // custom external action
+                    if (this.postSaved) {
+                        this.postSaved(potentiallySavedEntity, newBindingEntity, customObject);
+                    }
+                    this.enableView();
+                    this._savingInitiated = false;
+                }).bind(self);
+                
+                self._postSavedDefaultError = (function (errorResult) {
+                    console.warn("SERVER ERROR: ", errorResult);
+                    
+                    // custom external action
+                    if (this.postSavedError) {
+                        this.postSavedError.bind(this)(errorResult);
+                    }
+                    this.enableView();
+                    this._savingInitiated = false;
                 }).bind(self);
             },
             
@@ -293,14 +328,18 @@
             _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
                 Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
                 
+                this._setInfoFrom(customObject);
+                this._criteriaLoaded = true;
+            },
+            
+            _setInfoFrom: function (customObject) {
                 if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                     this.staleCriteriaMessage = customObject.staleCriteriaMessage;
                 }
                 this._setPropertyModel(customObject.metaValues);
                 this._centreChanged = customObject.isCentreChanged;
-                this._criteriaLoaded = true;
             },
-
+            
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
                 var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
                 if (this._reflector().isEntity(bindingEntity)) {

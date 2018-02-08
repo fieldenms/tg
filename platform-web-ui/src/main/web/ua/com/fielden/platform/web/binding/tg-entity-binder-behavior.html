@@ -324,6 +324,21 @@
                 _retrievalInitiated: {
                     type: Boolean,
                     value: false
+                },
+                
+                /**
+                 * Indicates whether saving process has been initiated by using CTRL+S key or tapping on SAVE button (or even programatically).
+                 * Strictly speaking it becomes 'true' when 'save' function gets functioned.
+                 *
+                 * _savingInitiated is needed to disable master / selectionCriteria view only once during debouncing of multiple saving requests, which in turn will be turned into single ajax request,
+                 * and thus only single 'view enablement' action.
+                 *
+                 * Debouncing of saving actions is needed to avoid multiple concurrent saving requests. However it adds additional debouncing 50-second delay similarly
+                 * as in validation.
+                 */
+                _savingInitiated: {
+                    type: Boolean,
+                    value: false
                 }
     		},
     		
