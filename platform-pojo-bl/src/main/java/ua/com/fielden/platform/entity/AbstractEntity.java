@@ -359,6 +359,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     private transient String preferredProperty;
 
     /**
+     * A custom toString value for this entity to override default logic.
+     */
+    private transient String customString;
+
+    /**
      * This is a default constructor, which is required for reflective construction.
      */
     @SuppressWarnings("unchecked")
@@ -499,7 +504,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (isIdOnlyProxy()) {
             return format("ID = %s", getId());
         }
-        return getKey() != null ? getKey().toString() : "[key is not assigned]";
+        return customString != null ? customString : getKey() != null ? getKey().toString() : "[key is not assigned]";
     }
 
     /**
