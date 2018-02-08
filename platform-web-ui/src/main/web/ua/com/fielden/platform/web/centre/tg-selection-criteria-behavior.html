@@ -292,7 +292,10 @@
              */
             _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
                 Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
-
+                
+                if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                    this.staleCriteriaMessage = customObject.staleCriteriaMessage;
+                }
                 this._setPropertyModel(customObject.metaValues);
                 this._centreChanged = customObject.isCentreChanged;
                 this._criteriaLoaded = true;
