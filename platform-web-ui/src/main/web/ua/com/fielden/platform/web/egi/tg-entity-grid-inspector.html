@@ -189,13 +189,13 @@
             --iron-icon-width: 1.5rem;
             --iron-icon-height: 1.5rem;
         }
-        .drag-anchor:hover {
+        .drag-anchor[selected]:hover {
             cursor: move;/* fallback if grab cursor is unsupported */
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
         }
-        .drag-anchor:active {
+        .drag-anchor[selected]:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
@@ -282,7 +282,7 @@
                         <!-- Table body -->
                         <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                             <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                <iron-icon draggable="true" class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                <iron-icon draggable="true" class="drag-anchor" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.selected)]]" icon="tg-icons:dragVertical"></iron-icon>
                                 <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                     <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                 </div>
@@ -379,7 +379,7 @@
                                 <!--body-->
                                 <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                     <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                        <iron-icon draggable="true" class="drag-anchor" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.over)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                        <iron-icon draggable="true" class="drag-anchor" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.selected)]]" icon="tg-icons:dragVertical"></iron-icon>
                                         <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                             <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                         </div>
@@ -1721,12 +1721,12 @@
             /**
              * Calculates style for the visibility of drag anchor.
              */
-            _calcDragAnchorStyle: function (canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, isSelected, isOver) {
-                return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && isOver ? "" : "visibility:hidden";
+            _calcDragAnchorStyle: function (canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, isSelected, isSelected) {
+                return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && isSelected ? "" : "visibility:hidden";
             },
 
-            _calcFixedDragAnchorStyle: function (canDragFrom, isOver) {
-                return canDragFrom && isOver ? "" : "visibility:hidden";
+            _calcFixedDragAnchorStyle: function (canDragFrom, isSelected) {
+                return canDragFrom && isSelected ? "" : "visibility:hidden";
             },
 
             _calcSelectCheckBoxStyle: function (canDragFrom) {
