@@ -66,31 +66,35 @@
 				width: auto;
 			}
 
-			paper-progress.uploading {
+			paper-progress.UPLOADING {
 				--paper-progress-active-color: var(--paper-blue-700);
 				--paper-progress-secondary-color: var(--paper-blue-200);
 			}
 
-			paper-progress.processing {
+			paper-progress.PROCESSING {
 				--paper-progress-active-color: var(--paper-blue-700);
 				--paper-progress-secondary-color: var(--paper-blue-200);
 			}
 
-			paper-progress.error {
+			paper-progress.ERROR {
 				--paper-progress-active-color: var(--paper-red-700);
 				--paper-progress-secondary-color: var(--paper-red-200);
 			}
 			
-			paper-progress.aborted {
+			paper-progress.ABORTED {
 				--paper-progress-active-color: var(--paper-grey-700);
 				--paper-progress-secondary-color: var(--paper-grey-200);
 			}
 
-			paper-progress.completed {
+			paper-progress.COMPLETED {
 				--paper-progress-active-color: var(--paper-green-500);
 				--paper-progress-secondary-color: var(--paper-green-200);
 			}
 			
+			paper-progress.PENDING {
+				--paper-progress-active-color: var(--paper-amber-500);
+				--paper-progress-secondary-color: var(--paper-amber-200);
+			}
 			
 		</style>
 
@@ -127,10 +131,24 @@
 		behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
 		properties: {
+		    
+		    statuses: {
+		        type: Object,
+		        readOnly: true,
+		        value: function() { return {
+			            		READY: 'READY',
+			            		PENDING: 'PENDING',
+			            		UPLOADING: 'UPLOADING',
+			            		PROCESSING: 'PROCESSING',
+			            		COMPLETED: 'COMPLETED',
+			            		ERROR: 'ERROR',
+			            		ABORTED: 'ABORTED'};}
+		    },
 
 			status: {
 				type: String,
-				value: 'READY'
+				value: 'PENDING',
+				observer: '_statusChange'
 			},
 			
 			fileName: {
@@ -152,33 +170,45 @@
 
 		},
 		
-        updateProgress: function (percentage, stage) {
+		_statusChange: function (newStatus, oldStatus) {
+		    // if the status becomes PENDING then progress bar should become indeterminate with appropriate styling
+			this.$.progressBar.indeterminate = newStatus === this.statuses.PENDING;
+			if (this.$.progressBar.indeterminate === true) {
+			    this.$.progressBar.classList.add('slow');
+			    this.$.progressBar.classList.add(this.statuses.PENDING);
+			    this.$.progressBar.updateStyles();
+			}
+		},
+		
+        updateProgress: function (percentage, status) {
             const progressBar = this.$.progressBar;
-            progressBar.classList.remove('error');
-            progressBar.classList.remove('aborted');
-            progressBar.classList.remove('uploading');
-            progressBar.classList.remove('processing');
-            progressBar.classList.remove('completed');
+
+ 			// let's remove any styles associated with previous statuses
+ 			progressBar.classList.remove('slow');
+            for (let key in this.statuses) {
+                progressBar.classList.remove(this.statuses[key]);
+	        }
             
+            // update progress bar if 0 <= % <= 100, which is only applicable to PROCESSING and UPLOADING statuses
             if (percentage >= 0 && percentage <= 100) {
-                if (stage === 'processing') {
+                if (status === this.statuses.PROCESSING) {
                 		progressBar.value = percentage;
-                } else if (stage === 'uploading') {
+                } else if (status === this.statuses.UPLOADING) {
                     progressBar.value = 0;
                     progressBar.secondaryProgress = percentage;
                 }
             }
 
-	        progressBar.classList.add(stage);
+            // update styling
+	        progressBar.classList.add(status);
             progressBar.updateStyles();
         },
 
 
 		ready: function() {
 			this.fpResponseHandler = function(e) {
-				this.updateProgress(100, 'completed');
-				
-				this.status = 'COMPLETED';
+			    this.status = this.statuses.COMPLETED;
+				this.updateProgress(100, this.status);
 
 				if (this.processResponse) {
 					this.processResponse(e);
@@ -186,8 +216,8 @@
 			}.bind(this);
 
 			this.fpErrorHandler = function(e) {
-				this.status = 'ERROR';
-				this.updateProgress(0, 'error');
+			    this.status = this.statuses.ERROR;
+				this.updateProgress(-1, this.status); // -1 not to update the progress bar
 
 				if (this.processError) {
 					this.processError(e);
@@ -195,23 +225,23 @@
 			}.bind(this);
 
 			this.fpAbortEventHandler = function(e) {
-				this.status = 'ABORTED';
-				this.updateProgress(0, 'aborted');
+			    this.status = this.statuses.ABORTED;
+				this.updateProgress(-1, this.status); // -1 not to update the progress bar
 			}.bind(this);
 
 			this.fpFileUploadingProgressEventHandler = function(prc) {
-				this.status = 'UPLOADING';
+			    this.status = this.statuses.UPLOADING;
 				this.fileName = this._debug_fileNames;
-				this.updateProgress(prc, 'uploading');
+				this.updateProgress(prc, this.status);
 			}.bind(this);
 
 			this.fpFileProcessingProgressEventHandler = function(prc) {
-				this.status = "PROCESSING";
-				this.updateProgress(prc, 'processing');
+			    this.status = this.statuses.PROCESSING;
+				this.updateProgress(prc, this.status);
 			}
 
 			this.fpFileUploadedEventHandler = function() {
-			    this.status = 'UPLOADED';
+			    this.status = this.statuses.PROCESSING;
 				if (this.processFileUploadedEvent) {
 					this.processFileUploadedEvent();
 				}
