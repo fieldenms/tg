@@ -555,7 +555,7 @@ public class FinderTest {
 
     @Test
     public void test_field_of_type_search_routine() {
-        assertEquals("Incorrect number of string fields.", 10, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
+        assertEquals("Incorrect number of string fields.", 11, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
         assertEquals("Incorrect number of SimpleEntity fields.", 1, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, SimpleEntity.class).size());
     }
 
