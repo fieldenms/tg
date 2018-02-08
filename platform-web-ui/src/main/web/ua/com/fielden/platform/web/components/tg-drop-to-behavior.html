@@ -9,7 +9,7 @@
 
             canDropType: function (types, type) {
                 for (var i = 0; i < types.length; ++i) {
-                    if (types[i] === type) return true;
+                    if (types[i] === type.toLowerCase()) return true;
                 }
                 return false;
             },

@@ -14,7 +14,10 @@
             elementToDrag.style.right = "-100%";
             Polymer.dom(document.body).appendChild(elementToDrag);
             Polymer.dom.flush();
-            e.dataTransfer.setData("text/plain", JSON.stringify(this.getDataToDragFrom()));
+            const dataToDrag = this.getDataToDragFrom();
+            Object.keys(dataToDrag).forEach(typeKey => {
+                e.dataTransfer.setData(typeKey, dataToDrag[typeKey]);    
+            });
             e.dataTransfer.effectAllowed = "copyMove";
             e.dataTransfer.setDragImage(elementToDrag, this.shiftDragX, this.shiftDragY);
         }

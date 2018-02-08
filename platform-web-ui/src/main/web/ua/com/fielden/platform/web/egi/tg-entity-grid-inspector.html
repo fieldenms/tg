@@ -2,6 +2,7 @@
 
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
@@ -190,7 +191,8 @@
             --iron-icon-height: 1.5rem;
         }
         .drag-anchor[selected]:hover {
-            cursor: move;/* fallback if grab cursor is unsupported */
+            cursor: move;
+            /* fallback if grab cursor is unsupported */
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
@@ -241,6 +243,7 @@
         <content id="insertion_point_action_selector" select=".insertion-point-action" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
+        <tg-serialiser id="serialiser"></tg-serialiser>
 
         <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
             <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
@@ -964,7 +967,7 @@
                     });
                 }
             },
-            
+
             getElementToDragFrom: function (target) {
                 const elem = document.createElement('div');
                 const entities = this.getSelectedEntities();
@@ -975,9 +978,15 @@
                 elem.style["width"] = "300px"
                 return elem;
             },
-            
+
             getDataToDragFrom: function (target) {
-                return this.getSelectedEntities();
+                const entities = this.getSelectedEntities();
+                if (entities.length > 0) {
+                    const type = "tg/" + entities[0].type()._simpleClassName();
+                    const data = {};
+                    data[type] = JSON.stringify(this.$.serialiser.serialise(this.getSelectedEntities()));
+                    return data;
+                }
             },
 
             _getKeyEventTarget: function () {
