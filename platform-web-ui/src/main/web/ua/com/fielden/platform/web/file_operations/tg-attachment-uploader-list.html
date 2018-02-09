@@ -31,6 +31,7 @@
 			#container {
 				display: flex;
 				flex-direction: column;
+				overflow: auto;
 				border:1px dashed #ff5555;
 				padding: 8px;
 			}
@@ -38,7 +39,9 @@
 		</style>
 
 		<div id="container" style="width:100%" on-tap='_openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
-			<tg-attachment-uploader style='width: 100%' id='firstUploader' url$='[[url]]' upload-size-limit-kb$='[[uploadSizeLimitKb]]' mime-types-accepted$='[[mimeTypesAccepted]]'></tg-attachment-uploader>		
+			<template is='dom-repeat' items='[[_files]]' as='f'>
+				<tg-attachment-uploader style='width: 100%' file='[[f]]' url='[[url]]' upload-size-limit-kb='[[uploadSizeLimitKb]]' mime-types-accepted='[[mimeTypesAccepted]]'></tg-attachment-uploader>
+			</template>
 		</div>
 
 	</template>
@@ -95,7 +98,16 @@
 			
 			_uploadInput: {
 				type: Object,
-			}
+			},
+			
+            /* An array of files that need to be uploaded.
+             * Should NOT be manipulated directly -- only via methods pushValue.*/
+            _files: {
+                type: Array,
+                value: function () {
+                    return [];
+                }
+            },
 
 		},
 		
@@ -105,10 +117,7 @@
 			this._uploadInput.type = 'file';
 			this._uploadInput.setAttribute('multiple', ''); // support multiple files
 			this._uploadInput.onchange = function() {
-			    // TODO this where uploading starts
-				//this._handleFiles(this._uploadInput.files);
-			    
-			    this.submitUploading(this._uploadingInput.files);
+			    this.submitUploading(this._uploadInput.files);
 			}.bind(this);
 		},
 		
@@ -130,6 +139,15 @@
 			}
 		},
 		
+        /* Pushes the specified file into the tail of attay _files */
+        _pushValue: function(file) {
+            this.push('_files', file);
+        },
+        
+        _makeId: function(index) {
+			return "id" + index;
+        },
+
 		/* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */
 		_openFileDialog: function(e) {
 			// let give a chance for tap animation to do its work
@@ -145,14 +163,14 @@
 		/* Function responsible for submitting files into the queue for uploading. */
 		submitUploading: function(fileList) {
 			// TODO add files one by one...
-			this.$.firstUploader.processUploadingStopped = function(uploader) {
+			this._pushValue(fileList[0]);
+			
+/*  			this.$.firstUploader.processUploadingStopped = function(uploader) {
 			    console.log("UPLOADER STOPPED FOR id=", uploader.id);
 			    if (this.processUploadingStopped) {
 			        this.processUploadingStopped(uploader);
 			    }
-			}.bind(this);
-			
-			this.$.firstUploader.upload(fileList[0]);
+			}.bind(this); */
 		},
 		
 		_dragenter: function(e) {
