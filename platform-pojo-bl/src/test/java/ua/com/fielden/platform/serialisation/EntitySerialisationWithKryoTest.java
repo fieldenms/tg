@@ -148,13 +148,13 @@ public class EntitySerialisationWithKryoTest {
 
         assertEquals("'observableProperty' has incorrect value", new Double(0.0), restoredEntity.getObservableProperty());
         restoredEntity.setObservableProperty(22.0);
-        assertTrue("Property 'observableProperty' should have been observed.", observed);
+        assertFalse("Property 'observableProperty' should have not been observed.", observed);
 
         // test property of entity type
         assertEquals("'entity' has incorrect value", entity.getEntity(), restoredEntity.getEntity());
         assertFalse("'entity' has incorrect value", entity.getEntity() == restoredEntity.getEntity());
         assertEquals("'entity' has incorrect type", "ua.com.fielden.platform.entity.Entity", restoredEntity.getEntity().getType().getName());
-        assertFalse("'entity' has incorrect type", "ua.com.fielden.platform.entity.Entity".equals(restoredEntity.getEntity().getClass().getName()));
+        assertTrue("'entity' has incorrect type", "ua.com.fielden.platform.entity.Entity".equals(restoredEntity.getEntity().getClass().getName()));
         // test sub-property of entity type
         assertEquals("'entity' has incorrect value", entity.getEntity().getEntity(), restoredEntity.getEntity().getEntity());
         assertFalse("'entity' has incorrect value", entity.getEntity().getEntity() == restoredEntity.getEntity().getEntity());
@@ -229,11 +229,7 @@ public class EntitySerialisationWithKryoTest {
         assertNull("Restored result should not have exception", restoredResult.getEx());
         assertNotNull("Restored result should have message", restoredResult.getMessage());
         assertNotNull("Restored result should have instance", restoredResult.getInstance());
-        assertTrue("Entity should stay dirty after marshaling.", ((Entity) restoredResult.getInstance()).isDirty());
-        assertFalse("Property should not be dirty.", ((Entity) restoredResult.getInstance()).getProperty("dependent").isDirty()); // has default value
-        assertTrue("Property should be dirty.", ((Entity) restoredResult.getInstance()).getProperty("date").isDirty());
         assertEquals("Incorrect value for property entity.", entForProp, ((Entity) restoredResult.getInstance()).getEntity());
-        assertEquals("Incorrect original value for property entity.", entForProp, ((Entity) restoredResult.getInstance()).getProperty("entity").getOriginalValue());
     }
 
     @Test
@@ -254,11 +250,7 @@ public class EntitySerialisationWithKryoTest {
         assertNotNull("Restored warning could not be null", restoredWarning);
         assertNotNull("Restored warning should have message", restoredWarning.getMessage());
         assertNotNull("Restored warning should have instance", restoredWarning.getInstance());
-        assertTrue("Entity should stay dirty after marshaling.", ((Entity) restoredWarning.getInstance()).isDirty());
-        assertFalse("Property should not be dirty.", ((Entity) restoredWarning.getInstance()).getProperty("dependent").isDirty()); // has default value
-        assertTrue("Property should be dirty.", ((Entity) restoredWarning.getInstance()).getProperty("date").isDirty());
         assertEquals("Incorrect value for property entity.", entForProp, ((Entity) restoredWarning.getInstance()).getEntity());
-        assertEquals("Incorrect original value for property entity.", entForProp, ((Entity) restoredWarning.getInstance()).getProperty("entity").getOriginalValue());
     }
 
     @Test

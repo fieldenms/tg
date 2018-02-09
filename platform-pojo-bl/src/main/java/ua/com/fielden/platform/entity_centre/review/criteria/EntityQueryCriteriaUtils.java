@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getDateValuesFrom;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,13 +20,9 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -95,13 +97,13 @@ public class EntityQueryCriteriaUtils {
      * @return
      */
     public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager) {
-        final Map<String, Pair<Object, Object>> paramValues = new HashMap<String, Pair<Object, Object>>();
+        final Map<String, Pair<Object, Object>> paramValues = new HashMap<>();
         for (final String propertyName : tickManager.checkedProperties(root)) {
-            if (!AbstractDomainTree.isPlaceholder(propertyName)) {
-                if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-                    if (EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
+            if (!isPlaceholder(propertyName)) {
+                if (isDoubleCriterion(managedType, propertyName)) {
+                    if (isDate(determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
                             && tickManager.getDateMnemonic(root, propertyName) != null) {
-                        final Pair<Date, Date> fromAndTo = DynamicQueryBuilder.getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName));
+                        final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName));
                         paramValues.put(propertyName, new Pair<Object, Object>(fromAndTo.getKey(), fromAndTo.getValue()));
                     } else {
                         paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));

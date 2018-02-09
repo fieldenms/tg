@@ -319,6 +319,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String KEY = "key";
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
+    public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
     public static final Set<String> COMMON_PROPS = unmodifiableSet(new HashSet<>(Arrays.asList(new String[] {KEY, DESC, "referencesCount", "referenced"})));
 
     /**
@@ -499,7 +500,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (isIdOnlyProxy()) {
             return format("ID = %s", getId());
         }
-        return getKey() != null ? getKey().toString() : "[key is not assigned]";
+        return getKey() != null ? getKey().toString() : KEY_NOT_ASSIGNED;
     }
 
     /**

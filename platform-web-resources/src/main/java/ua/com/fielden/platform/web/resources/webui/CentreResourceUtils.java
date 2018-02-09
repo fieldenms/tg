@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -74,7 +77,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
-
+    
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
     }
@@ -316,7 +319,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
         final Map<String, Object> metaValues = new LinkedHashMap<>();
 
-        if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
+        if (isDoubleCriterion(managedType(root, cdtmae), prop) && !isBooleanCriterion(managedType(root, cdtmae), prop)) {
             final Boolean exclusive = tickManager.getExclusive(root, prop);
             if (!isExclusiveDefault(exclusive)) {
                 metaValues.put("exclusive", exclusive);
@@ -367,7 +370,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final String prop = propAndMetaValues.getKey();
 
             final Map<String, Object> mValues = propAndMetaValues.getValue();
-            if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
+            if (isDoubleCriterion(managedType(root, cdtmae), prop) && !isBooleanCriterion(managedType(root, cdtmae), prop)) {
                 cdtmae.getFirstTick().setExclusive(root, prop, mValues.get("exclusive") != null ? (Boolean) mValues.get("exclusive") : null);
                 cdtmae.getFirstTick().setExclusive2(root, prop, mValues.get("exclusive2") != null ? (Boolean) mValues.get("exclusive2") : null);
             }
@@ -387,13 +390,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Creates the validation prototype for criteria entity of concrete [miType].
      * <p>
      * The entity creation process uses rigorous generation of criteria type and the instance every time (based on cdtmae of concrete miType).
+     * <p>
+     * IMPORTANT: Both methods {@link CentreResourceUtils#createCriteriaValidationPrototype(Class, ICentreDomainTreeManagerAndEnhancer, ICriteriaGenerator, Long, IGlobalDomainTreeManager)}
+     * and {@link CentreResourceUtils#createCriteriaEntity(Map, ICompanionObjectFinder, ICriteriaGenerator, Class, IGlobalDomainTreeManager)} need synchronisation against this utility 
+     * class ({@link CentreResourceUtils}). This is needed to avoid simultaneous write access to FRESH_CENTRE_NAMEd centre manager, which could happen for quick simultaneous validation 
+     * requests (even though older validation request could be aborted on the client-side, still, the server-side continues processing).
      *
      * @param miType
      * @param gdtm
      * @param critGenerator
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
+    static synchronized <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final ICentreDomainTreeManagerAndEnhancer cdtmae,
             final ICriteriaGenerator critGenerator,
@@ -418,7 +426,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final boolean idAccessible = idField.isAccessible();
         idField.setAccessible(true);
         try {
-            idField.set(validationPrototype, 333L); // here the fictional id is populated to mark the entity as persisted!
+            idField.set(validationPrototype, CRITERIA_ENTITY_ID); // here the fictional id is populated to mark the entity as persisted!
             idField.setAccessible(idAccessible);
         } catch (IllegalArgumentException | IllegalAccessException e) {
             idField.setAccessible(idAccessible);
@@ -711,10 +719,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * Creates selection criteria entity from <code>modifPropsHolder</code>.
+     * <p>
+     * IMPORTANT: Both methods {@link CentreResourceUtils#createCriteriaValidationPrototype(Class, ICentreDomainTreeManagerAndEnhancer, ICriteriaGenerator, Long, IGlobalDomainTreeManager)}
+     * and {@link CentreResourceUtils#createCriteriaEntity(Map, ICompanionObjectFinder, ICriteriaGenerator, Class, IGlobalDomainTreeManager)} need synchronisation against this utility 
+     * class ({@link CentreResourceUtils}). This is needed to avoid simultaneous write access to FRESH_CENTRE_NAMEd centre manager, which could happen for quick simultaneous validation 
+     * requests (even though older validation request could be aborted on the client-side, still, the server-side continues processing).
      *
      * @return
      */
-    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+    protected static synchronized <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
