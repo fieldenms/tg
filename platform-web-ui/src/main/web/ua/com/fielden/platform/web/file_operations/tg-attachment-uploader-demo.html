@@ -29,7 +29,6 @@
 		<!-- mime-types-accepted='.csv,.txt,text/plain,text/csv' -->
 		<tg-attachment-uploader id="attachmentUploader" style="width: 400px" upload-size-limit-kb='10240' debug mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' url="/upload-attachment"></tg-attachment-uploader>
 		<br/>
-		<paper-button raised roll="button" id="btnAbort" on-tap='abort'><span>Abort</span></paper-button>
 	</template>
 	
 </body>
@@ -38,6 +37,10 @@
 	var t = document.querySelector('#t');
 
 	t.addEventListener('dom-change', function() {
+	    t.$.attachmentUploader.processUploadingStopped = function(uploader) {
+	        console.log('UPLOADING STOPPED DUE TO: ', uploader.status);
+	    }
+	    
 		t.$.attachmentUploader.processFileUploadedEvent = function() {
 			console.log("file uploaded!");
 		};
@@ -49,8 +52,6 @@
 		t.$.attachmentUploader.processError = function(e) {
 			console.log("file processing resulted in error:", e);
 		}
-		
-		t.abort = () => console.log(t.$.attachmentUploader.abortUploadIfPossible());
 	}.bind(t));
 </script>
 
