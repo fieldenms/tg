@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.error.Result.failure;
 
 import java.io.File;
@@ -13,6 +14,8 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Date;
 import java.util.Random;
+
+import javax.management.RuntimeErrorException;
 
 import org.apache.log4j.Logger;
 
@@ -55,7 +58,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private static final Random rnd = new Random(100);
     private static void delay(final AbstractSubjectKind<Integer> ess, final int prc) {
         try {
-            Thread.sleep(rnd.nextInt(3000));
+            Thread.sleep(rnd.nextInt(2000));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -85,6 +88,10 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 // writing input stream to tmp file...
                 Files.copy(dis, tmpPath);
                 uploader.getEventSourceSubject().ifPresent(ess -> delay(ess, 40));
+            }
+            
+            if (rnd.nextInt(300) > 160) {
+                throw new RuntimeException("ha-ha-ha this is on purpose");
             }
             
             // convert digest to string for target file creation
@@ -144,7 +151,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     }
 
     private String tmpFileName() {
-        return attachmentsLocation + File.separator  + getUsername() + "_" + new Date().getTime() + ".tmp";
+        return attachmentsLocation + File.separator  + getUsername() + "_" + randomUUID().toString() + ".tmp";
     }
     
     private String targetFileName(final String sha1) {
