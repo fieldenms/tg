@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import java.io.InputStream;
+import java.util.Date;
 import java.util.Optional;
 
 import ua.com.fielden.platform.rx.AbstractSubjectKind;
@@ -20,8 +21,18 @@ public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> ext
 
     private InputStream inputStream;
     private String origFileName;
+    private Date lastModified;
     
     private Optional<AbstractSubjectKind<Integer>> eventSourceSubject = Optional.empty();
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Date lastModified) {
+        this.lastModified = lastModified;
+    }
+
 
     public AbstractEntityWithInputStream<K> setOrigFileName(final String origFileName) {
         this.origFileName = origFileName;

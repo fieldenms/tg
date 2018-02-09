@@ -247,8 +247,10 @@
 					// which is provided to the server as a header value
 					var jobUid = this.generateUUID();
 					xhr.setRequestHeader('jobUid', jobUid);
-					// and also let's provide the original file name
-					xhr.setRequestHeader('origFileName', fileNames);
+					// and also let's provide the original file meta-data
+					xhr.setRequestHeader('origFileName', file.name);
+					xhr.setRequestHeader('lastModified', file.lastModified);
+					
 
 					// let's add onload handler to return the element to its original look
 					// and to invoke an external response handler if provided
@@ -291,12 +293,11 @@
 					// and to invoke an external response handler if provided
 					xhr.onerror = function(e) {
 						this.closeEventSource();
-
+						this._cleanup();
+						
 						if (this.fpErrorHandler) {
 							this.fpErrorHandler(e);
 						}
-
-						this._cleanup();
 					}.bind(this);
 
 					// let's clean up if the call was aborted

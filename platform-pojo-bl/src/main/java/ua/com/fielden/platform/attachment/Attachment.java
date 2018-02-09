@@ -2,6 +2,8 @@ package ua.com.fielden.platform.attachment;
 
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
+import java.util.Date;
+
 import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
 import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
@@ -85,6 +87,13 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Final(persistentOnly = false)
     @AfterChange(AssignAttachmentTitle.class)
     private String origFileName;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Last Modified", desc = "The date/time of last file modification.")
+    @Readonly
+    @Final(persistentOnly = false)
+    private Date lastModified;
     
     @IsProperty
     @MapTo
@@ -188,4 +197,15 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public String getTitle() {
         return title;
     }
+    
+    @Observable
+    public Attachment setLastModified(final Date lastModified) {
+        this.lastModified = lastModified;
+        return this;
+    }
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
 }

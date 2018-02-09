@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.IOException;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -45,6 +46,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final Router router;
     private final String jobUid;
     private final String origFileName;
+    private final Date fileLastModified;
 
     public FileProcessingResource(
             final Router router, 
@@ -75,6 +77,9 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         if (StringUtils.isEmpty(origFileName)) {
             throw new IllegalArgumentException("origFileName is required");
         }
+        
+        final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified"));
+        this.fileLastModified = new Date(lastModified);
     }
 
     /**
@@ -126,6 +131,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         try {
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
+            entity.setLastModified(fileLastModified);
             entity.setInputStream(stream);
             entity.setEventSourceSubject(subject);
 

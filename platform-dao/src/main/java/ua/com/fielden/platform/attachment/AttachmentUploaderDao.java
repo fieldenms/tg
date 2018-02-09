@@ -117,7 +117,8 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         LOGGER.debug(format("Creating an attachment for uploaded [%s].", uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
-                .setOrigFileName(uploader.getOrigFileName());
+                .setOrigFileName(uploader.getOrigFileName())
+                .setLastModified(uploader.getLastModified());
         try {
             final Attachment savedAttachment = co$(Attachment.class).save(attachment);
             uploader.setKey(savedAttachment);
