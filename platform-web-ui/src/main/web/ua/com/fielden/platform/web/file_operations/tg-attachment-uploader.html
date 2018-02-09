@@ -1,6 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-progress/paper-progress.html">
@@ -131,14 +130,6 @@
 		
         <tg-serialiser id="serialiser"></tg-serialiser>
 		
-
-		<!-- content below is only needed during the development phase and will be removed once the component it completed -->
-		<br>
-		<br>
-		<paper-button raised roll="button" id="fileSelect" on-tap='openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_fpInProgress]]">
-			<span>[[status]]</span>
-		</paper-button>
-
 
 		<!-- need also support some debug information on a selected file -->
 		<template is='dom-if' if='[[debug]]'>
@@ -346,38 +337,7 @@
 					}
 		        }
 		    }
-		},
-
-		_dragenter: function(e) {
-			e.stopPropagation();
-			e.preventDefault();
-
-			this.$.fileSelect.classList.add('over');
-		},
-
-		_dragover: function(e) {
-			e.stopPropagation();
-			e.preventDefault();
-			
-			this.$.fileSelect.classList.add('over');
-		},
-
-		_dragleave: function(e) {
-			e.stopPropagation();
-			e.preventDefault();
-			
-			this.$.fileSelect.classList.remove('over');
-		},
-
-		_drop: function(e) {
-			e.stopPropagation();
-			e.preventDefault();
-			this.$.fileSelect.classList.remove('over');
-
-			const fileList = e.dataTransfer.files;
-			this.upload(fileList[0]);
 		}
-
 	});
 })();
 </script>
