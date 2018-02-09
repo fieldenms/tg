@@ -11,14 +11,6 @@ import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
-import com.esotericsoftware.kryo.Context;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Kryo.RegisteredClass;
-import com.esotericsoftware.kryo.SerializationException;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.serialize.IntSerializer;
-import com.esotericsoftware.kryo.serialize.LongSerializer;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -27,6 +19,14 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import com.esotericsoftware.kryo.Context;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Kryo.RegisteredClass;
+import com.esotericsoftware.kryo.SerializationException;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.serialize.IntSerializer;
+import com.esotericsoftware.kryo.serialize.LongSerializer;
 
 /**
  * Serialises descendants of {@link AbstractEntity}.
@@ -116,7 +116,7 @@ public final class EntitySerialiser extends Serializer {
             IntSerializer.put(buffer, reference, true);
             return;
         }
-
+        
         IntSerializer.put(buffer, 0, true);
         references.referenceCount++;
         references.objectToReference.put(instance, references.referenceCount);
@@ -145,12 +145,12 @@ public final class EntitySerialiser extends Serializer {
                 // non-composite keys should be persisted by identifying their actual type
                 final String name = prop.field.getName();
                 lastProperty = name;
-
+                
                 Object protoValue = prop.field.get(entity);
                 if (protoValue instanceof AbstractEntity) {
-                    protoValue = ((AbstractEntity<?>) protoValue).isIdOnlyProxy() ? null : protoValue;
+                    protoValue = ((AbstractEntity<?>) protoValue).isIdOnlyProxy() ? null : protoValue; 
                 }
-
+                
                 final Object value =  protoValue;
                 final Optional<MetaProperty<?>> metaProp = entity.getPropertyOptionally(name);
                 final boolean dirty = !metaProp.isPresent() || metaProp.get().isProxy() ? false : metaProp.get().isDirty();
@@ -223,13 +223,12 @@ public final class EntitySerialiser extends Serializer {
             final Long id = NOT_NULL_NOT_DIRTY == buffer.get() ? LongSerializer.get(buffer, false) : null;
             final AbstractEntity<?> entity;
 
-            //if (DynamicEntityClassLoader.isGenerated(type)) {
-                entity = EntityFactory.newPlainEntity(type, id);
-                entity.setEntityFactory(factory);
-            //            } else {
-            //                entity = factory.newEntity(type, id);
-            //            }
-
+            // TODO at this stage only crit-only single entity-typed criterion value could be serialised by this serialiser.
+            // That's why serialisation will occur into uninstrumented instance regardless of whether original instance was instrumented.
+            // It will be sufficient for selection criteria serialisation.
+            entity = EntityFactory.newPlainEntity(type, id);
+            entity.setEntityFactory(factory);
+            
             references.referenceCount++;
             references.referenceToObject.put(references.referenceCount, entity);
 

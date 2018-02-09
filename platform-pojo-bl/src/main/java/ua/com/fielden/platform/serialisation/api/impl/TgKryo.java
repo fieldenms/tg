@@ -644,7 +644,6 @@ class TgKryo extends Kryo implements ISerialiserEngine {
                         }
                     }
                 }
-                //DefinersExecutor.execute(entity);
                 entity.endInitialising();
             }
         }
