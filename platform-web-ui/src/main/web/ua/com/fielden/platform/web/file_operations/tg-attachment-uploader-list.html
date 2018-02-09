@@ -1,0 +1,189 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/file_operations/tg-attachment-uploader.html">
+
+<dom-module id="tg-attachment-uploader-list">
+	<template>
+		<style>
+			:host {
+				display: inline-block;
+				position: relative;
+				box-sizing: border-box;
+				text-align: center;
+				font: inherit;
+				outline: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				-webkit-user-select: none;
+				user-select: none;
+			}
+
+			.over {
+				background: var(--paper-green-100);
+			}
+
+			#fileSelect {
+				cursor: pointer;
+			}
+
+			#container {
+				display: flex;
+				flex-direction: column;
+				border:1px dashed #ff5555;
+				padding: 8px;
+			}
+			
+		</style>
+
+		<div id="container" style="width:100%" on-tap='_openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+			<tg-attachment-uploader style='width: 100%' id='firstUploader' url$='[[url]]' upload-size-limit-kb$='[[uploadSizeLimitKb]]' mime-types-accepted$='[[mimeTypesAccepted]]'></tg-attachment-uploader>		
+		</div>
+
+	</template>
+</dom-module>
+
+<script>
+(function () {
+	Polymer({
+		is: 'tg-attachment-uploader-list',
+
+		behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+
+		properties: {
+			/* If enabled will output names, number, total size and mime types of the selected files. */
+			debug: {
+				type: Boolean,
+				value: false
+			},
+		    
+			/* URI that points to a file processing resource. */
+			url: {
+				type: String,
+			},
+
+			/* The limit of data to be uploaded for processing in Kibibytes. */
+			uploadSizeLimitKb: {
+				type: Number,
+				value: 20480 // 20 Mebibyte
+			},
+
+			/* Acceptable mime types for the files to be uploaded. */
+			mimeTypesAccepted: {
+				type: String,
+				value: '*/*',
+				observer: '_mimeTypesAcceptedChanged'
+			},
+		    
+			/* A callback, which gets invoked when uploading of all files stopped, either due to success, error or abortion. */
+			processUploadingStopped: {
+			    type: Function
+			},
+			
+			numberOfUploaded: {
+			    type: Function
+			},
+			
+			numberOfFailed: {
+			    type: Function
+			},
+
+			numberOfAborted: {
+			    type: Function
+			},
+			
+			_uploadInput: {
+				type: Object,
+			}
+
+		},
+		
+		created: function() {
+			// let's create an invisible file input element to be used for opening a file dialog
+			this._uploadInput = document.createElement('input');
+			this._uploadInput.type = 'file';
+			this._uploadInput.setAttribute('multiple', ''); // support multiple files
+			this._uploadInput.onchange = function() {
+			    // TODO this where uploading starts
+				//this._handleFiles(this._uploadInput.files);
+			    
+			    this.submitUploading(this._uploadingInput.files);
+			}.bind(this);
+		},
+		
+		_mimeTypesAcceptedChanged: function(newValue, oldValue) {
+			this._uploadInput.setAttribute('accept', newValue);
+		},
+		
+		ready: function() {
+			this.numberOfUploaded = function () {
+			    return 1;
+			}
+
+			this.numberOfFailed = function () {
+			    return 1;
+			}
+
+			this.numberOfAborted = function () {
+			    return 1;
+			}
+		},
+		
+		/* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */
+		_openFileDialog: function(e) {
+			// let give a chance for tap animation to do its work
+			this.async(function() {
+				if (this._uploadInput) {
+					this._uploadInput.click();
+				} else {
+					throw new Error('this._uploadInput is not defined!');
+				}
+			}.bind(this), 200);
+		},
+
+		/* Function responsible for submitting files into the queue for uploading. */
+		submitUploading: function(fileList) {
+			// TODO add files one by one...
+			this.$.firstUploader.processUploadingStopped = function(uploader) {
+			    console.log("UPLOADER STOPPED FOR id=", uploader.id);
+			    if (this.processUploadingStopped) {
+			        this.processUploadingStopped(uploader);
+			    }
+			}.bind(this);
+			
+			this.$.firstUploader.upload(fileList[0]);
+		},
+		
+		_dragenter: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+
+			this.classList.add('over');
+		},
+
+		_dragover: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			
+			this.classList.add('over');
+		},
+
+		_dragleave: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			
+			this.classList.remove('over');
+		},
+
+		_drop: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			this.classList.remove('over');
+
+			this.submitUploading(e.dataTransfer.files);
+		}
+
+	});
+})();
+</script>
