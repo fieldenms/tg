@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-progress/paper-progress.html">
 
-<link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/file_operations/tg-file-processing-behavior.html">
 
@@ -100,6 +100,9 @@
 			<div class="labelHolder"><span class="status" tooltip-text="Current status">[[status]]</span><span class="fileName" tooltip-text$="[[_fileNameTooltip(fileName, _errorMsg)]]">[[fileName]]</span></div>
 			<paper-progress id="progressBar"></paper-progress>
 		</div>
+		
+        <tg-serialiser id="serialiser"></tg-serialiser>
+		
 
 		<!-- content below is only needed during the development phase and will be removed once the component it completed -->
 		<br>
@@ -208,7 +211,6 @@
         },
 
         _fileNameTooltip: function (fileName, errorMsg) {
-            console.log("_fileNameTooltip: ", fileName + '<br>' + errorMsg);
             return fileName + '<br><span>' + errorMsg + '</span>';
         },
 
@@ -225,10 +227,21 @@
 			}.bind(this);
 
 			this.fpErrorHandler = function(e) {
+			    const getResult = (response) => {
+				    const result = this.$.serialiser.deserialise(response);
+				    if (typeof result === 'string') {
+				        return JSON.parse(result);
+				    } else {
+						return result;			        
+				    }
+			    }
+			    
 			    this.status = this.statuses.ERROR;
-
+			    const result = getResult(e.currentTarget.response);
+			    this._errorMsg = result.message;
+			    
 				if (this.processError) {
-					this.processError(e);
+					this.processError(result);
 				}
 			}.bind(this);
 
@@ -247,7 +260,10 @@
 			}
 
 			this.fpFileUploadedEventHandler = function() {
+			    this._updateProgress(100); // make sure UPLOADING progress is at 100%
 			    this.status = this.statuses.PROCESSING;
+			    this._updateProgress(3); // set some small value such as 3% just to provide some feedback to about processing starting
+			    
 				if (this.processFileUploadedEvent) {
 					this.processFileUploadedEvent();
 				}
@@ -258,15 +274,19 @@
 		    if (file instanceof File) {
 		        // _handleFiles requires FileList or an array of files for legacy reasons
 		        try {
+		            // set progress to 0 as a new file is being uploaded
 		            this.$.progressBar.value = 0;
 		            this.$.progressBar.secondaryProgress = 0;
-		            this.fileName = file.name;
 		            this._errorMsg = '';
+		            this.fileName = file.name;
 		        		this._handleFiles([file]);
 		        } catch (error) {
 		            console.error(error);
 		            this.status = this.statuses.ERROR;
 		            this._errorMsg = error;
+					if (this.processError) {
+						this.processError(error);
+					}
 		        }
 		    }
 		},
