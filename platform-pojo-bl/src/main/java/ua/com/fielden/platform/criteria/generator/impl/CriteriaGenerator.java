@@ -222,12 +222,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-        
-//        TODO this logic is needed for 'clearing requiredness errors during validation' -- need to clarify whether such logic should be implemented
-//        if (critOnlyAnnotation != null) {
-//            // generate CritOnly annotation exactly like in original property, from which this single criterion has been generated; this will facilitate crit-only requiredness errors clearing (EntityResourceUtils.disregardCritOnlyRequiredProperties)
-//            annotations.add(new CritOnlyAnnotation(critOnlyAnnotation.value(), critOnlyAnnotation.scale(), critOnlyAnnotation.precision()).newInstance());
-//        }
         final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
         if (newCritOnly.isPresent()) {
             annotations.add(newCritOnly.get().newInstance());

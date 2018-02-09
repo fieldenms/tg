@@ -431,32 +431,6 @@ public class EntityResourceUtils {
         return entity;
     }
 
-//    TODO this logic is needed for 'clearing requiredness errors during validation' -- need to clarify whether such logic should be implemented
-//    /**
-//     * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types and on selection criteria (save / run will trigger requiredness later).
-//     *
-//     * @param entity
-//     */
-//    private static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
-//        logger.error("disregardCritOnlyRequiredProperties for entity " + entity);
-//        final Class<?> managedType = entity.getType();
-//        entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
-//            final String prop = mp.getName();
-//            logger.error("disregardCritOnlyRequiredProperties for prop 1 " + prop);
-//            final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
-//            if (critOnlyAnnotation != null) {
-//                logger.error("disregardCritOnlyRequiredProperties for prop 2 " + prop);
-//                if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
-//                    logger.error("disregardCritOnlyRequiredProperties for prop 3 " + prop);
-//                    mp.setRequiredValidationResult(successful(entity));
-//                } else {
-//                    logger.error("disregardCritOnlyRequiredProperties for prop 4 " + prop);
-//                    mp.setDomainValidationResult(successful(entity));
-//                    mp.setRequiredValidationResult(successful(entity));
-//                }
-//            }
-//        });
-//    }
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
      *
