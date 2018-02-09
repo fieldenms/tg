@@ -21,14 +21,12 @@
 
 				/* The limit of data to be uploaded for processing in Kibibytes. */
 				uploadSizeLimitKb: {
-					type: Number,
-					value: 20480 // 20 Mebibyte
+					type: Number
 				},
 
 				/* Acceptable mime types for the files to be uploaded. */
 				mimeTypesAccepted: {
 					type: String,
-					value: '*/*',
 					observer: '_mimeTypesAcceptedChanged'
 				},
 
