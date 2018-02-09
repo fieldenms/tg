@@ -34,6 +34,8 @@
 			}
 
 			#container {
+				display: flex;
+				flex-direction: column;
 				border:1px dashed #aaaaaa;
 			}
 			
@@ -102,6 +104,17 @@
 				--paper-progress-secondary-color: var(--paper-grey-200);
 			}
 			
+			.errorMsg {
+				font-size: 12px;
+				font-weight: 400;			
+				color: var(--paper-input-container-invalid-color, --error-color);
+				text-align: left;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				padding: 4px 8px 4px 8px;
+			}
+			
 		</style>
 
 		<div id="container" style="width:100%" tooltip-text$="[[_fileNameTooltip(fileName, _errorMsg)]]">
@@ -113,6 +126,7 @@
 				</div>
 			</div>
 			<paper-progress id="progressBar"></paper-progress>
+			<span class='errorMsg' hidden$='[[!_errorMsg]]'>[[_errorMsg]]</span>
 		</div>
 		
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -328,7 +342,7 @@
 		            this.status = this.statuses.ERROR;
 		            this._errorMsg = error;
 					if (this.processError) {
-						this.processError(error);
+					    this.processError({message: error});
 					}
 		        }
 		    }
