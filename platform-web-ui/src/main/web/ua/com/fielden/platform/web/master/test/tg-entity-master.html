@@ -1169,7 +1169,8 @@
             });
             
             test('avoids for existing valid non-dirty entity with Already Saved exception thrown', function (done) {
-                var firstValidation = true;
+                let firstValidation = true;
+                let thirdValidation = false;
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
@@ -1177,11 +1178,12 @@
                     if (firstValidation) {
                         MockInteractions.tap(saveButton);
                         firstValidation = false;
-                    } else {
+                    } else if (!firstValidation && !thirdValidation) {
                         master.$.editor_4_dateProp._editingValue = '01/02/2003 00:00';
                         master.$.editor_4_dateProp.commit();
                         MockInteractions.tap(saveButton);
-                    }
+                        thirdValidation = true;
+                    } 
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
