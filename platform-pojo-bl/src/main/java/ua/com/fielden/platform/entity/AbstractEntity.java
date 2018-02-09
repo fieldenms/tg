@@ -319,6 +319,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String KEY = "key";
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
+    public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
     public static final Set<String> COMMON_PROPS = unmodifiableSet(new HashSet<>(Arrays.asList(new String[] {KEY, DESC, "referencesCount", "referenced"})));
 
     /**
@@ -357,11 +358,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * So, the place where in the application logic an entity was instantiated can determine which of its properties should be focused by default.
      */
     private transient String preferredProperty;
-
-    /**
-     * A custom toString value for this entity to override default logic.
-     */
-    private transient String customString;
 
     /**
      * This is a default constructor, which is required for reflective construction.
@@ -504,7 +500,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (isIdOnlyProxy()) {
             return format("ID = %s", getId());
         }
-        return customString != null ? customString : getKey() != null ? getKey().toString() : "[key is not assigned]";
+        return getKey() != null ? getKey().toString() : KEY_NOT_ASSIGNED;
     }
 
     /**

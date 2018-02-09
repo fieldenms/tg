@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntit
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
@@ -248,7 +247,7 @@ public class EntityResourceUtils {
             if (valToBeApplied != null && convertedValue == null) {
                 final Class<?> propType = determinePropertyType(type, name);
                 if (isEntityType(propType)) {
-                    valueToBeApplied = createMockNotFoundEntity(propType, valToBeApplied.toString());
+                    valueToBeApplied = createMockNotFoundEntity(propType);
                 } else {
                     valueToBeApplied = convertedValue;
                 }
@@ -283,26 +282,14 @@ public class EntityResourceUtils {
     }
     
     /**
-     * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID but can gracefully be converted to {@link String} with concrete <code>toStringVal</code> value.
+     * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
+     * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
      * 
      * @param type
-     * @param toStringVal
      * @return
      */
-    private static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type, final String toStringVal) {
-        try {
-            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) type;
-            final AbstractEntity<?> mockEntity = newPlainEntity(entityType, null);
-            
-            final Field customStringField = getFieldByName(entityType, "customString");
-            customStringField.setAccessible(true);
-            customStringField.set(mockEntity, toStringVal);
-            customStringField.setAccessible(false);
-            
-            return mockEntity;
-        } catch (final Exception ex) {
-            throw new EntityResourceUtilsException("Creation of mock 'not found' entity has failed.", ex);
-        }
+    private static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type) {
+        return newPlainEntity((Class<AbstractEntity<?>>) type, null);
     }
     
     /**
