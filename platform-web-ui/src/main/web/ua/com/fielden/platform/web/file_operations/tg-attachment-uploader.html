@@ -54,6 +54,7 @@
 			}
 			
 			.fileName {
+				flex: auto;
 				text-align: left;
 				overflow: hidden;
     				text-overflow: ellipsis;
@@ -96,8 +97,8 @@
 			
 		</style>
 
-		<div id="container" style="width:100%" disabled$="[[_fpInProgress]]">
-			<div class="labelHolder"><span class="status" tooltip-text="Current status">[[status]]</span><span class="fileName" tooltip-text$="[[_fileNameTooltip(fileName, _errorMsg)]]">[[fileName]]</span></div>
+		<div id="container" style="width:100%" tooltip-text$="[[_fileNameTooltip(fileName, _errorMsg)]]">
+			<div class="labelHolder"><span class="status">[[status]]</span><span class="fileName">[[fileName]]</span></div>
 			<paper-progress id="progressBar"></paper-progress>
 		</div>
 		
@@ -230,9 +231,9 @@
 			    const getResult = (response) => {
 				    const result = this.$.serialiser.deserialise(response);
 				    if (typeof result === 'string') {
-				        return JSON.parse(result);
+						return JSON.parse(result);
 				    } else {
-						return result;			        
+						return result;
 				    }
 			    }
 			    
