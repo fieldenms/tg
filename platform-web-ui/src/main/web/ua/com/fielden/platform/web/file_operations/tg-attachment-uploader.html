@@ -151,6 +151,10 @@
 
 		behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
+		observers: [
+			'_canTryFileUploading(file, url, uploadSizeLimitKb, mimeTypesAccepted)'
+		],
+	
 		properties: {
 		    
 		    statuses: {
@@ -168,6 +172,9 @@
 
 			status: {
 				type: String,
+				value: function() {
+					return 'PENDING';
+				},
 				observer: '_statusChange'
 			},
 			
@@ -179,6 +186,10 @@
 			_errorMsg: {
 				type: String,
 				value: ''
+			},
+			
+			file: {
+			    type: Object
 			},
 
 			/*
@@ -201,6 +212,13 @@
 				type: Function
 			}
 
+		},
+		
+		_canTryFileUploading: function(file, url, uploadSizeLimitKb, mimeTypesAccepted) {
+		    console.log('File provided:', file, ' url=', url, ' uploadSizeLimitKb = ', uploadSizeLimitKb, ' mimeTypesAccepted=', mimeTypesAccepted);
+			if (file instanceof File && this.status === this.statuses.PENDING) {
+			    this.upload(file);
+			}    
 		},
 		
 		_statusChange: function (newStatus, oldStatus) {
@@ -258,8 +276,6 @@
         },
 
 		ready: function() {
-		    this.status = this.statuses.PENDING;
-		    
 			this.fpResponseHandler = function(e) {
 			    this.status = this.statuses.COMPLETED;
 				this._updateProgress(100);
