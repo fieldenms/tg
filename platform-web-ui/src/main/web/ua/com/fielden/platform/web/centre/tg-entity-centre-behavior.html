@@ -65,7 +65,7 @@
                     queryParam.exclude2 = shouldExcludeSecondParam(queryParts[1]);
                 }
             } else {
-                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "");
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], "");
                 queryParam.firstEditorValue = queryParts[1];
             }
             return queryParam;

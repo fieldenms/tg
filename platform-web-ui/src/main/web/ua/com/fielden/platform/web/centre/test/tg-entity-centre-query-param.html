@@ -253,7 +253,7 @@
             
              test("crit only properties don't set mnemonics", function (done) {
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_critOnlyBooleanProp_is;
+                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_critOnlyBooleanProp;
                     var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_critOnlyBooleanProp;
                     var oldValue = editor._editingValue;
                     var oldNot = criterion._not;
