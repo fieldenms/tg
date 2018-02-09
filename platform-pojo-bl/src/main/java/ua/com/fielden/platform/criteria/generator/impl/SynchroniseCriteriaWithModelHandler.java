@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.generateCriteriaPropertyName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaProperty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.isSecondParam;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
@@ -31,11 +29,11 @@ import ua.com.fielden.platform.error.Result;
  * @param <T>
  */
 public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> implements IAfterChangeEventHandler<Object> {
-    private final static Logger LOGGER = Logger.getLogger(SynchroniseCriteriaWithModelHandler.class);
+    public static final Long CRITERIA_ENTITY_ID = 333L;
     
     @Override
     public void handle(final MetaProperty<Object> property, final Object newValue) {
-        LOGGER.error(format("\t\tACE started for [%s]...", property.getName()));
+        // LOGGER.debug(format("\t\tACE started for [%s]...", property.getName()));
         // criteria entity and property
         final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = (EntityQueryCriteria<CDTME, T, IEntityDao<T>>) property.getEntity();
         final Class<?> criteriaType = criteriaEntity.getType();
@@ -47,20 +45,20 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         
         // crit-only single property processing differs from any other property processing
         if (isCritOnlySingle(entityType, propName)) {
-            LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...", propName));
+            // LOGGER.debug(format("\t\t\toriginal property [%s] is crit-only single...", propName));
             // set corresponding critOnlySinglePrototype's property which will trigger all necessary validations / definers and dependent properties processing
-            criteriaEntity.critOnlySinglePrototypeInit(entityType, /* TODO criteriaEntity.getId() */ 333L).set(propName, newValue);
+            criteriaEntity.critOnlySinglePrototypeInit(entityType, CRITERIA_ENTITY_ID).set(propName, newValue);
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
             final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
             // apply the snapshot against criteriaEntity
             applySnapshot(criteriaEntity, snapshot);
-            LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...done", propName));
+            // LOGGER.debug(format("\t\t\toriginal property [%s] is crit-only single...done", propName));
         } else {
-            LOGGER.error(format("\t\t\toriginal property [%s] is simple...", propName));
+            // LOGGER.debug(format("\t\t\toriginal property [%s] is simple...", propName));
             updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, propName, newValue, criteriaType, criteriaPropName);
-            LOGGER.error(format("\t\t\toriginal property [%s] is simple...done", propName));
+            // LOGGER.debug(format("\t\t\toriginal property [%s] is simple...done", propName));
         }
-        LOGGER.error(format("\t\tACE started for [%s]...done", property.getName()));
+        // LOGGER.debug(format("\t\tACE started for [%s]...done", property.getName()));
     }
     
     /**
@@ -78,20 +76,9 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         final boolean isSecond = isSecondParam(criteriaType, criteriaPropName);
         final Object currValue = isSecond    ? criteriaTick.getValue2(entityType, propName)
                                              : criteriaTick.getValue(entityType, propName);
-        if (!equalsEx(currValue, newValue)) {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...", propName, currValue, newValue));
-        } else {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
-        }
-        final IAddToCriteriaTickManager v = equalsEx(currValue, newValue) ? criteriaTick : 
+        return equalsEx(currValue, newValue) ? criteriaTick : 
                isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
                                              : criteriaTick.setValue(entityType, propName, newValue);
-        if (!equalsEx(currValue, newValue)) {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...done", propName, currValue, newValue));
-        } else {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...done", propName, currValue));
-        }
-        return v;
     }
     
     /**
@@ -112,9 +99,6 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
                 final MetaProperty<Object> criteriaMetaProp = (MetaProperty<Object>) mp;
                 // the order of meta-info application is synced with EntityJsonDeserialiser; all properties are copied excluding prevValue, valueChangeCount and visible -- it is believed that these props are not relevant for critOnlySinglePrototype lifecycle 
                 final Result firstFailure = metaProp.getFirstFailure();
-                // TODO do we need to clear required validation result?
-                // TODO following logic is needed for 'clearing requiredness errors during validation' -- need to clarify whether such logic should be implemented
-                // TODO criteriaMetaProp.setRequiredValidationResult(successful(criteriaEntity));
                 criteriaMetaProp.setDomainValidationResult(firstFailure == null ? metaProp.getFirstWarning() : firstFailure);
                 criteriaMetaProp.setOriginalValue(metaProp.getOriginalValue());
                 criteriaMetaProp.setLastInvalidValue(metaProp.getLastInvalidValue());

@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -75,7 +76,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
 
-    private static final Logger logger = Logger.getLogger(CriteriaGenerator.class);
+    private static final Logger LOGGER = Logger.getLogger(CriteriaGenerator.class);
 
     private final EntityFactory entityFactory;
 
@@ -152,7 +153,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
             return entity;
         } catch (final Exception e) {
-            logger.error(e.getMessage(), e);
+            LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
         }
     }
@@ -172,7 +173,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
         final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
 
-        if (AbstractDomainTree.isDoubleCriterion(managedType, propertyName)) {
+        if (isDoubleCriterion(managedType, propertyName)) {
             generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
         } else {
             generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
@@ -201,7 +202,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             hasEntityExists = setter == null ? false : AnnotationReflector.isAnnotationPresent(setter, EntityExists.class);
         } catch (final ReflectionException e) {
             // TODO if this is an error -- please handle it appropriately, if not -- please remove rigorous logging
-            logger.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
+            LOGGER.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
         }
         final boolean finalHasEntityExists = hasEntityExists;
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
@@ -288,7 +289,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param entity
      */
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {
-        logger.error(format("!synchroniseWithModel started..."));
+        // LOGGER.debug(format("synchroniseWithModel started..."));
         final Class<T> root = entity.getEntityClass();
         final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         CriteriaReflector.getCriteriaProperties(entity.getType()).stream().map(propertyField -> {
@@ -297,14 +298,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
             final Field field = fieldAndVal._1;
             try {
-                logger.error(format("\t!!synchroniseWithModel prop [%s] setting...", field.getName()));
+                // LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...", field.getName()));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
                 entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
             } catch (final Exception ex) {
-                logger.error(format("\t!!Could not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
-            }
-            logger.error(format("\t!!synchroniseWithModel prop [%s] setting...done", field.getName()));
+                LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
+            } 
+            // finally { LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
-        logger.error(format("!synchroniseWithModel started...done"));
+        // LOGGER.debug(format("synchroniseWithModel started...done"));
     }
 }

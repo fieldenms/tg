@@ -10,6 +10,8 @@ import java.util.Optional;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
@@ -64,6 +66,12 @@ public class EntityResourceContinuationsHelper {
         return saved;
     }
     
+    /**
+     * Validates entity skipping required checks for its {@link CritOnly} {@link Required} properties and not skipping these checks for other properties.
+     * 
+     * @param entity
+     * @return
+     */
     private static <T extends AbstractEntity<?>> boolean validateWithoutCritOnlyRequired(final T entity) {
         // iterate over properties in search of the first invalid one with required checks, but not for @CritOnly properties
         final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()

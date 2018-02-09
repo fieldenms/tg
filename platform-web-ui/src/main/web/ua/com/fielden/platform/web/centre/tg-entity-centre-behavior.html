@@ -939,16 +939,8 @@
             },
 
             canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
-                const reflector = this.$.selection_criteria._reflector();
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : 
-                    // (centreChanged === true);
-                    (_editedPropsExist
-                        ? true
-                        : (((reflector.isEntity(_currEntity) && _currEntity.isValid()) || (!reflector.isEntity(_currEntity)))
-                            ? (centreChanged === true)
-                            : _bindingEntityNotPersistentOrNotPersistedOrModified
-                          )
-                    );
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false :
+                    this.$.selection_criteria.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
             /**

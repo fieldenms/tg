@@ -408,7 +408,7 @@
             },
 
             canLeave: function () {
-                return this._centreChanged ? "Please save changes before leaving" : undefined; // TODO adjust this logic according to method tg-entity-centre-behavior.canManageCentreConfig
+                return this.canManageCentreConfig(this._centreChanged, this._bindingEntityNotPersistentOrNotPersistedOrModified, this._editedPropsExist, this._currEntity) ? "Please save changes before leaving" : undefined;
             },
 
             /**
@@ -487,7 +487,15 @@
             _canCurrent: function (pageNumber, pageCount) {
                 return !(pageCount <= 0);
             },
-
+            
+            canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                return _editedPropsExist ? true
+                    : (((this._reflector().isEntity(_currEntity) && _currEntity.isValid()) || (!this._reflector().isEntity(_currEntity)))
+                        ? (centreChanged === true)
+                        : _bindingEntityNotPersistentOrNotPersistedOrModified
+                    );
+            },
+            
             /**
              * Starts the process of centre run.
              *

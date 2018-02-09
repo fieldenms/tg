@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
@@ -76,7 +77,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
-
+    
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
     }
@@ -425,7 +426,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final boolean idAccessible = idField.isAccessible();
         idField.setAccessible(true);
         try {
-            idField.set(validationPrototype, 333L); // here the fictional id is populated to mark the entity as persisted!
+            idField.set(validationPrototype, CRITERIA_ENTITY_ID); // here the fictional id is populated to mark the entity as persisted!
             idField.setAccessible(idAccessible);
         } catch (IllegalArgumentException | IllegalAccessException e) {
             idField.setAccessible(idAccessible);

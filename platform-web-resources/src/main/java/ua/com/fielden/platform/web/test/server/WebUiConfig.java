@@ -1863,6 +1863,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
         return scl.build();
     }
     
+    /**
+     * Default value assigner for crit-only single criteria validation example.
+     * 
+     * @author TG Team
+     *
+     */
     private static class CosCritAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>, TgPersistentEntityWithProperties> {
         private final ITgPersistentEntityWithProperties co;
         

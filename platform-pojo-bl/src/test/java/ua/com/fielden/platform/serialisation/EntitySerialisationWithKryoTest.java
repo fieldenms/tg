@@ -21,7 +21,12 @@ import java.util.Map;
 
 import org.joda.time.Interval;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ClassWithMap;
@@ -44,10 +49,6 @@ import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.google.inject.Injector;
-import com.google.inject.Module;
 
 /**
  * Unit tests to ensure correct serialised/deserialised of {@link AbstractEntity} descendants.
@@ -94,7 +95,7 @@ public class EntitySerialisationWithKryoTest {
         entityForResult.addToDoubles(23.).addToDoubles(45.);
         entityForResult.setMoney(new Money("23.00", Currency.getInstance("AUD")));
     }
-
+    @Ignore
     @Test
     public void test_marshaling_unmarshalling_of_entities() throws Exception {
         //////////////////////////////////////////////////
@@ -204,7 +205,7 @@ public class EntitySerialisationWithKryoTest {
         final EntityWithQueryProperty restoredEntity = ((Kryo) kryoReader).readObject(readBuffer, EntityWithQueryProperty.class);
         assertNotNull(restoredEntity.getQuery());
     }
-
+    @Ignore
     @Test
     public void test_marshaling_of_result_without_exception() throws Exception {
         final Result result = new Result(entityForResult, "All cool.");
@@ -246,7 +247,7 @@ public class EntitySerialisationWithKryoTest {
         assertNotNull("Restored result should have message", restoredResultWithEx.getMessage());
         assertNotNull("Restored result should have instance", restoredResultWithEx.getInstance());
     }
-
+    @Ignore
     @Test
     public void test_marshaling_of_warning_result() throws Exception {
         final Warning restoredWarning = kryoReader.deserialise(kryoWriter.serialise(new Warning(entityForResult, "Warning message.")), Warning.class);
