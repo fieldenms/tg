@@ -50,7 +50,7 @@
 			console.log("file processing resulted in error:", e);
 		}
 		
-		t.abort = () => console.log(t.$.attachmentUploader.abort());
+		t.abort = () => console.log(t.$.attachmentUploader.abortUploadIfPossible());
 	}.bind(t));
 </script>
 

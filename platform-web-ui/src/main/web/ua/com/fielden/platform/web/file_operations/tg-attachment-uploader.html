@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-progress/paper-progress.html">
 
@@ -37,10 +39,13 @@
 			
 			.labelHolder {
 				display:flex;
-				padding: 8px;
+				flex-wrap: nowrap;
+				align-items: center;
+				padding-left: 8px;
 			}
 			
 			.status {
+				order: 1;
 				padding-right: 4px;
 				text-align: left; 
 				float: left;
@@ -55,10 +60,12 @@
 			
 			.fileName {
 				flex: auto;
+				order: 2;
 				text-align: left;
 				overflow: hidden;
     				text-overflow: ellipsis;
     				white-space: nowrap;
+    				padding-right: 4px;
 			}
 			
 			paper-progress {
@@ -98,7 +105,13 @@
 		</style>
 
 		<div id="container" style="width:100%" tooltip-text$="[[_fileNameTooltip(fileName, _errorMsg)]]">
-			<div class="labelHolder"><span class="status">[[status]]</span><span class="fileName">[[fileName]]</span></div>
+			<div class="labelHolder">
+				<span class="status">[[status]]</span>
+				<span class="fileName">[[fileName]]</span>
+				<div style="order: 3">
+					<paper-icon-button id="abortButton" disabled$="[[_abortDisabled(status)]]" on-tap="abortUploadIfPossible" icon="icons:cancel" class="abort-button custom-icon-buttons" tabIndex="-1" tooltip-text="Abort file uploading."></paper-icon-button>
+				</div>
+			</div>
 			<paper-progress id="progressBar"></paper-progress>
 		</div>
 		
@@ -210,6 +223,17 @@
                 }
             }
         },
+        
+        _abortDisabled: function (status) {
+        		return status !== this.statuses.UPLOADING;    
+        },
+        
+        abortUploadIfPossible: function() {
+            // check if we still can abort before aborting...
+            if (this.status === this.statuses.UPLOADING) {
+        			this.abort();    
+            }
+        },
 
         _fileNameTooltip: function (fileName, errorMsg) {
             return fileName + '<br><span>' + errorMsg + '</span>';
@@ -231,7 +255,12 @@
 			    const getResult = (response) => {
 				    const result = this.$.serialiser.deserialise(response);
 				    if (typeof result === 'string') {
-						return JSON.parse(result);
+				        try {
+							return JSON.parse(result);
+				        } catch (parsingError) {
+				            console.error(parsingError);
+				            return {message: result}; // return as is
+				        }
 				    } else {
 						return result;
 				    }
