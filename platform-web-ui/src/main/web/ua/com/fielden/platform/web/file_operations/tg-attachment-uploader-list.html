@@ -40,7 +40,12 @@
 
 		<div id="container" style="width:100%" on-tap='_openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
 			<template is='dom-repeat' items='[[_files]]' as='f'>
-				<tg-attachment-uploader style='width: 100%' file='[[f]]' url='[[url]]' upload-size-limit-kb='[[uploadSizeLimitKb]]' mime-types-accepted='[[mimeTypesAccepted]]'></tg-attachment-uploader>
+				<tg-attachment-uploader style='width: 100%' 
+					file='[[f]]' 
+					url='[[url]]' 
+					upload-size-limit-kb='[[uploadSizeLimitKb]]' 
+					mime-types-accepted='[[mimeTypesAccepted]]'
+					process-uploading-stopped='[[_perUploaderListenerOnUploadingStopped]]'></tg-attachment-uploader>
 			</template>
 		</div>
 
@@ -108,6 +113,18 @@
                     return [];
                 }
             },
+            
+    			_perUploaderListenerOnUploadingStopped: {
+    			    type: Function,
+    			    value: function() {
+	    			    return function(uploader) {
+			    		    console.log("UPLOADER STOPPED FOR id=", uploader);
+			    		    if (this.processUploadingStopped) {
+			    		        this.processUploadingStopped(uploader);
+			    		    }
+	    			    }.bind(this);
+    			    }
+    			}
 
 		},
 		
@@ -163,14 +180,8 @@
 		/* Function responsible for submitting files into the queue for uploading. */
 		submitUploading: function(fileList) {
 			// TODO add files one by one...
-			this._pushValue(fileList[0]);
-			
-/*  			this.$.firstUploader.processUploadingStopped = function(uploader) {
-			    console.log("UPLOADER STOPPED FOR id=", uploader.id);
-			    if (this.processUploadingStopped) {
-			        this.processUploadingStopped(uploader);
-			    }
-			}.bind(this); */
+			const self = this;
+			Array.from(fileList).forEach( file => self._pushValue(file) );
 		},
 		
 		_dragenter: function(e) {

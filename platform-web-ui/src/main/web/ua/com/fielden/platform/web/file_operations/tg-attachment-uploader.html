@@ -152,7 +152,7 @@
 		behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
 		observers: [
-			'_canTryFileUploading(file, url, uploadSizeLimitKb, mimeTypesAccepted)'
+			'_canTryFileUploading(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped)'
 		],
 	
 		properties: {
@@ -182,10 +182,13 @@
 			    type: String,
 			    value: 'no file was provided for upload'
 			},
+			
+			error: {
+			  type: Object  
+			},
 
 			_errorMsg: {
-				type: String,
-				value: ''
+				type: String
 			},
 			
 			file: {
@@ -214,8 +217,8 @@
 
 		},
 		
-		_canTryFileUploading: function(file, url, uploadSizeLimitKb, mimeTypesAccepted) {
-		    console.log('File provided:', file, ' url=', url, ' uploadSizeLimitKb = ', uploadSizeLimitKb, ' mimeTypesAccepted=', mimeTypesAccepted);
+		_canTryFileUploading: function(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped) {
+		    console.log('File provided:', file, ' url=', url, ' uploadSizeLimitKb = ', uploadSizeLimitKb, ' mimeTypesAccepted=', mimeTypesAccepted, ' and listener = ', processUploadingStopped);
 			if (file instanceof File && this.status === this.statuses.PENDING) {
 			    this.upload(file);
 			}    
@@ -255,6 +258,9 @@
                 		progressBar.value = percentage;
                 } else if (this.status === this.statuses.UPLOADING) {
                     progressBar.value = 0;
+                    progressBar.secondaryProgress = percentage;
+                } else if (this.status === this.statuses.COMPLETED) { // percentage should really be 100%
+                    progressBar.value = percentage;
                     progressBar.secondaryProgress = percentage;
                 }
             }
@@ -300,10 +306,11 @@
 				    }
 			    }
 			    
-			    this.status = this.statuses.ERROR;
 			    const result = getResult(e.currentTarget.response);
+			    this.error = result;
 			    this._errorMsg = result.message;
-			    
+
+			    this.status = this.statuses.ERROR;
 				if (this.processError) {
 					this.processError(result);
 				}
@@ -342,12 +349,14 @@
 		            this.$.progressBar.value = 0;
 		            this.$.progressBar.secondaryProgress = 0;
 		            this._errorMsg = '';
+		            this.error = {message: 'no errors'};
 		            this.fileName = file.name;
 		        		this._handleFiles([file]);
 		        } catch (error) {
 		            console.error(error);
-		            this.status = this.statuses.ERROR;
 		            this._errorMsg = error;
+		            this.error = {message: error};
+		            this.status = this.statuses.ERROR;
 					if (this.processError) {
 					    this.processError({message: error});
 					}
