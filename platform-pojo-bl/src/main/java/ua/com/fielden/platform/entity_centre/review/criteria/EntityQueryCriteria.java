@@ -814,6 +814,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public AbstractEntity<?> critOnlySinglePrototypeInit(final Class<AbstractEntity<?>> entityType, final Long id) {
         if (critOnlySinglePrototype == null) {
             critOnlySinglePrototype = getEntityFactory().newEntity(entityType, id);
+            critOnlySinglePrototype.resetMetaState();
         }
         return critOnlySinglePrototype();
     }
