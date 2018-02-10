@@ -190,19 +190,20 @@
                 this.alwaysOnTop = true;
             },
             
-            clearSelection: function () {
-                this._selectedIndex = 0;
-                this._keyBoardNavigationReady = false;
-                this.$.selector.selectedItem = null;
-            	this.selectedValues = {};
-            	while(this.pop('_values')){}
-            	
-                if (this.multi === true) {
-                    this.$.selector.selectedValues = [];
-                } else {
-                	this.$.selector.selected = '';
-                }
-            },
+			clearSelection: function () {
+				this._selectedIndex = 0;
+				this._keyBoardNavigationReady = false;
+				this.$.selector.selectedItem = null;
+				this.selectedValues = {};
+
+				while(this.pop('_values')){}
+
+				if (this.multi === true) {
+					this.$.selector.selectedValues = [];
+				} else {
+					this.$.selector.selected = '';
+				}
+			},
 
             /* Pushes the specified value into the tail of attay _values */
             pushValue: function(value) {
