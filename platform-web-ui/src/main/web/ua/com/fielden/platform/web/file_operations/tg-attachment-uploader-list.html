@@ -39,7 +39,7 @@
 		</style>
 
 		<div id="container" style="width:100%" on-tap='_openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
-			<template is='dom-repeat' id='uploaders' items='[[_filesToUpload]]' as='f'>
+			<template is='dom-repeat' id='uploaders' items='[[_filesToUpload]]' as='f' rendered-item-count="{{renderedCount}}">
 				<tg-attachment-uploader style='width: 100%'
 					id$='[[_makeId(index)]]'
 					list-index='[[index]]'
@@ -130,6 +130,8 @@
 				    		    if (elem) {
 				    		        elem.canUpload = true;
 				    		    }
+			    		    } else {
+			    		        this.uploadInProgress = false;
 			    		    }
 			    		    
 			    		    if (this.processUploadingStopped) {
@@ -139,15 +141,33 @@
     			    }
     			},
     			
-    			uploadersRenderedItemCountChanged: { 
-    			    type: Function,
-    			    value: function() {
-    			        return function() {
-    			   					console.log("RENDERED ITEMS COUNT:", this.$.uploaders.renderedItemCount);
-    					}.bind(this);
-    			    }
+    			/* A property that is bound to track the number of rendered attachment uploader components by dom-repeate component 'uploaders'.
+    			 * Changes in the number of rendered uploaders is used to decide if there is a need to start the actual uploading. */
+    			renderedCount: {
+    			    type: Number,
+    			    observer: '_renderedCountChanged'
+    			},
+    			
+    			/* Indicates whether there are any uploads that have not yet completed. 
+    			 * It is also used as part of '_renderedCountChanged' when deciding if a new upload should be started. */
+    			uploadInProgress: {
+    			    type: Boolean,
+    			    value: false
     			}
 
+		},
+		
+		/* Gets invoked upon the change to the number of attachment uploaders that are rendered by dom-repeate component 'uploaders'.
+		 * It is used to instigate uploading of the first file in the added batch if there are no other uploads in progress. */
+		_renderedCountChanged: function (newCount, oldCount) {
+		  	if (oldCount >= 0 && this.uploadInProgress === false) {
+		  	  	this.uploadInProgress = true;
+		        const startId = this._makeId(oldCount);
+			    const elem = Polymer.dom(this.root).querySelector("#" + startId);
+			    if (elem) {
+			        elem.canUpload = true;
+			    }
+		  	}
 		},
 		
 		created: function() {

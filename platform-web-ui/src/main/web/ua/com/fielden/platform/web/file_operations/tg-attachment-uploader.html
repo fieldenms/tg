@@ -170,6 +170,7 @@
 			            		ABORTED: 'ABORTED'};}   // indicate completion of the file upload
 		    },
 
+		    	/* The current status of the uploader. */
 			status: {
 				type: String,
 				value: function() {
@@ -178,19 +179,24 @@
 				observer: '_statusChange'
 			},
 			
+			/* A short file name (i.e. not a path). If observer _canTryFileUploading fires, which accepts a valid file object then this property get assigned value of file.name. */
 			fileName: {
 			    type: String,
 			    value: 'no file was provided for upload'
 			},
 			
+			/* An object representing the error if it occurres. */
 			error: {
 			  type: Object  
 			},
 
+			/* A value of the error message. */
 			_errorMsg: {
 				type: String
 			},
 			
+			/* The file that needs to be uploaded. It is primarily required for automatic instigation of file uploading based on observer _canTryFileUploading.
+			 * It does not have to be provided to upload a file per se. Instead method this.upload(someFile) can be used.*/
 			file: {
 			    type: Object
 			},
@@ -200,6 +206,7 @@
 				type: Number  
 			},
 			
+			/* This property is used as part of oberver _canTryFileUploading to control when file uploading can start. */
 			canUpload: {
 				type: Boolean,
 				value: false
@@ -227,9 +234,15 @@
 
 		},
 		
+		/* This is an observer that initiates file upload upon the provising of all listed property values. */
 		_canTryFileUploading: function(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped, canUpload, listIndex) {
-		    console.log('File provided:', file, ' url=', url, ' uploadSizeLimitKb = ', uploadSizeLimitKb, ' mimeTypesAccepted = ', mimeTypesAccepted, 'canUpload = ', this.canUpload, 'listIndex = ', this.listIndex);
-			if (file instanceof File && this.status === this.statuses.PENDING && (this.canUpload === true || this.listIndex === 0)) {
+		    // just to assigne the file name if the file was provided
+		    if (file instanceof File) {
+		        this.fileName = file.name;
+		    }
+		    
+		    // should the upload start?
+			if (file instanceof File && this.status === this.statuses.PENDING && this.canUpload === true) {
 			    this.upload(file);
 			}    
 		},
