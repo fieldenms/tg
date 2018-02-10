@@ -39,11 +39,13 @@
 		</style>
 
 		<div id="container" style="width:100%" on-tap='_openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
-			<template is='dom-repeat' items='[[_files]]' as='f'>
-				<tg-attachment-uploader style='width: 100%' 
-					file='[[f]]' 
-					url='[[url]]' 
-					upload-size-limit-kb='[[uploadSizeLimitKb]]' 
+			<template is='dom-repeat' id='uploaders' items='[[_filesToUpload]]' as='f'>
+				<tg-attachment-uploader style='width: 100%'
+					id$='[[_makeId(index)]]'
+					list-index='[[index]]'
+					file='[[f]]'
+					url='[[url]]'
+					upload-size-limit-kb='[[uploadSizeLimitKb]]'
 					mime-types-accepted='[[mimeTypesAccepted]]'
 					process-uploading-stopped='[[_perUploaderListenerOnUploadingStopped]]'></tg-attachment-uploader>
 			</template>
@@ -107,7 +109,7 @@
 			
             /* An array of files that need to be uploaded.
              * Should NOT be manipulated directly -- only via methods pushValue.*/
-            _files: {
+            _filesToUpload: {
                 type: Array,
                 value: function () {
                     return [];
@@ -118,11 +120,31 @@
     			    type: Function,
     			    value: function() {
 	    			    return function(uploader) {
-			    		    console.log("UPLOADER STOPPED FOR id=", uploader);
+			    		    console.log("UPLOADER STOPPED FOR index=", uploader.listIndex, 'id=', uploader.id);
+			    		    
+			    		    // if the uploader is not the last element then the next uploader needs to start uploading
+			    		    if (uploader.listIndex < this.$.uploaders.items.length - 1) {
+			    		        const nextId = this._makeId(uploader.listIndex+1);
+				    		    const elem = Polymer.dom(this.root).querySelector("#" + nextId);
+				    		    console.log("NEXT UPLOADER:", elem);
+				    		    if (elem) {
+				    		        elem.canUpload = true;
+				    		    }
+			    		    }
+			    		    
 			    		    if (this.processUploadingStopped) {
 			    		        this.processUploadingStopped(uploader);
 			    		    }
 	    			    }.bind(this);
+    			    }
+    			},
+    			
+    			uploadersRenderedItemCountChanged: { 
+    			    type: Function,
+    			    value: function() {
+    			        return function() {
+    			   					console.log("RENDERED ITEMS COUNT:", this.$.uploaders.renderedItemCount);
+    					}.bind(this);
     			    }
     			}
 
@@ -136,10 +158,6 @@
 			this._uploadInput.onchange = function() {
 			    this.submitUploading(this._uploadInput.files);
 			}.bind(this);
-		},
-		
-		_mimeTypesAcceptedChanged: function(newValue, oldValue) {
-			this._uploadInput.setAttribute('accept', newValue);
 		},
 		
 		ready: function() {
@@ -156,16 +174,21 @@
 			}
 		},
 		
-        /* Pushes the specified file into the tail of attay _files */
-        _pushValue: function(file) {
-            this.push('_files', file);
+		/**
+         * Makes a value for attribute id based on the provided index.
+         * Such id values are used for <tg-attachment-uploader> HTML elements representing list of files for upload. 
+         */
+		_makeId: function(index) {
+		    const id = "tg-attachment-uploader-" + index;
+			return id;
+		},
+		
+        /* Pushes the specified file into the tail of attay _filesToUpload, which triggers its uploading */
+        _pushFileForUpload: function(file) {
+            this.push('_filesToUpload', file);
         },
         
-        _makeId: function(index) {
-			return "id" + index;
-        },
-
-		/* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */
+        /* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */
 		_openFileDialog: function(e) {
 			// let give a chance for tap animation to do its work
 			this.async(function() {
@@ -179,11 +202,14 @@
 
 		/* Function responsible for submitting files into the queue for uploading. */
 		submitUploading: function(fileList) {
-			// TODO add files one by one...
 			const self = this;
-			Array.from(fileList).forEach( file => self._pushValue(file) );
+			Array.from(fileList).forEach( file => self._pushFileForUpload(file) );
 		},
-		
+
+		_mimeTypesAcceptedChanged: function(newValue, oldValue) {
+			this._uploadInput.setAttribute('accept', newValue);
+		},
+
 		_dragenter: function(e) {
 			e.stopPropagation();
 			e.preventDefault();

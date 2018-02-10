@@ -152,7 +152,7 @@
 		behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
 		observers: [
-			'_canTryFileUploading(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped)'
+			'_canTryFileUploading(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped, canUpload, listIndex)'
 		],
 	
 		properties: {
@@ -195,6 +195,16 @@
 			    type: Object
 			},
 
+			/* This property is used by <tg-attachment-uploader-list> to record the position of this instance in the list for each of access. */
+			listIndex: {
+				type: Number  
+			},
+			
+			canUpload: {
+				type: Boolean,
+				value: false
+			},
+			
 			/*
 			 * A callback function that accepts one argument -- an instance of 'this'.
 			 * It is invoked upon completion of the file upload, be that successful completion, error or abortion
@@ -217,9 +227,9 @@
 
 		},
 		
-		_canTryFileUploading: function(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped) {
-		    console.log('File provided:', file, ' url=', url, ' uploadSizeLimitKb = ', uploadSizeLimitKb, ' mimeTypesAccepted=', mimeTypesAccepted, ' and listener = ', processUploadingStopped);
-			if (file instanceof File && this.status === this.statuses.PENDING) {
+		_canTryFileUploading: function(file, url, uploadSizeLimitKb, mimeTypesAccepted, processUploadingStopped, canUpload, listIndex) {
+		    console.log('File provided:', file, ' url=', url, ' uploadSizeLimitKb = ', uploadSizeLimitKb, ' mimeTypesAccepted = ', mimeTypesAccepted, 'canUpload = ', this.canUpload, 'listIndex = ', this.listIndex);
+			if (file instanceof File && this.status === this.statuses.PENDING && (this.canUpload === true || this.listIndex === 0)) {
 			    this.upload(file);
 			}    
 		},
