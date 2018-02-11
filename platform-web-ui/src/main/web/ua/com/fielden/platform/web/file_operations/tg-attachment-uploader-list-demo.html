@@ -42,8 +42,9 @@
 	var t = document.querySelector('#t');
 
 	t.addEventListener('dom-change', function() {
-	    t.$.attachmentUploader.processUploadingStopped = function(uploader) {
-	        console.log('UPLOADING STOPPED for file [', uploader.fileName, '] with status ', uploader.status, ' error:', uploader.error);
+	    const uploaderList = t.$.attachmentUploader;
+	    uploaderList.processUploadingStopped = function() {
+	        console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);
 	    }
 	}.bind(t));
 </script>
