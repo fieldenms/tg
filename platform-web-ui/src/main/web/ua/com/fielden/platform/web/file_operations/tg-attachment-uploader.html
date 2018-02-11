@@ -195,10 +195,13 @@
 				type: String
 			},
 			
-			/* The file that needs to be uploaded. It is primarily required for automatic instigation of file uploading based on observer _canTryFileUploading.
-			 * It does not have to be provided to upload a file per se. Instead method this.upload(someFile) can be used.*/
+			/* 
+			 * The file that needs to be uploaded. 
+			 * It is primarily required for automatic instigation of file uploading based on observer _canTryFileUploading.
+			 */
 			file: {
-			    type: Object
+			    type: Object,
+			    observer: '_fileAssigned'
 			},
 
 			/* This property is used by <tg-attachment-uploader-list> to record the position of this instance in the list for each of access. */
@@ -243,8 +246,14 @@
 		    
 		    // should the upload start?
 			if (file instanceof File && this.status === this.statuses.PENDING && this.canUpload === true) {
-			    this.upload(file);
+			    this._uploadFile();
 			}    
+		},
+		
+		_fileAssigned: function(newFile, oldFile) {
+		    if (newFile instanceof File) {
+		    		this.fileName = newFile.name;
+		    }
 		},
 		
 		_statusChange: function (newStatus, oldStatus) {
@@ -364,8 +373,9 @@
 			}.bind(this);
 		},
 		
-		upload: function(file) {
-		    if (file instanceof File) {
+		/* Instigates file uploading. It is not intended for direct use. Insetead property file should be used to set the file for upload. */
+		_uploadFile: function() {
+		    if (this.file instanceof File) {
 		        // _handleFiles requires FileList or an array of files for legacy reasons
 		        try {
 		            // set progress to 0 as a new file is being uploaded
@@ -373,8 +383,7 @@
 		            this.$.progressBar.secondaryProgress = 0;
 		            this._errorMsg = '';
 		            this.error = {message: 'no errors'};
-		            this.fileName = file.name;
-		        		this._handleFiles([file]);
+					this._handleFiles([this.file]);
 		        } catch (error) {
 		            console.error(error);
 		            this._errorMsg = error;
