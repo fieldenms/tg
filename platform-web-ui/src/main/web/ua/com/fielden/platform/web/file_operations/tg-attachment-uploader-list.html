@@ -11,7 +11,7 @@
 			}
 
 			.over {
-				background: var(--paper-green-100);
+				background: var(--paper-blue-100);
 			}
 
 			#fileSelect {
@@ -33,6 +33,21 @@
 				user-select: none;
 			}
 			
+			#openDialogOrDrop {
+				display:flex;
+				flex-direction: column;
+				padding: 8px;
+				margin-top: 4px;
+				cursor: pointer;
+				border: 1px dashed var(--paper-grey-700);
+			}
+			
+			.dropHere {
+				flex:auto;
+				text-align: center;
+				font-weight: 700;
+				color: var(--paper-grey-400);			
+			}
 		</style>
 
 		<div id="container" style="width:100%" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
@@ -46,6 +61,9 @@
 					mime-types-accepted='[[mimeTypesAccepted]]'
 					process-uploading-stopped='[[_perUploaderListenerOnUploadingStopped]]'></tg-attachment-uploader>
 			</template>
+			<div id="openDialogOrDrop" on-tap="_openFileDialog" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+				<span id="dropAreaTitle" class="dropHere">Click to select files or Drop files for upload...</span>
+			</div>
 		</div>
 
 	</template>
@@ -257,27 +275,27 @@
 			e.stopPropagation();
 			e.preventDefault();
 
-			this.classList.add('over');
+			this.$.openDialogOrDrop.classList.add('over');
 		},
 
 		_dragover: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
 			
-			this.classList.add('over');
+			this.$.openDialogOrDrop.classList.add('over');
 		},
 
 		_dragleave: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
 			
-			this.classList.remove('over');
+			this.$.openDialogOrDrop.classList.remove('over');
 		},
 
 		_drop: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
-			this.classList.remove('over');
+			this.$.openDialogOrDrop.classList.remove('over');
 
 			this.submitUploading(e.dataTransfer.files);
 		}
