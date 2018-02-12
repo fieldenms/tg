@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/file_operations/tg-attachment-uploader.html">
@@ -8,6 +9,8 @@
 	<template>
 		<style>
 			:host {
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
 			}
 
 			.over {
@@ -19,8 +22,8 @@
 			}
 
 			#container {
-				display: flex;
-				flex-direction: column;
+				@apply(--layout-vertical);
+				@apply(--layout-flex);
 				border:1px dashed #ff5555;
 				padding: 8px;
 				position: relative;
@@ -50,7 +53,7 @@
 			}
 		</style>
 
-		<div id="container" style="width:100%" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+		<div id="container" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
 			<template is='dom-repeat' id='uploaders' items='[[_filesToUpload]]' as='f' rendered-item-count="{{_renderedCount}}">
 				<tg-attachment-uploader style='width: 100%'
 					id$='[[_makeId(index)]]'
@@ -61,11 +64,10 @@
 					mime-types-accepted='[[mimeTypesAccepted]]'
 					process-uploading-stopped='[[_perUploaderListenerOnUploadingStopped]]'></tg-attachment-uploader>
 			</template>
-			<div id="openDialogOrDrop" on-tap="_openFileDialog" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
-				<span id="dropAreaTitle" class="dropHere">Click to select files or Drop files for upload...</span>
-			</div>
 		</div>
-
+		<div id="openDialogOrDrop" on-tap="_openFileDialog" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+			<span id="dropAreaTitle" class="dropHere">Click to select files or Drop files for upload...</span>
+		</div>
 	</template>
 </dom-module>
 

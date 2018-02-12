@@ -25,16 +25,17 @@
 
 <body unresolved class="fullbleed">
 
+	<div style="display: flex; flex-direction: column; width: 400px; height: 300px; overflow: auto; border:1px solid #ff5555; padding: 8px;">
 	<template id="t" is="dom-bind">
 		<!-- mime-types-accepted='.csv,.txt,text/plain,text/csv' -->
 		<tg-attachment-uploader-list 
-			debug 
+			debug
 			id="attachmentUploader" 
-			style="width: 400px" 
 			upload-size-limit-kb='10240' 
 			mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
 			url="/upload-attachment"></tg-attachment-uploader-list>
 	</template>
+	</div>
 	
 </body>
 
