@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
@@ -826,6 +827,15 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public AbstractEntity<?> critOnlySinglePrototype() {
         return critOnlySinglePrototype;
+    }
+    
+    /**
+     * Returns crit-only single prototype entity if exists.
+     * 
+     * @return
+     */
+    public Optional<AbstractEntity<?>> critOnlySinglePrototypeOptional() {
+        return ofNullable(critOnlySinglePrototype);
     }
     
 }

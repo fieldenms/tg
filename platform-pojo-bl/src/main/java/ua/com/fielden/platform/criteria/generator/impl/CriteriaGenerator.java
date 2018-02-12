@@ -6,9 +6,12 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.disregardCritOnlyRequiredProperties;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -51,6 +55,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -287,14 +292,29 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
             final Field field = fieldAndVal._1;
             try {
-                // LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...", field.getName()));
+                // LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
                 entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
+                // LOGGER.debug("\tsynchroniseWithModel. valResult = " + entity.getProperty(field.getName()).getFirstFailure());
             } catch (final Exception ex) {
                 LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             } 
             // finally { LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
+        
+        // LOGGER.debug(format("\tsynchroniseWithModel: clearing requiredness..."));
+        entity.critOnlySinglePrototypeOptional().map(cosPrototype -> {
+            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) entity.getEntityClass();
+            
+            disregardCritOnlyRequiredProperties(cosPrototype);
+            // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
+            final Stream<MetaProperty<?>> snapshot = entity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
+            // apply the snapshot against criteriaEntity
+            applySnapshot(entity, snapshot);
+            return cosPrototype;
+        });
+        // LOGGER.debug(format("\tsynchroniseWithModel: clearing requiredness...done"));
+        
         // LOGGER.debug(format("synchroniseWithModel started...done"));
     }
 }

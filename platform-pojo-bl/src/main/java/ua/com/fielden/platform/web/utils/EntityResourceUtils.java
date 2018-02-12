@@ -423,7 +423,7 @@ public class EntityResourceUtils {
      *
      * @param entity
      */
-    private static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
+    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
