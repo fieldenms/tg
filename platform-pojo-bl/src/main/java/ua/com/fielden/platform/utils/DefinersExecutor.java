@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.partitioningBy;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityIdentity;
 
 import java.lang.reflect.Field;
@@ -14,14 +18,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -130,9 +130,9 @@ public class DefinersExecutor {
         //------------------------------------------------------------------
 
         // collect properties to process
-        final Map<Boolean, List<Field>> propFieldsToProcess = Finder.streamRealProperties(entity.getType())
-                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()))
-                .collect(Collectors.partitioningBy(field -> isValueProxied(entity, field)));
+        final Map<Boolean, List<Field>> propFieldsToProcess = streamRealProperties(entity.getType())
+                .filter(field -> !isPropertyProxied(entity, field.getName()) && !isCritOnlySingle(entity.getType(), field.getName()) )
+                .collect(partitioningBy(field -> isValueProxied(entity, field)));
 
         // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted
         if (isInstrumented && isEntityPersisted) {
