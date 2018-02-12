@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
@@ -1253,22 +1254,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return validation result
      */
     protected Result validate() {
-        if (!isInstrumented()) {
-            throw new EntityException(format("Uninstrumented entity [%s] should not be validated.", getType().getName()));
-        }
-        // iterate over properties in search of the first invalid one, including requiredness for any kind of property
-        final java.util.Optional<Result> firstFailure = nonProxiedProperties()
-        .filter(mp -> !mp.isValidWithRequiredCheck(false) && mp.getFirstFailure() != null)
-        .findFirst().map(MetaProperty::getFirstFailure);
-
-        // returns first failure if exists or successful result if there was no failure.
-        if (firstFailure.isPresent()) {
-            return firstFailure.get();
-        } else if (hasWarnings()) {
-            return Result.warning(this, "There are warnings.");
-        } else {
-            return  Result.successful(this);
-        }
+        return validateWithCritOnly().validate(this);
     }
 
     /**
