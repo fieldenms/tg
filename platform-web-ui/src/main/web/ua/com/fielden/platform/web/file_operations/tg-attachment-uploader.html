@@ -221,6 +221,11 @@
 				value: false
 			},
 			
+			/* Represents the attachment entity, which was part of a successful upload response. */
+			attachment: {
+				type: Object
+			},
+			
 			/*
 			 * A callback function that accepts one argument -- an instance of 'this'.
 			 * It is invoked upon completion of the file upload, be that successful completion, error or abortion
@@ -327,6 +332,28 @@
 
 		ready: function() {
 			this.fpResponseHandler = function(e) {
+				// deserialise e.currentTarget.response, which should be of type Result that contains an instance of AttachmentUploader with its key as Attachment
+				// and assign the returned attachment to property attachment
+				const getAttachmentUploader = (response) => {
+				    const result = this.$.serialiser.deserialise(response);
+				    if (typeof result === 'string') {
+				        try {
+							const resultAsObj = JSON.parse(result);
+							return resultAsObj.instance;
+				        } catch (parsingError) {
+				            console.error(parsingError);
+				            return null; // return as null
+				        }
+				    } else {
+						return result.instance;
+				    }
+			    }
+				
+				const attachmentUploader = getAttachmentUploader(e.currentTarget.response);
+				if (attachmentUploader) {
+				    this.attachment = attachmentUploader.key;
+				}
+
 			    this.status = this.statuses.COMPLETED;
 				this._updateProgress(100);
 
