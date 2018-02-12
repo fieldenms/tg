@@ -45,7 +45,8 @@
 	    const uploaderList = t.$.attachmentUploader;
 	    
 	    uploaderList.processUploadingStopped = function() {
-	        console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);
+	        console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Attachments created:', uploaderList.attachments.length, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);
+	        uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );   
 	    }
 	    
 	    uploaderList.processUploadingStarted = function(uploader) {
