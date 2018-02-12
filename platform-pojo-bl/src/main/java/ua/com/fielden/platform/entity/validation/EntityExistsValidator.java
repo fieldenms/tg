@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -32,7 +33,8 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  */
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
-    public static final String WAS_NOT_FOUND_ERR = "%s [%s] was not found.";
+    private static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
+    private static final String WAS_NOT_FOUND_ERR = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
     
     private final Class<T> type;
@@ -90,10 +92,11 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
 
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
+                final String newValueStr = newValue.toString();
                 if (!exists) {
-                    return failure(entity, format(WAS_NOT_FOUND_ERR, entityTitle, newValue));
+                    return failure(entity, KEY_NOT_ASSIGNED.equals(newValueStr) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValueStr));
                 } else {
-                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue));
+                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValueStr));
                 }
             } else {
                 return successful(entity);

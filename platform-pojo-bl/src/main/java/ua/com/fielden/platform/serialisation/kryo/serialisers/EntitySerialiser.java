@@ -223,13 +223,12 @@ public final class EntitySerialiser extends Serializer {
             final Long id = NOT_NULL_NOT_DIRTY == buffer.get() ? LongSerializer.get(buffer, false) : null;
             final AbstractEntity<?> entity;
 
-            if (DynamicEntityClassLoader.isGenerated(type)) {
-                entity = EntityFactory.newPlainEntity(type, id);
-                entity.setEntityFactory(factory);
-            } else {
-                entity = factory.newEntity(type, id);
-            }
-
+            // TODO at this stage only crit-only single entity-typed criterion value could be serialised by this serialiser.
+            // That's why serialisation will occur into uninstrumented instance regardless of whether original instance was instrumented.
+            // It will be sufficient for selection criteria serialisation.
+            entity = EntityFactory.newPlainEntity(type, id);
+            entity.setEntityFactory(factory);
+            
             references.referenceCount++;
             references.referenceToObject.put(references.referenceCount, entity);
 
@@ -250,7 +249,7 @@ public final class EntitySerialiser extends Serializer {
                     }
                     break;
                 case NULL_DIRTY:
-                    if (!DynamicEntityClassLoader.isGenerated(type)) {
+                    if (entity.isInstrumented() && !DynamicEntityClassLoader.isGenerated(type)) {
                         entity.getProperty(prop.field.getName()).setOriginalValue(null).setDirty(true);
                     }
                     break;
@@ -258,7 +257,7 @@ public final class EntitySerialiser extends Serializer {
                     readProperty(buffer, entity, prop);
                     break;
                 case NULL_NOT_DIRTY:
-                    if (!DynamicEntityClassLoader.isGenerated(type)) {
+                    if (entity.isInstrumented() && !DynamicEntityClassLoader.isGenerated(type)) {
                         entity.getProperty(prop.field.getName()).setOriginalValue(null);
                     }
                     break;
@@ -303,7 +302,7 @@ public final class EntitySerialiser extends Serializer {
         final Object value = serializer.readObjectData(buffer, concreteType);
         prop.field.set(entity, value);
 
-        return !DynamicEntityClassLoader.isGenerated(type) ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
+        return !DynamicEntityClassLoader.isGenerated(type) && entity.isInstrumented() ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
     }
 
     /**

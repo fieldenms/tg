@@ -65,7 +65,7 @@
                     queryParam.exclude2 = shouldExcludeSecondParam(queryParts[1]);
                 }
             } else {
-                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "");
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], "");
                 queryParam.firstEditorValue = queryParts[1];
             }
             return queryParam;
@@ -244,14 +244,28 @@
                 // Also, these properties are designed to be bound to children element properties -- it is necessary to//
                 //   populate their default values in ready callback (to have these values populated in children)!     //
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+                
                 /**
                  * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
                  */
                 _centreChanged: {
                     type: Boolean
                 },
-
+                
+                /**
+                 * The next three properties are bound from respective properties from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
+                 * They (and '_centreChanged' property) are needed for correct enabling / disabling of Save / Discard buttons.
+                 */
+                _bindingEntityNotPersistentOrNotPersistedOrModified: {
+                    type: Boolean
+                },
+                _editedPropsExist: {
+                    type: Boolean
+                },
+                _currEntity: {
+                    type: Object
+                },
+                
                 /**
                  * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
                  */
@@ -270,12 +284,12 @@
 
                 _saverDisabled: {
                     type: Boolean,
-                    computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
+                    computed: '_computeSaverDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
                 _discarderDisabled: {
                     type: Boolean,
-                    computed: '_computeDiscarderDisabled(_centreChanged, _actionInProgress)'
+                    computed: '_computeDiscarderDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
                 _runnerDisabled: {
@@ -411,12 +425,12 @@
                 }
             },
 
-            _computeSaverDisabled: function (_centreChanged, _actionInProgress) {
-                return _actionInProgress === true || !this.canSave(_centreChanged);
+            _computeSaverDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+                return _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
-            _computeDiscarderDisabled: function (_centreChanged, _actionInProgress) {
-                return _actionInProgress === true || !this.canDiscard(_centreChanged);
+            _computeDiscarderDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+                return _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
@@ -479,14 +493,14 @@
                     self.$.selection_criteria._processResponse(e, "save", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE SAVED", entityAndCustomObject);
                         self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
-                        self.$.selection_criteria._postValidatedDefault(entityAndCustomObject);
+                        self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
                     });
                 };
                 self._processSaverError = function (e) {
                     self.$.selection_criteria._processError(e, "save", function (errorResult) {
                         // This function will be invoked after server-side error appear.
                         console.warn("SERVER ERROR: ", errorResult);
-                        self.$.selection_criteria._postValidatedDefaultError(errorResult);
+                        self.$.selection_criteria._postSavedDefaultError(errorResult);
                     });
                 };
 
@@ -494,14 +508,14 @@
                     self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE DISCARDED", entityAndCustomObject);
                         self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
-                        self.$.selection_criteria._postValidatedDefault(entityAndCustomObject);
+                        self.$.selection_criteria._postRetrievedDefault(entityAndCustomObject);
                     });
                 };
                 self._processDiscarderError = function (e) {
                     self.$.selection_criteria._processError(e, "discard", function (errorResult) {
                         // This function will be invoked after server-side error appear.
                         console.warn("SERVER ERROR: ", errorResult);
-                        self.$.selection_criteria._postValidatedDefaultError(errorResult);
+                        self.$.selection_criteria._postRetrievedDefaultError(errorResult);
                     });
                 };
 
@@ -528,49 +542,93 @@
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
-
-                self.save = (function () {
-                    if (!this.canSave(this._centreChanged)) {
-                        throw "Cannot save the not modified centre.";
-                    }
-                    console.log("CENTRE SAVE");
-
-                    self._actionInProgress = true;
-                    var sc = this.$.selection_criteria;
-                    var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
-
-                    // cancel previous validation before starting Save process -- it includes validation process internally!
-                    sc._validator().abortValidationIfAny();
-
+                
+                self._createSavingPromise = function () { // very similar to tg-entity-master-behavior._createSavingPromise
+                    const slf = this;
+                    const sc = this.$.selection_criteria;
+                    const holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
                     this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
                     return this._ajaxSaver().generateRequest().completes.then(
                         function () {
-                            self._actionInProgress = false;
+                            slf._actionInProgress = false;
                         }, function (error) {
-                            self._actionInProgress = false;
-                        });
+                            slf._actionInProgress = false;
+                        }
+                    );
+                }.bind(self);
+                
+                self.save = (function () { // very similar to tg-entity-master-behavior.save
+                    const slf = this;
+                    slf._actionInProgress = true;
+                    const sc = this.$.selection_criteria;
+                    if (!sc._savingInitiated) {
+                        sc._savingInitiated = true;
+                        sc.disableView();
+                    }
+                    
+                    return new Promise(function (resolve, reject) {
+                        slf.debounce('invoke-saving', function () {
+                            // cancel the 'invoke-saving' debouncer if there is any active one:
+                            slf.cancelDebouncer('invoke-saving');
+                            
+                            // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
+                            // otherwise -- saving process will simply start immediately
+                            const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
+                            if (lastValidationPromise !== null) {
+                                console.warn("Saving is chained to the last validation promise...");
+                                return resolve(lastValidationPromise
+                                    .then(function () {
+                                        return slf._createSavingPromise();
+                                    }));
+                            }
+                            return resolve(slf._createSavingPromise());
+                        }, 50);
+                    });
                 }).bind(self);
-
-                self.discard = (function () {
-                    console.log("CENTRE DISCARD");
-
-                    self._actionInProgress = true;
-                    var sc = this.$.selection_criteria;
-
-                    // cancel previous validation before starting Discard process!
-                    sc._validator().abortValidationIfAny();
-
-                    var customObject = {};
-                    customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
+                
+                self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
+                    const slf = this;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
                     return this._ajaxDiscarder().generateRequest().completes.then(
                         function () {
-                            self._actionInProgress = false;
+                            slf._actionInProgress = false;
                         }, function (error) {
-                            self._actionInProgress = false;
-                        });
+                            slf._actionInProgress = false;
+                        }
+                    );
+                }.bind(self);
+                
+                self.discard = (function () { // very similar to tg-entity-binder-behavior.retrieve
+                    const slf = this;
+                    slf._actionInProgress = true;
+                    const sc = this.$.selection_criteria;
+                    if (!sc._retrievalInitiated) {
+                        sc._retrievalInitiated = true;
+                        sc.disableView();
+                    }
+                    
+                    return new Promise(function (resolve, reject) {
+                        slf.debounce('invoke-discard', function () {
+                            // cancel the 'invoke-discard' debouncer if there is any active one:
+                            slf.cancelDebouncer('invoke-discard');
+                            
+                            // cancel previous validation requests except the last one -- if it exists then discarding process will be chained on top of that last validation process, 
+                            // otherwise -- discard process will simply start immediately
+                            const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
+                            const customObject = {};
+                            customObject['@@wasRun'] = sc._wasRun;
+                            if (lastValidationPromise !== null) {
+                                console.warn("Discard is chained to the last validation promise...");
+                                return resolve(lastValidationPromise
+                                    .then(function () {
+                                        return slf._createDiscardPromise(customObject);
+                                    }));
+                            }
+                            return resolve(slf._createDiscardPromise(customObject));
+                        }, 50);
+                    });
                 }).bind(self);
-
+                
                 self.run = (function (isSortingAction, forceRegeneration) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
@@ -872,16 +930,17 @@
                 return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
             },
 
-            canSave: function (centreChanged) {
-                return this.canManageCentreConfig(centreChanged);
+            canSave: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                return this.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
-            canDiscard: function (centreChanged) {
-                return this.canManageCentreConfig(centreChanged);
+            canDiscard: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                return this.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
-            canManageCentreConfig: function (centreChanged) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : centreChanged === true;
+            canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false :
+                    this.$.selection_criteria.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
             /**

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.report.query.generation;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,10 +50,10 @@ public class ReportQueryGenerationUtils {
         final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, actualProperty);
 
         queryProperty.setValue(tickManager.getValue(root, actualProperty));
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, actualProperty)) {
+        if (isDoubleCriterion(managedType, actualProperty)) {
             queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
         }
-        if (AbstractDomainTree.isDoubleCriterion(managedType, actualProperty)) {
+        if (isDoubleCriterion(managedType, actualProperty) && !isBooleanCriterion(managedType, actualProperty)) {
             queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
             queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
         }

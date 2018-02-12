@@ -1,22 +1,26 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
@@ -33,17 +37,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.CritOnlyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.RequiredAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -64,8 +66,6 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Inject;
-
 /**
  * The implementation of the {@link ICriteriaGenerator} that generates {@link EntityQueryCriteria} with criteria properties.
  *
@@ -74,7 +74,7 @@ import com.google.inject.Inject;
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
 
-    private static final Logger logger = Logger.getLogger(CriteriaGenerator.class);
+    private static final Logger LOGGER = Logger.getLogger(CriteriaGenerator.class);
 
     private final EntityFactory entityFactory;
 
@@ -151,7 +151,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
             return entity;
         } catch (final Exception e) {
-            logger.error(e.getMessage(), e);
+            LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
         }
     }
@@ -170,11 +170,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
         final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
         final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
-
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
+        
+        final IsProperty isPropertyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(IsProperty.class, managedType, propertyName);
+        if (isDoubleCriterion(managedType, propertyName)) {
+            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation));
         } else {
-            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
+            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation));
         }
         return generatedProperties;
     }
@@ -190,29 +191,29 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
+    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
         final boolean isEntityItself = "".equals(propertyName);
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-        final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
         boolean hasEntityExists = false;
         try {
             final Method setter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
             hasEntityExists = setter == null ? false : AnnotationReflector.isAnnotationPresent(setter, EntityExists.class);
         } catch (final ReflectionException e) {
             // TODO if this is an error -- please handle it appropriately, if not -- please remove rigorous logging
-            logger.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
+            LOGGER.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
         }
         final boolean finalHasEntityExists = hasEntityExists;
-        final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
+        final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
 
         final List<Annotation> annotations = new ArrayList<Annotation>();
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
             annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
-        }
-        if (isSingle && isRequired) {
-            annotations.add(new RequiredAnnotation().newInstance());
+        } else {
+            if (isPropertyAnnotation != null) {
+                annotations.add(new IsPropertyAnnotation().copyFrom(isPropertyAnnotation));
+            }
         }
         if (isEntity && isSingle && finalHasEntityExists) {
             annotations.add(new BeforeChangeAnnotation(
@@ -225,12 +226,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-
-        final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
-        if (newCritOnly.isPresent()) {
-            annotations.add(newCritOnly.get().newInstance());
-        }
-
         return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
@@ -245,24 +240,15 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     @SuppressWarnings("serial")
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
         //final boolean isEntityItself = "".equals(propertyName);
         final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
-        final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
-        //final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
-
-        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
-                new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
-                new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-
-        if (newCritOnly.isPresent()) {
-            firstProperty.addAnnotation(newCritOnly.get().newInstance());
-            secondProperty.addAnnotation(newCritOnly.get().newInstance());
-        }
-
+        
+        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation));
+        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation));
+        
         return new ArrayList<NewProperty>() {
             {
                 add(firstProperty);
@@ -270,38 +256,45 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             }
         };
     }
-
-    /**
-     * Generates {@link CritOnlyAnnotation} instance for the specified property in the managed type.
-     *
-     * @param managedType
-     * @param propertyType
-     * @param propertyName
-     * @return
-     */
-    private static Optional<CritOnlyAnnotation> generateCritOnlyAnnotation(final CritOnly critOnlyAnnotation, final Class<?> propertyType) {
-        if (BigDecimal.class.isAssignableFrom(propertyType) && critOnlyAnnotation != null && critOnlyAnnotation.scale() >= 0) {
-            return Optional.of(new CritOnlyAnnotation(Type.SINGLE, critOnlyAnnotation.scale(), critOnlyAnnotation.precision()));
+    
+    private static Annotation[] createAnnotations(final boolean first, final Class<?> managedType, final String otherPropertyName, final String originalPropertyName, final IsProperty isProperty) {
+        final List<Annotation> annotations = new ArrayList<>();
+        if (isProperty != null) {
+            annotations.add(new IsPropertyAnnotation().copyFrom(isProperty));
         }
-        return Optional.empty();
+        if (first) {
+            annotations.add(new FirstParamAnnotation(otherPropertyName).newInstance());
+        } else {
+            annotations.add(new SecondParamAnnotation(otherPropertyName).newInstance());
+        }
+        annotations.add(new CriteriaPropertyAnnotation(managedType, originalPropertyName).newInstance());
+        annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+        return annotations.toArray(new Annotation[0]);
     }
-
+    
     /**
      * Synchronises entity query criteria property values with domain tree model.
      *
      * @param entity
      */
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {
+        // LOGGER.debug(format("synchroniseWithModel started..."));
+        final Class<T> root = entity.getEntityClass();
         final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        for (final Field propertyField : CriteriaReflector.getCriteriaProperties(entity.getType())) {
-            final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
-            final CriteriaProperty critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class);
-            final Class<T> root = entity.getEntityClass();
+        CriteriaReflector.getCriteriaProperties(entity.getType()).stream().map(propertyField -> {
+            final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
+            return t2(propertyField, getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
+        }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
+            final Field field = fieldAndVal._1;
             try {
-                entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
+                // LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...", field.getName()));
+                // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
+                entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
             } catch (final Exception ex) {
-                logger.warn(format("Could not assign crit value to [%s] in root [%s].", propertyField.getName(), root.getName()));
-            }
-        }
+                LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
+            } 
+            // finally { LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
+        });
+        // LOGGER.debug(format("synchroniseWithModel started...done"));
     }
 }

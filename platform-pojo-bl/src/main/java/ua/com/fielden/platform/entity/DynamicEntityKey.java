@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -13,7 +14,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
@@ -192,7 +192,8 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
         for (int index = 0; index < notNullValues.size(); index++) {
             buffer.append(convertToString(notNullValues.get(index)) + (index + 1 < notNullValues.size() ? KEY_MEMBERS_SEPARATOR : ""));
         }
-        return buffer.toString();
+        final String bufferString = buffer.toString();
+        return isEmpty(bufferString) ? KEY_NOT_ASSIGNED : bufferString;
     }
 
     private final String convertToString(final Object value) {
