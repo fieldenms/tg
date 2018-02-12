@@ -13,11 +13,9 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
@@ -39,9 +37,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.CritOnlyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
@@ -172,11 +170,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
         final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
         final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
-
+        
+        final IsProperty isPropertyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(IsProperty.class, managedType, propertyName);
         if (isDoubleCriterion(managedType, propertyName)) {
-            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
+            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation));
         } else {
-            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
+            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation));
         }
         return generatedProperties;
     }
@@ -192,7 +191,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
+    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
         final boolean isEntityItself = "".equals(propertyName);
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
@@ -211,6 +210,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
             annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
+        } else {
+            if (isPropertyAnnotation != null) {
+                annotations.add(new IsPropertyAnnotation().copyFrom(isPropertyAnnotation));
+            }
         }
         if (isEntity && isSingle && finalHasEntityExists) {
             annotations.add(new BeforeChangeAnnotation(
@@ -223,11 +226,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-        final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
-        if (newCritOnly.isPresent()) {
-            annotations.add(newCritOnly.get().newInstance());
-        }
-
         return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
@@ -242,24 +240,15 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     @SuppressWarnings("serial")
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
         //final boolean isEntityItself = "".equals(propertyName);
         final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
-        final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
-        //final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
-
-        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
-                new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
-                new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-
-        if (newCritOnly.isPresent()) {
-            firstProperty.addAnnotation(newCritOnly.get().newInstance());
-            secondProperty.addAnnotation(newCritOnly.get().newInstance());
-        }
-
+        
+        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation));
+        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation));
+        
         return new ArrayList<NewProperty>() {
             {
                 add(firstProperty);
@@ -267,22 +256,22 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             }
         };
     }
-
-    /**
-     * Generates {@link CritOnlyAnnotation} instance for the specified property in the managed type.
-     *
-     * @param managedType
-     * @param propertyType
-     * @param propertyName
-     * @return
-     */
-    private static Optional<CritOnlyAnnotation> generateCritOnlyAnnotation(final CritOnly critOnlyAnnotation, final Class<?> propertyType) {
-        if (BigDecimal.class.isAssignableFrom(propertyType) && critOnlyAnnotation != null && critOnlyAnnotation.scale() >= 0) {
-            return Optional.of(new CritOnlyAnnotation(Type.SINGLE, critOnlyAnnotation.scale(), critOnlyAnnotation.precision()));
+    
+    private static Annotation[] createAnnotations(final boolean first, final Class<?> managedType, final String otherPropertyName, final String originalPropertyName, final IsProperty isProperty) {
+        final List<Annotation> annotations = new ArrayList<>();
+        if (isProperty != null) {
+            annotations.add(new IsPropertyAnnotation().copyFrom(isProperty));
         }
-        return Optional.empty();
+        if (first) {
+            annotations.add(new FirstParamAnnotation(otherPropertyName).newInstance());
+        } else {
+            annotations.add(new SecondParamAnnotation(otherPropertyName).newInstance());
+        }
+        annotations.add(new CriteriaPropertyAnnotation(managedType, originalPropertyName).newInstance());
+        annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+        return annotations.toArray(new Annotation[0]);
     }
-
+    
     /**
      * Synchronises entity query criteria property values with domain tree model.
      *
