@@ -178,6 +178,11 @@
 				},
 				observer: '_statusChange'
 			},
+
+			/* Captures the status value that the current status was changed from. */
+			prevStatus: {
+				type: String
+			},
 			
 			/* A short file name (i.e. not a path). If observer _canTryFileUploading fires, which accepts a valid file object then this property get assigned value of file.name. */
 			fileName: {
@@ -258,6 +263,7 @@
 		
 		_statusChange: function (newStatus, oldStatus) {
             const progressBar = this.$.progressBar;
+            this.prevStatus = oldStatus;
 
  			// let's remove any styles associated with previous statuses
  			progressBar.classList.remove('slow');
@@ -299,13 +305,18 @@
         },
         
         _abortDisabled: function (status) {
-        		return status !== this.statuses.UPLOADING;    
+        		return this.status !== this.statuses.PENDING && status !== this.statuses.UPLOADING;    
         },
         
         abortUploadIfPossible: function() {
-            // check if we still can abort before aborting...
-            if (this.status === this.statuses.UPLOADING) {
-        			this.abort();    
+            // check if we can abort before aborting...
+            if (this.status === this.statuses.PENDING || this.status === this.statuses.UPLOADING) {
+                // PENDING means uploading has not started yet, so technically, there is nothing to abort,
+                // but the status needs to be changed to prevent any pending upload requests...
+                // UPLOADIG means that the upload in already in progress with an active XHR request,
+                // which mean that abort call needs to be delegated to the file processing behaviour.
+                // In both cases, setting the status to ABORTED is the responsibility of this.fpAbortEventHandler.
+        			this.abort();
             }
         },
 

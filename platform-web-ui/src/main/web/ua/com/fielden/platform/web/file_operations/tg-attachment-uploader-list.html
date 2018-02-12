@@ -38,7 +38,7 @@
 			
 		</style>
 
-		<div id="container" style="width:100%" on-tap='_openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+		<div id="container" style="width:100%" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
 			<template is='dom-repeat' id='uploaders' items='[[_filesToUpload]]' as='f' rendered-item-count="{{_renderedCount}}">
 				<tg-attachment-uploader style='width: 100%'
 					id$='[[_makeId(index)]]'
@@ -90,7 +90,12 @@
 			processUploadingStopped: {
 			    type: Function
 			},
-			
+
+			/* A callback, which gets invoked when uploading of the firt file in a sequence starts. Passes one argument -- the uploader performing file uploading. */
+			processUploadingStarted: {
+			    type: Function
+			},
+
 			numberOfUploaded: {
 			    type: Number,
 			    value: 0
@@ -134,20 +139,33 @@
 			    		        this.numberOfFailed = this.numberOfFailed + 1;
 			    		    }
 			    		    
-			    		    // if the uploader is not the last element then the next uploader needs to start uploading
-			    		    if (uploader.listIndex < this.$.uploaders.items.length - 1) {
-			    		        const nextId = this._makeId(uploader.listIndex+1);
-				    		    const elem = Polymer.dom(this.root).querySelector("#" + nextId);
-				    		    console.log("NEXT UPLOADER:", elem);
-				    		    if (elem) {
-				    		        elem.canUpload = true;
-				    		    }
-			    		    } else {
-			    		        this.uploadInProgress = false;
-				    		    if (this.processUploadingStopped) {
-				    		        this.processUploadingStopped();
-				    		    }
+			    		    // if a PENDING uploader was aborted then there is already one in progress,
+			    		    // and there is no need to instigate any new upload -- this will the responsibility of that other uploader
+			    		    if (uploader.status !== uploader.statuses.ABORTED || uploader.prevStatus !== uploader.statuses.PENDING) { 
+							// let's find the next PENDING uploader
+							let index = uploader.listIndex + 1;
+							let pendingUploader = null;
+							while (!pendingUploader && index < this.$.uploaders.items.length) {
+								const id = this._makeId(index);
+								const elem = Polymer.dom(this.root).querySelector("#" + id);
+								if (elem && elem.status === elem.statuses.PENDING) {
+									pendingUploader = elem;
+								}
+								index = index + 1;
+							}
+	
+							// if the next PENDING uploader was found then activate it
+							if (pendingUploader) {
+								pendingUploader.canUpload = true;
+							} else {
+							    // if there is nothin else to upload then report that all uploading has stopped 
+								this.uploadInProgress = false;
+								if (this.processUploadingStopped) {
+									this.processUploadingStopped();
+								}
+							}
 			    		    }
+			    		    
 	    			    }.bind(this);
     			    }
     			},
@@ -177,6 +195,9 @@
 			    const elem = Polymer.dom(this.root).querySelector("#" + startId);
 			    if (elem) {
 			        elem.canUpload = true;
+			        if (this.processUploadingStarted) {
+			            this.processUploadingStarted(elem);
+			        }
 			    }
 		  	}
 		},

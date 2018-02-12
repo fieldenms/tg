@@ -43,8 +43,13 @@
 
 	t.addEventListener('dom-change', function() {
 	    const uploaderList = t.$.attachmentUploader;
+	    
 	    uploaderList.processUploadingStopped = function() {
 	        console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);
+	    }
+	    
+	    uploaderList.processUploadingStarted = function(uploader) {
+	        console.log('STARTED UPLOADING of', uploader.fileName);
 	    }
 	}.bind(t));
 </script>
