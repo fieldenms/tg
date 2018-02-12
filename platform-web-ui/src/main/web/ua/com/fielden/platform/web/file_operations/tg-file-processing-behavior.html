@@ -140,7 +140,11 @@
 			/* A helper method to clean up resources post files processing or error handling. */
 			_cleanup: function() {
 				this._fpInProgress = false;
-				this.abort = () => 'There is nothing to abort';
+				this.abort = () => {
+					if (this.fpAbortEventHandler) {
+						this.fpAbortEventHandler();
+					}
+				}
 				// remove previously selected files
 				// the file input onchange is not invoked when assigning the value
 				this._uploadInput.value = '';
