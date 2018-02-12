@@ -30,35 +30,36 @@ import ua.com.fielden.platform.error.Result;
  */
 public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> implements IAfterChangeEventHandler<Object> {
     public static final Long CRITERIA_ENTITY_ID = 333L;
+    // private static final Logger LOGGER = Logger.getLogger(SynchroniseCriteriaWithModelHandler.class);
     
     @Override
     public void handle(final MetaProperty<Object> property, final Object newValue) {
-        // LOGGER.debug(format("\t\tACE started for [%s]...", property.getName()));
+        // LOGGER.error(format("\t\tACE started for [%s]...", property.getName()));
         // criteria entity and property
         final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = (EntityQueryCriteria<CDTME, T, IEntityDao<T>>) property.getEntity();
         final Class<?> criteriaType = criteriaEntity.getType();
         final String criteriaPropName = property.getName();
         
         // real entity and property from which criteria entity and property were generated
-        final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) criteriaEntity.getEntityClass(); // getEntityType(getAnnotation(criteriaType, MiType.class).value());
+        final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) criteriaEntity.getEntityClass();
         final String propName = getCriteriaProperty(criteriaType, criteriaPropName);
         
         // crit-only single property processing differs from any other property processing
         if (isCritOnlySingle(entityType, propName)) {
-            // LOGGER.debug(format("\t\t\toriginal property [%s] is crit-only single...", propName));
+            // LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...", propName));
             // set corresponding critOnlySinglePrototype's property which will trigger all necessary validations / definers and dependent properties processing
             criteriaEntity.critOnlySinglePrototypeInit(entityType, CRITERIA_ENTITY_ID).set(propName, newValue);
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
             final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
             // apply the snapshot against criteriaEntity
             applySnapshot(criteriaEntity, snapshot);
-            // LOGGER.debug(format("\t\t\toriginal property [%s] is crit-only single...done", propName));
+            // LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...done", propName));
         } else {
-            // LOGGER.debug(format("\t\t\toriginal property [%s] is simple...", propName));
+            // LOGGER.error(format("\t\t\toriginal property [%s] is simple...", propName));
             updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, propName, newValue, criteriaType, criteriaPropName);
-            // LOGGER.debug(format("\t\t\toriginal property [%s] is simple...done", propName));
+            // LOGGER.error(format("\t\t\toriginal property [%s] is simple...done", propName));
         }
-        // LOGGER.debug(format("\t\tACE started for [%s]...done", property.getName()));
+        // LOGGER.error(format("\t\tACE started for [%s]...done", property.getName()));
     }
     
     /**
@@ -76,9 +77,20 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         final boolean isSecond = isSecondParam(criteriaType, criteriaPropName);
         final Object currValue = isSecond    ? criteriaTick.getValue2(entityType, propName)
                                              : criteriaTick.getValue(entityType, propName);
-        return equalsEx(currValue, newValue) ? criteriaTick : 
+        /*if (!equalsEx(currValue, newValue)) {
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...", propName, currValue, newValue));
+        } else {
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
+        }*/
+        final IAddToCriteriaTickManager v = equalsEx(currValue, newValue) ? criteriaTick : 
                isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
                                              : criteriaTick.setValue(entityType, propName, newValue);
+        /*if (!equalsEx(currValue, newValue)) {
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...done", propName, currValue, newValue));
+        } else {
+            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...done", propName, currValue));
+        }*/
+        return v;
     }
     
     /**
@@ -87,7 +99,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
      * @param criteriaEntity
      * @param snapshot
      */
-    private static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> void applySnapshot(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity, final Stream<MetaProperty<?>> snapshot) {
+    public static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> void applySnapshot(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity, final Stream<MetaProperty<?>> snapshot) {
         final Class<?> criteriaType = criteriaEntity.getType();
         final Class<?> entityType = criteriaEntity.getEntityClass();
         
@@ -113,6 +125,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
                     // This will confuse conflict resolution mechanism.
                     // We need to sync the value with initial values in critOnlySinglePrototype.
                     criteriaMetaProp.setValue(null);
+                    // LOGGER.error(firstFailure);
                 } else {
                     criteriaMetaProp.setValue(metaProp.getValue());
                 }
