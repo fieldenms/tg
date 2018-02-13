@@ -8,8 +8,10 @@ import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
 import ua.com.fielden.platform.attachment.AttachmentUploaderDao;
+import ua.com.fielden.platform.attachment.AttachmentsUploadActionDao;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IAttachmentUploader;
+import ua.com.fielden.platform.attachment.IAttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -179,6 +181,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind attachment related companions
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IAttachmentUploader.class).to(AttachmentUploaderDao.class);
+        bind(IAttachmentsUploadAction.class).to(AttachmentsUploadActionDao.class);
 
         // configuration menu related binding
         bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);
