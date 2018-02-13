@@ -331,22 +331,23 @@
         },
 
 		ready: function() {
+		    // a helper lambda to conver a response to entity Result
+		    const toResult = (response) => {
+				const resultAsObj = JSON.parse(response);
+				return this.$.serialiser.deserialise(resultAsObj);
+		    }
+
 			this.fpResponseHandler = function(e) {
-				// deserialise e.currentTarget.response, which should be of type Result that contains an instance of AttachmentUploader with its key as Attachment
+				// first parse e.currentTarget.response as a JSON object and pass it for deserialisation,
+				// which should produce an entity of type Result that contains an instance of AttachmentUploader with its key as Attachment
 				// and assign the returned attachment to property attachment
 				const getAttachmentUploader = (response) => {
-				    const result = this.$.serialiser.deserialise(response);
-				    if (typeof result === 'string') {
-				        try {
-							const resultAsObj = JSON.parse(result);
-							return resultAsObj.instance;
-				        } catch (parsingError) {
-				            console.error(parsingError);
-				            return null; // return as null
-				        }
-				    } else {
-						return result.instance;
-				    }
+					try {
+						return toResult(response).instance;
+					} catch (parsingError) {
+						console.error(parsingError);
+						return null; // return as null
+					}
 			    }
 				
 				const attachmentUploader = getAttachmentUploader(e.currentTarget.response);
@@ -364,22 +365,16 @@
 
 			this.fpErrorHandler = function(e) {
 			    const getResult = (response) => {
-				    const result = this.$.serialiser.deserialise(response);
-				    if (typeof result === 'string') {
-				        try {
-							return JSON.parse(result);
-				        } catch (parsingError) {
-				            console.error(parsingError);
-				            return {message: result}; // return as is
-				        }
-				    } else {
-						return result;
-				    }
+					try {
+						return toResult(response);
+					} catch (parsingError) {
+						console.error(parsingError);
+						return {message: response}; // return as is
+					}
 			    }
 			    
-			    const result = getResult(e.currentTarget.response);
-			    this.error = result;
-			    this._errorMsg = result.message;
+			    this.error = getResult(e.currentTarget.response);
+			    this._errorMsg = this.error.message;
 
 			    this.status = this.statuses.ERROR;
 				if (this.processError) {
