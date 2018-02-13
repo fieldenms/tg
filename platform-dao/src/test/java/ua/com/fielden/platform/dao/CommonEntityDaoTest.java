@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -22,6 +23,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -448,7 +450,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
         assertTrue("New entity should be dirty", newEntity.isDirty());
-        assertEquals("All properties should be dirty after entity creation.", 5, newEntity.getDirtyProperties().size());
+        assertEquals("All properties should be dirty after entity creation.", 6, newEntity.getDirtyProperties().size());
 
         final Date originalDate = newEntity.getDateTimeProperty();
         newEntity.setDateTimeProperty(new Date());
@@ -687,6 +689,23 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithDynamicCompositeKeyDao co2 = co.co$(EntityWithDynamicCompositeKey.class);
 
         assertTrue(co1 == co2);
+    }
+
+    @Test
+    public void entity_with_invalid_critOnly_properties_fails_default_validation_but_can_be_saved() {
+        final IEntityWithMoney co = co$(EntityWithMoney.class);
+
+        final EntityWithMoney entity = co.findByKey("key1");
+        final String newDescValue = entity.getDesc() + " some modification";
+        entity.setDesc(newDescValue);
+        assertEquals(newDescValue, entity.getDesc());
+
+        assertFalse(entity.isValid().isSuccessful());
+        assertFalse(entity.getProperty("requiredCritOnly").isValid());
+        
+        assertTrue(entity.isValid(validateWithoutCritOnly).isSuccessful());
+        
+        co.save(entity);
     }
 
     @Override

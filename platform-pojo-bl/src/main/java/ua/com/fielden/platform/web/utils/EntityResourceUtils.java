@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -44,6 +45,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -51,7 +53,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -241,27 +242,31 @@ public class EntityResourceUtils {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
             final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
             final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
-            final Object valueToBeApplied = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
-            if (notFoundEntity(type, name, valToBeApplied, valueToBeApplied)) {
-                final String valueAsEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, name)).getKey();
-                final String msg = format("%s [%s] was not found.", valueAsEntityTitle, valToBeApplied);
-                logger.info(msg);
-                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
+            final Object valueToBeApplied;
+            if (valToBeApplied != null && convertedValue == null) {
+                final Class<?> propType = determinePropertyType(type, name);
+                if (isEntityType(propType)) {
+                    valueToBeApplied = createMockNotFoundEntity(propType);
+                } else {
+                    valueToBeApplied = convertedValue;
+                }
             } else {
-                validateAnd(() -> {
-                    // Value application should be enforced.
-                    // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
-                    // This is necessary because without enforcement property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
-                    // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
-                    // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
-                    // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
-                    entity.getProperty(name).setValue(valueToBeApplied, true);
-                }, () -> {
-                    return valueToBeApplied;
-                }, () -> {
-                    return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-                }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                valueToBeApplied = convertedValue;
             }
+            validateAnd(() -> {
+                // Value application should be enforced.
+                // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
+                // This is necessary because without enforcement property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
+                // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
+                // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
+                // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
+                entity.getProperty(name).setValue(valueToBeApplied, true);
+            }, () -> {
+                return valueToBeApplied;
+            }, () -> {
+                return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
             validateAnd(() -> {
@@ -275,7 +280,18 @@ public class EntityResourceUtils {
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
         }
     }
-
+    
+    /**
+     * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
+     * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
+     * 
+     * @param type
+     * @return
+     */
+    private static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type) {
+        return newPlainEntity((Class<AbstractEntity<?>>) type, null);
+    }
+    
     /**
      * Validates the property on subject of conflicts and <code>perform[s]Action</code>.
      *
@@ -407,7 +423,7 @@ public class EntityResourceUtils {
      *
      * @param entity
      */
-    private static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
+    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
@@ -418,19 +434,6 @@ public class EntityResourceUtils {
                 }
             });
         }
-    }
-
-    /**
-     * Returns <code>true</code> if the property is of entity type and the entity was not found by the search string (reflectedValue), <code>false</code> otherwise.
-     *
-     * @param type
-     * @param propertyName
-     * @param reflectedValue
-     * @param newValue
-     * @return
-     */
-    private static <M extends AbstractEntity<?>> boolean notFoundEntity(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
-        return reflectedValue != null && newValue == null && isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
 
     /**

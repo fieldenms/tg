@@ -123,7 +123,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean visible = true;
     private boolean required = false;
     public final boolean isRequiredByDefinition;
-    public final boolean isCritOnly;
     private final boolean calculated;
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +183,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         final Final finalAnnotation = field.getAnnotation(Final.class);
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
         this.isRequiredByDefinition = isRequiredByDefinition(field, entity.getType());
-        this.isCritOnly = field.isAnnotationPresent(CritOnly.class);
     }
 
     /**
@@ -481,7 +479,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final synchronized boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
         final boolean result = isValid();
-        if (result && (!ignoreRequirednessForCritOnly || !isCritOnly)) {
+        if (result && (!ignoreRequirednessForCritOnly || !isCritOnly())) {
             // if valid check whether it's requiredness sound
             final Object value = getEntity().get(getName());
             // this is a potential alternative approach to validating requiredness for proxied properties
@@ -953,7 +951,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getSimpleName()));
         }
 
-        if (!required && isRequiredByDefinition && !isCritOnly && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
+        if (!required && isRequiredByDefinition && !isCritOnly() && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
             throw new EntityDefinitionException(format("Property [%s] in entity [%s] is declared as required and cannot have this constraint relaxed.", name, getEntity().getType().getSimpleName()));
         }
     }

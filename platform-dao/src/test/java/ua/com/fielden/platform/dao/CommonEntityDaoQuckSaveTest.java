@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
@@ -23,6 +25,16 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
+    @Test
+    public void save_is_not_overridden_in_EntityWithMoneyDao() {
+        assertFalse(Reflector.isMethodOverriddenOrDeclared(CommonEntityDao.class, EntityWithMoneyDao.class, "save", EntityWithMoney.class));
+    }
+
+    @Test
+    public void save_is_overridden_in_EntityWithSimpleMoneyDao() {
+        assertTrue(Reflector.isMethodOverriddenOrDeclared(CommonEntityDao.class, EntityWithSimpleMoneyDao.class, "save", EntityWithSimpleMoney.class));
+    }
+    
     @Test
     public void entity_version_is_updated_after_quickSave() {
         final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
