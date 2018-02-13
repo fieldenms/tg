@@ -55,11 +55,17 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     private String readyCallback() {
         // that's a nice trick to include ... "self.classList.remove('canLeave');\n" ... if appropriate
         // TODO need to modify listeners to manage SAVE and CANCEL states
-        return  "// register listeners for attachment uploading\n"
+        return  "// Overridden to support hidden property conversion on the client-side ('attachments').\n" 
+                + "self._isNecessaryForConversion = function (propertyName) {\n"
+                + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
+                + "};\n"
+                + "// register listeners for attachment uploading\n"
                 + "const uploaderList = self.$.attachmentUploader;" 
                 + "uploaderList.processUploadingStopped = function() {\n"
                 + "    console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Attachments created:', uploaderList.attachments.length, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);\n"
                 + "    uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );\n"
+                + "    const ids = uploaderList.attachments.map(att => att.id);\n"
+                + "    self._currBindingEntity.setAndRegisterPropertyTouch('attachmentIds', ids);\n"
                 + "    this._toastGreeting().text = 'Uploading completed...';\n"
                 + "    this._toastGreeting().hasMore = false;\n"
                 + "    this._toastGreeting().showProgress = false;\n"
