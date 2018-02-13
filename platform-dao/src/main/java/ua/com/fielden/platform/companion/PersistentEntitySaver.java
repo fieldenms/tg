@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.addToResultIfApplicableFromActivatablePerspective;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
@@ -50,6 +51,7 @@ import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -136,7 +138,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
         } else if (!entity.isInstrumented()) {
             throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
-        } else if (!entity.isDirty() && entity.isValid().isSuccessful()) {
+        } else if (!entity.isDirty() && entity.isValid(validateWithoutCritOnly).isSuccessful()) {
             logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
             return skipRefetching.get() ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
@@ -144,13 +146,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
         // this is needed for executing after save event handler
-        final List<String> dirtyProperties = entity.getDirtyProperties().stream().map(p -> p.getName()).collect(toList());
+        final List<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toList());
 
         final T resultantEntity;
         // let's try to save entity
         try {
             // firstly validate the entity
-            final Result isValid = entity.isValid();
+            final Result isValid = entity.isValid(validateWithoutCritOnly);
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }

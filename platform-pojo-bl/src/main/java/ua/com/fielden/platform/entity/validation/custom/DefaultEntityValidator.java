@@ -14,10 +14,10 @@ import ua.com.fielden.platform.error.Result;
 /**
  * Represents the default entity validation logic, which traverses and validates non-proxied properties.
  * <p>
- * There are two factory-methods:
+ * There are two static variables of this validator, which represent the two possible instances:
  * <ul>
- * <li><code>validateWithCritOnly</code> -- returns a validator that includes {@link CritOnly} properties as part of validation;
- * <li><code>validateWithoutCritOnly</code> -- returns a validator that excludes {@link CritOnly} properties from validation.
+ * <li><code>validateWithCritOnly</code> -- a validator that includes {@link CritOnly} properties as part of validation;
+ * <li><code>validateWithoutCritOnly</code> -- a validator that excludes {@link CritOnly} properties from validation.
  * </ul> 
  * 
  * @author TG Team
@@ -25,30 +25,22 @@ import ua.com.fielden.platform.error.Result;
  */
 public class DefaultEntityValidator implements ICustomValidator {
     
-    private final boolean ignoreRequirednessForCritOnly;
-
-    protected DefaultEntityValidator(final boolean ignoreRequirednessForCritOnly) {
-        this.ignoreRequirednessForCritOnly = ignoreRequirednessForCritOnly;
-    }
-
-    /**
-     * Creates an entity validator that performs validation for all non-proxied properties, including those annotated with {@link CritOnly}.
-     *  
-     * @return
-     */
-    public static ICustomValidator validateWithCritOnly() {
-        return new DefaultEntityValidator(false);
-    }
-
-    /**
-     * Creates an entity validator that performs validation for all non-proxied properties, but excluding those annotated with {@link CritOnly}.
-     *  
-     * @return
-     */
-    public static ICustomValidator validateWithoutCritOnly() {
-        return new DefaultEntityValidator(true);
-    }
+    private final boolean ignoreCritOnly;
     
+    /**
+     * An entity validator that performs validation for all non-proxied properties, including those annotated with {@link CritOnly}.
+     */
+    public static final DefaultEntityValidator validateWithCritOnly = new DefaultEntityValidator(false);
+    
+    /**
+     * An entity validator that performs validation for all non-proxied properties, but excluding those annotated with {@link CritOnly}.
+     */
+    public static final DefaultEntityValidator validateWithoutCritOnly = new DefaultEntityValidator(true);
+
+    protected DefaultEntityValidator(final boolean ignoreCritOnly) {
+        this.ignoreCritOnly = ignoreCritOnly;
+    }
+
     /**
      * Method that actually perform entity validation.
      * <p>
@@ -61,7 +53,7 @@ public class DefaultEntityValidator implements ICustomValidator {
         }
         // iterate over properties in search of the first invalid one, including requiredness for any kind of property
         final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
-        .filter(mp -> !mp.isValidWithRequiredCheck(ignoreRequirednessForCritOnly) && !mp.validationResult().isSuccessful())
+        .filter(mp -> (ignoreCritOnly ? !mp.isCritOnly() : true) && !mp.isValidWithRequiredCheck(false) && !mp.validationResult().isSuccessful())
         .findFirst().map(MetaProperty::getFirstFailure);
 
         // returns first failure if exists or successful result if there was no failure.

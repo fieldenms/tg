@@ -1254,7 +1254,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return validation result
      */
     protected Result validate() {
-        return validateWithCritOnly().validate(this);
+        return validateWithCritOnly.validate(this);
     }
 
     /**
