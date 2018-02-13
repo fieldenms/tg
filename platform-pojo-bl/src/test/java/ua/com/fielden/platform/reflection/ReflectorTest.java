@@ -1,17 +1,21 @@
 package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssociationWithOneToManyAssociation;
@@ -29,6 +33,7 @@ import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeE
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
@@ -37,8 +42,6 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 /**
  * Test case for {@link Reflector}.
@@ -293,12 +296,24 @@ public class ReflectorTest {
             assertEquals("Non-collectional property many2oneProp in type ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations represents a Many-to-One association.", ex.getMessage());
         }
     }
+    
+    @Test
+    public void reflector_correctly_identifies_overridden_method_as_such() {
+        assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "validate"));
+        assertFalse(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "toString"));
+    }
+
+    @Test
+    public void reflector_correctly_identifies_declared_methods_as_such() {
+        assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "setMonth", Integer.class));
+    }
 
     @KeyType(String.class)
     private static class EntityWithValidationLimits extends AbstractEntity<String> {
+
         public EntityWithValidationLimits() {
         }
-
+        
         @IsProperty
         private Integer month;
         @IsProperty
@@ -337,6 +352,11 @@ public class ReflectorTest {
         @GreaterOrEqual(1950)
         public void setYear(final Integer year) {
             this.year = year;
+        }
+        
+        @Override
+        protected Result validate() {
+            return super.validate();
         }
     }
 
