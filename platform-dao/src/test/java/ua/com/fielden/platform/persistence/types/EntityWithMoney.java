@@ -9,12 +9,16 @@ import ua.com.fielden.platform.dao.IEntityWithMoney;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
@@ -47,6 +51,12 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @IsProperty(assignBeforeSave = true)
     @MapTo("TRANS_DATE_TIME")
     private Date transDate;
+    
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title("Required Crit Only")
+    @Required
+    private Integer requiredCritOnly;
 
     protected EntityWithMoney() {}
 
@@ -97,4 +107,15 @@ public class EntityWithMoney extends AbstractEntity<String> {
         this.transDate = transDate;
         return this;
     }
+    
+    @Observable
+    public EntityWithMoney setRequiredCritOnly(final Integer requiredCritOnly) {
+        this.requiredCritOnly = requiredCritOnly;
+        return this;
+    }
+
+    public Integer getRequiredCritOnly() {
+        return requiredCritOnly;
+    }
+
 }
