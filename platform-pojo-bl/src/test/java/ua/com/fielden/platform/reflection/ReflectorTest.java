@@ -15,6 +15,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssociationWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
@@ -40,8 +42,6 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 import fielden.personnel.Delegation;
 
