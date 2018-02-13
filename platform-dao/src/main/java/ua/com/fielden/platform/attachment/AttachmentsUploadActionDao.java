@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 @EntityType(AttachmentsUploadAction.class)
 public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploadAction> implements IAttachmentsUploadAction {
@@ -28,11 +29,14 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
     @SessionRequired
     public AttachmentsUploadAction save(final AttachmentsUploadAction action) {
         // if there are attachments and master entity then build their associations
-        if (action.getMasterEntity() != null && !action.getAttachments().isEmpty()) {
+        if (action.getMasterEntity() != null && !action.getAttachmentIds().isEmpty()) {
+            final fetch<Attachment> attachmentFetchModel = co(Attachment.class).getFetchProvider().fetchModel();
             final Class<? extends AbstractEntity<?>> entityType = action.getMasterEntity().getType();
             if (co$(action.getMasterEntity().getType()) instanceof ICanAttach) {
                 final ICanAttach co = (ICanAttach) co$(entityType);
-                action.getAttachments().stream().forEach(att -> co.attach(att, action.getMasterEntity()));
+                action.getAttachmentIds().stream()
+                .map(id -> co(Attachment.class).findById(id, attachmentFetchModel))
+                .forEach(att -> co.attach(att, action.getMasterEntity()));
             } else {
                 throw failure(format("Companion for %s cannot attach attachments.", getEntityTitleAndDesc(entityType).getKey()));
             }

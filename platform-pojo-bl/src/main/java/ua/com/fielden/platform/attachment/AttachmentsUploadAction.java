@@ -34,17 +34,17 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
     
     @IsProperty(Attachment.class)
     @Title(value = "Attachments", desc = "Attachments to be associated with the master entity.")
-    private Set<Attachment> attachments = new HashSet<>();
+    private Set<Long> attachmentIds = new HashSet<>();
 
     @Observable
-    protected AttachmentsUploadAction setAttachments(final Set<Attachment> attachments) {
-        this.attachments.clear();
-        this.attachments.addAll(attachments);
+    protected AttachmentsUploadAction setAttachmentIds(final Set<Long> attachments) {
+        this.attachmentIds.clear();
+        this.attachmentIds.addAll(attachments);
         return this;
     }
 
-    public Set<Attachment> getAttachments() {
-        return Collections.unmodifiableSet(attachments);
+    public Set<Long> getAttachmentIds() {
+        return Collections.unmodifiableSet(attachmentIds);
     }
 
     @Observable
