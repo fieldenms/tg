@@ -25,7 +25,7 @@ import ua.com.fielden.platform.error.Result;
  */
 public class DefaultEntityValidator implements ICustomValidator {
     
-    private final boolean ignoreCritOnly;
+    private final boolean skipCritOnly;
     
     /**
      * An entity validator that performs validation for all non-proxied properties, including those annotated with {@link CritOnly}.
@@ -37,8 +37,8 @@ public class DefaultEntityValidator implements ICustomValidator {
      */
     public static final DefaultEntityValidator validateWithoutCritOnly = new DefaultEntityValidator(true);
 
-    protected DefaultEntityValidator(final boolean ignoreCritOnly) {
-        this.ignoreCritOnly = ignoreCritOnly;
+    protected DefaultEntityValidator(final boolean skipCritOnly) {
+        this.skipCritOnly = skipCritOnly;
     }
 
     /**
@@ -53,7 +53,7 @@ public class DefaultEntityValidator implements ICustomValidator {
         }
         // iterate over properties in search of the first invalid one, including requiredness for any kind of property
         final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
-        .filter(mp -> (ignoreCritOnly ? !mp.isCritOnly() : true) && !mp.isValidWithRequiredCheck(false) && !mp.validationResult().isSuccessful())
+        .filter(mp -> (skipCritOnly ? !mp.isCritOnly() : true) && !mp.isValidWithRequiredCheck(false) && !mp.validationResult().isSuccessful())
         .findFirst().map(MetaProperty::getFirstFailure);
 
         // returns first failure if exists or successful result if there was no failure.

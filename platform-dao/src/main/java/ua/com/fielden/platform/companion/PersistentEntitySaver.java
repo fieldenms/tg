@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityVali
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.addToResultIfApplicableFromActivatablePerspective;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
@@ -51,7 +52,6 @@ import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -87,6 +87,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final BiFunction<Long, fetch<T>, T> findById;
     private final Function<EntityResultQueryModel<T>, Integer> kount;
 
+    private Boolean targetEntityTypeHasValidateOverridden;
+    
     private final Logger logger;
     
     public PersistentEntitySaver(
@@ -138,7 +140,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
         } else if (!entity.isInstrumented()) {
             throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
-        } else if (!entity.isDirty() && entity.isValid(validateWithoutCritOnly).isSuccessful()) {
+        } else if (!entity.isDirty() && validateEntity(entity).isSuccessful()) {
             logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
             return skipRefetching.get() ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
@@ -152,7 +154,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // let's try to save entity
         try {
             // firstly validate the entity
-            final Result isValid = entity.isValid(validateWithoutCritOnly);
+            final Result isValid = validateEntity(entity);
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
@@ -171,6 +173,19 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         processAfterSaveEvent.accept(resultantEntity, dirtyProperties);
 
         return resultantEntity;
+    }
+
+    /**
+     * Chooses between overridden validation or an alternative default validation that skips crit-only properties. 
+     * 
+     * @param entity
+     * @return
+     */
+    private Result validateEntity(final T entity) {
+        if (targetEntityTypeHasValidateOverridden == null) {
+            this.targetEntityTypeHasValidateOverridden = isMethodOverriddenOrDeclared(AbstractEntity.class, entityType, "validate");
+        }
+        return targetEntityTypeHasValidateOverridden ? entity.isValid() : entity.isValid(validateWithoutCritOnly);
     }
 
     /**

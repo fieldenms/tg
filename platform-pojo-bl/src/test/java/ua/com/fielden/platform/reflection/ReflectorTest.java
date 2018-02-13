@@ -43,8 +43,6 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
-import fielden.personnel.Delegation;
-
 /**
  * Test case for {@link Reflector}.
  *
