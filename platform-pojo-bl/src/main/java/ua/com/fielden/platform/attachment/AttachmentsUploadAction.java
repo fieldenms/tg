@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(NoKey.class)
 @CompanionObject(IAttachmentsUploadAction.class)
+@EntityTitle(value = "Attach Files", desc ="An action for attaching files.")
 public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty

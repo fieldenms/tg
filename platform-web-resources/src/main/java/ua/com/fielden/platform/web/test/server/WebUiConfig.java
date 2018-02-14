@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 
 import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
+import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -1373,6 +1374,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withNoParentCentreRefresh()
                                 .build()
                 )
+                .also()
+                .addTopAction(
+                        action(AttachmentsUploadAction.class)
+                                .withContext(context().withSelectedEntities().build())
+                                .icon("icons:attachment")
+                                .shortDesc("Attach file to a selected entity.")
+                                .build()
+                )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
@@ -1711,6 +1720,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("stringProp").minWidth(50).also()
                 .addProp("colourProp").width(40).also()
+                .addProp("numberOfAttachments").width(100).also()
                 .addProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["

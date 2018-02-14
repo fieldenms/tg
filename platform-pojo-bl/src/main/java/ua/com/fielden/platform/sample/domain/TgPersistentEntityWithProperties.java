@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -25,6 +28,7 @@ import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
@@ -129,6 +133,15 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @AfterChange(RequirednessDefiner.class)
     @Title(value = "Required validated prop", desc = "Required validated prop desc")
     private Integer requiredValidatedProp;
+
+    @IsProperty
+    @Readonly
+    @Calculated
+    @Title(value = "Number of Attachments", desc = "Desc")
+    private Integer numberOfAttachments = 0;
+    protected static final ExpressionModel numberOfAttachments_ = expr().model(
+                    select(TgPersistentEntityWithPropertiesAttachment.class).as("attachment").where()
+                    .prop("attachment.master").eq().extProp("id").groupBy().prop("attachment.master").yield().countAll().modelAsPrimitive()).model();
 
     @IsProperty
     @CritOnly(Type.SINGLE)
@@ -789,6 +802,16 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
 
     public Integer getIntegerProp() {
         return integerProp;
+    }
+
+    @Observable
+    protected TgPersistentEntityWithProperties setNumberOfAttachments(final Integer numberOfAttachments) {
+        this.numberOfAttachments = numberOfAttachments;
+        return this;
+    }
+
+    public Integer getNumberOfAttachments() {
+        return numberOfAttachments;
     }
 
 }
