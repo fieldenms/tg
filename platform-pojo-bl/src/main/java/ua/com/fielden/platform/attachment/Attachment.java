@@ -60,6 +60,8 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String pn_REV_NO = "revNo";
     public static final String pn_PREV_REVISION = "prevRevision";
     public static final String pn_LAST_REVISION = "lastRevision";
+    public static final String pn_LAST_MODIFIED = "lastModified";
+    public static final String pn_MIME = "mime";
     
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Attachment.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
@@ -95,6 +97,13 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Final(persistentOnly = false)
     private Date lastModified;
     
+    @IsProperty
+    @MapTo
+    @Title(value = "MIME", desc = "File MIME type.")
+    @Readonly
+    @Final(persistentOnly = false)
+    private String mime;
+
     @IsProperty
     @MapTo
     @Title(value = "Rev#", desc = "Attachment revision number.")
@@ -208,4 +217,13 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
         return lastModified;
     }
 
+    @Observable
+    public Attachment setMime(final String mime) {
+        this.mime = mime;
+        return this;
+    }
+
+    public String getMime() {
+        return mime;
+    }
 }

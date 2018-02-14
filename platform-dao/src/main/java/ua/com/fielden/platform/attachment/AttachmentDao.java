@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
+import static ua.com.fielden.platform.attachment.Attachment.pn_MIME;
 import static ua.com.fielden.platform.attachment.Attachment.pn_ORIG_FILE_NAME;
 import static ua.com.fielden.platform.attachment.Attachment.pn_PREV_REVISION;
 import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
@@ -127,7 +129,10 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
 
     @Override
     protected IFetchProvider<Attachment> createFetchProvider() {
-        return super.createFetchProvider().with(pn_TITLE, pn_SHA1, pn_ORIG_FILE_NAME, pn_REV_NO, pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, pn_LAST_REVISION);
+        return super.createFetchProvider().with(
+                pn_TITLE, pn_SHA1, pn_ORIG_FILE_NAME, pn_REV_NO, 
+                pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, 
+                pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME);
     }
     
     @Override

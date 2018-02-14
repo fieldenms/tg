@@ -104,7 +104,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             return restUtil.errorJSONRepresentation("File is too large.");
         } else {
             final InputStream stream = entity.getStream();
-            response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream), restUtil);
+            response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, entity.getMediaType()), restUtil);
         }
 
         return response;
@@ -122,7 +122,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      * @param stream -- a stream that represents a file to be processed.
      * @return
      */
-    private Representation tryToProcess(final InputStream stream) {
+    private Representation tryToProcess(final InputStream stream, final MediaType mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject));
         final String baseUri = getRequest().getResourceRef().getPath(true);
@@ -134,6 +134,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             entity.setLastModified(fileLastModified);
             entity.setInputStream(stream);
             entity.setEventSourceSubject(subject);
+            entity.setMime(mime.getName());
 
             final T applied = companion.save(entity);
             return restUtil.singleJSONRepresentation(applied);

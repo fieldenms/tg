@@ -22,6 +22,7 @@ public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> ext
     private InputStream inputStream;
     private String origFileName;
     private Date lastModified;
+    private String mime;
     
     private Optional<AbstractSubjectKind<Integer>> eventSourceSubject = Optional.empty();
 
@@ -60,5 +61,13 @@ public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> ext
         this.eventSourceSubject = Optional.of(eventSourceSubject);
         return this;
     }
-    
+
+    public final String getMime() {
+        return mime;
+    }
+
+    public final void setMime(String mime) {
+        this.mime = mime;
+    }
+
 }
