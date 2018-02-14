@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.attachment;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,6 +38,10 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
     @Title(value = "Attachments", desc = "Attachments to be associated with the master entity.")
     private Set<Long> attachmentIds = new HashSet<>();
 
+    protected AttachmentsUploadAction() {
+        setKey(NO_KEY);
+    }
+    
     @Observable
     protected AttachmentsUploadAction setAttachmentIds(final Set<Long> attachments) {
         this.attachmentIds.clear();
