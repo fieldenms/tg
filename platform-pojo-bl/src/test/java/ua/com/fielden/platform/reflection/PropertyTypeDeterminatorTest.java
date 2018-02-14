@@ -2,9 +2,12 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMap;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMappedOrCalculated;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 
 import java.lang.ref.Reference;
@@ -15,6 +18,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -322,4 +327,37 @@ public class PropertyTypeDeterminatorTest {
         assertFalse(isMappedOrCalculated(Entity.class, "monitoring"));
         assertFalse(isMappedOrCalculated(Entity.class, "observableProperty"));
     }
+    
+    @Test
+    public void determinePropertyType_returns_null_if_the_type_could_not_be_determined() {
+        assertNull(determinePropertyType(AbstractPersistentEntity.class, AbstractEntity.KEY));
+    }
+    
+    @Test
+    public void determinePropertyType_requires_both_type_and_propety_to_be_specified() {
+        try {
+            determinePropertyType(null, AbstractEntity.KEY);
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+
+        try {
+            determinePropertyType(AbstractPersistentEntity.class, null);
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+        
+        try {
+            determinePropertyType(AbstractPersistentEntity.class, "");
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+        
+        try {
+            determinePropertyType(null, null);
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+    }
+
 }
