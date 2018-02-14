@@ -58,7 +58,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private static final Random rnd = new Random(100);
     private static void delay(final AbstractSubjectKind<Integer> ess, final int prc) {
         try {
-            Thread.sleep(rnd.nextInt(2000));
+            Thread.sleep(rnd.nextInt(300));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

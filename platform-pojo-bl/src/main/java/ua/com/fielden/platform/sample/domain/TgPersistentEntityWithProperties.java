@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -52,7 +52,7 @@ import ua.com.fielden.platform.types.Money;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 @DisplayDescription
-public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
+public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Integer prop", desc = "Integer prop desc")

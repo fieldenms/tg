@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import ua.com.fielden.platform.attachment.ICanAttach;
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /** 
@@ -8,6 +9,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface ITgPersistentEntityWithProperties extends IEntityDao<TgPersistentEntityWithProperties> {
+public interface ITgPersistentEntityWithProperties extends IEntityDao<TgPersistentEntityWithProperties>, ICanAttach<TgPersistentEntityWithProperties> {
 
 }
