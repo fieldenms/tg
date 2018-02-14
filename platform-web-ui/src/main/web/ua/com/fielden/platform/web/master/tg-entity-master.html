@@ -91,10 +91,6 @@
         ready: function () {
             this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         },
-        
-        getEditorContainer: function() {
-        		return this.$.editorContainer;  
-        },
 
         _resizeEventListener: function (event, details) {
             this._contentScrolled();

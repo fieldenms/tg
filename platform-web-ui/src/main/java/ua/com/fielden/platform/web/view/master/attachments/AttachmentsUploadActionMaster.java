@@ -68,11 +68,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     private String readyCallback() {
         // that's a nice trick to include ... "self.classList.remove('canLeave');\n" ... if appropriate
         // TODO need to modify listeners to manage SAVE and CANCEL states
-        return  "// Overridden to support hidden property conversion on the client-side ('attachments').\n"
-                +"const editorContainer = self.$.masterDom.getEditorContainer();\n"
-                + "if (editorContainer) {\n"
-                + "    editorContainer.style.display = 'flex';\n"
-                + "}\n"
+        return  "// Overridden to support hidden property conversion on the client-side ('attachmentIds').\n"
                 + "self._isNecessaryForConversion = function (propertyName) {\n"
                 + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
                 + "};\n"
