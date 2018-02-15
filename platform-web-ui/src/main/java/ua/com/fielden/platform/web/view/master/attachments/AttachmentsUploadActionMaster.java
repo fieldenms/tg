@@ -102,9 +102,9 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", 
-                        actionBarLayout.code().toString() + "\n"
-                        + entityActionsStr.toString() + "\n"
-                        + readyCallback())
+                         actionBarLayout.code().toString() + "\n" + 
+                         entityActionsStr.toString() + "\n" + 
+                         uploaderListEventHandling())
                 .replace("@SHORTCUTS", shortcuts)
                 .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
@@ -113,16 +113,29 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         renderable = () -> new InnerTextElement(entityMasterStr);
     }
 
-    private String readyCallback() {
+    private String uploaderListEventHandling() {
         return  "// Overridden to support hidden property conversion on the client-side ('attachmentIds').\n"
                 + "self._isNecessaryForConversion = function (propertyName) {\n"
                 + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
                 + "};\n"
                 + "// register listeners for attachment uploading\n"
-                + "const uploaderList = self.$.attachmentUploader;" 
+                + "const uploaderList = self.$.attachmentUploader;"
+                // when uploading start, master needs to go to status VIEW and kick in a toast with generic progress.
+                + "uploaderList.processUploadingStarted = function(uploader) {\n"
+                + "    //console.log('STARTED UPLOADING of', uploader.fileName);\n"
+                + "    uploaderList.classList.add('canLeave');\n"
+                + "    self.view();\n"
+                + "    self._toastGreeting().text = 'Uploading files...';\n"
+                + "    self._toastGreeting().hasMore = false;\n"
+                + "    self._toastGreeting().showProgress = true;\n"
+                + "    self._toastGreeting().msgHeading = 'Info';\n"
+                + "    self._toastGreeting().isCritical = false;\n"
+                + "    self._toastGreeting().show();\n"
+                + "};\n"
+                // when uploading stops, master needs to go to status EDIT and kick in a toast with generic progress.
                 + "uploaderList.processUploadingStopped = function() {\n"
-                + "    console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Attachments created:', uploaderList.attachments.length, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);\n"
-                + "    uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );\n"
+                + "    //console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Attachments created:', uploaderList.attachments.length, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);\n"
+                + "    //uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );\n"
                 + "    const ids = uploaderList.attachments.map(att => att.id);\n"
                 + "    self._currBindingEntity.setAndRegisterPropertyTouch('attachmentIds', ids);\n"
                 + "    uploaderList.classList.remove('canLeave');\n"                
@@ -133,19 +146,8 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 + "    self._toastGreeting().msgHeading = 'Info';\n"
                 + "    self._toastGreeting().isCritical = false;\n"
                 + "    self._toastGreeting().show();\n"
-                + "};\n"
-                + "\n"
-                + "uploaderList.processUploadingStarted = function(uploader) {\n"
-                + "    console.log('STARTED UPLOADING of', uploader.fileName);\n"
-                + "    uploaderList.classList.add('canLeave');\n"
-                + "    self.view();\n"
-                + "    self._toastGreeting().text = 'Uploading files...';\n"
-                + "    self._toastGreeting().hasMore = false;\n"
-                + "    self._toastGreeting().showProgress = true;\n"
-                + "    self._toastGreeting().msgHeading = 'Info';\n"
-                + "    self._toastGreeting().isCritical = false;\n"
-                + "    self._toastGreeting().show();\n"
                 + "};\n";
+                
     }
 
     @Override
