@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
@@ -18,6 +19,11 @@ public class TgPersistentEntityWithPropertiesAttachmentDao extends CommonEntityD
     @Inject
     protected TgPersistentEntityWithPropertiesAttachmentDao(final IFilter filter) {
         super(filter);
+    }
+    
+    @Override
+    protected IFetchProvider<TgPersistentEntityWithPropertiesAttachment> createFetchProvider() {
+        return super.createFetchProvider().with("master", "attachment");
     }
 
 

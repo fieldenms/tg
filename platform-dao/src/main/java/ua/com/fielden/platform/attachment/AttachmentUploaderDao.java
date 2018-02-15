@@ -57,11 +57,11 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     
     private static final Random rnd = new Random(100);
     private static void delay(final AbstractSubjectKind<Integer> ess, final int prc) {
-        try {
-            Thread.sleep(rnd.nextInt(300));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(rnd.nextInt(300));
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         
         ess.publish(prc);
     }
@@ -90,9 +90,9 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 uploader.getEventSourceSubject().ifPresent(ess -> delay(ess, 40));
             }
             
-            if (rnd.nextInt(300) > 160) {
-                throw new RuntimeException("ha-ha-ha this is on purpose");
-            }
+//            if (rnd.nextInt(300) > 160) {
+//                throw new RuntimeException("ha-ha-ha this is on purpose");
+//            }
             
             // convert digest to string for target file creation
             final byte[] digest = md.digest();

@@ -36,7 +36,8 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
                 final ICanAttach co = (ICanAttach) co$(entityType);
                 action.getAttachmentIds().stream()
                 .map(id -> co(Attachment.class).findById(id, attachmentFetchModel))
-                .forEach(att -> co.attach(att, action.getMasterEntity()));
+                .map(att -> co.attach(att, action.getMasterEntity()))
+                .forEach(System.out::println);
             } else {
                 throw failure(format("Companion for %s cannot attach attachments.", getEntityTitleAndDesc(entityType).getKey()));
             }
