@@ -1379,7 +1379,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         action(AttachmentsUploadAction.class)
                                 .withContext(context().withSelectedEntities().build())
                                 .icon("icons:attachment")
-                                .shortDesc("Attach file to a selected entity.")
+                                .shortDesc("Attach file to a selected entity")
                                 .build()
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
