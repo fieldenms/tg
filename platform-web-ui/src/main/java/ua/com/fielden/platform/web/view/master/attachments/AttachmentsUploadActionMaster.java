@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.view.master.attachments;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
@@ -12,7 +11,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
@@ -20,8 +21,8 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -51,21 +52,20 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     private final List<AttachmentsUploadActionMasterEntityActionConfig> entityActions = new ArrayList<>();
     
 
-    public AttachmentsUploadActionMaster() {
-
+    public AttachmentsUploadActionMaster(final PrefDim dims, final int fileSizeLimitKb, final String mimeType, final String... moreMimeTypes) {
         final LinkedHashSet<String> importPaths = CollectionUtil.linkedSetOf(
                 "file_operations/tg-attachment-uploader-list",
                 "layout/tg-flex-layout",
                 "master/actions/tg-action");
 
+        final String mimeTypesAccepted = StreamUtils.of(mimeType, moreMimeTypes).collect(Collectors.joining(","));
         final DomElement attachmentUploaderList = new DomElement("tg-attachment-uploader-list")
                 .attr("id", "attachmentUploader")
                 .attr("class", "property-editors")
                 .attr("entity", "[[_currBindingEntity]]")
-                .attr("upload-size-limit-kb", "10240")
-                .attr("mime-types-accepted", "image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .attr("upload-size-limit-kb", fileSizeLimitKb)
+                .attr("mime-types-accepted", mimeTypesAccepted)
                 .attr("url", "/upload-attachment");
-        
         
         addMasterAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel attaching files");
         addMasterAction(SAVE).shortDesc("ATTACH").longDesc("Attach uploaded files");
@@ -92,7 +92,6 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         
         final DomElement elementContainer = new DomContainer().add(attachmentUploaderList, actionContainer);
         
-        final PrefDim dims = mkDim(400, Unit.PX, 400, Unit.PX);
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append(format("{'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'}", dims.width, dims.height, dims.widthUnit.value, dims.heightUnit.value));
         

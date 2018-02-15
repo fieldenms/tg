@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -90,7 +89,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
-        final EntityMaster<AttachmentsUploadAction> genericAttachmentsUploadActionMaster = StandardMastersWebUiConfig.createAttachmentsUploadMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
@@ -103,7 +101,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityEditActionMaster)
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
-        .addMaster(genericAttachmentsUploadActionMaster)
         .addMaster(genericMenuSaveMaster)
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig).master)
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)

@@ -109,6 +109,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -133,6 +134,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
+import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -785,7 +787,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
+        
+        final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
+                .createAttachmentsUploadMaster(injector(), mkDim(400, Unit.PX, 400, Unit.PX), 10240,
+                        "image/png", "image/jpeg", 
+                        "application/pdf,application/zip", 
+                        ".csv", ".txt", "text/plain", "text/csv", 
+                        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                        "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        
         configApp().
+            addMaster(attachmentsUploadActionMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).

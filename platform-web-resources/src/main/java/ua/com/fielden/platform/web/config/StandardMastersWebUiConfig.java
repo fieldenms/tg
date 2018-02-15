@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -92,8 +93,13 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
     }
     
-    public static EntityMaster<AttachmentsUploadAction> createAttachmentsUploadMaster(final Injector injector) {
-        final IMaster<AttachmentsUploadAction> masterConfig = new AttachmentsUploadActionMaster();
+    public static EntityMaster<AttachmentsUploadAction> createAttachmentsUploadMaster(
+            final Injector injector, 
+            final PrefDim dims, 
+            final int fileSizeLimitKb, 
+            final String mimeType, 
+            final String... moreMimeTypes) {
+        final IMaster<AttachmentsUploadAction> masterConfig = new AttachmentsUploadActionMaster(dims, fileSizeLimitKb, mimeType, moreMimeTypes);
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
     }
 
