@@ -114,8 +114,6 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     }
 
     private String readyCallback() {
-        // that's a nice trick to include ... "self.classList.remove('canLeave');\n" ... if appropriate
-        // TODO need to modify listeners to manage SAVE and CANCEL states
         return  "// Overridden to support hidden property conversion on the client-side ('attachmentIds').\n"
                 + "self._isNecessaryForConversion = function (propertyName) {\n"
                 + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
@@ -127,17 +125,20 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 + "    uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );\n"
                 + "    const ids = uploaderList.attachments.map(att => att.id);\n"
                 + "    self._currBindingEntity.setAndRegisterPropertyTouch('attachmentIds', ids);\n"
+                + "    uploaderList.classList.remove('canLeave');\n"                
+                + "    self.edit();\n"                
                 + "    self._toastGreeting().text = 'Uploaded ' + uploaderList.numberOfUploaded +' / Failed ' + uploaderList.numberOfFailed +' / Aborted ' + uploaderList.numberOfAborted;\n"
                 + "    self._toastGreeting().hasMore = false;\n"
                 + "    self._toastGreeting().showProgress = false;\n"
                 + "    self._toastGreeting().msgHeading = 'Info';\n"
                 + "    self._toastGreeting().isCritical = false;\n"
                 + "    self._toastGreeting().show();\n"
-                + "    //self.save();\n"
                 + "};\n"
                 + "\n"
                 + "uploaderList.processUploadingStarted = function(uploader) {\n"
                 + "    console.log('STARTED UPLOADING of', uploader.fileName);\n"
+                + "    uploaderList.classList.add('canLeave');\n"
+                + "    self.view();\n"
                 + "    self._toastGreeting().text = 'Uploading files...';\n"
                 + "    self._toastGreeting().hasMore = false;\n"
                 + "    self._toastGreeting().showProgress = true;\n"
