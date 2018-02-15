@@ -271,6 +271,14 @@
 			Array.from(fileList).forEach( file => self._pushFileForUpload(file) );
 		},
 
+		/* Provides a reason why the attachment uploader list cannot be left... */
+		canLeave: function () {
+		    return {
+				imperative: true,
+				msg: "Uploading is still in progress..."
+            }    
+		},
+		
 		_mimeTypesAcceptedChanged: function(newValue, oldValue) {
 			this._uploadInput.setAttribute('accept', newValue);
 		},
