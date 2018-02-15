@@ -226,10 +226,10 @@
 		        const startId = this._makeId(oldCount);
 			    const elem = Polymer.dom(this.root).querySelector("#" + startId);
 			    if (elem) {
-			        elem.canUpload = true;
 			        if (this.processUploadingStarted) {
 			            this.processUploadingStarted(elem);
 			        }
+			        elem.canUpload = true;
 			    }
 		  	}
 		},
