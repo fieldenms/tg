@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/file_operations/tg-attachment-uploader.html">
@@ -26,7 +27,6 @@
 			#container {
 				@apply(--layout-vertical);
 				@apply(--layout-flex);
-				border:1px dashed #ff5555;
 				padding: 8px;
 				position: relative;
 				box-sizing: border-box;
@@ -44,7 +44,6 @@
 				padding: 8px;
 				margin-top: 4px;
 				cursor: pointer;
-				border: 1px dashed var(--paper-grey-700);
 			}
 			
 			.dropHere {
@@ -53,9 +52,14 @@
 				font-weight: 700;
 				color: var(--paper-grey-400);			
 			}
+			
+			.with-shadow {
+				box-shadow: 0px -3px 6px -2px rgba(0, 0, 0, 0.7);
+				z-index: 1;
+			}
 		</style>
 
-		<div id="container" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+		<div id="container" on-scroll="_contentScrolled" on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
 			<template is='dom-repeat' id='uploaders' items='[[_filesToUpload]]' as='f' rendered-item-count="{{_renderedCount}}">
 				<tg-attachment-uploader style='width: 100%'
 					id$='[[_makeId(index)]]'
@@ -78,7 +82,7 @@
 	Polymer({
 		is: 'tg-attachment-uploader-list',
 
-		behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+		behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
 		properties: {
 			/* If enabled will output names, number, total size and mime types of the selected files. */
@@ -217,6 +221,7 @@
 		 * It is used to instigate uploading of the first file in the added batch if there are no other uploads in progress. */
 		_renderedCountChanged: function (newCount, oldCount) {
 		  	if (oldCount >= 0 && this.uploadInProgress === false) {
+				this._contentScrolled();
 		  	  	this.uploadInProgress = true;
 		        const startId = this._makeId(oldCount);
 			    const elem = Polymer.dom(this.root).querySelector("#" + startId);
@@ -237,6 +242,10 @@
 			this._uploadInput.onchange = function() {
 			    this.submitUploading(this._uploadInput.files);
 			}.bind(this);
+		},
+
+		ready: function () {
+			this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 		},
 		
 		/**
@@ -278,6 +287,24 @@
 				msg: "Uploading is still in progress..."
             }    
 		},
+		
+		/* Ensures that shasow style is applied/removed depending on the size of the component. */
+        _resizeEventListener: function (event, details) {
+            this._contentScrolled();
+        },
+
+        /* Ensures that shadow style is applied/removed depending on the content of the list of attachment uploaders. */
+        _contentScrolled: function (e) {
+            const scrollTarget = this.$.container;
+            const openDialogOrDrop = this.$.openDialogOrDrop;
+            if (scrollTarget && openDialogOrDrop) {
+                if (scrollTarget.scrollTop + scrollTarget.offsetHeight >= scrollTarget.scrollHeight) {
+                    openDialogOrDrop.classList.remove('with-shadow');
+                } else {
+                    openDialogOrDrop.classList.add('with-shadow');
+                }
+            }
+        },
 		
 		_mimeTypesAcceptedChanged: function(newValue, oldValue) {
 			this._uploadInput.setAttribute('accept', newValue);
