@@ -15,6 +15,12 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
+/**
+ * A companion that is responsible for associating attachments with other domain entities.
+ * 
+ * @author TG Team
+ *
+ */
 @EntityType(AttachmentsUploadAction.class)
 public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploadAction> implements IAttachmentsUploadAction {
 
@@ -37,11 +43,10 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
                 action.getAttachmentIds().stream()
                 .map(id -> co(Attachment.class).findById(id, attachmentFetchModel))
                 .map(att -> co.attach(att, action.getMasterEntity()))
-                .forEach(System.out::println);
+                .forEach(assoc -> LOGGER.debug(format("Attachment association created: %s", assoc)));
             } else {
                 throw failure(format("Companion for %s cannot attach attachments.", getEntityTitleAndDesc(entityType).getKey()));
             }
-            
         } else { // otherwise do nothing...
             LOGGER.debug("Either master entity or attachments are missing.");
         }
