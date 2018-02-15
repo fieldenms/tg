@@ -20,9 +20,27 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class StreamUtils {
+    public static final String ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL = "First stream element cannot be null.";
+
     private StreamUtils() {
     }
 
+    /**
+     * Creates a new stream from the provided values.
+     * 
+     * @param first
+     * @param rest
+     * @return
+     */
+    public static <T> Stream<T> of(final T first, final T... rest) {
+        if (first == null) {
+            throw new NullPointerException(ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL);
+        }
+        final Stream<T> xs = Stream.of(first);
+        final Stream<T> ys = Stream.of(rest);
+        return Stream.concat(xs, ys);
+    }
+    
     /**
      * Splits a stream into a <code>head</code> and <code>tail</code>. The head is optional as the passed in stream could be empty. The tail is a stream, which could be empty if
      * the input stream is empty or contains only a single element.
