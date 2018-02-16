@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.attachment.Attachment.pn_PREV_REVISION;
 import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
 import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
 import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
@@ -31,6 +32,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.handlers.IAttachmentAfterSave;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -130,8 +132,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     @Override
     protected IFetchProvider<Attachment> createFetchProvider() {
         return super.createFetchProvider().with(
+                DESC,
                 pn_TITLE, pn_SHA1, pn_ORIG_FILE_NAME, pn_REV_NO, 
-                pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, 
+                pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, pn_PREV_REVISION + "." + pn_LAST_REVISION, 
                 pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME);
     }
     
