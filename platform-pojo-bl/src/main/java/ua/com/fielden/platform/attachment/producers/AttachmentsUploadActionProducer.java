@@ -25,6 +25,8 @@ public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithCo
     protected AttachmentsUploadAction provideDefaultValues(final AttachmentsUploadAction entity) {
         if (masterEntityNotEmpty() && masterEntityInstanceOf(AbstractPersistentEntity.class)) {
             entity.setMasterEntity((AbstractPersistentEntity<?>) masterEntity());
+        } else if (keyOfMasterEntityInstanceOf(AbstractPersistentEntity.class)) {
+            entity.setMasterEntity(keyOfMasterEntity(AbstractPersistentEntity.class));
         } else if (selectedEntitiesOnlyOne()) {
             final AbstractPersistentEntity<?> selected = (AbstractPersistentEntity<?>) selectedEntities().get(0);
             entity.setMasterEntity(selected);

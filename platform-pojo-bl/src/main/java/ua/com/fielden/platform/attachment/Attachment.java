@@ -11,7 +11,6 @@ import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
 import ua.com.fielden.platform.attachment.validators.IsRevNoAlignedWithPrevRevision;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
