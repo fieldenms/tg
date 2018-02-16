@@ -87,7 +87,9 @@
             actionModel.postActionSuccess = function (functionalEntity) {};
             actionModel.postActionError = function (functionalEntity) {};
             actionModel.attrs = {
-                entityType:'ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater', currentState:'EDIT', centreUuid: entityCentre.uuid
+                entityType: 'ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater',
+                currentState: 'EDIT',
+                centreUuid: entityCentre.uuid
             };
             actionModel.requireSelectionCriteria = 'true';
             actionModel.requireSelectedEntities = 'NONE';
@@ -146,7 +148,7 @@
                 /**
                  * Holds the egi selection for binding into an insertion point
                  */
-                centreSelection : {
+                centreSelection: {
                     type: Object
                 },
                 /**
@@ -244,14 +246,14 @@
                 // Also, these properties are designed to be bound to children element properties -- it is necessary to//
                 //   populate their default values in ready callback (to have these values populated in children)!     //
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                
+
                 /**
                  * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
                  */
                 _centreChanged: {
                     type: Boolean
                 },
-                
+
                 /**
                  * The next three properties are bound from respective properties from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
                  * They (and '_centreChanged' property) are needed for correct enabling / disabling of Save / Discard buttons.
@@ -265,7 +267,7 @@
                 _currEntity: {
                     type: Object
                 },
-                
+
                 /**
                  * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
                  */
@@ -419,9 +421,9 @@
                 }
             },
 
-            _actionInProgressChanged: function(newValue, oldValue) {
+            _actionInProgressChanged: function (newValue, oldValue) {
                 if (newValue === false) {
-                  this._dom().$.spinner.style.visibility = 'hidden';
+                    this._dom().$.spinner.style.visibility = 'hidden';
                 }
             },
 
@@ -542,7 +544,7 @@
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
-                
+
                 self._createSavingPromise = function () { // very similar to tg-entity-master-behavior._createSavingPromise
                     const slf = this;
                     const sc = this.$.selection_criteria;
@@ -556,7 +558,7 @@
                         }
                     );
                 }.bind(self);
-                
+
                 self.save = (function () { // very similar to tg-entity-master-behavior.save
                     const slf = this;
                     slf._actionInProgress = true;
@@ -565,12 +567,12 @@
                         sc._savingInitiated = true;
                         sc.disableView();
                     }
-                    
+
                     return new Promise(function (resolve, reject) {
                         slf.debounce('invoke-saving', function () {
                             // cancel the 'invoke-saving' debouncer if there is any active one:
                             slf.cancelDebouncer('invoke-saving');
-                            
+
                             // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
                             // otherwise -- saving process will simply start immediately
                             const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
@@ -585,7 +587,7 @@
                         }, 50);
                     });
                 }).bind(self);
-                
+
                 self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
                     const slf = this;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
@@ -597,7 +599,7 @@
                         }
                     );
                 }.bind(self);
-                
+
                 self.discard = (function () { // very similar to tg-entity-binder-behavior.retrieve
                     const slf = this;
                     slf._actionInProgress = true;
@@ -606,12 +608,12 @@
                         sc._retrievalInitiated = true;
                         sc.disableView();
                     }
-                    
+
                     return new Promise(function (resolve, reject) {
                         slf.debounce('invoke-discard', function () {
                             // cancel the 'invoke-discard' debouncer if there is any active one:
                             slf.cancelDebouncer('invoke-discard');
-                            
+
                             // cancel previous validation requests except the last one -- if it exists then discarding process will be chained on top of that last validation process, 
                             // otherwise -- discard process will simply start immediately
                             const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
@@ -628,7 +630,7 @@
                         }, 50);
                     });
                 }).bind(self);
-                
+
                 self.run = (function (isSortingAction, forceRegeneration) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
@@ -641,18 +643,18 @@
 
                     // let's register a timer to kickoff a spinner if the run action is taking too long...
                     if (self._startSpinnerTimer) {
-                      clearTimeout(self._startSpinnerTimer);
+                        clearTimeout(self._startSpinnerTimer);
                     }
                     self._startSpinnerTimer = setTimeout(() => {
-                      // position and make spinner visible if action is in progress
-                      if (self._actionInProgress === true) {
-                        const runnerButton = this._dom().$.runner;
-                        const spinner = this._dom().$.spinner;
+                        // position and make spinner visible if action is in progress
+                        if (self._actionInProgress === true) {
+                            const runnerButton = this._dom().$.runner;
+                            const spinner = this._dom().$.spinner;
 
-                        spinner.style.left = (runnerButton.offsetWidth / 2 - spinner.offsetWidth / 2) + 'px';
-                        spinner.style.top = (runnerButton.offsetHeight / 2 - spinner.offsetHeight / 2) + 'px';
-                        spinner.style.visibility = 'visible';
-                      }
+                            spinner.style.left = (runnerButton.offsetWidth / 2 - spinner.offsetWidth / 2) + 'px';
+                            spinner.style.top = (runnerButton.offsetHeight / 2 - spinner.offsetHeight / 2) + 'px';
+                            spinner.style.visibility = 'visible';
+                        }
                     }, 2000);
 
                     return self.$.selection_criteria.run(isSortingAction, forceRegeneration).then(
@@ -708,16 +710,14 @@
                 /**
                  * Adds event listener that will update egi when some entity was changed
                  */
-                self.addEventListener("tg-entity-changed", function(e) {
-                    e.detail.entities.forEach(entity => {
-                        e.detail.properties.forEach(prop => this.$.egi.updateEntity(entity, prop));
-                    });
+                self.addEventListener("tg-entity-changed", function (e) {
+                    self.refreshEntitiesLocaly(e.detail.entities, e.detail.properties);
                 }.bind(self));
 
                 /**
                  * Adds event listener fot entity selection in insertion point that will update other insertion point and also egi.
                  */
-                self.addEventListener("tg-entity-selected", function(e) {
+                self.addEventListener("tg-entity-selected", function (e) {
                     this.centreSelection = e.detail;
                 }.bind(self));
 
@@ -747,6 +747,20 @@
                 //Select the result view if autoRun is true
                 if (self.autoRun || self.queryPart) {
                     self._selectedView = 1;
+                }
+            },
+
+            refreshEntitiesLocaly: function (entities, properties) {
+                //Update egi entity
+                entities.forEach(entity => {
+                    properties.forEach(prop => {
+                        this.$.egi.updateEntity(entity, prop);
+                    });
+                });
+                //Update other insertion point entities
+                const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
+                    insertionPoints[insPoIndex].refreshEntitiesLocaly(entities, properties);
                 }
             },
 
