@@ -9,6 +9,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface ITgPersistentEntityWithProperties extends IEntityDao<TgPersistentEntityWithProperties>, ICanAttach<TgPersistentEntityWithProperties> {
+public interface ITgPersistentEntityWithProperties extends IEntityDao<TgPersistentEntityWithProperties>, ICanAttach<TgPersistentEntityWithProperties, TgPersistentEntityWithPropertiesAttachment> {
 
 }
