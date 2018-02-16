@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final String jobUid;
     private final String origFileName;
     private final Date fileLastModified;
+    private final String mimeAsProvided;
 
     public FileProcessingResource(
             final Router router, 
@@ -78,6 +80,11 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             throw new IllegalArgumentException("origFileName is required");
         }
         
+        this.mimeAsProvided = request.getHeaders().getFirstValue("mime");
+        if (StringUtils.isEmpty(this.mimeAsProvided)) {
+            throw new IllegalArgumentException("File MIME type is missing.");
+        }
+        
         final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified"));
         this.fileLastModified = new Date(lastModified);
     }
@@ -95,7 +102,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             return restUtil.errorJSONRepresentation("There is nothing to process");
         } else if (!isMediaTypeSupported(entity.getMediaType())) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJSONRepresentation("Unexpected media type.");
+            return restUtil.errorJSONRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));
         } else if (entity.getSize() == -1) {
             getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
             return restUtil.errorJSONRepresentation("File size is required.");
@@ -104,15 +111,20 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             return restUtil.errorJSONRepresentation("File is too large.");
         } else {
             final InputStream stream = entity.getStream();
-            response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, entity.getMediaType()), restUtil);
+            response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, getMime(entity.getMediaType())), restUtil);
         }
 
         return response;
     }
 
-    private boolean isMediaTypeSupported(MediaType mediaType) {
+    private String getMime(final MediaType mediaType) {
+        return mediaType != null ? mediaType.getName() : this.mimeAsProvided;
+    }
+    
+    private boolean isMediaTypeSupported(final MediaType mediaType) {
         // simply checking types.contains(mediaType) may not be sufficient as there could be something like IMAGE/*
-        return types.contains(mediaType);
+        final String mime = getMime(mediaType);
+        return types.stream().anyMatch(mt -> mime.equals(mt.getName()));
     }
 
     /**
@@ -122,7 +134,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      * @param stream -- a stream that represents a file to be processed.
      * @return
      */
-    private Representation tryToProcess(final InputStream stream, final MediaType mime) {
+    private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject));
         final String baseUri = getRequest().getResourceRef().getPath(true);
@@ -134,7 +146,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             entity.setLastModified(fileLastModified);
             entity.setInputStream(stream);
             entity.setEventSourceSubject(subject);
-            entity.setMime(mime.getName());
+            entity.setMime(mime);
 
             final T applied = companion.save(entity);
             return restUtil.singleJSONRepresentation(applied);
