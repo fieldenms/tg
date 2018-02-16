@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
 import static ua.com.fielden.platform.attachment.Attachment.pn_MIME;
@@ -32,7 +33,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.handlers.IAttachmentAfterSave;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -135,7 +135,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 DESC,
                 pn_TITLE, pn_SHA1, pn_ORIG_FILE_NAME, pn_REV_NO, 
                 pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, pn_PREV_REVISION + "." + pn_LAST_REVISION, 
-                pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME);
+                pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME, pn_IS_LATEST_REV);
     }
     
     @Override

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.attachment;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.util.Date;
@@ -9,13 +11,16 @@ import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
 import ua.com.fielden.platform.attachment.validators.IsRevNoAlignedWithPrevRevision;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -26,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -49,6 +55,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 @KeyType(value = DynamicEntityKey.class, keyMemberSeparator = " | SHA1: ")
+@KeyTitle("Attachment")
 @DescTitle(value = "Description", desc = "A summary about the attachment, which can be used for search.")
 @DisplayDescription
 @MapEntityTo
@@ -62,6 +69,8 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String pn_LAST_REVISION = "lastRevision";
     public static final String pn_LAST_MODIFIED = "lastModified";
     public static final String pn_MIME = "mime";
+    public static final String pn_IS_LATEST_REV = "latestRev";
+    
     
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Attachment.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
@@ -126,6 +135,21 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Readonly
     @BeforeChange(@Handler(CanBeUsedAsLastAttachmentRev.class))
     private Attachment lastRevision;
+    
+    @IsProperty
+    @Readonly
+    @Calculated
+    @Title(value = "Is the lates revision?", desc = "Indicates if the attachment represent the lates revision of the associated file.")
+    private boolean latestRev;
+    protected static final ExpressionModel latestRev_ = expr()
+            .caseWhen().model(
+                select(Attachment.class).where()
+                .prop(ID).eq().extProp(ID).and()
+                .begin()
+                    .prop(pn_LAST_REVISION).eq().extProp(ID).or()
+                    .prop(pn_LAST_REVISION).isNull()
+                .end().yield().countAll().modelAsPrimitive()).eq().val(1).then().val(true)
+            .otherwise().val(false).endAsBool().model();
 
     /**
      * A necessary flag to allow modification of the last revision upon revision history rewriting.
@@ -226,4 +250,15 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public String getMime() {
         return mime;
     }
+    
+    @Observable
+    protected Attachment setLatestRev(final boolean latestRevision) {
+        this.latestRev = latestRevision;
+        return this;
+    }
+
+    public boolean isLatestRev() {
+        return latestRev;
+    }
+
 }
