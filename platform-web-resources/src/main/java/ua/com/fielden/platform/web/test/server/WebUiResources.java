@@ -10,6 +10,7 @@ import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
+import ua.com.fielden.platform.web.factories.webui.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.test.eventsources.TgMessageEventSource;
@@ -77,6 +78,9 @@ public class WebUiResources extends AbstractWebUiResources {
                 MediaType.APPLICATION_WORD, MediaType.APPLICATION_MSOFFICE_DOCX,
                 MediaType.APPLICATION_EXCEL, MediaType.APPLICATION_MSOFFICE_XLSX);
         router.attach("/upload-attachment", factoryForAttachmentUploader);
+
+        // register attachment download resource
+        router.attach("/download-attachment/{attachment-id}", new AttachmentDownloadResourceFactory(injector));
 
         // register some server-side eventing
         // router.attach("/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment

@@ -54,6 +54,16 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         super(filter);
         this.attachmentsLocation = attachmentsLocation;
     }
+    
+    @Override
+    public File asFile(final Attachment attachment) {
+        final File file = new File(attachmentsLocation + File.separatorChar + attachment.getSha1());
+        if (file.canRead()) {
+            return file;
+        } else {
+            throw failure(format("Could not read file for attachment [%s]", attachment));
+        }
+    }
 
     @Override
     @SessionRequired

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.attachment;
 
+import java.io.File;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /**
@@ -9,5 +11,5 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * 
  */
 public interface IAttachment extends IEntityDao<Attachment> {
-
+    File asFile(final Attachment attachment);
 }
