@@ -53,7 +53,6 @@ public class DefinersExecutorTest {
                 );
     }
     
-
     @Test
     public void definers_execute_firstly_for_key_member_entity_of_root_and_then_for_collection_items_of_collection_property_and_then_for_collection_itself_and_for_next_property_defined_after_collection() {
         final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
@@ -138,4 +137,31 @@ public class DefinersExecutorTest {
                     grandParent.getHandledProperties()
                 );
     }
+    
+    @Test
+    public void definers_do_not_execute_for_critOnlySingle_properties() {
+        final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
+        grandParent.beginInitialising();
+        grandParent.setKey("grand1");
+        grandParent.setPropWithHandler("PropWithHandler value");
+        grandParent.setCritOnlySinglePropWithHandler("CritOnlySinglePropWithHandler value");
+        
+        final TgDefinersExecutorParent parent = factory.newEntity(TgDefinersExecutorParent.class, 1L);
+        parent.beginInitialising();
+        parent.setKeyMember1(grandParent);
+        parent.setKeyMember2("parent1");
+        parent.setCritOnlySinglePropWithHandler("CritOnlySinglePropWithHandler value");
+        
+        DefinersExecutor.execute(parent);
+        
+        assertEquals(
+                    Arrays.asList(
+                        pair("", "propWithHandler"),
+                        pair("keyMember1", "collectionWithHandler"),
+                        pair("keyMember1", "propWithHandler")
+                    ),
+                    grandParent.getHandledProperties()
+                );
+    }
+    
 }
