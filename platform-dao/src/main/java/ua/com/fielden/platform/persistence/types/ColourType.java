@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static com.microsoft.sqlserver.jdbc.StringUtils.isEmpty;
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -11,8 +11,6 @@ import java.sql.Types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
-
-import com.microsoft.sqlserver.jdbc.StringUtils;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
