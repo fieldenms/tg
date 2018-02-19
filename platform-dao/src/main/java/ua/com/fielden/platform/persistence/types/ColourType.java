@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.persistence.types;
 
+import static com.microsoft.sqlserver.jdbc.StringUtils.isEmpty;
 import static java.lang.String.format;
 
 import java.io.Serializable;
@@ -10,6 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
+
+import com.microsoft.sqlserver.jdbc.StringUtils;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
@@ -65,7 +68,7 @@ public class ColourType implements UserType, IColourType {
 
 	@Override
 	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
-		if (null == value) {
+		if (value == null || isEmpty(((Colour) value).hashlessUppercasedColourValue)) {
 			preparedStatement.setNull(index, Types.VARCHAR);
 		} else {
 			preparedStatement.setString(index, value.toString());

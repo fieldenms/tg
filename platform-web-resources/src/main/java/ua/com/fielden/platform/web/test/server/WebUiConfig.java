@@ -1631,6 +1631,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //.hideCheckboxes()
                 //.notScrollable()
                 final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig.withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(2).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
+                .draggable()
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this")

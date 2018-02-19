@@ -271,6 +271,12 @@
                 }, 1);
             },
             
+            refreshEntitiesLocaly: function(entities, properties) {
+                if (this._element && typeof this._element.refreshEntitiesLocaly === 'function') {
+                    this._element.refreshEntitiesLocaly(entities, properties);
+                }
+            },
+            
             _customShortcutsChanged: function (newValue, oldValue) {
                 this.removeOwnKeyBindings();
                 this.addOwnKeyBinding(newValue, "_shortcutPressed");

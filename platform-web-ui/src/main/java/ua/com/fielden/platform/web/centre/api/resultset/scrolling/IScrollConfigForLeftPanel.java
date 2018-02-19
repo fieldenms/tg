@@ -8,6 +8,8 @@ package ua.com.fielden.platform.web.centre.api.resultset.scrolling;
  */
 public interface IScrollConfigForLeftPanel extends IScrollConfigSecondaryActions {
 
+    IScrollConfigSecondaryActions withFixedDragAnchor();
+
     IScrollConfigSecondaryActions withFixedCheckboxes();
 
     IScrollConfigSecondaryActions withFixedCheckboxesAndPrimaryActions();

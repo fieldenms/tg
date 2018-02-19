@@ -1,0 +1,40 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+
+<!--
+-->
+<script>
+    (function () {
+        let elementToDrag = null;
+
+        const dragStartListener = function (e) {
+            elementToDrag = this.getElementToDragFrom().cloneNode(true);
+            elementToDrag.style.position = "absolute";
+            elementToDrag.style.top = "-100%";
+            elementToDrag.style.right = "-100%";
+            Polymer.dom(document.body).appendChild(elementToDrag);
+            Polymer.dom.flush();
+            const dataToDrag = this.getDataToDragFrom();
+            Object.keys(dataToDrag).forEach(typeKey => {
+                e.dataTransfer.setData(typeKey, dataToDrag[typeKey]);    
+            });
+            e.dataTransfer.effectAllowed = "copyMove";
+            e.dataTransfer.setDragImage(elementToDrag, this.shiftDragX, this.shiftDragY);
+        }
+
+        function dragEndListener(e) {
+            Polymer.dom(document.body).removeChild(elementToDrag);
+            Polymer.dom.flush();
+            elementToDrag = null;
+        }
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgDragFromBehavior = {
+
+            ready: function () {
+                this.addEventListener("dragstart", dragStartListener.bind(this));
+                this.addEventListener("dragend", dragEndListener.bind(this));
+            },
+        };
+    })();
+</script>
