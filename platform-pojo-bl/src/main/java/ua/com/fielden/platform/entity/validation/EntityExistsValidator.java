@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
@@ -65,7 +66,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
-
+            
+            if (EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+                return successful(entity);
+            }
             // the notion of existence is different for activatable and non-activatable entities,
             // where for activatable entities to exists mens also to be active
             final boolean exists;

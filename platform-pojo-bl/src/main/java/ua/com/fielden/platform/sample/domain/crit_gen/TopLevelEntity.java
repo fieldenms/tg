@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.criteria.generator.impl;
+package ua.com.fielden.platform.sample.domain.crit_gen;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;

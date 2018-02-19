@@ -298,14 +298,15 @@ public class Finder {
     }
 
     /**
-     * Returns a list of properties of the specified type that are declared in the provided entity type.
+     * Returns a list of properties of the specified type that are declared in the provided entity type and are annotated with specified <code>annotations</code> (if any).
      *
      * @param entityType
      * @param propertyType
+     * @param annotations
      * @return
      */
-    public static List<Field> findPropertiesOfSpecifiedType(final Class<?> entityType, final Class<?> propertyType) {
-        final List<Field> properties = findProperties(entityType);
+    public static List<Field> findPropertiesOfSpecifiedType(final Class<?> entityType, final Class<?> propertyType, final Class<? extends Annotation>... annotations) {
+        final List<Field> properties = findProperties(entityType, annotations);
 
         for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
             final Field property = iter.next();

@@ -1,17 +1,19 @@
-package ua.com.fielden.platform.criteria.generator.impl;
+package ua.com.fielden.platform.sample.domain.crit_gen;
+
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
-import com.google.inject.Scopes;
 
 public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory {
 
@@ -33,6 +35,7 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(StubSerialiser.class).in(Scopes.SINGLETON);
         bind(ISerialisationClassProvider.class).to(StubSerialisationClassProvider.class).in(Scopes.SINGLETON);
+        bind(ITgSystem.class).to(TgSystemDaoStub.class);
     }
 
     @Override

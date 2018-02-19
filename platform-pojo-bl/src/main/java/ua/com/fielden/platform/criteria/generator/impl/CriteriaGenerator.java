@@ -15,7 +15,6 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.disregardCri
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,31 +42,22 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
-import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -197,18 +187,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
-        final boolean isEntityItself = "".equals(propertyName);
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-        boolean hasEntityExists = false;
-        try {
-            final Method setter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
-            hasEntityExists = setter == null ? false : AnnotationReflector.isAnnotationPresent(setter, EntityExists.class);
-        } catch (final ReflectionException e) {
-            // TODO if this is an error -- please handle it appropriately, if not -- please remove rigorous logging
-            LOGGER.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
-        }
-        final boolean finalHasEntityExists = hasEntityExists;
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
 
         final List<Annotation> annotations = new ArrayList<Annotation>();
@@ -219,15 +199,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             if (isPropertyAnnotation != null) {
                 annotations.add(new IsPropertyAnnotation().copyFrom(isPropertyAnnotation));
             }
-        }
-        if (isEntity && isSingle && finalHasEntityExists) {
-            annotations.add(new BeforeChangeAnnotation(
-                    new Handler[] {
-                            new HandlerAnnotation(EntityExistsValidator.class).
-                                    non_ordinary(new ClassParam[] { ParamAnnotation.classParam("coFinder", ICompanionObjectFinder.class) }).
-                                    clazz(new ClassParam[] { ParamAnnotation.classParam("type", newPropertyType) }).
-                                    newInstance() }
-                    ).newInstance());
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());

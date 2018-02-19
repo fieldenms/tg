@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.criteria.generator.impl;
+package ua.com.fielden.platform.sample.domain.crit_gen;
 
 import java.io.IOException;
 import java.util.List;
