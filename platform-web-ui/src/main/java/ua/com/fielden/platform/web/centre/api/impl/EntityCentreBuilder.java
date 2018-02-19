@@ -57,6 +57,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
     protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
+    protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
@@ -159,9 +160,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
         return new EntityCentreConfig<>(
-        		    hideCheckboxes,
+                draggable,
+                hideCheckboxes,
                 toolbarConfig,
-        		    hideToolbar,
+                hideToolbar,
                 scrollConfig,
                 pageCapacity,
                 visibleRowsCount,

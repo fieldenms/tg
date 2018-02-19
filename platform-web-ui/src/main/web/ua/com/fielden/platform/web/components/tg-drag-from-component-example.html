@@ -1,0 +1,42 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tg-drag-from-behavior.html">
+
+<dom-module id="tg-drag-from-component-example">
+    <template>
+        <style>
+            .drag-from-rect {
+                width: 100px;
+                height: 50px;
+                background-color: blue;
+            }
+        </style>
+        <div class="drag-from-rect" draggable="true"></div>
+    </template>
+    <script>
+        Polymer({
+            is: 'tg-drag-from-component-example',
+            
+            behaviors: [Polymer.TgBehaviors.TgDragFromBehavior],
+
+            ready: function () {
+                
+            },
+            
+            getElementToDragFrom: function (target) {
+                const elem = document.createElement('div');
+                elem.style.width = "50px";
+                elem.style.height = "25px";
+                elem.style.backgroundColor = "green";
+                return elem;
+            },
+            
+            getDataToDragFrom: function () {
+                return {
+                    name: "drag-from",
+                    value: 12
+                };
+            }
+        })
+    </script>
+</dom-module>

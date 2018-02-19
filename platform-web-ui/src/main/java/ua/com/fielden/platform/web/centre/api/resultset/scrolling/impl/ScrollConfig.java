@@ -9,6 +9,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfigS
 
 public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
 
+    private boolean fixedDragAnchor = false;
     private boolean fixedCheckboxes = false;
     private boolean fixedCheckboxesWithPrimaryActions = false;
     private boolean fixedSecondaryActions = false;
@@ -48,12 +49,14 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
 
     @Override
     public IScrollConfigSecondaryActions withFixedCheckboxes() {
+        this.fixedDragAnchor = true;
         this.fixedCheckboxes = true;
         return this;
     }
 
     @Override
     public IScrollConfigSecondaryActions withFixedCheckboxesAndPrimaryActions() {
+        this.fixedDragAnchor = true;
         this.fixedCheckboxes = true;
         this.fixedCheckboxesWithPrimaryActions = true;
         return this;
@@ -86,6 +89,7 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
 
     @Override
     public IScrollConfigSecondaryActions withFixedCheckboxesPrimaryActionsAndFirstProps(final int numberOfProps) {
+        this.fixedDragAnchor = true;
         this.fixedCheckboxes = true;
         this.fixedCheckboxesWithPrimaryActions = true;
         this.numOfFixedProps = numberOfProps;
@@ -95,6 +99,17 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
     @Override
     public int getNumberOfFixedColumns() {
         return numOfFixedProps;
+    }
+
+    @Override
+    public IScrollConfigSecondaryActions withFixedDragAnchor() {
+        this.fixedDragAnchor = true;
+        return this;
+    }
+
+    @Override
+    public boolean isDragAnchorFixed() {
+        return fixedDragAnchor;
     }
 
 }
