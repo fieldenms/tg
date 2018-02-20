@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Method;
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class TitlesDescsGetter {
     public static final char LEFT_ARROW = '\u2190';
-
+    public static final Pair<String, String> EMPTY_TITLE_AND_DESC = pair("", "");
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -50,15 +51,15 @@ public class TitlesDescsGetter {
     private static Pair<List<String>, List<String>> getPropertyTitlesAndDescriptionsPath(final Class<?> type, final String dotNotationExp) {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
         Class<?> ownerType = type;
-        final List<String> pathOfTitles = new ArrayList<String>();
-        final List<String> pathOfDescs = new ArrayList<String>();
+        final List<String> pathOfTitles = new ArrayList<>();
+        final List<String> pathOfDescs = new ArrayList<>();
         for (final String propertyName : properties) {
             pathOfTitles.add(getTitleAndDesc(propertyName, ownerType).getKey());
             pathOfDescs.add(getTitleAndDesc(propertyName, ownerType).getValue());
             ownerType = PropertyTypeDeterminator.determineClass(ownerType, propertyName, true, true);
         }
 
-        return new Pair<List<String>, List<String>>(pathOfTitles, pathOfDescs);
+        return new Pair<>(pathOfTitles, pathOfDescs);
     }
 
     /**
@@ -126,36 +127,22 @@ public class TitlesDescsGetter {
      * @return
      */
     public static Pair<String, String> getTitleAndDesc(final String propertyName, final Class<?> entityType) {
-        final KeyTitle keyTitleAnnotation = AnnotationReflector.getPropertyAnnotation(KeyTitle.class, entityType, propertyName);
-        final DescTitle descTitleAnnotation = AnnotationReflector.getPropertyAnnotation(DescTitle.class, entityType, propertyName);
-        final Title titleAnnotation = AnnotationReflector.getPropertyAnnotation(Title.class, entityType, propertyName);
-        
         final boolean containsKey = KEY.equals(propertyName) || propertyName.endsWith("." + KEY);
         final boolean containsDesc = DESC.equals(propertyName) || propertyName.endsWith("." + DESC);
         
-        final String title; 
-        if (containsKey) {
-            // key could be of entity-typed in case of one-2-one association
-            title = keyTitleAnnotation != null ? keyTitleAnnotation.value() : "";
-        } else if (containsDesc) {
-            title = descTitleAnnotation != null ? descTitleAnnotation.value() : "";
-        } else {
-            title = titleAnnotation != null ? titleAnnotation.value() : "";
+        if (!containsKey && !containsDesc) {
+            return getPropertyAnnotationOptionally(Title.class, entityType, propertyName)
+                   .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
+                   .orElseGet(() -> getTitleAndDescOfPropertyType(propertyName, entityType).map(p -> pair(p.getKey(), p.getKey())).orElse(EMPTY_TITLE_AND_DESC));
+        } else if (containsKey) {
+            return getPropertyAnnotationOptionally(KeyTitle.class, entityType, propertyName)
+                   .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
+                   .orElse(EMPTY_TITLE_AND_DESC);
+        } else  {
+            return getPropertyAnnotationOptionally(DescTitle.class, entityType, propertyName)
+                    .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
+                    .orElse(EMPTY_TITLE_AND_DESC);
         }
-        
-        final String desc;
-        if (containsKey) {
-            // if desc() is not specified in corresponding annotation then use value() instead
-            desc = keyTitleAnnotation != null ? (keyTitleAnnotation.desc().isEmpty() ? keyTitleAnnotation.value() : keyTitleAnnotation.desc()) : "";
-        } else if (containsDesc) {
-            // if desc() is not specified in corresponding annotation then use value() instead
-            desc = descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "";
-        } else {
-            // if desc() is not specified in corresponding annotation then use value() instead
-            desc =  titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
-        }
-
-        return pair(title, desc);
     }
     
     /**
@@ -166,7 +153,7 @@ public class TitlesDescsGetter {
      * @param propOwnerType
      * @return
      */
-    public static Optional<Pair<String, String>> getTitleAndDescOfPropertyType(final String dotNotationExp, final Class<? extends AbstractEntity<?>> propOwnerType) {
+    public static Optional<Pair<String, String>> getTitleAndDescOfPropertyType(final String dotNotationExp, final Class<?> propOwnerType) {
         final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(propOwnerType, dotNotationExp);
         if (AbstractEntity.class.isAssignableFrom(propertyType)) {
             final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) propertyType;
@@ -185,7 +172,7 @@ public class TitlesDescsGetter {
         final Pair<String, String> tad = getEntityTitleAndDesc(collectionalPropertyType);
 
         // TODO : improve!
-        return new Pair<String, String>(tad.getKey() + "-es", tad.getValue() + "-es");
+        return new Pair<>(tad.getKey() + "-es", tad.getValue() + "-es");
     }
 
     /**
@@ -196,12 +183,9 @@ public class TitlesDescsGetter {
      * @return
      */
     public static Pair<String, String> getEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> entityType) {
-        final EntityTitle entityTitleAnnotation = AnnotationReflector.getAnnotation(entityType, EntityTitle.class);
-        final String title = entityTitleAnnotation != null ? entityTitleAnnotation.value() : "";
-        final String desc = entityTitleAnnotation != null ? entityTitleAnnotation.desc() : "";
-
-        final Pair<String, String> detad = getDefaultEntityTitleAndDesc(entityType);
-        return new Pair<String, String>(title.isEmpty() ? detad.getKey() : title, desc.isEmpty() ? detad.getValue() : desc);
+        return AnnotationReflector.getAnnotationOptionally(entityType, EntityTitle.class)
+               .map(annotation -> pair(annotation.value(), annotation.desc()))
+               .orElseGet(() -> getDefaultEntityTitleAndDesc(entityType));
     }
 
     /**
@@ -209,7 +193,7 @@ public class TitlesDescsGetter {
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
         final String s = breakClassName(klass.getSimpleName());
-        return new Pair<String, String>(s, s + " entity");
+        return new Pair<>(s, s + " entity");
     }
 
     private static String breakClassName(final String str) {

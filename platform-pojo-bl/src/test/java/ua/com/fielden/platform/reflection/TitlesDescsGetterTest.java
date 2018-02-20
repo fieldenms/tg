@@ -2,7 +2,6 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
@@ -17,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
+import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -76,6 +76,16 @@ public class TitlesDescsGetterTest {
                 + add + add + add + add + add + add + "]</i></html>"), TitlesDescsGetter.getFullTitleAndDesc("c.c.c.c.c.c.incident", C.class));
     }
 
+    @Test
+    public void getTitleAndDesc_uses_entity_type_title_for_entity_typed_properties_that_miss_annotation_Title_as_their_title_and_desc() {
+        final Pair<String, String> propTitleAndDesc = TitlesDescsGetter.getTitleAndDesc("critOnlyAEProperty", FirstLevelEntity.class);
+        final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(SimpleEntity.class);
+        
+        assertEquals(entityTitleAndDesc.getKey(), propTitleAndDesc.getKey());
+        assertEquals(entityTitleAndDesc.getKey(), propTitleAndDesc.getValue());
+    }
+
+    
     @Test
     public void getTitleAndDescOfPropertyType_can_determine_title_and_desc_of_entity_type_by_property_path() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("critOnlyAEProperty", FirstLevelEntity.class);
