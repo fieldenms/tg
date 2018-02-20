@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.criteria.generator.impl;
+package ua.com.fielden.platform.sample.domain.crit_gen;
 
 import java.io.IOException;
 import java.util.List;
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 
-public class LastLevelEntityDaoStub implements ILastLevelEntity {
+public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
 
     @Override
     public String getUsername() {
@@ -27,7 +27,7 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public Class<LastLevelEntity> getEntityType() {
+    public Class<SecondLevelEntity> getEntityType() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -45,68 +45,69 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public LastLevelEntity findById(final Long id, final fetch<LastLevelEntity> fetchModel) {
+    public SecondLevelEntity findById(final Long id, final fetch<SecondLevelEntity> fetchModel) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public LastLevelEntity findById(final Long id) {
+    public SecondLevelEntity findById(final Long id) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public LastLevelEntity findByKey(final Object... keyValues) {
+    public SecondLevelEntity findByKey(final Object... keyValues) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public LastLevelEntity findByKeyAndFetch(final fetch<LastLevelEntity> fetchModel, final Object... keyValues) {
+    public SecondLevelEntity findByKeyAndFetch(final fetch<SecondLevelEntity> fetchModel, final Object... keyValues) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IPage<LastLevelEntity> firstPage(final int pageCapacity) {
+    public IPage<SecondLevelEntity> firstPage(final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IPage<LastLevelEntity> getPage(final int pageNo, final int pageCapacity) {
+    public IPage<SecondLevelEntity> getPage(final int pageNo, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IPage<LastLevelEntity> firstPage(final QueryExecutionModel<LastLevelEntity, ?> query, final int pageCapacity) {
+    public IPage<SecondLevelEntity> firstPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IPage<LastLevelEntity> getPage(final QueryExecutionModel<LastLevelEntity, ?> query, final int pageNo, final int pageCapacity) {
+    public IPage<SecondLevelEntity> getPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageNo, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IPage<LastLevelEntity> getPage(final QueryExecutionModel<LastLevelEntity, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
+    public IPage<SecondLevelEntity> getPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public LastLevelEntity save(final LastLevelEntity entity) {
+    public SecondLevelEntity save(final SecondLevelEntity entity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public boolean entityExists(final LastLevelEntity entity) {
-        return "EntityKey".equals(entity.getKey());
+    public boolean entityExists(final SecondLevelEntity entity) {
+        // TODO Auto-generated method stub
+        return false;
     }
 
     @Override
@@ -117,46 +118,42 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
 
     @Override
     public boolean entityWithKeyExists(final Object... keyValues) {
-        for (final Object keyValue : keyValues) {
-            if (!"EntityKey".equals(keyValue)) {
-                return false;
-            }
-        }
-        return true;
+        // TODO Auto-generated method stub
+        return false;
     }
 
     @Override
-    public LastLevelEntity getEntity(final QueryExecutionModel<LastLevelEntity, ?> model) {
+    public SecondLevelEntity getEntity(final QueryExecutionModel<SecondLevelEntity, ?> model) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public int count(final EntityResultQueryModel<LastLevelEntity> model, final Map<String, Object> paramValues) {
+    public int count(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int count(final EntityResultQueryModel<LastLevelEntity> model) {
+    public int count(final EntityResultQueryModel<SecondLevelEntity> model) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public List<LastLevelEntity> getAllEntities(final QueryExecutionModel<LastLevelEntity, ?> query) {
+    public List<SecondLevelEntity> getAllEntities(final QueryExecutionModel<SecondLevelEntity, ?> query) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public byte[] export(final QueryExecutionModel<LastLevelEntity, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+    public byte[] export(final QueryExecutionModel<SecondLevelEntity, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public List<LastLevelEntity> getFirstEntities(final QueryExecutionModel<LastLevelEntity, ?> query, final int numberOfEntities) {
+    public List<SecondLevelEntity> getFirstEntities(final QueryExecutionModel<SecondLevelEntity, ?> query, final int numberOfEntities) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -172,31 +169,31 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public LastLevelEntity findByEntityAndFetch(final fetch<LastLevelEntity> fetchModel, final LastLevelEntity entity) {
+    public SecondLevelEntity findByEntityAndFetch(final fetch<SecondLevelEntity> fetchModel, final SecondLevelEntity entity) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IFetchProvider<LastLevelEntity> getFetchProvider() {
+    public IFetchProvider<SecondLevelEntity> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public LastLevelEntity new_() {
+    public SecondLevelEntity new_() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem, int fetchSize) {
+    public Stream<SecondLevelEntity> stream(QueryExecutionModel<SecondLevelEntity, ?> qem, int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem) {
+    public Stream<SecondLevelEntity> stream(QueryExecutionModel<SecondLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }

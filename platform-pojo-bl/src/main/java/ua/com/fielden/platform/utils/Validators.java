@@ -20,6 +20,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -175,14 +176,14 @@ public final class Validators {
 
             // let's start with making counting query for the first dependent entity type -- there is at least one if this code was reached
             // first obtain list of properties of the type that matches the entity type of interest
-            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstDependentEntityType, entityType);
+            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstDependentEntityType, entityType, MapTo.class);
             // then actually make a counting query based on the obtained list
             IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(mkQueryToCountReferencesInType(firstDependentEntityType, propsForFirstEntityType));
 
             // need to do the same operation with other dependent types in case there are more than one
             while (iter.hasNext()) {
                 final Class<? extends AbstractEntity<?>> nextDependentEntityType = iter.next();
-                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextDependentEntityType, entityType);
+                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextDependentEntityType, entityType, MapTo.class);
                 expressionModelInProgress = expressionModelInProgress.add().model(mkQueryToCountReferencesInType(nextDependentEntityType, propsForNextEntityType));
             }
 
