@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -59,7 +59,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class Finder {
-    private final static Map<Class<?>, List<Field>> entityKeyMembers = new HashMap<>();
+    private static final Map<Class<?>, List<Field>> entityKeyMembers = new ConcurrentHashMap<>();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -85,7 +85,7 @@ public class Finder {
      * 
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final Predicate<Field> shouldSkip) {
-        final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
+        final List<PropertyDescriptor<T>> result = new ArrayList<>();
         for (final Field field : findProperties(entityType)) {
             if (!shouldSkip.test(field)) {
                 result.add(new PropertyDescriptor<T>(entityType, field.getName()));
