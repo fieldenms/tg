@@ -2,12 +2,14 @@ package ua.com.fielden.platform.reflection;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -60,7 +62,7 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * Returns full property title and description (usually Egi columns titles and toolTips) in form of "reversed path of titles" (e.g. "Status code<-Status<-Vehicle") and
+     * Returns full property title and description (usually EGI columns titles and toolTips) in form of "reversed path of titles" (e.g. "Status code<-Status<-Vehicle") and
      * "property description" (e.g. "[Vehicle Status code]").
      *
      * @param propertyName
@@ -71,7 +73,7 @@ public class TitlesDescsGetter {
     public static Pair<String, String> getFullTitleAndDesc(final String propertyName, final Class<?> parentKlass) {
         final String path = pathOfTitles(parentKlass, propertyName);
         final Pair<List<String>, List<String>> list = getPropertyTitlesAndDescriptionsPath(parentKlass, propertyName);
-        return new Pair<String, String>(path, "<html><i><b>" + removeHtmlTag(list.getValue().get(list.getValue().size() - 1)) + "</b></i><br><i>[" + path + "]</i></html>");
+        return pair(path, "<html><i><b>" + removeHtmlTag(list.getValue().get(list.getValue().size() - 1)) + "</b></i><br><i>[" + path + "]</i></html>");
     }
 
     /**
@@ -127,18 +129,51 @@ public class TitlesDescsGetter {
         final KeyTitle keyTitleAnnotation = AnnotationReflector.getPropertyAnnotation(KeyTitle.class, entityType, propertyName);
         final DescTitle descTitleAnnotation = AnnotationReflector.getPropertyAnnotation(DescTitle.class, entityType, propertyName);
         final Title titleAnnotation = AnnotationReflector.getPropertyAnnotation(Title.class, entityType, propertyName);
-
+        
         final boolean containsKey = KEY.equals(propertyName) || propertyName.endsWith("." + KEY);
         final boolean containsDesc = DESC.equals(propertyName) || propertyName.endsWith("." + DESC);
-        final String title = containsKey ? (keyTitleAnnotation != null ? keyTitleAnnotation.value() : "") //
-        : containsDesc ? (descTitleAnnotation != null ? descTitleAnnotation.value() : "") //
-        : titleAnnotation != null ? titleAnnotation.value() : "";
-        // If desc() is not specified in corresponding annotation then use value() instead:
-        final String desc = containsKey ? (keyTitleAnnotation != null ? (keyTitleAnnotation.desc().isEmpty() ? keyTitleAnnotation.value() : keyTitleAnnotation.desc()) : "") //
-        : containsDesc ? (descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "") //
-        : titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
+        
+        final String title; 
+        if (containsKey) {
+            // key could be of entity-typed in case of one-2-one association
+            title = keyTitleAnnotation != null ? keyTitleAnnotation.value() : "";
+        } else if (containsDesc) {
+            title = descTitleAnnotation != null ? descTitleAnnotation.value() : "";
+        } else {
+            title = titleAnnotation != null ? titleAnnotation.value() : "";
+        }
+        
+        final String desc;
+        if (containsKey) {
+            // if desc() is not specified in corresponding annotation then use value() instead
+            desc = keyTitleAnnotation != null ? (keyTitleAnnotation.desc().isEmpty() ? keyTitleAnnotation.value() : keyTitleAnnotation.desc()) : "";
+        } else if (containsDesc) {
+            // if desc() is not specified in corresponding annotation then use value() instead
+            desc = descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "";
+        } else {
+            // if desc() is not specified in corresponding annotation then use value() instead
+            desc =  titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
+        }
 
-        return new Pair<>(title, desc);
+        return pair(title, desc);
+    }
+    
+    /**
+     * If <code>dotNotationExp</code> refers to an entity-typed property of <code>propOwnerType</code> then a pair of title and description of of the entity-type is returned.
+     * Otherwise, an empty result is returned. 
+     * 
+     * @param dotNotationExp
+     * @param propOwnerType
+     * @return
+     */
+    public static Optional<Pair<String, String>> getTitleAndDescOfPropertyType(final String dotNotationExp, final Class<? extends AbstractEntity<?>> propOwnerType) {
+        final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(propOwnerType, dotNotationExp);
+        if (AbstractEntity.class.isAssignableFrom(propertyType)) {
+            final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) propertyType;
+            return Optional.of(getEntityTitleAndDesc(type));
+        }
+        
+        return Optional.empty();
     }
 
     /**
