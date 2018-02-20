@@ -64,19 +64,19 @@ public class AttachmentDownloadResource extends ServerResource {
                         return repFile;
                     } catch (final Exception ex) {
                         LOGGER.fatal(ex);
-                        return this.errorPage();
+                        return this.errorPage(ex.getMessage());
                     }
                 })
-               .orElseGet(this::errorPage);
+               .orElseGet(() -> this.errorPage("Attachment could not be found."));
     }
     
-    private Representation errorPage() {
+    private Representation errorPage(final String errorSubheading) {
         getResponse().setStatus(Status.CLIENT_ERROR_GONE);
         try {
             final String errorPageTemplate = ResourceLoader.getText("ua/com/fielden/platform/web/error-page-template.html")
                     .replaceAll("@title", "Error")
                     .replaceAll("@error-heading", "Error")
-                    .replaceAll("@error-subheading", "Attachment could not be found.");
+                    .replaceAll("@error-subheading", errorSubheading);
             
             return new EncodeRepresentation(Encoding.GZIP, new StringRepresentation(errorPageTemplate, MediaType.TEXT_HTML));
         } catch (final Exception ex) {
