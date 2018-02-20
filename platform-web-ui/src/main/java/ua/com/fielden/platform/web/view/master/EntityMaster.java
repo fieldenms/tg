@@ -227,13 +227,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
                     .replace("@noUiValue", "true")
                     .replace("@saveOnActivationValue", "true");
 
-            renderable = new IRenderable() {
-                @Override
-                public DomElement render() {
-                    return new InnerTextElement(entityMasterStr);
-                }
-            };
-
+            renderable = () -> new InnerTextElement(entityMasterStr);
         }
 
         @Override

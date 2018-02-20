@@ -32,7 +32,7 @@ public class EntityManipulationMasterBuilder<T extends AbstractEntityManipulatio
 
     @Override
     public IMaster<T> done() {
-        return new EntityManipulationMaster<T>(type, shouldRefreshParentCentreAfterSave);
+        return new EntityManipulationMaster<>(type, shouldRefreshParentCentreAfterSave);
     }
 
 }

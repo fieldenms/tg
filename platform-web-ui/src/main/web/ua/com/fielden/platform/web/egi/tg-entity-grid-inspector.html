@@ -1377,6 +1377,8 @@
             getActionTooltip: function (entity, column, action) {
                 if (action && (action.shortDesc || action.longDesc)) {
                     return this._generateActionTooltip(action);
+                } else if (this._getAttachmentIfPossible(entity, column)) {
+                    return this._generateActionTooltip({shortDesc: 'Download', longDesc: 'Click to download attachment.'});
                 }
                 return "";
             },
@@ -1938,6 +1940,27 @@
             _isHyperlinkProp: function (entity, column) {
                 return column.type === 'Hyperlink' && this._getValueFromEntity(entity, column.property) !== null
             },
+
+            /**
+             * Determines whether property is or belongs to type Attachment.
+             */
+             _getAttachmentIfPossible: function (entity, column) {
+                if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                    return entity;
+             	} else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type && 
+             	           this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+             	    return this._getValueFromEntity(entity, column.property);
+             	} else  if (this.$.reflector.entityPropOwner(entity, column.property)){
+             	    const owner = this.$.reflector.entityPropOwner(entity, column.property);
+             	    if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+             	        return owner;
+             	    }
+             	    return null;
+             	} else {
+             	    return null;
+             	}
+            },
+
             /**
              * Determines whether property is not boolean property or is.
              */
@@ -1963,7 +1986,7 @@
 
             /** Identifies if there is a column action for the specified entity and column. */
             hasAction: function (entity, column) {
-                return column.customAction || this._isHyperlinkProp(entity, column) === true;
+                return column.customAction || this._isHyperlinkProp(entity, column) === true || this._getAttachmentIfPossible(entity, column);
             },
 
             /**
@@ -1978,9 +2001,20 @@
                     // if the clicked property is a hyperlink and there was no custom action associted with it
                     // then let's open the linked resources
                     if (this._isHyperlinkProp(entity, column) === true) {
-                        var url = this._getValue(entity, column.property, column.type);
-                        var win = window.open(url, '_blank');
+                        const url = this._getValue(entity, column.property, column.type);
+                        const win = window.open(url, '_blank');
                         win.focus();
+                    } else {
+                        const attachment = this._getAttachmentIfPossible(entity, column);
+                        if (attachment) {
+	                        const url = '/download-attachment/' + attachment.id;
+	                        window.open(url, '_blank');
+	                        // a better experience is provided when using <a> insteado of opening another browser window, but this does not work well when an error occurs
+	                        // in case of an error, the application gets replaced with an error page and the back button leads to reloadig of the whole application
+	                        //const a = document.createElement('A');
+	                        //a.href = url;
+	                        //a.click();
+                        }
                     }
                 }
             },

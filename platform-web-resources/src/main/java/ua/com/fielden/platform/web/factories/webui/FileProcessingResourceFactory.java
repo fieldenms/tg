@@ -19,8 +19,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
  * Factory to instantiate {@link FileProcessingResource}.
@@ -53,7 +51,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.fileSizeLimitKb = fileSizeLimitKb;
         this.types.add(type);
-        Arrays.stream(types).forEach(t -> this.types.add(t));
+        Arrays.stream(types).forEach(this.types::add);
     }
 
     @Override

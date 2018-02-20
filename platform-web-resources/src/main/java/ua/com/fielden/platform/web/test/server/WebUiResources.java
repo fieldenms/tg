@@ -6,9 +6,11 @@ import org.restlet.routing.Router;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
+import ua.com.fielden.platform.web.factories.webui.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.test.eventsources.TgMessageEventSource;
@@ -57,6 +59,28 @@ public class WebUiResources extends AbstractWebUiResources {
                 MediaType.TEXT_CSV,
                 MediaType.TEXT_PLAIN);
         router.attach("/csv-txt-file-processing", factory);
+
+        // register attachment uploader
+        final FileProcessingResourceFactory<AttachmentUploader> factoryForAttachmentUploader = new FileProcessingResourceFactory<AttachmentUploader>(
+                router,
+                injector,
+                AttachmentUploader.class,
+                f -> f.newEntity(AttachmentUploader.class),
+                20 * 1024 * 1024, // Kilobytes
+                // image/png,image/jpeg,
+                // .csv,.txt,text/plain,text/csv,
+                // application/pdf,application/zip, 
+                // application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                // application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG,
+                MediaType.TEXT_CSV, MediaType.TEXT_PLAIN,
+                MediaType.APPLICATION_PDF, MediaType.APPLICATION_ZIP,
+                MediaType.APPLICATION_WORD, MediaType.APPLICATION_MSOFFICE_DOCX,
+                MediaType.APPLICATION_EXCEL, MediaType.APPLICATION_MSOFFICE_XLSX);
+        router.attach("/upload-attachment", factoryForAttachmentUploader);
+
+        // register attachment download resource
+        router.attach("/download-attachment/{attachment-id}", new AttachmentDownloadResourceFactory(injector));
 
         // register some server-side eventing
         // router.attach("/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment

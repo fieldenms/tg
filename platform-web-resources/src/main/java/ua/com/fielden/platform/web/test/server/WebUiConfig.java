@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 
 import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
+import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -108,6 +109,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -132,6 +134,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
+import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -784,7 +787,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
+        
+        final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
+                .createAttachmentsUploadMaster(injector(), mkDim(400, Unit.PX, 400, Unit.PX), 10240,
+                        "image/png", "image/jpeg", 
+                        "application/pdf,application/zip", 
+                        ".csv", ".txt", "text/plain", "text/csv", 
+                        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                        "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        
         configApp().
+            addMaster(attachmentsUploadActionMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).
@@ -1373,6 +1386,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withNoParentCentreRefresh()
                                 .build()
                 )
+                .also()
+                .addTopAction(
+                        action(AttachmentsUploadAction.class)
+                                .withContext(context().withSelectedEntities().build())
+                                .icon("icons:attachment")
+                                .shortDesc("Attach file to a selected entity")
+                                .build()
+                )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
@@ -1712,6 +1733,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("stringProp").minWidth(50).also()
                 .addProp("colourProp").width(40).also()
+                .addProp("numberOfAttachments").width(100).also()
                 .addProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["

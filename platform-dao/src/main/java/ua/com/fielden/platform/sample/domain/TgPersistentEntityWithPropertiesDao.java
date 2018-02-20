@@ -10,9 +10,12 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.attachment.ICanAttach;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -23,7 +26,12 @@ import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithP
 
 /**
  * DAO implementation for companion object {@link ITgPersistentEntityWithProperties}.
- * It demos the use of {@link TgPersistentEntityWithPropertiesChangeSubject} for publishing change events to be propagated to the subscribed clients.
+ * <p>
+ * It demos:
+ * <ul>
+ * <li> The use of {@link TgPersistentEntityWithPropertiesChangeSubject} for publishing change events to be propagated to the subscribed clients.
+ * <li> Implementation of {@link ICanAttach} for associating attachments.
+ * </ul
  *
  * @author Developers
  *
@@ -137,5 +145,17 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("producerInitProp", "status.key", "status.desc")
                 .with("colourProp", "hyperlinkProp")
                 .with("idOnlyProxyProp"); //
+    }
+
+    @Override
+    public TgPersistentEntityWithPropertiesAttachment attach(final Attachment attachment, final TgPersistentEntityWithProperties entity) {
+        final TgPersistentEntityWithPropertiesAttachment entityAttachment = co$(TgPersistentEntityWithPropertiesAttachment.class).new_()
+                .setMaster(entity)
+                .setAttachment(attachment);
+        try {
+            return co$(TgPersistentEntityWithPropertiesAttachment.class).save(entityAttachment);
+        } catch (final EntityAlreadyExists ex) {
+            return co$(TgPersistentEntityWithPropertiesAttachment.class).findByEntityAndFetch(co(TgPersistentEntityWithPropertiesAttachment.class).getFetchProvider().fetchModel(), entityAttachment);
+        }
     }
 }

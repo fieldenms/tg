@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -25,7 +26,7 @@ public final class CollectionUtil {
     }
 
     @SafeVarargs
-    public static <T> HashSet<T> setOf(final T ... elements) {
+    public static <T> Set<T> setOf(final T ... elements) {
         return new HashSet<T>(Arrays.asList(elements));
     }
     

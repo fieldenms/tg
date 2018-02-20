@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IDumpCsvTxtProcessor.class)
 public class DumpCsvTxtProcessor extends AbstractEntityWithInputStream<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

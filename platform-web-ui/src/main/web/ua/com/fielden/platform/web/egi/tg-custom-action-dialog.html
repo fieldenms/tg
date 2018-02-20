@@ -440,7 +440,12 @@
                         // for example, when closing a master for a functional entity, the reason states the need to save changes,
                         // while it is also possible and safe to simple cancel them
                         // so, the message below is a good compromise
-                        this.$.toaster.text = "Please save or cancel changes.";
+                        // however, the reason can still insist by providing an imperative hint
+					    if (reason.imperative === true) {
+					        this.$.toaster.text = reason.msg;
+                        } else {
+					        this.$.toaster.text = "Please save or cancel changes.";
+                        }
                         this.$.toaster.hasMore = false;
                         this.$.toaster.msgText = "";
                         this.$.toaster.showProgress = false;

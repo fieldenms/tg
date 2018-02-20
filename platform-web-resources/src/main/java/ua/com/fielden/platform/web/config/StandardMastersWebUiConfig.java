@@ -12,12 +12,15 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
+import ua.com.fielden.platform.attachment.producers.AttachmentsUploadActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -25,6 +28,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
+import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
 
 /**
  * A set of factory methods for various standard platform-level entity masters such as Export to Excel. 
@@ -81,7 +85,7 @@ public class StandardMastersWebUiConfig {
                 /*      */.longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 /*      */.shortDesc("EXPORT")
-                /*      */.longDesc("Export action")
+                /*      */.longDesc("Start exporting")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
@@ -89,6 +93,16 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
     }
     
+    public static EntityMaster<AttachmentsUploadAction> createAttachmentsUploadMaster(
+            final Injector injector, 
+            final PrefDim dims, 
+            final int fileSizeLimitKb, 
+            final String mimeType, 
+            final String... moreMimeTypes) {
+        final IMaster<AttachmentsUploadAction> masterConfig = new AttachmentsUploadActionMaster(dims, fileSizeLimitKb, mimeType, moreMimeTypes);
+        return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
+    }
+
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:
 //    public static EntityMaster<EntityNewActionWithNoParentCentreRefresh> createEntityNewMasterWithNoParentCentreRefresh(final Injector injector) {
 //        return new EntityMaster<EntityNewAction>(EntityNewActionWithNoParentCentreRefresh.class,

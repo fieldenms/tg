@@ -101,7 +101,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return this;
     }
 
-    private Optional<String> getFocusingCallback(final MasterActions masterAction) {
+    public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
         if (MasterActions.SAVE == masterAction) {
             return Optional.of("focusFirstInputBound");
         } else {
@@ -109,7 +109,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
     }
 
-    private Optional<String> getShortcut(final MasterActions masterAction) {
+    public static Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return Optional.of("ctrl+r");
         } else if (MasterActions.SAVE == masterAction) {
@@ -121,7 +121,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
     }
 
-    private String getPostActionError(final MasterActions masterAction) {
+    public static String getPostActionError(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
@@ -137,7 +137,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
     }
 
-    private String getPostAction(final MasterActions masterAction) {
+    public static String getPostAction(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
@@ -251,7 +251,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     primaryActionObjects.append(prefix + el.createActionObject());
                 }
             }
-
         }
 
         final StringBuilder prefDimBuilder = new StringBuilder();
@@ -286,13 +285,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivation + "");
 
-        final IRenderable representation = new IRenderable() {
-            @Override
-            public DomElement render() {
-                return new InnerTextElement(entityMasterStr);
-            }
-        };
-
+        final IRenderable representation = () -> new InnerTextElement(entityMasterStr);
         return new SimpleMaster(representation, valueMatcherForProps);
     }
 

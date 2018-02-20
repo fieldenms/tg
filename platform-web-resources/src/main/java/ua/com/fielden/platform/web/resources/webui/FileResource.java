@@ -12,7 +12,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
 
 import com.google.common.base.Charsets;
 
@@ -47,7 +46,7 @@ public class FileResource extends DeviceProfileDifferentiatorResource {
      * Invoked on GET request from client.
      */
     @Override
-    protected Representation get() throws ResourceException {
+    protected Representation get() {
         final String originalPath = getReference().getRemainingPart();
         final String extension = getReference().getExtensions();
         final MediaType mediaType = determineMediaType(extension);

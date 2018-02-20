@@ -1,13 +1,19 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.validation.annotation.Final.ERR_REASSIGNMENT;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 /**
  * BCE implementation to enforce {@link Final} semantics.
@@ -16,7 +22,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class FinalValidator implements IBeforeChangeEventHandler<Object> {
-    
     private final boolean persistentOnly;
     
     public FinalValidator(final boolean persistentOnly) {
@@ -26,13 +31,14 @@ public class FinalValidator implements IBeforeChangeEventHandler<Object> {
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
-        
+
         if (!isPropertyFinalised(property, persistentOnly) ||
-             EntityUtils.equalsEx(property.getValue(), newValue)) { // i.e. there is no actual change
-            return Result.successful("Value is being assigned for the first time.");
+            equalsEx(property.getValue(), newValue)) { // i.e. there is no actual change
+            return successful("Value is being assigned for the first time.");
         }
-        
-        return Result.failure(entity, format("Reassigning a value for property [%s] in entity [%s] is not permitted.", property.getName(), entity.getType().getSimpleName()));
+
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
+        return failure(entity, format(ERR_REASSIGNMENT, property.getTitle(), entityTitle));
     }
     
     /**

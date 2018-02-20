@@ -347,19 +347,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
      */
-    private transient EntityFactory entityFactory;
+    private EntityFactory entityFactory;
 
     /**
      * Property factory is responsible for meta-property instantiation. The actual instantiation happens in the setter.
      */
-    private transient java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
+    private java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
 
     /**
      * Preferred property should be used by custom logic to set what property is from certain perspective is preferred.
      * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master.
      * So, the place where in the application logic an entity was instantiated can determine which of its properties should be focused by default.
      */
-    private transient String preferredProperty;
+    private String preferredProperty;
 
     /**
      * This is a default constructor, which is required for reflective construction.

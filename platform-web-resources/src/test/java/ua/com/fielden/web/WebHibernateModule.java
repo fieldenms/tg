@@ -8,8 +8,8 @@ import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.attachment.AttachmentDao;
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;

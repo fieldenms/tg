@@ -256,9 +256,8 @@ public class DomainMetadata {
         return new ModelledEntityMetadata(baseInfoForDomainMetadata.getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType, UNION));
     }
 
-    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata)
-            throws Exception {
-        return new PureEntityMetadata(baseInfoForDomainMetadata.getTableClause(entityType), entityType, generatePropertyMetadatasForEntity(entityType, PURE));
+    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) {
+        return new PureEntityMetadata<>(baseInfoForDomainMetadata.getTableClause(entityType), entityType);
     }
 
     //    public void enhanceWithCalcProps(final Collection<EntityMetadata> entityMetadatas) {

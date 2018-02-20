@@ -37,6 +37,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class PropertyTypeDeterminator {
     private static final String PROPERTY_SPLITTER = ".";
+    public static final String ERR_TYPE_AND_PROP_REQUIRED = "Property type cannot be determined without both property name and owning type specified.";
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -55,6 +56,10 @@ public class PropertyTypeDeterminator {
      * @return -- property/function class
      */
     public static Class<?> determinePropertyType(final Class<?> type, final String dotNotationExp) {
+        if (type == null || StringUtils.isEmpty(dotNotationExp)) {
+            throw new ReflectionException(ERR_TYPE_AND_PROP_REQUIRED);
+        }
+        
         if ("this".equals(dotNotationExp)) {
             return stripIfNeeded(type);
         }
@@ -64,7 +69,8 @@ public class PropertyTypeDeterminator {
         for (final String propertyOrFunction : propertiesOrFunctions) {
             result = determineClass(result, propertyOrFunction, true, true);
         }
-        return stripIfNeeded(result);
+        
+        return result == null ? null : stripIfNeeded(result);
     }
 
     /**

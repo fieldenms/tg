@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.reflection;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -125,8 +128,8 @@ public class TitlesDescsGetter {
         final DescTitle descTitleAnnotation = AnnotationReflector.getPropertyAnnotation(DescTitle.class, entityType, propertyName);
         final Title titleAnnotation = AnnotationReflector.getPropertyAnnotation(Title.class, entityType, propertyName);
 
-        final boolean containsKey = AbstractEntity.KEY.equals(propertyName) || propertyName.endsWith("." + AbstractEntity.KEY);
-        final boolean containsDesc = AbstractEntity.DESC.equals(propertyName) || propertyName.endsWith("." + AbstractEntity.DESC);
+        final boolean containsKey = KEY.equals(propertyName) || propertyName.endsWith("." + KEY);
+        final boolean containsDesc = DESC.equals(propertyName) || propertyName.endsWith("." + DESC);
         final String title = containsKey ? (keyTitleAnnotation != null ? keyTitleAnnotation.value() : "") //
         : containsDesc ? (descTitleAnnotation != null ? descTitleAnnotation.value() : "") //
         : titleAnnotation != null ? titleAnnotation.value() : "";
@@ -135,7 +138,7 @@ public class TitlesDescsGetter {
         : containsDesc ? (descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "") //
         : titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
 
-        return new Pair<String, String>(title, desc);
+        return new Pair<>(title, desc);
     }
 
     /**
