@@ -97,7 +97,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final Representation response;
         if (entity == null) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJSONRepresentation("There is nothing to process");
+            return restUtil.errorJSONRepresentation("The file content is empty, which is prohibited.");
         } else if (!isMediaTypeSupported(entity.getMediaType())) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             return restUtil.errorJSONRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));

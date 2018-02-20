@@ -233,6 +233,12 @@
 					this._cleanup();
 					throw new Error('The maximum upload size is exceeded.');
 				}
+				
+				if (nBytes === 0) {
+					this._cleanup();
+					throw new Error('Uploading of empty files is prohibited.');
+				}
+
 				// end of size and mime type validation
 				
 				// we can only have at most 1 file for upload
