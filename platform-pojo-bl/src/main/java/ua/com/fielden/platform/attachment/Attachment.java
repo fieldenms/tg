@@ -48,7 +48,7 @@ import ua.com.fielden.platform.utils.Pair;
  * Any attachment can only be associated once. This ensures immutable and linear hierarchy of attachment revisions.
  * <p>
  * Attachments with the same SHA1 cannot be in the immediate association as they represent the same file.
- *  
+ *
  *
  * @author TG Team
  *
@@ -69,8 +69,8 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String pn_LAST_MODIFIED = "lastModified";
     public static final String pn_MIME = "mime";
     public static final String pn_IS_LATEST_REV = "latestRev";
-    
-    
+
+
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Attachment.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getKey();
@@ -80,7 +80,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "Title", desc = "A concenient attachment title that would indicate what it is about")
     @CompositeKeyMember(1)
     private String title;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "SHA1", desc = "A unique SHA1-based checksum of the file referenced by this attachment.")
@@ -97,14 +97,14 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Final(persistentOnly = false)
     @AfterChange(AssignAttachmentTitle.class)
     private String origFileName;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Last Modified", desc = "The date/time of last file modification.")
     @Readonly
     @Final(persistentOnly = false)
     private Date lastModified;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "MIME", desc = "File MIME type.")
@@ -127,18 +127,18 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @BeforeChange(@Handler(CanBeUsedAsPrevAttachmentRev.class))
     @AfterChange(UpdateAttachmentRevNo.class)
     private Attachment prevRevision;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Latest Rev.", desc = "An attachment that represents the latest revision of this document. Empty if there is no revision history. References itself is there is revision history.")
     @Readonly
     @BeforeChange(@Handler(CanBeUsedAsLastAttachmentRev.class))
     private Attachment lastRevision;
-    
+
     @IsProperty
     @Readonly
     @Calculated
-    @Title(value = "Is the lates revision?", desc = "Indicates if the attachment represent the lates revision of the associated file.")
+    @Title(value = "Latest revision?", desc = "Indicates if the attachment represent the latest revision of the associated file.")
     private boolean latestRev;
     protected static final ExpressionModel latestRev_ = expr()
             .caseWhen().model(
@@ -155,18 +155,18 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
      * The last revision should not be modifiable in any other circumstances.
      */
     private boolean allowLastRevisionUpdate = false;
-    
+
     public boolean isLastRevisionUpdateAllowed() {
         return allowLastRevisionUpdate;
     }
 
     Attachment beginLastRevisionUpdate() {
-        this.allowLastRevisionUpdate = true;
+        allowLastRevisionUpdate = true;
         return this;
     }
 
     Attachment endLastRevisionUpdate() {
-        this.allowLastRevisionUpdate = false;
+        allowLastRevisionUpdate = false;
         return this;
     }
 
@@ -189,7 +189,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public Attachment getPrevRevision() {
         return prevRevision;
     }
-    
+
     @Observable
     public Attachment setRevNo(final Integer revNo) {
         this.revNo = revNo;
@@ -209,7 +209,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public String getOrigFileName() {
         return origFileName;
     }
-    
+
     @Observable
     public Attachment setSha1(final String sha1) {
         this.sha1 = sha1;
@@ -229,7 +229,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public String getTitle() {
         return title;
     }
-    
+
     @Observable
     public Attachment setLastModified(final Date lastModified) {
         this.lastModified = lastModified;
@@ -249,10 +249,10 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public String getMime() {
         return mime;
     }
-    
+
     @Observable
     protected Attachment setLatestRev(final boolean latestRevision) {
-        this.latestRev = latestRevision;
+        latestRev = latestRevision;
         return this;
     }
 
