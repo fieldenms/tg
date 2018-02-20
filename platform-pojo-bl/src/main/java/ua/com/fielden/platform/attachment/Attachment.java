@@ -141,13 +141,10 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "Latest revision?", desc = "Indicates if the attachment represent the latest revision of the associated file.")
     private boolean latestRev;
     protected static final ExpressionModel latestRev_ = expr()
-            .caseWhen().model(
-                select(Attachment.class).where()
-                .prop(ID).eq().extProp(ID).and()
-                .begin()
-                    .prop(pn_LAST_REVISION).eq().extProp(ID).or()
-                    .prop(pn_LAST_REVISION).isNull()
-                .end().yield().countAll().modelAsPrimitive()).eq().val(1).then().val(true)
+            .caseWhen().begin()
+            .prop(pn_LAST_REVISION).isNull().or()
+            .prop(ID).eq().prop(pn_LAST_REVISION)
+            .end().then().val(true)
             .otherwise().val(false).endAsBool().model();
 
     /**

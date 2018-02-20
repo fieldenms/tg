@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
 import static ua.com.fielden.platform.attachment.Attachment.pn_PREV_REVISION;
 
@@ -29,11 +30,25 @@ public class AttachmentRevisionHandlingTest extends AbstractDaoTestCase {
 
     @Test
     public void attachments_are_created_with_rev_0() {
-        assertEquals(Integer.valueOf(0), co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_01.pdf", "AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").getRevNo());
-        assertEquals(Integer.valueOf(0), co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_02.pdf", "B5B3FF9137053279C8B1ECE96F817BA0129F614C").getRevNo());
-        assertEquals(Integer.valueOf(0), co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_03.pdf", "C5B3FF9137053279C8B1ECE96F817BA0129F614C").getRevNo());
-        assertEquals(Integer.valueOf(0), co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_04.pdf", "D5B3FF9137053279C8B1ECE96F817BA0129F614C").getRevNo());
-        assertEquals(Integer.valueOf(0), co(Attachment.class).findByKeyAndFetch(fmAttachment, "duplicate_of_document_03.pdf", "C5B3FF9137053279C8B1ECE96F817BA0129F614C").getRevNo());
+        final Attachment doc01 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_01.pdf", "AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4");
+        assertEquals(Integer.valueOf(0), doc01.getRevNo());
+        assertTrue(doc01.isLatestRev());
+
+        final Attachment doc02 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_02.pdf", "B5B3FF9137053279C8B1ECE96F817BA0129F614C");
+        assertEquals(Integer.valueOf(0), doc02.getRevNo());
+        assertTrue(doc02.isLatestRev());
+
+        final Attachment doc03 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_03.pdf", "C5B3FF9137053279C8B1ECE96F817BA0129F614C");
+        assertEquals(Integer.valueOf(0), doc03.getRevNo());
+        assertTrue(doc03.isLatestRev());
+
+        final Attachment doc04 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_04.pdf", "D5B3FF9137053279C8B1ECE96F817BA0129F614C");
+        assertEquals(Integer.valueOf(0), doc04.getRevNo());
+        assertTrue(doc04.isLatestRev());
+
+        final Attachment doc03dup = co(Attachment.class).findByKeyAndFetch(fmAttachment, "duplicate_of_document_03.pdf", "C5B3FF9137053279C8B1ECE96F817BA0129F614C");
+        assertEquals(Integer.valueOf(0), doc03dup.getRevNo());
+        assertTrue(doc03dup.isLatestRev());
     }
     
     @Test
@@ -100,19 +115,23 @@ public class AttachmentRevisionHandlingTest extends AbstractDaoTestCase {
         final Attachment doc01 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_01.pdf", "AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4");
         assertNull(doc01.getPrevRevision());
         assertEquals(Integer.valueOf(0), doc01.getRevNo());
+        assertTrue(doc01.isLatestRev());
         
         final Attachment doc02 = co$(Attachment.class).findByKeyAndFetch(fmAttachment, "document_02.pdf", "B5B3FF9137053279C8B1ECE96F817BA0129F614C");
         assertNull(doc02.getPrevRevision());
         assertEquals(Integer.valueOf(0), doc02.getRevNo());
+        assertTrue(doc02.isLatestRev());
         
         final Attachment doc02NextRevForDoc01 = save(doc02.setPrevRevision(doc01));
         final Attachment doc01PrevRevForDoc02 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_01.pdf", "AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4");
         
         assertEquals(Integer.valueOf(1), doc02NextRevForDoc01.getRevNo());
+        assertTrue(doc02NextRevForDoc01.isLatestRev());
         assertEquals(doc01PrevRevForDoc02, doc02NextRevForDoc01.getPrevRevision());
         assertEquals(doc02NextRevForDoc01, doc02NextRevForDoc01.getLastRevision());
         
         assertEquals(Integer.valueOf(0), doc01PrevRevForDoc02.getRevNo());
+        assertFalse(doc01PrevRevForDoc02.isLatestRev());
         assertNull(doc01PrevRevForDoc02.getPrevRevision());
         assertEquals(doc02NextRevForDoc01, doc01PrevRevForDoc02.getLastRevision());
     }
@@ -152,7 +171,7 @@ public class AttachmentRevisionHandlingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void reassigning_last_revision_to_self_that_leads_to_broken_revision_histor_is_not_permitted() {
+    public void reassigning_last_revision_to_self_that_leads_to_broken_revision_history_is_not_permitted() {
         final Attachment doc01 = co(Attachment.class).findByKeyAndFetch(fmAttachment, "document_01.pdf", "AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4");
         assertNull(doc01.getPrevRevision());
         assertEquals(Integer.valueOf(0), doc01.getRevNo());
