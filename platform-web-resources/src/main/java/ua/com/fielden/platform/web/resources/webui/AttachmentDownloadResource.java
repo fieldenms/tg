@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Optional;
 
@@ -14,7 +13,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.FileRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
@@ -25,9 +23,7 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
- * This resource should be used for uploading files to be processed with the specified functional entity.
- * 
- * Unlike {@link AttachmentTypeResource} it does not save or associated the uploaded file with any entity. Instead it passes that file into
+ * This resource should be used for downloading files that are associated with {@link Attachment} instances.
  * 
  * @author TG Team
  * 

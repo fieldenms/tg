@@ -29,9 +29,7 @@ import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 
 /**
- * This resource should be used for uploading files to be processed with the specified functional entity.
- * 
- * Unlike {@link AttachmentTypeResource} it does not save or associated the uploaded file with any entity. Instead it passes that file into
+ * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
  * 
  * @author TG Team
  * 
