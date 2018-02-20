@@ -1945,7 +1945,7 @@
              * Determines whether property is or belongs to type Attachment.
              */
              _getAttachmentIfPossible: function (entity, column) {
-                if (entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
                     return entity;
              	} else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type && 
              	           this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
