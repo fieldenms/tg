@@ -34,11 +34,9 @@ public class DeviceProfileDifferentiatorResource extends ServerResource {
      * @return
      */
     private DeviceProfile calculateDeviceProfile(final Request request) {
-        // browsers from mobile phones also send word Mobile as part of the agent info
-        // however, both Android tablets and mobiles send work Android.
-        // therefore, in case there would be a need to distinguish between tablets and mobiles the following condition would need to be enhanced
-        // also, there was no testing done for iOS devices... Chrom on iOS would include word CriOS, but that is different for Safari...
-        if (request.getClientInfo().getAgent().contains("Android") || request.getClientInfo().getAgent().contains("CriOS")) {
+        // It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
+        // At this stage "Tablet" token will be skipped for 'Mozilla (Gecko, Firefox)' browsers -- this will direct the page to the desktop version.
+        if (request.getClientInfo().getAgent().contains("Mobi")) {
             return DeviceProfile.MOBILE;
         } else {
             return DeviceProfile.DESKTOP;
