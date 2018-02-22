@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -131,7 +132,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genDesktopMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-desktop-app.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.html").
+                replace("@isMobileDevice", "false").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
     }
@@ -139,7 +141,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genMobileMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = mobileMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-mobile-app.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.html").
+                replace("@isMobileDevice", "true").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
     }
@@ -225,9 +228,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         CentreUpdater.clearAllCentres(gdtm);
         logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
     }
-
+    
     @Override
-    public Menu getMenuEntity() {
-        return desktopMainMenuConfig.getMenu();
+    public Menu getMenuEntity(final DeviceProfile deviceProfile) {
+        return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
+    
 }

@@ -12,7 +12,7 @@
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
-<dom-module id="tg-desktop-app">
+<dom-module id="tg-app-template">
     <template>
         <style>
             :host {
@@ -87,7 +87,7 @@
             };
             Polymer({
 
-                is: "tg-desktop-app",
+                is: "tg-app-template",
 
                 properties: {
                     /**
@@ -134,7 +134,18 @@
                     _saveIdentifier: Number,
                     _visibleMenuItems: Array,
                     _invisibleMenuItems: Array,
-                    _saveMenuVisibilityChanges: Function
+                    _saveMenuVisibilityChanges: Function,
+                    
+                    /**
+                     * Returns 'true' if this generated 'tg-app' component was loaded for mobile device, 'false' otherwise (see DeviceProfileDifferentiatorResource and DeviceProfile for more details).
+                     * 
+                     * Currently, the only difference will be in constructing app menu content.
+                     * We use this flag when making 'retrieve' call for 'Menu' entity.
+                     */
+                    mobile: {
+                        type: Boolean,
+                        value: @isMobileDevice
+                    }
                 },
 
                 behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
@@ -363,9 +374,9 @@
                         }
                     }.bind(this);
                 },
-
+                
                 attached: function () {
-                    var self = this;
+                    const self = this;
                     this.async(function () {
                         self.topLevelActions = [
                             //actionsObject
@@ -373,7 +384,12 @@
                         if (!this._route.path) {
                             this.set("_route.path", "/menu");
                         }
-                        this.retrieve();
+                        
+                        self.entityId = 'new';
+                        const context = self._reflector().createContextHolder(null, null, null, null, null, null, null);
+                        context['chosenProperty'] = self.mobile === true ? 'mobile' : 'desktop';
+                        
+                        this.retrieve(context);
                         this._toastGreeting().text = "Loading menu...";
                         this._toastGreeting().hasMore = false;
                         this._toastGreeting().showProgress = true;
@@ -381,13 +397,14 @@
                         this._toastGreeting().isCritical = false;
                         this._toastGreeting().show();
                     });
-
+                    
                     window.addEventListener("beforeunload", this._checkWeatherCanLeave);
                 },
-
+                
                 detached: function () {
                     window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
                 }
+                
             });
         })();
     </script>
