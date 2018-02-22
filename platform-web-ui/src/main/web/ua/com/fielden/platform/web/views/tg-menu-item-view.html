@@ -72,6 +72,10 @@
                 hostAttributes: {
                     "class": "layout vertical"
                 },
+                
+                ready: function () {
+                    this._afterInitLoading = true;
+                },
 
                 attached: function () {
                     var self = this;

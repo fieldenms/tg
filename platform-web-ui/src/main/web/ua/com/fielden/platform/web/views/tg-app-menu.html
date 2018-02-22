@@ -113,7 +113,7 @@
 <script>
     (function () {
         var isMenuPresent = function (menu) {
-            return menu && menu.length > 0;
+            return menu && /*menu.length > 0*/ true;
         };
         Polymer({
 
@@ -200,7 +200,7 @@
                 }
             },
             _calcTileStyle: function (item) {
-                return isMenuPresent(item.menu) ? "cursor:pointer;" : "filter: grayscale(1);"
+                return isMenuPresent(item.menu) ? "cursor:pointer;" : "filter: grayscale(1);";
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";

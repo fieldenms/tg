@@ -46,7 +46,21 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     @IsProperty(ModuleMenuItem.class)
     @Title("Module menu")
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
-
+    
+    @IsProperty
+    @Title(value = "View", desc = "Menu item view")
+    private View view;
+    
+    @Observable
+    public Module setView(final View view) {
+        this.view = view;
+        return this;
+    }
+    
+    public View getView() {
+        return view;
+    }
+    
     @Observable
     public Module setMenu(final List<ModuleMenuItem> menu) {
         this.menu.clear();
