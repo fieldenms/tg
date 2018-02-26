@@ -12,13 +12,23 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 
 /**
- * A convenience class that assists in automation of binding companion object implementations to its declarations. It automatically determines the companion object contract based
- * on the type of an entity object.
+ * A convenience class that assists in automation of binding companion object implementations to its declarations. 
+ * It automatically determines the companion object contract from annotation {@link CompanionObject} on the type of an entity object.
+ * <p>
+ * A possible implementation for a companion object is determined using naming heuristics:
+ * <ul>
+ * <li> The full name of the companion implementation class matches the full name of a corresponding entity type, but with suffix "Dao". 
+ * <li> The full name of the companion implementation class matches the package name of a corresponding entity type and its simple name with prefix "Co".
+ * </ul>
+ * 
+ * If neither are found then a runtime exception of type {@link EntityDefinitionException} is thrown. Otherwise, the first match is used.
  * 
  * @author TG Team
  * 
  */
 public class CompanionObjectAutobinder {
+    
+    private CompanionObjectAutobinder() {}
 
     /**
      * Returns companion object type or null if its declaration is missing from the entity object.
@@ -34,7 +44,7 @@ public class CompanionObjectAutobinder {
     }
 
     /**
-     * Uses the provided binder to bind DAO implementation to entity's companion object contract.
+     * Uses the provided binder to bind a companion object implementation to entity's companion object contract.
      * 
      * @param entityType
      * @param binder
@@ -48,8 +58,8 @@ public class CompanionObjectAutobinder {
             // determine a type implementing the companion for the passed in entity type
             // and bind it if found, otherwise throw an exception
             Stream.of(
-                    entityType.getPackage().getName() + "." + co.getSimpleName().substring(1) + "Dao", // the legacy DAO naming strategy
-                    entityType.getPackage().getName() + ".Co" + co.getSimpleName().substring(1))       // the new Co naming strategy
+                    format("%sDao", entityType.getName()),                                            // the legacy DAO naming strategy
+                    format("%s.Co%s", entityType.getPackage().getName(), entityType.getSimpleName())) // the new Co naming strategy
             .map(name -> {final Class<T> coType = fromString(name); return coType;}).findFirst()
             .map(type -> binder.bind(co).to(type)).orElseThrow(() -> new EntityDefinitionException(format("Could not find a implementation for companion object of type [%s]", co.getSimpleName()))); 
         }
