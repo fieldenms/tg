@@ -1491,6 +1491,7 @@
                 updateSelectAll(this, tempEgiModel);
                 self.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
+                this.fire("tg-egi-entities-loaded", newValue);
             },
 
             _renderingHintsChanged: function (newValue, oldValue) {
