@@ -112,8 +112,11 @@
 
 <script>
     (function () {
-        var isMenuPresent = function (menu) {
-            return menu && /*menu.length > 0*/ true;
+        /**
+         * This function is now very specific to the presence of 'menu', but should be expanded to query 'view' existence as well in case where master / centre views will need to be supported.
+         */
+        const isMenuPresent = function (menu) {
+            return menu && menu.length > 0;
         };
         Polymer({
 

@@ -60,7 +60,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
                 .ifPresent(computeVisibility(userProvider, lastMenuPart));
             }
         } else { // chosenPropertyEqualsTo("mobile")
-            menu = menuRetirever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase()); // TODO .setCanEdit(false);
+            menu = menuRetirever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
             // At this stage all items are visible for mobile profile.
             // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
         }

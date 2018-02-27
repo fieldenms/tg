@@ -25,8 +25,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IModule.class)
 @DescTitle(value = "Description", desc = "Short explanation of module purpose")
 public class Module extends AbstractEntity<String> implements IMenuManager {
-    private static final long serialVersionUID = 1L;
-
     @IsProperty
     @Title("Background color")
     private String bgColor;
@@ -48,7 +46,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
     
     @IsProperty
-    @Title(value = "View", desc = "Menu item view")
+    @Title("Module view")
     private View view;
     
     @Observable
