@@ -125,8 +125,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final String genWebUiPreferences() {
-        return webUiBuilder.genWebUiPrefComponent();
+    public final String genWebUiPreferences(final DeviceProfile deviceProfile) {
+        return webUiBuilder.genWebUiPrefComponent(deviceProfile);
     }
 
     @Override

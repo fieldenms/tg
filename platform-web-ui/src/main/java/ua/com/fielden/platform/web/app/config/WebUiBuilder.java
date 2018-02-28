@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.app.config;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -203,7 +205,7 @@ public class WebUiBuilder implements IWebUiBuilder {
      *
      * @return
      */
-    public String genWebUiPrefComponent() {
+    public String genWebUiPrefComponent(final DeviceProfile deviceProfile) {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
@@ -213,7 +215,8 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@locale", "\"" + this.locale + "\"").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
+                replace("@mobile", Boolean.toString(MOBILE.equals(deviceProfile)));
     }
 
     @Override

@@ -300,7 +300,7 @@ public class SourceControllerImpl implements ISourceController {
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
-            return getTgAppConfigSource(webUiConfig);
+            return getTgAppConfigSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
@@ -349,8 +349,8 @@ public class SourceControllerImpl implements ISourceController {
         return DeviceProfile.DESKTOP.equals(deviceProfile) ? app.genDesktopAppIndex() : app.genMobileAppIndex();
     }
 
-    private static String getTgAppConfigSource(final IWebUiConfig app) {
-        return app.genWebUiPreferences();
+    private static String getTgAppConfigSource(final IWebUiConfig app, final DeviceProfile deviceProfile) {
+        return app.genWebUiPreferences(deviceProfile);
     }
 
     private static String getTgAppSource(final IWebUiConfig app, final DeviceProfile deviceProfile) {

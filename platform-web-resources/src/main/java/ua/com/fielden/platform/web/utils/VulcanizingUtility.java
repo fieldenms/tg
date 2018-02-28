@@ -181,7 +181,6 @@ public class VulcanizingUtility {
 
     private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController, final Logger logger) {
         logger.info("\tDownloading common generated resources...");
-        downloadSource("app", "tg-app-config.html", sourceController, null, logger);
         downloadSource("app", "tg-reflector.html", sourceController, null, logger);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName(), sourceController, null, logger);
@@ -198,6 +197,7 @@ public class VulcanizingUtility {
 
     private static void downloadSpecificGeneratedResourcesFor(final DeviceProfile deviceProfile, final ISourceController sourceController, final Logger logger) {
         logger.info("\t\tDownloading " + deviceProfile + " generated resources...");
+        downloadSource("app", "tg-app-config.html", sourceController, deviceProfile, logger);
         downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
         downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
         if (DeviceProfile.DESKTOP.equals(deviceProfile)) {
