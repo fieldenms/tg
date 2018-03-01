@@ -1,4 +1,5 @@
 <link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
@@ -127,6 +128,7 @@
         </div>
         <tg-toast id="toaster"></tg-toast>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+        <tg-app-config id="appConfig"></tg-app-config>
     </template>
 </dom-module>
 <script>
@@ -750,6 +752,11 @@
                         this._parentDialog = actionsDialog;
                     }
                     this._focusAndRefit(); // this is a legacy support
+                    
+                    if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
+                        this._invertMaximiseState();
+                    }
+                    
                     this.open();
                 }.bind(this), 200);
             },

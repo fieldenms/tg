@@ -28053,6 +28053,7 @@ styles. All other styles should exist as single lines."
         </div>
         <tg-toast id="toaster"></tg-toast>
         <iron-icon id="resizer" hidden="[[_dialogInteractionsDisabled(_minimised,_maximised)]]" icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+        <tg-app-config id="appConfig"></tg-app-config>
     </template>
 </dom-module>
 <script>
@@ -28676,6 +28677,11 @@ styles. All other styles should exist as single lines."
                         this._parentDialog = actionsDialog;
                     }
                     this._focusAndRefit(); // this is a legacy support
+                    
+                    if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
+                        this._invertMaximiseState();
+                    }
+                    
                     this.open();
                 }.bind(this), 200);
             },
