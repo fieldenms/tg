@@ -203,8 +203,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
      */
     @Override
-    public Integer progress() {
-        return null;
+    public Optional<Integer> progress() {
+        return Optional.empty();
     }
 
     @Override
