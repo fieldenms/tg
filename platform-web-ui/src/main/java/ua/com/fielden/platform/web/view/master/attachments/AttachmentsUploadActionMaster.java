@@ -48,7 +48,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadAction> {
 
     private final IRenderable renderable;
-    private final FlexLayout actionBarLayout = new FlexLayout();
+    private final FlexLayout actionBarLayout = new FlexLayout("actions");
     private final List<AttachmentsUploadActionMasterEntityActionConfig> entityActions = new ArrayList<>();
     
 

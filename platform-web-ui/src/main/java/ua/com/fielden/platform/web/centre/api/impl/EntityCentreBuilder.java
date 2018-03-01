@@ -110,10 +110,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
     protected final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
-    protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
-    protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout();
-    protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout();
-    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout();
+    protected final FlexLayout selectionCriteriaLayout = new FlexLayout("sel_crit");
+    protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout("collapsed_card");
+    protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout("expansion_card");
+    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout("summary_card");
 
     /////////////////////////////////////////
     ////////////// RESULT SET ///////////////
