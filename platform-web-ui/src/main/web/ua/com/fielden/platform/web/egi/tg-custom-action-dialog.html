@@ -751,7 +751,7 @@
                         actionsDialog._childDialogs.push(this);
                         this._parentDialog = actionsDialog;
                     }
-                    this._focusAndRefit(); // this is a legacy support
+                    this._refitLater(); // this is a legacy support
                     
                     if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
                         this._invertMaximiseState();
@@ -797,7 +797,10 @@
              * Listener that listens binding entity appeared event and focuses first input.
              */
             _focusDialogWithInput: function (e) {
-                if (this._lastElement.focusFirstInput) {
+                // Desktop app specific: focus first input when opening dialog.
+                // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
+                // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor). 
+                if (this.$.appConfig.mobile === false && this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
                 }
             },
@@ -812,21 +815,17 @@
                 this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                 this.removeEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
             },
-
+            
             /** 
-             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound.
+             * Refits this dialog on async after 50 millis.
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
-            _focusAndRefit: function () {
+            _refitLater: function () {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
-                if (this._lastElement.focusFirstInput) {
-                    this._lastElement.focusFirstInput();
-                }
             },
-
-
+            
             _dialogOpened: function (e, detail, source) {
                 // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
                 // a more appropriate place for refitting is post entity binding
