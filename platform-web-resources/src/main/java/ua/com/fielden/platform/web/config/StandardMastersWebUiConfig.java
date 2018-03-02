@@ -5,6 +5,9 @@ import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
@@ -71,7 +74,7 @@ public class StandardMastersWebUiConfig {
                layout().withStyle("padding", "20px").end()).toString();
         
         final String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
-        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 20px', 'wrap', 'justify-content: center'";
+        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 8px', 'wrap', 'justify-content: center'";
         final String buttonPanelLayout = format("[%s, [%s], [%s]]", MASTER_ACTION_LAYOUT_SPECIFICATION, MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()
                 .forEntity(EntityExportAction.class)
@@ -87,7 +90,9 @@ public class StandardMastersWebUiConfig {
                 /*      */.shortDesc("EXPORT")
                 /*      */.longDesc("Start exporting")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(TABLET, Optional.empty(), layout)
+                .setLayoutFor(MOBILE, Optional.empty(), layout)
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
