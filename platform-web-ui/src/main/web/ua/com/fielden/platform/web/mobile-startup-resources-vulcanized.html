@@ -45058,6 +45058,7 @@ postActionError: function (functionalEntity, action) {
                 updateSelectAll(this, tempEgiModel);
                 self.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
+                this.fire("tg-egi-entities-loaded", newValue);
             },
 
             _renderingHintsChanged: function (newValue, oldValue) {
@@ -47961,7 +47962,7 @@ postActionError: function (functionalEntity, action) {
                     <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
-                <div class="insertion-point-slot layout vertical flex" style="min-width:0">
+                <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
