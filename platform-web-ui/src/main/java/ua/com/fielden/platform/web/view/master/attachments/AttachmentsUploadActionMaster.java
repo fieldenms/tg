@@ -179,8 +179,8 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     }
 
     private static String mkActionLayoutForMaster() {
-        final String MARGIN_PIX = "20px";
-        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: " + MARGIN_PIX + "', 'wrap', 'justify-content: center',";
+        final String MARGIN_PIX_FOR_MASTER_ACTION = "10px";
+        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: " + MARGIN_PIX_FOR_MASTER_ACTION + "', 'wrap', 'justify-content: center',";
         final String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
         
         final StringBuilder layout = new StringBuilder();
