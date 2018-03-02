@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.test.server.config;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
+
 /**
  * Provides an API to consistently compose Web UI layouts for both entity centres and masters.
  */
@@ -12,7 +15,7 @@ public class LayoutComposer {
 
     public final static String MASTER_LAYOUT_SPECIFICATION = "'horizontal','justified',";
     public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 20px', 'wrap', 'justify-content: center',";
-    public final static String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
+    public final static String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
 
     /**
      * @param layout

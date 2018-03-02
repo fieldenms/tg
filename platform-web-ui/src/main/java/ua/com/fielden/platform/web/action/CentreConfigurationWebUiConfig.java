@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
@@ -56,10 +57,10 @@ public class CentreConfigurationWebUiConfig {
         final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "20px 20px 0 20px").horizontal().justified().end();
         final ContainerConfig actionLayout = cell(
             cell(
-                layout().withStyle("width", "110px").withStyle("margin-bottom", "20px").end()
+                layout().withStyle("width", MASTER_ACTION_WIDTH).withStyle("margin-bottom", "20px").end()
             )
             .cell(
-                cell().cell().layoutForEach(layout().withStyle("width", "110px").end()).withGapBetweenCells(20),
+                cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_WIDTH).end()).withGapBetweenCells(20),
                 layout().withStyle("margin-left", "auto").withStyle("margin-bottom", "20px").end()
             )
             .withGapBetweenCells(20),

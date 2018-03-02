@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.attachments;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
@@ -180,7 +181,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     private static String mkActionLayoutForMaster() {
         final String MARGIN_PIX = "20px";
         final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: " + MARGIN_PIX + "', 'wrap', 'justify-content: center',";
-        final String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
+        final String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
         
         final StringBuilder layout = new StringBuilder();
         layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");

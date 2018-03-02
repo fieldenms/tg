@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -35,7 +36,7 @@ import com.google.inject.Injector;
  *
  */
 public class UserRoleWebUiConfig {
-    private static final String actionButton = "'margin: 10px', 'width: 110px'";
+    private static final String actionButton = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
     private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<UserRoleTokensUpdater> tokensUpdater;

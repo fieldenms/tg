@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -110,6 +111,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -134,7 +136,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
-import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -189,7 +190,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
     private EntityMaster<ExportAction> createExportActionMaster() {
         final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
-        final String actionButton = "'margin: 10px', 'width: 110px'";
+        final String actionButton = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
         final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
                 .forEntity(ExportAction.class)
                 .addProp("count").asSpinner()
@@ -251,7 +252,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
         final SimpleMasterBuilder<TgDeletionTestEntity> masterBuilder = new SimpleMasterBuilder<TgDeletionTestEntity>();
-        final String actionStyle = "'margin: 10px', 'width: 110px'";
+        final String actionStyle = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
         final String outer = "'flex', 'min-width:200px'";
 
         final String desktopTabletMasterLayout = ("['padding:20px',"
@@ -424,7 +425,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final String mr = "'margin-right: 20px', 'width:300px'";
         final String fmr = "'flex', 'margin-right: 20px'";
-        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
+        final String actionMr = format("'margin-top: 20px', 'margin-left: 20px', 'width: %s'", MASTER_ACTION_WIDTH);
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<TgPersistentEntityWithProperties>();
         @SuppressWarnings("unchecked")
@@ -1052,7 +1053,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 + "      ['width:300px', 'flex'], "
                 + "      ['width:300px', 'flex']"
                 + "  ]]";
-        final String actionBarLayout = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]";
+        final String part = format("'margin: 10px', 'width: %s', 'flex'", MASTER_ACTION_WIDTH);
+        final String actionBarLayout = format("['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', %s, %s]", part, part);
         final IMaster<TgCreatePersistentStatusAction> config =
                 new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
                 .addProp("statusCode").asSinglelineText()

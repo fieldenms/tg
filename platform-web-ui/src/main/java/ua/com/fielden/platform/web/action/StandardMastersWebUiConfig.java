@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.config;
+package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
@@ -40,7 +40,8 @@ import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActi
  *
  */
 public class StandardMastersWebUiConfig {
-
+    public static final String MASTER_ACTION_WIDTH = "80px";
+    
     private StandardMastersWebUiConfig() {}
     
     public static EntityMaster<EntityNewAction> createEntityNewMaster(final Injector injector) {
@@ -73,7 +74,7 @@ public class StandardMastersWebUiConfig {
                .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end()),
                layout().withStyle("padding", "20px").end()).toString();
         
-        final String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
+        final String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
         final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 10px', 'wrap', 'justify-content: center'";
         final String buttonPanelLayout = format("[%s, [%s], [%s]]", MASTER_ACTION_LAYOUT_SPECIFICATION, MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()
