@@ -74,7 +74,7 @@ public class StandardMastersWebUiConfig {
                layout().withStyle("padding", "20px").end()).toString();
         
         final String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
-        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 8px', 'wrap', 'justify-content: center'";
+        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 10px', 'wrap', 'justify-content: center'";
         final String buttonPanelLayout = format("[%s, [%s], [%s]]", MASTER_ACTION_LAYOUT_SPECIFICATION, MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()
                 .forEntity(EntityExportAction.class)

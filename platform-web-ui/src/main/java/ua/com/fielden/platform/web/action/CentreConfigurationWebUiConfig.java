@@ -3,6 +3,9 @@ package ua.com.fielden.platform.web.action;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
@@ -50,9 +53,18 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector) {
-        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "20px").horizontal().justified().end();
-        final FlexLayoutConfig buttonStyle = layout().withStyle("width", "110px").end();
-        final ContainerConfig layout = cell(cell(buttonStyle).cell(cell().cell().layoutForEach(buttonStyle).withGapBetweenCells(20)).withGapBetweenCells(20), horizontal);
+        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "20px 20px 0 20px").horizontal().justified().end();
+        final ContainerConfig actionLayout = cell(
+            cell(
+                layout().withStyle("width", "110px").withStyle("margin-bottom", "20px").end()
+            )
+            .cell(
+                cell().cell().layoutForEach(layout().withStyle("width", "110px").end()).withGapBetweenCells(20),
+                layout().withStyle("margin-left", "auto").withStyle("margin-bottom", "20px").end()
+            )
+            .withGapBetweenCells(20),
+            horizontal
+        );
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().maxVisibleRows(5).withHeader("title")
@@ -79,10 +91,12 @@ public class CentreConfigurationWebUiConfig {
                         .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
-
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), layout.toString())
+                
+                .setActionBarLayoutFor(DESKTOP, Optional.empty(), actionLayout.toString())
+                .setActionBarLayoutFor(TABLET, Optional.empty(), actionLayout.toString())
+                .setActionBarLayoutFor(MOBILE, Optional.empty(), actionLayout.toString())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'width:500px', "
+                        "      ['padding:20px', 'width:300px', "
                         + format("['flex', ['flex']]")
                         + "    ]"))
                 .done();
