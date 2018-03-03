@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
+import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.mkActionLayoutForMaster;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsProducer;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
-import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.test.server.config.LayoutComposer;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -33,18 +37,20 @@ public class AcknowledgeWarningsWebUiConfig {
     }
 
     private EntityMaster<AcknowledgeWarnings> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMaster(640, 1, 1);
-
+        final String layout = LayoutComposer.mkGridForMaster(300, 1, 1);
+        
         final IMaster<AcknowledgeWarnings> masterConfig = new SimpleMasterBuilder<AcknowledgeWarnings>().forEntity(AcknowledgeWarnings.class)
                 .addProp("warnings").asCollectionalEditor().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE).shortDesc("Acknowledge").longDesc("Acknowledge warnings and continue saving")
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
-                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                .addAction(MasterActions.SAVE).shortDesc("Accept").longDesc("Acknowledge warnings and continue saving")
+                .setActionBarLayoutFor(DESKTOP, Optional.empty(), mkActionLayoutForMaster())
+                .setActionBarLayoutFor(TABLET, Optional.empty(), mkActionLayoutForMaster())
+                .setActionBarLayoutFor(MOBILE, Optional.empty(), mkActionLayoutForMaster())
+                .setLayoutFor(DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(TABLET, Optional.empty(), layout)
+                .setLayoutFor(MOBILE, Optional.empty(), layout)
                 .done();
-
+        
         return new EntityMaster<AcknowledgeWarnings>(AcknowledgeWarnings.class, AcknowledgeWarningsProducer.class, masterConfig, injector);
     }
 }
