@@ -104,7 +104,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         try {
             final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass;
 
-            if (generatedClasses.containsKey(miType)) {
+            if (miType != null && generatedClasses.containsKey(miType)) {
                 queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(miType);
             } else {
                 final List<NewProperty> newProperties = new ArrayList<NewProperty>();
