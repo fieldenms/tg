@@ -10,7 +10,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1cVisibleRows<T extends AbstractEntity<?>> extends IResultSetBuilder2Properties<T> {
+public interface IResultSetBuilder1cVisibleRows<T extends AbstractEntity<?>> extends IResultSetBuilder1dFitBehaviour<T> {
 
-    IResultSetBuilder2Properties<T> setVisibleRowsCount(int visibleRowsCount);
+    IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(int visibleRowsCount);
+
+    /**
+     * Set the height for egi.
+     *
+     * @param height
+     * @return
+     */
+    IResultSetBuilder1dFitBehaviour<T> setHeight(String height);
 }

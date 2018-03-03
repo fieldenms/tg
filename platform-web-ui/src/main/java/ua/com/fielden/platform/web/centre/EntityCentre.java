@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISI
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAGGABLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAG_ANCHOR_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.FIT_TO_HEIGHT;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
@@ -141,6 +142,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String EGI_HEADER_FIXED = "@headerFixed";
     private final String EGI_SUMMARY_FIXED = "@summaryFixed";
     private final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
+    private final String EGI_HEIGHT = "@egiHeight";
+    private final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
     private final String EGI_PAGE_CAPACITY = "@pageCapacity";
     private final String EGI_ACTIONS = "//generatedActionObjects";
     private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
@@ -992,6 +995,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
                 replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
                 replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
+                replace(EGI_HEIGHT, dslDefaultConfig.getEgiHeight()).
+                replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
                 ///////////////////////
                 replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
                 replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
