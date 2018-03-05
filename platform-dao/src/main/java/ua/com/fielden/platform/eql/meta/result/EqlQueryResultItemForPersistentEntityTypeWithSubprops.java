@@ -1,32 +1,24 @@
 package ua.com.fielden.platform.eql.meta.result;
 
-import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
-public class EqlQueryResultItemForPersistentEntityTypeWithSubprops implements IEqlQueryResultParent, IEqlQueryResultItem {
+import ua.com.fielden.platform.entity.AbstractEntity;
 
-    @Override
-    public IEqlQueryResultParent getParent() {
-        // TODO Auto-generated method stub
-        return null;
+public class EqlQueryResultItemForPersistentEntityTypeWithSubprops<T extends AbstractEntity<?>> extends AbstractEqlQueryResultItem<T> implements IEqlQueryResultParent, IEqlQueryResultItem<T> {
+    private final SortedMap<String, IEqlQueryResultItem<?>> items = new TreeMap<>();
+    
+    public EqlQueryResultItemForPersistentEntityTypeWithSubprops(final String name, final Class<T> javaType, final Set<IEqlQueryResultItem<?>> items) {
+        super(name, javaType);
+        for (final IEqlQueryResultItem<?> item : items) {
+            this.items.put(item.getName(), item);
+        }
     }
 
     @Override
-    public SortedMap<String, IEqlQueryResultItem> getItems() {
+    public EqlPropResolutionProgress resolve(final EqlPropResolutionProgress resolutionProgress) {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IEqlQueryResultItem resolve(final List<String> path) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

@@ -1,32 +1,13 @@
 package ua.com.fielden.platform.eql.meta.result;
 
-import java.util.List;
-import java.util.SortedMap;
+public class EqlQueryResultItemForPrimitiveType<T> extends AbstractEqlQueryResultItem<T> implements IEqlQueryResultItem<T> {
 
-public class EqlQueryResultItemForPrimitiveType implements IEqlQueryResultParent, IEqlQueryResultItem {
-
-    @Override
-    public IEqlQueryResultParent getParent() {
-        // TODO Auto-generated method stub
-        return null;
+    public EqlQueryResultItemForPrimitiveType(final String name, final Class<T> javaType) {
+        super(name, javaType);
     }
 
     @Override
-    public SortedMap<String, IEqlQueryResultItem> getItems() {
-        // TODO Auto-generated method stub
-        return null;
+    public EqlPropResolutionProgress resolve(final EqlPropResolutionProgress resolutionProgress) {
+        return resolutionProgress;
     }
-
-    @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IEqlQueryResultItem resolve(final List<String> path) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

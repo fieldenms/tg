@@ -1,25 +1,15 @@
 package ua.com.fielden.platform.eql.meta.result;
 
-import java.util.List;
-import java.util.SortedMap;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class EqlQueryResultItemForPersistentEntityType implements IEqlQueryResultItem {
-
-    @Override
-    public IEqlQueryResultParent getParent() {
-        // TODO Auto-generated method stub
-        return null;
+public class EqlQueryResultItemForPersistentEntityType<T extends AbstractEntity<?>> extends AbstractEqlQueryResultItem<T> implements IEqlQueryResultItem<T> {
+    
+    public EqlQueryResultItemForPersistentEntityType(final String name, final Class<T> javaType) {
+        super(name, javaType);
     }
 
     @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IEqlQueryResultItem resolve(final List<String> path) {
-        // TODO Auto-generated method stub
-        return null;
+    public EqlPropResolutionProgress resolve(final EqlPropResolutionProgress resolutionProgress) {
+        return resolutionProgress;
     }
 }
