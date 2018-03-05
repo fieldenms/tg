@@ -2234,7 +2234,7 @@
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
                     if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
-                        columnParameter.width = e.model.item.width;
+                        columnParameter.width = (+(e.model.item.width.toFixed(0)));
                     }
                     if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
                         columnParameter.growFactor = e.model.item.growFactor;
