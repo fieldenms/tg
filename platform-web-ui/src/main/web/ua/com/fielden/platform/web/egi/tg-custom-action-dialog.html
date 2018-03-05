@@ -111,12 +111,12 @@
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
                 <!-- collapse/expand buttons -->
-                <paper-icon-button hidden=[[!_minimised]]  class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
-                <paper-icon-button hidden="[[_minimised]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
                 <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden=[[!_maximised]]  class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
 
                 <!-- close/next buttons -->
                 <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
@@ -128,7 +128,7 @@
         </div>
         <tg-toast id="toaster"></tg-toast>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
-        <tg-app-config id="appConfig"></tg-app-config>
+        <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     </template>
 </dom-module>
 <script>
@@ -257,6 +257,13 @@
                  */
                 _windowWidth: Number,
                 _windowHeight: Number,
+                
+                /**
+                 * Binds to the property 'appConfig.mobile'.
+                 */
+                mobile: {
+                    type: Boolean
+                }
             },
             
             observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
@@ -866,6 +873,20 @@
                 if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
+            },
+            
+            /**
+             * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
+             */
+            _maximiseRestorerHidden: function (_maximised, mobile) {
+                return !_maximised || mobile === true;
+            },
+            
+            /**
+             * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
+             */
+            _collapserHidden: function (_minimised, mobile) {
+                return _minimised || mobile === true;
             }
         });
     })();
