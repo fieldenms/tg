@@ -548,7 +548,7 @@
             
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
-                if (target === this.$.titleBar) {
+                if (target === this.$.titleBar && this._maximised === false) {
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';
