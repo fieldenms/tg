@@ -64,6 +64,35 @@ public class StreamUtilsTest {
     
 
     @Test
+    public void prepending_null_throws_NPE() {
+        try {
+            StreamUtils.prepend(null, Stream.of("second", "thirds"));
+            fail();
+        } catch (final NullPointerException ex) {
+            assertEquals(ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL, ex.getMessage());
+        }
+    }
+
+    @Test
+    public void prepending_to_empty_stream_results_in_single_element_stream() {
+        final Stream<String> xs = StreamUtils.prepend("one", Stream.empty());
+        assertEquals("one", xs.findFirst().orElse("Stream is empty"));
+    }
+    
+    @Test
+    public void prepending_to_non_empty_stream_add_element_as_head() {
+        final Stream<Integer> xs = StreamUtils.prepend(0, Stream.of(1, 2, 3, 4));
+        
+        final List<Integer> ys = xs.collect(Collectors.toList());
+        assertEquals(5, ys.size());
+        assertEquals(Integer.valueOf(0), ys.get(0));
+        assertEquals(Integer.valueOf(1), ys.get(1));
+        assertEquals(Integer.valueOf(2), ys.get(2));
+        assertEquals(Integer.valueOf(3), ys.get(3));
+        assertEquals(Integer.valueOf(4), ys.get(4));
+    }
+
+    @Test
     public void head_and_tail_of_a_stream_with_more_than_2_elements_are_not_empty_and_contain_the_expected_elements() {
         final T2<Optional<Integer>, Stream<Integer>> head_and_tail = head_and_tail(Stream.of(1, 2, 3, 4));
         final Optional<Integer> head = head_and_tail._1;
