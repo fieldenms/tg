@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
@@ -75,7 +76,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             // throw new IllegalStateException("Illegal state during entity validation.");
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
 
-            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0, calculateDeviceProfile(getRequest()));
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJSONRepresentation(applied);

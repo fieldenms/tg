@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
+import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
@@ -93,7 +96,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, calculateDeviceProfile(getRequest()));
             
             // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without saving.
             final Result validationResult = appliedCriteriaEntity.isValid();
@@ -110,11 +113,11 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
                 );
             }
             
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.centre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.centre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
             CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME, freshCentre);
             
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
-            return CriteriaResource.createCriteriaRetrievalEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator);
+            return CriteriaResource.createCriteriaRetrievalEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, calculateDeviceProfile(getRequest()));
         }, restUtil);
     }
     
@@ -130,17 +133,17 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
 
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
             final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
             // discards fresh centre's changes (fresh centre could have no changes)
             if (CentreUtils.isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
-                CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME, updatedSavedCentre);
+                CentreUpdater.initAndCommit(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType), updatedSavedCentre);
             }
             
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = CentreUpdater.centre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = CentreUpdater.centre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
             final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, newFreshCentre, miType, gdtm, companionFinder, critGenerator);
-            return CriteriaResource.createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
+            return CriteriaResource.createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, calculateDeviceProfile(getRequest()));
         }, restUtil);
     }
 }

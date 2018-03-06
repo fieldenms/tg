@@ -65,6 +65,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
@@ -406,10 +407,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer cdtmae,
             final ICriteriaGenerator critGenerator,
             final Long previousVersion,
-            final IGlobalDomainTreeManager gdtm) {
+            final IGlobalDomainTreeManager gdtm,
+            final DeviceProfile device) {
         final Class<T> entityType = EntityResourceUtils.getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
-        validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
+        validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType)));
         validationPrototype.setDefaultCentreSupplier(() -> CentreUpdater.getDefaultCentre(gdtm, miType));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
             centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
@@ -547,7 +549,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final CentreContextHolder centreContextHolder,
             final M criteriaEntity,
             final Optional<CentreContextConfig> contextConfig,
-            final String chosenProperty
+            final String chosenProperty,
+            final DeviceProfile device
     ) {
         if (contextConfig.isPresent()) {
             final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
@@ -559,7 +562,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
+                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0, device));
             }
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
@@ -620,7 +623,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IServerGlobalDomainTreeManager serverGdtm, 
         final IUserProvider userProvider, 
         final IWebUiConfig webUiConfig,
-        final EntityFactory entityFactory
+        final EntityFactory entityFactory,
+        
+        final DeviceProfile device
     ) {
         if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
             return null;
@@ -632,8 +637,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
 
-        final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm).setCentreContextHolder(centreContextHolder);
-        criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, serverGdtm, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject));
+        final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm, device).setCentreContextHolder(centreContextHolder);
+        criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, serverGdtm, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject, device));
         return criteriaEntity;
     }
 
@@ -663,7 +668,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         
         final CentreContextHolder centreContextHolder, 
         final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
-        final Map<String, Object> adhocParams
+        final Map<String, Object> adhocParams,
+        final DeviceProfile device
     ) {
         final Class<? extends MiWithConfigurationSupport<?>> miType = EntityResourceUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
@@ -689,7 +695,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                                 entityFactory,
                                 centreContextHolder,
                                 centre.getQueryEnhancerConfig(),
-                                appliedCriteriaEntity),
+                                appliedCriteriaEntity,
+                                device),
                         // There could be cases where the generated data and the queried data would have different types.
                         // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
                         // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
@@ -712,9 +719,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *            -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
      * @return
      */
-    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
-        return createCriteriaValidationPrototype(miType, updatedPreviouslyRunCentre, critGenerator, 0L, gdtm);
+        return createCriteriaValidationPrototype(miType, updatedPreviouslyRunCentre, critGenerator, 0L, gdtm, device);
     }
 
     /**
@@ -727,7 +734,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @return
      */
-    protected static synchronized <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+    protected static synchronized <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
@@ -735,7 +742,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // load / update fresh centre if it is not loaded yet / stale
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         applyMetaValues(originalCdtmae, EntityResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm);
+        final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm, device);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,

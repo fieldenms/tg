@@ -5,6 +5,7 @@ import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
@@ -57,6 +58,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
@@ -125,7 +127,7 @@ public class CriteriaResource extends ServerResource {
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
             // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria retrieval.");
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator);
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, calculateDeviceProfile(getRequest()));
         }, restUtil);
     }
 
@@ -142,7 +144,8 @@ public class CriteriaResource extends ServerResource {
                     ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), 
                     restUtil, 
                     companionFinder, 
-                    critGenerator);
+                    critGenerator,
+                    calculateDeviceProfile(getRequest()));
         }, restUtil);
     }
 
@@ -152,10 +155,11 @@ public class CriteriaResource extends ServerResource {
             final IGlobalDomainTreeManager gdtm,
             final RestServerUtil restUtil,
             final ICompanionObjectFinder companionFinder,
-            final ICriteriaGenerator critGenerator
+            final ICriteriaGenerator critGenerator,
+            final DeviceProfile device
                     ) {
         return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm),
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm, device),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME))
@@ -170,10 +174,11 @@ public class CriteriaResource extends ServerResource {
             final RestServerUtil restUtil,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
-            final String staleCriteriaMessage
+            final String staleCriteriaMessage,
+            final DeviceProfile device
                     ) {
         return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm),
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, updatedFreshCentre, critGenerator, -1L, gdtm, device),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, EntityResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
@@ -188,9 +193,10 @@ public class CriteriaResource extends ServerResource {
             final IGlobalDomainTreeManager gdtm,
             final RestServerUtil restUtil,
             final ICompanionObjectFinder companionFinder,
-            final ICriteriaGenerator critGenerator
+            final ICriteriaGenerator critGenerator,
+            final DeviceProfile device
                     ) {
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, device);
         final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
         return restUtil.rawListJSONRepresentation(
                 appliedCriteriaEntity,
@@ -238,7 +244,7 @@ public class CriteriaResource extends ServerResource {
             final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
             
             if (isRunning) {
-                freshCentreAppliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm);
+                freshCentreAppliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, calculateDeviceProfile(getRequest()));
                 updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
                 
                 // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
@@ -286,7 +292,7 @@ public class CriteriaResource extends ServerResource {
             }
             
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
-            final  EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = CentreResourceUtils.createCriteriaValidationPrototype(miType, previouslyRunCentre, critGenerator, 0L, gdtm);
+            final  EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = CentreResourceUtils.createCriteriaValidationPrototype(miType, previouslyRunCentre, critGenerator, 0L, gdtm, calculateDeviceProfile(getRequest()));
             
             final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext = createQueryEnhancerAndContext(
                     webUiConfig,
@@ -297,7 +303,8 @@ public class CriteriaResource extends ServerResource {
                     entityFactory,
                     centreContextHolder,
                     centre.getQueryEnhancerConfig(),
-                    previouslyRunCriteriaEntity);
+                    previouslyRunCriteriaEntity,
+                    calculateDeviceProfile(getRequest()));
             
             final Pair<Map<String, Object>, List<?>> pair =
                     CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
@@ -384,7 +391,8 @@ public class CriteriaResource extends ServerResource {
             final EntityFactory entityFactory,
             final CentreContextHolder centreContextHolder,
             final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContextConfig>>> queryEnhancerConfig,
-            final  EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity) {
+            final  EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+            final DeviceProfile device) {
         if (queryEnhancerConfig.isPresent()) {
             return Optional.of(new Pair<>(
                     queryEnhancerConfig.get().getKey(),
@@ -399,7 +407,8 @@ public class CriteriaResource extends ServerResource {
                             centreContextHolder,
                             criteriaEntity,
                             queryEnhancerConfig.get().getValue(),
-                            null /* chosenProperty is not applicable in queryEnhancer context */
+                            null, /* chosenProperty is not applicable in queryEnhancer context */
+                            device
                             )//
             ));
         } else {

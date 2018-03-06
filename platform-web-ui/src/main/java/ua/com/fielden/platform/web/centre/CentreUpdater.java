@@ -25,6 +25,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
@@ -65,6 +68,24 @@ public class CentreUpdater {
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
+    }
+    
+    /**
+     * Returns device-specific surrogate name for the centre based on original <code>surrogateName</code>.
+     * 
+     * @param surrogateName
+     * @param device
+     * @param miType
+     * @return
+     */
+    public static String deviceSpecific(final String surrogateName, final DeviceProfile device, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (DESKTOP.equals(device)) {
+            return surrogateName;
+        } else if (MOBILE.equals(device)) {
+            return surrogateName + MOBILE.name(); // TODO miType.mobileShouldDifferFromDesktop
+        } else {
+            throw new IllegalStateException("DeviceProfile is not legal"); // TODO exception type + message
+        }
     }
     
     /**

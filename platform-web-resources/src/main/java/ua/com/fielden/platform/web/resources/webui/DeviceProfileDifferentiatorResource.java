@@ -33,7 +33,7 @@ public class DeviceProfileDifferentiatorResource extends ServerResource {
      * @param request
      * @return
      */
-    private DeviceProfile calculateDeviceProfile(final Request request) {
+    public static DeviceProfile calculateDeviceProfile(final Request request) {
         // It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
         // At this stage "Tablet" token will be skipped for 'Mozilla (Gecko, Firefox)' browsers -- this will direct the page to the desktop version.
         if (request.getClientInfo().getAgent().contains("Mobi")) {
