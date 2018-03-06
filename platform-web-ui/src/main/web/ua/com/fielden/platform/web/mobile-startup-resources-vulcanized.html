@@ -13812,7 +13812,8 @@ links:["Africa/Abidjan|Africa/Bamako","Africa/Abidjan|Africa/Banjul","Africa/Abi
                 mobile: {
                     type: Boolean,
                     readOnly: true,
-                    value: true
+                    value: true,
+                    notify: true
                 }
             },
             
@@ -28033,11 +28034,11 @@ styles. All other styles should exist as single lines."
             <div class="layout horizontal center" style="margin-left:10px">
                 
                 <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
-                <paper-icon-button hidden="[[_minimised]]" class="minimise-button" icon="tg-icons:collapseMin" on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled="[[_dialogInteractionsDisabled(_minimised,_maximised)]]"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin" on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled="[[_dialogInteractionsDisabled(_minimised,_maximised)]]"></paper-icon-button>
 
                 
                 <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen" on-tap="_invertMaximiseState" tooltip-text="Maximise" disabled="[[_dialogInteractionsDisabled(_minimised,_maximised)]]"></paper-icon-button>
-                <paper-icon-button hidden="[[!_maximised]]" class="maximise-button" icon="icons:fullscreen-exit" on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button" icon="icons:fullscreen-exit" on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
 
                 
                 <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
@@ -28049,7 +28050,7 @@ styles. All other styles should exist as single lines."
         </div>
         <tg-toast id="toaster"></tg-toast>
         <iron-icon id="resizer" hidden="[[_dialogInteractionsDisabled(_minimised,_maximised)]]" icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
-        <tg-app-config id="appConfig"></tg-app-config>
+        <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     </template>
 </dom-module>
 <script>
@@ -28178,6 +28179,13 @@ styles. All other styles should exist as single lines."
                  */
                 _windowWidth: Number,
                 _windowHeight: Number,
+                
+                /**
+                 * Binds to the property 'appConfig.mobile'.
+                 */
+                mobile: {
+                    type: Boolean
+                }
             },
             
             observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
@@ -28462,7 +28470,7 @@ styles. All other styles should exist as single lines."
             
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
-                if (target === this.$.titleBar) {
+                if (target === this.$.titleBar && this._maximised === false) {
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';
@@ -28787,6 +28795,20 @@ styles. All other styles should exist as single lines."
                 if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
+            },
+            
+            /**
+             * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
+             */
+            _maximiseRestorerHidden: function (_maximised, mobile) {
+                return !_maximised || mobile === true;
+            },
+            
+            /**
+             * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
+             */
+            _collapserHidden: function (_minimised, mobile) {
+                return _minimised || mobile === true;
             }
         });
     })();
@@ -41372,7 +41394,7 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
 this._tabletLayout_editors = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
 this._mobileLayout_editors = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
 
-this._desktopLayout_actions = ['horizontal', 'padding: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']];
+this._desktopLayout_actions = ['horizontal', 'padding: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 80px'],['margin-top: 20px', 'margin-left: 20px', 'width: 80px'],['margin-top: 20px', 'margin-left: 20px', 'width: 80px'],['margin-top: 20px', 'margin-left: 20px', 'width: 80px'],['margin-top: 20px', 'margin-left: 20px', 'width: 80px'],['margin-top: 20px', 'margin-left: 20px', 'width: 80px']];
 
                     self.set('_actions.REFRESH.shortDesc', 'CANCEL');
                     self.set('_actions.REFRESH.longDesc', 'Cancels any changes and closes the master (if in dialog)');
@@ -45801,7 +45823,7 @@ postActionError: function (functionalEntity, action) {
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
                     if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
-                        columnParameter.width = e.model.item.width;
+                        columnParameter.width = (+(e.model.item.width.toFixed(0)));
                     }
                     if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
                         columnParameter.growFactor = e.model.item.growFactor;
@@ -47670,7 +47692,7 @@ postActionError: function (functionalEntity, action) {
         }
     </style>
     <template>
-        <div style="overflow:auto; padding: 24px;">
+        <div style="overflow:auto; padding: 20px;">
             <content select=".custom-selection-criteria"></content>
         </div>
         <content select=".selection-criteria-buttons"></content>
@@ -47922,6 +47944,12 @@ postActionError: function (functionalEntity, action) {
             /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
         }
+        .button-group {
+            margin-bottom: 20px;
+        }
+        .right-button-group {
+            margin-left: auto;
+        }
     </style>
 
     <template>
@@ -47937,12 +47965,12 @@ postActionError: function (functionalEntity, action) {
                 <paper-material>
                     <tg-selection-view id="selectionView">
                         <content select=".custom-selection-criteria"></content>
-                        <div class="selection-criteria-buttons layout horizontal justified" style="padding: 0 24px 24px 24px;">
-                            <div class="layout horizontal wrap">
+                        <div class="selection-criteria-buttons layout horizontal justified wrap" style="padding: 20px 20px 0 20px;">
+                            <div class="layout horizontal button-group">
                                 <paper-button id="saver" raised="" shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
                                 <paper-button id="discarder" raised="" shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
                             </div>
-                            <div class="layout horizontal wrap">
+                            <div class="layout horizontal button-group right-button-group">
                                 <paper-button id="view" raised="" shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
                                 <paper-button id="runner" raised="" shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">
                                   <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
