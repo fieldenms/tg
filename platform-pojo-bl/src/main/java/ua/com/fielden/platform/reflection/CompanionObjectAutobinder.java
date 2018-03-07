@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.inject.Binder;
@@ -60,7 +61,8 @@ public class CompanionObjectAutobinder {
             Stream.of(
                     format("%sDao", entityType.getName()),                                            // the legacy DAO naming strategy
                     format("%s.Co%s", entityType.getPackage().getName(), entityType.getSimpleName())) // the new Co naming strategy
-            .map(name -> {final Class<T> coType = fromString(name); return coType;}).findFirst()
+            .map(name -> (Class<T>) fromString(name))
+            .filter(Objects::nonNull).findFirst()
             .map(type -> binder.bind(co).to(type)).orElseThrow(() -> new EntityDefinitionException(format("Could not find a implementation for companion object of type [%s]", co.getSimpleName()))); 
         }
     }
