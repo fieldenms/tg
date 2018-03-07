@@ -10,6 +10,7 @@
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-app-template">
@@ -148,7 +149,7 @@
                     }
                 },
 
-                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.IronResizableBehavior],
                 
                 keyBindings: {
                     'f3': '_searchMenu'
@@ -373,6 +374,8 @@
                             this._invisibleMenuItems = null;
                         }
                     }.bind(this);
+                    
+                    this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
                 },
                 
                 attached: function () {
@@ -403,8 +406,41 @@
                 
                 detached: function () {
                     window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
-                }
+                },
                 
+                _resizeEventListener: function (event, details) {
+                    
+                    if (document.activeElement
+                        && (document.activeElement.nodeName.toLowerCase() === 'input'
+                            || document.activeElement.nodeName.toLowerCase() === 'textarea')
+                        && !this._isElementInViewport(document.activeElement)
+                    ) {
+                        let node = document.activeElement;
+                        while (node !== null && node.nodeName.toLowerCase() !== 'paper-input-container') {
+                            node = node.parentNode;
+                        }
+                        if (node !== null) {
+                            this.async(function () {
+                                node.scrollIntoView();
+                            }, 300);
+                        }
+                    } 
+                    
+                    
+                },
+                
+                /**
+                 * Check whether an element is visible in viewport. See https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport.
+                 */
+                _isElementInViewport: function (el) {
+                    const rect = el.getBoundingClientRect();
+                    return (
+                        rect.top >= 0 &&
+                        rect.left >= 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /*or $(window).height() */
+                        rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
+                    );
+                }
             });
         })();
     </script>
