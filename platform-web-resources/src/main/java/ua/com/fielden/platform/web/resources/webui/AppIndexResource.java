@@ -20,7 +20,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -34,28 +33,28 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
+    private final ISourceController sourceController;
     
     /**
      * Creates {@link AppIndexResource} instance.
      *
-     * @param sourceController
      * @param context
      * @param request
      * @param response
      */
     public AppIndexResource(
-            final ISourceController sourceController, 
-            final RestServerUtil restUtil,
+            final ISourceController sourceController,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response);
         this.serverGdtm = serverGdtm;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
+        this.sourceController = sourceController;
     }
 
     @Override
@@ -68,7 +67,7 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
             webUiConfig.initConfiguration();
         }
         
-        final String source = sourceController().loadSource("/app/tg-app-index.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-app-index.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 

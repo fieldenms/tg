@@ -25,7 +25,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CentreComponentResource extends DeviceProfileDifferentiatorResource {
     private final String mitypeString;
-
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
+    
     /**
      * Creates {@link CentreComponentResource} and initialises it with centre instance.
      *
@@ -40,15 +42,17 @@ public class CentreComponentResource extends DeviceProfileDifferentiatorResource
             final Context context, //
             final Request request, //
             final Response response) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response);
         this.mitypeString = (String) request.getAttributes().get("mitype");
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
 
     @Override
     protected Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController().loadSource("/centre_ui/" + this.mitypeString, deviceProfile());
+            final String source = sourceController.loadSource("/centre_ui/" + this.mitypeString, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
-        }, restUtil());
+        }, restUtil);
     }
 }

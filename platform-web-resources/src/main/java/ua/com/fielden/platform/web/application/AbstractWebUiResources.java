@@ -113,13 +113,13 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(sourceController, restUtil, injector.getInstance(IServerGlobalDomainTreeManager.class), webApp, injector.getInstance(IUserProvider.class)));
-        router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController, restUtil));
-        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, restUtil));
+        router.attach("/", new AppIndexResourceFactory(sourceController, injector.getInstance(IServerGlobalDomainTreeManager.class), webApp, injector.getInstance(IUserProvider.class)));
+        router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController));
+        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController));
         // type meta info resource
-        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(sourceController, restUtil));
-        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(sourceController, restUtil));
-        router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, restUtil));
+        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(sourceController));
+        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(sourceController));
+        router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
@@ -211,6 +211,6 @@ public abstract class AbstractWebUiResources extends Application {
      */
     private void attachResources(final Router router, final RestServerUtil restUtil) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
-        router.attach("/resources/", new FileResourceFactory(sourceController, restUtil, webApp.resourcePaths()), Template.MODE_STARTS_WITH);
+        router.attach("/resources/", new FileResourceFactory(sourceController, webApp.resourcePaths()), Template.MODE_STARTS_WITH);
     }
 }

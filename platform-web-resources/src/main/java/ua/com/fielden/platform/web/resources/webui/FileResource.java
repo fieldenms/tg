@@ -28,7 +28,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class FileResource extends DeviceProfileDifferentiatorResource {
     private final Logger logger = Logger.getLogger(getClass());
     private final List<String> resourcePaths;
-
+    private final ISourceController sourceController;
+    
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
      *
@@ -37,9 +38,10 @@ public class FileResource extends DeviceProfileDifferentiatorResource {
      * @param request
      * @param response
      */
-    public FileResource(final ISourceController sourceController, final RestServerUtil restUtil, final List<String> resourcePaths, final Context context, final Request request, final Response response) {
-        super(sourceController, restUtil, context, request, response);
+    public FileResource(final ISourceController sourceController, final List<String> resourcePaths, final Context context, final Request request, final Response response) {
+        super(context, request, response);
         this.resourcePaths = resourcePaths;
+        this.sourceController = sourceController;
     }
 
     /**
@@ -57,14 +59,14 @@ public class FileResource extends DeviceProfileDifferentiatorResource {
             return null;
         } else {
             if (MediaType.TEXT_HTML.equals(mediaType)) {
-                final String source = sourceController().loadSourceWithFilePath(filePath, deviceProfile());
+                final String source = sourceController.loadSourceWithFilePath(filePath, deviceProfile());
                 if (source != null) {
                     return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), mediaType);
                 } else {
                     return null;
                 }
             } else {
-                final InputStream stream = sourceController().loadStreamWithFilePath(filePath);
+                final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
                 if (stream != null) {
                     final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, mediaType);
                     logger.debug(String.format("File resource [%s] generated.", originalPath));

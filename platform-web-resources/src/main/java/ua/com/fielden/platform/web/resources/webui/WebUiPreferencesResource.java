@@ -14,7 +14,6 @@ import org.restlet.resource.ResourceException;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Responds to GET requests with generated application specific Web UI preferences, which include location, widths settings for responsive layout etc.
@@ -23,13 +22,17 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class WebUiPreferencesResource extends DeviceProfileDifferentiatorResource {
-    public WebUiPreferencesResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        super(sourceController, restUtil, context, request, response);
+    private final ISourceController sourceController;
+    
+    public WebUiPreferencesResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
+        super(context, request, response);
+        this.sourceController = sourceController;
     }
-
+    
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController().loadSource("/app/tg-app-config.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-app-config.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
+    
 }

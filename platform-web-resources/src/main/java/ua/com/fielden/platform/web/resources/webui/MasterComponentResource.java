@@ -26,7 +26,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class MasterComponentResource extends DeviceProfileDifferentiatorResource {
     private final String entityTypeString;
-
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
+    
     /**
      * Creates {@link MasterComponentResource} and initialises it with master instance.
      *
@@ -42,15 +44,18 @@ public class MasterComponentResource extends DeviceProfileDifferentiatorResource
             final Request request,
             final Response response //
     ) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response);
         this.entityTypeString = (String) request.getAttributes().get("entityType");
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
-
+    
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController().loadSource("/master_ui/" + this.entityTypeString, deviceProfile());
+            final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
-        }, restUtil());
+        }, restUtil);
     }
+    
 }

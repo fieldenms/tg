@@ -25,7 +25,9 @@ import com.google.common.base.Charsets;
  */
 public class CentreEgiResource extends DeviceProfileDifferentiatorResource {
     private final String mitypeString;
-
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
+    
     /**
      * Creates {@link CentreEgiResource} and initialises it with centre instance.
      *
@@ -40,15 +42,18 @@ public class CentreEgiResource extends DeviceProfileDifferentiatorResource {
             final Context context, //
             final Request request, //
             final Response response) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response);
         this.mitypeString = (String) request.getAttributes().get("mitype");
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
-
+    
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController().loadSource("/centre_ui/egi/" + this.mitypeString, deviceProfile());
+            final String source = sourceController.loadSource("/centre_ui/egi/" + this.mitypeString, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
-        }, restUtil());
+        }, restUtil);
     }
+    
 }

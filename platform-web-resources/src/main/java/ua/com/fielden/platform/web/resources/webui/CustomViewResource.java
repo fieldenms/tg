@@ -25,7 +25,9 @@ import com.google.common.base.Charsets;
  */
 public class CustomViewResource extends DeviceProfileDifferentiatorResource {
     private final String viewName;
-
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
+    
     /**
      * Creates {@link CustomViewResource} and initialises it view name.
      *
@@ -41,15 +43,17 @@ public class CustomViewResource extends DeviceProfileDifferentiatorResource {
             final Request request,
             final Response response //
     ) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response);
         this.viewName = (String) request.getAttributes().get("viewName");
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
 
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController().loadSource("/custom_view/" + this.viewName, deviceProfile());
+            final String source = sourceController.loadSource("/custom_view/" + this.viewName, deviceProfile());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
-        }, restUtil());
+        }, restUtil);
     }
 }

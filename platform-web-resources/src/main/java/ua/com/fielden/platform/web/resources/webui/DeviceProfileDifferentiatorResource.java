@@ -5,9 +5,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * A base resource implementation for those resources that need to have specific handling for different {@link DeviceProfile}s.
@@ -17,16 +15,12 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class DeviceProfileDifferentiatorResource extends ServerResource {
     private final DeviceProfile deviceProfile;
-    private final ISourceController sourceController;
-    private final RestServerUtil restUtil;
-
-    public DeviceProfileDifferentiatorResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    
+    public DeviceProfileDifferentiatorResource(final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.sourceController = sourceController;
-        this.restUtil = restUtil;
         this.deviceProfile = calculateDeviceProfile(request);
     }
-
+    
     /**
      * Calculates the {@link DeviceProfile} that is relevant to the specified <code>request</code>.
      *
@@ -42,7 +36,7 @@ public class DeviceProfileDifferentiatorResource extends ServerResource {
             return DeviceProfile.DESKTOP;
         }
     }
-
+    
     /**
      * Returns the {@link DeviceProfile} that is associated with this source request.
      *
@@ -51,22 +45,5 @@ public class DeviceProfileDifferentiatorResource extends ServerResource {
     protected DeviceProfile deviceProfile() {
         return deviceProfile;
     }
-
-    /**
-     * Returns the {@link ISourceController} instance.
-     *
-     * @return
-     */
-    protected ISourceController sourceController() {
-        return sourceController;
-    }
-
-    /**
-     * Returns the {@link RestServerUtil} instance.
-     *
-     * @return
-     */
-    protected RestServerUtil restUtil() {
-        return restUtil;
-    }
+    
 }
