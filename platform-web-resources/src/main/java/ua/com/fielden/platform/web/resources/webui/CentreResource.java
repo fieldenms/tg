@@ -108,7 +108,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
                     createCriteriaMetaValuesCustomObject(
                             createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                             CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
-                            createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator)
+                            createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator, calculateDeviceProfile(getRequest()))
                     )
                 );
             }
@@ -142,7 +142,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre = CentreUpdater.centre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
-            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, newFreshCentre, miType, gdtm, companionFinder, critGenerator);
+            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, newFreshCentre, miType, gdtm, companionFinder, critGenerator, calculateDeviceProfile(getRequest()));
             return CriteriaResource.createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, calculateDeviceProfile(getRequest()));
         }, restUtil);
     }

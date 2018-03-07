@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.app;
 
+import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
+
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -86,7 +88,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType));
                 decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {

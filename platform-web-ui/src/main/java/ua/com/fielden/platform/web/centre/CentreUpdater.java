@@ -727,8 +727,8 @@ public class CentreUpdater {
             globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device, miType), gdtm), null);
             globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(PREVIOUSLY_RUN_CENTRE_NAME, gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(PREVIOUSLY_RUN_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
 
             globalManager.overrideCentre(miType, userSpecificName(SAVED_CENTRE_NAME, gdtm), null);
             globalManager.overrideCentre(miType, userSpecificName(SAVED_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
