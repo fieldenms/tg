@@ -413,13 +413,12 @@
                     if (document.activeElement
                         && (document.activeElement.nodeName.toLowerCase() === 'input'
                             || document.activeElement.nodeName.toLowerCase() === 'textarea')
-                        && !this._isElementInViewport(document.activeElement)
                     ) {
                         let node = document.activeElement;
                         while (node !== null && node.nodeName.toLowerCase() !== 'paper-input-container') {
                             node = node.parentNode;
                         }
-                        if (node !== null) {
+                        if (node !== null && !this._isElementInViewport(node)) {
                             this.async(function () {
                                 node.scrollIntoView();
                             }, 300);
