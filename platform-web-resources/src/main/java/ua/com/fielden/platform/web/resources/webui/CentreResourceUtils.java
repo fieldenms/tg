@@ -10,7 +10,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -417,8 +416,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType)));
             CentreUpdater.commitCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType));
 
-            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME));
-            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, device, miType)));
+            CentreUpdater.commitCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, device, miType));
 
             centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType)));
             CentreUpdater.commitCentre(gdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType));

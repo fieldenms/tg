@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
@@ -107,14 +108,14 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
                     appliedCriteriaEntity,
                     createCriteriaMetaValuesCustomObject(
                             createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                            CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)),
+                            CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType))),
                             createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator, calculateDeviceProfile(getRequest()))
                     )
                 );
             }
             
             final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.centre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
-            CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME, freshCentre);
+            CentreUpdater.initAndCommit(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType), freshCentre);
             
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
             return CriteriaResource.createCriteriaRetrievalEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, calculateDeviceProfile(getRequest()));
@@ -134,7 +135,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
 
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
-            final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
             // discards fresh centre's changes (fresh centre could have no changes)
             if (CentreUtils.isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
                 CentreUpdater.initAndCommit(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType), updatedSavedCentre);

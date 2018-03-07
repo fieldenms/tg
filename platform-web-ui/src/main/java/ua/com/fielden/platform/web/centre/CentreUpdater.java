@@ -714,9 +714,10 @@ public class CentreUpdater {
     }
 
     /**
-     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager}.
+     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager} and concrete {@link DeviceProfile}.
      *
      * @param gdtm
+     * @param device
      */
     public static void clearAllCentres(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
         for (final Class<?> miKlass: gdtm.entityCentreMenuItemTypes()) {
@@ -730,8 +731,8 @@ public class CentreUpdater {
             globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType), gdtm), null);
             globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(SAVED_CENTRE_NAME, gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(SAVED_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device, miType), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
         }
     }
 }
