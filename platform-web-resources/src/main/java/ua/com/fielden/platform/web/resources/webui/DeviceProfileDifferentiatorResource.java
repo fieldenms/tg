@@ -5,6 +5,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 /**
@@ -16,9 +17,9 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 public class DeviceProfileDifferentiatorResource extends ServerResource {
     private final DeviceProfile deviceProfile;
     
-    public DeviceProfileDifferentiatorResource(final Context context, final Request request, final Response response) {
+    public DeviceProfileDifferentiatorResource(final Context context, final Request request, final Response response, final IUserProvider userProvider) {
         init(context, request, response);
-        this.deviceProfile = calculateDeviceProfile(request);
+        userProvider.setDeviceProfile(deviceProfile = calculateDeviceProfile(request));
     }
     
     /**

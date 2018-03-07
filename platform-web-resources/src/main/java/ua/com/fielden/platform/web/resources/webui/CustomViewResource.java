@@ -13,6 +13,7 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import com.google.common.base.Charsets;
@@ -39,11 +40,12 @@ public class CustomViewResource extends DeviceProfileDifferentiatorResource {
     public CustomViewResource(
             final ISourceController sourceController,//
             final RestServerUtil restUtil,
+            final IUserProvider userProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
         this.viewName = (String) request.getAttributes().get("viewName");
         this.sourceController = sourceController;
         this.restUtil = restUtil;

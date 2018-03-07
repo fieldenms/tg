@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.IReport;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource;
 
 /**
@@ -31,8 +32,8 @@ public class ReportResource extends DeviceProfileDifferentiatorResource {
     private final RestServerUtil restUtil;
     private final IReport dao;
 
-    public ReportResource(final IReport dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        super(context, request, response);
+    public ReportResource(final IReport dao, final RestServerUtil restUtil, final IUserProvider userProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, userProvider);
         setNegotiated(true);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
         this.dao = dao;

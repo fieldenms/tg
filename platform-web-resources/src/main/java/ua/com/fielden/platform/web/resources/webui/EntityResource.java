@@ -114,7 +114,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends DeviceProfileDi
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
 
         this.companionFinder = companionFinder;
         this.critGenerator = critGenerator;

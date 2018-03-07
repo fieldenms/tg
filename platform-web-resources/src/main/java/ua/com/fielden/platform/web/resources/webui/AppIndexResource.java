@@ -50,7 +50,7 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
         this.serverGdtm = serverGdtm;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;

@@ -13,6 +13,7 @@ import org.restlet.resource.ResourceException;
 
 import com.google.common.base.Charsets;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 
 /**
@@ -26,8 +27,8 @@ import ua.com.fielden.platform.web.app.ISourceController;
 public class DesktopApplicationStartupResourcesComponentResource extends DeviceProfileDifferentiatorResource {
     private final ISourceController sourceController;
     
-    public DesktopApplicationStartupResourcesComponentResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
-        super(context, request, response);
+    public DesktopApplicationStartupResourcesComponentResource(final ISourceController sourceController, final IUserProvider userProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, userProvider);
         this.sourceController = sourceController;
     }
     

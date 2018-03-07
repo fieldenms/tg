@@ -5,6 +5,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreEgiResource;
@@ -20,14 +21,16 @@ import ua.com.fielden.platform.web.resources.webui.CentreEgiResource;
 public class CentreEgiResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final RestServerUtil restUtil;
+    private final IUserProvider userProvider;
 
     /**
      * Creates the {@link CentreEgiResourceFactory} instance.
      *
      */
-    public CentreEgiResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+    public CentreEgiResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil, final IUserProvider userProvider) {
         this.sourceController = sourceController;
         this.restUtil = restUtil;
+        this.userProvider = userProvider;
     }
 
     /**
@@ -41,6 +44,7 @@ public class CentreEgiResourceFactory extends Restlet {
             new CentreEgiResource(
                     sourceController,
                     restUtil,
+                    userProvider,
                     getContext(),
                     request,
                     response //

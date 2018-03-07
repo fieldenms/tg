@@ -8,6 +8,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
@@ -20,15 +21,17 @@ import ua.com.fielden.platform.web.resources.webui.FileResource;
 public class FileResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final List<String> resourcePaths;
-    
+    private final IUserProvider userProvider;
+
     /**
      * Creates new {@link FileResourceFactory} instance with specified paths of file resources.
      *
      * @param resourcePaths
      */
-    public FileResourceFactory(final ISourceController sourceController, final List<String> resourcePaths) {
+    public FileResourceFactory(final ISourceController sourceController, final List<String> resourcePaths, final IUserProvider userProvider) {
         this.sourceController = sourceController;
         this.resourcePaths = resourcePaths;
+        this.userProvider = userProvider;
     }
     
     /**
@@ -39,7 +42,7 @@ public class FileResourceFactory extends Restlet {
         super.handle(request, response);
         
         if (Method.GET.equals(request.getMethod())) {
-            new FileResource(sourceController, Collections.unmodifiableList(resourcePaths), getContext(), request, response).handle();
+            new FileResource(sourceController, Collections.unmodifiableList(resourcePaths), userProvider, getContext(), request, response).handle();
         }
     }
     

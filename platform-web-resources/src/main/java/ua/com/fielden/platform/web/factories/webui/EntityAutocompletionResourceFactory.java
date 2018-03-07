@@ -109,6 +109,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         valueMatcher,
                         coFinder,
                         restUtil,
+                        userProvider,
                         getContext(),
                         request,
                         response //

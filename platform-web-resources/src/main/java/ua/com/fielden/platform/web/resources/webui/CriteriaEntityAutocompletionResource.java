@@ -73,7 +73,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
 
         this.miType = miType;
         this.criterionPropertyName = criterionPropertyName;

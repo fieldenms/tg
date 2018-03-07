@@ -5,6 +5,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CustomViewResource;
@@ -20,14 +21,16 @@ import ua.com.fielden.platform.web.resources.webui.CustomViewResource;
 public class CustomViewResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final RestServerUtil restUtil;
+    private final IUserProvider userProvider;
 
     /**
      * Creates the {@link CustomViewResourceFactory} instance.
      *
      */
-    public CustomViewResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+    public CustomViewResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil, final IUserProvider userProvider) {
         this.sourceController = sourceController;
         this.restUtil = restUtil;
+        this.userProvider = userProvider;
     }
 
     @Override
@@ -38,6 +41,7 @@ public class CustomViewResourceFactory extends Restlet {
             new CustomViewResource(
                     sourceController,
                     restUtil,
+                    userProvider,
                     getContext(),
                     request,
                     response //

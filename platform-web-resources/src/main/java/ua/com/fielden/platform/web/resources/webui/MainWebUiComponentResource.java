@@ -13,6 +13,7 @@ import org.restlet.resource.ResourceException;
 
 import com.google.common.base.Charsets;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 
 /**
@@ -33,8 +34,8 @@ public class MainWebUiComponentResource  extends DeviceProfileDifferentiatorReso
      * @param request
      * @param response
      */
-    public MainWebUiComponentResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
-        super(context, request, response);
+    public MainWebUiComponentResource(final ISourceController sourceController, final IUserProvider userProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, userProvider);
         this.sourceController = sourceController;
     }
     

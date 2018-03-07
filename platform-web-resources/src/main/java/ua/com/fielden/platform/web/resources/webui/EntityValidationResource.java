@@ -50,7 +50,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Devic
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
 
         this.entityType = entityType;
         this.entityFactory = entityFactory;

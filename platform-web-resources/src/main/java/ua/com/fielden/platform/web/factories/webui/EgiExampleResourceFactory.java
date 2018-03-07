@@ -6,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EgiExampleResource;
 
@@ -20,10 +21,12 @@ import com.google.inject.Injector;
 public class EgiExampleResourceFactory extends Restlet {
     private final EntityFactory factory;
     private final RestServerUtil restUtil;
+    private final IUserProvider userProvider;
 
     public EgiExampleResourceFactory(final Injector injector) {
         this.factory = injector.getInstance(EntityFactory.class);
         this.restUtil = injector.getInstance(RestServerUtil.class);
+        this.userProvider = injector.getInstance(IUserProvider.class);
     }
 
     @Override
@@ -31,7 +34,7 @@ public class EgiExampleResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final EgiExampleResource resource = new EgiExampleResource(factory, restUtil, getContext(), request, response);
+            final EgiExampleResource resource = new EgiExampleResource(factory, restUtil, userProvider, getContext(), request, response);
             resource.handle();
         }
     }

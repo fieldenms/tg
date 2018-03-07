@@ -14,6 +14,7 @@ import org.restlet.representation.Representation;
 
 import com.google.common.base.Charsets;
 
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -39,10 +40,11 @@ public class CentreComponentResource extends DeviceProfileDifferentiatorResource
     public CentreComponentResource(
             final ISourceController sourceController,//
             final RestServerUtil restUtil,
+            final IUserProvider userProvider,
             final Context context, //
             final Request request, //
             final Response response) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
         this.mitypeString = (String) request.getAttributes().get("mitype");
         this.sourceController = sourceController;
         this.restUtil = restUtil;

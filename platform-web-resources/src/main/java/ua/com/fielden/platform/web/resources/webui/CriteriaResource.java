@@ -102,7 +102,7 @@ public class CriteriaResource extends DeviceProfileDifferentiatorResource {
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
 
         this.restUtil = restUtil;
         this.companionFinder = companionFinder;

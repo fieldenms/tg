@@ -13,6 +13,7 @@ import org.restlet.resource.ResourceException;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -34,11 +35,12 @@ public class MasterTestsComponentResource extends DeviceProfileDifferentiatorRes
      */
     public MasterTestsComponentResource(
             final EntityMaster<? extends AbstractEntity<?>> master,
+            final IUserProvider userProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(context, request, response);
+        super(context, request, response, userProvider);
         this.master = master;
     }
 
