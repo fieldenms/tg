@@ -35,7 +35,7 @@ public class TgElementLoaderComponentResource extends DeviceProfileDifferentiato
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController.loadSource("/app/tg-element-loader.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-element-loader.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
     

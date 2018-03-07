@@ -224,9 +224,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
 
-        logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
+        logger.error(String.format("Clearing centres for user [%s] and device [%s]...", gdtm.getUserProvider().getUser(), device));
         CentreUpdater.clearAllCentres(gdtm, device);
-        logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
+        logger.error(String.format("Clearing centres for user [%s] and device [%s]...done", gdtm.getUserProvider().getUser(), device));
     }
     
     @Override

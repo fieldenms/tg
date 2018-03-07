@@ -41,7 +41,7 @@ public class MainWebUiComponentResource  extends DeviceProfileDifferentiatorReso
     
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController.loadSource("/app/tg-app.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-app.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
     

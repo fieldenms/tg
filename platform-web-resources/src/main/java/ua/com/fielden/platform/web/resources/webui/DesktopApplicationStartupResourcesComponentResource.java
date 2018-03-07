@@ -37,7 +37,7 @@ public class DesktopApplicationStartupResourcesComponentResource extends DeviceP
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController.loadSource("/app/desktop-application-startup-resources.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/desktop-application-startup-resources.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
     

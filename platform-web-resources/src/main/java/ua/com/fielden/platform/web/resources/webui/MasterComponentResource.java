@@ -55,7 +55,7 @@ public class MasterComponentResource extends DeviceProfileDifferentiatorResource
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString, deviceProfile());
+            final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString, device());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil);
     }

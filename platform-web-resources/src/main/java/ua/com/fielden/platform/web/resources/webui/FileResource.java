@@ -60,7 +60,7 @@ public class FileResource extends DeviceProfileDifferentiatorResource {
             return null;
         } else {
             if (MediaType.TEXT_HTML.equals(mediaType)) {
-                final String source = sourceController.loadSourceWithFilePath(filePath, deviceProfile());
+                final String source = sourceController.loadSourceWithFilePath(filePath, device());
                 if (source != null) {
                     return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), mediaType);
                 } else {

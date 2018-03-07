@@ -108,11 +108,11 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             if (CentreResourceUtils.isEmpty(modifHolder)) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType)), critGenerator, 0L, gdtm, calculateDeviceProfile(getRequest()));
+                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device(), miType)), critGenerator, 0L, gdtm, device());
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
             } else {
-                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, gdtm, calculateDeviceProfile(getRequest()));
+                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, gdtm, device());
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
@@ -144,7 +144,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                     criteriaEntity, 
                     contextConfig,
                     criterionPropertyName,
-                    calculateDeviceProfile(getRequest())
+                    device()
                     );
             if (context.isPresent()) {
                 logger.debug("context for prop [" + criterionPropertyName + "] = " + context);

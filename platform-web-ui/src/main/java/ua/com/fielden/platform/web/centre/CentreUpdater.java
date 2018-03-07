@@ -61,7 +61,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
-
+    
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
@@ -72,6 +72,13 @@ public class CentreUpdater {
     
     /**
      * Returns device-specific surrogate name for the centre based on original <code>surrogateName</code>.
+     * <p>
+     * Every centre, defined by miType and surrogateName, when accessed through {@link CentreUpdater} API could have two counterparts: DESKTOP and MOBILE.
+     * This is needed to differentiate between actual centres on different devices for the same user (for example, only a subset of columns could be visible in
+     * MOBILE app, but a full set in DESKTOP app).
+     * <p>
+     * This need has arisen mainly from embedded [into actions] centres, because copying of miTypes and those actions (and their full hierarchy with invocation points)
+     * seems heavily impractical.
      * 
      * @param surrogateName
      * @param device
@@ -82,9 +89,13 @@ public class CentreUpdater {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {
-            return surrogateName + MOBILE.name(); // TODO miType.mobileShouldDifferFromDesktop
+            // Please note that in case where the need arise to 'use the same configuration for both MOBILE and DESKTOP apps' 
+            // then it is quite trivial to support such functionality.
+            // In that case we can provide annotation for menu item types like @TheSameForMobileAndDesktop and check here whether this annotation is present.
+            // If yes then 'surrogateName' should be returned just like for DESKTOP device.
+            return surrogateName + "_" + MOBILE.name();
         } else {
-            throw new IllegalStateException("DeviceProfile is not legal"); // TODO exception type + message
+            throw new CentreUpdaterException(format("Device [%s] is unknown.", device));
         }
     }
     
@@ -99,7 +110,7 @@ public class CentreUpdater {
     private static String userSpecificName(final String surrogateName, final IGlobalDomainTreeManager gdtm) {
         return surrogateName + "_FOR_USER_" + gdtm.getUserProvider().getUser().getId();
     }
-
+    
     /**
      * Returns the current version of centre manager (it assumes that it should be initialised!).
      *

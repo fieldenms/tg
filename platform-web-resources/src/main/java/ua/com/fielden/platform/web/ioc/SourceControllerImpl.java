@@ -459,7 +459,13 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig, final DeviceProfile device) {
-        // TODO in future we need to load device-specific EntityCentre instance if such instance was registered
+        // At this stage (#231) we only support single EntityCentre instance for both MOBILE / DESKTOP applications.
+        // This means that starting the MOBILE or DESKTOP app for the first time will show us the same initial full-blown (aka-desktop)
+        // configuration; the user however could change the number of columns, resize their widths etc. for MOBILE and DESKTOP apps separately
+        // (see CentreUpdater.deviceSpecific method for more details).
+        
+        // In future potentially we would need to define distinct initial configurations for MOBILE and DESKTOP apps.
+        // Here we would need to take device specific instance.
         final EntityCentre<? extends AbstractEntity<?>> centre = ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig);
         if (centre == null) {
             throw new MissingCentreConfigurationException(format("The entity centre configuration for %s menu item is missing", mitypeString));

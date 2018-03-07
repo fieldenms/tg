@@ -53,7 +53,7 @@ public class CentreComponentResource extends DeviceProfileDifferentiatorResource
     @Override
     protected Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/centre_ui/" + this.mitypeString, deviceProfile());
+            final String source = sourceController.loadSource("/centre_ui/" + this.mitypeString, device());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil);
     }

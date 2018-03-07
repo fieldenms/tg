@@ -54,7 +54,7 @@ public class CustomViewResource extends DeviceProfileDifferentiatorResource {
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/custom_view/" + this.viewName, deviceProfile());
+            final String source = sourceController.loadSource("/custom_view/" + this.viewName, device());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil);
     }

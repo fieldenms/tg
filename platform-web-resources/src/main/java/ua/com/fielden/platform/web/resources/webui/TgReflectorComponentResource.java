@@ -37,7 +37,7 @@ public class TgReflectorComponentResource extends DeviceProfileDifferentiatorRes
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController.loadSource("/app/tg-reflector.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-reflector.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
     
