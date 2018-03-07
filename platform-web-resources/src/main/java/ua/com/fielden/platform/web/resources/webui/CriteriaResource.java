@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
-import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
@@ -31,8 +30,6 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
@@ -75,7 +72,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
  * @author TG Team
  *
  */
-public class CriteriaResource extends ServerResource {
+public class CriteriaResource extends DeviceProfileDifferentiatorResource {
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
     private final static String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
@@ -105,7 +102,7 @@ public class CriteriaResource extends ServerResource {
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response);
 
         this.restUtil = restUtil;
         this.companionFinder = companionFinder;

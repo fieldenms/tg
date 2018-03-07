@@ -13,13 +13,12 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.IReport;
+import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource;
 
 /**
  * Resource for handling report requests.
@@ -27,13 +26,13 @@ import ua.com.fielden.platform.file_reports.IReport;
  * @author TG Team
  * 
  */
-public class ReportResource extends ServerResource {
+public class ReportResource extends DeviceProfileDifferentiatorResource {
 
     private final RestServerUtil restUtil;
     private final IReport dao;
 
     public ReportResource(final IReport dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        init(context, request, response);
+        super(context, request, response);
         setNegotiated(true);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
         this.dao = dao;

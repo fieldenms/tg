@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreJSONResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.IdentityHashMap;
@@ -21,8 +20,6 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -56,12 +53,12 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <T>
  * @param <DAO>
  */
-public class SerialisationTestResource extends ServerResource {
+public class SerialisationTestResource extends DeviceProfileDifferentiatorResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
     public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
-        init(context, request, response);
+        super(context, request, response);
         this.restUtil = restUtil;
         this.entities.addAll(entities);
     }

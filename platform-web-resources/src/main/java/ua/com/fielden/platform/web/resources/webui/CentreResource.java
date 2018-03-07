@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
-import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
@@ -21,7 +20,6 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -49,7 +47,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends ServerResource {
+public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends DeviceProfileDifferentiatorResource {
     private final static Logger logger = Logger.getLogger(CentreResource.class);
 
     private final RestServerUtil restUtil;
@@ -74,7 +72,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response);
 
         this.restUtil = restUtil;
 

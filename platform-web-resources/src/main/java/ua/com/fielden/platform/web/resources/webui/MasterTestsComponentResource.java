@@ -10,8 +10,6 @@ import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
-
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,7 +21,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class MasterTestsComponentResource extends ServerResource {
+public class MasterTestsComponentResource extends DeviceProfileDifferentiatorResource {
     private final EntityMaster<? extends AbstractEntity<?>> master;
 
     /**
@@ -40,7 +38,7 @@ public class MasterTestsComponentResource extends ServerResource {
             final Request request,
             final Response response //
     ) {
-        init(context, request, response);
+        super(context, request, response);
         this.master = master;
     }
 

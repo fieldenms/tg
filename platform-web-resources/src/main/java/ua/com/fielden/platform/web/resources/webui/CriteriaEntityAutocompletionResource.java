@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
-import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
@@ -17,8 +16,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -47,7 +44,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends ServerResource {
+public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends DeviceProfileDifferentiatorResource {
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final String criterionPropertyName;
     private final RestServerUtil restUtil;
@@ -76,7 +73,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Context context, 
             final Request request, 
             final Response response) {
-        init(context, request, response);
+        super(context, request, response);
 
         this.miType = miType;
         this.criterionPropertyName = criterionPropertyName;

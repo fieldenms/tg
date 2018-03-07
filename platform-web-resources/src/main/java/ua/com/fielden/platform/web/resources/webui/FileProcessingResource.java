@@ -17,7 +17,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
-import org.restlet.resource.ServerResource;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -34,7 +33,7 @@ import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
  * @author TG Team
  * 
  */
-public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends ServerResource {
+public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends DeviceProfileDifferentiatorResource {
 
     private final IEntityDao<T> companion;
     private final EntityFactory factory;
@@ -59,7 +58,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final Context context, 
             final Request request, 
             final Response response) {
-        init(context, request, response);
+        super(context, request, response);
         this.router = router;
         this.companion = companion;
         this.factory = factory;

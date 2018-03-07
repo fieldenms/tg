@@ -14,8 +14,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
-
+import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.ServletUtils;
@@ -25,7 +24,7 @@ import ua.com.fielden.platform.web.utils.ServletUtils;
  *
  * @author TG Team
  */
-public class EventSourcingResource extends ServerResource {
+public class EventSourcingResource extends DeviceProfileDifferentiatorResource {
 
     private final Logger logger = Logger.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
@@ -36,7 +35,7 @@ public class EventSourcingResource extends ServerResource {
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response);
         this.eventSource = eventSource;
     }
 

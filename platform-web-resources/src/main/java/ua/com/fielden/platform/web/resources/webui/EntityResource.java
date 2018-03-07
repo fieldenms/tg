@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
@@ -27,8 +26,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-import org.restlet.resource.ServerResource;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -72,7 +69,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class EntityResource<T extends AbstractEntity<?>> extends ServerResource {
+public class EntityResource<T extends AbstractEntity<?>> extends DeviceProfileDifferentiatorResource {
     private final RestServerUtil restUtil;
     private final Long entityId;
     private final EntityIdKind entityIdKind;
@@ -117,7 +114,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response);
 
         this.companionFinder = companionFinder;
         this.critGenerator = critGenerator;
