@@ -152,13 +152,13 @@ public class VulcanizingUtility {
         LOGGER.info("\t------------------------------");
 
         LOGGER.info("\tVulcanizing mobile resources...");
-        downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController, LOGGER);
+        downloadSpecificGeneratedResourcesFor(webUiConfig, DeviceProfile.MOBILE, sourceController, LOGGER);
         vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), additionalPaths, LOGGER, dir);
         LOGGER.info("\tVulcanized mobile resources.");
         LOGGER.info("\t------------------------------");
 
         LOGGER.info("\tVulcanizing desktop resources...");
-        downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController, LOGGER);
+        downloadSpecificGeneratedResourcesFor(webUiConfig, DeviceProfile.DESKTOP, sourceController, LOGGER);
         vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), additionalPaths, LOGGER, dir);
         LOGGER.info("\tVulcanized desktop resources.");
         LOGGER.info("\t------------------------------");
@@ -185,18 +185,18 @@ public class VulcanizingUtility {
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName(), sourceController, null, logger);
         }
-        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
-            downloadSource("centre_ui", centreMiType.getName(), sourceController, null, logger);
-            // downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null, logger);
-        }
         for (final String viewName : webUiConfig.getCustomViews().keySet()) {
             downloadSource("custom_view", viewName, sourceController, null, logger);
         }
         logger.info("\tDownloaded common generated resources.");
     }
 
-    private static void downloadSpecificGeneratedResourcesFor(final DeviceProfile deviceProfile, final ISourceController sourceController, final Logger logger) {
+    private static void downloadSpecificGeneratedResourcesFor(final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile, final ISourceController sourceController, final Logger logger) {
         logger.info("\t\tDownloading " + deviceProfile + " generated resources...");
+        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
+            downloadSource("centre_ui", centreMiType.getName(), sourceController, deviceProfile, logger);
+            // downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, deviceProfile, logger);
+        }
         downloadSource("app", "tg-app-config.html", sourceController, deviceProfile, logger);
         downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
         downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
