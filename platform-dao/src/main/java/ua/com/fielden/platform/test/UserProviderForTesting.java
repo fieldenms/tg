@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.test;
 
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 /**
  * Provider for testing purposes.
@@ -36,5 +39,15 @@ public class UserProviderForTesting implements IUserProvider {
     public void setUser(final User user) {
         this.user = user;
     }
-
+    
+    @Override
+    public DeviceProfile getDeviceProfile() {
+        return DESKTOP;
+    }
+    
+    @Override
+    public void setDeviceProfile(final DeviceProfile deviceProfile) {
+        // mobile device specific testing is unsupported at this stage
+    }
+    
 }

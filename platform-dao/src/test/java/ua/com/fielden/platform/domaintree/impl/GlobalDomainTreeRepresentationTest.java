@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -72,14 +74,22 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
             public User getUser() {
                 return userDao.findByKeyAndFetch(fetchAll(User.class), userName);
             }
-
+            
             @Override
             public void setUsername(final String username, final IUser coUser) {
             }
-
+            
             @Override
-            public void setUser(User user) {
-                
+            public void setUser(final User user) {
+            }
+            
+            @Override
+            public DeviceProfile getDeviceProfile() {
+                return DESKTOP;
+            }
+            
+            @Override
+            public void setDeviceProfile(final DeviceProfile deviceProfile) {
             }
         };
         return baseUserProvider;
