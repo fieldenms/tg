@@ -217,7 +217,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
         logger.error("Clearing configurations...");
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
@@ -225,7 +225,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         logger.error("Clearing configurations...done");
 
         logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
-        CentreUpdater.clearAllCentres(gdtm);
+        CentreUpdater.clearAllCentres(gdtm, device);
         logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
     }
     

@@ -414,8 +414,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreSupplier(() -> CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType)));
         validationPrototype.setDefaultCentreSupplier(() -> CentreUpdater.getDefaultCentre(gdtm, miType));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
-            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME));
-            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType)));
+            CentreUpdater.commitCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType));
 
             centreConsumer.accept(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME));
             CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
@@ -740,7 +740,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
 
         // load / update fresh centre if it is not loaded yet / stale
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType));
         applyMetaValues(originalCdtmae, EntityResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm, device);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
@@ -751,7 +751,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
 
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+        CentreUpdater.commitCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device, miType));
         return appliedCriteriaEntity;
     }
 

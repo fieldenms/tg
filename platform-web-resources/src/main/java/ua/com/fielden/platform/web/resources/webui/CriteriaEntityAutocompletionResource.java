@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -109,7 +111,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             if (CentreResourceUtils.isEmpty(modifHolder)) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME), critGenerator, 0L, gdtm, calculateDeviceProfile(getRequest()));
+                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType)), critGenerator, 0L, gdtm, calculateDeviceProfile(getRequest()));
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
             } else {

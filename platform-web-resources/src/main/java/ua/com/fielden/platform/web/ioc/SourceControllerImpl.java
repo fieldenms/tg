@@ -312,7 +312,7 @@ public class SourceControllerImpl implements ISourceController {
 //        } else if (resourceURI.startsWith("/centre_ui/egi")) {
 //            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
-            return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
+            return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/custom_view")) {
             return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
@@ -458,12 +458,13 @@ public class SourceControllerImpl implements ISourceController {
         return master.render().toString();
     }
 
-    private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
+    private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig, final DeviceProfile device) {
+        // TODO in future we need to load device-specific EntityCentre instance if such instance was registered
         final EntityCentre<? extends AbstractEntity<?>> centre = ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig);
         if (centre == null) {
             throw new MissingCentreConfigurationException(format("The entity centre configuration for %s menu item is missing", mitypeString));
         }
-        return centre.build().render().toString();
+        return centre.buildFor(device).render().toString();
     }
 
     private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {

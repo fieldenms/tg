@@ -5,6 +5,8 @@ import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource.calculateDeviceProfile;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -124,7 +126,7 @@ public class CriteriaResource extends ServerResource {
         return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, calculateDeviceProfile(getRequest()), miType));
             // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria retrieval.");
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, calculateDeviceProfile(getRequest()));

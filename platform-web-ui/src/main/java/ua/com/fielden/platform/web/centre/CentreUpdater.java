@@ -718,13 +718,14 @@ public class CentreUpdater {
      *
      * @param gdtm
      */
-    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm) {
-        for (final Class<?> miType: gdtm.entityCentreMenuItemTypes()) {
+    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
+        for (final Class<?> miKlass: gdtm.entityCentreMenuItemTypes()) {
             final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miKlass;
             globalManager.overrideCentre(miType, null, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(FRESH_CENTRE_NAME, gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(FRESH_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device, miType), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
 
             globalManager.overrideCentre(miType, userSpecificName(PREVIOUSLY_RUN_CENTRE_NAME, gdtm), null);
             globalManager.overrideCentre(miType, userSpecificName(PREVIOUSLY_RUN_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
