@@ -82,10 +82,9 @@ public class CentreUpdater {
      * 
      * @param surrogateName
      * @param device
-     * @param miType
      * @return
      */
-    public static String deviceSpecific(final String surrogateName, final DeviceProfile device, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+    public static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {
@@ -736,14 +735,14 @@ public class CentreUpdater {
             final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miKlass;
             globalManager.overrideCentre(miType, null, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device, miType), gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device), gdtm) + DIFFERENCES_SUFFIX, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType), gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device), gdtm) + DIFFERENCES_SUFFIX, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device, miType), gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device, miType), gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device), gdtm) + DIFFERENCES_SUFFIX, null);
         }
     }
 }

@@ -89,7 +89,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, userProvider.getDeviceProfile(), miType));
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, userProvider.getDeviceProfile()));
                 decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
