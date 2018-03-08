@@ -409,7 +409,6 @@
                 },
                 
                 _resizeEventListener: function (event, details) {
-                    
                     if (document.activeElement
                         && (document.activeElement.nodeName.toLowerCase() === 'input'
                             || document.activeElement.nodeName.toLowerCase() === 'textarea')
@@ -419,25 +418,30 @@
                             node = node.parentNode;
                         }
                         if (node !== null && !this._isElementInViewport(node)) {
-                            this.async(function () {
-                                node.scrollIntoView();
-                            }, 300);
+                            node.scrollIntoView();
                         }
                     } 
-                    
-                    
                 },
                 
                 /**
                  * Check whether an element is visible in viewport. See https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport.
                  */
                 _isElementInViewport: function (el) {
-                    const rect = el.getBoundingClientRect();
+                    const rect     = el.getBoundingClientRect();
+                    const vWidth   = window.innerWidth || document.documentElement.clientWidth;
+                    const vHeight  = window.innerHeight || document.documentElement.clientHeight;
+                    const efp      = function (x, y) { return document.elementFromPoint(x, y) };
+                    
+                    // Return false if it's not in the viewport
+                    if (rect.right < 0 || rect.bottom < 0 || rect.left > vWidth || rect.top > vHeight) {
+                        return false;
+                    }
+                    // Return true if all its four corners are visible, aka the element from corner point is the child the 'el' or el itsels
                     return (
-                        rect.top >= 0 &&
-                        rect.left >= 0 &&
-                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /*or $(window).height() */
-                        rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
+                          el.contains(efp(rect.left + 1,  rect.top + 1)) // used slightly narrower rectangle due to [most likely] rounding issues of floating point pixels
+                      &&  el.contains(efp(rect.right - 1, rect.top + 1))
+                      &&  el.contains(efp(rect.right - 1, rect.bottom - 1))
+                      &&  el.contains(efp(rect.left + 1,  rect.bottom - 1))
                     );
                 }
             });
