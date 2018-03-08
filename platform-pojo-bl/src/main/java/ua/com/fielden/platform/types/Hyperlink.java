@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.types;
 
-import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.*;
 import static java.lang.String.format;
+import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
+import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.FTP;
+import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.FTPS;
+import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTP;
+import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
+import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.MAILTO;
 
 import java.util.Optional;
 
@@ -12,7 +17,7 @@ import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 /**
  * A type for representing hyper links.
- * 
+ *
  * @author TG Team
  *
  */
@@ -59,9 +64,10 @@ public class Hyperlink {
         // if the value is not associated with mailto protocol then use UrlValidator
         // otherwise, the value can be considered valid as there is no any reasonable and stronger validation process for mailto values.
         if (!SupportedProtocols.identify(value).map(v -> v == MAILTO).orElse(false)) {
-            final UrlValidator validator = new UrlValidator(new String[] { 
+            final UrlValidator validator = new UrlValidator(new String[] {
                     HTTP.name(), HTTPS.name(), FTP.name(), FTPS.name(),
-                    HTTP.name().toLowerCase(), HTTPS.name().toLowerCase(), FTP.name().toLowerCase(), FTPS.name().toLowerCase() });
+                    HTTP.name().toLowerCase(), HTTPS.name().toLowerCase(), FTP.name().toLowerCase(), FTPS.name().toLowerCase() },
+                    ALLOW_LOCAL_URLS);
 
             if (!validator.isValid(value)) {
                 throw new ValueObjectException(format("Value [%s] is not a valid hyperlink.", value));
