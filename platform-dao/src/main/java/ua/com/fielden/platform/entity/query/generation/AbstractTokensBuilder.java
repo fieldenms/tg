@@ -109,6 +109,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case IF_NULL:
             setChild(new IfNullBuilder(this, queryBuilder, getParamValues()));
             break;
+        case ADD_DATE_INTERVAL:
+            setChild(new AddDateIntervalBuilder(this, queryBuilder, getParamValues()));
+            break;
         case COUNT_DATE_INTERVAL:
             setChild(new CountDateIntervalBuilder(this, queryBuilder, getParamValues()));
             break;

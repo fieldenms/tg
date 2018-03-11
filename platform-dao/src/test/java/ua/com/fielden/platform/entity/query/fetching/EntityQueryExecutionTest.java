@@ -138,7 +138,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_ordering_by_yielded_prop() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
+    	final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
         yield().prop("model.make.key").as("makeKey"). //
         yield().countAll().as("count"). //
         modelAsAggregate();
@@ -195,6 +195,42 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
+
+    @Test
+    public void add_seconds_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addIntervalOf().val(10).seconds().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-01 00:00:10"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+
+    @Test
+    public void add_minutes_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addIntervalOf().val(10).minutes().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-01 00:10:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void add_hours_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addIntervalOf().val(10).hours().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-01 10:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+
+    @Test
+    public void add_days_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addIntervalOf().val(10).days().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-11 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void add_months_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addIntervalOf().val(10).months().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-11-01 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void add_years_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addIntervalOf().val(10).years().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2017-01-01 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
 
     @Test
     public void count_seconds_function_works_correctly_against_h2_database() {

@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionTo;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffIntervalFunction;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
@@ -79,6 +81,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	@Override
 	public T expr(final ExpressionModel expr) {
 		return nextForSingleOperand(getTokens().expr(expr));
+	}
+
+	@Override
+	public IDateAddIntervalFunctionArgument<T, ET> addIntervalOf() {
+		return createDateAddIntervalFunctionArgument(getTokens().addDateInterval());
 	}
 
 	@Override
@@ -161,6 +168,17 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		return createFunctionLastArgument(getTokens().absOf());
 	}
 	
+	private IDateAddIntervalFunctionArgument<T, ET> createDateAddIntervalFunctionArgument(final Tokens tokens) {
+		return new DateAddIntervalFunctionArgument<T, ET>(tokens) {
+
+			@Override
+			protected T nextForDateAddIntervalFunctionArgument(Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
+			}
+
+		};
+	}
+
 	private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction(final Tokens tokens) {
 		return new DateDiffIntervalFunction<T, ET>(tokens) {
 
