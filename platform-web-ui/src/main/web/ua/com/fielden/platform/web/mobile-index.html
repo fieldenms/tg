@@ -30,16 +30,12 @@
         body {
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 10pt;
-            /* The following makes app content not scrollable, which have been manifested on Android Chrome devices as a white space at the bottom with the height of address bar. */
-            /* One drawback of such is an inability to reload application by dragging it down; another problem is that address bar can not be hidden when dragging application up. */
-            /* See more at https://stackoverflow.com/questions/28411499/html-css-disable-scrolling-on-body */
-            overflow: hidden;
         }
     </style>
 
 </head>
 
-<body unresolved class="fullbleed">
+<body unresolved class="fullbleed relative">
     <template is="dom-bind" id="app">
         <tg-app-template class="fit"></tg-app-template>
     </template>
