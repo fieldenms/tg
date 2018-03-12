@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -183,7 +184,11 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     T getEntity(final QueryExecutionModel<T, ?> model);
 
     default Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
-        return Optional.ofNullable(getEntity(model));
+        try {
+            return Optional.ofNullable(getEntity(model));
+        } catch (final UnexpectedNumberOfReturnedEntities ex) {
+            return Optional.empty();
+        }
     }
     
     /**

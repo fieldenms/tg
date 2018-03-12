@@ -29,7 +29,7 @@ public interface ICompanionObjectFinder {
     /**
      * Returns a new instance of a fully fledged companion object as defined for the provided entity type.
      * <p>
-     * Should not, buy may return <code>null</code>.
+     * Should not, but may return <code>null</code>.
      * 
      * @param type An entity type whose companion object is requested.
      * @return
