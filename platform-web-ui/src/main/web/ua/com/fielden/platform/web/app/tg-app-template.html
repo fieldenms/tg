@@ -418,7 +418,7 @@
                             node = node.parentNode;
                         }
                         if (node !== null && !this._isElementInViewport(node)) {
-                            node.scrollIntoView();
+                            node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
                         }
                     } 
                 },
