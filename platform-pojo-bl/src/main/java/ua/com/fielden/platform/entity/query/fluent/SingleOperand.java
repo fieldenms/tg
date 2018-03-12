@@ -84,7 +84,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public IDateAddIntervalFunctionArgument<T, ET> addIntervalOf() {
+	public IDateAddIntervalFunctionArgument<T, ET> addTimeIntervalOf() {
 		return createDateAddIntervalFunctionArgument(getTokens().addDateInterval());
 	}
 
