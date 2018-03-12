@@ -138,10 +138,10 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_ordering_by_yielded_prop() {
-    	final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
-        yield().prop("model.make.key").as("makeKey"). //
-        yield().countAll().as("count"). //
-        modelAsAggregate();
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
+                yield().prop("model.make.key").as("makeKey"). //
+                yield().countAll().as("count"). //
+                modelAsAggregate();
 
         final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).with(orderBy().yield("count").desc().model()).model());
     }

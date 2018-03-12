@@ -21,7 +21,7 @@ public class AddDateInterval extends TwoOperandsFunction {
         case H2:
             return format("DATEADD('%s', %s, %s)",  intervalUnit, getOperand1().sql(), getOperand2().sql());
         case MSSQL:
-        	return format("DATEADD(%s, %s, %s)",  intervalUnit, getOperand1().sql(), getOperand2().sql());
+            return format("DATEADD(%s, %s, %s)",  intervalUnit, getOperand1().sql(), getOperand2().sql());
         default:
             throw new EqlException(format("Function [%s] is not yet implemented for RDBMS [%s]!", getClass().getSimpleName(), getDbVersion()));
         }
