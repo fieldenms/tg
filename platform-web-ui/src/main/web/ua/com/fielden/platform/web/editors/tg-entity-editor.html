@@ -60,7 +60,7 @@
 
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
-            <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-down="_onDown" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]" />
+            <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]" />
             <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>

@@ -28,7 +28,7 @@
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]">
-    		<input id="input" class="custom-input hyperlink-input" is="iron-input" bind-value="{{_editingValue}}" on-change="_onChange"	on-input="_onInput"	on-down="_onDown" on-keydown="_onKeydown"	disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]"/>
+    		<input id="input" class="custom-input hyperlink-input" is="iron-input" bind-value="{{_editingValue}}" on-change="_onChange"	on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-keydown="_onKeydown"	disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]"/>
     		<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>
         	<content class=".property-action"></content>
     	</tg-editor>

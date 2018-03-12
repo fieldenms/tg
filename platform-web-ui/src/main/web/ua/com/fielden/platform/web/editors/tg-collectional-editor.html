@@ -141,7 +141,7 @@
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
-            <input id="searchInput" is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-down="_onDown" on-blur="_eventHandler" prevent-invalid-input>
+            <input id="searchInput" is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
@@ -253,9 +253,9 @@
             },
             
             /**
-             * The mouse down event listener that selectes the text inside input when first time clicked.
+             * The mouse tap event listener that selectes the text inside input when first time tapped.
              */
-            _onDown: {
+            _onTap: {
                 type: Function,
                 value: function () {
                     return (function (event) {
