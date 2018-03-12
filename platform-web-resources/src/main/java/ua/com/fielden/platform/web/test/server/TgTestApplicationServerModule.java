@@ -104,7 +104,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
 
         // dynamically bind DAO implementations for all companion objects
         for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
-            CompanionObjectAutobinder.bindDao(entityType, binder());
+            CompanionObjectAutobinder.bindCo(entityType, binder());
         }
 
         // the following bindings are well suited for a test server
