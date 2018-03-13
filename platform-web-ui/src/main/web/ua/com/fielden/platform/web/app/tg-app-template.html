@@ -187,26 +187,74 @@
                     if (this.currentHistoryState && currentOverlay) {
                         // disableNextHistoryChange flag is needed to avoid history movements cycling
                         if (!this.disableNextHistoryChange) {
-                            if (!window.history.state || window.history.state.currIndex < this.currentHistoryState) { // moving back
-                                window.history.forward(); // to remain history not changed
-                                if (currentOverlay.closeDialog) {
-                                    currentOverlay.closeDialog();
-                                } else {
-                                    currentOverlay.close();
+                            const historySteps = this.currentHistoryState - (window.history.state ? window.history.state.currIndex : 1);
+                            if (!window.history.state || historySteps > 0) { // moving back
+                                if (historySteps > 1) { // 'multiple back' action
+                                    if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
+                                        window.history.go(historySteps);
+                                    } else { // otherwise the history changes already occured and just change the page
+                                        this._changePage();
+                                    }
+                                } else { // 'single back' action
+                                    window.history.forward(); // to remain history not changed
+                                    this._closeDialog(currentOverlay);
                                 }
-                            } else { // moving forward
-                                window.history.back(); // to remain history not changed
+                            } else { // moving forward ('multiple forward' action or 'forward' action)
+                                window.history.go(historySteps); // to remain history not changed
                             }
                         }
                         this.disableNextHistoryChange = !this.disableNextHistoryChange;
                     } else {
-                        this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                        this._changePage();
                         this.disableNextHistoryChange = false;
                     }
                     this.currentHistoryState = window.history.state && window.history.state.currIndex;
                 },
                 
-                _findFirstClosableDialog: function() {
+                /**
+                 * Actually changes the page; if the page is about to change to 'root' page (for e.g. https://tgdev.com:8091), then it moves forward to corresponding menu,
+                 * which should definitely exist (https://tgdev.com:8091/#/menu).
+                 */
+                _changePage: function () {
+                    if (this._route.path) {
+                        this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                    } else {
+                        window.history.forward();
+                    }
+                },
+                
+                /**
+                 * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
+                 *
+                 * This method skips all iron-overlay-behavior elements that contain property 'skipHistoryAction'.
+                 */
+                _closeAllDialogs: function () {
+                    const overlays = this._manager._overlays;
+                    for (let i = overlays.length - 1; i >= 0; i--) {
+                        if (!overlays[i].skipHistoryAction) {
+                            this._closeDialog(overlays[i]);
+                        }
+                    }
+                    for (let i = overlays.length - 1; i >= 0; i--) {
+                        if (!overlays[i].skipHistoryAction) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                
+                /**
+                 * Performs dialog closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+                 */
+                _closeDialog: function (dialog) {
+                    if (dialog.closeDialog) {
+                        dialog.closeDialog();
+                    } else {
+                        dialog.close();
+                    }
+                },
+                
+                _findFirstClosableDialog: function () {
                     const overlays = this._manager._overlays;
                     for (let i = overlays.length - 1; i >= 0; i--) {
                         if (!overlays[i].skipHistoryAction) {
@@ -460,7 +508,7 @@
                       url += '#' + this.$.location.__hash;
                     }
                     return url;
-                  },
+                },
                 
                 _resizeEventListener: function (event, details) {
                     if (document.activeElement
