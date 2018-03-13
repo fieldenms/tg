@@ -150,6 +150,18 @@
                     mobile: {
                         type: Boolean,
                         value: @isMobileDevice
+                    },
+                    
+                    /**
+                     * The current number of active history entry.
+                     * 
+                     * For the very first history entry this number will be 'null' due to window.history.state === null in that case.
+                     * For all othe cases we have actual number, aka 2, 3, and so on.
+                     * 
+                     * Please, not that history also always contains 'zero' entry which represents 'New Tab'.
+                     */
+                    currentHistoryState: {
+                        type: Number
                     }
                 },
 
@@ -184,7 +196,7 @@
                 _routeChanged: function (newValue, oldValue) {
                     // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
                     const currentOverlay = this._findFirstClosableDialog();
-                    if (this.currentHistoryState && currentOverlay) {
+                    if (this.currentHistoryState && currentOverlay) { // if there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
                         // disableNextHistoryChange flag is needed to avoid history movements cycling
                         if (!this.disableNextHistoryChange) {
                             const historySteps = this.currentHistoryState - (window.history.state ? window.history.state.currIndex : 1);
@@ -491,10 +503,15 @@
                     window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
                 },
                 
+                /**
+                 * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
+                 */
                 _replaceStateWithNumber: function () {
-                    const fullNewUrl = new URL(
-                            this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    // the URI for history state rewrite
+                    const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    // rewrite history state by providing concrete number of last history state
                     window.history.replaceState({currIndex: window.history.length - 1}, '', fullNewUrl);
+                    // currentHistoryState will be updated accordingly
                     this.currentHistoryState = window.history.length - 1;
                 },
                 
