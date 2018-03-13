@@ -155,8 +155,9 @@
                     /**
                      * The current number of active history entry.
                      * 
-                     * For the very first history entry this number will be 'null' due to window.history.state === null in that case.
-                     * For all othe cases we have actual number, aka 2, 3, and so on.
+                     * For the very first history entry this number will be '1' due to rewriting in attached callback (if application loads from root page).
+                     * For the very first history entry this number will be 'undefined' (if application loads from some specific URI, e.g. http://tgdev.com:8091/#/Work%20Activities/Work%20Activity).
+                     * For all other cases we have actual number, aka 2, 3, and so on.
                      * 
                      * Please, not that history also always contains 'zero' entry which represents 'New Tab'.
                      */
@@ -195,32 +196,47 @@
                 
                 _routeChanged: function (newValue, oldValue) {
                     // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
-                    const currentOverlay = this._findFirstClosableDialog();
-                    if (this.currentHistoryState && currentOverlay) { // if there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
-                        // disableNextHistoryChange flag is needed to avoid history movements cycling
-                        if (!this.disableNextHistoryChange) {
-                            const historySteps = this.currentHistoryState - (window.history.state ? window.history.state.currIndex : 1);
-                            if (!window.history.state || historySteps > 0) { // moving back
-                                if (historySteps > 1) { // 'multiple back' action
-                                    if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
-                                        window.history.go(historySteps);
-                                    } else { // otherwise the history changes already occured and just change the page
-                                        this._changePage();
-                                    }
-                                } else { // 'single back' action
-                                    window.history.forward(); // to remain history not changed
-                                    this._closeDialog(currentOverlay);
-                                }
-                            } else { // moving forward ('multiple forward' action or 'forward' action)
-                                window.history.go(historySteps); // to remain history not changed
-                            }
-                        }
-                        this.disableNextHistoryChange = !this.disableNextHistoryChange;
+                    if (!this.currentHistoryState) {
+                        this._loadApplicationInfrastructureIntoHistory();
                     } else {
-                        this._changePage();
-                        this.disableNextHistoryChange = false;
+                        const currentOverlay = this._findFirstClosableDialog();
+                        if (currentOverlay) { // if there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+                            // disableNextHistoryChange flag is needed to avoid history movements cycling
+                            if (!this.disableNextHistoryChange) {
+                                const historySteps = this.currentHistoryState - window.history.state.currIndex;
+                                if (!window.history.state || historySteps > 0) { // moving back
+                                    if (historySteps > 1) { // 'multiple back' action
+                                        if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
+                                            window.history.go(historySteps);
+                                        } else { // otherwise the history changes already occured and just change the page
+                                            this._changePage();
+                                        }
+                                    } else { // 'single back' action
+                                        window.history.forward(); // to remain history not changed
+                                        this._closeDialog(currentOverlay);
+                                    }
+                                } else { // moving forward ('multiple forward' action or 'forward' action)
+                                    window.history.go(historySteps); // to remain history not changed
+                                }
+                            }
+                            this.disableNextHistoryChange = !this.disableNextHistoryChange;
+                        } else {
+                            this._changePage();
+                            this.disableNextHistoryChange = false;
+                        }
+                        this.currentHistoryState = window.history.state && window.history.state.currIndex;
                     }
-                    this.currentHistoryState = window.history.state && window.history.state.currIndex;
+                },
+                
+                _loadApplicationInfrastructureIntoHistory: function () {
+                    const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
+                    const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
+                    const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    window.history.replaceState({currIndex: window.history.length - 1}, '', urlForRoot);
+                    window.history.pushState({currIndex: window.history.length}, '', urlForMenu);
+                    window.history.pushState({currIndex: window.history.length}, '', urlToOpen);
+                    this.currentHistoryState = window.history.length - 1;
+                    this._routeChanged();
                 },
                 
                 /**
@@ -480,6 +496,7 @@
                             //actionsObject
                         ];
                         if (!this._route.path) {
+                            this._replaceStateWithNumber();
                             this.set("_route.path", "/menu");
                         }
                         
