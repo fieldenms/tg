@@ -180,14 +180,28 @@
                 _restoreLastFocusedElement: function (event) {
                     this.restoreActiveElement();
                 },
-
+                
                 _routeChanged: function (newValue, oldValue) {
-                    if (window.history.state && this.currentHistoryState && window.history.state.currIndex < this.currentHistoryState && this._manager.currentOverlay()) {
-                        window.history.forward();
-                        alert("close dialog first");
-                        console.log(window.history.state);
+                    // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
+                    if (window.history.state && this.currentHistoryState && this._manager.currentOverlay()) {
+                        // disableNextHistoryChange flag is needed to avoid history movements cycling
+                        if (!this.disableNextHistoryChange) {
+                            const currentOverlay = this._manager.currentOverlay();
+                            if (window.history.state.currIndex < this.currentHistoryState) { // moving back
+                                window.history.forward(); // to remain history not changed
+                                if (currentOverlay.closeDialog) {
+                                    currentOverlay.closeDialog();
+                                } else {
+                                    currentOverlay.close();
+                                }
+                            } else { // moving forward
+                                window.history.back(); // to remain history not changed
+                            }
+                        }
+                        this.disableNextHistoryChange = !this.disableNextHistoryChange;
                     } else {
                         this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                        this.disableNextHistoryChange = false;
                     }
                     this.currentHistoryState = window.history.state && window.history.state.currIndex;
                 },
