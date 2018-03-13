@@ -154,6 +154,11 @@
           computed: '_shouldSkipProgress(_showProgress, _hasMore)'
         }
       },
+      
+      ready: function () {
+          //Indicates whether toast overlay can be closed via history (back button or not)
+          this.$.toast.skipHistoryAction = true;
+      },
 
       _showMessageDlg: function(event) {
         const self = this;

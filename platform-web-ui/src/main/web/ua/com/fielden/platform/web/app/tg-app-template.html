@@ -183,10 +183,10 @@
                 
                 _routeChanged: function (newValue, oldValue) {
                     // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
-                    if (this.currentHistoryState && this._manager.currentOverlay()) {
+                    const currentOverlay = this._findFirstClosableDialog();
+                    if (this.currentHistoryState && currentOverlay) {
                         // disableNextHistoryChange flag is needed to avoid history movements cycling
                         if (!this.disableNextHistoryChange) {
-                            const currentOverlay = this._manager.currentOverlay();
                             if (!window.history.state || window.history.state.currIndex < this.currentHistoryState) { // moving back
                                 window.history.forward(); // to remain history not changed
                                 if (currentOverlay.closeDialog) {
@@ -204,6 +204,15 @@
                         this.disableNextHistoryChange = false;
                     }
                     this.currentHistoryState = window.history.state && window.history.state.currIndex;
+                },
+                
+                _findFirstClosableDialog: function() {
+                    const overlays = this._manager._overlays;
+                    for (let i = overlays.length - 1; i >= 0; i--) {
+                        if (!overlays[i].skipHistoryAction) {
+                            return overlays[i];
+                        }
+                    }
                 },
                 
                 _selectedSubmoduleChanged: function (newValue, oldValue) {
