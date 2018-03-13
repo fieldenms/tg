@@ -805,6 +805,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore("Support for yielding values as ordinary properties for non-synthetic entities is no longer available.")
     public void test_retrieval_of_non_persisted_entity_prop_from_model() {
         final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
         where().prop("key").eq().val("MERC"). //
