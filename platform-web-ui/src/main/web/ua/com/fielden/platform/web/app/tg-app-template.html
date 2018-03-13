@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
@@ -116,7 +117,10 @@
                     },
                     
                     entityType: String,
-                    
+                    _manager: {
+                        type: Object,
+                        value: Polymer.IronOverlayManager
+                    },
                     _route: {
                         type: Object,
                         observer: "_routeChanged"
@@ -178,7 +182,14 @@
                 },
 
                 _routeChanged: function (newValue, oldValue) {
-                    this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                    if (window.history.state && this.currentHistoryState && window.history.state.currIndex < this.currentHistoryState && this._manager.currentOverlay()) {
+                        window.history.forward();
+                        alert("close dialog first");
+                        console.log(window.history.state);
+                    } else {
+                        this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                    }
+                    this.currentHistoryState = window.history.state && window.history.state.currIndex;
                 },
                 
                 _selectedSubmoduleChanged: function (newValue, oldValue) {
@@ -376,6 +387,7 @@
                     }.bind(this);
                     
                     this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+                    window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
                 },
                 
                 attached: function () {
@@ -407,6 +419,25 @@
                 detached: function () {
                     window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
                 },
+                
+                _replaceStateWithNumber: function () {
+                    const fullNewUrl = new URL(
+                            this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    window.history.replaceState({currIndex: window.history.length - 1}, '', fullNewUrl);
+                    this.currentHistoryState = window.history.length - 1;
+                },
+                
+                _getUrl: function() {
+                    let url = this.$.location.__path;
+                    const query = this.$.location.__query;
+                    if (query) {
+                      url += '?' + query;
+                    }
+                    if (this.$.location.__hash) {
+                      url += '#' + this.$.location.__hash;
+                    }
+                    return url;
+                  },
                 
                 _resizeEventListener: function (event, details) {
                     if (document.activeElement
