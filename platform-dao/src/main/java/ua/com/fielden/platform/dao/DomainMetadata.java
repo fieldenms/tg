@@ -386,7 +386,6 @@ public class DomainMetadata {
         safeMapAdd(result, generateVersionPropertyMetadata(entityType, entityCategory));
         safeMapAdd(result, generateKeyPropertyMetadata(entityType, entityCategory));
 
-        final boolean isSyntheticEntity = isSyntheticEntityType(entityType);
         for (final Field field : getRealProperties(entityType)) {
             if (!result.containsKey(field.getName())) {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(entityType, field.getName())) {
@@ -397,7 +396,7 @@ public class DomainMetadata {
                     safeMapAdd(result, getCommonPropHibInfo(entityType, field));
                 } else if (isOne2One_association(entityType, field.getName())) {
                     safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-                } else if (isSyntheticEntity && !isAnnotationPresent(field, CritOnly.class)) {
+                } else if (!isAnnotationPresent(field, CritOnly.class)) {
                     safeMapAdd(result, getSyntheticPropInfo(entityType, field));
                 } else {
                     //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
