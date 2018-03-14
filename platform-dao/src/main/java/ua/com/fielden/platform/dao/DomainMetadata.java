@@ -37,6 +37,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -385,6 +386,7 @@ public class DomainMetadata {
         safeMapAdd(result, generateVersionPropertyMetadata(entityType, entityCategory));
         safeMapAdd(result, generateKeyPropertyMetadata(entityType, entityCategory));
 
+        final boolean isSyntheticEntity = isSyntheticEntityType(entityType);
         for (final Field field : getRealProperties(entityType)) {
             if (!result.containsKey(field.getName())) {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(entityType, field.getName())) {
@@ -395,7 +397,7 @@ public class DomainMetadata {
                     safeMapAdd(result, getCommonPropHibInfo(entityType, field));
                 } else if (isOne2One_association(entityType, field.getName())) {
                     safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-                } else if (!isAnnotationPresent(field, CritOnly.class)) {
+                } else if (isSyntheticEntity && !isAnnotationPresent(field, CritOnly.class)) {
                     safeMapAdd(result, getSyntheticPropInfo(entityType, field));
                 } else {
                     //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());

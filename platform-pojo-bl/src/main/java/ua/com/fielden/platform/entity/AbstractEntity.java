@@ -1339,15 +1339,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public final boolean isDirty() {
         return !isPersisted() ||
-                nonProxiedProperties().filter(mp -> mp.isDirty()).findFirst().isPresent() ;
+                nonProxiedProperties().anyMatch(MetaProperty::isDirty);
     }
 
     public final AbstractEntity<K> setDirty(final boolean dirty) {
         // reset dirty state for properties in case where entity becomes not dirty
         if (!dirty) {
-            for (final MetaProperty<?> prop : getDirtyProperties()) {
-                prop.setDirty(false);
-            }
+            getDirtyProperties().forEach(prop -> prop.setDirty(false));
         }
         return this;
     }
@@ -1367,16 +1365,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     public final List<MetaProperty<?>> getDirtyProperties() {
-        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(Collectors.toList());
+        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(toList());
     }
 
     public AbstractEntity<?> resetMetaState() {
-        nonProxiedProperties().forEach(mp -> mp.resetState());
+        nonProxiedProperties().forEach(MetaProperty::resetState);
         return this;
     }
 
     public AbstractEntity<?> resetMetaValue() {
-        nonProxiedProperties().forEach(mp -> mp.resetValues());
+        nonProxiedProperties().forEach(MetaProperty::resetValues);
         return this;
     }
 

@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -86,7 +87,7 @@ public class EntityAggregatesDao implements IEntityAggregatesOperations {
     }
 
     @Override
-    public Integer progress() {
+    public Optional<Integer> progress() {
         return coFinder.find(EntityAggregates.class, true).progress();
     }
 

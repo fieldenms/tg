@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent.enums;
 
 public enum Functions {
+    ADD_DATE_INTERVAL,
     COUNT_DATE_INTERVAL,
     CONCAT,
     CASE_WHEN,

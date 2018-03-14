@@ -3,6 +3,7 @@ package ua.com.fielden.platform.sample.domain.crit_gen;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -142,8 +143,8 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public Integer progress() {
-        return null;
+    public Optional<Integer> progress() {
+        return Optional.empty();
     }
 
     @Override
