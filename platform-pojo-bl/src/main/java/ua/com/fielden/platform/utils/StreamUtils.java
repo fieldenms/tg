@@ -42,6 +42,21 @@ public class StreamUtils {
     }
     
     /**
+     * Prepends a non-null {@code first} to stream {@code rest}, returning a new stream.
+     * 
+     * @param first
+     * @param rest
+     * @return
+     */
+    public static <T> Stream<T> prepend(final T first, final Stream<T> rest) {
+        if (first == null) {
+            throw new NullPointerException(ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL);
+        }
+        final Stream<T> xs = Stream.of(first);
+        return Stream.concat(xs, rest);
+    }
+    
+    /**
      * Splits a stream into a <code>head</code> and <code>tail</code>. The head is optional as the passed in stream could be empty. The tail is a stream, which could be empty if
      * the input stream is empty or contains only a single element.
      * 

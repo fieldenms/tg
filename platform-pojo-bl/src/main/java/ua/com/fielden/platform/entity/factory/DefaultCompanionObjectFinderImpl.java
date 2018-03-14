@@ -24,8 +24,12 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
 
     private static final Logger LOGGER = Logger.getLogger(DefaultCompanionObjectFinderImpl.class);
     
+    private final Injector injector;
+    
     @Inject
-    private Injector injector;
+    public DefaultCompanionObjectFinderImpl(final Injector injector) {
+        this.injector = injector;
+    }
 
     @Override
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type) {
@@ -75,12 +79,4 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
         
         return co;
     }
-
-    public Injector getInjector() {
-        return injector;
-    }
-
-    public void setInjector(final Injector injector) {
-        this.injector = injector;
-    }
-}
+ }

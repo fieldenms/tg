@@ -410,14 +410,14 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
     private Pair<Object, Object> determineNewAndOldValues(final AbstractEntity<?> entity, final String propertyName, final Object newValue, final Method mutator) throws Exception {
         // setter?
         if (Mutator.SETTER == Mutator.getValueByMethod(mutator)) { // this covers both simple and collectional properties
-            return new Pair<Object, Object>(newValue, entity.get(propertyName));
+            return new Pair<>(newValue, entity.get(propertyName));
         }
         // incrementor?
         if (Mutator.INCREMENTOR == Mutator.getValueByMethod(mutator)) {
-            return new Pair<Object, Object>(newValue, null);
+            return new Pair<>(newValue, null);
         }
         // decrementor
-        return new Pair<Object, Object>(newValue, null);
+        return new Pair<>(newValue, null);
     }
 
 }
