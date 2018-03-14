@@ -229,14 +229,16 @@
                 },
                 
                 _loadApplicationInfrastructureIntoHistory: function () {
-                    const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
-                    const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
-                    const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-                    window.history.replaceState({currIndex: window.history.length - 1}, '', urlForRoot);
-                    window.history.pushState({currIndex: window.history.length}, '', urlForMenu);
-                    window.history.pushState({currIndex: window.history.length}, '', urlToOpen);
-                    this.currentHistoryState = window.history.length - 1;
-                    this._routeChanged();
+                    if (this._route.path) {
+                        const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
+                        const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
+                        const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                        window.history.replaceState({currIndex: window.history.length - 1}, '', urlForRoot);
+                        window.history.pushState({currIndex: window.history.length}, '', urlForMenu);
+                        window.history.pushState({currIndex: window.history.length}, '', urlToOpen);
+                        this.currentHistoryState = window.history.length - 1;
+                        this._routeChanged();
+                    }
                 },
                 
                 /**
