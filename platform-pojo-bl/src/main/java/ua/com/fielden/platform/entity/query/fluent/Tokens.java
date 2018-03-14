@@ -24,6 +24,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CASE_W
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CONCAT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_ALL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ADD_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_DISTINCT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.DATE;
@@ -396,6 +397,10 @@ final class Tokens {
 
     public Tokens setOfExpressions(final ExpressionModel... expressions) {
         return add(SET_OF_EXPR_TOKENS, getListFromArray(expressions));
+    }
+
+    public Tokens addDateInterval() {
+        return add(FUNCTION, ADD_DATE_INTERVAL);
     }
 
     public Tokens countDateIntervalFunction() {

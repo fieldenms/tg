@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,7 +44,6 @@ import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -205,8 +203,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
      */
     @Override
-    public Integer progress() {
-        return null;
+    public Optional<Integer> progress() {
+        return Optional.empty();
     }
 
     @Override

@@ -27,17 +27,17 @@ public final class CollectionUtil {
 
     @SafeVarargs
     public static <T> Set<T> setOf(final T ... elements) {
-        return new HashSet<T>(Arrays.asList(elements));
+        return new HashSet<>(Arrays.asList(elements));
     }
     
     @SafeVarargs
     public static <T> LinkedHashSet<T> linkedSetOf(final T ... elements) {
-        return new LinkedHashSet<T>(Arrays.asList(elements));
+        return new LinkedHashSet<>(Arrays.asList(elements));
     }
     
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
-        return new ArrayList<T>(Arrays.asList(elements));
+        return new ArrayList<>(Arrays.asList(elements));
     }
 
     @SafeVarargs

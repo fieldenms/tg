@@ -31,7 +31,7 @@ public class FluencyApiTest extends TestCase {
     }
 
 	private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
-			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf" };
+			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf", "addTimeIntervalOf" };
 
 	private static final String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf",
 			"sumOfDistinct", "countOfDistinct", "avgOfDistinct", "countAll" };
