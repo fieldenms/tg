@@ -135,7 +135,7 @@ and instead put a div inside and style that.
     },
 
     listeners: {
-      transitionend: '_transitionEnd'
+      transitionend: '_onTransitionEnd'
     },
 
     attached: function() {
@@ -225,6 +225,12 @@ and instead put a div inside and style that.
         this.focus();
       }
       if (this.noAnimation) {
+        this._transitionEnd();
+      }
+    },
+    
+    _onTransitionEnd: function(event) {
+      if (Polymer.dom(event).rootTarget === this) {
         this._transitionEnd();
       }
     },
