@@ -25,6 +25,20 @@ public class TgVehicleModel extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Test vehicle model", desc = "Test vehicle model")
     private TgVehicleMake make;
+    
+    @IsProperty
+    @Title("Ordinary property")
+    private Integer ordinaryIntProp;
+
+    @Observable
+    public TgVehicleModel setOrdinaryIntProp(final Integer ordinaryIntProp) {
+        this.ordinaryIntProp = ordinaryIntProp;
+        return this;
+    }
+
+    public Integer getOrdinaryIntProp() {
+        return ordinaryIntProp;
+    }
 
     @Observable
     public TgVehicleModel setMake(final TgVehicleMake make) {

@@ -56,11 +56,8 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Last Access", desc = "The time when the session was last accessed.")
     private Date lastAccess;
 
-    @IsProperty
-    @Title(value = "Authenticator", desc = "A dynamically computed authenticator for the session.")
     private Optional<Authenticator> authenticator = Optional.empty();
 
-    @Observable
     public UserSession setAuthenticator(final Authenticator authenticator) {
         this.authenticator = Optional.of(authenticator);
         return this;
