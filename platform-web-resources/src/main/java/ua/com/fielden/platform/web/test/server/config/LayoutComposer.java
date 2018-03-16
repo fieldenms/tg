@@ -2,6 +2,9 @@ package ua.com.fielden.platform.web.test.server.config;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 
 /**
  * Provides an API to consistently compose Web UI layouts for both entity centres and masters.
@@ -9,7 +12,7 @@ import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MAST
 public class LayoutComposer {
     public final static String MARGIN_PIX = "20px";
     public static final String MARGIN_PIX_FOR_MASTER_ACTION = "10px";
-    
+
     public final static String CENTRE_LAYOUT_SPECIFICATION = "'horizontal', 'center', 'start-justified',";
     public final static String COMPONENT = "['flex']";
     public final static String COMPONENT_WITH_PADDING = "['flex', 'margin-right: " + MARGIN_PIX + "']";
@@ -17,6 +20,8 @@ public class LayoutComposer {
     public final static String MASTER_LAYOUT_SPECIFICATION = "'horizontal','justified',";
     public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = format("'horizontal', 'padding: %s', 'wrap', 'justify-content: center',", MARGIN_PIX_FOR_MASTER_ACTION);
     public final static String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
+
+    public static final FlexLayoutConfig CELL_LAYOUT = layout().flex().end();
 
     /**
      * @param layout

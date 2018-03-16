@@ -2,12 +2,15 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import java.util.Optional;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
@@ -26,8 +29,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-
-import com.google.inject.Injector;
 
 /**
  * {@link UserRole} Web UI configuration.
@@ -126,16 +127,17 @@ public class UserRoleWebUiConfig {
     private static EntityMaster<UserRoleTokensUpdater> createTokensUpdater(final Injector injector) {
         final IMaster<UserRoleTokensUpdater> masterConfig = new SimpleMasterBuilder<UserRoleTokensUpdater>()
                 .forEntity(UserRoleTokensUpdater.class)
-                .addProp("tokens").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
+                .addProp("tokens").asCollectionalEditor().withHeader("title")
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'width:500px', "
+                        "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
                         + format("['flex', ['flex']]")
                         + "    ]"))
+                .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<UserRoleTokensUpdater>(
                 UserRoleTokensUpdater.class,

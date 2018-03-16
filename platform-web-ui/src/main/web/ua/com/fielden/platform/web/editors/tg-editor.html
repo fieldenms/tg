@@ -17,10 +17,12 @@
         .main-container {
             @apply(--layout-horizontal);
             @apply(--layout-center);
+            @apply(--tg-editor-main-container-mixin);
         }
         
         #input-container {
             @apply(--layout-flex);
+            @apply(--tg-editor-input-container-mixin);
         }
 
         #input-container::content .input-layer {
@@ -50,6 +52,11 @@
         
         paper-input-container::shadow .label-and-input-container {
             min-width: 0px;
+            @apply(--tg-editor-label-and-input-container-mixin);
+        }
+        
+        paper-input-container::shadow .input-content {
+            @apply(--tg-editor-input-content-mixin);
         }
         
         paper-input-container {
@@ -65,7 +72,9 @@
             --paper-input-container-input: {
                 font-size: 1rem;
                 line-height: 1.8rem;
-            }
+            };
+              
+            @apply(--tg-editor-paper-input-container-mixin);
         }
             
         paper-input-error {

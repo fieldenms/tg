@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -68,7 +69,7 @@ public class CentreConfigurationWebUiConfig {
         );
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
-                .addProp("customisableColumns").asCollectionalEditor().reorderable().maxVisibleRows(5).withHeader("title")
+                .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title")
                 .also()
                 .addAction(
                         action(CentreConfigUpdaterDefaultAction.class)
@@ -97,9 +98,10 @@ public class CentreConfigurationWebUiConfig {
                 .setActionBarLayoutFor(TABLET, Optional.empty(), actionLayout.toString())
                 .setActionBarLayoutFor(MOBILE, Optional.empty(), actionLayout.toString())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', "
+                        "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
                         + format("['flex', ['flex']]")
                         + "    ]"))
+                .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<CentreConfigUpdater>(
                 CentreConfigUpdater.class,

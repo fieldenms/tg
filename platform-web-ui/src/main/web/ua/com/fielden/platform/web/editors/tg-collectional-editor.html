@@ -14,6 +14,31 @@
 
 <dom-module id="tg-collectional-editor">
     <style>
+        :host, 
+        tg-editor {
+            @apply(--layout-vertical);
+            @apply(--layout-flex);
+        }
+        tg-editor {
+            --tg-editor-paper-input-container-mixin: {
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
+            };
+            --tg-editor-input-content-mixin: {
+                @apply(--layout-start);
+                height: 100%;
+            };
+            --tg-editor-label-and-input-container-mixin: {
+                height: 100%;
+            };
+            --tg-editor-main-container-mixin: {
+                height: 100%;
+            };
+            --tg-editor-input-container-mixin: {
+                @apply(--layout-vertical);
+                height: 100%;
+            };
+        }
         .noselect {
             -webkit-touch-callout: none;
             /* iOS Safari */
@@ -142,26 +167,28 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
             <input id="searchInput" is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
-                <template>
-                    <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
-                        <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
-                        <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
-                            <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]"></iron-icon>
-                            <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
-                            <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
-                                <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
-                                <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
-                            </div>
-                            <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
-                                <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                                <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                            </div>
-                      </div>
-                      <div class="border"></div>
-                    </div>
-                </template>
-            </iron-list>
+            <div class="custom-input layout vertical flex relative">
+                <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
+                    <template>
+                        <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
+                            <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
+                            <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
+                                <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]"></iron-icon>
+                                <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
+                                <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
+                                    <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
+                                    <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
+                                </div>
+                                <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
+                                    <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                                    <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                                </div>
+                          </div>
+                          <div class="border"></div>
+                        </div>
+                    </template>
+                </iron-list>
+            </div>
     	</tg-editor>
     </template>
 </dom-module>
@@ -172,13 +199,6 @@
         behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
         
         properties: {
-            /**
-             * The maximum number of visible items on collectional editor (comes from Java API).
-             */
-            maxVisibleItems: {
-                type: Number
-            },
-            
             /**
              * The name of the property to be shown in item header.
              */
@@ -603,11 +623,6 @@
             this.$.input.scrollToIndex(indexOfFirstElementWithPhrase);
         },
         
-        _calcListHeight: function (maxVisibleItems) {
-            var rowCount = maxVisibleItems > 0 ? maxVisibleItems : 1; 
-            return "max-height:calc(" + rowCount + " * (2.8rem + 33px))";
-        },
-		
 		_highlightedValue : function (propertyValue, phraseForSearchingCommited) {
 			var html = '';
 			var matchedParts = this._matchedParts(propertyValue, phraseForSearchingCommited);
