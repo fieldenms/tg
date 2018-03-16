@@ -88,33 +88,7 @@ The `tg-date-range-criterion-config` contains just the DOM part of all date rang
             this._prefixTitles = ["Previous", "Current", "Next"];
             this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
             this._andBeforeTitles = ["", " and before", " and after"];
-            // this.addEventListener("transitionend", this._transEnd.bind(this));
-            // this.addEventListener('transitionstart',  this._transStart.bind(this));
 		},
-        
-/*        _transEnd: function () {
-            if (this._scrollElem && this._scrollTop) {
-                this._scrollElem.scrollTop = this._scrollTop;
-            } else {
-                this._scrollElem = this.findFirstWithScrollTop();
-                this._scrollTop = this._scrollElem.scrollTop;
-            }
-        },
-        
-        _transStart: function () {
-            this._scrollElem = this.findFirstWithScrollTop();
-            this._scrollTop = this._scrollElem.scrollTop;
-        },
-        
-        findFirstWithScrollTop: function () {
-            let scrollElem = this;
-            while (scrollElem != null) {
-                if (scrollElem.scrollTop) {
-                    return scrollElem;
-                }
-                scrollElem = scrollElem.parentElement;
-            }
-        },*/
 
 		attached: function () {
 			this.async(function () {

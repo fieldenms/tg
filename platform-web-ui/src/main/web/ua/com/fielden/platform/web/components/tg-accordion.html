@@ -85,34 +85,8 @@
                       .filter(([key, descriptor]) => typeof descriptor.get === 'function').map(([key]) => key)
                       .find(prop => rect[prop] !== 0);
             }.bind(this.$.collapse));
-            // this.$.collapse.addEventListener("transitionend", this._transEnd.bind(this));
-            // this.$.collapse.addEventListener('transitionstart',  this._transStart.bind(this));
         },
-        
-        /*_transEnd: function () {
-            if (this._scrollElem && this._scrollTop) {
-                this._scrollElem.scrollTop = this._scrollTop;
-            } else {
-                this._scrollElem = this.findFirstWithScrollTop();
-                this._scrollTop = this._scrollElem.scrollTop;
-            }
-        },
-        
-        _transStart: function () {
-            this._scrollElem = this.findFirstWithScrollTop();
-            this._scrollTop = this._scrollElem.scrollTop;
-        },
-        
-        findFirstWithScrollTop: function () {
-            let scrollElem = this;
-            while (scrollElem != null) {
-                if (scrollElem.scrollTop) {
-                    return scrollElem;
-                }
-                scrollElem = scrollElem.parentElement;
-            }
-        },*/
-        
+
         _calcIcon: function (isOpened) {
             return "icons:" + (this.opened ? 'expand-less' : 'expand-more');
         },
