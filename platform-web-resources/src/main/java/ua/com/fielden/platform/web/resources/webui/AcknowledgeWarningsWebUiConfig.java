@@ -7,6 +7,8 @@ import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.mkAc
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsProducer;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -15,8 +17,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-
-import com.google.inject.Injector;
 /**
  * {@link AcknowledgeWarnings} Web UI configuration.
  *
@@ -37,8 +37,8 @@ public class AcknowledgeWarningsWebUiConfig {
     }
 
     private EntityMaster<AcknowledgeWarnings> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMaster(300, 1, 1);
-        
+        final String layout = LayoutComposer.mkGridForEmbeddedMaster(1, 1);
+
         final IMaster<AcknowledgeWarnings> masterConfig = new SimpleMasterBuilder<AcknowledgeWarnings>().forEntity(AcknowledgeWarnings.class)
                 .addProp("warnings").asCollectionalEditor().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
@@ -50,7 +50,7 @@ public class AcknowledgeWarningsWebUiConfig {
                 .setLayoutFor(TABLET, Optional.empty(), layout)
                 .setLayoutFor(MOBILE, Optional.empty(), layout)
                 .done();
-        
+
         return new EntityMaster<AcknowledgeWarnings>(AcknowledgeWarnings.class, AcknowledgeWarningsProducer.class, masterConfig, injector);
     }
 }

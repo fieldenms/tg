@@ -92,12 +92,12 @@ public class CentreConfigurationWebUiConfig {
                         .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
-                
+
                 .setActionBarLayoutFor(DESKTOP, Optional.empty(), actionLayout.toString())
                 .setActionBarLayoutFor(TABLET, Optional.empty(), actionLayout.toString())
                 .setActionBarLayoutFor(MOBILE, Optional.empty(), actionLayout.toString())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'width:300px', "
+                        "      ['padding:20px', "
                         + format("['flex', ['flex']]")
                         + "    ]"))
                 .done();
