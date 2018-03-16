@@ -95,7 +95,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         final OrderingModel ordering = makeOrderingModel();
         final Map<String, Object> params = new HashMap<>();
         fillParamsBasedOnContext(getContext(), params);
-        return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).lightweight().model(), getPageSize());
+        return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).with(params).lightweight().model(), getPageSize());
     }
 
     @Override
@@ -106,7 +106,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         final OrderingModel ordering = makeOrderingModel();
         final Map<String, Object> params = new HashMap<>();
         fillParamsBasedOnContext(getContext(), params);
-        return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).lightweight().model(), getPageSize());
+        return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).with(params).lightweight().model(), getPageSize());
     }
 
 
