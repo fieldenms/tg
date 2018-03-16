@@ -119,7 +119,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             // serialise id
             generator.writeFieldName(AbstractEntity.ID);
-            generator.writeObject(entity.getId());
+            generator.writeObject(getIdSafely(entity));
 
             // serialise version -- should never be null
             generator.writeFieldName(AbstractEntity.VERSION);
@@ -220,6 +220,29 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         }
     }
     
+    /**
+     * Until implementation of issue #999, it was always safe to get ID.
+     * However, for synthetic entities method {@code getId()} may get overridden to return something like {@code getComputedId()}, which in turn may 
+     * represent a getter for a proxied property. Thus, such calls to overridden {@link getId()} may result in exception at runtime.
+     * <p>
+     * As an example, consider a situation with an Entity Centre that is based on a synthetic entity and has summary.
+     * Normally, instance that represent "summary" values have ID equal to {@code null} -- calling {@code getId()} returns {@code null}.
+     * But calling {@code getId()}, which is overridden will most definitely result in a runtime error due to proxied property {@code computedId}.
+     * <p>
+     * Perhaps this is not an ideal solution, but for practical consideration, let's assume that getting ID should never fail. Hence, this method.  
+     *
+     * @param entity
+     * @return
+     */
+    private Long getIdSafely(final T entity) {
+        try {
+            return entity.getId();
+        } catch (final Exception ex) {
+            LOGGER.debug("Could not get ID.", ex);
+            return null;
+        }
+    }
+
     /**
      * Returns an object to be used for serialisation that corresponds to <code>value</code>.
      * <p>
