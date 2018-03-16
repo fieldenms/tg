@@ -35,15 +35,16 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
     private final Collection<PropertyMetadata> propsMetadata;
+    private final boolean isSyntheticEntity;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
+        isSyntheticEntity = isSyntheticEntityType(getEntityType());
 
         switch (originalFetch.getFetchCategory()) {
         case ALL:
@@ -98,7 +99,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void populateProxies() {
-        final boolean isSyntheticEntity = isSyntheticEntityType(getEntityType());
         for (final PropertyMetadata ppi : propsMetadata) {
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
