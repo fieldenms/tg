@@ -171,9 +171,9 @@
                 <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                     <template>
                         <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
-                            <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisisble(item, _draggingItem)]]"></div>
+                            <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
                             <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
-                                <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]"></iron-icon>
+                                <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
                                 <paper-checkbox hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                                 <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                                     <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
@@ -468,7 +468,7 @@
             return 'IRRELEVANT';
         },
         
-        _isDummyBoxVisisble: function (item, _draggingItem) {
+        _isDummyBoxVisible: function (item, _draggingItem) {
             return item === _draggingItem;
         },
         
@@ -770,6 +770,13 @@
                    break;
            }
            if (e.stopPropagation) e.stopPropagation();
+           if (e.preventDefault) e.preventDefault();
+           e.cancelBubble = true;
+           e.returnValue = false;
+        },
+        
+        _disableScrolling: function (e) {
+            if (e.stopPropagation) e.stopPropagation();
            if (e.preventDefault) e.preventDefault();
            e.cancelBubble = true;
            e.returnValue = false;
