@@ -308,8 +308,18 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     }
     
     @Test
+    public void ordinary_non_persistent_properties_in_persistent_entities_do_not_get_proxied() {
+        try (final Stream<TgVehicleModel> stream = co(TgVehicleModel.class).stream(from(select(TgVehicleModel.class).model()).with(fetchOnly(TgVehicleModel.class).with("key")).model())) {
+            stream.forEach(vm -> {
+                assertFalse("Oridinary, not persistent props should not be proxied", isPropertyProxied(vm, "ordinaryIntProp"));
+                assertNull(vm.getOrdinaryIntProp());
+                assertFalse("Fetched inherited @MapTo props should not be proxied.", isPropertyProxied(vm, "key"));
+            });
+        }
+    }
+    
+    @Test
     public void properties_of_synthetic_entities_get_proxied_except_crit_only_ones() {
-        
         try (final Stream<TgReVehicleModel> stream = co(TgReVehicleModel.class)
                                                     .stream(from(select(TgReVehicleModel.class).model())
                                                             .with(fetchOnly(TgReVehicleModel.class).with("key")).model())) {
@@ -317,6 +327,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
                 assertTrue("Not-fetched yielded props should be proxied", isPropertyProxied(vm, "intProp"));
                 assertTrue("Not-feched and not-yielded props should be proxied", isPropertyProxied(vm, "noYieldIntProp"));
                 assertTrue("Not-fetched inherited @MapTo props should be proxied", isPropertyProxied(vm, "make"));
+                assertTrue("Even inherited, oridinary, not persistent props should become proxied in the context of a synthetic entity", isPropertyProxied(vm, "ordinaryIntProp"));
                 assertFalse("@CritOnly props should not be proxied", isPropertyProxied(vm, "intCritProp"));
                 assertFalse("Fetched inherited @MapTo props should not be proxied.", isPropertyProxied(vm, "key"));
                 assertNull(vm.getIntCritProp());

@@ -285,6 +285,15 @@
                 _centreRefreshRedirector: {
                     type: Object,
                     value: null
+                },
+                
+                /**
+                 * Publishes data with 'canClose=true' to channel 'self.centreUuid', topic 'refresh.post.success' to close the master regardless of the state of the bound entity.
+                 * This request may or may not succeed, which depends on who is subscribed to the pulished event.
+                 * In general dialogs, holding entity mesters, do subscribe and can be closed this way.
+                 */
+                publishCloseForcibly: {
+                    type: Function
                 }
             },
 
@@ -601,6 +610,10 @@
                     this.async(function () {
                         this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(self), 1);
+                }).bind(self);
+
+                self.publishCloseForcibly = (function () {
+                    postal.publish({channel: self.centreUuid, topic: 'refresh.post.success', data: {canClose: true}});
                 }).bind(self);
             }, // end of ready callback
 

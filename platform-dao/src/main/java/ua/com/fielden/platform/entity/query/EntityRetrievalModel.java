@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Collection;
@@ -36,12 +37,14 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
     private final Collection<PropertyMetadata> propsMetadata;
+    private final boolean isSyntheticEntity;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
+        isSyntheticEntity = isSyntheticEntityType(getEntityType());
 
         switch (originalFetch.getFetchCategory()) {
         case ALL:
@@ -100,10 +103,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
             if (!ID.equals(name) &&
-                    !(KEY.equals(name) && !ppi.affectsMapping()) &&
-                    !ppi.isCollection() &&
-                    !name.contains(".") &&
-                    !containsProp(name)) {
+                !(KEY.equals(name) && !ppi.affectsMapping()) &&
+                !ppi.isCollection() &&
+                !name.contains(".") &&
+                !containsProp(name) &&
+                (isSyntheticEntity || !ppi.isSynthetic())) {
                 getProxiedProps().add(name);
             }
         }
