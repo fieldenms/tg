@@ -8,7 +8,7 @@ package ua.com.fielden.platform.web.centre.api.insertion_points;
  */
 public enum InsertionPoints {
 
-    LEFT(".left-insertion-point"),  BOTTOM(".bottom-insertion-point"), RIGHT(".right-insertion-point");
+    TOP(".top-insertion-point"), LEFT(".left-insertion-point"),  BOTTOM(".bottom-insertion-point"), RIGHT(".right-insertion-point");
 
     public final String selector;
 
