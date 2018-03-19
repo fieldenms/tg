@@ -13802,7 +13802,7 @@ links:["Africa/Abidjan|Africa/Bamako","Africa/Abidjan|Africa/Banjul","Africa/Abi
                 
                 /**
                  * Returns 'true' if this tg-app-config instance is loaded during mobile application loading (vulcanised or non-vulcanised loading), 'false' otherwise.
-                 * See DeviceProfileDifferentiatorResource for more details.
+                 * See AbstactWebResource for more details.
                  * 
                  * It is very important not to confuse this parameter with MOBILE / TABLET / DESKTOP layouts (tg-tile-layout, tg-flex-layout).
                  * These three layout modes can be used in 'desktop' application when resizing application window.
@@ -24042,16 +24042,16 @@ context. You should place this element as a child of `<body>` whenever possible.
     </script></dom-module><dom-module id="tg-view" assetpath="/resources/views/">
     <style>
         :host {
-            --paper-fab-background: #fcfcfc;
+            --paper-fab-background: var(--paper-grey-50);
+            --paper-fab-keyboard-focus-background: var(--paper-grey-200); /* this is close to Material Design guidelines https://material.io/guidelines/components/buttons.html -- 'Focused:12% #000000 shade over the color' */
             --paper-fab: {
-                color: #666464;
+                color: var(--paper-grey-700);
                 position: absolute;
                 top: 16px;
                 right: 16px;
                 width: 50px;
                 height: 50px;
-            }
-            ;
+            };
         }
         .tool-bar {
             padding: 0 16px;
@@ -26117,40 +26117,37 @@ context. You should place this element as a child of `<body>` whenever possible.
 <dom-module id="tg-view-with-menu" assetpath="/resources/views/">
     <style>
         :host {
-            --paper-fab-background: #fcfcfc;
+            --paper-fab-background: var(--paper-grey-50);
+            --paper-fab-keyboard-focus-background: var(--paper-grey-200); /* this is close to Material Design guidelines https://material.io/guidelines/components/buttons.html -- 'Focused:12% #000000 shade over the color' */
             --paper-menu-color: var(--paper-light-blue-700);
             --paper-menu-undone-color: var(--paper-light-blue-100);
             --paper-item-min-height: 40px;
             --paper-fab: {
-                color: #666464;
+                color: var(--paper-grey-700);
                 position: absolute;
                 top: 16px;
                 right: 16px;
                 z-index: 1;
                 width: 50px;
                 height: 50px;
-            }
-            ;
+            };
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
-            }
-            ;
+            };
             --paper-item: {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            }
-            ;
+            };
         }
         paper-menu.menu-content {
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: hidden;
-            }
-            ;
+            };
         }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
@@ -32382,7 +32379,7 @@ if (!window.Promise) {
                     _saveMenuVisibilityChanges: Function,
                     
                     /**
-                     * Returns 'true' if this generated 'tg-app' component was loaded for mobile device, 'false' otherwise (see DeviceProfileDifferentiatorResource and DeviceProfile for more details).
+                     * Returns 'true' if this generated 'tg-app' component was loaded for mobile device, 'false' otherwise (see AbstactWebResource and DeviceProfile for more details).
                      * 
                      * Currently, the only difference will be in constructing app menu content.
                      * We use this flag when making 'retrieve' call for 'Menu' entity.
@@ -48356,7 +48353,8 @@ postActionError: function (functionalEntity, action) {
 
             _selectedView: {
                 type: Number,
-                notify: true
+                notify: true,
+                observer: '_selectedViewChanged'
             },
             _url: Function,
             _processSaverResponse: Function,
@@ -48558,19 +48556,14 @@ postActionError: function (functionalEntity, action) {
         _pageSelectionChanged: function (event) {
             var target = event.target || event.srcElement;
             if (target === this.$.views) {
-                var egi = this.querySelector(".custom-egi");
-                var selectionCriteria = this.$.selectionView;
+                const egi = this.querySelector(".custom-egi");
+                const selectionView = this.$.selectionView;
                 if (this._selectedView === 0) {
-                    this._configViewBindings(egi, selectionCriteria);
-                    selectionCriteria.focus();
+                    this._configViewBindings(egi, selectionView);
                 } else if (this._selectedView === 1) {
-                    this._configViewBindings(selectionCriteria, egi);
-                    var elementToFocus = egi.$$("#elementToFocus");
-                    //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
-                    if (elementToFocus && typeof elementToFocus.focus === 'function') {
-                        elementToFocus.focus();
-                    }
+                    this._configViewBindings(selectionView, egi);
                 }
+                this.focusSelectedView();
                 if (event.stopPropagation) event.stopPropagation();
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
@@ -48585,19 +48578,31 @@ postActionError: function (functionalEntity, action) {
                 newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
             }
         },
-
+        
+        _selectedViewChanged: function (newValue, oldValue) {
+            this._prevSelectedView = oldValue;
+        },
+        
         focusSelectedView: function () {
             if (this._selectedView === 0) {
-                this.$.selectionView.focus();
+                this.$.selectionView.focus(); // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
+                if (this._prevSelectedView === undefined) {
+                    this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
+                    this._prevSelectedView = 0;
+                } else {
+                    // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
+                    this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
+                }
             } else if (this._selectedView === 1) {
-                var elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
-                //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
+                const elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
                 if (elementToFocus && typeof elementToFocus.focus === 'function') {
                     elementToFocus.focus();
+                    this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
                 }
             }
         },
-
+        
         addOwnKeyBindings: function () {
             var egi = this.querySelector(".custom-egi");
             var selectionCriteria = this.$.selectionView;
@@ -48639,6 +48644,7 @@ postActionError: function (functionalEntity, action) {
         runAsync: function () {
             var self = this;
             this.async(function () {
+                self.persistActiveElement();
                 self.run();
             }, 100);
         }
@@ -49468,6 +49474,7 @@ postActionError: function (functionalEntity, action) {
                         if (self._criteriaLoaded === false) {
                             throw "Cannot activate result-set view (not initialised criteria).";
                         }
+                        self.$.dom.persistActiveElement();
                         self._selectedView = 1;
                     }, 100);
                 }).bind(self);
