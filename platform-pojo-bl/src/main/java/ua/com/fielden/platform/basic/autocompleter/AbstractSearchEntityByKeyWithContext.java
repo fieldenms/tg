@@ -9,7 +9,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
@@ -64,24 +66,50 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         return incompleteEql.model();
     }
 
+    /**
+     * This method may be overridden to provide the param values for the
+     * resulting query based on the provided context.
+     *
+     * @param context
+     * @param params
+     *            - params to fill
+     */
+    protected void fillParamsBasedOnContext(final CONTEXT context, final Map<String, Object> params) {
+        // Do nothing here
+    }
+
+    /**
+     * This method may be overridden to provide an alternative ordering if the
+     * default ordering by the key is not suitable.
+     *
+     * @return alternative ordering model
+     */
+    protected OrderingModel makeOrderingModel() {
+        return orderBy().prop(KEY).asc().model();
+    }
+
     @Override
     public List<T> findMatches(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         queryModel.setFilterable(true);
-        final OrderingModel ordering = orderBy().prop(KEY).asc().model();
-        return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).lightweight().model(), getPageSize());
+        final OrderingModel ordering = makeOrderingModel();
+        final Map<String, Object> params = new HashMap<>();
+        fillParamsBasedOnContext(getContext(), params);
+        return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).with(params).lightweight().model(), getPageSize());
     }
+
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         queryModel.setFilterable(true);
-        final OrderingModel ordering = orderBy().prop(KEY).asc().model();
-        return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).lightweight().model(), getPageSize());
+        final OrderingModel ordering = makeOrderingModel();
+        final Map<String, Object> params = new HashMap<>();
+        fillParamsBasedOnContext(getContext(), params);
+        return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).with(params).lightweight().model(), getPageSize());
     }
-
 
     @Override
     public fetch<T> getFetch() {
@@ -107,6 +135,5 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     public Integer getPageSize() {
         return pageSize;
     }
-
 
 }
