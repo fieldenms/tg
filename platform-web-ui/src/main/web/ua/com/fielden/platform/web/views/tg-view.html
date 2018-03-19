@@ -8,16 +8,16 @@
 <dom-module id="tg-view">
     <style>
         :host {
-            --paper-fab-background: #fcfcfc;
+            --paper-fab-background: var(--paper-grey-50);
+            --paper-fab-keyboard-focus-background: var(--paper-grey-200); /* this is close to Material Design guidelines https://material.io/guidelines/components/buttons.html -- 'Focused:12% #000000 shade over the color' */
             --paper-fab: {
-                color: #666464;
+                color: var(--paper-grey-700);
                 position: absolute;
                 top: 16px;
                 right: 16px;
                 width: 50px;
                 height: 50px;
-            }
-            ;
+            };
         }
         .tool-bar {
             padding: 0 16px;
