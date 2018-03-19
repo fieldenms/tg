@@ -18,6 +18,8 @@ public class AddDateInterval extends TwoOperandsFunction {
     @Override
     public String sql() {
         switch (getDbVersion()) {
+        case POSTGRESQL:
+            return format("('1 %s' * %s + %s)",  intervalUnit, getOperand1().sql(), getOperand2().sql());
         case H2:
             return format("DATEADD('%s', %s, %s)",  intervalUnit, getOperand1().sql(), getOperand2().sql());
         case MSSQL:
