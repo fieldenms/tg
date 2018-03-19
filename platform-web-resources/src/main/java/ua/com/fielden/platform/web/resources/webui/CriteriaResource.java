@@ -74,7 +74,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
  * @author TG Team
  *
  */
-public class CriteriaResource extends DeviceProfileDifferentiatorResource {
+public class CriteriaResource extends AbstractWebResource {
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
     private final static String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "

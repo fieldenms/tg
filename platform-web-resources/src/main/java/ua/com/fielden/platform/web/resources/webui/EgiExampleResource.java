@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <T>
  * @param <DAO>
  */
-public class EgiExampleResource extends DeviceProfileDifferentiatorResource {
+public class EgiExampleResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities;
 

@@ -23,7 +23,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class MasterTestsComponentResource extends DeviceProfileDifferentiatorResource {
+public class MasterTestsComponentResource extends AbstractWebResource {
     private final EntityMaster<? extends AbstractEntity<?>> master;
 
     /**

@@ -34,7 +34,7 @@ import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
  * @author TG Team
  * 
  */
-public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends DeviceProfileDifferentiatorResource {
+public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
     private final IEntityDao<T> companion;
     private final EntityFactory factory;

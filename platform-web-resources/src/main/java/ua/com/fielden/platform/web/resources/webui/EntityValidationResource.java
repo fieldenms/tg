@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityValidationResource<T extends AbstractEntity<?>> extends DeviceProfileDifferentiatorResource {
+public class EntityValidationResource<T extends AbstractEntity<?>> extends AbstractWebResource {
     private final Class<T> entityType;
     private final EntityFactory entityFactory;
     private final RestServerUtil restUtil;

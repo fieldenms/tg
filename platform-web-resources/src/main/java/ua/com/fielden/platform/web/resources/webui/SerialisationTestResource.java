@@ -55,7 +55,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <T>
  * @param <DAO>
  */
-public class SerialisationTestResource extends DeviceProfileDifferentiatorResource {
+public class SerialisationTestResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 

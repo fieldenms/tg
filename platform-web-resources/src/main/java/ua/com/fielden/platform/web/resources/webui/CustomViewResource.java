@@ -25,7 +25,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CustomViewResource extends DeviceProfileDifferentiatorResource {
+public class CustomViewResource extends AbstractWebResource {
     private final String viewName;
     private final ISourceController sourceController;
     private final RestServerUtil restUtil;

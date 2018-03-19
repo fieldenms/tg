@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  * @param <T>
  * @param <DAO>
  */
-public class DesktopApplicationStartupResourcesComponentResource extends DeviceProfileDifferentiatorResource {
+public class DesktopApplicationStartupResourcesComponentResource extends AbstractWebResource {
     private final ISourceController sourceController;
     
     public DesktopApplicationStartupResourcesComponentResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {

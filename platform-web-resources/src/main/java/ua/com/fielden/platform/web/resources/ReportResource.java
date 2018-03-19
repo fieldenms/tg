@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.IReport;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource;
+import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
 /**
  * Resource for handling report requests.
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorRe
  * @author TG Team
  * 
  */
-public class ReportResource extends DeviceProfileDifferentiatorResource {
+public class ReportResource extends AbstractWebResource {
 
     private final RestServerUtil restUtil;
     private final IReport dao;

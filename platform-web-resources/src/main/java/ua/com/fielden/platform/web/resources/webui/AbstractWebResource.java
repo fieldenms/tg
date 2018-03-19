@@ -12,15 +12,16 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
- * A base resource implementation for those resources that need to have specific handling for different {@link DeviceProfile}s.
+ * An abstract resource implementation for TG web resources (except login / logout resources and attachment download resource).
+ * Contains device profile differentiation logic that can be used in those resources that need specific handling for different {@link DeviceProfile}s.
  *
  * @author TG Team
  *
  */
-public class DeviceProfileDifferentiatorResource extends ServerResource {
+public class AbstractWebResource extends ServerResource {
     private final DeviceProfile deviceProfile;
     
-    public DeviceProfileDifferentiatorResource(final Context context, final Request request, final Response response, final IDeviceProvider deviceProvider) {
+    public AbstractWebResource(final Context context, final Request request, final Response response, final IDeviceProvider deviceProvider) {
         init(context, request, response);
         deviceProvider.setDeviceProfile(deviceProfile = calculateDeviceProfile(request));
     }

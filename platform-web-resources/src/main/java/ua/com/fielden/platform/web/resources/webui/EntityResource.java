@@ -71,7 +71,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class EntityResource<T extends AbstractEntity<?>> extends DeviceProfileDifferentiatorResource {
+public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final Long entityId;
     private final EntityIdKind entityIdKind;

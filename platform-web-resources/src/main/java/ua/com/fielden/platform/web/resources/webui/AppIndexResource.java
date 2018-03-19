@@ -30,7 +30,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  * @author TG Team
  *
  */
-public class AppIndexResource extends DeviceProfileDifferentiatorResource {
+public class AppIndexResource extends AbstractWebResource {
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;

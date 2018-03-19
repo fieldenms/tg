@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CentreComponentResource extends DeviceProfileDifferentiatorResource {
+public class CentreComponentResource extends AbstractWebResource {
     private final String mitypeString;
     private final ISourceController sourceController;
     private final RestServerUtil restUtil;

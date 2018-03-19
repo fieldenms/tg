@@ -23,7 +23,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  * @author TG Team
  *
  */
-public class MainWebUiComponentResource  extends DeviceProfileDifferentiatorResource {
+public class MainWebUiComponentResource  extends AbstractWebResource {
     private final ISourceController sourceController;
     
     /**

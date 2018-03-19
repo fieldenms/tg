@@ -16,7 +16,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource;
+import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.ServletUtils;
@@ -26,7 +26,7 @@ import ua.com.fielden.platform.web.utils.ServletUtils;
  *
  * @author TG Team
  */
-public class EventSourcingResource extends DeviceProfileDifferentiatorResource {
+public class EventSourcingResource extends AbstractWebResource {
 
     private final Logger logger = Logger.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);

@@ -33,7 +33,7 @@ import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
  * @author TG Team
  *
  */
-public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends DeviceProfileDifferentiatorResource {
+public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractWebResource {
     private static final Logger logger = Logger.getLogger(EntityAutocompletionResource.class);
     private final Class<CONTEXT> entityType;
     private final String propertyName;

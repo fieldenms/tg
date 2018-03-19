@@ -26,7 +26,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class FileResource extends DeviceProfileDifferentiatorResource {
+public class FileResource extends AbstractWebResource {
     private final Logger logger = Logger.getLogger(getClass());
     private final List<String> resourcePaths;
     private final ISourceController sourceController;

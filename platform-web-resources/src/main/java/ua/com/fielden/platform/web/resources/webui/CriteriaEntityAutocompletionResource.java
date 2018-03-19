@@ -46,7 +46,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends DeviceProfileDifferentiatorResource {
+public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final String criterionPropertyName;
     private final RestServerUtil restUtil;

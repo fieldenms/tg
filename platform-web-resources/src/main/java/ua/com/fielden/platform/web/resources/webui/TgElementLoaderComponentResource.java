@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  * @author TG Team
  *
  */
-public class TgElementLoaderComponentResource extends DeviceProfileDifferentiatorResource {
+public class TgElementLoaderComponentResource extends AbstractWebResource {
     private final ISourceController sourceController;
     
     public TgElementLoaderComponentResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
