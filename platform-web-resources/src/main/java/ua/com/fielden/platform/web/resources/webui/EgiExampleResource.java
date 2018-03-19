@@ -9,10 +9,11 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -27,8 +28,8 @@ public class EgiExampleResource extends DeviceProfileDifferentiatorResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities;
 
-    public EgiExampleResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final IUserProvider userProvider, final Context context, final Request request, final Response response) {
-        super(context, request, response, userProvider);
+    public EgiExampleResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider);
         this.restUtil = restUtil;
         this.entities = createEntities(entityFactory);
     }

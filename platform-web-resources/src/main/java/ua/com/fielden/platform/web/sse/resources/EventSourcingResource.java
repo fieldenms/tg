@@ -15,7 +15,7 @@ import org.restlet.Response;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
-import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.DeviceProfileDifferentiatorResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
@@ -34,11 +34,11 @@ public class EventSourcingResource extends DeviceProfileDifferentiatorResource {
 
     public EventSourcingResource(
             final IEventSource eventSource,
-            final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
         this.eventSource = eventSource;
     }
 

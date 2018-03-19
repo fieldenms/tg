@@ -17,7 +17,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
 
@@ -36,14 +36,14 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     
     private final long fileSizeLimitKb;
     private final Set<MediaType> types = new HashSet<>();
-    private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
 
     public FileProcessingResourceFactory(
             final Router router,
             final Injector injector,
             final Class<T> entityType,
             final Function<EntityFactory, T> entityCreator,
-            final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final long fileSizeLimitKb,
             final MediaType type, // at least one type is required 
             final MediaType... types) {
@@ -55,7 +55,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.fileSizeLimitKb = fileSizeLimitKb;
         this.types.add(type);
         Arrays.stream(types).forEach(this.types::add);
-        this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
                     injector.getInstance(RestServerUtil.class), 
                     fileSizeLimitKb, 
                     types, 
-                    userProvider,
+                    deviceProvider,
                     getContext(), request, response).handle();
         }
     }

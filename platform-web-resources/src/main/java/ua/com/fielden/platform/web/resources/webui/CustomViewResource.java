@@ -13,10 +13,11 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Represents web server resource that returns custom view component for specified view name to the client.
@@ -40,12 +41,12 @@ public class CustomViewResource extends DeviceProfileDifferentiatorResource {
     public CustomViewResource(
             final ISourceController sourceController,//
             final RestServerUtil restUtil,
-            final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
         this.viewName = (String) request.getAttributes().get("viewName");
         this.sourceController = sourceController;
         this.restUtil = restUtil;

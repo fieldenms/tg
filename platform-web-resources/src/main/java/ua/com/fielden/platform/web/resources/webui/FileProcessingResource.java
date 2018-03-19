@@ -23,7 +23,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
-import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
@@ -47,7 +47,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final String origFileName;
     private final Date fileLastModified;
     private final String mimeAsProvided;
-    private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
 
     public FileProcessingResource(
             final Router router, 
@@ -57,18 +57,18 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final RestServerUtil restUtil, 
             final long fileSizeLimit, 
             final Set<MediaType> types, 
-            final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
         this.router = router;
         this.companion = companion;
         this.factory = factory;
         this.entityCreator = entityCreator;
         this.restUtil = restUtil;
         this.sizeLimit = fileSizeLimit;
-        this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
         this.types = types;
         
         this.jobUid = request.getHeaders().getFirstValue("jobUid");
@@ -137,7 +137,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), userProvider);
+        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider);
         final String baseUri = getRequest().getResourceRef().getPath(true);
         router.attach(baseUri + "/" + jobUid, eventSource);
         

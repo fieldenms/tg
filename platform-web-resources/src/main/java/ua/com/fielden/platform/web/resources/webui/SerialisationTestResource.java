@@ -20,6 +20,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -29,7 +30,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
@@ -44,6 +44,7 @@ import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -58,14 +59,14 @@ public class SerialisationTestResource extends DeviceProfileDifferentiatorResour
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final RestServerUtil restUtil, final IUserProvider userProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
-        super(context, request, response, userProvider);
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
+        super(context, request, response, deviceProvider);
         this.restUtil = restUtil;
         this.entities.addAll(entities);
     }
     
-    public SerialisationTestResource(final RestServerUtil restUtil, final IUserProvider userProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
-        this(restUtil, userProvider, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, deviceProvider, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**

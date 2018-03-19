@@ -30,6 +30,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
@@ -60,6 +61,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
@@ -97,12 +99,13 @@ public class CriteriaResource extends DeviceProfileDifferentiatorResource {
             final ICompanionObjectFinder companionFinder,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final ICriteriaGenerator critGenerator,
             final EntityFactory entityFactory,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
 
         this.restUtil = restUtil;
         this.companionFinder = companionFinder;

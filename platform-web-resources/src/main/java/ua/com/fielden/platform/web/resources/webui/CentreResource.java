@@ -36,6 +36,7 @@ import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -66,13 +67,14 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Dev
 
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
 
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
 
         this.restUtil = restUtil;
 

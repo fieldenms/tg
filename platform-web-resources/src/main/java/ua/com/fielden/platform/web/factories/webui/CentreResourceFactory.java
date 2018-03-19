@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreResource;
 
@@ -26,12 +27,12 @@ import ua.com.fielden.platform.web.resources.webui.CentreResource;
  */
 public class CentreResourceFactory extends Restlet {
     private final IWebUiConfig webUiConfig;
-    private final Injector injector;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
     private final ICriteriaGenerator critGenerator;
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
 
     /**
      * Instantiates a factory for centre resources.
@@ -39,12 +40,12 @@ public class CentreResourceFactory extends Restlet {
      */
     public CentreResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.webUiConfig = webUiConfig;
-        this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
-        this.userProvider = injector.getInstance(IUserProvider.class);;
+        this.userProvider = injector.getInstance(IUserProvider.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
     }
 
     @Override
@@ -57,6 +58,7 @@ public class CentreResourceFactory extends Restlet {
                     ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
                     serverGdtm,
                     userProvider,
+                    deviceProvider,
                     companionFinder,
                     critGenerator,
                     getContext(),

@@ -20,6 +20,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -47,10 +48,11 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
             final IServerGlobalDomainTreeManager serverGdtm,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
         this.serverGdtm = serverGdtm;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;

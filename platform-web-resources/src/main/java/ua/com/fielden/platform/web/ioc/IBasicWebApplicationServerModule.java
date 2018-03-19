@@ -17,10 +17,12 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
+import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
 import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
@@ -47,6 +49,9 @@ public interface IBasicWebApplicationServerModule {
      * @param webApp
      */
     default public void bindWebAppResources(final IWebUiConfig webApp) {
+        // bind IDeviceProvider to its implementation as singleton
+        bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class).in(Scopes.SINGLETON);
+        
         /////////////////////////////// application specific ////////////////////////////
         bindType(IServerGlobalDomainTreeManager.class).to(ServerGlobalDomainTreeManager.class).in(Scopes.SINGLETON);
         bindType(IGlobalDomainTreeManager.class).to(WebGlobalDomainTreeManager.class);

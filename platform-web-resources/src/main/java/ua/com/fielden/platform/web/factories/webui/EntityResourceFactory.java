@@ -5,6 +5,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -13,11 +15,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-
-import com.google.inject.Injector;
 
 /**
  * A factory for entity resources which instantiate resources based on entity type.
@@ -35,7 +36,8 @@ public class EntityResourceFactory extends Restlet {
     private final ICompanionObjectFinder coFinder;
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
-
+    private final IDeviceProvider deviceProvider;
+    
     /**
      * Instantiates a factory for entity resources.
      *
@@ -51,6 +53,7 @@ public class EntityResourceFactory extends Restlet {
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
     }
 
     @Override
@@ -70,6 +73,7 @@ public class EntityResourceFactory extends Restlet {
                     webUiConfig,
                     serverGdtm,
                     userProvider,
+                    deviceProvider,
                     getContext(),
                     request,
                     response //

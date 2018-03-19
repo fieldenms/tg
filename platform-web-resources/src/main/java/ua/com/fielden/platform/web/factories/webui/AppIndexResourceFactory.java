@@ -9,6 +9,7 @@ import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 
 /**
@@ -22,16 +23,19 @@ public class AppIndexResourceFactory extends Restlet {
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
     
     public AppIndexResourceFactory(
             final ISourceController sourceController, 
             final IServerGlobalDomainTreeManager serverGdtm,
             final IWebUiConfig webUiConfig,
-            final IUserProvider userProvider) {
+            final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.serverGdtm = serverGdtm;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
     }
     
     @Override
@@ -39,7 +43,7 @@ public class AppIndexResourceFactory extends Restlet {
         super.handle(request, response);
         
         if (Method.GET == request.getMethod()) {
-            new AppIndexResource(sourceController, serverGdtm, webUiConfig, userProvider, getContext(), request, response).handle();
+            new AppIndexResource(sourceController, serverGdtm, webUiConfig, userProvider, deviceProvider, getContext(), request, response).handle();
         }
     }
     

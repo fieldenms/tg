@@ -13,8 +13,8 @@ import org.restlet.resource.ResourceException;
 
 import com.google.common.base.Charsets;
 
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * Responds to GET requests with generated application specific Web UI preferences, which include location, widths settings for responsive layout etc.
@@ -25,8 +25,8 @@ import ua.com.fielden.platform.web.app.ISourceController;
 public class WebUiPreferencesResource extends DeviceProfileDifferentiatorResource {
     private final ISourceController sourceController;
     
-    public WebUiPreferencesResource(final ISourceController sourceController, final IUserProvider userProvider, final Context context, final Request request, final Response response) {
-        super(context, request, response, userProvider);
+    public WebUiPreferencesResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider);
         this.sourceController = sourceController;
     }
     

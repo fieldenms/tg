@@ -5,11 +5,11 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import rx.Observable;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.sse.AbstractEventSource;
-
 import com.google.inject.Injector;
+
+import rx.Observable;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.sse.AbstractEventSource;
 
 /**
  * A factory for a web resource {@link EventSourcingResource} that provides a general purpose implementation for the server-side eventing
@@ -24,20 +24,20 @@ public class EventSourcingResourceFactory extends Restlet {
     private final Injector injector;
     private final Class<? extends AbstractEventSource<?, ?>> eventSourceType;
     private final AbstractEventSource<?, ?> eventSource;
-    private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
 
-    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType, final IUserProvider userProvider) {
+    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType, final IDeviceProvider deviceProvider) {
         this.injector = injector;
         this.eventSourceType = eventSourceType;
         this.eventSource = null;
-        this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
     }
 
-    public EventSourcingResourceFactory(final AbstractEventSource<?, ?> eventSource, final IUserProvider userProvider) {
+    public EventSourcingResourceFactory(final AbstractEventSource<?, ?> eventSource, final IDeviceProvider deviceProvider) {
         this.injector = null;
         this.eventSource = eventSource;
         this.eventSourceType = null;
-        this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
     }
 
     @Override
@@ -45,9 +45,9 @@ public class EventSourcingResourceFactory extends Restlet {
 
         if (Method.GET == request.getMethod()) {
             if (this.eventSource != null) {
-                new EventSourcingResource(eventSource, userProvider, getContext(), request, response).handle();
+                new EventSourcingResource(eventSource, deviceProvider, getContext(), request, response).handle();
             } else {
-                new EventSourcingResource(injector.getInstance(eventSourceType), userProvider, getContext(), request, response).handle();
+                new EventSourcingResource(injector.getInstance(eventSourceType), deviceProvider, getContext(), request, response).handle();
             }
         }
     }

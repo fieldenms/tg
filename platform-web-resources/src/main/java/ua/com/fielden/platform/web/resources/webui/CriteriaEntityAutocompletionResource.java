@@ -16,6 +16,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -64,6 +66,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final ICompanionObjectFinder companionFinder, 
             final IServerGlobalDomainTreeManager serverGdtm, 
             final IUserProvider userProvider, 
+            final IDeviceProvider deviceProvider,
             final ICriteriaGenerator critGenerator, 
             final EntityFactory entityFactory, 
             final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -73,7 +76,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
 
         this.miType = miType;
         this.criterionPropertyName = criterionPropertyName;

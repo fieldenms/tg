@@ -10,10 +10,11 @@ import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
+
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -35,12 +36,12 @@ public class MasterTestsComponentResource extends DeviceProfileDifferentiatorRes
      */
     public MasterTestsComponentResource(
             final EntityMaster<? extends AbstractEntity<?>> master,
-            final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(context, request, response, userProvider);
+        super(context, request, response, deviceProvider);
         this.master = master;
     }
 
