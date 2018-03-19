@@ -198,7 +198,8 @@
 
             _selectedView: {
                 type: Number,
-                notify: true
+                notify: true,
+                observer: '_selectedViewChanged'
             },
             _url: Function,
             _processSaverResponse: Function,
@@ -400,19 +401,14 @@
         _pageSelectionChanged: function (event) {
             var target = event.target || event.srcElement;
             if (target === this.$.views) {
-                var egi = this.querySelector(".custom-egi");
-                var selectionCriteria = this.$.selectionView;
+                const egi = this.querySelector(".custom-egi");
+                const selectionView = this.$.selectionView;
                 if (this._selectedView === 0) {
-                    this._configViewBindings(egi, selectionCriteria);
-                    selectionCriteria.focus();
+                    this._configViewBindings(egi, selectionView);
                 } else if (this._selectedView === 1) {
-                    this._configViewBindings(selectionCriteria, egi);
-                    var elementToFocus = egi.$$("#elementToFocus");
-                    //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
-                    if (elementToFocus && typeof elementToFocus.focus === 'function') {
-                        elementToFocus.focus();
-                    }
+                    this._configViewBindings(selectionView, egi);
                 }
+                this.focusSelectedView();
                 if (event.stopPropagation) event.stopPropagation();
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
@@ -427,19 +423,31 @@
                 newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
             }
         },
-
+        
+        _selectedViewChanged: function (newValue, oldValue) {
+            this._prevSelectedView = oldValue;
+        },
+        
         focusSelectedView: function () {
             if (this._selectedView === 0) {
-                this.$.selectionView.focus();
+                this.$.selectionView.focus(); // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
+                if (this._prevSelectedView === undefined) {
+                    this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
+                    this._prevSelectedView = 0;
+                } else {
+                    // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
+                    this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
+                }
             } else if (this._selectedView === 1) {
-                var elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
-                //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
+                const elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
                 if (elementToFocus && typeof elementToFocus.focus === 'function') {
                     elementToFocus.focus();
+                    this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
                 }
             }
         },
-
+        
         addOwnKeyBindings: function () {
             var egi = this.querySelector(".custom-egi");
             var selectionCriteria = this.$.selectionView;
@@ -481,6 +489,7 @@
         runAsync: function () {
             var self = this;
             this.async(function () {
+                self.persistActiveElement();
                 self.run();
             }, 100);
         }
