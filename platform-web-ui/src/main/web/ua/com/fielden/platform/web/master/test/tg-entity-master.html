@@ -9,7 +9,6 @@
 	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
 	<script src="/resources/polymer/web-component-tester/browser.js"></script>
 	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
 	
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
   
@@ -819,8 +818,8 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
+                    const saveButton = master.$$('tg-action[role="save"]');
+                    saveButton._asyncRun();
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -867,8 +866,8 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
+                    const saveButton = master.$$('tg-action[role="save"]');
+                    saveButton._asyncRun();
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -914,8 +913,8 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
+                    const saveButton = master.$$('tg-action[role="save"]');
+                    saveButton._asyncRun();
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -1109,14 +1108,14 @@
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    const saveButton = master.$$('tg-action[role="save"]');
                     if (firstValidation) {
-                        MockInteractions.tap(saveButton);
+                        saveButton._asyncRun();
                         firstValidation = false;
                     } else {
                         this.async(function () {
                             // need to place this on top of JS execution stack after save button enablement logic
-                            MockInteractions.tap(saveButton);
+                            saveButton._asyncRun();
                         }, 1);
                     }
                 };
@@ -1174,14 +1173,14 @@
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    var saveButton = master.$._saveAction.$.actionButton;
+                    const saveButton = master.$._saveAction;
                     if (firstValidation) {
-                        MockInteractions.tap(saveButton);
+                        saveButton._asyncRun();
                         firstValidation = false;
                     } else if (!firstValidation && !thirdValidation) {
                         master.$.editor_4_dateProp._editingValue = '01/02/2003 00:00';
                         master.$.editor_4_dateProp.commit();
-                        MockInteractions.tap(saveButton);
+                        saveButton._asyncRun();
                         thirdValidation = true;
                     } 
                 };
