@@ -139,7 +139,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
     @Override
     public final DomElement render() {
-        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes()).add(editors());
+        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes()).add(editors()).clazz("criterion-widget");
     }
 
     /**
@@ -173,7 +173,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     public static Pair<String, String> generateNames(final Class<?> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, propertyName);
-        
+
         final String firstPropertyName, secondPropertyName;
         if (isDoubleCriterion(managedType, propertyName)) {
             firstPropertyName = generateCriteriaPropertyName(root, isBoolean(propertyType) ? is(propertyName) : from(propertyName));

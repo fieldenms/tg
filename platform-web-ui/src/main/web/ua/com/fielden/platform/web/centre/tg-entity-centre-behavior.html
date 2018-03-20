@@ -787,7 +787,7 @@
             },
 
             /**
-             * Set the query params to selection criteria if they exists.
+             * Set the query params to selection criteria if they exists and then clears the query part.
              */
             _setQueryParams: function () {
                 var self = this;
@@ -800,6 +800,11 @@
                 paramObject = queries.map(function (query) {
                     return generateQueryParam(root, query)
                 });
+                //If parameters are not empty then clear mnemonics
+                if (paramObject.length > 0) {
+                    const criterions = self.$.selection_criteria.$.masterDom.querySelectorAll('.criterion-widget');
+                    criterions.forEach(criterion => criterion.clearMetaValues());
+                }
                 paramObject.forEach(function (queryParam) {
                     var criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
                     var firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
@@ -820,6 +825,7 @@
                         secondEditor.commit();
                     }
                 });
+                delete this.queryPart;
             },
 
             /**
