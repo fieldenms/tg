@@ -130,6 +130,11 @@
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
@@ -169,10 +174,10 @@
             <div class="layout vertical" main>
 
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
-                    <div class="layout horizontal center flex">
+                    <div class="layout horizontal center flex" style="display: contents">
                         <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                         <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-                        <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                        <div class="flex truncate">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
 
