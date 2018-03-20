@@ -549,6 +549,8 @@
                     if (viewToLoad) {
                         if (!viewToLoad.wasLoaded()) {
                             viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                            const currentState = window.history.state;
+                            window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
                         } else {
                             viewToLoad.focusLoadedView();
                         }
