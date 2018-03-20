@@ -630,7 +630,7 @@
 <script>
     (function () {
         const _areEqual = function (a, b) {
-            return a.get('id') === b.get('id');
+            return a && b && a.get('id') === b.get('id');
         };
         const _findEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
@@ -641,7 +641,7 @@
             return -1;
         };
         const _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = selectedEntities.indexOf(entity);
+            var selectedIndex = _findEntity(entity, selectedEntities);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
@@ -714,6 +714,10 @@
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
+                },
+                filteredEntities: {
+                    type: Array,
+                    observer: "_filteredEntitiesChanged"
                 },
                 totals: Object,
                 columns: {
@@ -973,7 +977,7 @@
              * Updates entity when some of the properties were changed.
              */
             updateEntity: function (entity, propPath) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
@@ -981,21 +985,21 @@
             },
 
             setRenderingHints: function (entity, property, renderingHints) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
             selectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], select, this);
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
                         entities: [{
-                            entity: this.entities[entityIndex],
+                            entity: this.filteredEntities[entityIndex],
                             select: select
                         }]
                     });
@@ -1003,14 +1007,13 @@
             },
 
             filter: function () {
-                const tempEgiModel = [];
-                this.nonFilteredEgiModel.forEach((egiEntity, index) => {
-                    if (this.isVisible(egiEntity.entity)) {
-                        tempEgiModel.push(egiEntity);
+                const tempFilteredEntities = [];
+                this.entities.forEach(entity => {
+                    if (this.isVisible(entity)) {
+                        tempFilteredEntities.push(entity);
                     }
                 });
-                this.egiModel = tempEgiModel;
-                this._updateTableSizeAsync();
+                this.filteredEntities = tempFilteredEntities;
             },
             
             isVisible: function (entity) {
@@ -1517,12 +1520,16 @@
                     return "padding: 8px;";
                 }
             },
+            
+            _entitiesChanged: function (newValue, oldValue) {
+                this.filter();
+            },
 
             /**
              * Observs the changes to entities property.
              */
-            _entitiesChanged: function (newValue, oldValue) {
-                this.nonFilteredEgiModel = [];
+            _filteredEntitiesChanged: function (newValue, oldValue) {
+                const tempEgiModel = [];
                 const self = this;
                 newValue.forEach(function (newEntity) {
                     const selectEntInd = _findEntity(newEntity, self.selectedEntities);
@@ -1540,10 +1547,11 @@
                         entity: newEntity,
                         renderingHints: newRendHints
                     };
-                    self.nonFilteredEgiModel.push(egiEntity);
+                    tempEgiModel.push(egiEntity);
                 });
-                updateSelectAll(this, self.nonFilteredEgiModel);
-                this.filter();
+                updateSelectAll(this, tempEgiModel);
+                self.egiModel = tempEgiModel;
+                this._updateTableSizeAsync();
                 this.fire("tg-egi-entities-loaded", newValue);
             },
 
@@ -1621,10 +1629,15 @@
                 let numOfSelected = 0;
                 let lastSelectedIndex = -1;
                 newSelection.entities.forEach(entitySelection => {
-                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    const entityIndex = _findEntity(entitySelection.entity, this.filteredEntities);
                     if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
                         this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], entitySelection.select, this);
+                    } else {
+                        const hiddenEntityIndex = _findEntity(entitySelection.entity, this.entities);
+                        if (hiddenEntityIndex >= 0) {
+                            _processEntitySelection(this.selectedEntities, this.entities[hiddenEntityIndex], entitySelection.select, this);
+                        }
                     }
                     if (entitySelection.select) {
                         numOfSelected += 1;
@@ -1634,7 +1647,7 @@
                 //update selectAll parameter according to entity selection.
                 updateSelectAll(this, this.egiModel);
                 //Scroll to the selected one if it is the only one and should scroll is true.
-                if (newSelection.shouldScrollToSelected && numOfSelected === 1) {
+                if (newSelection.shouldScrollToSelected && numOfSelected === 1 && lastSelectedIndex >= 0) {
                     const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
                     if (entityRow) {
@@ -1668,9 +1681,9 @@
                     for (let i = 0; i < this.egiModel.length; i += 1) {
                         if (this.egiModel[i].selected !== checked) {
                             this.set("egiModel." + i + ".selected", checked);
-                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
+                            _processEntitySelection(this.selectedEntities, this.filteredEntities[i], checked);
                             selectionDetails.push({
-                                entity: this.entities[i],
+                                entity: this.filteredEntities[i],
                                 select: checked
                             });
                         }
@@ -1697,11 +1710,11 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[index], target.checked, this);
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
                             entities: [{
-                                entity: this.entities[index],
+                                entity: this.filteredEntities[index],
                                 select: target.checked
                         }]
                         });
@@ -1731,9 +1744,9 @@
                 for (let i = from; i <= to; i++) {
                     if (!this.egiModel[i].selected) {
                         this.set("egiModel." + i + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[i], true);
                         selectionDetails.push({
-                            entity: this.entities[i],
+                            entity: this.filteredEntities[i],
                             select: true
                         });
                     }
@@ -1984,7 +1997,7 @@
             containsAnyEntity: function (entitiesToSearch) {
                 var entityIndex;
                 for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
-                    if (_findEntity(entitiesToSearch[entityIndex], this.entities) !== -1) {
+                    if (_findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
                         return true;
                     }
                 }
@@ -2056,7 +2069,7 @@
              * Tap action on data column. TODO: implement this.
              */
             _tapAction: function (e, detail) {
-                this.tap(this.entities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
+                this.tap(this.filteredEntities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
             },
 
             tap: function (entity, index, column) {
