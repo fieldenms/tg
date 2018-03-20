@@ -814,7 +814,7 @@
                         criterion._not = queryParam.not;
                         criterion._exclusive = queryParam.exclude1;
                         criterion._exclusive2 = queryParam.exclude2;
-                        criterion._acceptMetaValues();
+                        criterion._acceptMetaValues(false);
                     }
                     if (firstEditor) {
                         firstEditor._editingValue = queryParam.firstEditorValue;
