@@ -120,8 +120,10 @@
         <h1>Application Login</h1>
         <h3>Please enter valid credentials.</h3>
     </hgroup>
-
-    <form id="form" is="iron-form" action="login" method="post">
+    
+    <!-- Autocompletion of fields from other un-related forms is prevented, however in-browser Save Password capabilities are always stronger than this.-->
+    <!-- See https://developer.mozilla.org/en-US/docs/Web/Security/Securing_your_site/Turning_off_form_autocompletion for more details. -->
+    <form id="form" is="iron-form" action="login" method="post" autocomplete="off">
         <div class="vertical-section">
             <paper-input-container id="in-username-container">
                 <label>User name</label>
