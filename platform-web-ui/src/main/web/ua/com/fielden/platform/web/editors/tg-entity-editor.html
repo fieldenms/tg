@@ -507,12 +507,19 @@
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-
+                
                 this.async(function () {
                     if (result.opened) {
                         this._resultOpened();
                     } else {
-                        result.open();
+                        if (result.visibleHeightUnderEditor() < 3 * 37) {
+                            this.scrollIntoView({block: "center", inline: "center", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
+                            this.async(function () {
+                                result.open();
+                            }.bind(this), 300);
+                        } else {
+                            result.open();    
+                        }
                     }
                     result.notifyResize();
                 }.bind(this), 100);

@@ -508,6 +508,17 @@
                 // the current vertical location of the element
                 var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment 
+            },
+            
+            visibleHeightUnderEditor: function () {
+                const clientRectAndOffsetHeight = this.retrieveContainerSizes();
+                const rect = clientRectAndOffsetHeight[0];
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                const top = rect.top + scrollTop + clientRectAndOffsetHeight[1];
+                
+                // let's try to determine the height under the editor to bottom of the screen
+                const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                return visibleHeight - top;
             }
 		});
 	})();
