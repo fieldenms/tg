@@ -512,19 +512,19 @@
                     if (result.opened) {
                         this._resultOpened();
                     } else {
-                        if (result.visibleHeightUnderEditor() < 3 * 37) {
+                        if (result.visibleHeightUnderEditorIsSmall()) {
                             this.scrollIntoView({block: "center", inline: "center", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
-                            this.async(function () {
+                            this.async(function () { // need to wait at least 300 ms for scrolling to complete..
                                 result.open();
                             }.bind(this), 300);
                         } else {
-                            result.open();    
+                            result.open();
                         }
                     }
                     result.notifyResize();
                 }.bind(this), 100);
             },
-
+            
             /**
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
