@@ -787,15 +787,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
-        
+
         final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
                 .createAttachmentsUploadMaster(injector(), mkDim(400, Unit.PX, 400, Unit.PX), 10240,
-                        "image/png", "image/jpeg", 
-                        "application/pdf,application/zip", 
-                        ".csv", ".txt", "text/plain", "text/csv", 
-                        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                        "image/png", "image/jpeg",
+                        "application/pdf,application/zip",
+                        ".csv", ".txt", "text/plain", "text/csv",
+                        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                         "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        
+
         configApp().
             addMaster(attachmentsUploadActionMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
@@ -1449,7 +1449,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
                 /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value());
-        
+
         final ILayoutConfigWithResultsetSupport<TgPersistentEntityWithProperties> layoutConfig;
         if (critOnlySingleValidation) {
             layoutConfig = afterAddCritConf
@@ -1479,7 +1479,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                   .also().addCrit("cosStaticallyRequiredWithNonEmptyDefaultValue")
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                       .withDefaultValueAssigner(CosCritAssigner.class)
-                  
+
                   .also().addCrit("cosWithACE1")
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                   .also().addCrit("cosWithACE1Child1")
@@ -1493,7 +1493,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                   .also().addCrit("cosWithACE1WithDefaultValueChild2")
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      
+
                   .also().addCrit("cosWithACE2")
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                   .also().addCrit("cosWithACE2Child1")
@@ -1507,7 +1507,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                   .also().addCrit("cosWithACE2WithDefaultValueChild2")
                       .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  
+
                   .setLayoutFor(Device.DESKTOP, Optional.empty(),
                           //                        ("[['center-justified', 'start', mrLast]]")
                           ("[['center-justified', 'start', mr, mr, mrLast]," +
@@ -1630,10 +1630,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
                 //.hideCheckboxes()
                 //.notScrollable()
-                final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig.withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(2).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
+                final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
+                        .withScrollingConfig(ScrollConfig.configScroll()
+                                .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
+                                .withFixedSecondaryActions()
+                                .withFixedHeader()
+                                .withFixedSummary()
+                                .done())
                 .draggable()
                 .setPageCapacity(20)
+                //.setHeight("100%")
                 .setVisibleRowsCount(10)
+                //.fitToHeight()
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
@@ -1885,21 +1893,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
         return scl.build();
     }
-    
+
     /**
      * Default value assigner for crit-only single criteria validation example.
-     * 
+     *
      * @author TG Team
      *
      */
     private static class CosCritAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>, TgPersistentEntityWithProperties> {
         private final ITgPersistentEntityWithProperties co;
-        
+
         @Inject
         public CosCritAssigner(final ITgPersistentEntityWithProperties co) {
             this.co = co;
         }
-        
+
         @Override
         public Optional<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>> getValue(final CentreContext<TgPersistentEntityWithProperties, ?> entity, final String name) {
             if ("cosEmptyValueProhibited".equals(name) || "cosStaticallyRequiredWithDefaultValue".equals(name)) {
@@ -1912,7 +1920,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             return empty();
         }
     }
-    
+
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(miType, name, entityCentreConfig, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.

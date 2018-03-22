@@ -34,6 +34,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolba
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
@@ -439,7 +440,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> setVisibleRowsCount(final int visibleRowsCount) {
+    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
         this.builder.visibleRowsCount = visibleRowsCount;
         return this;
     }
@@ -459,6 +460,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1bPageCapacity<T> draggable() {
         builder.draggable = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+        this.builder.egiHeight = height;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> fitToHeight() {
+        this.builder.fitToHeight = true;
         return this;
     }
 }

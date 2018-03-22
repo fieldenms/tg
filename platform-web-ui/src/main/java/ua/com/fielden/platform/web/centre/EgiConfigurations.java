@@ -16,7 +16,8 @@ public enum EgiConfigurations {
     CHECKBOX_WITH_PRIMARY_ACTION_FIXED("checkboxes-with-primary-actions-fixed"),
     SECONDARY_ACTION_FIXED("secondary-actions-fixed"),
     HEADER_FIXED("header-fixed"),
-    SUMMARY_FIXED("summary-fixed");
+    SUMMARY_FIXED("summary-fixed"),
+    FIT_TO_HEIGHT("fit-to-height");
 
     private final String egiConfigurationString;
 
