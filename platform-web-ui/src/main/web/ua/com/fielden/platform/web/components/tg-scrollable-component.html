@@ -13,21 +13,21 @@
             @apply(--layout-vertical);
             @apply(--tg-scrollable-layout);
         }
+        #shadowContainer {
+            pointer-events: none;
+        }
     </style>
     <template>
         <div id="scrollablePanel" on-scroll="_contentScrolled">
             <content></content>
         </div>
+        <div id="shadowContainer" class="fit"></div>
     </template>
 </dom-module>
 
 <script>
     Polymer({
         is: 'tg-scrollable-component',
-
-        properties: {
-
-        },
 
         behaviors: [Polymer.IronResizableBehavior],
 
@@ -41,6 +41,7 @@
 
         _contentScrolled: function (e) {
             const scrollTarget = this.$.scrollablePanel;
+            const shadowTarget = this.$.shadowContainer;
             if (scrollTarget) {
                 let shadowStyle = "";
                 if (scrollTarget.scrollTop) {
@@ -50,9 +51,9 @@
                     shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
                 }
                 if (shadowStyle) {
-                    scrollTarget.style.boxShadow = shadowStyle;
+                    shadowTarget.style.boxShadow = shadowStyle;
                 } else {
-                    scrollTarget.style.removeProperty('box-shadow');
+                    shadowTarget.style.removeProperty('box-shadow');
                 }
             }
         },

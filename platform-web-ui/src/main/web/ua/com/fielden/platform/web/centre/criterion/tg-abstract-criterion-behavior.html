@@ -200,7 +200,7 @@
             var div = domBind.content.ownerDocument.createElement('div');
             div.innerHTML = '<paper-dialog id="metaValueEditor" class="layout vertical meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_openedBind">' +
 
-            '<tg-scrollable-component>' +
+            '<tg-scrollable-component class="relative">' +
                 '<div class="metavalue-editor layout vertical">' +
                 self._createMetaValueEditors() +
                 '</div>' +
