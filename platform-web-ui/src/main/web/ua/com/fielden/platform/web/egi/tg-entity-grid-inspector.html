@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 <link rel="import" href="/resources/images/tg-icons.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
@@ -30,6 +31,10 @@
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
+        :host {
+            @apply(--layout-vertical);
+
+        }
         /*miscellanea styles*/
         .lock-layer {
             opacity: 0.5;
@@ -87,6 +92,9 @@
         paper-material {
             border-radius: 2px;
         }
+        paper-material[fit-to-height] {
+            flex-grow: 1;
+        }
         #scrollContainer {
             overflow: auto;
         }
@@ -120,6 +128,8 @@
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-data-row {
             font-size: 1rem;
@@ -130,6 +140,8 @@
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-data-row:last-of-type,
         .table-footer-row:last-of-type,
@@ -151,6 +163,8 @@
             text-rendering: optimizeLegibility;
             min-width: fit-content;
             background-color: white;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-cell,
         .table-data-cell {
@@ -163,6 +177,8 @@
             height: auto;
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .grid-toolbar-content::content > * {
             margin-top: 8px;
@@ -245,8 +261,8 @@
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
-            <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
+        <paper-material elevation="1" style="margin: 10px 10px;" fit-to-height$="[[fitToHeight]]" class="layout vertical">
+            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -257,8 +273,8 @@
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
-                    <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
+                <div id="baseContainer" class="relative layout horizontal flex" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
+                    <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
                             <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
@@ -321,9 +337,10 @@
                             </div>
                         </template>
                         <!-- Table footer -->
+                        <!--div class="flex"></div-->
                         <template is="dom-if" if="[[totals]]">
                             <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex)]]">
+                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex, fitToHeight)]]">
                                     <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
                                     <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]">
                                         <!-- checkbox stub for table footer -->
@@ -404,7 +421,7 @@
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                     <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                                        <div class="layout horizontal table-footer-row">
+                                        <div class="layout horizontal table-footer-row" style$="[[_calcFixedFooterRowStyle(summaryIndex, fitToHeight)]]">
                                             <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
                                             <div class="table-cell no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <!-- checkbox stub for table footer -->
@@ -458,7 +475,7 @@
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                     <template is="dom-repeat" items="[[_totalsRows]]">
-                                        <div class="layout horizontal table-footer-row">
+                                        <div class="layout horizontal table-footer-row" style$="[[_calcFixedFooterRowStyle(index, fitToHeight)]]">
                                             <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Secondary actions header goes here-->
                                             </div>
@@ -613,7 +630,7 @@
 <script>
     (function () {
         const _areEqual = function (a, b) {
-            return a.get('id') === b.get('id');
+            return a && b && a.get('id') === b.get('id');
         };
         const _findEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
@@ -624,7 +641,7 @@
             return -1;
         };
         const _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = selectedEntities.indexOf(entity);
+            var selectedIndex = _findEntity(entity, selectedEntities);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
@@ -698,6 +715,10 @@
                     type: Array,
                     observer: "_entitiesChanged"
                 },
+                filteredEntities: {
+                    type: Array,
+                    observer: "_filteredEntitiesChanged"
+                },
                 totals: Object,
                 columns: {
                     type: Array,
@@ -735,7 +756,20 @@
                     type: Number,
                     value: 0
                 },
-
+                /**
+                 * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
+                 */
+                constantHeight: {
+                    type: String,
+                    value: ""
+                },
+                /**
+                 * Indicates whether content should be extended to EGI's height or not.
+                 */
+                fitToHeight: {
+                    type: Boolean,
+                    value: false
+                },
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
@@ -829,6 +863,10 @@
                 },
                 _lastSelectedIndex: Number
             },
+
+            observers: [
+          '_heightRelatedPropertiesChanged(visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
+            ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior, Polymer.TgBehaviors.TgDragFromBehavior],
 
@@ -939,7 +977,7 @@
              * Updates entity when some of the properties were changed.
              */
             updateEntity: function (entity, propPath) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
@@ -947,25 +985,39 @@
             },
 
             setRenderingHints: function (entity, property, renderingHints) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
             selectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], select, this);
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
                         entities: [{
-                            entity: this.entities[entityIndex],
+                            entity: this.filteredEntities[entityIndex],
                             select: select
                         }]
                     });
                 }
+            },
+
+            filter: function () {
+                const tempFilteredEntities = [];
+                this.entities.forEach(entity => {
+                    if (this.isVisible(entity)) {
+                        tempFilteredEntities.push(entity);
+                    }
+                });
+                this.filteredEntities = tempFilteredEntities;
+            },
+            
+            isVisible: function (entity) {
+                return true;
             },
 
             getElementToDragFrom: function (target) {
@@ -1185,31 +1237,33 @@
             },
 
             /**
-             * Resize event handler that adjasts the lock container size and position.
+             * Resize event handler that adjusts the lock container size and position.
              */
             _resizeEventListener: function (event, details) {
-                const propertyToSet = this.visibleRowCount > 0 ? "max-height" : "height";
-                const propertyToRemove = this.visibleRowCount > 0 ? "height" : "max-height";
-                const bottomPosition = this._calcHorizontalScrollBarHeight();
-                let rowCount, height;
-                if (this.visibleRowCount > 0) {
-                    rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
-                    height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
-                } else {
-                    rowCount = this.entities.length + this._totalsRowCount;
-                    height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
-                }
-                const previousHeight = this.$.baseContainer.style[propertyToSet];
-                this.$.baseContainer.style.removeProperty(propertyToRemove);
-                this.$.scrollContainer.style.removeProperty(propertyToRemove);
-                this.$.baseContainer.style[propertyToSet] = height;
-                this.$.scrollContainer.style[propertyToSet] = height;
-                this.$.lockContainer.style.bottom = bottomPosition + "px";
+                this.$.lockContainer.style.bottom = this._calcHorizontalScrollBarHeight() + "px";
                 this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                 this._handleScrollEvent();
-                if (previousHeight !== height) {
-                    this.fire("tg-egi-resizied", height);
+            },
+
+            _heightRelatedPropertiesChanged: function (visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
+                //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
+                this.style.removeProperty("height");
+                this.style.removeProperty("min-height");
+                this.$.scrollContainer.style.removeProperty("height");
+                this.$.scrollContainer.style.removeProperty("max-height");
+                if (constantHeight) { //Set the height for the egi
+                    this.style["height"] = constantHeight;
+                } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+                    this.style["min-height"] = "fit-content";
+                    const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+                    const height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
+                    if (fitToHeight) {
+                        this.$.scrollContainer.style["height"] = height;
+                    } else {
+                        this.$.scrollContainer.style["max-height"] = height;
+                    }
                 }
+                this._resizeEventListener();
             },
 
             _updateShadows: function () {
@@ -1378,7 +1432,10 @@
                 if (action && (action.shortDesc || action.longDesc)) {
                     return this._generateActionTooltip(action);
                 } else if (this._getAttachmentIfPossible(entity, column)) {
-                    return this._generateActionTooltip({shortDesc: 'Download', longDesc: 'Click to download attachment.'});
+                    return this._generateActionTooltip({
+                        shortDesc: 'Download',
+                        longDesc: 'Click to download attachment.'
+                    });
                 }
                 return "";
             },
@@ -1463,11 +1520,15 @@
                     return "padding: 8px;";
                 }
             },
+            
+            _entitiesChanged: function (newValue, oldValue) {
+                this.filter();
+            },
 
             /**
              * Observs the changes to entities property.
              */
-            _entitiesChanged: function (newValue, oldValue) {
+            _filteredEntitiesChanged: function (newValue, oldValue) {
                 const tempEgiModel = [];
                 const self = this;
                 newValue.forEach(function (newEntity) {
@@ -1568,10 +1629,15 @@
                 let numOfSelected = 0;
                 let lastSelectedIndex = -1;
                 newSelection.entities.forEach(entitySelection => {
-                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    const entityIndex = _findEntity(entitySelection.entity, this.filteredEntities);
                     if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
                         this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], entitySelection.select, this);
+                    } else {
+                        const hiddenEntityIndex = _findEntity(entitySelection.entity, this.entities);
+                        if (hiddenEntityIndex >= 0) {
+                            _processEntitySelection(this.selectedEntities, this.entities[hiddenEntityIndex], entitySelection.select, this);
+                        }
                     }
                     if (entitySelection.select) {
                         numOfSelected += 1;
@@ -1581,7 +1647,7 @@
                 //update selectAll parameter according to entity selection.
                 updateSelectAll(this, this.egiModel);
                 //Scroll to the selected one if it is the only one and should scroll is true.
-                if (newSelection.shouldScrollToSelected && numOfSelected === 1) {
+                if (newSelection.shouldScrollToSelected && numOfSelected === 1 && lastSelectedIndex >= 0) {
                     const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
                     if (entityRow) {
@@ -1615,9 +1681,9 @@
                     for (let i = 0; i < this.egiModel.length; i += 1) {
                         if (this.egiModel[i].selected !== checked) {
                             this.set("egiModel." + i + ".selected", checked);
-                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
+                            _processEntitySelection(this.selectedEntities, this.filteredEntities[i], checked);
                             selectionDetails.push({
-                                entity: this.entities[i],
+                                entity: this.filteredEntities[i],
                                 select: checked
                             });
                         }
@@ -1644,11 +1710,11 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[index], target.checked, this);
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
                             entities: [{
-                                entity: this.entities[index],
+                                entity: this.filteredEntities[index],
                                 select: target.checked
                         }]
                         });
@@ -1678,9 +1744,9 @@
                 for (let i = from; i <= to; i++) {
                     if (!this.egiModel[i].selected) {
                         this.set("egiModel." + i + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[i], true);
                         selectionDetails.push({
-                            entity: this.entities[i],
+                            entity: this.filteredEntities[i],
                             select: true
                         });
                     }
@@ -1727,9 +1793,18 @@
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
              */
-            _calcFooterRowStyle: function (summaryFixed, summaryIndex) {
-                return summaryFixed ? "visibility:hidden" : "";
+            _calcFooterRowStyle: function (summaryFixed, summaryIndex, fitToHeight) {
+                let styleStr = summaryFixed ? "visibility:hidden;" : "";
+                if (fitToHeight && summaryIndex === 0) {
+                    styleStr += "margin-top:auto;"
+                }
+                return styleStr;
             },
+
+            _calcFixedFooterRowStyle: function (summaryIndex, fitToHeight) {
+                return (summaryIndex === 0 && fitToHeight) ? "margin-top: auto" : "";
+            },
+
             /**
              * Calculates style for the visibility of drag anchor.
              */
@@ -1823,11 +1898,11 @@
              * Below are function related to lock panels position calculation logic.
              */
             _calculateLeftLockPanelStyle: function (_showLeftShadow, _scrollTop, headerFixed) {
-                return "left:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
+                return "left:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);bottom:0";
             },
 
             _calculateRightLockPanelStyle: function (_showRightShadow, _scrollTop, headerFixed) {
-                return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
+                return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);bottom:0";
             },
 
             _calculateTopLockPanelStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
@@ -1922,7 +1997,7 @@
             containsAnyEntity: function (entitiesToSearch) {
                 var entityIndex;
                 for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
-                    if (_findEntity(entitiesToSearch[entityIndex], this.entities) !== -1) {
+                    if (_findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
                         return true;
                     }
                 }
@@ -1945,21 +2020,21 @@
             /**
              * Determines whether property is or belongs to type Attachment.
              */
-             _getAttachmentIfPossible: function (entity, column) {
+            _getAttachmentIfPossible: function (entity, column) {
                 if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
                     return entity;
-             	} else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type && 
-             	           this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-             	    return this._getValueFromEntity(entity, column.property);
-             	} else  if (this.$.reflector.entityPropOwner(entity, column.property)){
-             	    const owner = this.$.reflector.entityPropOwner(entity, column.property);
-             	    if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-             	        return owner;
-             	    }
-             	    return null;
-             	} else {
-             	    return null;
-             	}
+                } else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type &&
+                    this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                    return this._getValueFromEntity(entity, column.property);
+                } else if (this.$.reflector.entityPropOwner(entity, column.property)) {
+                    const owner = this.$.reflector.entityPropOwner(entity, column.property);
+                    if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                        return owner;
+                    }
+                    return null;
+                } else {
+                    return null;
+                }
             },
 
             /**
@@ -1994,7 +2069,7 @@
              * Tap action on data column. TODO: implement this.
              */
             _tapAction: function (e, detail) {
-                this.tap(this.entities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
+                this.tap(this.filteredEntities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
             },
 
             tap: function (entity, index, column) {
@@ -2008,13 +2083,13 @@
                     } else {
                         const attachment = this._getAttachmentIfPossible(entity, column);
                         if (attachment) {
-	                        const url = '/download-attachment/' + attachment.id;
-	                        window.open(url, '_blank');
-	                        // a better experience is provided when using <a> insteado of opening another browser window, but this does not work well when an error occurs
-	                        // in case of an error, the application gets replaced with an error page and the back button leads to reloadig of the whole application
-	                        //const a = document.createElement('A');
-	                        //a.href = url;
-	                        //a.click();
+                            const url = '/download-attachment/' + attachment.id;
+                            window.open(url, '_blank');
+                            // a better experience is provided when using <a> insteado of opening another browser window, but this does not work well when an error occurs
+                            // in case of an error, the application gets replaced with an error page and the back button leads to reloadig of the whole application
+                            //const a = document.createElement('A');
+                            //a.href = url;
+                            //a.click();
                         }
                     }
                 }
