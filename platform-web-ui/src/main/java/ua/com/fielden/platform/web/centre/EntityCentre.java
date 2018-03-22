@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISI
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAGGABLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAG_ANCHOR_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.FIT_TO_HEIGHT;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
@@ -144,6 +145,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String EGI_HEADER_FIXED = "@headerFixed";
     private final String EGI_SUMMARY_FIXED = "@summaryFixed";
     private final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
+    private final String EGI_HEIGHT = "@egiHeight";
+    private final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
     private final String EGI_PAGE_CAPACITY = "@pageCapacity";
     private final String EGI_ACTIONS = "//generatedActionObjects";
     private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
@@ -166,6 +169,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
     private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
     private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
+    private final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
     private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
     // generic custom code
     private final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
@@ -934,12 +938,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
+        final DomContainer topInsertionPointsDom = new DomContainer();
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
-            if (el.whereToInsert() == InsertionPoints.LEFT) {
+            if (el.whereToInsert() == InsertionPoints.TOP) {
+                topInsertionPointsDom.add(insertionPoint);
+            } else if (el.whereToInsert() == InsertionPoints.LEFT) {
                 leftInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.RIGHT) {
                 rightInsertionPointsDom.add(insertionPoint);
@@ -995,6 +1002,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
                 replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
                 replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
+                replace(EGI_HEIGHT, dslDefaultConfig.getEgiHeight()).
+                replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
                 ///////////////////////
                 replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
                 replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
@@ -1020,6 +1029,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
+                replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
