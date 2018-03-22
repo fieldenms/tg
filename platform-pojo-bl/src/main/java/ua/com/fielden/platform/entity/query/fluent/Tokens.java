@@ -487,6 +487,10 @@ final class Tokens {
         return add(FUNCTION, Functions.YEAR);
     }
 
+    public Tokens dayOfWeekOf() {
+        return add(FUNCTION, Functions.DAY_OF_WEEK);
+    }
+
     public Tokens dateOf() {
         return add(FUNCTION, DATE);
     }

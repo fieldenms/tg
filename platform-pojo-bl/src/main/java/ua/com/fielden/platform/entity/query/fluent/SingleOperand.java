@@ -157,6 +157,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	public IFunctionLastArgument<T, ET> yearOf() {
 		return createFunctionLastArgument(getTokens().yearOf());
 	}
+	
+	@Override
+	public IFunctionLastArgument<T, ET> dayOfWeekOf() {
+		return createFunctionLastArgument(getTokens().dayOfWeekOf());
+	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> dateOf() {

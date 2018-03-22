@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
+import static java.lang.Integer.valueOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -202,6 +203,12 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
 
+    @Test
+    public void day_of_week_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().dayOfWeekOf().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(1), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
     @Test
     public void add_seconds_function_works_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).seconds().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
