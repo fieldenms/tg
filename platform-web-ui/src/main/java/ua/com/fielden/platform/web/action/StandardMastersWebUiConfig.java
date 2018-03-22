@@ -40,7 +40,9 @@ import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActi
  *
  */
 public class StandardMastersWebUiConfig {
-    public static final String MASTER_ACTION_WIDTH = "80px";
+    public static final int MASTER_ACTION_DEFAULT_WIDTH = 80;
+    public static final String MASTER_ACTION_CUSTOM_SPECIFICATION = "'margin: 10px', 'width: %spx'";
+    public static final String MASTER_ACTION_SPECIFICATION = format(MASTER_ACTION_CUSTOM_SPECIFICATION, MASTER_ACTION_DEFAULT_WIDTH);
     
     private StandardMastersWebUiConfig() {}
     
@@ -74,7 +76,6 @@ public class StandardMastersWebUiConfig {
                .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end()),
                layout().withStyle("padding", "20px").end()).toString();
         
-        final String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
         final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 10px', 'wrap', 'justify-content: center'";
         final String buttonPanelLayout = format("[%s, [%s], [%s]]", MASTER_ACTION_LAYOUT_SPECIFICATION, MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()

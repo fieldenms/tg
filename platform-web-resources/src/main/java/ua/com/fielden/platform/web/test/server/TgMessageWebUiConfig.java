@@ -5,8 +5,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.*;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
-
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 import java.util.Optional;
 
 import org.joda.time.DateTime;
@@ -53,7 +52,7 @@ public class TgMessageWebUiConfig {
         builder.register(createTgMessageMapMaster(injector));
 
         final SimpleMasterBuilder<TgMessage> masterBuilder = new SimpleMasterBuilder<TgMessage>();
-        final String actionStyle = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
+        final String actionStyle = MASTER_ACTION_SPECIFICATION;
         final String outer = "'flex', 'min-width:200px'";
 
         final String desktopTabletMasterLayout = ("['padding:20px',"

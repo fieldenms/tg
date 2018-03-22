@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.test.server.config;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_WIDTH;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 
 /**
@@ -19,7 +19,7 @@ public class LayoutComposer {
 
     public final static String MASTER_LAYOUT_SPECIFICATION = "'horizontal','justified',";
     public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = format("'horizontal', 'padding: %s', 'wrap', 'justify-content: center',", MARGIN_PIX_FOR_MASTER_ACTION);
-    public final static String MASTER_ACTION_SPECIFICATION = format("'margin: 10px', 'width: %s'", MASTER_ACTION_WIDTH);
+    public final static String MASTER_ACTION_SPECIFICATION = StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 
     public static final FlexLayoutConfig CELL_LAYOUT = layout().flex().end();
 
