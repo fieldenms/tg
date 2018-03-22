@@ -18758,7 +18758,7 @@ context. You should place this element as a child of `<body>` whenever possible.
             width: 0;
         }
         paper-input-container {
-            width: 300px;
+            width: 230px;
             transition: width 200ms linear;
             --paper-input-container-color: var(--menu-search-input-color);
             --paper-input-container-focus-color: var(--menu-search-input-color);
@@ -23227,6 +23227,7 @@ context. You should place this element as a child of `<body>` whenever possible.
             --paper-toolbar-background: var(--paper-light-blue-700);
             --paper-toolbar-color: white;
             --paper-toolbar-height: 44px;
+            --paper-toolbar-sm-height: 44px;
         }
         a paper-icon-button,
         a:active paper-icon-button,
@@ -23267,13 +23268,18 @@ context. You should place this element as a child of `<body>` whenever possible.
         .tile-toolbar[action-disabled] ::content tg-ui-action {
             pointer-events: none;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 
     <template>
         <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <div class="layout horizontal center">
-                <span style="font-size:1rem; padding-right:4px;">[[menuConfig.userName]]</span>
+            <div class="layout horizontal center" style="display: contents">
+                <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
                 <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
             </div>
         </paper-toolbar>
@@ -23610,7 +23616,7 @@ context. You should place this element as a child of `<body>` whenever possible.
 </dom-module>
 <script>
     (function () {
-        var importedURLs = {'/resources/polymer/paper-styles/paper-styles.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout.html': 'imported','/resources/polymer/polymer/polymer.html': 'imported','/resources/polymer/polymer/polymer-mini.html': 'imported','/resources/polymer/polymer/polymer-micro.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-shadow-flex-layout.html': 'imported','/resources/polymer/paper-styles/color.html': 'imported','/resources/polymer/paper-styles/default-theme.html': 'imported','/resources/polymer/paper-styles/shadow.html': 'imported','/resources/polymer/paper-styles/typography.html': 'imported','/resources/polymer/font-roboto/roboto.html': 'imported','https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic': 'imported','https://fonts.googleapis.com/css?family=Roboto+Mono:400,700': 'imported','/app/tg-app.html': 'imported','/resources/polymer/neon-animation/neon-animated-pages.html': 'imported','/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html': 'imported','/resources/polymer/iron-selector/iron-selectable.html': 'imported','/resources/polymer/iron-selector/iron-selection.html': 'imported','/resources/polymer/neon-animation/neon-animation-runner-behavior.html': 'imported','/resources/polymer/iron-meta/iron-meta.html': 'imported','/resources/polymer/neon-animation/neon-animatable-behavior.html': 'imported','/resources/polymer/neon-animation/animations/opaque-animation.html': 'imported','/resources/polymer/neon-animation/neon-animation-behavior.html': 'imported','/resources/polymer/neon-animation/web-animations.html': 'imported','/resources/polymer/carbon-route/carbon-location.html': 'imported','/resources/polymer/iron-location/iron-location.html': 'imported','/resources/polymer/iron-location/iron-query-params.html': 'imported','/resources/polymer/carbon-route/carbon-route-converter.html': 'imported','/resources/polymer/carbon-route/carbon-route.html': 'imported','/resources/views/tg-app-menu.html': 'imported','/resources/polymer/paper-toolbar/paper-toolbar.html': 'imported','/resources/polymer/paper-icon-button/paper-icon-button.html': 'imported','/resources/polymer/iron-icon/iron-icon.html': 'imported','/resources/polymer/paper-behaviors/paper-inky-focus-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-button-state.html': 'imported','/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-control-state.html': 'imported','/resources/polymer/paper-behaviors/paper-ripple-behavior.html': 'imported','/resources/polymer/paper-ripple/paper-ripple.html': 'imported','/resources/layout/tg-tile-layout.html': 'imported','/resources/polymer/iron-media-query/iron-media-query.html': 'imported','/app/tg-app-config.html': 'imported','/resources/components/moment-component.html': 'imported','/resources/polymer/iron-icons/av-icons.html': 'imported','/resources/polymer/iron-iconset-svg/iron-iconset-svg.html': 'imported','/resources/components/postal-lib.html': 'imported','/resources/components/lodash-lib.html': 'imported','/resources/components/tg-tooltip-behavior.html': 'imported','/resources/components/tg-tooltip.html': 'imported','/resources/polymer/neon-animation/animations/fade-in-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-out-animation.html': 'imported','/resources/components/tg-menu-search-input.html': 'imported','/resources/polymer/iron-input/iron-input.html': 'imported','/resources/polymer/iron-a11y-announcer/iron-a11y-announcer.html': 'imported','/resources/polymer/iron-validatable-behavior/iron-validatable-behavior.html': 'imported','/resources/polymer/iron-icons/iron-icons.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html': 'imported','/resources/polymer/paper-input/paper-input-container.html': 'imported','/resources/components/tg-menu-list.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html': 'imported','/resources/polymer/iron-fit-behavior/iron-fit-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-backdrop.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html': 'imported','/resources/polymer/iron-selector/iron-selector.html': 'imported','/resources/polymer/iron-selector/iron-multi-selectable.html': 'imported','/resources/polymer/paper-item/paper-item.html': 'imported','/resources/polymer/paper-item/paper-item-behavior.html': 'imported','/resources/polymer/paper-item/paper-item-shared-styles.html': 'imported','/resources/editors/tg-highlighting-behavior.html': 'imported','/resources/editors/tg-dom-stamper.html': 'imported','/resources/views/tg-app-animation-behavior.html': 'imported','/resources/polymer/neon-animation/neon-animation.html': 'imported','/resources/polymer/neon-animation/neon-animatable.html': 'imported','/resources/polymer/neon-animation/neon-animations.html': 'imported','/resources/polymer/neon-animation/animations/cascaded-animation.html': 'imported','/resources/polymer/neon-animation/animations/hero-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animation-behavior.html': 'imported','/resources/polymer/neon-animation/animations/ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/reverse-ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-top-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-bottom-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/transform-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animatable-behavior.html': 'imported','/resources/polymer/iron-icons/editor-icons.html': 'imported','/resources/polymer/iron-icons/hardware-icons.html': 'imported','/resources/polymer/iron-icons/image-icons.html': 'imported','/resources/actions/tg-ui-action.html': 'imported','/resources/polymer/paper-button/paper-button.html': 'imported','/resources/polymer/paper-material/paper-material.html': 'imported','/resources/polymer/paper-material/paper-material-shared-styles.html': 'imported','/resources/polymer/paper-behaviors/paper-button-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-styles.html': 'imported','/app/tg-reflector.html': 'imported','/resources/serialisation/tg-serialiser.html': 'imported','/resources/actions/tg-focus-restoration-behavior.html': 'imported','/resources/views/tg-app-view.html': 'imported','/resources/views/tg-view.html': 'imported','/resources/polymer/paper-fab/paper-fab.html': 'imported','/resources/views/tg-menu-item-view.html': 'imported','/app/tg-element-loader.html': 'imported','/resources/reflection/tg-polymer-utils.html': 'imported','/resources/views/tg-view-with-menu.html': 'imported','/resources/polymer/paper-menu/paper-menu.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menu-behavior.html': 'imported','/resources/polymer/paper-menu/paper-menu-shared-styles.html': 'imported','/resources/polymer/paper-menu/paper-submenu.html': 'imported','/resources/polymer/iron-collapse/iron-collapse.html': 'imported','/resources/polymer/paper-drawer-panel/paper-drawer-panel.html': 'imported','/resources/polymer/paper-checkbox/paper-checkbox.html': 'imported','/resources/polymer/paper-behaviors/paper-checked-element-behavior.html': 'imported','/resources/polymer/iron-checked-element-behavior/iron-checked-element-behavior.html': 'imported','/resources/polymer/iron-form-element-behavior/iron-form-element-behavior.html': 'imported','/resources/egi/tg-custom-action-dialog.html': 'imported','/resources/components/tg-toast.html': 'imported','/resources/polymer/paper-dialog/paper-dialog.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-behavior.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-shared-styles.html': 'imported','/resources/polymer/paper-toast/paper-toast.html': 'imported','/resources/images/tg-icons.html': 'imported','/resources/polymer/paper-styles/paper-styles-classes.html': 'imported','/resources/polymer/paper-styles/classes/typography.html': 'imported','/resources/polymer/paper-styles/classes/shadow.html': 'imported','/resources/master/tg-entity-master.html': 'imported','/resources/polymer/iron-ajax/iron-ajax.html': 'imported','/resources/polymer/iron-ajax/iron-request.html': 'imported','/resources/polymer/promise-polyfill/promise-polyfill-lite.html': 'imported','/resources/validation/tg-entity-validator.html': 'imported','/resources/binding/tg-entity-binder.html': 'imported','/resources/master/tg-entity-master-behavior.html': 'imported','/resources/binding/tg-entity-binder-behavior.html': 'imported','/resources/master/actions/tg-entity-master-closing-behavior.html': 'imported','/resources/mobile-application-startup-resources.html': 'imported','/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties': 'imported','/resources/layout/tg-flex-layout.html': 'imported','/resources/components/tg-subheader.html': 'imported','/resources/editors/tg-entity-editor.html': 'imported','/resources/editors/tg-entity-editor-result.html': 'imported','/resources/editors/tg-editor-behavior.html': 'imported','/resources/editors/tg-editor.html': 'imported','/resources/polymer/paper-input/paper-input-error.html': 'imported','/resources/polymer/paper-input/paper-input-addon-behavior.html': 'imported','/resources/polymer/paper-input/paper-input-char-counter.html': 'imported','/resources/editors/tg-singleline-text-editor.html': 'imported','/resources/editors/tg-decimal-editor.html': 'imported','/resources/reflection/tg-numeric-utils.html': 'imported','/resources/editors/tg-multiline-text-editor.html': 'imported','/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html': 'imported','/resources/editors/tg-datetime-picker.html': 'imported','/resources/reflection/tg-date-utils.html': 'imported','/resources/components/tg-calendar.html': 'imported','/resources/components/tg-month-selector.html': 'imported','/resources/components/tg-number-selector.html': 'imported','/resources/polymer/iron-list/iron-list.html': 'imported','/resources/polymer/iron-scroll-target-behavior/iron-scroll-target-behavior.html': 'imported','/resources/polymer/iron-scroll-threshold/iron-scroll-threshold.html': 'imported','/resources/editors/tg-boolean-editor.html': 'imported','/resources/editors/tg-integer-editor.html': 'imported','/resources/editors/tg-colour-picker.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown-scroll-manager.html': 'imported','/resources/editors/tg-hyperlink-editor.html': 'imported','/resources/editors/tg-money-editor.html': 'imported','/resources/master/actions/tg-action.html': 'imported','/resources/master/actions/tg-action-behavior.html': 'imported','/resources/components/filesaver-lib.html': 'imported','/resources/master/actions/tg-abstract-action-behavior.html': 'imported','/resources/master/actions/tg-abstract-action.html': 'imported','/resources/master/tg-entity-master-template-behavior.html': 'imported','/resources/master/tg-entity-master-styles.html': 'imported','/resources/actions/tg-shortcut-processing-behavior.html': 'imported','/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties': 'imported','/resources/centre/criterion/multi/tg-multi-criterion.html': 'imported','/resources/centre/criterion/tg-abstract-criterion.html': 'imported','/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html': 'imported','/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html': 'imported','/resources/centre/criterion/tg-abstract-criterion-behavior.html': 'imported','/resources/components/tg-scrollable-component.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion-config.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion-config.html': 'imported','/resources/centre/criterion/multi/tg-boolean-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.html': 'imported','/resources/components/tg-accordion.html': 'imported','/resources/centre/criterion/single/tg-single-criterion.html': 'imported','/resources/egi/tg-property-column.html': 'imported','/resources/egi/tg-summary-property.html': 'imported','/resources/egi/tg-entity-grid-inspector.html': 'imported','/resources/components/tg-drag-from-behavior.html': 'imported','/resources/egi/tg-secondary-action-button.html': 'imported','/resources/polymer/paper-progress/paper-progress.html': 'imported','/resources/polymer/iron-range-behavior/iron-range-behavior.html': 'imported','/resources/centre/tg-selection-criteria.html': 'imported','/resources/centre/tg-criteria-validator.html': 'imported','/resources/centre/tg-selection-criteria-template-behavior.html': 'imported','/resources/centre/tg-selection-criteria-behavior.html': 'imported','/resources/centre/tg-entity-centre.html': 'imported','/resources/polymer/paper-tabs/paper-tabs.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menubar-behavior.html': 'imported','/resources/polymer/paper-tabs/paper-tabs-icons.html': 'imported','/resources/polymer/paper-tabs/paper-tab.html': 'imported','/resources/components/tg-confirmation-dialog.html': 'imported','/resources/centre/tg-selection-view.html': 'imported','/resources/centre/tg-centre-result-view.html': 'imported','/resources/polymer/iron-pages/iron-pages.html': 'imported','/resources/centre/tg-entity-centre-styles.html': 'imported','/resources/centre/tg-selection-criteria-styles.html': 'imported','/resources/centre/tg-entity-centre-template-behavior.html': 'imported','/resources/centre/tg-entity-centre-behavior.html': 'imported','/resources/sse/tg-sse-behavior.html': 'imported','/resources/centre/tg-entity-centre-insertion-point.html': 'imported','/resources/images/mobile-menu.html': 'imported'};
+        var importedURLs = {'/resources/polymer/paper-styles/paper-styles.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout.html': 'imported','/resources/polymer/polymer/polymer.html': 'imported','/resources/polymer/polymer/polymer-mini.html': 'imported','/resources/polymer/polymer/polymer-micro.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-shadow-flex-layout.html': 'imported','/resources/polymer/paper-styles/color.html': 'imported','/resources/polymer/paper-styles/default-theme.html': 'imported','/resources/polymer/paper-styles/shadow.html': 'imported','/resources/polymer/paper-styles/typography.html': 'imported','/resources/polymer/font-roboto/roboto.html': 'imported','https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic': 'imported','https://fonts.googleapis.com/css?family=Roboto+Mono:400,700': 'imported','/app/tg-app.html': 'imported','/resources/polymer/neon-animation/neon-animated-pages.html': 'imported','/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html': 'imported','/resources/polymer/iron-selector/iron-selectable.html': 'imported','/resources/polymer/iron-selector/iron-selection.html': 'imported','/resources/polymer/neon-animation/neon-animation-runner-behavior.html': 'imported','/resources/polymer/iron-meta/iron-meta.html': 'imported','/resources/polymer/neon-animation/neon-animatable-behavior.html': 'imported','/resources/polymer/neon-animation/animations/opaque-animation.html': 'imported','/resources/polymer/neon-animation/neon-animation-behavior.html': 'imported','/resources/polymer/neon-animation/web-animations.html': 'imported','/resources/polymer/carbon-route/carbon-location.html': 'imported','/resources/polymer/iron-location/iron-location.html': 'imported','/resources/polymer/iron-location/iron-query-params.html': 'imported','/resources/polymer/carbon-route/carbon-route-converter.html': 'imported','/resources/polymer/carbon-route/carbon-route.html': 'imported','/resources/views/tg-app-menu.html': 'imported','/resources/polymer/paper-toolbar/paper-toolbar.html': 'imported','/resources/polymer/paper-icon-button/paper-icon-button.html': 'imported','/resources/polymer/iron-icon/iron-icon.html': 'imported','/resources/polymer/paper-behaviors/paper-inky-focus-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-button-state.html': 'imported','/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-control-state.html': 'imported','/resources/polymer/paper-behaviors/paper-ripple-behavior.html': 'imported','/resources/polymer/paper-ripple/paper-ripple.html': 'imported','/resources/layout/tg-tile-layout.html': 'imported','/resources/polymer/iron-media-query/iron-media-query.html': 'imported','/app/tg-app-config.html': 'imported','/resources/components/moment-component.html': 'imported','/resources/polymer/iron-icons/av-icons.html': 'imported','/resources/polymer/iron-iconset-svg/iron-iconset-svg.html': 'imported','/resources/components/postal-lib.html': 'imported','/resources/components/lodash-lib.html': 'imported','/resources/components/tg-tooltip-behavior.html': 'imported','/resources/components/tg-tooltip.html': 'imported','/resources/polymer/neon-animation/animations/fade-in-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-out-animation.html': 'imported','/resources/components/tg-menu-search-input.html': 'imported','/resources/polymer/iron-input/iron-input.html': 'imported','/resources/polymer/iron-a11y-announcer/iron-a11y-announcer.html': 'imported','/resources/polymer/iron-validatable-behavior/iron-validatable-behavior.html': 'imported','/resources/polymer/iron-icons/iron-icons.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html': 'imported','/resources/polymer/paper-input/paper-input-container.html': 'imported','/resources/components/tg-menu-list.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html': 'imported','/resources/polymer/iron-fit-behavior/iron-fit-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-backdrop.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html': 'imported','/resources/polymer/iron-selector/iron-selector.html': 'imported','/resources/polymer/iron-selector/iron-multi-selectable.html': 'imported','/resources/polymer/paper-item/paper-item.html': 'imported','/resources/polymer/paper-item/paper-item-behavior.html': 'imported','/resources/polymer/paper-item/paper-item-shared-styles.html': 'imported','/resources/editors/tg-highlighting-behavior.html': 'imported','/resources/editors/tg-dom-stamper.html': 'imported','/resources/views/tg-app-animation-behavior.html': 'imported','/resources/polymer/neon-animation/neon-animation.html': 'imported','/resources/polymer/neon-animation/neon-animatable.html': 'imported','/resources/polymer/neon-animation/neon-animations.html': 'imported','/resources/polymer/neon-animation/animations/cascaded-animation.html': 'imported','/resources/polymer/neon-animation/animations/hero-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animation-behavior.html': 'imported','/resources/polymer/neon-animation/animations/ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/reverse-ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-top-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-bottom-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/transform-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animatable-behavior.html': 'imported','/resources/polymer/iron-icons/editor-icons.html': 'imported','/resources/polymer/iron-icons/hardware-icons.html': 'imported','/resources/polymer/iron-icons/image-icons.html': 'imported','/resources/actions/tg-ui-action.html': 'imported','/resources/polymer/paper-button/paper-button.html': 'imported','/resources/polymer/paper-material/paper-material.html': 'imported','/resources/polymer/paper-material/paper-material-shared-styles.html': 'imported','/resources/polymer/paper-behaviors/paper-button-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-styles.html': 'imported','/app/tg-reflector.html': 'imported','/resources/serialisation/tg-serialiser.html': 'imported','/resources/actions/tg-focus-restoration-behavior.html': 'imported','/resources/views/tg-app-view.html': 'imported','/resources/views/tg-view.html': 'imported','/resources/polymer/paper-fab/paper-fab.html': 'imported','/resources/views/tg-menu-item-view.html': 'imported','/app/tg-element-loader.html': 'imported','/resources/reflection/tg-polymer-utils.html': 'imported','/resources/views/tg-view-with-menu.html': 'imported','/resources/polymer/paper-menu/paper-menu.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menu-behavior.html': 'imported','/resources/polymer/paper-menu/paper-menu-shared-styles.html': 'imported','/resources/polymer/paper-menu/paper-submenu.html': 'imported','/resources/polymer/iron-collapse/iron-collapse.html': 'imported','/resources/polymer/paper-drawer-panel/paper-drawer-panel.html': 'imported','/resources/polymer/paper-checkbox/paper-checkbox.html': 'imported','/resources/polymer/paper-behaviors/paper-checked-element-behavior.html': 'imported','/resources/polymer/iron-checked-element-behavior/iron-checked-element-behavior.html': 'imported','/resources/polymer/iron-form-element-behavior/iron-form-element-behavior.html': 'imported','/resources/egi/tg-custom-action-dialog.html': 'imported','/resources/components/tg-toast.html': 'imported','/resources/polymer/paper-dialog/paper-dialog.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-behavior.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-shared-styles.html': 'imported','/resources/polymer/paper-toast/paper-toast.html': 'imported','/resources/images/tg-icons.html': 'imported','/resources/polymer/paper-styles/paper-styles-classes.html': 'imported','/resources/polymer/paper-styles/classes/typography.html': 'imported','/resources/polymer/paper-styles/classes/shadow.html': 'imported','/resources/master/tg-entity-master.html': 'imported','/resources/polymer/iron-ajax/iron-ajax.html': 'imported','/resources/polymer/iron-ajax/iron-request.html': 'imported','/resources/polymer/promise-polyfill/promise-polyfill-lite.html': 'imported','/resources/components/tg-scrollable-component.html': 'imported','/resources/validation/tg-entity-validator.html': 'imported','/resources/binding/tg-entity-binder.html': 'imported','/resources/master/tg-entity-master-behavior.html': 'imported','/resources/binding/tg-entity-binder-behavior.html': 'imported','/resources/master/actions/tg-entity-master-closing-behavior.html': 'imported','/resources/mobile-application-startup-resources.html': 'imported','/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties': 'imported','/resources/layout/tg-flex-layout.html': 'imported','/resources/components/tg-subheader.html': 'imported','/resources/editors/tg-entity-editor.html': 'imported','/resources/editors/tg-entity-editor-result.html': 'imported','/resources/editors/tg-editor-behavior.html': 'imported','/resources/editors/tg-editor.html': 'imported','/resources/polymer/paper-input/paper-input-error.html': 'imported','/resources/polymer/paper-input/paper-input-addon-behavior.html': 'imported','/resources/polymer/paper-input/paper-input-char-counter.html': 'imported','/resources/editors/tg-singleline-text-editor.html': 'imported','/resources/editors/tg-decimal-editor.html': 'imported','/resources/reflection/tg-numeric-utils.html': 'imported','/resources/editors/tg-multiline-text-editor.html': 'imported','/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html': 'imported','/resources/editors/tg-datetime-picker.html': 'imported','/resources/reflection/tg-date-utils.html': 'imported','/resources/components/tg-calendar.html': 'imported','/resources/components/tg-month-selector.html': 'imported','/resources/components/tg-number-selector.html': 'imported','/resources/polymer/iron-list/iron-list.html': 'imported','/resources/polymer/iron-scroll-target-behavior/iron-scroll-target-behavior.html': 'imported','/resources/polymer/iron-scroll-threshold/iron-scroll-threshold.html': 'imported','/resources/editors/tg-boolean-editor.html': 'imported','/resources/editors/tg-integer-editor.html': 'imported','/resources/editors/tg-colour-picker.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown-scroll-manager.html': 'imported','/resources/editors/tg-hyperlink-editor.html': 'imported','/resources/editors/tg-money-editor.html': 'imported','/resources/master/actions/tg-action.html': 'imported','/resources/master/actions/tg-action-behavior.html': 'imported','/resources/components/filesaver-lib.html': 'imported','/resources/master/actions/tg-abstract-action-behavior.html': 'imported','/resources/master/actions/tg-abstract-action.html': 'imported','/resources/master/tg-entity-master-template-behavior.html': 'imported','/resources/master/tg-entity-master-styles.html': 'imported','/resources/actions/tg-shortcut-processing-behavior.html': 'imported','/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties': 'imported','/resources/centre/criterion/multi/tg-multi-criterion.html': 'imported','/resources/centre/criterion/tg-abstract-criterion.html': 'imported','/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html': 'imported','/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html': 'imported','/resources/centre/criterion/tg-abstract-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion-config.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion-config.html': 'imported','/resources/centre/criterion/multi/tg-boolean-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.html': 'imported','/resources/components/tg-accordion.html': 'imported','/resources/centre/criterion/single/tg-single-criterion.html': 'imported','/resources/egi/tg-property-column.html': 'imported','/resources/egi/tg-summary-property.html': 'imported','/resources/egi/tg-entity-grid-inspector.html': 'imported','/resources/components/tg-drag-from-behavior.html': 'imported','/resources/egi/tg-secondary-action-button.html': 'imported','/resources/polymer/paper-progress/paper-progress.html': 'imported','/resources/polymer/iron-range-behavior/iron-range-behavior.html': 'imported','/resources/centre/tg-selection-criteria.html': 'imported','/resources/centre/tg-criteria-validator.html': 'imported','/resources/centre/tg-selection-criteria-template-behavior.html': 'imported','/resources/centre/tg-selection-criteria-behavior.html': 'imported','/resources/centre/tg-entity-centre.html': 'imported','/resources/polymer/paper-tabs/paper-tabs.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menubar-behavior.html': 'imported','/resources/polymer/paper-tabs/paper-tabs-icons.html': 'imported','/resources/polymer/paper-tabs/paper-tab.html': 'imported','/resources/components/tg-confirmation-dialog.html': 'imported','/resources/centre/tg-selection-view.html': 'imported','/resources/centre/tg-centre-result-view.html': 'imported','/resources/polymer/iron-pages/iron-pages.html': 'imported','/resources/centre/tg-entity-centre-styles.html': 'imported','/resources/centre/tg-selection-criteria-styles.html': 'imported','/resources/centre/tg-entity-centre-template-behavior.html': 'imported','/resources/centre/tg-entity-centre-behavior.html': 'imported','/resources/sse/tg-sse-behavior.html': 'imported','/resources/centre/tg-entity-centre-insertion-point.html': 'imported','/resources/images/mobile-menu.html': 'imported'};
         //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
         var insertElement = function (insertToElement, elementName, attributes) {
             if (elementName && elementName.toString().length > 0) {
@@ -26218,6 +26224,11 @@ context. You should place this element as a child of `<body>` whenever possible.
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
@@ -26257,10 +26268,10 @@ context. You should place this element as a child of `<body>` whenever possible.
             <div class="layout vertical" main="">
 
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
-                    <div class="layout horizontal center flex">
+                    <div class="layout horizontal center flex" style="display: contents">
                         <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                         <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-                        <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                        <div class="flex truncate">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
 
@@ -28086,7 +28097,6 @@ styles. All other styles should exist as single lines."
                 position: absolute;
                 bottom: 0;
                 right: 0;
-                z-index: 2; /* higher than in non-scrollable entity-master's action bar (1) */
                 --iron-icon-fill-color: var(--paper-grey-600);
             }
             #resizer:hover {
@@ -29909,6 +29919,62 @@ if (!window.Promise) {
     },
 
   });
+</script>
+
+<dom-module id="tg-scrollable-component" assetpath="/resources/components/">
+    <style>
+        :host {
+            @apply(--layout-vertical);
+        }
+        #scrollablePanel {
+            overflow: auto;
+            @apply(--tg-scrollable-layout);
+        }
+        #shadowContainer {
+            pointer-events: none;
+        }
+    </style>
+    <template>
+        <div id="scrollablePanel" on-scroll="_contentScrolled">
+            <content></content>
+        </div>
+        <div id="shadowContainer" class="fit"></div>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-scrollable-component',
+
+        behaviors: [Polymer.IronResizableBehavior],
+
+        ready: function () {
+            this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        },
+
+        _resizeEventListener: function (event, details) {
+            this._contentScrolled();
+        },
+
+        _contentScrolled: function (e) {
+            const scrollTarget = this.$.scrollablePanel;
+            const shadowTarget = this.$.shadowContainer;
+            if (scrollTarget) {
+                let shadowStyle = "";
+                if (scrollTarget.scrollTop) {
+                    shadowStyle += "inset 0 3px 6px -2px rgba(0,0,0,0.7)";
+                }
+                if (scrollTarget.scrollTop + scrollTarget.offsetHeight < scrollTarget.scrollHeight) {
+                    shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
+                }
+                if (shadowStyle) {
+                    shadowTarget.style.boxShadow = shadowStyle;
+                } else {
+                    shadowTarget.style.removeProperty('box-shadow');
+                }
+            }
+        },
+    });
 </script><dom-module id="tg-entity-validator" assetpath="/resources/validation/"> 
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -30059,13 +30125,6 @@ if (!window.Promise) {
         :host::content tg-flex-layout {
             background-color: white;
         }
-        .property-editors-container {
-            overflow: auto;
-        }
-        .with-shadow {
-            box-shadow: 0px -3px 6px -2px rgba(0, 0, 0, 0.7);
-            z-index: 1;
-        }
         #masterContainer {
             overflow-y: auto; /* vertical scrollbar is needed in case where master content does not fit into parent container; this works as a fallback when editorContainer has been shrinked to zero height */
         }
@@ -30079,9 +30138,9 @@ if (!window.Promise) {
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
         <div id="masterContainer" class="layout vertical">
-            <div id="editorContainer" class="property-editors-container flex" on-scroll="_contentScrolled">
+            <tg-scrollable-component class="flex relative">
                 <content select=".property-editors"></content>
-            </div>
+            </tg-scrollable-component>
             <div id="actionContainer">
                 <content select=".action-bar"></content>
             </div>
@@ -30134,26 +30193,6 @@ if (!window.Promise) {
         },
 
         behaviors: [Polymer.IronResizableBehavior],
-
-        ready: function () {
-            this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-        },
-
-        _resizeEventListener: function (event, details) {
-            this._contentScrolled();
-        },
-
-        _contentScrolled: function (e) {
-            var scrollTarget = this.$.editorContainer;
-            var actionContainer = this.$.actionContainer;
-            if (scrollTarget && actionContainer) {
-                if (scrollTarget.scrollTop + scrollTarget.offsetHeight >= scrollTarget.scrollHeight) {
-                    actionContainer.classList.remove('with-shadow');
-                } else {
-                    actionContainer.classList.add('with-shadow');
-                }
-            }
-        },
 
         /**
          * Computes URLs for 'ajaxRetriever' and 'ajaxSaver'.
@@ -33895,11 +33934,26 @@ if (!window.Promise) {
                         this.style.left = adjustment + 'px';
                     }
                 }
-
+                
                 // let's try also to determine the best height depending on the window height and 
                 // the current vertical location of the element
                 var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment 
+            },
+            
+            /**
+             * Defines reasonable rule for 'small height for showing autocompleter results'. For now three items need to be shown, otherwise scrolling will be triggered.
+             */
+            visibleHeightUnderEditorIsSmall: function () {
+                const clientRectAndOffsetHeight = this.retrieveContainerSizes();
+                const rect = clientRectAndOffsetHeight[0];
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                const top = rect.top + scrollTop + clientRectAndOffsetHeight[1];
+                
+                // let's try to determine the height under the editor to bottom of the screen
+                const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
+                return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
             }
 		});
 	})();
@@ -35530,17 +35584,24 @@ if (!window.Promise) {
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-
+                
                 this.async(function () {
                     if (result.opened) {
                         this._resultOpened();
                     } else {
-                        result.open();
+                        if (result.visibleHeightUnderEditorIsSmall()) {
+                            this.scrollIntoView({block: "center", inline: "center", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
+                            this.async(function () { // need to wait at least 300 ms for scrolling to complete..
+                                result.open();
+                            }.bind(this), 300);
+                        } else {
+                            result.open();
+                        }
                     }
                     result.notifyResize();
                 }.bind(this), 100);
             },
-
+            
             /**
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
@@ -39570,19 +39631,22 @@ if (!window.Promise) {
             flex-shrink: 0;
         }
         paper-checkbox::shadow #checkboxLabel {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display:grid !important;
             font-size: 0.9rem;
             font-weight: 400;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             color: #757575 !important;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]">
-        	<paper-checkbox id="input" class="paper-input-input custom-input boolean-input layout horizontal center" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" tooltip-text$="[[_getTooltip(_editingValue)]]">[[propTitle]]</paper-checkbox>
+        	<paper-checkbox id="input" class="paper-input-input custom-input boolean-input layout horizontal center" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>
         	<content class=".property-action"></content>
         </tg-editor>
     </template>
@@ -41630,10 +41694,10 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
 <tg-singleline-text-editor id="editor_4_domainInitProp" entity="{{_currBindingEntity}}" original-entity="{{_originalBindingEntity}}" previous-modified-properties-holder="[[_previousModifiedPropertiesHolder]]" property-name="domainInitProp" validation-callback="[[validate]]" prop-title="Domain initialised prop" prop-desc="The property that was initialised directly inside Entity type definition Java class" current-state="[[currentState]]"></tg-singleline-text-editor>
 </tg-flex-layout>
 <tg-flex-layout when-desktop="[[_desktopLayout_actions]]" class="action-bar">
-<tg-action entity-type="[[_actions.REFRESH.entityType]]" enabled-states="[[_actions.REFRESH.enabledStates]]" short-desc="[[_actions.REFRESH.shortDesc]]" long-desc="[[_actions.REFRESH.longDesc]]" current-state="[[currentState]]" shortcut="ctrl+r" role="refresh" event-channel="[[centreUuid]]" action="[[_actions.REFRESH.action]]" post-action="{{_postRetrievedDefault}}" post-action-error="{{_postRetrievedDefaultError}}"></tg-action>
+<tg-action entity-type="[[_actions.REFRESH.entityType]]" enabled-states="[[_actions.REFRESH.enabledStates]]" short-desc="[[_actions.REFRESH.shortDesc]]" long-desc="[[_actions.REFRESH.longDesc]]" current-state="[[currentState]]" shortcut="ctrl+r meta+r" role="refresh" event-channel="[[centreUuid]]" action="[[_actions.REFRESH.action]]" post-action="{{_postRetrievedDefault}}" post-action-error="{{_postRetrievedDefaultError}}"></tg-action>
 <tg-ui-action ui-role="BUTTON" short-desc="Export" long-desc="Export action" shortcut="ctrl+shift+e" icon="trending-up" icon-style="" should-refresh-parent-centre-after-save="" component-uri="/master_ui/ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity" element-name="tg-TgExportFunctionalEntity-master" number-of-action="11" action-kind="PRIMARY_RESULT_SET" element-alias="tg-TgExportFunctionalEntity-master_11_PRIMARY_RESULT_SET" show-dialog="[[_showDialog]]" create-context-holder="[[_createContextHolder]]" attrs="[[primaryAction.11.attrs]]" pre-action="[[primaryAction.11.preAction]]" post-action-success="[[primaryAction.11.postActionSuccess]]" post-action-error="[[primaryAction.11.postActionError]]" require-selection-criteria="false" require-selected-entities="NONE" require-master-entity="true" class="primary-action"></tg-ui-action>
 <tg-action entity-type="[[_actions.VALIDATE.entityType]]" enabled-states="[[_actions.VALIDATE.enabledStates]]" short-desc="[[_actions.VALIDATE.shortDesc]]" long-desc="[[_actions.VALIDATE.longDesc]]" current-state="[[currentState]]" role="validate" event-channel="[[centreUuid]]" action="[[_actions.VALIDATE.action]]" post-action="{{_postValidatedDefault}}" post-action-error="{{_postValidatedDefaultError}}"></tg-action>
-<tg-action entity-type="[[_actions.SAVE.entityType]]" enabled-states="[[_actions.SAVE.enabledStates]]" short-desc="[[_actions.SAVE.shortDesc]]" long-desc="[[_actions.SAVE.longDesc]]" current-state="[[currentState]]" shortcut="ctrl+s" id="_saveAction" role="save" focusing-callback="[[focusFirstInputBound]]" event-channel="[[centreUuid]]" action="[[_actions.SAVE.action]]" post-action="{{_postSavedDefault}}" post-action-error="{{_postSavedDefaultError}}"></tg-action>
+<tg-action entity-type="[[_actions.SAVE.entityType]]" enabled-states="[[_actions.SAVE.enabledStates]]" short-desc="[[_actions.SAVE.shortDesc]]" long-desc="[[_actions.SAVE.longDesc]]" current-state="[[currentState]]" shortcut="ctrl+s meta+s" id="_saveAction" role="save" focusing-callback="[[focusFirstInputBound]]" event-channel="[[centreUuid]]" action="[[_actions.SAVE.action]]" post-action="{{_postSavedDefault}}" post-action-error="{{_postSavedDefaultError}}"></tg-action>
 <tg-action entity-type="[[_actions.EDIT.entityType]]" enabled-states="[[_actions.EDIT.enabledStates]]" short-desc="[[_actions.EDIT.shortDesc]]" long-desc="[[_actions.EDIT.longDesc]]" current-state="[[currentState]]" role="edit" event-channel="[[centreUuid]]" action="[[_actions.EDIT.action]]" post-action="{{_actions.EDIT.postAction}}" post-action-error="{{_actions.EDIT.postActionError}}"></tg-action>
 <tg-action entity-type="[[_actions.VIEW.entityType]]" enabled-states="[[_actions.VIEW.enabledStates]]" short-desc="[[_actions.VIEW.shortDesc]]" long-desc="[[_actions.VIEW.longDesc]]" current-state="[[currentState]]" role="view" event-channel="[[centreUuid]]" action="[[_actions.VIEW.action]]" post-action="{{_actions.VIEW.postAction}}" post-action-error="{{_actions.VIEW.postActionError}}"></tg-action>
 </tg-flex-layout>
@@ -41909,7 +41973,7 @@ postActionError: function (functionalEntity, action) {
              * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
              */
             _ownKeyBindings: {
-                'ctrl+shift+l ctrl+r ctrl+shift+e ctrl+s ': '_shortcutPressed'
+                'ctrl+shift+l ctrl+r meta+r ctrl+shift+e ctrl+s meta+s ': '_shortcutPressed'
             },
             
         });
@@ -42148,61 +42212,6 @@ postActionError: function (functionalEntity, action) {
             return critOnly === false && _not === true;
         }
     });
-</script><dom-module id="tg-scrollable-component" assetpath="/resources/components/">
-    <style>
-        :host {
-            @apply(--layout-vertical);
-        }
-        #scrollablePanel {
-            overflow: auto;
-            padding: 0 24px;
-            @apply(--layout-vertical);
-            @apply(--tg-scrollable-layout);
-        }
-    </style>
-    <template>
-        <div id="scrollablePanel" on-scroll="_contentScrolled">
-            <content></content>
-        </div>
-    </template>
-</dom-module>
-
-<script>
-    Polymer({
-        is: 'tg-scrollable-component',
-
-        properties: {
-
-        },
-
-        behaviors: [Polymer.IronResizableBehavior],
-
-        ready: function () {
-            this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-        },
-
-        _resizeEventListener: function (event, details) {
-            this._contentScrolled();
-        },
-
-        _contentScrolled: function (e) {
-            const scrollTarget = this.$.scrollablePanel;
-            if (scrollTarget) {
-                let shadowStyle = "";
-                if (scrollTarget.scrollTop) {
-                    shadowStyle += "inset 0 3px 6px -2px rgba(0,0,0,0.7)";
-                }
-                if (scrollTarget.scrollTop + scrollTarget.offsetHeight < scrollTarget.scrollHeight) {
-                    shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
-                }
-                if (shadowStyle) {
-                    scrollTarget.style.boxShadow = shadowStyle;
-                } else {
-                    scrollTarget.style.removeProperty('box-shadow');
-                }
-            }
-        },
-    });
 </script><style is="custom-style">
     .meta-value-editor paper-button {
         color: var(--paper-light-blue-500);
@@ -42221,6 +42230,9 @@ postActionError: function (functionalEntity, action) {
     .meta-value-editor > tg-scrollable-component {
         margin: 0;
         padding: 0;
+        --tg-scrollable-layout: {
+            padding: 0 24px;
+        };
     }
     
     .metavalue-editor {
@@ -42398,7 +42410,7 @@ postActionError: function (functionalEntity, action) {
             var div = domBind.content.ownerDocument.createElement('div');
             div.innerHTML = '<paper-dialog id="metaValueEditor" class="layout vertical meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_openedBind">' +
 
-            '<tg-scrollable-component>' +
+            '<tg-scrollable-component class="relative">' +
                 '<div class="metavalue-editor layout vertical">' +
                 self._createMetaValueEditors() +
                 '</div>' +
@@ -43948,6 +43960,10 @@ postActionError: function (functionalEntity, action) {
 </script>
 <dom-module id="tg-entity-grid-inspector" assetpath="/resources/egi/">
     <style>
+        :host {
+            @apply(--layout-vertical);
+
+        }
         /*miscellanea styles*/
         .lock-layer {
             opacity: 0.5;
@@ -44005,6 +44021,9 @@ postActionError: function (functionalEntity, action) {
         paper-material {
             border-radius: 2px;
         }
+        paper-material[fit-to-height] {
+            flex-grow: 1;
+        }
         #scrollContainer {
             overflow: auto;
         }
@@ -44038,6 +44057,8 @@ postActionError: function (functionalEntity, action) {
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-data-row {
             font-size: 1rem;
@@ -44048,6 +44069,8 @@ postActionError: function (functionalEntity, action) {
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-data-row:last-of-type,
         .table-footer-row:last-of-type,
@@ -44069,6 +44092,8 @@ postActionError: function (functionalEntity, action) {
             text-rendering: optimizeLegibility;
             min-width: fit-content;
             background-color: white;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-cell,
         .table-data-cell {
@@ -44081,6 +44106,8 @@ postActionError: function (functionalEntity, action) {
             height: auto;
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .grid-toolbar-content::content > * {
             margin-top: 8px;
@@ -44163,8 +44190,8 @@ postActionError: function (functionalEntity, action) {
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
-            <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
+        <paper-material elevation="1" style="margin: 10px 10px;" fit-to-height$="[[fitToHeight]]" class="layout vertical">
+            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
                 
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -44175,8 +44202,8 @@ postActionError: function (functionalEntity, action) {
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
-                    <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
+                <div id="baseContainer" class="relative layout horizontal flex" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
+                    <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                         
                         <div class="layout horizontal table-header-row">
                             <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
@@ -44239,9 +44266,10 @@ postActionError: function (functionalEntity, action) {
                             </div>
                         </template>
                         
+                        
                         <template is="dom-if" if="[[totals]]">
                             <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex)]]">
+                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex, fitToHeight)]]">
                                     <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
                                     <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]">
                                         
@@ -44322,7 +44350,7 @@ postActionError: function (functionalEntity, action) {
                                 
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                     <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                                        <div class="layout horizontal table-footer-row">
+                                        <div class="layout horizontal table-footer-row" style$="[[_calcFixedFooterRowStyle(summaryIndex, fitToHeight)]]">
                                             <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
                                             <div class="table-cell no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 
@@ -44376,7 +44404,7 @@ postActionError: function (functionalEntity, action) {
                                 
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                     <template is="dom-repeat" items="[[_totalsRows]]">
-                                        <div class="layout horizontal table-footer-row">
+                                        <div class="layout horizontal table-footer-row" style$="[[_calcFixedFooterRowStyle(index, fitToHeight)]]">
                                             <div class="action-cell layout horizontal center no-flexible">
                                                 
                                             </div>
@@ -44531,7 +44559,7 @@ postActionError: function (functionalEntity, action) {
 <script>
     (function () {
         const _areEqual = function (a, b) {
-            return a.get('id') === b.get('id');
+            return a && b && a.get('id') === b.get('id');
         };
         const _findEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
@@ -44542,7 +44570,7 @@ postActionError: function (functionalEntity, action) {
             return -1;
         };
         const _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = selectedEntities.indexOf(entity);
+            var selectedIndex = _findEntity(entity, selectedEntities);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
@@ -44616,6 +44644,10 @@ postActionError: function (functionalEntity, action) {
                     type: Array,
                     observer: "_entitiesChanged"
                 },
+                filteredEntities: {
+                    type: Array,
+                    observer: "_filteredEntitiesChanged"
+                },
                 totals: Object,
                 columns: {
                     type: Array,
@@ -44653,7 +44685,20 @@ postActionError: function (functionalEntity, action) {
                     type: Number,
                     value: 0
                 },
-
+                /**
+                 * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
+                 */
+                constantHeight: {
+                    type: String,
+                    value: ""
+                },
+                /**
+                 * Indicates whether content should be extended to EGI's height or not.
+                 */
+                fitToHeight: {
+                    type: Boolean,
+                    value: false
+                },
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
@@ -44747,6 +44792,10 @@ postActionError: function (functionalEntity, action) {
                 },
                 _lastSelectedIndex: Number
             },
+
+            observers: [
+          '_heightRelatedPropertiesChanged(visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
+            ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior, Polymer.TgBehaviors.TgDragFromBehavior],
 
@@ -44857,7 +44906,7 @@ postActionError: function (functionalEntity, action) {
              * Updates entity when some of the properties were changed.
              */
             updateEntity: function (entity, propPath) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
@@ -44865,25 +44914,39 @@ postActionError: function (functionalEntity, action) {
             },
 
             setRenderingHints: function (entity, property, renderingHints) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
             selectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], select, this);
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
                         entities: [{
-                            entity: this.entities[entityIndex],
+                            entity: this.filteredEntities[entityIndex],
                             select: select
                         }]
                     });
                 }
+            },
+
+            filter: function () {
+                const tempFilteredEntities = [];
+                this.entities.forEach(entity => {
+                    if (this.isVisible(entity)) {
+                        tempFilteredEntities.push(entity);
+                    }
+                });
+                this.filteredEntities = tempFilteredEntities;
+            },
+            
+            isVisible: function (entity) {
+                return true;
             },
 
             getElementToDragFrom: function (target) {
@@ -45103,31 +45166,33 @@ postActionError: function (functionalEntity, action) {
             },
 
             /**
-             * Resize event handler that adjasts the lock container size and position.
+             * Resize event handler that adjusts the lock container size and position.
              */
             _resizeEventListener: function (event, details) {
-                const propertyToSet = this.visibleRowCount > 0 ? "max-height" : "height";
-                const propertyToRemove = this.visibleRowCount > 0 ? "height" : "max-height";
-                const bottomPosition = this._calcHorizontalScrollBarHeight();
-                let rowCount, height;
-                if (this.visibleRowCount > 0) {
-                    rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
-                    height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
-                } else {
-                    rowCount = this.entities.length + this._totalsRowCount;
-                    height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
-                }
-                const previousHeight = this.$.baseContainer.style[propertyToSet];
-                this.$.baseContainer.style.removeProperty(propertyToRemove);
-                this.$.scrollContainer.style.removeProperty(propertyToRemove);
-                this.$.baseContainer.style[propertyToSet] = height;
-                this.$.scrollContainer.style[propertyToSet] = height;
-                this.$.lockContainer.style.bottom = bottomPosition + "px";
+                this.$.lockContainer.style.bottom = this._calcHorizontalScrollBarHeight() + "px";
                 this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                 this._handleScrollEvent();
-                if (previousHeight !== height) {
-                    this.fire("tg-egi-resizied", height);
+            },
+
+            _heightRelatedPropertiesChanged: function (visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
+                //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
+                this.style.removeProperty("height");
+                this.style.removeProperty("min-height");
+                this.$.scrollContainer.style.removeProperty("height");
+                this.$.scrollContainer.style.removeProperty("max-height");
+                if (constantHeight) { //Set the height for the egi
+                    this.style["height"] = constantHeight;
+                } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+                    this.style["min-height"] = "fit-content";
+                    const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+                    const height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
+                    if (fitToHeight) {
+                        this.$.scrollContainer.style["height"] = height;
+                    } else {
+                        this.$.scrollContainer.style["max-height"] = height;
+                    }
                 }
+                this._resizeEventListener();
             },
 
             _updateShadows: function () {
@@ -45296,7 +45361,10 @@ postActionError: function (functionalEntity, action) {
                 if (action && (action.shortDesc || action.longDesc)) {
                     return this._generateActionTooltip(action);
                 } else if (this._getAttachmentIfPossible(entity, column)) {
-                    return this._generateActionTooltip({shortDesc: 'Download', longDesc: 'Click to download attachment.'});
+                    return this._generateActionTooltip({
+                        shortDesc: 'Download',
+                        longDesc: 'Click to download attachment.'
+                    });
                 }
                 return "";
             },
@@ -45381,11 +45449,15 @@ postActionError: function (functionalEntity, action) {
                     return "padding: 8px;";
                 }
             },
+            
+            _entitiesChanged: function (newValue, oldValue) {
+                this.filter();
+            },
 
             /**
              * Observs the changes to entities property.
              */
-            _entitiesChanged: function (newValue, oldValue) {
+            _filteredEntitiesChanged: function (newValue, oldValue) {
                 const tempEgiModel = [];
                 const self = this;
                 newValue.forEach(function (newEntity) {
@@ -45486,10 +45558,15 @@ postActionError: function (functionalEntity, action) {
                 let numOfSelected = 0;
                 let lastSelectedIndex = -1;
                 newSelection.entities.forEach(entitySelection => {
-                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    const entityIndex = _findEntity(entitySelection.entity, this.filteredEntities);
                     if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
                         this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], entitySelection.select, this);
+                    } else {
+                        const hiddenEntityIndex = _findEntity(entitySelection.entity, this.entities);
+                        if (hiddenEntityIndex >= 0) {
+                            _processEntitySelection(this.selectedEntities, this.entities[hiddenEntityIndex], entitySelection.select, this);
+                        }
                     }
                     if (entitySelection.select) {
                         numOfSelected += 1;
@@ -45499,7 +45576,7 @@ postActionError: function (functionalEntity, action) {
                 //update selectAll parameter according to entity selection.
                 updateSelectAll(this, this.egiModel);
                 //Scroll to the selected one if it is the only one and should scroll is true.
-                if (newSelection.shouldScrollToSelected && numOfSelected === 1) {
+                if (newSelection.shouldScrollToSelected && numOfSelected === 1 && lastSelectedIndex >= 0) {
                     const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
                     if (entityRow) {
@@ -45533,9 +45610,9 @@ postActionError: function (functionalEntity, action) {
                     for (let i = 0; i < this.egiModel.length; i += 1) {
                         if (this.egiModel[i].selected !== checked) {
                             this.set("egiModel." + i + ".selected", checked);
-                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
+                            _processEntitySelection(this.selectedEntities, this.filteredEntities[i], checked);
                             selectionDetails.push({
-                                entity: this.entities[i],
+                                entity: this.filteredEntities[i],
                                 select: checked
                             });
                         }
@@ -45562,11 +45639,11 @@ postActionError: function (functionalEntity, action) {
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[index], target.checked, this);
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
                             entities: [{
-                                entity: this.entities[index],
+                                entity: this.filteredEntities[index],
                                 select: target.checked
                         }]
                         });
@@ -45596,9 +45673,9 @@ postActionError: function (functionalEntity, action) {
                 for (let i = from; i <= to; i++) {
                     if (!this.egiModel[i].selected) {
                         this.set("egiModel." + i + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[i], true);
                         selectionDetails.push({
-                            entity: this.entities[i],
+                            entity: this.filteredEntities[i],
                             select: true
                         });
                     }
@@ -45645,9 +45722,18 @@ postActionError: function (functionalEntity, action) {
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
              */
-            _calcFooterRowStyle: function (summaryFixed, summaryIndex) {
-                return summaryFixed ? "visibility:hidden" : "";
+            _calcFooterRowStyle: function (summaryFixed, summaryIndex, fitToHeight) {
+                let styleStr = summaryFixed ? "visibility:hidden;" : "";
+                if (fitToHeight && summaryIndex === 0) {
+                    styleStr += "margin-top:auto;"
+                }
+                return styleStr;
             },
+
+            _calcFixedFooterRowStyle: function (summaryIndex, fitToHeight) {
+                return (summaryIndex === 0 && fitToHeight) ? "margin-top: auto" : "";
+            },
+
             /**
              * Calculates style for the visibility of drag anchor.
              */
@@ -45741,11 +45827,11 @@ postActionError: function (functionalEntity, action) {
              * Below are function related to lock panels position calculation logic.
              */
             _calculateLeftLockPanelStyle: function (_showLeftShadow, _scrollTop, headerFixed) {
-                return "left:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
+                return "left:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);bottom:0";
             },
 
             _calculateRightLockPanelStyle: function (_showRightShadow, _scrollTop, headerFixed) {
-                return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
+                return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);bottom:0";
             },
 
             _calculateTopLockPanelStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
@@ -45840,7 +45926,7 @@ postActionError: function (functionalEntity, action) {
             containsAnyEntity: function (entitiesToSearch) {
                 var entityIndex;
                 for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
-                    if (_findEntity(entitiesToSearch[entityIndex], this.entities) !== -1) {
+                    if (_findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
                         return true;
                     }
                 }
@@ -45863,21 +45949,21 @@ postActionError: function (functionalEntity, action) {
             /**
              * Determines whether property is or belongs to type Attachment.
              */
-             _getAttachmentIfPossible: function (entity, column) {
+            _getAttachmentIfPossible: function (entity, column) {
                 if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
                     return entity;
-             	} else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type && 
-             	           this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-             	    return this._getValueFromEntity(entity, column.property);
-             	} else  if (this.$.reflector.entityPropOwner(entity, column.property)){
-             	    const owner = this.$.reflector.entityPropOwner(entity, column.property);
-             	    if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-             	        return owner;
-             	    }
-             	    return null;
-             	} else {
-             	    return null;
-             	}
+                } else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type &&
+                    this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                    return this._getValueFromEntity(entity, column.property);
+                } else if (this.$.reflector.entityPropOwner(entity, column.property)) {
+                    const owner = this.$.reflector.entityPropOwner(entity, column.property);
+                    if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                        return owner;
+                    }
+                    return null;
+                } else {
+                    return null;
+                }
             },
 
             /**
@@ -45912,7 +45998,7 @@ postActionError: function (functionalEntity, action) {
              * Tap action on data column. TODO: implement this.
              */
             _tapAction: function (e, detail) {
-                this.tap(this.entities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
+                this.tap(this.filteredEntities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
             },
 
             tap: function (entity, index, column) {
@@ -45926,13 +46012,13 @@ postActionError: function (functionalEntity, action) {
                     } else {
                         const attachment = this._getAttachmentIfPossible(entity, column);
                         if (attachment) {
-	                        const url = '/download-attachment/' + attachment.id;
-	                        window.open(url, '_blank');
-	                        // a better experience is provided when using <a> insteado of opening another browser window, but this does not work well when an error occurs
-	                        // in case of an error, the application gets replaced with an error page and the back button leads to reloadig of the whole application
-	                        //const a = document.createElement('A');
-	                        //a.href = url;
-	                        //a.click();
+                            const url = '/download-attachment/' + attachment.id;
+                            window.open(url, '_blank');
+                            // a better experience is provided when using <a> insteado of opening another browser window, but this does not work well when an error occurs
+                            // in case of an error, the application gets replaced with an error page and the back button leads to reloadig of the whole application
+                            //const a = document.createElement('A');
+                            //a.href = url;
+                            //a.click();
                         }
                     }
                 }
@@ -48323,6 +48409,7 @@ postActionError: function (functionalEntity, action) {
                     <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
                 </div>
                 <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
+                    <content select=".top-insertion-point"></content>
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
@@ -50485,7 +50572,7 @@ border-color: var(--paper-orange-500);
         <tg-entity-centre id="dom" _selected-view="{{_selectedView}}" _url="[[_url]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _saver-disabled="[[_saverDisabled]]" _discarder-disabled="[[_discarderDisabled]]" _runner-disabled="[[_runnerDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]">
             <tg-mitgpersistententitywithproperties-selection-criteria id="selection_criteria" class="custom-selection-criteria" _was-run="{{_wasRun}}" _centre-changed="{{_centreChanged}}" _binding-entity-not-persistent-or-not-persisted-or-modified="{{_bindingEntityNotPersistentOrNotPersistedOrModified}}" _edited-props-exist="{{_editedPropsExist}}" _curr-entity="{{_currEntity}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties" page-capacity="20" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" require-selected-entities="NONE" require-master-entity="false"></tg-mitgpersistententitywithproperties-selection-criteria>
 
-            <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="ctrl+e ctrl+down ctrl+left ctrl+right ctrl+up f5 alt+n alt+d " visible-row-count="10" can-drag-from="" toolbar-visible="" checkbox-visible="" drag-anchor-fixed="" checkboxes-fixed="" checkboxes-with-primary-actions-fixed="" num-of-fixed-cols="2" secondary-actions-fixed="" header-fixed="" summary-fixed="" short-layout="[[gridShortLayout]]" long-layout="[[gridLongLayout]]" summary-layout="[[summaryLayout]]">
+            <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="ctrl+e ctrl+down ctrl+left ctrl+right ctrl+up f5 alt+n alt+d " visible-row-count="10" constant-height="" can-drag-from="" toolbar-visible="" checkbox-visible="" drag-anchor-fixed="" checkboxes-fixed="" checkboxes-with-primary-actions-fixed="" num-of-fixed-cols="2" secondary-actions-fixed="" header-fixed="" summary-fixed="" short-layout="[[gridShortLayout]]" long-layout="[[gridLongLayout]]" summary-layout="[[summaryLayout]]">
                 
                 <tg-property-column property="" width="60" min-width="48" grow-factor="0" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" column-title="Key" column-desc="Some key description">
 <tg-ui-action ui-role="ICON" short-desc="Edit entity" long-desc="Opens master for editing this entity" icon="editor:mode-edit" icon-style="" should-refresh-parent-centre-after-save="" component-uri="/master_ui/ua.com.fielden.platform.entity.EntityEditAction" element-name="tg-EntityEditAction-master" number-of-action="0" action-kind="PROP" element-alias="tg-EntityEditAction-master_0_PROP" show-dialog="[[_showDialog]]" create-context-holder="[[_createContextHolder]]" attrs="[[propActions.0.attrs]]" pre-action="[[propActions.0.preAction]]" post-action-success="[[propActions.0.postActionSuccess]]" post-action-error="[[propActions.0.postActionError]]" chosen-property="" require-selection-criteria="true" require-selected-entities="ONE" require-master-entity="false"></tg-ui-action>
@@ -50565,6 +50652,9 @@ border-color: var(--paper-orange-500);
                 
             </div>
             <div class="bottom-insertion-point">
+                
+            </div>
+            <div class="top-insertion-point">
                 
             </div>
         </tg-entity-centre>
