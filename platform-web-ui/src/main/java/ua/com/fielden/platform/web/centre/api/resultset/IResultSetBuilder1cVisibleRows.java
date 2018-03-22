@@ -15,7 +15,7 @@ public interface IResultSetBuilder1cVisibleRows<T extends AbstractEntity<?>> ext
     IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(int visibleRowsCount);
 
     /**
-     * Set the height for egi.
+     * Set the height for egi. The height parameter could be anything that one can specify as height css style for element (e.g. '100%', 640px, 'fit-content', '100vh', etc.)
      *
      * @param height
      * @return
