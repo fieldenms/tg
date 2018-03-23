@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
+<link rel="import" href="/resources/components/tg-scrollable-component.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <dom-module id="tg-selection-view">
@@ -11,11 +12,16 @@
             background-color: white;
             @apply(--layout-vertical);
         }
+        tg-scrollable-component {
+            --tg-scrollable-layout: {
+                flex: 1;
+            };
+        }
     </style>
     <template>
-        <div style="overflow:auto; padding: 20px;">
+        <tg-scrollable-component class="flex relative">
             <content select=".custom-selection-criteria"></content>
-        </div>
+        </tg-scrollable-component>
         <content select=".selection-criteria-buttons"></content>
     </template>
     <script>
