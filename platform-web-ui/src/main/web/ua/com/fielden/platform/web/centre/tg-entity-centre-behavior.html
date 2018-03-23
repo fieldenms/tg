@@ -411,12 +411,14 @@
                         self._setQueryParams();
                         if (self.autoRun || self.queryPart) {
                             self.run();
+                            delete self.queryPart;
                         }
                     });
                 } else {
                     self._setQueryParams();
                     if (self.autoRun || self.queryPart) {
                         self.run();
+                        delete self.queryPart;
                     }
                 }
             },
@@ -790,25 +792,19 @@
              * Set the query params to selection criteria if they exists and then clears the query part.
              */
             _setQueryParams: function () {
-                var self = this;
-                var root = self._simpleEntityType();
-                var queries = [];
-                var paramObject = [];
-                if (self.queryPart) {
-                    queries = self.queryPart.split("&");
-                }
-                paramObject = queries.map(function (query) {
-                    return generateQueryParam(root, query)
-                });
+                const self = this;
+                const root = self._simpleEntityType();
+                const queries = self.queryPart ? self.queryPart.split("&") : [];
+                const paramObject = queries.map(query => generateQueryParam(root, query));
                 //If parameters are not empty then clear mnemonics
                 if (paramObject.length > 0) {
                     const criterions = self.$.selection_criteria.$.masterDom.querySelectorAll('.criterion-widget');
                     criterions.forEach(criterion => criterion.clearMetaValues());
                 }
                 paramObject.forEach(function (queryParam) {
-                    var criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
-                    var firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
-                    var secondEditor = queryParam.secondEditorName && self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.secondEditorName + ']');
+                    const criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
+                    const firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
+                    const secondEditor = queryParam.secondEditorName && self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.secondEditorName + ']');
                     if (criterion && criterion._iconButtonVisible()) {
                         criterion._orNull = queryParam.isMissing;
                         criterion._not = queryParam.not;
@@ -825,7 +821,6 @@
                         secondEditor.commit();
                     }
                 });
-                delete this.queryPart;
             },
 
             /**
