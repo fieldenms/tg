@@ -77,7 +77,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Title", desc = "A concenient attachment title that would indicate what it is about")
+    @Title(value = "Title", desc = "A convenient attachment title that would indicate what it is about")
     @CompositeKeyMember(1)
     private String title;
 
