@@ -31,7 +31,7 @@
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
         <div id="masterContainer" class="layout vertical">
-            <tg-scrollable-component class="layout vertical flex relative">
+            <tg-scrollable-component id="scrollableContainer" class="layout vertical flex relative">
                 <content select=".property-editors"></content>
             </tg-scrollable-component>
             <div id="actionContainer">

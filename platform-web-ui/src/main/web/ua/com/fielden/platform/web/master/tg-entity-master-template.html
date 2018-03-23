@@ -42,6 +42,19 @@
                 self.noUI = @noUiValue;
                 self.saveOnActivation = @saveOnActivationValue;
                 
+                // The following logic fixes appearance of bottom shadow inside 'this._masterDom().$.scrollableContainer' in cases where 
+                //  a) the sizes of this master are not known at the beginning;
+                //  b) 'this._masterDom().$.scrollableContainer' is not empty (custom masters with charts or maps do not use scrollableContainer and it is empty)
+                // Please note that 'flickering' effect of shadow dissapearance still exists.
+                this.addEventListener('binding-entity-appeared', (function (event) {
+                    if (event.srcElement === this) { // need to filter out events from children
+                        const scrollableContainer = this._masterDom().$.scrollableContainer;
+                        if (scrollableContainer.offsetHeight > 0 && scrollableContainer.offsetWidth > 0) { // notify about resizing only in non-empty scrollable containers
+                            scrollableContainer.notifyResize();
+                        }
+                    }
+                }).bind(this));
+                
                 //START OF GENERATED JS LOGIC
                 //@ready-callback
                 //END OF GENERATED JS LOGIC

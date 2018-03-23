@@ -33,6 +33,11 @@
 
         ready: function () {
             this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            // The following logic fixes appearance of bottom shadow in cases where 
+            //  a) the sizes of inner content are not known at the beginning;
+            //  b) tg-entity-binder-behavior -based component is inside tg-scrollable-component (for e.g. tg-selection-criteria-behavior; look into tg-selection-view for more details).
+            // Please note that 'flickering' effect of shadow dissapearance still exists.
+            this.addEventListener('binding-entity-appeared', this._resizeEventListener.bind(this));
         },
 
         _resizeEventListener: function (event, details) {
