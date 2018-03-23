@@ -213,6 +213,8 @@ public interface EntityQueryProgressiveInterfaces {
 		IFunctionLastArgument<T, ET> monthOf();
 
 		IFunctionLastArgument<T, ET> yearOf();
+		
+		IFunctionLastArgument<T, ET> dayOfWeekOf();
 
 		IIfNullFunctionArgument<T, ET> ifNull();
 
