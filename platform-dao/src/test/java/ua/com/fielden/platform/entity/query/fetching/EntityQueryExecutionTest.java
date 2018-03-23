@@ -220,7 +220,13 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final AggregatedResultQueryModel qrySunday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-08 00:00:00")).as("result").modelAsAggregate();
         assertEquals(valueOf(7), aggregateDao.getEntity(from(qrySunday).model()).get("result"));
     }
-    
+
+    @Test
+    public void day_of_week_function_can_be_used_for_data_querying_against_h2_database() {
+        assertEquals(1, co(TgFuelUsage.class).count(select(TgFuelUsage.class).where().dayOfWeekOf().prop("date").eq().val(4).model()));
+        assertEquals(1, co(TgFuelUsage.class).count(select(TgFuelUsage.class).where().dayOfWeekOf().addTimeIntervalOf().val(1).days().to().prop("date").eq().val(5).model()));
+    }
+
     @Test
     public void add_seconds_function_works_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).seconds().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
