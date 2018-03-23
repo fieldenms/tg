@@ -13,15 +13,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalcAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -204,9 +198,27 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
 
     @Test
-    public void day_of_week_function_works_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().dayOfWeekOf().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        assertEquals(valueOf(1), aggregateDao.getEntity(from(qry).model()).get("result"));
+    public void day_of_week_function_correctly_attributes_range_1_7_to_days_against_h2_database() {
+        final AggregatedResultQueryModel qryMonday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-02 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(1), aggregateDao.getEntity(from(qryMonday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryTuesday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-03 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(2), aggregateDao.getEntity(from(qryTuesday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryWednesday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-04 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(3), aggregateDao.getEntity(from(qryWednesday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryThursday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-05 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(4), aggregateDao.getEntity(from(qryThursday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryFriday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-06 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(5), aggregateDao.getEntity(from(qryFriday).model()).get("result"));
+
+        final AggregatedResultQueryModel qrySaturday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-07 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(6), aggregateDao.getEntity(from(qrySaturday).model()).get("result"));
+
+        final AggregatedResultQueryModel qrySunday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-08 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(7), aggregateDao.getEntity(from(qrySunday).model()).get("result"));
     }
     
     @Test
