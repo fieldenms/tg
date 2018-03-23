@@ -29950,6 +29950,11 @@ if (!window.Promise) {
 
         ready: function () {
             this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            // The following logic fixes appearance of bottom shadow in cases where 
+            //  a) the sizes of inner content are not known at the beginning;
+            //  b) tg-entity-binder-behavior -based component is inside tg-scrollable-component (for e.g. tg-selection-criteria-behavior; look into tg-selection-view for more details).
+            // Please note that 'flickering' effect of shadow dissapearance still exists.
+            this.addEventListener('binding-entity-appeared', this._resizeEventListener.bind(this));
         },
 
         _resizeEventListener: function (event, details) {
@@ -30128,6 +30133,11 @@ if (!window.Promise) {
         #masterContainer {
             overflow-y: auto; /* vertical scrollbar is needed in case where master content does not fit into parent container; this works as a fallback when editorContainer has been shrinked to zero height */
         }
+        tg-scrollable-component {
+            --tg-scrollable-layout: {
+                flex: 1;
+            };
+        }
     </style>
     <template>
         <tg-entity-binder id="binderDom">
@@ -30138,7 +30148,7 @@ if (!window.Promise) {
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
         <div id="masterContainer" class="layout vertical">
-            <tg-scrollable-component class="flex relative">
+            <tg-scrollable-component id="scrollableContainer" class="layout vertical flex relative">
                 <content select=".property-editors"></content>
             </tg-scrollable-component>
             <div id="actionContainer">
@@ -36446,7 +36456,7 @@ if (!window.Promise) {
         .day {
             height: 2.2em;
             width: 2.2em;
-            font-size: 12px;
+            font-size: 12px; /*24px;*/
             border-radius: 1.1em;
             cursor: pointer;
         }
@@ -38855,6 +38865,7 @@ if (!window.Promise) {
         .col {
             width: 14em;
             height: 15em;
+            /*font-size: 24px;*/
         }
         .day-name {
             background-color: #0288D1;
@@ -41721,6 +41732,19 @@ var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/
                 self.prefDim = null;
                 self.noUI = false;
                 self.saveOnActivation = false;
+                
+                // The following logic fixes appearance of bottom shadow inside 'this._masterDom().$.scrollableContainer' in cases where 
+                //  a) the sizes of this master are not known at the beginning;
+                //  b) 'this._masterDom().$.scrollableContainer' is not empty (custom masters with charts or maps do not use scrollableContainer and it is empty)
+                // Please note that 'flickering' effect of shadow dissapearance still exists.
+                this.addEventListener('binding-entity-appeared', (function (event) {
+                    if (event.srcElement === this) { // need to filter out events from children
+                        const scrollableContainer = this._masterDom().$.scrollableContainer;
+                        if (scrollableContainer.offsetHeight > 0 && scrollableContainer.offsetWidth > 0) { // notify about resizing only in non-empty scrollable containers
+                            scrollableContainer.notifyResize();
+                        }
+                    }
+                }).bind(this));
                 
                 //START OF GENERATED JS LOGIC
                 this._desktopLayout_editors =       ['padding:20px', ['subheader-open:Other components', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['subheader-open:Other components 1', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['subheader-open:Other components 2', 'flex'],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['html:<span>This is binded text for String prop: </span><span id="stringProp_bind" style="color:blue">{{stringProp}}</span>', 'flex', 'padding-top: 20px']],[['html:<span>This is binded text for Status.desc: </span><span id="status_Desc_bind" style="color:blue">{{status.desc}}</span>', 'flex', 'padding-top: 20px']]];
@@ -46384,6 +46408,11 @@ postActionError: function (functionalEntity, action) {
         });
     })();
 </script><dom-module id="tg-selection-criteria" assetpath="/resources/centre/">
+    <style>
+        :host::content > tg-flex-layout {
+            padding: 20px;
+        }
+    </style>
     <template>
        	<tg-entity-binder id="binderDom">
     	</tg-entity-binder>
@@ -48108,11 +48137,16 @@ postActionError: function (functionalEntity, action) {
             background-color: white;
             @apply(--layout-vertical);
         }
+        tg-scrollable-component {
+            --tg-scrollable-layout: {
+                flex: 1;
+            };
+        }
     </style>
     <template>
-        <div style="overflow:auto; padding: 20px;">
+        <tg-scrollable-component class="flex relative">
             <content select=".custom-selection-criteria"></content>
-        </div>
+        </tg-scrollable-component>
         <content select=".selection-criteria-buttons"></content>
     </template>
     <script>
@@ -48280,8 +48314,9 @@ postActionError: function (functionalEntity, action) {
             bottom: 0px;
         }
         paper-material {
-            margin: 10px 30px;
+            margin: 10px;
             border-radius: 2px;
+            max-height: 100%;
             overflow: hidden;
         }
         paper-spinner {
@@ -48368,6 +48403,10 @@ postActionError: function (functionalEntity, action) {
         .right-button-group {
             margin-left: auto;
         }
+        .selection-criteria-buttons {
+            padding: 20px 20px 0 20px;
+            min-height: fit-content;
+        }
     </style>
 
     <template>
@@ -48379,11 +48418,11 @@ postActionError: function (functionalEntity, action) {
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
         <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
-            <div class="fit">
-                <paper-material>
+            <div class="fit layout vertical">
+                <paper-material class="selection-material layout vertical">
                     <tg-selection-view id="selectionView">
                         <content select=".custom-selection-criteria"></content>
-                        <div class="selection-criteria-buttons layout horizontal justified wrap" style="padding: 20px 20px 0 20px;">
+                        <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
                                 <paper-button id="saver" raised="" shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
                                 <paper-button id="discarder" raised="" shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
