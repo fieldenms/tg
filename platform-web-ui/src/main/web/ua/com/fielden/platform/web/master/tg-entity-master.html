@@ -16,6 +16,11 @@
         #masterContainer {
             overflow-y: auto; /* vertical scrollbar is needed in case where master content does not fit into parent container; this works as a fallback when editorContainer has been shrinked to zero height */
         }
+        tg-scrollable-component {
+            --tg-scrollable-layout: {
+                flex: 1;
+            };
+        }
     </style>
     <template>
         <tg-entity-binder id="binderDom">
@@ -26,7 +31,7 @@
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
         <div id="masterContainer" class="layout vertical">
-            <tg-scrollable-component class="flex relative">
+            <tg-scrollable-component class="layout vertical flex relative">
                 <content select=".property-editors"></content>
             </tg-scrollable-component>
             <div id="actionContainer">
