@@ -80,15 +80,11 @@
             padding-left: 30px;
             padding-right: 30px;
         }
-        
-        #drawer {
-            border-right: 1px solid rgba(0, 0, 0, 0.14);
-        }
-        
-        #drawerToolbar {
-            color: var(--secondary-text-color);
-            background-color: var(--drawer-menu-color);
-            border-bottom: var(--drawer-toolbar-border-color);
+            
+        paper-drawer-panel {
+            --paper-drawer-panel-drawer-container: {
+                border-right: 1px solid rgba(0, 0, 0, 0.14);
+            }
         }
         
         iron-pages {

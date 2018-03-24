@@ -72,7 +72,12 @@
                 hostAttributes: {
                     "class": "layout vertical"
                 },
-
+                
+                // ready: function () {
+                //     This setting could be helpful in case where master / centre views will need to be supported.
+                //     this._afterInitLoading = true;
+                // },
+                
                 attached: function () {
                     var self = this;
                     self.async(function () {

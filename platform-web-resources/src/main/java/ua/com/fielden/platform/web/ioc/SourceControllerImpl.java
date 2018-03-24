@@ -300,7 +300,7 @@ public class SourceControllerImpl implements ISourceController {
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
-            return getTgAppConfigSource(webUiConfig);
+            return getTgAppConfigSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
@@ -312,7 +312,7 @@ public class SourceControllerImpl implements ISourceController {
 //        } else if (resourceURI.startsWith("/centre_ui/egi")) {
 //            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
-            return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
+            return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/custom_view")) {
             return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
@@ -349,8 +349,8 @@ public class SourceControllerImpl implements ISourceController {
         return DeviceProfile.DESKTOP.equals(deviceProfile) ? app.genDesktopAppIndex() : app.genMobileAppIndex();
     }
 
-    private static String getTgAppConfigSource(final IWebUiConfig app) {
-        return app.genWebUiPreferences();
+    private static String getTgAppConfigSource(final IWebUiConfig app, final DeviceProfile deviceProfile) {
+        return app.genWebUiPreferences(deviceProfile);
     }
 
     private static String getTgAppSource(final IWebUiConfig app, final DeviceProfile deviceProfile) {
@@ -458,12 +458,19 @@ public class SourceControllerImpl implements ISourceController {
         return master.render().toString();
     }
 
-    private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
+    private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig, final DeviceProfile device) {
+        // At this stage (#231) we only support single EntityCentre instance for both MOBILE / DESKTOP applications.
+        // This means that starting the MOBILE or DESKTOP app for the first time will show us the same initial full-blown (aka-desktop)
+        // configuration; the user however could change the number of columns, resize their widths etc. for MOBILE and DESKTOP apps separately
+        // (see CentreUpdater.deviceSpecific method for more details).
+        
+        // In future potentially we would need to define distinct initial configurations for MOBILE and DESKTOP apps.
+        // Here we would need to take device specific instance.
         final EntityCentre<? extends AbstractEntity<?>> centre = ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig);
         if (centre == null) {
             throw new MissingCentreConfigurationException(format("The entity centre configuration for %s menu item is missing", mitypeString));
         }
-        return centre.build().render().toString();
+        return centre.buildFor(device).render().toString();
     }
 
     private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {

@@ -25,6 +25,7 @@
             --paper-toolbar-background: var(--paper-light-blue-700);
             --paper-toolbar-color: white;
             --paper-toolbar-height: 44px;
+            --paper-toolbar-sm-height: 44px;
         }
         a paper-icon-button,
         a:active paper-icon-button,
@@ -65,16 +66,19 @@
         .tile-toolbar[action-disabled] ::content tg-ui-action {
             pointer-events: none;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 
     <template>
         <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <div class="layout horizontal center">
-                <span style="font-size:1rem; padding-right:4px;">[[menuConfig.userName]]</span>
-                <a href="/logout" tabIndex="-1">
-                    <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout"></paper-icon-button>
-                </a>
+            <div class="layout horizontal center" style="display: contents">
+                <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
+                <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
             </div>
         </paper-toolbar>
 
@@ -112,7 +116,10 @@
 
 <script>
     (function () {
-        var isMenuPresent = function (menu) {
+        /**
+         * This function is now very specific to the presence of 'menu', but should be expanded to query 'view' existence as well in case where master / centre views will need to be supported.
+         */
+        const isMenuPresent = function (menu) {
             return menu && menu.length > 0;
         };
         Polymer({
@@ -200,7 +207,7 @@
                 }
             },
             _calcTileStyle: function (item) {
-                return isMenuPresent(item.menu) ? "cursor:pointer;" : "filter: grayscale(1);"
+                return isMenuPresent(item.menu) ? "cursor:pointer;" : "filter: grayscale(1);";
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";
@@ -216,6 +223,9 @@
             },
             _isDisabled: function(item) {
                 return !isMenuPresent(item.menu);
+            },
+            _logout: function () {
+                window.location.href = '/logout';
             }
         });
     })();

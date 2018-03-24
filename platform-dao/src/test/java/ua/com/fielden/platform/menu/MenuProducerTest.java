@@ -10,16 +10,20 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 public class MenuProducerTest extends AbstractDaoTestCase {
 
     private final IMenuRetriever menuRetriever = new IMenuRetriever() {
 
         @Override
-        public Menu getMenuEntity() {
+        public Menu getMenuEntity(final DeviceProfile deviceProfile) {
             final List<ModuleMenuItem> moduleMenu1 = Arrays.asList(
                     new ModuleMenuItem().setKey("module1item1"),
                     new ModuleMenuItem().setKey("module1item2"),
@@ -64,7 +68,10 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3"))));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up);
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final CentreContext context = new CentreContext();
+        context.setChosenProperty("desktop");
+        menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
         assertEquals("The menu has incorrect number of modules", 2, menu.getMenu().size());
@@ -130,7 +137,10 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item3"))));
 
         up.setUser(co$(User.class).findByKey("USER_2"));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up);
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final CentreContext context = new CentreContext();
+        context.setChosenProperty("desktop");
+        menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
         assertEquals("The menu has incorrect number of modules", 2, menu.getMenu().size());

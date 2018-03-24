@@ -693,6 +693,7 @@
                         if (self._criteriaLoaded === false) {
                             throw "Cannot activate result-set view (not initialised criteria).";
                         }
+                        self.$.dom.persistActiveElement();
                         self._selectedView = 1;
                     }, 100);
                 }).bind(self);

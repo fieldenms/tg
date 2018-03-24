@@ -241,20 +241,20 @@
                 },
                 
                 /**
-                 * The mouse down event listener that selectes the text inside input when first time clicked.
+                 * The mouse tap event listener that selectes the text inside input when first time tapped.
                  */
-                _onDown: {
+                _onTap: {
                     type: Function,
                 	value: function () {
                     	return (function (event) {
-                        	if (document.activeElement !== this.decoratedInput()) {
+                            if (document.activeElement !== this.decoratedInput()) {
                                 this.decoratedInput().select();
                                 this._preventEventBubbling(event);
                             }
                     	}).bind(this);
                 	}
                 },
-
+                
             	/**
              	 * This event is invoked after the component gained focus.
              	 *

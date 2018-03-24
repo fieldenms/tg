@@ -41,7 +41,7 @@ The `tg-date-range-criterion-config` contains just the DOM part of all date rang
     <template>
         <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
             <tg-accordion id$="[[prefix]]" dont-close-on-tap heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" class$="[[_calcClass(prefix, _datePrefix)]]" on-accordion-toggled="_accordionToggledListener">
-                <div class="layout horizontal">
+                <div class="layout horizontal wrap">
                     <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
                         <div class="layout vertical">
                             <template is="dom-repeat" items="{{_dateMnemonics}}" as="mnemonic" index-as="mIndex">

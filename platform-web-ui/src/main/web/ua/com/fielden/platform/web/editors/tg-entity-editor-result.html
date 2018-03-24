@@ -503,11 +503,26 @@
                         this.style.left = adjustment + 'px';
                     }
                 }
-
+                
                 // let's try also to determine the best height depending on the window height and 
                 // the current vertical location of the element
                 var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment 
+            },
+            
+            /**
+             * Defines reasonable rule for 'small height for showing autocompleter results'. For now three items need to be shown, otherwise scrolling will be triggered.
+             */
+            visibleHeightUnderEditorIsSmall: function () {
+                const clientRectAndOffsetHeight = this.retrieveContainerSizes();
+                const rect = clientRectAndOffsetHeight[0];
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                const top = rect.top + scrollTop + clientRectAndOffsetHeight[1];
+                
+                // let's try to determine the height under the editor to bottom of the screen
+                const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
+                return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
             }
 		});
 	})();

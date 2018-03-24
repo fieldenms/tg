@@ -40,17 +40,12 @@ public class CollectionalEditorWidget extends AbstractWidget {
      * The name of 'removedIds' property, that represents the container with unordered list of removed entity ids.
      */
 
-    private int maxVisibleRows = 3;
     private String headerPropertyName = AbstractEntity.KEY;
     private String descriptionPropertyName = AbstractEntity.DESC;
     private boolean reorderable = false;
 
     public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
-    }
-
-    public void setMaxVisibleRows(final int maxVisibleRows) {
-        this.maxVisibleRows = maxVisibleRows;
     }
 
     public void setHeaderPropertyName(final String headerPropertyName) {
@@ -71,7 +66,6 @@ public class CollectionalEditorWidget extends AbstractWidget {
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> customAttr = super.createCustomAttributes();
-        customAttr.put("max-visible-items", maxVisibleRows);
         customAttr.put("header-property-name", headerPropertyName);
         customAttr.put("description-property-name", descriptionPropertyName);
         customAttr.put("can-reorder-items", reorderable);

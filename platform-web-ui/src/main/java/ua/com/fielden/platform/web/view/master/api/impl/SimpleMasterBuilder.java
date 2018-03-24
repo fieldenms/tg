@@ -48,8 +48,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
 
-    private final FlexLayout layout = new FlexLayout();
-    private final FlexLayout actionBarLayout = new FlexLayout();
+    private final FlexLayout layout = new FlexLayout("editors");
+    private final FlexLayout actionBarLayout = new FlexLayout("actions");
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 

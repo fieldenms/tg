@@ -63,11 +63,14 @@
                                 resolve("ENTER");
                             }
                         }
-
+                        
                         dialogModel.dialogCanceled = function (e) {
                             reject("ESC");
                         };
-
+                        dialogModel.closeDialog = function () {
+                            reject("ESC");
+                        };
+                        
                         dialogModel._action = function (e) {
                             var button = e.model.item;
                             if (button.confirm) {

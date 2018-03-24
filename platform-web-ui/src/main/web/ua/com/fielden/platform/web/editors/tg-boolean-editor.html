@@ -25,14 +25,17 @@
             flex-shrink: 0;
         }
         paper-checkbox::shadow #checkboxLabel {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display:grid !important;
             font-size: 0.9rem;
             font-weight: 400;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             color: #757575 !important;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
     <template>
@@ -52,7 +55,7 @@
         		checked="[[_isBooleanChecked(_editingValue)]]"
         		disabled$="[[_disabled]]"
         		on-change="_onChange"
-                tooltip-text$="[[_getTooltip(_editingValue)]]">[[propTitle]]</paper-checkbox>
+                tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>
         	<content class=".property-action"></content>
         </tg-editor>
     </template>

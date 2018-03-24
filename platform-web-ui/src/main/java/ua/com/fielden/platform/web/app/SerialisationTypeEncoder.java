@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.app;
 
+import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
+
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -22,17 +25,20 @@ import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private final Logger logger = Logger.getLogger(getClass());
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
     private final IServerGlobalDomainTreeManager serverGdtm;
     
     @Inject
-    public SerialisationTypeEncoder(final IUserProvider userProvider, final IServerGlobalDomainTreeManager serverGdtm) {
+    public SerialisationTypeEncoder(final IUserProvider userProvider, final IDeviceProvider deviceProvider, final IServerGlobalDomainTreeManager serverGdtm) {
         this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
         this.serverGdtm = serverGdtm;
     }
     
@@ -86,7 +92,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, deviceProvider.getDeviceProfile()));
                 decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {

@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    <!-- Startup configuration -->
+    <link rel="manifest" href="/resources/manifest.webmanifest">
+    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
@@ -35,9 +38,9 @@
 
 </head>
 
-<body unresolved class="fullbleed">
+<body unresolved class="fullbleed relative">
     <template is="dom-bind" id="app">
-        <tg-desktop-app class="fit"></tg-desktop-app>
+        <tg-app-template class="fit"></tg-app-template>
     </template>
     <script>
         (function () {

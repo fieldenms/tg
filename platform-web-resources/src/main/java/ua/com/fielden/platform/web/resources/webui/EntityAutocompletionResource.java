@@ -13,17 +13,16 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
@@ -34,7 +33,7 @@ import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
  * @author TG Team
  *
  */
-public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends ServerResource {
+public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractWebResource {
     private static final Logger logger = Logger.getLogger(EntityAutocompletionResource.class);
     private final Class<CONTEXT> entityType;
     private final String propertyName;
@@ -51,10 +50,11 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final IValueMatcherWithContext<CONTEXT, T> valueMatcher,
             final ICompanionObjectFinder companionFinder,
             final RestServerUtil restUtil,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider);
 
         this.entityType = entityType;
         this.propertyName = propertyName;

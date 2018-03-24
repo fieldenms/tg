@@ -1,4 +1,5 @@
 <link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
@@ -94,7 +95,6 @@
                 position: absolute;
                 bottom: 0;
                 right: 0;
-                z-index: 2; /* higher than in non-scrollable entity-master's action bar (1) */
                 --iron-icon-fill-color: var(--paper-grey-600);
             }
             #resizer:hover {
@@ -110,15 +110,15 @@
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
                 <!-- collapse/expand buttons -->
-                <paper-icon-button hidden=[[!_minimised]]  class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
-                <paper-icon-button hidden="[[_minimised]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
                 <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden=[[!_maximised]]  class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
+                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
         </div>
@@ -127,6 +127,7 @@
         </div>
         <tg-toast id="toaster"></tg-toast>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+        <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     </template>
 </dom-module>
 <script>
@@ -255,6 +256,13 @@
                  */
                 _windowWidth: Number,
                 _windowHeight: Number,
+                
+                /**
+                 * Binds to the property 'appConfig.mobile'.
+                 */
+                mobile: {
+                    type: Boolean
+                }
             },
             
             observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
@@ -491,10 +499,10 @@
                     this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                     this.style.overflow = 'auto';
                 } else if (!minimised && maximised) {
-                    this.style.top = '2%';
-                    this.style.left = '2%';
-                    this.style.width = '96%';
-                    this.style.height = '96%';
+                    this.style.top = this.mobile === true ? '0%' : '2%';
+                    this.style.left = this.mobile === true ? '0%' : '2%';
+                    this.style.width = this.mobile === true ? '100%' : '96%';
+                    this.style.height = this.mobile === true ? '100%' : '96%';
                     this.style.overflow = 'auto';
                 } else if (minimised && !maximised) {
                     this.style.height = '44px';
@@ -539,7 +547,7 @@
             
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
-                if (target === this.$.titleBar) {
+                if (target === this.$.titleBar && this._maximised === false) {
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';
@@ -749,7 +757,12 @@
                         actionsDialog._childDialogs.push(this);
                         this._parentDialog = actionsDialog;
                     }
-                    this._focusAndRefit(); // this is a legacy support
+                    this._refitLater(); // this is a legacy support
+                    
+                    if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
+                        this._invertMaximiseState();
+                    }
+                    
                     this.open();
                 }.bind(this), 200);
             },
@@ -790,7 +803,10 @@
              * Listener that listens binding entity appeared event and focuses first input.
              */
             _focusDialogWithInput: function (e) {
-                if (this._lastElement.focusFirstInput) {
+                // Desktop app specific: focus first input when opening dialog.
+                // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
+                // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor). 
+                if (this.$.appConfig.mobile === false && this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
                 }
             },
@@ -805,21 +821,17 @@
                 this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                 this.removeEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
             },
-
+            
             /** 
-             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound.
+             * Refits this dialog on async after 50 millis.
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
-            _focusAndRefit: function () {
+            _refitLater: function () {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
-                if (this._lastElement.focusFirstInput) {
-                    this._lastElement.focusFirstInput();
-                }
             },
-
-
+            
             _dialogOpened: function (e, detail, source) {
                 // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
                 // a more appropriate place for refitting is post entity binding
@@ -860,6 +872,27 @@
                 if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
+            },
+            
+            /**
+             * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
+             */
+            _maximiseRestorerHidden: function (_maximised, mobile) {
+                return !_maximised || mobile === true;
+            },
+            
+            /**
+             * Returns 'true' if Closer button is hidden, 'false' otherwise.
+             */
+            _closerHidden: function (_lastAction, mobile) {
+                return _lastAction.continuous || mobile === true;
+            },
+            
+            /**
+             * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
+             */
+            _collapserHidden: function (_minimised, mobile) {
+                return _minimised || mobile === true;
             }
         });
     })();

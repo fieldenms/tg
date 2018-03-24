@@ -9,10 +9,12 @@
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
-<dom-module id="tg-desktop-app">
+<dom-module id="tg-app-template">
     <template>
         <style>
             :host {
@@ -87,7 +89,7 @@
             };
             Polymer({
 
-                is: "tg-desktop-app",
+                is: "tg-app-template",
 
                 properties: {
                     /**
@@ -115,7 +117,10 @@
                     },
                     
                     entityType: String,
-                    
+                    _manager: {
+                        type: Object,
+                        value: Polymer.IronOverlayManager
+                    },
                     _route: {
                         type: Object,
                         observer: "_routeChanged"
@@ -134,10 +139,34 @@
                     _saveIdentifier: Number,
                     _visibleMenuItems: Array,
                     _invisibleMenuItems: Array,
-                    _saveMenuVisibilityChanges: Function
+                    _saveMenuVisibilityChanges: Function,
+                    
+                    /**
+                     * Returns 'true' if this generated 'tg-app' component was loaded for mobile device, 'false' otherwise (see AbstactWebResource and DeviceProfile for more details).
+                     * 
+                     * Currently, the only difference will be in constructing app menu content.
+                     * We use this flag when making 'retrieve' call for 'Menu' entity.
+                     */
+                    mobile: {
+                        type: Boolean,
+                        value: @isMobileDevice
+                    },
+                    
+                    /**
+                     * The current number of active history entry.
+                     * 
+                     * For the very first history entry this number will be '1' due to rewriting in attached callback (if application loads from root page).
+                     * For the very first history entry this number will be 'undefined' (if application loads from some specific URI, e.g. http://tgdev.com:8091/#/Work%20Activities/Work%20Activity).
+                     * For all other cases we have actual number, aka 2, 3, and so on.
+                     * 
+                     * Please, not that history also always contains 'zero' entry which represents 'New Tab'.
+                     */
+                    currentHistoryState: {
+                        type: Number
+                    }
                 },
 
-                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.IronResizableBehavior],
                 
                 keyBindings: {
                     'f3': '_searchMenu'
@@ -164,9 +193,104 @@
                 _restoreLastFocusedElement: function (event) {
                     this.restoreActiveElement();
                 },
-
+                
                 _routeChanged: function (newValue, oldValue) {
-                    this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                    // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
+                    if (!this.currentHistoryState) {
+                        this._loadApplicationInfrastructureIntoHistory();
+                    } else {
+                        const currentOverlay = this._findFirstClosableDialog();
+                        if (currentOverlay) { // if there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+                            // disableNextHistoryChange flag is needed to avoid history movements cycling
+                            if (!this.disableNextHistoryChange) {
+                                const historySteps = this.currentHistoryState - window.history.state.currIndex;
+                                if (!window.history.state || historySteps > 0) { // moving back
+                                    if (historySteps > 1) { // 'multiple back' action
+                                        if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
+                                            window.history.go(historySteps);
+                                        } else { // otherwise the history changes already occured and just change the page
+                                            this._changePage();
+                                        }
+                                    } else { // 'single back' action
+                                        window.history.forward(); // to remain history not changed
+                                        this._closeDialog(currentOverlay);
+                                    }
+                                } else { // moving forward ('multiple forward' action or 'forward' action)
+                                    window.history.go(historySteps); // to remain history not changed
+                                }
+                            }
+                            this.disableNextHistoryChange = !this.disableNextHistoryChange;
+                        } else {
+                            this._changePage();
+                            this.disableNextHistoryChange = false;
+                        }
+                        this.currentHistoryState = window.history.state && window.history.state.currIndex;
+                    }
+                },
+                
+                _loadApplicationInfrastructureIntoHistory: function () {
+                    if (this._route.path) {
+                        const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
+                        const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
+                        const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                        window.history.replaceState({currIndex: window.history.length - 1}, '', urlForRoot);
+                        window.history.pushState({currIndex: window.history.length}, '', urlForMenu);
+                        window.history.pushState({currIndex: window.history.length}, '', urlToOpen);
+                        this.currentHistoryState = window.history.length - 1;
+                        this._routeChanged();
+                    }
+                },
+                
+                /**
+                 * Actually changes the page; if the page is about to change to 'root' page (for e.g. https://tgdev.com:8091), then it moves forward to corresponding menu,
+                 * which should definitely exist (https://tgdev.com:8091/#/menu).
+                 */
+                _changePage: function () {
+                    if (this._route.path) {
+                        this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                    } else {
+                        window.history.forward();
+                    }
+                },
+                
+                /**
+                 * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
+                 *
+                 * This method skips all iron-overlay-behavior elements that contain property 'skipHistoryAction'.
+                 */
+                _closeAllDialogs: function () {
+                    const overlays = this._manager._overlays;
+                    for (let i = overlays.length - 1; i >= 0; i--) {
+                        if (!overlays[i].skipHistoryAction) {
+                            this._closeDialog(overlays[i]);
+                        }
+                    }
+                    for (let i = overlays.length - 1; i >= 0; i--) {
+                        if (!overlays[i].skipHistoryAction) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                
+                /**
+                 * Performs dialog closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+                 */
+                _closeDialog: function (dialog) {
+                    if (dialog.closeDialog) {
+                        dialog.closeDialog();
+                    } else {
+                        dialog.close();
+                    }
+                },
+                
+                _findFirstClosableDialog: function () {
+                    const overlays = this._manager._overlays;
+                    for (let i = overlays.length - 1; i >= 0; i--) {
+                        if (!overlays[i].skipHistoryAction) {
+                            return overlays[i];
+                        }
+                    }
                 },
                 
                 _selectedSubmoduleChanged: function (newValue, oldValue) {
@@ -176,7 +300,7 @@
                 },
 
                 _showMainMenu: function (e) {
-                    this._setSelected("menu");
+                    this.set("_route.path", "/menu");
                 },
 
                 _showView: function (e) {
@@ -185,11 +309,7 @@
                     var route = "/" + menuPathItems[0];
                     menuPathItems.splice(0,1);
                     route += "/" + (menuPathItems.length > 0 ? menuPathItems.join("/") : "_");
-                    if (this._route.path === route) {
-                        this._setSelected(moduleName);
-                    } else {
-                        this.set("_route.path", route);
-                    }
+                    this.set("_route.path", route);
                 },
 
                 _modulesRendered: function (e) {
@@ -362,18 +482,27 @@
                             this._invisibleMenuItems = null;
                         }
                     }.bind(this);
+                    
+                    this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+                    window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
                 },
-
+                
                 attached: function () {
-                    var self = this;
+                    const self = this;
                     this.async(function () {
                         self.topLevelActions = [
                             //actionsObject
                         ];
                         if (!this._route.path) {
+                            this._replaceStateWithNumber();
                             this.set("_route.path", "/menu");
                         }
-                        this.retrieve();
+                        
+                        self.entityId = 'new';
+                        const context = self._reflector().createContextHolder(null, null, null, null, null, null, null);
+                        context['chosenProperty'] = self.mobile === true ? 'mobile' : 'desktop';
+                        
+                        this.retrieve(context);
                         this._toastGreeting().text = "Loading menu...";
                         this._toastGreeting().hasMore = false;
                         this._toastGreeting().showProgress = true;
@@ -381,12 +510,73 @@
                         this._toastGreeting().isCritical = false;
                         this._toastGreeting().show();
                     });
-
+                    
                     window.addEventListener("beforeunload", this._checkWeatherCanLeave);
                 },
-
+                
                 detached: function () {
                     window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
+                },
+                
+                /**
+                 * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
+                 */
+                _replaceStateWithNumber: function () {
+                    // the URI for history state rewrite
+                    const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    // rewrite history state by providing concrete number of last history state
+                    window.history.replaceState({currIndex: window.history.length - 1}, '', fullNewUrl);
+                    // currentHistoryState will be updated accordingly
+                    this.currentHistoryState = window.history.length - 1;
+                },
+                
+                _getUrl: function() {
+                    let url = this.$.location.__path;
+                    const query = this.$.location.__query;
+                    if (query) {
+                      url += '?' + query;
+                    }
+                    if (this.$.location.__hash) {
+                      url += '#' + this.$.location.__hash;
+                    }
+                    return url;
+                },
+                
+                _resizeEventListener: function (event, details) {
+                    if (document.activeElement
+                        && (document.activeElement.nodeName.toLowerCase() === 'input'
+                            || document.activeElement.nodeName.toLowerCase() === 'textarea')
+                    ) {
+                        let node = document.activeElement;
+                        while (node !== null && node.nodeName.toLowerCase() !== 'paper-input-container') {
+                            node = node.parentNode;
+                        }
+                        if (node !== null && !this._isElementInViewport(node)) {
+                            node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
+                        }
+                    } 
+                },
+                
+                /**
+                 * Check whether an element is visible in viewport. See https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport.
+                 */
+                _isElementInViewport: function (el) {
+                    const rect     = el.getBoundingClientRect();
+                    const vWidth   = window.innerWidth || document.documentElement.clientWidth;
+                    const vHeight  = window.innerHeight || document.documentElement.clientHeight;
+                    const efp      = function (x, y) { return document.elementFromPoint(x, y) };
+                    
+                    // Return false if it's not in the viewport
+                    if (rect.right < 0 || rect.bottom < 0 || rect.left > vWidth || rect.top > vHeight) {
+                        return false;
+                    }
+                    // Return true if all its four corners are visible, aka the element from corner point is the child the 'el' or el itsels
+                    return (
+                          el.contains(efp(rect.left + 1,  rect.top + 1)) // used slightly narrower rectangle due to [most likely] rounding issues of floating point pixels
+                      &&  el.contains(efp(rect.right - 1, rect.top + 1))
+                      &&  el.contains(efp(rect.right - 1, rect.bottom - 1))
+                      &&  el.contains(efp(rect.left + 1,  rect.bottom - 1))
+                    );
                 }
             });
         })();

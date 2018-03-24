@@ -23,6 +23,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -48,7 +49,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadAction> {
 
     private final IRenderable renderable;
-    private final FlexLayout actionBarLayout = new FlexLayout();
+    private final FlexLayout actionBarLayout = new FlexLayout("actions");
     private final List<AttachmentsUploadActionMasterEntityActionConfig> entityActions = new ArrayList<>();
     
 
@@ -178,9 +179,9 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     }
 
     private static String mkActionLayoutForMaster() {
-        final String MARGIN_PIX = "20px";
-        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: " + MARGIN_PIX + "', 'wrap', 'justify-content: center',";
-        final String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
+        final String MARGIN_PIX_FOR_MASTER_ACTION = "10px";
+        final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: " + MARGIN_PIX_FOR_MASTER_ACTION + "', 'wrap', 'justify-content: center',";
+        final String MASTER_ACTION_SPECIFICATION = StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
         
         final StringBuilder layout = new StringBuilder();
         layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");

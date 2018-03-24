@@ -11,6 +11,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -94,11 +95,11 @@ public interface IWebUiConfig extends IMenuRetriever {
     String genDesktopMainWebUIComponent();
 
     /**
-     * Generates the global configuration component.
+     * Generates the global configuration component depending on {@link DeviceProfile}.
      *
      * @return
      */
-    String genWebUiPreferences();
+    String genWebUiPreferences(final DeviceProfile deviceProfile);
 
     /**
      * Returns the map of entity masters for this web application.
@@ -129,7 +130,7 @@ public interface IWebUiConfig extends IMenuRetriever {
     /**
      * Clears all centre, master and menu configurations that were initialised before. After that, clears all centre configurations for the application user represented by <code>gdtm</code> instance.
      */
-    void clearConfiguration(final IGlobalDomainTreeManager gdtm);
+    void clearConfiguration(final IGlobalDomainTreeManager gdtm, final DeviceProfile device);
 
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented

@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    <!-- Startup configuration -->
+    <link rel="manifest" href="/resources/manifest.webmanifest">
+    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
@@ -39,6 +42,7 @@
             background-image: url(#bg-svg), none;
             -webkit-font-smoothing: antialiased;
             min-height: 100%;
+            margin: 0px; /* overrides user agent stylesheet's margin if there is one */
         }
         h1 {
         	font-weight: 700;

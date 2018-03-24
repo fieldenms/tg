@@ -55,6 +55,7 @@ public class WebUiResources extends AbstractWebUiResources {
                 injector,
                 DumpCsvTxtProcessor.class,
                 f -> f.newByKey(DumpCsvTxtProcessor.class, "DUMMY"), // this entity construction could be more sophisticated in practice
+                deviceProvider,
                 20 * 1024 * 1024, // Kilobytes
                 MediaType.TEXT_CSV,
                 MediaType.TEXT_PLAIN);
@@ -66,6 +67,7 @@ public class WebUiResources extends AbstractWebUiResources {
                 injector,
                 AttachmentUploader.class,
                 f -> f.newEntity(AttachmentUploader.class),
+                deviceProvider,
                 20 * 1024 * 1024, // Kilobytes
                 // image/png,image/jpeg,
                 // .csv,.txt,text/plain,text/csv,
@@ -84,7 +86,7 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register some server-side eventing
         // router.attach("/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
-        router.attach("/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class));
-        router.attach("/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class));
+        router.attach("/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider));
+        router.attach("/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider));
     }
 }

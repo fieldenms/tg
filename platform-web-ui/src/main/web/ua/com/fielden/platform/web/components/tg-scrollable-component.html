@@ -1,0 +1,66 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
+<!-- Generic component for scrollable container with bottom / top shadows. The usage of this component should be relatively or absolutely positioned. -->
+<!-- --tg-scrollable-layout mixin can be used to customise layout and styles of scrollable content.  -->
+<dom-module id="tg-scrollable-component">
+    <style>
+        :host {
+            @apply(--layout-vertical);
+        }
+        #scrollablePanel {
+            overflow: auto;
+            @apply(--tg-scrollable-layout);
+        }
+        #shadowContainer {
+            pointer-events: none;
+        }
+    </style>
+    <template>
+        <div id="scrollablePanel" on-scroll="_contentScrolled">
+            <content></content>
+        </div>
+        <div id="shadowContainer" class="fit"></div>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-scrollable-component',
+
+        behaviors: [Polymer.IronResizableBehavior],
+
+        ready: function () {
+            this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            // The following logic fixes appearance of bottom shadow in cases where 
+            //  a) the sizes of inner content are not known at the beginning;
+            //  b) tg-entity-binder-behavior -based component is inside tg-scrollable-component (for e.g. tg-selection-criteria-behavior; look into tg-selection-view for more details).
+            // Please note that 'flickering' effect of shadow dissapearance still exists.
+            this.addEventListener('binding-entity-appeared', this._resizeEventListener.bind(this));
+        },
+
+        _resizeEventListener: function (event, details) {
+            this._contentScrolled();
+        },
+
+        _contentScrolled: function (e) {
+            const scrollTarget = this.$.scrollablePanel;
+            const shadowTarget = this.$.shadowContainer;
+            if (scrollTarget) {
+                let shadowStyle = "";
+                if (scrollTarget.scrollTop) {
+                    shadowStyle += "inset 0 3px 6px -2px rgba(0,0,0,0.7)";
+                }
+                if (scrollTarget.scrollTop + scrollTarget.offsetHeight < scrollTarget.scrollHeight) {
+                    shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
+                }
+                if (shadowStyle) {
+                    shadowTarget.style.boxShadow = shadowStyle;
+                } else {
+                    shadowTarget.style.removeProperty('box-shadow');
+                }
+            }
+        },
+    });
+</script>

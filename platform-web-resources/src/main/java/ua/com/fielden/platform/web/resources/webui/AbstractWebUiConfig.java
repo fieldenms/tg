@@ -26,13 +26,14 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -124,14 +125,15 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final String genWebUiPreferences() {
-        return webUiBuilder.genWebUiPrefComponent();
+    public final String genWebUiPreferences(final DeviceProfile deviceProfile) {
+        return webUiBuilder.genWebUiPrefComponent(deviceProfile);
     }
 
     @Override
     public final String genDesktopMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-desktop-app.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.html").
+                replace("@isMobileDevice", "false").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
     }
@@ -139,7 +141,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genMobileMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = mobileMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-mobile-app.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.html").
+                replace("@isMobileDevice", "true").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
     }
@@ -214,20 +217,21 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
         logger.error("Clearing configurations...");
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
 
-        logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
-        CentreUpdater.clearAllCentres(gdtm);
-        logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
+        logger.error(String.format("Clearing centres for user [%s] and device [%s]...", gdtm.getUserProvider().getUser(), device));
+        CentreUpdater.clearAllCentres(gdtm, device);
+        logger.error(String.format("Clearing centres for user [%s] and device [%s]...done", gdtm.getUserProvider().getUser(), device));
     }
-
+    
     @Override
-    public Menu getMenuEntity() {
-        return desktopMainMenuConfig.getMenu();
+    public Menu getMenuEntity(final DeviceProfile deviceProfile) {
+        return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
+    
 }

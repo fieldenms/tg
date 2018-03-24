@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
@@ -105,6 +107,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionEle
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -725,19 +728,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             return Optional.empty();
         }
     }
-
+    
     @Override
-    public IRenderable build() {
+    public IRenderable buildFor(final DeviceProfile device) {
         logger.debug("Initiating fresh centre...");
-        return createRenderableRepresentation(getAssociatedEntityCentreManager());
+        return createRenderableRepresentation(getAssociatedEntityCentreManager(device));
     }
-
-    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
+    
+    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, CentreUpdater.FRESH_CENTRE_NAME);
+            return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, deviceSpecific(FRESH_CENTRE_NAME, device));
         }
     }
 

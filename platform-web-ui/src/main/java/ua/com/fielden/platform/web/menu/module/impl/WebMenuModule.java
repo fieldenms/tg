@@ -99,6 +99,8 @@ public class WebMenuModule implements IExecutable {
         //TODO module menu can not be null. Right now platform supports modules with view. This case should be covered with separate issue.
         if (this.menu != null) {
             module.setMenu(menu.getMenu());
+        } else if (view != null) {
+            module.setView(view.getView());
         }
         return module;
     }

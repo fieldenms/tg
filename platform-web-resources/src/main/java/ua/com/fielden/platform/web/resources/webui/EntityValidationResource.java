@@ -9,7 +9,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -19,6 +18,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityValidationResource<T extends AbstractEntity<?>> extends ServerResource {
+public class EntityValidationResource<T extends AbstractEntity<?>> extends AbstractWebResource {
     private final Class<T> entityType;
     private final EntityFactory entityFactory;
     private final RestServerUtil restUtil;
@@ -49,10 +49,11 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             final IWebUiConfig webUiConfig,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider);
 
         this.entityType = entityType;
         this.entityFactory = entityFactory;
@@ -75,7 +76,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             // throw new IllegalStateException("Illegal state during entity validation.");
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
 
-            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0, device());
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJSONRepresentation(applied);
