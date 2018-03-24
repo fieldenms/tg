@@ -98,12 +98,18 @@
                     var self = this;
                     if (e.target === this.$$("#elementToLoad")) {
                         if (this.menuItem.view.viewType === 'centre') {
+                            const oldPostRetrieved = detail.postRetrieved;
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                                if (oldPostRetrieved) {
+                                    oldPostRetrieved(entity, bindingEntity, customObject);
+                                }
                                 detail._setQueryParams();
                                 if (detail.autoRun || detail.queryPart) {
                                     detail.run();
+                                    delete detail.queryPart;
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);
+                                detail.postRetrieved = oldPostRetrieved; 
                             };
                             detail.retrieve();
                         } else if (this.menuItem.view.viewType === 'master') {
