@@ -18,20 +18,20 @@ import ua.com.fielden.platform.web.resources.webui.DesktopApplicationStartupReso
 public class DesktopApplicationStartupResourcesComponentResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final IDeviceProvider deviceProvider;
-    
+
     public DesktopApplicationStartupResourcesComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.deviceProvider = deviceProvider;
     }
-    
+
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-        
+
         if (Method.GET == request.getMethod()) {
             final DesktopApplicationStartupResourcesComponentResource resource = new DesktopApplicationStartupResourcesComponentResource(sourceController, deviceProvider, getContext(), request, response);
             resource.handle();
         }
     }
-    
+
 }

@@ -22,7 +22,7 @@ public class MasterComponentResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final RestServerUtil restUtil;
     private final IDeviceProvider deviceProvider;
-    
+
     /**
      * Creates the {@link MasterComponentResourceFactory} instance.
      *
@@ -33,7 +33,7 @@ public class MasterComponentResourceFactory extends Restlet {
         this.restUtil = restUtil;
         this.deviceProvider = deviceProvider;
     }
-    
+
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);

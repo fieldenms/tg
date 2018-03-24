@@ -18,12 +18,12 @@ import ua.com.fielden.platform.web.resources.webui.TgElementLoaderComponentResou
 public class TgElementLoaderComponentResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final IDeviceProvider deviceProvider;
-    
+
     public TgElementLoaderComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.deviceProvider = deviceProvider;
     }
-    
+
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
@@ -33,5 +33,5 @@ public class TgElementLoaderComponentResourceFactory extends Restlet {
             resource.handle();
         }
     }
-    
+
 }

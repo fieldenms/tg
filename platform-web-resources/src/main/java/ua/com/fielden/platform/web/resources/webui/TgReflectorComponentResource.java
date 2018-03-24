@@ -31,7 +31,7 @@ public class TgReflectorComponentResource extends AbstractWebResource {
         super(context, request, response, deviceProvider);
         this.sourceController = sourceController;
     }
-    
+
     /**
      * Handles sending of the serialised testing entities to the Web UI client (GET method).
      */
@@ -40,5 +40,5 @@ public class TgReflectorComponentResource extends AbstractWebResource {
         final String source = sourceController.loadSource("/app/tg-reflector.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
-    
+
 }

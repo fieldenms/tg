@@ -33,17 +33,17 @@ public class FileResourceFactory extends Restlet {
         this.resourcePaths = resourcePaths;
         this.deviceProvider = deviceProvider;
     }
-    
+
     /**
      * Invoked on GET request from client.
      */
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-        
+
         if (Method.GET.equals(request.getMethod())) {
             new FileResource(sourceController, Collections.unmodifiableList(resourcePaths), deviceProvider, getContext(), request, response).handle();
         }
     }
-    
+
 }

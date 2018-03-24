@@ -12,19 +12,19 @@ import ua.com.fielden.platform.web.resources.webui.WebUiPreferencesResource;
 public class WebUiPreferencesResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final IDeviceProvider deviceProvider;
-    
+
     public WebUiPreferencesResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.deviceProvider = deviceProvider;
     }
-    
+
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-        
+
         if (Method.GET.equals(request.getMethod())) {
             new WebUiPreferencesResource(sourceController, deviceProvider, getContext(), request, response).handle();
         }
     }
-    
+
 }

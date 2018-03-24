@@ -20,12 +20,12 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  */
 public class AbstractWebResource extends ServerResource {
     private final DeviceProfile deviceProfile;
-    
+
     public AbstractWebResource(final Context context, final Request request, final Response response, final IDeviceProvider deviceProvider) {
         init(context, request, response);
         deviceProvider.setDeviceProfile(deviceProfile = calculateDeviceProfile(request));
     }
-    
+
     /**
      * Calculates the {@link DeviceProfile} that is relevant to the specified <code>request</code>.
      *
@@ -41,7 +41,7 @@ public class AbstractWebResource extends ServerResource {
             return DESKTOP;
         }
     }
-    
+
     /**
      * Returns the {@link DeviceProfile} that is associated with this source request.
      *
@@ -50,5 +50,5 @@ public class AbstractWebResource extends ServerResource {
     protected DeviceProfile device() {
         return deviceProfile;
     }
-    
+
 }

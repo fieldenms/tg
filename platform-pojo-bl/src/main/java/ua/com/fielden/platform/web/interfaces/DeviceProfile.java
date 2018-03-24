@@ -1,8 +1,14 @@
 package ua.com.fielden.platform.web.interfaces;
 
 /**
- * This enumeration lists supported profiles of web application. Currently, we have two profiles: DESKTOP and MOBILE. Each profile could have different main menu
- * and other settings.
+ * Enumeration of supported web application profiles.
+ * <p>
+ * Currently, there are have two profiles:
+ * <ul>
+ * <li>DESKTOP
+ * <li>MOBILE
+ * </ul>
+ * Each profile can be provided with its one main menu and other settings.
  *
  * @author TG Team
  *

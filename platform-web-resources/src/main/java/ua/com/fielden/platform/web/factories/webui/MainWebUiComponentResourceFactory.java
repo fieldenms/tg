@@ -17,14 +17,14 @@ public class MainWebUiComponentResourceFactory extends Restlet {
         this.sourceController = sourceController;
         this.deviceProvider = deviceProvider;
     }
-    
+
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-        
+
         if (Method.GET.equals(request.getMethod())) {
             new MainWebUiComponentResource(sourceController, deviceProvider, getContext(), request, response).handle();
         }
     }
-    
+
 }

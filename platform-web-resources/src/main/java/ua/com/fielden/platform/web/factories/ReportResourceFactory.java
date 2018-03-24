@@ -43,11 +43,11 @@ public class ReportResourceFactory extends Restlet {
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-        
+
         if (Method.POST.equals(request.getMethod())) {
             final String username = (String) request.getAttributes().get("username");
             userProvider.setUsername(username, injector.getInstance(IUser.class));
-            
+
             new ReportResource(reportDaoFactory.createReportDao(), restServerUtil, deviceProvider, getContext(), request, response).handle();
         }
     }

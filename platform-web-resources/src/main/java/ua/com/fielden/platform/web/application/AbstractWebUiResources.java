@@ -39,8 +39,10 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
 /**
- * Represents the web application that is running on the server as a resource provider for browser client. Extend this abstract web application in order to provide custom entity
- * centres, entity masters and other custom views.
+ * Represents a web application that is running on the server.
+ * It is responsible for request routing and serving web resources.
+ * <p>
+ * This abstract implementation should be extend in concrete TG-based web applications to registers domain specific entity centres, entity masters and other views.
  *
  * @author TG Team
  *
@@ -84,17 +86,16 @@ public abstract class AbstractWebUiResources extends Application {
         //        this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.injector = injector;
-        
+
         this.sourceController = injector.getInstance(ISourceController.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
-        
+
         setName(appName);
         setDescription(desc);
         setOwner(owner);
         setAuthor(author);
     }
-
 
     /**
      * An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
@@ -107,7 +108,7 @@ public abstract class AbstractWebUiResources extends Application {
     }
 
     /**
-     * Creates router and configures it with default resources and their paths.
+     * Creates the application router and configures it with default web resources.
      *
      */
     @Override
@@ -116,7 +117,7 @@ public abstract class AbstractWebUiResources extends Application {
         final Router router = new Router(getContext());
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
-        
+
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(sourceController, injector.getInstance(IServerGlobalDomainTreeManager.class), webApp, userProvider, deviceProvider));
         router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));

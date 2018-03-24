@@ -71,11 +71,11 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
             public User getUser() {
                 return userDao.findByKeyAndFetch(fetchAll(User.class), userName);
             }
-            
+
             @Override
             public void setUsername(final String username, final IUser coUser) {
             }
-            
+
             @Override
             public void setUser(final User user) {
             }
