@@ -116,12 +116,12 @@
             this._andBefore = null;
         },
 
-        _acceptMetaValues: function () {
+        _acceptMetaValues: function (validate) {
             this.datePrefix = this._datePrefix;
             this.dateMnemonic = this._dateMnemonic;
             this.andBefore = this._andBefore;
 
-            Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._acceptMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._acceptMetaValues.call(this, validate);
         },
         
         /**

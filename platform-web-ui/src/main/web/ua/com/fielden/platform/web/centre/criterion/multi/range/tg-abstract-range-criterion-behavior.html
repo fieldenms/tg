@@ -54,11 +54,11 @@
         	this._exclusive2 = false;
         },
 
-        _acceptMetaValues: function() {
+        _acceptMetaValues: function(validate) {
             this.exclusive = this._exclusive;
             this.exclusive2 = this._exclusive2;
 
-            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior[1]._acceptMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior[1]._acceptMetaValues.call(this, validate);
         },
         _cancelMetaValues: function() {
             this._exclusive = this.exclusive;

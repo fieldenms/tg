@@ -112,6 +112,20 @@
             this._cancelMetaValuesForBinding = this._cancelMetaValues.bind(this);
             this._computeIconButtonStyleForBinding = this._computeIconButtonStyle.bind(this);
         },
+        
+        /**
+         * Clears all meta value parameters foir this criterion.
+         */
+        clearMetaValues: function () {
+            this._datePrefix = null;
+            this._dateMnemonic = null;
+            this._andBefore = null;
+            this._exclusive = false;
+            this._exclusive2 = false;
+            this._orNull = false;
+            this._not = false;
+            this._acceptMetaValues(false);
+        },
 
         /**
          * Creates dynamically the 'dom-bind' template, which hold the dialog with all meta value editors.
@@ -184,7 +198,7 @@
                 self._exclusive2 = domBind._exclusive2Bind;
                 self._orNull = domBind._orNullBind;
                 self._not = domBind._notBind;
-                self._acceptMetaValues();
+                self._acceptMetaValues(true);
             };
 
             domBind.open = function () {
@@ -233,8 +247,10 @@
         /**
          * Accepts all new meta-values. Should be overridden to provide acceptance in specific descendants.
          */
-        _acceptMetaValues: function () {
-            this.validationCallback();
+        _acceptMetaValues: function (validate) {
+            if (validate) {
+                this.validationCallback();
+            }
         },
 
         /**
