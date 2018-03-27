@@ -200,11 +200,11 @@
                         this._loadApplicationInfrastructureIntoHistory();
                     } else {
                         const currentOverlay = this._findFirstClosableDialog();
-                        if (currentOverlay) { // if there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+                        const historySteps = this.currentHistoryState - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
+                        if (historySteps !== 0 && currentOverlay) { // if user went backward or forward and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
                             // disableNextHistoryChange flag is needed to avoid history movements cycling
                             if (!this.disableNextHistoryChange) {
-                                const historySteps = this.currentHistoryState - window.history.state.currIndex;
-                                if (!window.history.state || historySteps > 0) { // moving back
+                                if (historySteps > 0) { // moving back
                                     if (historySteps > 1) { // 'multiple back' action
                                         if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
                                             window.history.go(historySteps);
@@ -220,7 +220,7 @@
                                 }
                             }
                             this.disableNextHistoryChange = !this.disableNextHistoryChange;
-                        } else {
+                        } else { //The history steps is 0 or there are no opened dialog
                             this._changePage();
                             this.disableNextHistoryChange = false;
                         }
