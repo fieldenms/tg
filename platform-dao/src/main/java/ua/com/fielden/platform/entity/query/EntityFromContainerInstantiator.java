@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -14,6 +16,7 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 public class EntityFromContainerInstantiator {
     private final EntityFactory entFactory;
@@ -107,9 +110,9 @@ public class EntityFromContainerInstantiator {
                 setPropertyToField(entity, propName, propValue, resultType);
             }
         } catch (final Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Can't set value [" + propValue + "] of type [" + (propValue != null ? propValue.getClass() : "?") + "] for property [" + propName
-                    + "] due to:" + e);
+            throw new IllegalStateException(
+                    format("Can't set value [%s] of type [%s] for property [%s] of type [%s] due to: %s",
+                           propValue, propValue != null ? propValue.getClass() : "?", propName, determinePropertyType(resultType, propName) , e));
         }
     }
 
