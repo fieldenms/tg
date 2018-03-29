@@ -249,7 +249,7 @@
 
 					// unique job UUID is required to register a progress update event source
 					// which is provided to the server as a header value
-					var jobUid = this.generateUUID();
+					const jobUid = this.generateUUID();
 					xhr.setRequestHeader('jobUid', jobUid);
 					// and also let's provide the original file meta-data
 					xhr.setRequestHeader('origFileName', file.name);

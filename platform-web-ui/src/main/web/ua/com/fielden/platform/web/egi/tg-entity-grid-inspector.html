@@ -2083,12 +2083,38 @@
                         const attachment = this._getAttachmentIfPossible(entity, column);
                         if (attachment) {
                             const url = '/download-attachment/' + attachment.id;
-                            window.open(url, '_blank');
-                            // a better experience is provided when using <a> insteado of opening another browser window, but this does not work well when an error occurs
-                            // in case of an error, the application gets replaced with an error page and the back button leads to reloadig of the whole application
-                            //const a = document.createElement('A');
-                            //a.href = url;
-                            //a.click();
+                            // AJAX approach to the file download
+                            const xhr = new XMLHttpRequest();
+                            xhr.open("GET", url, true);
+                            xhr.responseType = 'blob';
+                            xhr.onload = function (e) {
+                                if (xhr.status === 200) {
+                                    console.log('File received', xhr.getResponseHeader('Content-Disposition'));
+                                    const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
+                                    const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
+                                    if (filename) {
+                                        // create a Blob object from the response and a URL for it
+                                        const blob = new Blob([xhr.response]);
+                                        const blobUrl = window.URL.createObjectURL(blob);
+                                        // the blob URL can be used for the <a> element for the user to download/open the file
+                                        const a = document.createElement("a");
+                                        a.href = blobUrl;
+                                        a.download = filename;
+                                        a.click();
+                                        // release the reference to the file by revoking the Object URL
+                                        window.URL.revokeObjectURL(url);                                        
+                                    }
+                                } else {
+                                    // TODO display the error in a toast
+                                    console.error('Error occurred when trying to download attachment.', 'Error code:', xhr.status, xhr.response);
+                                }
+                                
+                            }.bind(this);
+                            xhr.onerror = function (e) {
+                                // TODO display the error in a toast
+                                console.error("Error occured when trying to download attachment.", e);    
+                            }.bind(this);
+                            xhr.send();
                         }
                     }
                 }
