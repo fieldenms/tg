@@ -13,10 +13,27 @@ import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
 import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
 import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalcAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,11 +55,15 @@ import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 
 @EntityType(Attachment.class)
@@ -194,14 +215,16 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         // first delete the attachment record
         defaultDelete(attachment);
 
-        // and then try deleting the associated file
-        asFile(attachment).ifPresent(file -> {
-            final Path path = Paths.get(file.toURI());
-            try {
-                Files.deleteIfExists(path);
-            } catch (final IOException ex) {
-                throw failure(ex);
-            }
-        });
+        // and then try deleting the associated file if there are no other attachments referencing it
+        if (0 == count(select(Attachment.class).where().prop(Attachment.pn_SHA1).eq().val(attachment.getSha1()).model())) {    
+            asFile(attachment).ifPresent(file -> {
+                final Path path = Paths.get(file.toURI());
+                try {
+                    Files.deleteIfExists(path);
+                } catch (final IOException ex) {
+                    throw failure(ex);
+                }
+            });
+        }
     }
 }

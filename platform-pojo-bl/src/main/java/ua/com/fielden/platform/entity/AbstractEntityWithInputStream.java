@@ -66,8 +66,9 @@ public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> ext
         return mime;
     }
 
-    public final void setMime(String mime) {
+    public final AbstractEntityWithInputStream<K> setMime(String mime) {
         this.mime = mime;
+        return this;
     }
 
 }

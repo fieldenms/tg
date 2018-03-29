@@ -48,7 +48,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     
     private static final Logger LOGGER = Logger.getLogger(AttachmentUploaderDao.class);
     
-    private final String attachmentsLocation;
+    public final String attachmentsLocation;
     
     @Inject
     public AttachmentUploaderDao(final @Named("attachments.location") String attachmentsLocation, final IFilter filter) {
