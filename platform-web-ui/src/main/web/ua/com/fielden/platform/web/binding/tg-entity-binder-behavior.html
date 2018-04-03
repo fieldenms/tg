@@ -369,7 +369,19 @@
                 this._currBindingEntity = null;
                 this._originalBindingEntity = null;
     		},
-            
+
+            /** Returns a delegation object that can be used for delegating calls to a number of "core" functions. */
+            functionsForExport: function() {
+                const self = this;
+                return {
+                    serialiser: function() { return self._serialiser();},
+                    reflector: function() { return self._reflector();},
+                    toastMsg: function(msg, entity) { return self._toastMsg(msg, entity);},
+                    toastMsgForError: function(errorResult) { return self._toastMsgForError(errorResult);},
+                    openToastForError: function (toastMsg, moreInfo, isCritical) { self._openToastForError(toastMsg, moreInfo, isCritical);}
+                };
+            },
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
