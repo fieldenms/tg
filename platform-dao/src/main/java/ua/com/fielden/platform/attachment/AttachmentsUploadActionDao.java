@@ -4,6 +4,9 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -39,10 +42,12 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
             final fetch<Attachment> attachmentFetchModel = co(Attachment.class).getFetchProvider().fetchModel();
             final Class<? extends AbstractEntity<?>> entityType = action.getMasterEntity().getType();
             if (co$(action.getMasterEntity().getType()) instanceof ICanAttach) {
+                action.setSingleAttachment(null);
                 final ICanAttach co = (ICanAttach) co$(entityType);
                 action.getAttachmentIds().stream()
                 .map(id -> co(Attachment.class).findById(id, attachmentFetchModel))
-                .map(att -> co.attach(att, action.getMasterEntity()))
+                .filter(Objects::nonNull) // just in case
+                .map(att -> {action.setSingleAttachment(att); return co.attach(att, action.getMasterEntity());})
                 .forEach(assoc -> LOGGER.debug(format("Attachment association created: %s", assoc)));
             } else {
                 throw failure(format("Companion for %s cannot attach attachments.", getEntityTitleAndDesc(entityType).getKey()));
