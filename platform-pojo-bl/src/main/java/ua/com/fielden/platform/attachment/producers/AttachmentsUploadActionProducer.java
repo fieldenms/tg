@@ -1,12 +1,17 @@
 package ua.com.fielden.platform.attachment.producers;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.failure;
+
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 
 /**
  * Producer of {@link AttachmentsUploadAction} that populates its master entity if that entity is present in the context.
@@ -24,8 +29,23 @@ public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithCo
     @Override
     protected AttachmentsUploadAction provideDefaultValues(final AttachmentsUploadAction entity) {
         if (masterEntityNotEmpty() && masterEntityInstanceOf(AbstractPersistentEntity.class)) {
-            entity.setChosenPropName(chosenProperty());
-            entity.setMasterEntity((AbstractPersistentEntity<?>) masterEntity());
+            // first assign the master entity
+            final AbstractPersistentEntity<?> masterEntity = (AbstractPersistentEntity<?>) masterEntity();
+            entity.setMasterEntity(masterEntity);
+            
+            // now let's analyse the chosen property
+            // if chosen property is specified and it is of type Attachment then it is assumed that this property is to be modified as the result of the attachment uploading
+            if (chosenPropertyNotEmpty()) {
+                final MetaProperty<?> prop = masterEntity.getProperty(chosenProperty());
+                if (Attachment.class.isAssignableFrom(prop.getType())) {
+                    if (prop.isEditable()) {
+                        entity.setChosenPropName(chosenProperty());
+                    } else {
+                        throw failure(format("%s is not editable.", prop.getTitle()));
+                    }
+                }
+            }
+            
         } else if (keyOfMasterEntityInstanceOf(AbstractPersistentEntity.class)) {
             entity.setMasterEntity(keyOfMasterEntity(AbstractPersistentEntity.class));
         } else if (selectedEntitiesOnlyOne()) {
