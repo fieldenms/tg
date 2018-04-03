@@ -757,7 +757,7 @@
                         actionsDialog._childDialogs.push(this);
                         this._parentDialog = actionsDialog;
                     }
-                    this._refitLater(); // this is a legacy support
+                    this._focusAndRefit(); // this is a legacy support
                     
                     if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
                         this._invertMaximiseState();
@@ -823,13 +823,14 @@
             },
             
             /** 
-             * Refits this dialog on async after 50 millis.
+             * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occured earlier than dialog .
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
-            _refitLater: function () {
+            _focusAndRefit: function () {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
+                this._focusDialogWithInput();
             },
             
             _dialogOpened: function (e, detail, source) {

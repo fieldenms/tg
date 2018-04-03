@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.attachment;
 
 import java.io.File;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 
@@ -11,5 +12,12 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * 
  */
 public interface IAttachment extends IEntityDao<Attachment> {
-    File asFile(final Attachment attachment);
+    
+    /**
+     * Returns a file optionally. An empty result is returned if the identified by the attachment file could be located.
+     * 
+     * @param attachment
+     * @return
+     */
+    Optional<File> asFile(final Attachment attachment);
 }

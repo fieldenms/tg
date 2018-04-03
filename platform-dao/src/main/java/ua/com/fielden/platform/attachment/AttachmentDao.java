@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
@@ -11,39 +13,63 @@ import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
 import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
 import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalcAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.AfterSave;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.handlers.IAttachmentAfterSave;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 
 @EntityType(Attachment.class)
-@AfterSave(IAttachmentAfterSave.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
-
+    private static final Logger LOGGER = Logger.getLogger(AttachmentDao.class);
+    
     private final String attachmentsLocation;
 
     @Inject
@@ -56,13 +82,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     }
     
     @Override
-    public File asFile(final Attachment attachment) {
+    public Optional<File> asFile(final Attachment attachment) {
         final File file = new File(attachmentsLocation + File.separatorChar + attachment.getSha1());
-        if (file.canRead()) {
-            return file;
-        } else {
-            throw failure(format("Could not read file for attachment [%s]", attachment));
-        }
+        return file.canRead() ? of(file) : empty();
     }
 
     @Override
@@ -154,41 +176,55 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     }
     
     public byte[] download(final Attachment attachment) {
-        final File file = new File(attachmentsLocation + File.separatorChar + attachment.getKey());
-        if (file.canRead()) {
-            try (FileInputStream is = new FileInputStream(file)) {
-                return IOUtils.toByteArray(is);
-            } catch (final IOException e) {
-                throw new IllegalArgumentException(e);
-            }
-        } else {
-            throw new IllegalArgumentException("Could not read file " + file.getName());
+        final File file = asFile(attachment).orElseThrow(() -> failure(format("Could not access file for attachment [%s].", attachment)));
+        try (FileInputStream is = new FileInputStream(file)) {
+            return IOUtils.toByteArray(is);
+        } catch (final IOException e) {
+            throw failure(e);
         }
     }
 
+    /**
+     * Deletes attachments and associated with them files one by one.
+     * In case of an exception, all attachments and associated files that were deleted during this call before it occurred are not rolled back.
+     * <p>
+     * This method should not be annotated with {@link SessionRequired} to ensure consistency of deleted attachments and associated with them files.
+     */
     @Override
-    @SessionRequired
-    public void delete(final Attachment entity) {
-        defaultDelete(entity);
-    }
-
-    @Override
-    @SessionRequired
-    public void delete(final EntityResultQueryModel<Attachment> model) {
-        defaultDelete(model);
-    }
-
-    @Override
-    @SessionRequired
-    public void delete(final EntityResultQueryModel<Attachment> model, final Map<String, Object> paramValues) {
-        defaultDelete(model, paramValues);
+    public int batchDelete(final Collection<Long> ids) {
+        final AtomicInteger count = new AtomicInteger(0);
+        try {
+            ids.stream()        
+            .map(id -> findById(id, createFetchProvider().fetchModel()))
+            .filter(Objects::nonNull)
+            .forEach(att -> {
+                delete(att);
+                count.incrementAndGet();
+            });
+        } catch (final Exception ex) {
+            final String msg = format("Deleted %s of %s attachments. Error occurred. <p>Cause: %s", count.get(), ids.size(), ex.getMessage());
+            LOGGER.error(msg, ex);
+            throw failure(msg);
+        }
+        return count.get();
     }
     
     @Override
     @SessionRequired
-    public int batchDelete(final List<Attachment> entities) {
-        return defaultBatchDelete(entities);
+    public void delete(final Attachment attachment) {
+        // first delete the attachment record
+        defaultDelete(attachment);
+
+        // and then try deleting the associated file if there are no other attachments referencing it
+        if (0 == count(select(Attachment.class).where().prop(Attachment.pn_SHA1).eq().val(attachment.getSha1()).model())) {    
+            asFile(attachment).ifPresent(file -> {
+                final Path path = Paths.get(file.toURI());
+                try {
+                    Files.deleteIfExists(path);
+                } catch (final IOException ex) {
+                    throw failure(ex);
+                }
+            });
+        }
     }
-
-
 }

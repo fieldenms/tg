@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+
 import java.io.File;
 import java.util.Optional;
 
@@ -8,19 +12,15 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Disposition;
-import org.restlet.data.Encoding;
 import org.restlet.data.MediaType;
-import org.restlet.data.Status;
-import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.FileRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * This resource should be used for downloading files that are associated with {@link Attachment} instances.
@@ -31,57 +31,43 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 public class AttachmentDownloadResource extends ServerResource {
     private static final Logger LOGGER = Logger.getLogger(AttachmentDownloadResource.class);
 
+    private final RestServerUtil restUtil;
     private final IAttachment coAttachment;
     private final Long attachmentId;
 
     public AttachmentDownloadResource(
+            final RestServerUtil restUtil,
             final IAttachment coAttachment, 
             final Context context, 
             final Request request, 
             final Response response) {
         init(context, request, response);
+        this.restUtil = restUtil;
         this.coAttachment = coAttachment;
         this.attachmentId = Long.parseLong(request.getAttributes().get("attachment-id").toString());
     }
 
     @Get
     public Representation download() {
-        final Optional<Attachment> opAttachment = coAttachment.findByIdOptional(attachmentId, coAttachment.getFetchProvider().fetchModel());
-        return opAttachment
-               .map(attachment -> {
-                    try {
-                        final File file = coAttachment.asFile(attachment);
-                        final MediaType fileType = MediaType.valueOf(attachment.getMime());
-
-                        final Disposition disposition = new Disposition();
-                        disposition.setType(Disposition.TYPE_ATTACHMENT);
-                        disposition.setFilename(attachment.getOrigFileName());
-                        disposition.setModificationDate(attachment.getLastModified());
-
-                        final Representation repFile = new FileRepresentation(file, fileType);
-                        repFile.setDisposition(disposition);
-
-                        return repFile;
-                    } catch (final Exception ex) {
-                        LOGGER.fatal(ex);
-                        return this.errorPage(ex.getMessage());
-                    }
-                })
-               .orElseGet(() -> this.errorPage("Attachment could not be found."));
-    }
+        return handleUndesiredExceptions(getResponse(), () -> {
+            LOGGER.debug(format("Looking for attachment [ID=%s]", attachmentId));
+            return coAttachment.findByIdOptional(attachmentId, coAttachment.getFetchProvider().fetchModel())
+            .map(attachment -> {
+                LOGGER.debug(format("Attachment [ID=%s] was found, getting the associated file.", attachmentId));
+                return coAttachment.asFile(attachment)
+                .map(file -> {                
+                    LOGGER.debug(format("Preparing and sending the response with file for attachment [ID=%s].", attachmentId));
+                    final MediaType fileType = MediaType.valueOf(attachment.getMime());    
+                    final Disposition disposition = new Disposition();
+                    disposition.setType(Disposition.TYPE_ATTACHMENT);
+                    disposition.setFilename(attachment.getOrigFileName());
+                    disposition.setModificationDate(attachment.getLastModified());
     
-    private Representation errorPage(final String errorSubheading) {
-        getResponse().setStatus(Status.CLIENT_ERROR_GONE);
-        try {
-            final String errorPageTemplate = ResourceLoader.getText("ua/com/fielden/platform/web/error-page-template.html")
-                    .replaceAll("@title", "Error")
-                    .replaceAll("@error-heading", "Error")
-                    .replaceAll("@error-subheading", errorSubheading);
-            
-            return new EncodeRepresentation(Encoding.GZIP, new StringRepresentation(errorPageTemplate, MediaType.TEXT_HTML));
-        } catch (final Exception ex) {
-            LOGGER.fatal(ex);
-            throw new IllegalStateException(ex);
-        }
+                    final Representation repFile = new FileRepresentation(file, fileType);
+                    repFile.setDisposition(disposition);
+                    return repFile;
+                }).orElseThrow(() -> failure(format("Could not read file for attachment [ID=%s, %s]", attachmentId, attachment)));
+            }).orElseThrow(() -> failure(format("Attachment [ID=%s] could not be found.", attachmentId)));
+        }, restUtil);
     }
 }
