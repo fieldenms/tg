@@ -710,6 +710,9 @@
             is: "tg-entity-grid-inspector",
 
             properties: {
+                /** An object that provides a number of useful delegated functions such as serialiser(), reflector(), and more as defined in tg-entity-binder-behavior.html. */
+                delegatedFunctions: Object,
+                
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
@@ -2105,14 +2108,28 @@
                                         window.URL.revokeObjectURL(url);                                        
                                     }
                                 } else {
-                                    // TODO display the error in a toast
-                                    console.error('Error occurred when trying to download attachment.', 'Error code:', xhr.status, xhr.response);
+                                    console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
+                                    if (this.delegatedFunctions) {
+                                        const delegatedFunctions = this.delegatedFunctions;
+                                        const reader = new FileReader();
+                                        reader.onload = function() {
+                                            const resultAsObj = JSON.parse(reader.result);
+                                            const result = delegatedFunctions.serialiser().deserialise(resultAsObj);
+                                            console.log('delegatedFunctions result', result);
+                                            delegatedFunctions.openToastForError(result.message, delegatedFunctions.toastMsgForError(result), true);
+                                        }
+                                        reader.readAsText(xhr.response);
+                                    }
                                 }
                                 
                             }.bind(this);
                             xhr.onerror = function (e) {
-                                // TODO display the error in a toast
-                                console.error("Error occured when trying to download attachment.", e);    
+                                const msg = "Error occured when sending request to download the attachment.";
+                                console.error(msg, e);
+                                if (this.delegatedFunctions) {
+                                    this.delegatedFunctions.openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
+                                }
+                                
                             }.bind(this);
                             xhr.send();
                         }
