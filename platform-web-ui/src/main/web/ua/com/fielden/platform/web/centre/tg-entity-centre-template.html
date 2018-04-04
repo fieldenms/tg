@@ -94,8 +94,8 @@
 
             ready: function () {
                 this.classList.add('generatedCentre');
-                // assign delegated functions to EGI
-                this.$.egi.delegatedFunctions = this.$.selection_criteria.functionsForExport();
+                // assign the download attachment function to EGI
+                this.$.egi.downloadAttachment = this.$.selection_criteria.mkDownloadAttachmentFunction();
                 //toolbarGeneratedFunction
                 
                 //@centre-is-ready-custom-code

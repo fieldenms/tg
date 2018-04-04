@@ -370,16 +370,52 @@
                 this._originalBindingEntity = null;
     		},
 
-            /** Returns a delegation object that can be used for delegating calls to a number of "core" functions. */
-            functionsForExport: function() {
-                const self = this;
-                return {
-                    serialiser: function() { return self._serialiser();},
-                    reflector: function() { return self._reflector();},
-                    toastMsg: function(msg, entity) { return self._toastMsg(msg, entity);},
-                    toastMsgForError: function(errorResult) { return self._toastMsgForError(errorResult);},
-                    openToastForError: function (toastMsg, moreInfo, isCritical) { self._openToastForError(toastMsg, moreInfo, isCritical);}
-                };
+            /* Returns a function that accepts an instance of Attachment to start the download of the associated file. The passed in attachment must not be null.*/
+            mkDownloadAttachmentFunction: function () {
+                return attachment => {
+	                const self = this;
+	                const url = '/download-attachment/' + attachment.id;
+	                // AJAX approach to the file download
+	                const xhr = new XMLHttpRequest();
+	                xhr.open("GET", url, true);
+	                xhr.responseType = 'blob';
+	                xhr.onload = function (e) {
+	                    if (xhr.status === 200) {
+	                        console.log('File received', xhr.getResponseHeader('Content-Disposition'));
+	                        const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
+	                        const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
+	                        if (filename) {
+	                            // create a Blob object from the response and a URL for it
+	                            const blob = new Blob([xhr.response]);
+	                            const blobUrl = window.URL.createObjectURL(blob);
+	                            // the blob URL can be used for the <a> element for the user to download/open the file
+	                            const a = document.createElement("a");
+	                            a.href = blobUrl;
+	                            a.download = filename;
+	                            a.click();
+	                            // release the reference to the file by revoking the Object URL
+	                            window.URL.revokeObjectURL(url);                                        
+	                        }
+	                    } else {
+	                        console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
+	                        const reader = new FileReader();
+	                        reader.onload = function() {
+	                            const resultAsObj = JSON.parse(reader.result);
+	                            const result = self._serialiser().deserialise(resultAsObj);
+	                            self._openToastForError(result.message, self._toastMsgForError(result), true);
+	                        }
+	                        reader.readAsText(xhr.response);
+	                    }
+	                    
+	                }.bind(self);
+	                xhr.onerror = function (e) {
+	                    const msg = "Unknown error occured when sending request to download the attachment.";
+	                    console.error(msg, e);
+	                    self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
+	                    
+	                }.bind(self);
+	                xhr.send();
+                }
             },
 
             /**
