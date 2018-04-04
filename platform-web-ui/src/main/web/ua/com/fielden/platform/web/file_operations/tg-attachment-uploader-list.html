@@ -158,8 +158,6 @@
     			    type: Function,
     			    value: function() {
 	    			    return function(uploader) {
-			    		    console.log("UPLOADER STOPPED FOR index=", uploader.listIndex, 'id=', uploader.id);
-			    		    
 			    		    // count successes and failures
 			    		    if (uploader.status === uploader.statuses.COMPLETED) {
 			    		        this.push('attachments', uploader.attachment);
@@ -244,7 +242,6 @@
 		},
 		
 		_multiChanged: function (newMulti, oldMulti) {
-			console.log('ATTACHMENT MULTI:', newMulti);
 			if (newMulti === true) {
 			    this._uploadInput.setAttribute('multiple', ''); // support selection of multiple files
 			} else {
