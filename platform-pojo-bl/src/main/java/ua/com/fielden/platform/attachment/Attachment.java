@@ -73,7 +73,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Attachment.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
-    public static final String ENTITY_DESC = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
     @MapTo

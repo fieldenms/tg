@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -17,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 /**
  * A companion that is responsible for associating attachments with other domain entities.
@@ -44,11 +47,12 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
             if (co$(action.getMasterEntity().getType()) instanceof ICanAttach) {
                 action.setSingleAttachment(null);
                 final ICanAttach co = (ICanAttach) co$(entityType);
-                action.getAttachmentIds().stream()
-                .map(id -> co(Attachment.class).findById(id, attachmentFetchModel))
-                .filter(Objects::nonNull) // just in case
-                .map(att -> {action.setSingleAttachment(att); return co.attach(att, action.getMasterEntity());})
-                .forEach(assoc -> LOGGER.debug(format("Attachment association created: %s", assoc)));
+                final EntityResultQueryModel<Attachment> query = select(Attachment.class).where().prop(ID).in().values(action.getAttachmentIds().toArray(new Long[] {})).model();
+                try (final Stream<Attachment> attachments = co(Attachment.class).stream(from(query).with(attachmentFetchModel).model())) {
+                    attachments.forEach(att -> {
+                        action.setSingleAttachment(att);
+                        co.attach(att, action.getMasterEntity());});
+                }
             } else {
                 throw failure(format("Companion for %s cannot attach attachments.", getEntityTitleAndDesc(entityType).getKey()));
             }
