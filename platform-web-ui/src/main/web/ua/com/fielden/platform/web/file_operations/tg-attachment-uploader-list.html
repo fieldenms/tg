@@ -213,6 +213,15 @@
     			uploadInProgress: {
     			    type: Boolean,
     			    value: false
+    			},
+    			
+    			/**
+    			 * Specifies if more than one file can be attached.
+    			 */
+    			multi: {
+    			    type: Boolean,
+    			    value: true,
+    			    observer: '_multiChanged'
     			}
 
 		},
@@ -234,11 +243,19 @@
 		  	}
 		},
 		
+		_multiChanged: function (newMulti, oldMulti) {
+			console.log('ATTACHMENT MULTI:', newMulti);
+			if (newMulti === true) {
+			    this._uploadInput.setAttribute('multiple', ''); // support selection of multiple files
+			} else {
+			    this._uploadInput.removeAttribute('multiple'); // remove support for selection of multiple files
+			}
+		},
+		
 		created: function() {
 			// let's create an invisible file input element to be used for opening a file dialog
 			this._uploadInput = document.createElement('input');
 			this._uploadInput.type = 'file';
-			this._uploadInput.setAttribute('multiple', ''); // support multiple files
 			this._uploadInput.onchange = function() {
 			    this.submitUploading(this._uploadInput.files);
 			}.bind(this);
@@ -265,17 +282,23 @@
         _pushFileForUpload: function(file) {
             this.push('_filesToUpload', file);
         },
-        
+
+        _canAcceptMoreFiles: function (optionalCondition) {
+            return this.multi === true || (this.attachments.length === 0 && ((typeof optionalCondition === 'undefined') ? true : optionalCondition));            
+        },
+
         /* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */
 		_openFileDialog: function(e) {
-			// let give a chance for tap animation to do its work
-			this.async(function() {
-				if (this._uploadInput) {
-					this._uploadInput.click();
-				} else {
-					throw new Error('this._uploadInput is not defined!');
-				}
-			}.bind(this), 200);
+			if (this._canAcceptMoreFiles()) {
+			    // let give a chance for tap animation to do its work
+				this.async(function() {
+					if (this._uploadInput) {
+						this._uploadInput.click();
+					} else {
+						throw new Error('this._uploadInput is not defined!');
+					}
+				}.bind(this), 200);
+			}
 		},
 
 		/* Function responsible for submitting files into the queue for uploading. */
@@ -317,15 +340,18 @@
 		_dragenter: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
-
-			this.$.openDialogOrDrop.classList.add('over');
+            if (this._canAcceptMoreFiles()) {
+				this.$.openDialogOrDrop.classList.add('over');
+            }
 		},
 
 		_dragover: function(e) {
 			e.stopPropagation();
 			e.preventDefault();
 			
-			this.$.openDialogOrDrop.classList.add('over');
+            if (this._canAcceptMoreFiles()) {
+				this.$.openDialogOrDrop.classList.add('over');
+            }
 		},
 
 		_dragleave: function(e) {
@@ -340,7 +366,9 @@
 			e.preventDefault();
 			this.$.openDialogOrDrop.classList.remove('over');
 
-			this.submitUploading(e.dataTransfer.files);
+			if (this._canAcceptMoreFiles(e.dataTransfer.files.length === 1)) {
+			    this.submitUploading(e.dataTransfer.files);
+            }
 		}
 
 	});
