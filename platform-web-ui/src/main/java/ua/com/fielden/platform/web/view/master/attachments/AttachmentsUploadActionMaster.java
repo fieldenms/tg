@@ -119,7 +119,12 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
                 + "};\n"
                 + "// register listeners for attachment uploading\n"
-                + "const uploaderList = self.$.attachmentUploader;"
+                + "const uploaderList = self.$.attachmentUploader;\n"
+                + "self.addEventListener('binding-entity-appeared', () => {\n"
+                + "    if (self._currEntity['chosenPropName']) {\n"
+                + "        uploaderList.multi = false;\n"
+                + "    }\n"
+                + "});\n"
                 // when uploading start, master needs to go to status VIEW and kick in a toast with generic progress.
                 + "uploaderList.processUploadingStarted = function(uploader) {\n"
                 + "    //console.log('STARTED UPLOADING of', uploader.fileName);\n"

@@ -13,7 +13,9 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
@@ -36,9 +38,19 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
     @Title(value = "Master", desc = "Master entity, if any, that is used to associte attachments with.")
     private AbstractPersistentEntity<?> masterEntity;
     
+    @IsProperty
+    @MapTo
+    @Title("Chosen Property Name")
+    private String chosenPropName;
+
     @IsProperty(Attachment.class)
     @Title(value = "Attachments", desc = "Attachments to be associated with the master entity.")
     private Set<Long> attachmentIds = new HashSet<>();
+
+    @IsProperty
+    @Title(value = "Attachment", desc = "The last attachment instance in a set of uploaded attachments.")
+    @SkipEntityExistsValidation
+    private Attachment singleAttachment;
 
     protected AttachmentsUploadAction() {
         setKey(NO_KEY);
@@ -65,4 +77,23 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
         return masterEntity;
     }
 
+    @Observable
+    public AttachmentsUploadAction setSingleAttachment(final Attachment singleAttachment) {
+        this.singleAttachment = singleAttachment;
+        return this;
+    }
+
+    public Attachment getSingleAttachment() {
+        return singleAttachment;
+    }
+
+    @Observable
+    public AttachmentsUploadAction setChosenPropName(final String chosenPropName) {
+        this.chosenPropName = chosenPropName;
+        return this;
+    }
+
+    public String getChosenPropName() {
+        return chosenPropName;
+    }
 }
