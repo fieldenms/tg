@@ -6,6 +6,11 @@
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 
 <dom-module id="tg-collectional-representor">
+    <style>
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
+    </style>
     <template>
     	<tg-editor 
     		id="editorDom" 
@@ -17,7 +22,7 @@
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]">
-			<input
+			<input 
     			id="input"
     			class="custom-input collectional-representor-input"
     			is="iron-input"

@@ -25,6 +25,9 @@
             text-overflow: ellipsis;
             overflow: hidden;
         }
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
     </style>
     <template>
         <tg-app-config id="appConfig"></tg-app-config>
@@ -39,7 +42,7 @@
     		_accepted-value="[[_acceptedValue]]"
             _focused="[[focused]]"
     		debug="[[debug]]">
-    		<input
+    		<input 
     			id="input"
     			class="custom-input money-input"
     			is="iron-input"

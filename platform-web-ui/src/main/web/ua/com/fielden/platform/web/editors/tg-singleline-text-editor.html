@@ -10,6 +10,9 @@
         #input.upper-case {
             text-transform: uppercase;
         }
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
     </style>
     <template>
     	<tg-editor 
@@ -22,7 +25,7 @@
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]">
-    		<input
+    		<input 
     			id="input"
     			class="custom-input singleline-text-input"
     			is="iron-input"
