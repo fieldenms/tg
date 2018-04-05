@@ -14,6 +14,7 @@
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/views/tg-back-button-behavior.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -60,7 +61,7 @@
                 height: 1.5em;
                 margin: 0 5px
             }
-            #menuToggler {
+            #menuToggler,#backButton {
                 color: white;
             }
             .close-button {
@@ -99,6 +100,9 @@
             }
             #resizer:hover {
                 cursor: nwse-resize;
+            }
+            .reverse {
+                flex-direction: row-reverse;
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
@@ -143,7 +147,13 @@
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [
+                Polymer.IronA11yKeysBehavior,
+                Polymer.IronOverlayBehavior,
+                Polymer.TgBehaviors.TgFocusRestorationBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior,
+                Polymer.TgBehaviors.TgBackButtonBehavior
+            ],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
@@ -291,8 +301,14 @@
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
 
                 this._setIsRunning(false);
+                
+                if (this.mobile === true  /* iOs */ ) {
+                    Polymer.dom(this.$.titleBar).appendChild(this.createBackButton());
+                    Polymer.dom.flush();
+                    this.$.titleBar.classList.add('reverse');
+                }
             },
-
+            
             attached: function () {
                 var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
                 this.addEventListener(clickEvent, this._onCaptureClick, true);
@@ -542,6 +558,9 @@
                 this.$.menuToggler.hidden = !appearedAndFunc.appeared;
                 if (appearedAndFunc.appeared) {
                     this._toggleMenu = appearedAndFunc.func;
+                    if (this.mobile === true /* iOs */) {
+                        appearedAndFunc.drawer.rightDrawer = true;
+                    }
                 }
             },
             

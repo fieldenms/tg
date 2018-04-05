@@ -102,7 +102,7 @@
         <tg-reflector id="reflector"></tg-reflector>
         <content id="menuItemActions" select=".menu-item-action"></content>
         
-        <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
+        <paper-drawer-panel id="paperDrawerPanel">
             <paper-scroll-header-panel drawer fixed id="drawer">
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
                     <content id="menuItems" select=".menu-item"></content>
@@ -344,7 +344,8 @@
             this.fire('tg-dynamic-title-changed', this.sectionTitle);
             this.fire('tg-menu-appeared', {
                 appeared: true,
-                func: self._toggleMenu.bind(self)
+                func: self._toggleMenu.bind(self),
+                drawer: self.$.paperDrawerPanel
             });
         },
         

@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/layout/tg-tile-layout.html">
+<link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -76,9 +77,9 @@
     <template>
         <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <div class="layout horizontal center" style="display: contents">
+            <div id="logoutContainer" class="layout horizontal center" style="display: contents">
                 <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
-                <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
+                <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
             </div>
         </paper-toolbar>
 
@@ -110,6 +111,7 @@
                 </template>
             </tg-tile-layout>
         </div>
+        <tg-app-config id="appConfig"></tg-app-config>
     </template>
 
 </dom-module>
@@ -145,7 +147,15 @@
                 Polymer.IronResizableBehavior,
                 Polymer.TgBehaviors.TgTooltipBehavior
             ],
-
+            
+            ready: function () {
+                if (this.$.appConfig.mobile === true  /* iOs */ ) {
+                    Polymer.dom(this.$.toolbar).removeChild(this.$.menuSearcher);
+                    Polymer.dom(this.$.logoutContainer).insertBefore(this.$.menuSearcher, this.$.logoutButton);
+                    Polymer.dom.flush();
+                }
+            },
+            
             /**
              * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
              */
