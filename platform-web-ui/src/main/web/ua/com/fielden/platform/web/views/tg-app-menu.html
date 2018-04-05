@@ -149,7 +149,7 @@
             ],
             
             ready: function () {
-                if (this.$.appConfig.mobile === true  /* iOs */ ) {
+                if (this.$.appConfig.mobile === true && this.$.appConfig.iPhoneOs()) {
                     Polymer.dom(this.$.toolbar).removeChild(this.$.menuSearcher);
                     Polymer.dom(this.$.logoutContainer).insertBefore(this.$.menuSearcher, this.$.logoutButton);
                     Polymer.dom.flush();

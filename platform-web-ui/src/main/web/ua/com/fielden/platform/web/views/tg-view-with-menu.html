@@ -305,7 +305,7 @@
                     }
                 });
                 
-                if (this.$.app_config.mobile === true  /* iOs */ ) {
+                if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
                     Polymer.dom(this.$.viewToolBarContainer).removeChild(this.$.mainMenu);
                     Polymer.dom(this.$.viewToolBarContainer).insertBefore(this.$.mainMenu, this.$.menuButton);
                     Polymer.dom(this.$.viewToolBarContainer).appendChild(this.createBackButton());

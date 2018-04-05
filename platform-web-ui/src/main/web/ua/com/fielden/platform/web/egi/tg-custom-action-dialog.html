@@ -302,7 +302,7 @@
 
                 this._setIsRunning(false);
                 
-                if (this.mobile === true  /* iOs */ ) {
+                if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
                     Polymer.dom(this.$.titleBar).appendChild(this.createBackButton());
                     Polymer.dom.flush();
                     this.$.titleBar.classList.add('reverse');
@@ -558,7 +558,7 @@
                 this.$.menuToggler.hidden = !appearedAndFunc.appeared;
                 if (appearedAndFunc.appeared) {
                     this._toggleMenu = appearedAndFunc.func;
-                    if (this.mobile === true /* iOs */) {
+                    if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
                         appearedAndFunc.drawer.rightDrawer = true;
                     }
                 }

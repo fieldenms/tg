@@ -62,6 +62,14 @@
             
             attached: function() {
                 this.style.display = "none";
+            },
+            
+            /**
+             * Determines whether iPhone specific browser is used for rendering this client application. This could be Safari, Chrome for iOS, 
+             * Opera Mini (iOS WebKit), Firefox for iOS. See https://deviceatlas.com/blog/mobile-browser-user-agent-strings for more details.
+             */
+            iPhoneOs: function () {
+                return window.navigator.userAgent.indexOf('iPhone OS') > 0;
             }
         });
     })();
