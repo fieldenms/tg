@@ -59,8 +59,8 @@ public class ResultTestCase {
     public void getInstanceOrElseThrow_returns_an_instance_if_result_is_successful() {
         final String value = "instance";
         final Result result = Result.successful(value);
-        assertEquals(value, result.getInstanceOrElseThrow(String.class));
-        assertEquals(result.getInstance(), result.getInstanceOrElseThrow(String.class));
+        assertEquals(value, result.getInstanceOrElseThrow());
+        assertEquals(result.getInstance(), result.getInstanceOrElseThrow());
     }
     
     @Test
@@ -68,7 +68,7 @@ public class ResultTestCase {
         final String errMsg = "error message";
         final Result result = Result.failure(errMsg);
         try {
-            result.getInstanceOrElseThrow(String.class);
+            result.getInstanceOrElseThrow();
             fail();
         } catch(final Exception ex) {
             assertEquals(errMsg, ex.getMessage());

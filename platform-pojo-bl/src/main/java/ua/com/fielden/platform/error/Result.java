@@ -159,9 +159,9 @@ public class Result extends RuntimeException {
      * @param expectedType
      * @return
      */
-    public <T> T getInstanceOrElseThrow(final Class<T> expectedType) {
+    public <T> T getInstanceOrElseThrow() {
         ifFailure(Result::throwRuntime);
-        return getInstance(expectedType);
+        return (T) getInstance();
     }
 
     /**
