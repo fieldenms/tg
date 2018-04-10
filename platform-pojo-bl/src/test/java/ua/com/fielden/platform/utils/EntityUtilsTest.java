@@ -307,16 +307,16 @@ public class EntityUtilsTest {
         assertTrue(EntityUtils.equalsEx(dateTime, timestamp));
         assertTrue(EntityUtils.equalsEx(timestamp, dateTime));
     }
-    
+
     @Test
-    public void toDecimal_converts_Integer_to_BidDecimal() {
+    public void toDecimal_converts_Integer_to_BigDecimal() {
         final Integer value = 42;
         assertEquals(new BigDecimal(value, new MathContext(2, RoundingMode.HALF_UP)), toDecimal(value));
         assertEquals(new BigDecimal(value, new MathContext(4, RoundingMode.HALF_UP)), toDecimal(value, 4));
     }
-    
+
     @Test
-    public void toDecimal_converts_Double_to_BidDecimal() {
+    public void toDecimal_converts_Double_to_BigDecimal() {
         final Double value = 42.46;
         assertEquals(new BigDecimal(value, new MathContext(2, RoundingMode.HALF_UP)), toDecimal(value));
         assertEquals(new BigDecimal(value, new MathContext(4, RoundingMode.HALF_UP)), toDecimal(value, 4));
