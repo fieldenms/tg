@@ -16,9 +16,12 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
+import static ua.com.fielden.platform.utils.EntityUtils.toDecimal;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -303,6 +306,28 @@ public class EntityUtilsTest {
         assertTrue(EntityUtils.equalsEx(dateTime, date));
         assertTrue(EntityUtils.equalsEx(dateTime, timestamp));
         assertTrue(EntityUtils.equalsEx(timestamp, dateTime));
+    }
+    
+    @Test
+    public void toDecimal_converts_Integer_to_BidDecimal() {
+        final Integer value = 42;
+        assertEquals(new BigDecimal(value, new MathContext(2, RoundingMode.HALF_UP)), toDecimal(value));
+        assertEquals(new BigDecimal(value, new MathContext(4, RoundingMode.HALF_UP)), toDecimal(value, 4));
+    }
+    
+    @Test
+    public void toDecimal_converts_Double_to_BidDecimal() {
+        final Double value = 42.46;
+        assertEquals(new BigDecimal(value, new MathContext(2, RoundingMode.HALF_UP)), toDecimal(value));
+        assertEquals(new BigDecimal(value, new MathContext(4, RoundingMode.HALF_UP)), toDecimal(value, 4));
+    }
+
+    @Test
+    public void toDecimal_rescales_BigDecimal_only_if_needed() {
+        final BigDecimal value = new BigDecimal("42.46");
+        assertEquals(2, value.scale());
+        assertEquals(value, toDecimal(value));
+        assertEquals(value.setScale(4, RoundingMode.HALF_UP), toDecimal(value, 4));
     }
 
 }

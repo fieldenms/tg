@@ -16,6 +16,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -115,6 +117,30 @@ public class EntityUtils {
             return "";
         }
         return toString(value, value.getClass());
+    }
+    
+    /**
+     * Converts {@link Number} to {@link BigDecimal} with the specified {@code scale}.
+     * 
+     * @param number
+     * @return
+     */
+    public static BigDecimal toDecimal(final Number number, final int scale) {
+        if (number instanceof BigDecimal) {
+            final BigDecimal decimal = (BigDecimal) number;
+            return decimal.scale() == scale ? decimal : decimal.setScale(scale, RoundingMode.HALF_UP);
+        }
+        return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
+    }
+    
+    /**
+     * The same as {@link #toDecimal(Number, int)}, but with scale set to 2.
+     * 
+     * @param number
+     * @return
+     */
+    public static BigDecimal toDecimal(final Number number) {
+        return toDecimal(number, 2);
     }
 
     /**
