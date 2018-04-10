@@ -65,7 +65,7 @@
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
             <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]" />
-            <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+            <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
             <div class="input-layer"><span>[[_formatKey(entity)]]</span><span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>
@@ -361,6 +361,7 @@
                     result.additionalProperties = JSON.parse(this.additionalProperties);
                 }
                 this._blurEventHandler = (function (e) {
+                    console.error('_blurEventHandler');
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
@@ -410,6 +411,7 @@
             /* Invokes _search with '*' as the default search value, so than when nothing was typed, but
              * the search button has been pressed then the search happens as if wildcard has been typed. */
             _searchOnTap: function (e) {
+                console.error('_searchOnTap', e);
                 // need to execute the tap action on async to ensure committing of any uncommitted
                 // values in other property editors that might influence the matching logic at the server side
                 this.async((function () {
@@ -490,6 +492,7 @@
              * Displays the search result.
              */
             _onFound: function (entities) {
+                console.error('_onFound');
                 const result = this.$.result;
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
@@ -507,6 +510,7 @@
                 // There is a need to check whether element already exists before appending it to document.body.
                 // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
                 const elementExists = Polymer.dom(document.body).querySelector("#result");
+                console.error('_onFound elementExists = ', elementExists);
                 if (!elementExists) {
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
@@ -514,14 +518,17 @@
                 
                 this.async(function () {
                     if (result.opened) {
+                        console.error('_onFound result.opened = ', result.opened);
                         this._resultOpened();
                     } else {
                         if (result.visibleHeightUnderEditorIsSmall()) {
+                            console.error('_onFound result.visibleHeightUnderEditorIsSmall() = ', result.visibleHeightUnderEditorIsSmall());
                             this.scrollIntoView({block: "center", inline: "center", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
                             this.async(function () { // need to wait at least 300 ms for scrolling to complete..
                                 result.open();
                             }.bind(this), 300);
                         } else {
+                            console.error('_onFound result.visibleHeightUnderEditorIsSmall() = ', result.visibleHeightUnderEditorIsSmall());
                             result.open();
                         }
                     }
@@ -556,6 +563,7 @@
             },
 
             _cancelSearch: function () {
+                console.trace();
                 if (this._asyncSearchHandle) {
                     this.cancelAsync(this._asyncSearchHandle);
                     this._asyncSearchHandle = null;
@@ -564,11 +572,15 @@
 
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
-                if (this.$.input === activeElement || /* if the autocompleter in focus */
+                console.error('_resultOpened activeElement ', activeElement);
+                if (this.$.searcherButton === activeElement || 
+                    this.$.input === activeElement || /* if the autocompleter in focus */
                     document.body === activeElement   /* or no other input or button in focus then show found values */) {
+                    console.error('_resultOpened', true, activeElement);
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
                 } else {
+                    console.error('_resultOpened', false);
                     this.opened = true;
                     this.$.result.cancel(e);
                 }
