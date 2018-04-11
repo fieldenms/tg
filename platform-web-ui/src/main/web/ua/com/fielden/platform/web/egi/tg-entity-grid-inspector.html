@@ -81,12 +81,14 @@
             bottom: 0;
             right: 0;
             width: 10px;
+            pointer-events: none;
         }
         .table-cell:hover > .resizing-box,
-        .resizing-box:hover,
-        .resizing-action {
-            cursor: col-resize;
+        .resizing-action > .resizing-box {
             border-right: 4px solid var(--paper-light-blue-100);
+        }
+        .resizing-action {
+             cursor: col-resize;
         }
         paper-material {
             border-radius: 2px;
@@ -261,7 +263,7 @@
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <paper-material elevation="1" style="margin: 10px 10px;" fit-to-height$="[[fitToHeight]]" class="layout vertical">
+        <paper-material elevation="1" style="" fit-to-height$="[[fitToHeight]]" class="layout vertical">
             <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
@@ -287,9 +289,9 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseleave="_hideResizingCue" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]">
                                     <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
-                                    <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                    <div class="resizing-box"></div>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -390,9 +392,9 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseleave="_hideResizingCue" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                            <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                            <div class="resizing-box"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -499,9 +501,9 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseleave="_hideResizingCue" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box"></div>
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
@@ -561,9 +563,9 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseleave="_hideResizingCue" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box"></div>
                                     </div>
                                 </template>
                             </div>
@@ -2222,7 +2224,7 @@
             _startColumnResize: function (e) {
                 //Change the style to visualise column resizing.
                 //this.style.cursor = "col-resize";
-                e.target.classList.toggle("resizing-action", true);
+                e.currentTarget.classList.toggle("resizing-action", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
                 const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
@@ -2244,14 +2246,14 @@
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
                     otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length, () => true, () => true, () => true),
-                    widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth,
+                    widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
 
             _trackColumnSize: function (e) {
                 if (this._columnResizingObject) {
-                    const columnWidth = e.target.previousElementSibling.offsetWidth;
+                    const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
                     let newWidth = columnWidth + e.detail.ddx;
                     //Correct size for mouse out of EGI.
                     const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
@@ -2303,7 +2305,7 @@
 
             _endColumnResizing: function (e) {
                 //this.style.cursor = "default";
-                e.target.classList.toggle("resizing-action", false);
+                e.currentTarget.classList.toggle("resizing-action", false);
                 if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
