@@ -196,7 +196,7 @@
                 
                 _routeChanged: function (newValue, oldValue) {
                     // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
-                    if (!this.currentHistoryState) {
+                    if (typeof this.currentHistoryState === "undefined") {
                         this._loadApplicationInfrastructureIntoHistory();
                     } else {
                         const currentOverlay = this._findFirstClosableDialog();
@@ -233,10 +233,10 @@
                         const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
                         const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
                         const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-                        window.history.replaceState({currIndex: window.history.length - 1}, '', urlForRoot);
-                        window.history.pushState({currIndex: window.history.length}, '', urlForMenu);
-                        window.history.pushState({currIndex: window.history.length}, '', urlToOpen);
-                        this.currentHistoryState = window.history.length - 1;
+                        window.history.replaceState({currIndex: 0}, '', urlForRoot);
+                        window.history.pushState({currIndex: 1}, '', urlForMenu);
+                        window.history.pushState({currIndex: 2}, '', urlToOpen);
+                        this.currentHistoryState = 2;
                         this._routeChanged();
                     }
                 },
@@ -524,10 +524,10 @@
                 _replaceStateWithNumber: function () {
                     // the URI for history state rewrite
                     const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
+                    this.currentHistoryState = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState + 1 : 0;
                     // rewrite history state by providing concrete number of last history state
-                    window.history.replaceState({currIndex: window.history.length - 1}, '', fullNewUrl);
-                    // currentHistoryState will be updated accordingly
-                    this.currentHistoryState = window.history.length - 1;
+                    window.history.replaceState({currIndex: this.currentHistoryState}, '', fullNewUrl);
                 },
                 
                 _getUrl: function() {
