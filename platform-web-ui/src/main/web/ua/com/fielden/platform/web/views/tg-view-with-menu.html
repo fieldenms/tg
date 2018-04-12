@@ -130,7 +130,7 @@
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" force-narrow disable-swipe>
+        <paper-drawer-panel id="drawerPanel" force-narrow disable-swipe="[[!mobile]]">
 
             <div class="layout vertical" drawer>
 
@@ -229,6 +229,7 @@
             is: "tg-view-with-menu",
 
             properties: {
+                mobile: Boolean,
                 menu: Array,
                 menuItem: Object,
                 selectedModule: String,
@@ -305,6 +306,7 @@
                     }
                 });
                 
+                this.mobile = this.$.app_config.mobile;
                 if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
                     Polymer.dom(this.$.viewToolBarContainer).removeChild(this.$.mainMenu);
                     Polymer.dom(this.$.viewToolBarContainer).insertBefore(this.$.mainMenu, this.$.menuButton);
