@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import javax.mail.BodyPart;
@@ -22,12 +23,14 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.mail.exceptions.EmailException;
 
 /**
- * A utility class for sending emails via SMTP. 
+ * A utility class for sending emails via SMTP.
  * Public methods in this class can be used to send email in HTML or plain format with/o attachments.
- * 
+ *
  * @author TG Team
  *
  */
@@ -36,41 +39,41 @@ public class SmtpEmailSender {
     private static enum EmailType {
         PLAIN {
             @Override
-            public void setBodyText(MimeMessage msg, String body) throws Exception {
+            public void setBodyText(final MimeMessage msg, final String body) throws Exception {
                 msg.setText(body);
             }
 
             @Override
-            public void setBodyText(BodyPart bodyPart, String body) throws Exception {
+            public void setBodyText(final BodyPart bodyPart, final String body) throws Exception {
                 bodyPart.setText(body + "\n\n");
-                
+
             }
-        }, 
-        
+        },
+
         HTML {
             @Override
-            public void setBodyText(MimeMessage msg, String body) throws Exception {
+            public void setBodyText(final MimeMessage msg, final String body) throws Exception {
                 msg.setContent(body, "text/html");
             }
 
             @Override
-            public void setBodyText(BodyPart bodyPart, String body) throws Exception {
+            public void setBodyText(final BodyPart bodyPart, final String body) throws Exception {
                 bodyPart.setContent(body, "text/html");
-                
+
             }
         };
-        
+
         public abstract void setBodyText(final MimeMessage msg, final String body) throws Exception;
         public abstract void setBodyText(final BodyPart bodyPart, final String body) throws Exception;
     }
-    
+
     private final Logger logger = Logger.getLogger(SmtpEmailSender.class);
     private final String host;
-    
+
     public SmtpEmailSender(final String host) {
         this.host = host;
     }
-    
+
     private Session newEmailSession() {
         final Properties props = new Properties();
         props.put("mail.smtp.host", host);
@@ -80,39 +83,39 @@ public class SmtpEmailSender {
 
     /**
      * Sends a plain text email with no attachments.
-     * 
+     *
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
      * @param body
      */
     public void sendPlainMessage(
-            final String fromAddress, 
-            final String csvToAddresses, 
-            final String subject, 
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
             final String body) {
         sendMessage(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
     }
 
     /**
      * Sends a HTML text email with no attachments.
-     * 
+     *
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
      * @param body
      */
     public void sendHtmlMessage(
-            final String fromAddress, 
-            final String csvToAddresses, 
-            final String subject, 
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
             final String body) {
         sendMessage(fromAddress, csvToAddresses, subject, body, EmailType.HTML);
     }
-    
+
     /**
      * Sends a plain text email with attachments.
-     * 
+     *
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
@@ -120,17 +123,37 @@ public class SmtpEmailSender {
      * @param filePathsToAttach
      */
     public void sendPlainMessageWithAttachments(
-            final String fromAddress, 
-            final String csvToAddresses, 
-            final String subject, 
-            final String body, 
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
             final Path... filePathsToAttach) {
         sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN, filePathsToAttach);
     }
 
     /**
+     * Sends a plain text email with attachments.
+     *
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param coAttachment
+     * @param filePathsToAttach
+     */
+    public void sendPlainMessageWithAttachments(
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final IAttachment coAttachment,
+            final Attachment... filePathsToAttach) {
+        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN, coAttachment, filePathsToAttach);
+    }
+
+    /**
      * Sends a HTML text email with attachments.
-     * 
+     *
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
@@ -138,18 +161,37 @@ public class SmtpEmailSender {
      * @param filePathsToAttach
      */
     public void sendHtmlMessageWithAttachments(
-            final String fromAddress, 
-            final String csvToAddresses, 
-            final String subject, 
-            final String body, 
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
             final Path... filePathsToAttach) {
         sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.HTML, filePathsToAttach);
     }
 
+    /**
+     * Sends a HTML text email with attachments.
+     *
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param filePathsToAttach
+     */
+    public void sendHtmlMessageWithAttachments(
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final IAttachment coAttachment,
+            final Attachment... filePathsToAttach) {
+        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.HTML, coAttachment, filePathsToAttach);
+    }
+
     private void sendMessage(
-            final String fromAddress, 
-            final String csvToAddresses, 
-            final String subject, 
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
             final String body,
             final EmailType type) {
         try {
@@ -166,18 +208,18 @@ public class SmtpEmailSender {
             throw new EmailException("Error during email sending.", ex);
         }
     }
-    
+
     private void sendMessageWithAttachments(
-            final String fromAddress, 
-            final String csvToAddresses, 
-            final String subject, 
-            final String body, 
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
             final EmailType type,
             final Path... filePathsToAttach) {
         if (filePathsToAttach.length == 0) {
             throw new EmailException("At least one attachment is expected.");
         }
-        
+
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
@@ -188,7 +230,7 @@ public class SmtpEmailSender {
             // create the main message part
             final BodyPart mainBodyPart = new MimeBodyPart();
             type.setBodyText(mainBodyPart, body);
-            
+
             // add everything to the email
             message.setContent(handleAttachments(body, mainBodyPart, filePathsToAttach), "multipart/mixed");
             message.setSentDate(new Timestamp(System.currentTimeMillis()));
@@ -200,8 +242,42 @@ public class SmtpEmailSender {
         }
     }
 
+    private void sendMessageWithAttachments(
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final EmailType type,
+            final IAttachment coAttachment,
+            final Attachment... filePathsToAttach) {
+        if (filePathsToAttach.length == 0) {
+            throw new EmailException("At least one attachment is expected.");
+        }
+
+        try {
+            final Session session = newEmailSession();
+            final MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(fromAddress));
+            assignToAddresses(csvToAddresses, message);
+            message.setSubject(subject);
+
+            // create the main message part
+            final BodyPart mainBodyPart = new MimeBodyPart();
+            type.setBodyText(mainBodyPart, body);
+
+            // add everything to the email
+            message.setContent(handleAttachments(body, mainBodyPart, coAttachment, filePathsToAttach), "multipart/mixed");
+            message.setSentDate(new Timestamp(System.currentTimeMillis()));
+            message.saveChanges();
+            Transport.send(message);
+        } catch (final Exception ex) {
+            logger.error("Error during email sending.", ex);
+            throw new EmailException("Error during email sending.", ex);
+        }
+    }
+
     private Multipart handleAttachments(final String body, final BodyPart mainBodyPart, final Path[] filePathsToAttach) throws Exception {
-        final List<BodyPart> bodyParts = new ArrayList<BodyPart>();
+        final List<BodyPart> bodyParts = new ArrayList<>();
         boolean relatedParts = false;
 
         // create attachments
@@ -227,10 +303,43 @@ public class SmtpEmailSender {
 
         return multipart;
     }
-    
+
+    private Multipart handleAttachments(final String body, final BodyPart mainBodyPart, final IAttachment coAttachment, final Attachment[] attachmentsToAttach) throws Exception {
+        final List<BodyPart> bodyParts = new ArrayList<>();
+        boolean relatedParts = false;
+
+        // create attachments
+        final String trimmedLowercaseBoddy = body.trim().toLowerCase();
+        for (final Attachment attachment : attachmentsToAttach) {
+            final Optional<File> optionalFile = coAttachment.asFile(attachment);
+            if (optionalFile.isPresent()) {
+                final MimeBodyPart messageBodyPart = new MimeBodyPart();
+                messageBodyPart.attachFile(optionalFile.get());
+                messageBodyPart.setFileName(attachment.getOrigFileName());
+
+                if (trimmedLowercaseBoddy.contains("cid:" + attachment.getOrigFileName())) {
+                    messageBodyPart.setHeader("Content-ID", attachment.getOrigFileName());
+                    relatedParts = true;
+                }
+
+                bodyParts.add(messageBodyPart);
+            } else {
+                // do what?
+            }
+        }
+
+        final Multipart multipart = relatedParts ? new MimeMultipart("related") : new MimeMultipart();
+        multipart.addBodyPart(mainBodyPart);
+        for (final BodyPart bodyPart : bodyParts) {
+            multipart.addBodyPart(bodyPart);
+        }
+
+        return multipart;
+    }
+
     /**
      * A helper method to process and assign the TO addresses.
-     * 
+     *
      * @param csvToAddresses
      * @param message
      * @throws MessagingException
@@ -243,11 +352,11 @@ public class SmtpEmailSender {
         }
     }
 
-    
-    public static void main(String[] args) {
+
+    public static void main(final String[] args) {
         final SmtpEmailSender sender = new SmtpEmailSender("192.168.1.8");
-        Path path1 = Paths.get("pom.xml");
-        Path path2 = Paths.get("desktop-script.sh");
+        final Path path1 = Paths.get("pom.xml");
+        final Path path2 = Paths.get("desktop-script.sh");
         sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
         sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com ", "Html text with HTML mime type", "Html text, but HTML mime type</br></br>", path1, path2);
         sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au  ", "Plain text with HTML mime type", "Plain text, but HTML mime type");
