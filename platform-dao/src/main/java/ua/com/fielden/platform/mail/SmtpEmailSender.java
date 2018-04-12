@@ -120,15 +120,15 @@ public class SmtpEmailSender {
      * @param csvToAddresses
      * @param subject
      * @param body
-     * @param filePathsToAttach
+     * @param filePaths
      */
     public void sendPlainMessageWithAttachments(
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
             final String body,
-            final Path... filePathsToAttach) {
-        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN, filePathsToAttach);
+            final Path... filePaths) {
+        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN, filePaths);
     }
 
     /**
@@ -139,7 +139,7 @@ public class SmtpEmailSender {
      * @param subject
      * @param body
      * @param coAttachment
-     * @param filePathsToAttach
+     * @param attachments
      */
     public void sendPlainMessageWithAttachments(
             final String fromAddress,
@@ -147,8 +147,8 @@ public class SmtpEmailSender {
             final String subject,
             final String body,
             final IAttachment coAttachment,
-            final Attachment... filePathsToAttach) {
-        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN, coAttachment, filePathsToAttach);
+            final Attachment... attachments) {
+        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN, coAttachment, attachments);
     }
 
     /**
@@ -158,15 +158,15 @@ public class SmtpEmailSender {
      * @param csvToAddresses
      * @param subject
      * @param body
-     * @param filePathsToAttach
+     * @param filePaths
      */
     public void sendHtmlMessageWithAttachments(
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
             final String body,
-            final Path... filePathsToAttach) {
-        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.HTML, filePathsToAttach);
+            final Path... filePaths) {
+        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.HTML, filePaths);
     }
 
     /**
@@ -176,7 +176,7 @@ public class SmtpEmailSender {
      * @param csvToAddresses
      * @param subject
      * @param body
-     * @param filePathsToAttach
+     * @param attachments
      */
     public void sendHtmlMessageWithAttachments(
             final String fromAddress,
@@ -184,8 +184,8 @@ public class SmtpEmailSender {
             final String subject,
             final String body,
             final IAttachment coAttachment,
-            final Attachment... filePathsToAttach) {
-        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.HTML, coAttachment, filePathsToAttach);
+            final Attachment... attachments) {
+        sendMessageWithAttachments(fromAddress, csvToAddresses, subject, body, EmailType.HTML, coAttachment, attachments);
     }
 
     private void sendMessage(
@@ -215,8 +215,8 @@ public class SmtpEmailSender {
             final String subject,
             final String body,
             final EmailType type,
-            final Path... filePathsToAttach) {
-        if (filePathsToAttach.length == 0) {
+            final Path... filePaths) {
+        if (filePaths.length == 0) {
             throw new EmailException("At least one attachment is expected.");
         }
 
@@ -232,7 +232,7 @@ public class SmtpEmailSender {
             type.setBodyText(mainBodyPart, body);
 
             // add everything to the email
-            message.setContent(handleAttachments(body, mainBodyPart, filePathsToAttach), "multipart/mixed");
+            message.setContent(handleAttachments(body, mainBodyPart, filePaths), "multipart/mixed");
             message.setSentDate(new Timestamp(System.currentTimeMillis()));
             message.saveChanges();
             Transport.send(message);
@@ -249,8 +249,8 @@ public class SmtpEmailSender {
             final String body,
             final EmailType type,
             final IAttachment coAttachment,
-            final Attachment... filePathsToAttach) {
-        if (filePathsToAttach.length == 0) {
+            final Attachment... attachments) {
+        if (attachments.length == 0) {
             throw new EmailException("At least one attachment is expected.");
         }
 
@@ -266,7 +266,7 @@ public class SmtpEmailSender {
             type.setBodyText(mainBodyPart, body);
 
             // add everything to the email
-            message.setContent(handleAttachments(body, mainBodyPart, coAttachment, filePathsToAttach), "multipart/mixed");
+            message.setContent(handleAttachments(body, mainBodyPart, coAttachment, attachments), "multipart/mixed");
             message.setSentDate(new Timestamp(System.currentTimeMillis()));
             message.saveChanges();
             Transport.send(message);
@@ -276,13 +276,13 @@ public class SmtpEmailSender {
         }
     }
 
-    private Multipart handleAttachments(final String body, final BodyPart mainBodyPart, final Path[] filePathsToAttach) throws Exception {
+    private Multipart handleAttachments(final String body, final BodyPart mainBodyPart, final Path[] filePaths) throws Exception {
         final List<BodyPart> bodyParts = new ArrayList<>();
         boolean relatedParts = false;
 
         // create attachments
         final String trimmedLowercaseBoddy = body.trim().toLowerCase();
-        for (final Path attachment : filePathsToAttach) {
+        for (final Path attachment : filePaths) {
             final MimeBodyPart messageBodyPart = new MimeBodyPart();
             final File file = attachment.toFile();
             messageBodyPart.attachFile(file);
@@ -304,13 +304,13 @@ public class SmtpEmailSender {
         return multipart;
     }
 
-    private Multipart handleAttachments(final String body, final BodyPart mainBodyPart, final IAttachment coAttachment, final Attachment[] attachmentsToAttach) throws Exception {
+    private Multipart handleAttachments(final String body, final BodyPart mainBodyPart, final IAttachment coAttachment, final Attachment[] attachments) throws Exception {
         final List<BodyPart> bodyParts = new ArrayList<>();
         boolean relatedParts = false;
 
         // create attachments
         final String trimmedLowercaseBoddy = body.trim().toLowerCase();
-        for (final Attachment attachment : attachmentsToAttach) {
+        for (final Attachment attachment : attachments) {
             final Optional<File> optionalFile = coAttachment.asFile(attachment);
             if (optionalFile.isPresent()) {
                 final MimeBodyPart messageBodyPart = new MimeBodyPart();
