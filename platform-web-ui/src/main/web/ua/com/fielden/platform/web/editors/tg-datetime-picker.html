@@ -97,7 +97,7 @@
     			disabled$="[[_disabled]]"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <content class=".property-action"></content>
-            <paper-icon-button id="openCalendarButton" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
+            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
     </template>
 </dom-module>
@@ -256,7 +256,6 @@
                 Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
                 
-                this.$.openCalendarButton.disabled = true;
                 mve.open();
             },
             
@@ -280,8 +279,7 @@
             		Polymer.dom(document.body).removeChild(this);
             		Polymer.dom.flush();
                     
-                    //Setting focus on input and restoring icon button state.
-                    self.$.openCalendarButton.disabled = false;
+                    //Setting focus on input.
                     self.decoratedInput().focus();
             	}.bind(domBind);
             	
