@@ -465,6 +465,9 @@
 
                 self._selectedView = 0;
                 self._showProgress = false;
+                //Configures the egi's margin.
+                const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                this.$.egi.showMarginAround = insertionPoints.length > 0;
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
                     if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {

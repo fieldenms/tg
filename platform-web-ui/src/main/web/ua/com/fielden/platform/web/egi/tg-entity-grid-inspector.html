@@ -263,7 +263,7 @@
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <paper-material elevation="1" style="" fit-to-height$="[[fitToHeight]]" class="layout vertical">
+        <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
             <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
@@ -755,6 +755,13 @@
                 renderingHints: {
                     type: Array,
                     observer: "_renderingHintsChanged"
+                },
+                /**
+                 * Indicates whether margin should be visible around egi or not.
+                 */
+                showMarginAround: {
+                    type: Boolean,
+                    value: true
                 },
                 /**
                  * Defines the number of visible rows.
@@ -1771,6 +1778,15 @@
              */
             _isSecondaryActionsPresent: function (secondaryActions) {
                 return secondaryActions && secondaryActions.length > 0;
+            },
+            /**
+             * Calculates the style for egi's paper material
+             */
+            _calcMaterialStyle: function (showMarginAround) {
+                if (showMarginAround) {
+                    return "margin:10px;";
+                }
+                return "";
             },
             /**
              * Calculates the column's header style.
