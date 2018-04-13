@@ -252,11 +252,14 @@
             },
 
             _showCalendar: function (e) {
-                var mve = this._createCalendarDialog();
-                Polymer.dom(document.body).appendChild(mve);
-                Polymer.dom.flush();
-                
-                mve.open();
+                if (!this._isCalendarOpen) {
+                    this._isCalendarOpen = true;
+                    var mve = this._createCalendarDialog();
+                    Polymer.dom(document.body).appendChild(mve);
+                    Polymer.dom.flush();
+                    //Opening date picker dialog itself.
+                    mve.open();
+                }
             },
             
             _isCalendarDisabled: function (_disabled, datePortion) {
@@ -281,6 +284,7 @@
                     
                     //Setting focus on input.
                     self.decoratedInput().focus();
+                    self._isCalendarOpen = false;
             	}.bind(domBind);
             	
             	domBind._acceptDateBind = function() {
