@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.error;
 
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Represents a result (an error or success) of some custom logic. That could been the result of some validation or application of some other business rules.
@@ -150,6 +152,18 @@ public class Result extends RuntimeException {
         return expectedType.cast(instance);
     }
     
+    /**
+     * A convenient method to get an instance associated with a successful result or throw an exception otherwise.
+     * This method is analogous to {@link Optional#orElseThrow(Supplier)}.
+     *
+     * @param expectedType
+     * @return
+     */
+    public <T> T getInstanceOrElseThrow() {
+        ifFailure(Result::throwRuntime);
+        return (T) getInstance();
+    }
+
     /**
      * Copies this result with overridden instance.
      * 
