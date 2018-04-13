@@ -13819,6 +13819,14 @@ links:["Africa/Abidjan|Africa/Bamako","Africa/Abidjan|Africa/Banjul","Africa/Abi
             
             attached: function() {
                 this.style.display = "none";
+            },
+            
+            /**
+             * Determines whether iPhone specific browser is used for rendering this client application. This could be Safari, Chrome for iOS, 
+             * Opera Mini (iOS WebKit), Firefox for iOS. See https://deviceatlas.com/blog/mobile-browser-user-agent-strings for more details.
+             */
+            iPhoneOs: function () {
+                return window.navigator.userAgent.indexOf('iPhone OS') > 0;
             }
         });
     })();
@@ -18395,8 +18403,8 @@ context. You should place this element as a child of `<body>` whenever possible.
             :host {
                 display: block;
                 background: white;
-                overflow: auto;
-                /* this is to make host scorable when needed */
+                overflow: auto; /* this is to make host scorable when needed */
+                -webkit-overflow-scrolling: touch;
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
             }
             .menu-item {
@@ -18763,6 +18771,9 @@ context. You should place this element as a child of `<body>` whenever possible.
             --paper-input-container-color: var(--menu-search-input-color);
             --paper-input-container-focus-color: var(--menu-search-input-color);
             --paper-input-container-input-color: var(--menu-search-input-color);
+        }
+        input[is="iron-input"] {
+            font-size: 16px;
         }
     </style>
 
@@ -23278,9 +23289,9 @@ context. You should place this element as a child of `<body>` whenever possible.
     <template>
         <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <div class="layout horizontal center" style="display: contents">
+            <div id="logoutContainer" class="layout horizontal center" style="display: contents">
                 <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
-                <paper-icon-button icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
+                <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
             </div>
         </paper-toolbar>
 
@@ -23312,6 +23323,7 @@ context. You should place this element as a child of `<body>` whenever possible.
                 </template>
             </tg-tile-layout>
         </div>
+        <tg-app-config id="appConfig"></tg-app-config>
     </template>
 
 </dom-module>
@@ -23347,7 +23359,15 @@ context. You should place this element as a child of `<body>` whenever possible.
                 Polymer.IronResizableBehavior,
                 Polymer.TgBehaviors.TgTooltipBehavior
             ],
-
+            
+            ready: function () {
+                if (this.$.appConfig.mobile === true && this.$.appConfig.iPhoneOs()) {
+                    Polymer.dom(this.$.toolbar).removeChild(this.$.menuSearcher);
+                    Polymer.dom(this.$.logoutContainer).insertBefore(this.$.menuSearcher, this.$.logoutButton);
+                    Polymer.dom.flush();
+                }
+            },
+            
             /**
              * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
              */
@@ -23616,7 +23636,7 @@ context. You should place this element as a child of `<body>` whenever possible.
 </dom-module>
 <script>
     (function () {
-        var importedURLs = {'/resources/polymer/paper-styles/paper-styles.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout.html': 'imported','/resources/polymer/polymer/polymer.html': 'imported','/resources/polymer/polymer/polymer-mini.html': 'imported','/resources/polymer/polymer/polymer-micro.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-shadow-flex-layout.html': 'imported','/resources/polymer/paper-styles/color.html': 'imported','/resources/polymer/paper-styles/default-theme.html': 'imported','/resources/polymer/paper-styles/shadow.html': 'imported','/resources/polymer/paper-styles/typography.html': 'imported','/resources/polymer/font-roboto/roboto.html': 'imported','https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic': 'imported','https://fonts.googleapis.com/css?family=Roboto+Mono:400,700': 'imported','/app/tg-app.html': 'imported','/resources/polymer/neon-animation/neon-animated-pages.html': 'imported','/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html': 'imported','/resources/polymer/iron-selector/iron-selectable.html': 'imported','/resources/polymer/iron-selector/iron-selection.html': 'imported','/resources/polymer/neon-animation/neon-animation-runner-behavior.html': 'imported','/resources/polymer/iron-meta/iron-meta.html': 'imported','/resources/polymer/neon-animation/neon-animatable-behavior.html': 'imported','/resources/polymer/neon-animation/animations/opaque-animation.html': 'imported','/resources/polymer/neon-animation/neon-animation-behavior.html': 'imported','/resources/polymer/neon-animation/web-animations.html': 'imported','/resources/polymer/carbon-route/carbon-location.html': 'imported','/resources/polymer/iron-location/iron-location.html': 'imported','/resources/polymer/iron-location/iron-query-params.html': 'imported','/resources/polymer/carbon-route/carbon-route-converter.html': 'imported','/resources/polymer/carbon-route/carbon-route.html': 'imported','/resources/views/tg-app-menu.html': 'imported','/resources/polymer/paper-toolbar/paper-toolbar.html': 'imported','/resources/polymer/paper-icon-button/paper-icon-button.html': 'imported','/resources/polymer/iron-icon/iron-icon.html': 'imported','/resources/polymer/paper-behaviors/paper-inky-focus-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-button-state.html': 'imported','/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-control-state.html': 'imported','/resources/polymer/paper-behaviors/paper-ripple-behavior.html': 'imported','/resources/polymer/paper-ripple/paper-ripple.html': 'imported','/resources/layout/tg-tile-layout.html': 'imported','/resources/polymer/iron-media-query/iron-media-query.html': 'imported','/app/tg-app-config.html': 'imported','/resources/components/moment-component.html': 'imported','/resources/polymer/iron-icons/av-icons.html': 'imported','/resources/polymer/iron-iconset-svg/iron-iconset-svg.html': 'imported','/resources/components/postal-lib.html': 'imported','/resources/components/lodash-lib.html': 'imported','/resources/components/tg-tooltip-behavior.html': 'imported','/resources/components/tg-tooltip.html': 'imported','/resources/polymer/neon-animation/animations/fade-in-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-out-animation.html': 'imported','/resources/components/tg-menu-search-input.html': 'imported','/resources/polymer/iron-input/iron-input.html': 'imported','/resources/polymer/iron-a11y-announcer/iron-a11y-announcer.html': 'imported','/resources/polymer/iron-validatable-behavior/iron-validatable-behavior.html': 'imported','/resources/polymer/iron-icons/iron-icons.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html': 'imported','/resources/polymer/paper-input/paper-input-container.html': 'imported','/resources/components/tg-menu-list.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html': 'imported','/resources/polymer/iron-fit-behavior/iron-fit-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-backdrop.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html': 'imported','/resources/polymer/iron-selector/iron-selector.html': 'imported','/resources/polymer/iron-selector/iron-multi-selectable.html': 'imported','/resources/polymer/paper-item/paper-item.html': 'imported','/resources/polymer/paper-item/paper-item-behavior.html': 'imported','/resources/polymer/paper-item/paper-item-shared-styles.html': 'imported','/resources/editors/tg-highlighting-behavior.html': 'imported','/resources/editors/tg-dom-stamper.html': 'imported','/resources/views/tg-app-animation-behavior.html': 'imported','/resources/polymer/neon-animation/neon-animation.html': 'imported','/resources/polymer/neon-animation/neon-animatable.html': 'imported','/resources/polymer/neon-animation/neon-animations.html': 'imported','/resources/polymer/neon-animation/animations/cascaded-animation.html': 'imported','/resources/polymer/neon-animation/animations/hero-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animation-behavior.html': 'imported','/resources/polymer/neon-animation/animations/ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/reverse-ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-top-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-bottom-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/transform-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animatable-behavior.html': 'imported','/resources/polymer/iron-icons/editor-icons.html': 'imported','/resources/polymer/iron-icons/hardware-icons.html': 'imported','/resources/polymer/iron-icons/image-icons.html': 'imported','/resources/actions/tg-ui-action.html': 'imported','/resources/polymer/paper-button/paper-button.html': 'imported','/resources/polymer/paper-material/paper-material.html': 'imported','/resources/polymer/paper-material/paper-material-shared-styles.html': 'imported','/resources/polymer/paper-behaviors/paper-button-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-styles.html': 'imported','/app/tg-reflector.html': 'imported','/resources/serialisation/tg-serialiser.html': 'imported','/resources/actions/tg-focus-restoration-behavior.html': 'imported','/resources/views/tg-app-view.html': 'imported','/resources/views/tg-view.html': 'imported','/resources/polymer/paper-fab/paper-fab.html': 'imported','/resources/views/tg-menu-item-view.html': 'imported','/app/tg-element-loader.html': 'imported','/resources/reflection/tg-polymer-utils.html': 'imported','/resources/views/tg-view-with-menu.html': 'imported','/resources/polymer/paper-menu/paper-menu.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menu-behavior.html': 'imported','/resources/polymer/paper-menu/paper-menu-shared-styles.html': 'imported','/resources/polymer/paper-menu/paper-submenu.html': 'imported','/resources/polymer/iron-collapse/iron-collapse.html': 'imported','/resources/polymer/paper-drawer-panel/paper-drawer-panel.html': 'imported','/resources/polymer/paper-checkbox/paper-checkbox.html': 'imported','/resources/polymer/paper-behaviors/paper-checked-element-behavior.html': 'imported','/resources/polymer/iron-checked-element-behavior/iron-checked-element-behavior.html': 'imported','/resources/polymer/iron-form-element-behavior/iron-form-element-behavior.html': 'imported','/resources/egi/tg-custom-action-dialog.html': 'imported','/resources/components/tg-toast.html': 'imported','/resources/polymer/paper-dialog/paper-dialog.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-behavior.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-shared-styles.html': 'imported','/resources/polymer/paper-toast/paper-toast.html': 'imported','/resources/images/tg-icons.html': 'imported','/resources/polymer/paper-styles/paper-styles-classes.html': 'imported','/resources/polymer/paper-styles/classes/typography.html': 'imported','/resources/polymer/paper-styles/classes/shadow.html': 'imported','/resources/master/tg-entity-master.html': 'imported','/resources/polymer/iron-ajax/iron-ajax.html': 'imported','/resources/polymer/iron-ajax/iron-request.html': 'imported','/resources/polymer/promise-polyfill/promise-polyfill-lite.html': 'imported','/resources/components/tg-scrollable-component.html': 'imported','/resources/validation/tg-entity-validator.html': 'imported','/resources/binding/tg-entity-binder.html': 'imported','/resources/master/tg-entity-master-behavior.html': 'imported','/resources/binding/tg-entity-binder-behavior.html': 'imported','/resources/master/actions/tg-entity-master-closing-behavior.html': 'imported','/resources/mobile-application-startup-resources.html': 'imported','/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties': 'imported','/resources/layout/tg-flex-layout.html': 'imported','/resources/components/tg-subheader.html': 'imported','/resources/editors/tg-entity-editor.html': 'imported','/resources/editors/tg-entity-editor-result.html': 'imported','/resources/editors/tg-editor-behavior.html': 'imported','/resources/editors/tg-editor.html': 'imported','/resources/polymer/paper-input/paper-input-error.html': 'imported','/resources/polymer/paper-input/paper-input-addon-behavior.html': 'imported','/resources/polymer/paper-input/paper-input-char-counter.html': 'imported','/resources/editors/tg-singleline-text-editor.html': 'imported','/resources/editors/tg-decimal-editor.html': 'imported','/resources/reflection/tg-numeric-utils.html': 'imported','/resources/editors/tg-multiline-text-editor.html': 'imported','/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html': 'imported','/resources/editors/tg-datetime-picker.html': 'imported','/resources/reflection/tg-date-utils.html': 'imported','/resources/components/tg-calendar.html': 'imported','/resources/components/tg-month-selector.html': 'imported','/resources/components/tg-number-selector.html': 'imported','/resources/polymer/iron-list/iron-list.html': 'imported','/resources/polymer/iron-scroll-target-behavior/iron-scroll-target-behavior.html': 'imported','/resources/polymer/iron-scroll-threshold/iron-scroll-threshold.html': 'imported','/resources/editors/tg-boolean-editor.html': 'imported','/resources/editors/tg-integer-editor.html': 'imported','/resources/editors/tg-colour-picker.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown-scroll-manager.html': 'imported','/resources/editors/tg-hyperlink-editor.html': 'imported','/resources/editors/tg-money-editor.html': 'imported','/resources/master/actions/tg-action.html': 'imported','/resources/master/actions/tg-action-behavior.html': 'imported','/resources/components/filesaver-lib.html': 'imported','/resources/master/actions/tg-abstract-action-behavior.html': 'imported','/resources/master/actions/tg-abstract-action.html': 'imported','/resources/master/tg-entity-master-template-behavior.html': 'imported','/resources/master/tg-entity-master-styles.html': 'imported','/resources/actions/tg-shortcut-processing-behavior.html': 'imported','/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties': 'imported','/resources/centre/criterion/multi/tg-multi-criterion.html': 'imported','/resources/centre/criterion/tg-abstract-criterion.html': 'imported','/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html': 'imported','/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html': 'imported','/resources/centre/criterion/tg-abstract-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion-config.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion-config.html': 'imported','/resources/centre/criterion/multi/tg-boolean-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.html': 'imported','/resources/components/tg-accordion.html': 'imported','/resources/centre/criterion/single/tg-single-criterion.html': 'imported','/resources/egi/tg-property-column.html': 'imported','/resources/egi/tg-summary-property.html': 'imported','/resources/egi/tg-entity-grid-inspector.html': 'imported','/resources/components/tg-drag-from-behavior.html': 'imported','/resources/egi/tg-secondary-action-button.html': 'imported','/resources/polymer/paper-progress/paper-progress.html': 'imported','/resources/polymer/iron-range-behavior/iron-range-behavior.html': 'imported','/resources/centre/tg-selection-criteria.html': 'imported','/resources/centre/tg-criteria-validator.html': 'imported','/resources/centre/tg-selection-criteria-template-behavior.html': 'imported','/resources/centre/tg-selection-criteria-behavior.html': 'imported','/resources/centre/tg-entity-centre.html': 'imported','/resources/polymer/paper-tabs/paper-tabs.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menubar-behavior.html': 'imported','/resources/polymer/paper-tabs/paper-tabs-icons.html': 'imported','/resources/polymer/paper-tabs/paper-tab.html': 'imported','/resources/components/tg-confirmation-dialog.html': 'imported','/resources/centre/tg-selection-view.html': 'imported','/resources/centre/tg-centre-result-view.html': 'imported','/resources/polymer/iron-pages/iron-pages.html': 'imported','/resources/centre/tg-entity-centre-styles.html': 'imported','/resources/centre/tg-selection-criteria-styles.html': 'imported','/resources/centre/tg-entity-centre-template-behavior.html': 'imported','/resources/centre/tg-entity-centre-behavior.html': 'imported','/resources/sse/tg-sse-behavior.html': 'imported','/resources/centre/tg-entity-centre-insertion-point.html': 'imported','/resources/images/mobile-menu.html': 'imported'};
+        var importedURLs = {'/resources/polymer/paper-styles/paper-styles.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout.html': 'imported','/resources/polymer/polymer/polymer.html': 'imported','/resources/polymer/polymer/polymer-mini.html': 'imported','/resources/polymer/polymer/polymer-micro.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-shadow-flex-layout.html': 'imported','/resources/polymer/paper-styles/color.html': 'imported','/resources/polymer/paper-styles/default-theme.html': 'imported','/resources/polymer/paper-styles/shadow.html': 'imported','/resources/polymer/paper-styles/typography.html': 'imported','/resources/polymer/font-roboto/roboto.html': 'imported','https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic': 'imported','https://fonts.googleapis.com/css?family=Roboto+Mono:400,700': 'imported','/app/tg-app.html': 'imported','/resources/polymer/neon-animation/neon-animated-pages.html': 'imported','/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html': 'imported','/resources/polymer/iron-selector/iron-selectable.html': 'imported','/resources/polymer/iron-selector/iron-selection.html': 'imported','/resources/polymer/neon-animation/neon-animation-runner-behavior.html': 'imported','/resources/polymer/iron-meta/iron-meta.html': 'imported','/resources/polymer/neon-animation/neon-animatable-behavior.html': 'imported','/resources/polymer/neon-animation/animations/opaque-animation.html': 'imported','/resources/polymer/neon-animation/neon-animation-behavior.html': 'imported','/resources/polymer/neon-animation/web-animations.html': 'imported','/resources/polymer/carbon-route/carbon-location.html': 'imported','/resources/polymer/iron-location/iron-location.html': 'imported','/resources/polymer/iron-location/iron-query-params.html': 'imported','/resources/polymer/carbon-route/carbon-route-converter.html': 'imported','/resources/polymer/carbon-route/carbon-route.html': 'imported','/resources/views/tg-app-menu.html': 'imported','/resources/polymer/paper-toolbar/paper-toolbar.html': 'imported','/resources/polymer/paper-icon-button/paper-icon-button.html': 'imported','/resources/polymer/iron-icon/iron-icon.html': 'imported','/resources/polymer/paper-behaviors/paper-inky-focus-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-button-state.html': 'imported','/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-control-state.html': 'imported','/resources/polymer/paper-behaviors/paper-ripple-behavior.html': 'imported','/resources/polymer/paper-ripple/paper-ripple.html': 'imported','/resources/layout/tg-tile-layout.html': 'imported','/resources/polymer/iron-media-query/iron-media-query.html': 'imported','/app/tg-app-config.html': 'imported','/resources/components/moment-component.html': 'imported','/resources/polymer/iron-icons/av-icons.html': 'imported','/resources/polymer/iron-iconset-svg/iron-iconset-svg.html': 'imported','/resources/components/postal-lib.html': 'imported','/resources/components/lodash-lib.html': 'imported','/resources/components/tg-tooltip-behavior.html': 'imported','/resources/components/tg-tooltip.html': 'imported','/resources/polymer/neon-animation/animations/fade-in-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-out-animation.html': 'imported','/resources/components/tg-menu-search-input.html': 'imported','/resources/polymer/iron-input/iron-input.html': 'imported','/resources/polymer/iron-a11y-announcer/iron-a11y-announcer.html': 'imported','/resources/polymer/iron-validatable-behavior/iron-validatable-behavior.html': 'imported','/resources/polymer/iron-icons/iron-icons.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html': 'imported','/resources/polymer/paper-input/paper-input-container.html': 'imported','/resources/components/tg-menu-list.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html': 'imported','/resources/polymer/iron-fit-behavior/iron-fit-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-backdrop.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html': 'imported','/resources/polymer/iron-selector/iron-selector.html': 'imported','/resources/polymer/iron-selector/iron-multi-selectable.html': 'imported','/resources/polymer/paper-item/paper-item.html': 'imported','/resources/polymer/paper-item/paper-item-behavior.html': 'imported','/resources/polymer/paper-item/paper-item-shared-styles.html': 'imported','/resources/editors/tg-highlighting-behavior.html': 'imported','/resources/editors/tg-dom-stamper.html': 'imported','/resources/views/tg-app-animation-behavior.html': 'imported','/resources/polymer/neon-animation/neon-animation.html': 'imported','/resources/polymer/neon-animation/neon-animatable.html': 'imported','/resources/polymer/neon-animation/neon-animations.html': 'imported','/resources/polymer/neon-animation/animations/cascaded-animation.html': 'imported','/resources/polymer/neon-animation/animations/hero-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animation-behavior.html': 'imported','/resources/polymer/neon-animation/animations/ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/reverse-ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-top-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-bottom-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/transform-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animatable-behavior.html': 'imported','/resources/polymer/iron-icons/editor-icons.html': 'imported','/resources/polymer/iron-icons/hardware-icons.html': 'imported','/resources/polymer/iron-icons/image-icons.html': 'imported','/resources/actions/tg-ui-action.html': 'imported','/resources/polymer/paper-button/paper-button.html': 'imported','/resources/polymer/paper-material/paper-material.html': 'imported','/resources/polymer/paper-material/paper-material-shared-styles.html': 'imported','/resources/polymer/paper-behaviors/paper-button-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-behavior.html': 'imported','/resources/polymer/paper-spinner/paper-spinner-styles.html': 'imported','/app/tg-reflector.html': 'imported','/resources/serialisation/tg-serialiser.html': 'imported','/resources/actions/tg-focus-restoration-behavior.html': 'imported','/resources/views/tg-app-view.html': 'imported','/resources/views/tg-view.html': 'imported','/resources/polymer/paper-fab/paper-fab.html': 'imported','/resources/views/tg-menu-item-view.html': 'imported','/app/tg-element-loader.html': 'imported','/resources/reflection/tg-polymer-utils.html': 'imported','/resources/views/tg-view-with-menu.html': 'imported','/resources/polymer/paper-menu/paper-menu.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menu-behavior.html': 'imported','/resources/polymer/paper-menu/paper-menu-shared-styles.html': 'imported','/resources/polymer/paper-menu/paper-submenu.html': 'imported','/resources/polymer/iron-collapse/iron-collapse.html': 'imported','/resources/polymer/paper-drawer-panel/paper-drawer-panel.html': 'imported','/resources/polymer/paper-checkbox/paper-checkbox.html': 'imported','/resources/polymer/paper-behaviors/paper-checked-element-behavior.html': 'imported','/resources/polymer/iron-checked-element-behavior/iron-checked-element-behavior.html': 'imported','/resources/polymer/iron-form-element-behavior/iron-form-element-behavior.html': 'imported','/resources/views/tg-back-button-behavior.html': 'imported','/resources/egi/tg-custom-action-dialog.html': 'imported','/resources/components/tg-toast.html': 'imported','/resources/polymer/paper-dialog/paper-dialog.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-behavior.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-shared-styles.html': 'imported','/resources/polymer/paper-toast/paper-toast.html': 'imported','/resources/images/tg-icons.html': 'imported','/resources/polymer/paper-styles/paper-styles-classes.html': 'imported','/resources/polymer/paper-styles/classes/typography.html': 'imported','/resources/polymer/paper-styles/classes/shadow.html': 'imported','/resources/master/tg-entity-master.html': 'imported','/resources/polymer/iron-ajax/iron-ajax.html': 'imported','/resources/polymer/iron-ajax/iron-request.html': 'imported','/resources/polymer/promise-polyfill/promise-polyfill-lite.html': 'imported','/resources/components/tg-scrollable-component.html': 'imported','/resources/validation/tg-entity-validator.html': 'imported','/resources/binding/tg-entity-binder.html': 'imported','/resources/master/tg-entity-master-behavior.html': 'imported','/resources/binding/tg-entity-binder-behavior.html': 'imported','/resources/master/actions/tg-entity-master-closing-behavior.html': 'imported','/resources/mobile-application-startup-resources.html': 'imported','/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties': 'imported','/resources/layout/tg-flex-layout.html': 'imported','/resources/components/tg-subheader.html': 'imported','/resources/editors/tg-entity-editor.html': 'imported','/resources/editors/tg-entity-editor-result.html': 'imported','/resources/editors/tg-editor-behavior.html': 'imported','/resources/editors/tg-editor.html': 'imported','/resources/polymer/paper-input/paper-input-error.html': 'imported','/resources/polymer/paper-input/paper-input-addon-behavior.html': 'imported','/resources/polymer/paper-input/paper-input-char-counter.html': 'imported','/resources/editors/tg-singleline-text-editor.html': 'imported','/resources/editors/tg-decimal-editor.html': 'imported','/resources/reflection/tg-numeric-utils.html': 'imported','/resources/editors/tg-multiline-text-editor.html': 'imported','/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html': 'imported','/resources/editors/tg-datetime-picker.html': 'imported','/resources/reflection/tg-date-utils.html': 'imported','/resources/components/tg-calendar.html': 'imported','/resources/components/tg-month-selector.html': 'imported','/resources/components/tg-number-selector.html': 'imported','/resources/polymer/iron-list/iron-list.html': 'imported','/resources/polymer/iron-scroll-target-behavior/iron-scroll-target-behavior.html': 'imported','/resources/polymer/iron-scroll-threshold/iron-scroll-threshold.html': 'imported','/resources/editors/tg-boolean-editor.html': 'imported','/resources/editors/tg-integer-editor.html': 'imported','/resources/editors/tg-colour-picker.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown-scroll-manager.html': 'imported','/resources/editors/tg-hyperlink-editor.html': 'imported','/resources/editors/tg-money-editor.html': 'imported','/resources/master/actions/tg-action.html': 'imported','/resources/master/actions/tg-action-behavior.html': 'imported','/resources/components/filesaver-lib.html': 'imported','/resources/master/actions/tg-abstract-action-behavior.html': 'imported','/resources/master/actions/tg-abstract-action.html': 'imported','/resources/master/tg-entity-master-template-behavior.html': 'imported','/resources/master/tg-entity-master-styles.html': 'imported','/resources/actions/tg-shortcut-processing-behavior.html': 'imported','/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties': 'imported','/resources/centre/criterion/multi/tg-multi-criterion.html': 'imported','/resources/centre/criterion/tg-abstract-criterion.html': 'imported','/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html': 'imported','/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html': 'imported','/resources/centre/criterion/tg-abstract-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion-config.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion-config.html': 'imported','/resources/centre/criterion/multi/tg-boolean-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.html': 'imported','/resources/components/tg-accordion.html': 'imported','/resources/centre/criterion/single/tg-single-criterion.html': 'imported','/resources/egi/tg-property-column.html': 'imported','/resources/egi/tg-summary-property.html': 'imported','/resources/egi/tg-entity-grid-inspector.html': 'imported','/resources/components/tg-drag-from-behavior.html': 'imported','/resources/egi/tg-secondary-action-button.html': 'imported','/resources/polymer/paper-progress/paper-progress.html': 'imported','/resources/polymer/iron-range-behavior/iron-range-behavior.html': 'imported','/resources/centre/tg-selection-criteria.html': 'imported','/resources/centre/tg-criteria-validator.html': 'imported','/resources/centre/tg-selection-criteria-template-behavior.html': 'imported','/resources/centre/tg-selection-criteria-behavior.html': 'imported','/resources/centre/tg-entity-centre.html': 'imported','/resources/polymer/paper-tabs/paper-tabs.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menubar-behavior.html': 'imported','/resources/polymer/paper-tabs/paper-tabs-icons.html': 'imported','/resources/polymer/paper-tabs/paper-tab.html': 'imported','/resources/components/tg-confirmation-dialog.html': 'imported','/resources/centre/tg-selection-view.html': 'imported','/resources/centre/tg-centre-result-view.html': 'imported','/resources/polymer/iron-pages/iron-pages.html': 'imported','/resources/centre/tg-entity-centre-styles.html': 'imported','/resources/centre/tg-selection-criteria-styles.html': 'imported','/resources/centre/tg-entity-centre-template-behavior.html': 'imported','/resources/centre/tg-entity-centre-behavior.html': 'imported','/resources/sse/tg-sse-behavior.html': 'imported','/resources/centre/tg-entity-centre-insertion-point.html': 'imported','/resources/images/mobile-menu.html': 'imported'};
         //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
         var insertElement = function (insertToElement, elementName, attributes) {
             if (elementName && elementName.toString().length > 0) {
@@ -26126,23 +26146,38 @@ context. You should place this element as a child of `<body>` whenever possible.
     });
   </script>
 </dom-module>
-<dom-module id="tg-view-with-menu" assetpath="/resources/views/">
+<script>
+    Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    Polymer.TgBehaviors.TgBackButtonBehavior = {
+        
+        /**
+         * Creates dynamically the 'dom-bind' template which holds back button.
+         */
+        createBackButton: function () {
+            const domBind = document.createElement('template', 'dom-bind');
+            domBind._back = this._back;
+            
+            const div = domBind.content.ownerDocument.createElement('div');
+            div.innerHTML = '<paper-icon-button id="backButton" icon="arrow-back" tooltip-text="Back" on-tap="_back"></paper-icon-button>';
+            
+            domBind.content.appendChild(div);
+            return domBind;
+        },
+        
+        /**
+         * Performs going back from this dialog, which means dialog closing if it is possible.
+         */
+        _back: function () {
+            history.back();
+        }
+        
+    };
+</script><dom-module id="tg-view-with-menu" assetpath="/resources/views/">
     <style>
         :host {
-            --paper-fab-background: var(--paper-grey-50);
-            --paper-fab-keyboard-focus-background: var(--paper-grey-200); /* this is close to Material Design guidelines https://material.io/guidelines/components/buttons.html -- 'Focused:12% #000000 shade over the color' */
             --paper-menu-color: var(--paper-light-blue-700);
             --paper-menu-undone-color: var(--paper-light-blue-100);
             --paper-item-min-height: 40px;
-            --paper-fab: {
-                color: var(--paper-grey-700);
-                position: absolute;
-                top: 16px;
-                right: 16px;
-                z-index: 1;
-                width: 50px;
-                height: 50px;
-            };
             --paper-menu: {
                 padding: 0;
                 margin: 0;
@@ -26235,10 +26270,13 @@ context. You should place this element as a child of `<body>` whenever possible.
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .reverse {
+            flex-direction: row-reverse;
+        }
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" disable-swipe="" force-narrow="">
+        <paper-drawer-panel id="drawerPanel" force-narrow="" disable-swipe="[[!mobile]]">
 
             <div class="layout vertical" drawer="">
 
@@ -26274,10 +26312,11 @@ context. You should place this element as a child of `<body>` whenever possible.
             <div class="layout vertical" main="">
 
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
-                    <div class="layout horizontal center flex" style="display: contents">
+                    <div id="viewToolBarContainer" class="layout horizontal center flex" style="display: contents">
                         <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                         <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                         <div class="flex truncate">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                        <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu" on-tap="_showMenu"></paper-icon-button>
                     </div>
                 </div>
 
@@ -26294,8 +26333,6 @@ context. You should place this element as a child of `<body>` whenever possible.
                         </template>
                     </template>
                 </neon-animated-pages>
-
-                <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             </div>
 
 
@@ -26338,6 +26375,7 @@ context. You should place this element as a child of `<body>` whenever possible.
             is: "tg-view-with-menu",
 
             properties: {
+                mobile: Boolean,
                 menu: Array,
                 menuItem: Object,
                 selectedModule: String,
@@ -26357,12 +26395,6 @@ context. You should place this element as a child of `<body>` whenever possible.
                                 }, {
                                     name: 'slide-from-bottom-animation',
                                     node: this.$.pages
-                                }, {
-                                    name: 'scale-up-animation',
-                                    node: this.$.fab,
-                                    timing: {
-                                        delay: 400
-                                    }
                                 }
                             ],
                             'exit': [
@@ -26372,9 +26404,6 @@ context. You should place this element as a child of `<body>` whenever possible.
                                 }, {
                                     name: 'slide-down-animation',
                                     node: this.$.pages
-                                }, {
-                                    name: 'scale-down-animation',
-                                    node: this.$.fab
                                 }
                             ]
                         };
@@ -26392,7 +26421,8 @@ context. You should place this element as a child of `<body>` whenever possible.
                 Polymer.NeonAnimatableBehavior,
                 Polymer.TgBehaviors.TgTooltipBehavior,
                 Polymer.IronA11yKeysBehavior,
-                Polymer.TgBehaviors.TgFocusRestorationBehavior
+                Polymer.TgBehaviors.TgFocusRestorationBehavior,
+                Polymer.TgBehaviors.TgBackButtonBehavior
             ],
 
             keyBindings: {
@@ -26421,6 +26451,16 @@ context. You should place this element as a child of `<body>` whenever possible.
                         delete this._wasClosedByEsc;
                     }
                 });
+                
+                this.mobile = this.$.app_config.mobile;
+                if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
+                    Polymer.dom(this.$.viewToolBarContainer).removeChild(this.$.mainMenu);
+                    Polymer.dom(this.$.viewToolBarContainer).insertBefore(this.$.mainMenu, this.$.menuButton);
+                    Polymer.dom(this.$.viewToolBarContainer).appendChild(this.createBackButton());
+                    Polymer.dom.flush();
+                    this.$.viewToolBar.classList.add('reverse');
+                    this.$.drawerPanel.rightDrawer = true;
+                }
             },
 
             attached: function () {
@@ -26433,7 +26473,7 @@ context. You should place this element as a child of `<body>` whenever possible.
                     }
                 });
             },
-
+            
             getSelectedPage: function () {
                 return this._selectedPage;
             },
@@ -28035,6 +28075,7 @@ styles. All other styles should exist as single lines."
                 padding: 0px;
                 overflow: auto;
                 /* this is to make host scorable when needed */
+                /* -webkit-overflow-scrolling: touch; this setting causes some masters to show as white space in iOs */
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
                 @apply(--layout-vertical);
             }
@@ -28070,7 +28111,7 @@ styles. All other styles should exist as single lines."
                 height: 1.5em;
                 margin: 0 5px
             }
-            #menuToggler {
+            #menuToggler,#backButton {
                 color: white;
             }
             .close-button {
@@ -28109,6 +28150,9 @@ styles. All other styles should exist as single lines."
             }
             #resizer:hover {
                 cursor: nwse-resize;
+            }
+            .reverse {
+                flex-direction: row-reverse;
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
@@ -28153,7 +28197,13 @@ styles. All other styles should exist as single lines."
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [
+                Polymer.IronA11yKeysBehavior,
+                Polymer.IronOverlayBehavior,
+                Polymer.TgBehaviors.TgFocusRestorationBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior,
+                Polymer.TgBehaviors.TgBackButtonBehavior
+            ],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
@@ -28301,8 +28351,14 @@ styles. All other styles should exist as single lines."
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
 
                 this._setIsRunning(false);
+                
+                if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
+                    Polymer.dom(this.$.titleBar).appendChild(this.createBackButton());
+                    Polymer.dom.flush();
+                    this.$.titleBar.classList.add('reverse');
+                }
             },
-
+            
             attached: function () {
                 var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
                 this.addEventListener(clickEvent, this._onCaptureClick, true);
@@ -28552,6 +28608,9 @@ styles. All other styles should exist as single lines."
                 this.$.menuToggler.hidden = !appearedAndFunc.appeared;
                 if (appearedAndFunc.appeared) {
                     this._toggleMenu = appearedAndFunc.func;
+                    if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
+                        appearedAndFunc.drawer.rightDrawer = true;
+                    }
                 }
             },
             
@@ -29939,17 +29998,20 @@ if (!window.Promise) {
         #scrollablePanel {
             overflow: auto;
             @apply(--tg-scrollable-layout);
-
+        }
+        .webkit-scroll-inertia {
+            -webkit-overflow-scrolling: touch;
         }
         #shadowContainer {
             pointer-events: none;
         }
     </style>
     <template>
-        <div id="scrollablePanel" on-scroll="_contentScrolled">
+        <div id="scrollablePanel" on-scroll="_contentScrolled" class="webkit-scroll-inertia">
             <content></content>
         </div>
         <div id="shadowContainer" class="fit"></div>
+        <tg-app-config id="appConfig"></tg-app-config>
     </template>
 </dom-module>
 
@@ -29987,11 +30049,23 @@ if (!window.Promise) {
             this.oldHeight = this.$.scrollablePanel.offsetHeight;
             return this._count;
         },
-
+        
         _resizeEventListener: function (event, details) {
             this._contentScrolled();
+            
+            if (this.$.appConfig.mobile === true && this.$.appConfig.iPhoneOs()) { // TODO perhaps MacOs webkit browsers are also affected, then it needs to be fixed here too
+                // In webkit-based browsers we use '-webkit-overflow-scrolling: touch' css fix to enable scroll inertia (all other browsers implement that natively).
+                // However, this causes completely broken scrolling in cases where inner content changes its sizes.
+                // Specifically the size change should be following: at the beginng the content becomes small and non-scrollable and then, again, big and scrollable.
+                // See this post http://patrickmuff.ch/blog/2014/10/01/how-we-fixed-the-webkit-overflow-scrolling-touch-bug-on-ios/ and its comments for more information.
+                // Also this post http://jstn.name/bug-fix-for-overflow-scrolling-on-orientation-change/ helps too.
+                this.$.scrollablePanel.classList.remove('webkit-scroll-inertia');
+                this.async(function () {
+                    this.$.scrollablePanel.classList.add('webkit-scroll-inertia');
+                }.bind(this), 200); // need magic async and wait at least 200 ms (this works on iOs 11.3 Safari 11.0)
+            }
         },
-
+        
         _contentScrolled: function (e) {
             const scrollTarget = this.$.scrollablePanel;
             const shadowTarget = this.$.shadowContainer;
@@ -30009,7 +30083,7 @@ if (!window.Promise) {
                     shadowTarget.style.removeProperty('box-shadow');
                 }
             }
-        },
+        }
     });
 </script><dom-module id="tg-entity-validator" assetpath="/resources/validation/"> 
     <template>
@@ -32561,7 +32635,7 @@ if (!window.Promise) {
                 
                 _routeChanged: function (newValue, oldValue) {
                     // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
-                    if (!this.currentHistoryState) {
+                    if (typeof this.currentHistoryState === "undefined") {
                         this._loadApplicationInfrastructureIntoHistory();
                     } else {
                         const currentOverlay = this._findFirstClosableDialog();
@@ -32598,10 +32672,10 @@ if (!window.Promise) {
                         const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
                         const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
                         const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-                        window.history.replaceState({currIndex: window.history.length - 1}, '', urlForRoot);
-                        window.history.pushState({currIndex: window.history.length}, '', urlForMenu);
-                        window.history.pushState({currIndex: window.history.length}, '', urlToOpen);
-                        this.currentHistoryState = window.history.length - 1;
+                        window.history.replaceState({currIndex: 0}, '', urlForRoot);
+                        window.history.pushState({currIndex: 1}, '', urlForMenu);
+                        window.history.pushState({currIndex: 2}, '', urlToOpen);
+                        this.currentHistoryState = 2;
                         this._routeChanged();
                     }
                 },
@@ -32889,10 +32963,10 @@ if (!window.Promise) {
                 _replaceStateWithNumber: function () {
                     // the URI for history state rewrite
                     const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+                    // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
+                    this.currentHistoryState = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState + 1 : 0;
                     // rewrite history state by providing concrete number of last history state
-                    window.history.replaceState({currIndex: window.history.length - 1}, '', fullNewUrl);
-                    // currentHistoryState will be updated accordingly
-                    this.currentHistoryState = window.history.length - 1;
+                    window.history.replaceState({currIndex: this.currentHistoryState}, '', fullNewUrl);
                 },
                 
                 _getUrl: function() {
@@ -33540,6 +33614,7 @@ if (!window.Promise) {
 	            color: black;
 	            padding: 0px;
 	            overflow: auto; /* this is to make host scorable when needed */
+	            -webkit-overflow-scrolling: touch;
 	            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
 	        }
 	        
@@ -33550,6 +33625,7 @@ if (!window.Promise) {
 	            padding: 6px;
 	            margin: 0px;
 	            overflow: auto;
+	            -webkit-overflow-scrolling: touch;
 	            text-overflow: ellipsis;
 	            border-top: 1px solid #e3e3e3;
 	            min-height: 24px;
@@ -33600,6 +33676,7 @@ if (!window.Promise) {
 	            min-width: 250px;
 	            padding: 0px;
 	            overflow: auto;
+	            -webkit-overflow-scrolling: touch;
 	            text-overflow: ellipsis;
 	        }
 	        
@@ -35209,6 +35286,7 @@ if (!window.Promise) {
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
+            font-size: 16px !important;
         }
         .search-button {
             --iron-icon-height: 1.3rem;
@@ -35231,12 +35309,15 @@ if (!window.Promise) {
             --paper-spinner-layer-3-color: var(--paper-blue-500);
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
     </style>
 
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
             <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]">
-            <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+            <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active="" hidden$="[[!searching]]" class="custom-icon-buttons" tabindex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
             <div class="input-layer"><span>[[_formatKey(entity)]]</span><span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> – <i>[[_formatDesc(entity)]]</i></span>
@@ -35726,7 +35807,8 @@ if (!window.Promise) {
 
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
-                if (this.$.input === activeElement || /* if the autocompleter in focus */
+                if (this.$.searcherButton === activeElement || /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
+                    this.$.input === activeElement || /* if autocompleter's input is in focus */
                     document.body === activeElement   /* or no other input or button in focus then show found values */) {
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
@@ -35972,6 +36054,9 @@ if (!window.Promise) {
         #input.upper-case {
             text-transform: uppercase;
         }
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
     </style>
     <template>
     	<tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]">
@@ -36019,6 +36104,10 @@ if (!window.Promise) {
             text-align: right;
             text-overflow: ellipsis;
             overflow: hidden;
+            font-size: 16px !important;
+        }
+        input[is="iron-input"] {
+            font-size: 16px !important;
         }
     </style>
     <template>
@@ -36391,6 +36480,11 @@ if (!window.Promise) {
         .upper-case {
             --iron-autogrow-textarea: {
                 text-transform: uppercase;
+            };
+        }
+        :host {
+            --iron-autogrow-textarea: {
+                font-size: 16px !important;
             };
         }
     </style>
@@ -39212,6 +39306,7 @@ if (!window.Promise) {
     .date-picker {
         line-height: normal;
         overflow: auto;
+        -webkit-overflow-scrolling: touch;
     }
 </style><dom-module id="tg-datetime-picker" assetpath="/resources/editors/">
     <style>
@@ -39242,6 +39337,9 @@ if (!window.Promise) {
             line-height: normal;
         }
 */
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
     }
     </style>
 
@@ -39249,7 +39347,7 @@ if (!window.Promise) {
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]">
         	<input id="input" class="custom-input date-input" is="iron-input" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]">
             <content class=".property-action"></content>
-            <paper-icon-button id="openCalendarButton" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog">
+            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog">
         </paper-icon-button></tg-editor>
     </template>
 </dom-module>
@@ -39404,12 +39502,14 @@ if (!window.Promise) {
             },
 
             _showCalendar: function (e) {
-                var mve = this._createCalendarDialog();
-                Polymer.dom(document.body).appendChild(mve);
-                Polymer.dom.flush();
-                
-                this.$.openCalendarButton.disabled = true;
-                mve.open();
+                if (!this._isCalendarOpen) {
+                    this._isCalendarOpen = true;
+                    var mve = this._createCalendarDialog();
+                    Polymer.dom(document.body).appendChild(mve);
+                    Polymer.dom.flush();
+                    //Opening date picker dialog itself.
+                    mve.open();
+                }
             },
             
             _isCalendarDisabled: function (_disabled, datePortion) {
@@ -39432,9 +39532,9 @@ if (!window.Promise) {
             		Polymer.dom(document.body).removeChild(this);
             		Polymer.dom.flush();
                     
-                    //Setting focus on input and restoring icon button state.
-                    self.$.openCalendarButton.disabled = false;
+                    //Setting focus on input.
                     self.decoratedInput().focus();
+                    self._isCalendarOpen = false;
             	}.bind(domBind);
             	
             	domBind._acceptDateBind = function() {
@@ -39816,6 +39916,10 @@ if (!window.Promise) {
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
+            font-size: 16px !important;
+        }
+        input[is="iron-input"] {
+            font-size: 16px !important;
         }
     </style>
     <template>
@@ -40572,6 +40676,9 @@ if (!window.Promise) {
              margin-left: 10px;
              font-size: 1rem;
          }
+         input[is="iron-input"] {
+             font-size: 16px !important;
+         }
     </style>
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]">
@@ -40845,7 +40952,10 @@ if (!window.Promise) {
             width: 1.3rem;
             height: 1.3rem;
             padding: 0;
-        }    
+        }
+        input[is="iron-input"] {
+            font-size: 16px !important;
+        }
     </style>
     <template>
     	<tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]">
@@ -40912,6 +41022,10 @@ if (!window.Promise) {
             text-align: right;
             text-overflow: ellipsis;
             overflow: hidden;
+            font-size: 16px !important;
+        }
+        input[is="iron-input"] {
+            font-size: 16px !important;
         }
     </style>
     <template>
@@ -42195,6 +42309,9 @@ postActionError: function (functionalEntity, action) {
         .metavalue-editor {
             padding-top: 15px;
         }
+        .criterion-container {
+            margin-right: 10px;
+        }
         .mnemonic-layer, .criterion-container ::content .mnemonic-layer {
             margin-bottom: 8px;
             margin-top: 28px;
@@ -42227,6 +42344,18 @@ postActionError: function (functionalEntity, action) {
             );
             pointer-events: none;
         }
+        #iconButton::shadow #ink {
+            width: 32px;
+            height: 32px;
+            top: -4px;
+            left: -4px;
+        }
+        #iconButton {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            margin-bottom: 8px;
+        }
     </style>
     <template>
         <tg-reflector id="reflector"></tg-reflector>
@@ -42238,7 +42367,7 @@ postActionError: function (functionalEntity, action) {
                 <div id="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
                 <div id="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
             </div>
-            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert" tooltip-text="Show additional criteria constraints">
+            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-horiz" tooltip-text="Show additional criteria constraints">
         </paper-icon-button></div>
     </template>
 </dom-module>
@@ -44117,12 +44246,14 @@ postActionError: function (functionalEntity, action) {
             bottom: 0;
             right: 0;
             width: 10px;
+            pointer-events: none;
         }
-        .table-cell:hover > .resizing-box,
-        .resizing-box:hover,
-        .resizing-action {
-            cursor: col-resize;
+        .table-cell:hover:not([is-resizing]):not([is-mobile]) > .resizing-box,
+        .resizing-action > .resizing-box {
             border-right: 4px solid var(--paper-light-blue-100);
+        }
+        .resizing-action {
+             cursor: col-resize;
         }
         paper-material {
             border-radius: 2px;
@@ -44132,6 +44263,7 @@ postActionError: function (functionalEntity, action) {
         }
         #scrollContainer {
             overflow: auto;
+            -webkit-overflow-scrolling: touch;
         }
         #lockContainer {
             pointer-events: none;
@@ -44296,7 +44428,7 @@ postActionError: function (functionalEntity, action) {
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <paper-material elevation="1" style="margin: 10px 10px;" fit-to-height$="[[fitToHeight]]" class="layout vertical">
+        <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
             <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
                 
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
@@ -44322,9 +44454,9 @@ postActionError: function (functionalEntity, action) {
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                     <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
-                                    <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                    <div class="resizing-box"></div>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -44425,9 +44557,9 @@ postActionError: function (functionalEntity, action) {
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                            <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                            <div class="resizing-box"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -44534,9 +44666,9 @@ postActionError: function (functionalEntity, action) {
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box"></div>
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
@@ -44596,9 +44728,9 @@ postActionError: function (functionalEntity, action) {
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box"></div>
                                     </div>
                                 </template>
                             </div>
@@ -44746,6 +44878,7 @@ postActionError: function (functionalEntity, action) {
             is: "tg-entity-grid-inspector",
 
             properties: {
+                mobile: Boolean,
                 /** An extrenally assigned function that accepts an instance of type Attachment as an argument and starts the download of the associated file. */
                 downloadAttachment: {
                     type: Function
@@ -44788,6 +44921,13 @@ postActionError: function (functionalEntity, action) {
                 renderingHints: {
                     type: Array,
                     observer: "_renderingHintsChanged"
+                },
+                /**
+                 * Indicates whether margin should be visible around egi or not.
+                 */
+                showMarginAround: {
+                    type: Boolean,
+                    value: true
                 },
                 /**
                  * Defines the number of visible rows.
@@ -44941,6 +45081,10 @@ postActionError: function (functionalEntity, action) {
              */
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
+                
+                //Configure device profile
+                this.mobile = this.$.appConfig.mobile;
+                
                 this._totalsRowCount = 0;
                 this._showProgress = false;
 
@@ -45806,6 +45950,15 @@ postActionError: function (functionalEntity, action) {
                 return secondaryActions && secondaryActions.length > 0;
             },
             /**
+             * Calculates the style for egi's paper material
+             */
+            _calcMaterialStyle: function (showMarginAround) {
+                if (showMarginAround) {
+                    return "margin:10px;";
+                }
+                return "";
+            },
+            /**
              * Calculates the column's header style.
              */
             _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, index, numOfFixedCols) {
@@ -46257,7 +46410,7 @@ postActionError: function (functionalEntity, action) {
             _startColumnResize: function (e) {
                 //Change the style to visualise column resizing.
                 //this.style.cursor = "col-resize";
-                e.target.classList.toggle("resizing-action", true);
+                e.currentTarget.classList.toggle("resizing-action", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
                 const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
@@ -46279,14 +46432,14 @@ postActionError: function (functionalEntity, action) {
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
                     otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length, () => true, () => true, () => true),
-                    widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth,
+                    widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
-
+            
             _trackColumnSize: function (e) {
                 if (this._columnResizingObject) {
-                    const columnWidth = e.target.previousElementSibling.offsetWidth;
+                    const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
                     let newWidth = columnWidth + e.detail.ddx;
                     //Correct size for mouse out of EGI.
                     const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
@@ -46338,7 +46491,7 @@ postActionError: function (functionalEntity, action) {
 
             _endColumnResizing: function (e) {
                 //this.style.cursor = "default";
-                e.target.classList.toggle("resizing-action", false);
+                e.currentTarget.classList.toggle("resizing-action", false);
                 if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
@@ -46354,27 +46507,24 @@ postActionError: function (functionalEntity, action) {
                 if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
                     this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
-                delete this._columnResizingObject;
+                this._columnResizingObject = null;
             },
 
             _makeEgiUnselectable: function (e) {
+                if (this.$.appConfig.mobile) {
+                    e.currentTarget.classList.toggle("resizing-action", true);
+                    console.log("set resizing action");
+                }
                 this.$.baseContainer.classList.toggle("noselect", true);
                 document.body.style["cursor"] = "col-resize";
             },
 
             _makeEgiSelectable: function (e) {
+                if (this.$.appConfig.mobile) {
+                    e.currentTarget.classList.toggle("resizing-action", false);
+                }
                 this.$.baseContainer.classList.toggle("noselect", false);
                 document.body.style["cursor"] = "";
-            },
-
-            _showResizingCue: function (e) {
-                if (!e.buttons) {
-                    e.currentTarget.classList.toggle("resizing-column", true);
-                }
-            },
-
-            _hideResizingCue: function (e) {
-                e.currentTarget.classList.toggle("resizing-column", false);
             }
         })
     })()
@@ -48399,6 +48549,7 @@ postActionError: function (functionalEntity, action) {
         }
         iron-pages {
             overflow: auto;
+            -webkit-overflow-scrolling: touch;
             position: absolute;
             top: 0px;
             left: 0px;
@@ -48406,7 +48557,7 @@ postActionError: function (functionalEntity, action) {
             bottom: 0px;
         }
         paper-material {
-            margin: 10px;
+            /*margin: 10px;*/
             border-radius: 2px;
             max-height: 100%;
             overflow: hidden;
@@ -49466,6 +49617,9 @@ postActionError: function (functionalEntity, action) {
 
                 self._selectedView = 0;
                 self._showProgress = false;
+                //Configures the egi's margin.
+                const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                this.$.egi.showMarginAround = insertionPoints.length > 0;
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
                     if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
