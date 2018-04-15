@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.mail;
 
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -472,21 +473,21 @@ public class SmtpEmailSender {
         // alteredBody, which are present
         final String alteredBody = emailType.alterBody(body, optionalT2Stream1);
         // Stream files, which are present
-        final Stream<T2<File, String>> fileStream = optionalT2Stream2.filter(t2 -> t2._1.isPresent()).map(t2 -> new T2<>(t2._1.get(), t2._2));
-        return new T2<>(alteredBody.toString(), fileStream);
+        final Stream<T2<File, String>> fileStream = optionalT2Stream2.filter(t2 -> t2._1.isPresent()).map(t2 -> t2(t2._1.get(), t2._2));
+        return t2(alteredBody.toString(), fileStream);
     }
 
     private Stream<T2<Optional<File>, String>> makeOptionalT2Stream(final IAttachment coAttachment, final Attachment[] attachments) {
-        return Stream.of(attachments).map(attachment -> new T2<>(coAttachment.asFile(attachment), attachment.getOrigFileName()));
+        return Stream.of(attachments).map(attachment -> t2(coAttachment.asFile(attachment), attachment.getOrigFileName()));
     }
 
     private Stream<T2<Optional<File>, String>> makeOptionalT2Stream(final Path[] filePaths) {
         return Stream.of(filePaths).map(path -> {
             final File file = path.toFile();
             if (file.exists() && file.canRead()) {
-                return new T2<>(Optional.of(file), file.getName());
+                return t2(Optional.of(file), file.getName());
             } else {
-                return new T2<Optional<File>, String>(Optional.empty(), file.getName());
+                return t2(Optional.empty(), file.getName());
             }
         });
     }
@@ -522,7 +523,6 @@ public class SmtpEmailSender {
         textPart.setContent(messageText, "text/plain; charset=\"utf-8\"");
         parent.addBodyPart(textPart);
     }
-
 
     public static void main(final String[] args) {
         final SmtpEmailSender sender = new SmtpEmailSender("192.168.1.8");
