@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -25,7 +25,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * If any of those properties is empty then no association would occur, no error would get thrown.
  * <p>
  * It is required that the companion object for master entity implements contract {@link ICanAttach}, which is only checked at runtime.
- * 
+ *
  * @author TG Team
  *
  */
@@ -36,8 +36,8 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
 
     @IsProperty
     @Title(value = "Master", desc = "Master entity, if any, that is used to associte attachments with.")
-    private AbstractPersistentEntity<?> masterEntity;
-    
+    private AbstractEntity<?> masterEntity;
+
     @IsProperty
     @MapTo
     @Title("Chosen Property Name")
@@ -45,7 +45,7 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
 
     @IsProperty(Attachment.class)
     @Title(value = "Attachments", desc = "Attachments to be associated with the master entity.")
-    private Set<Long> attachmentIds = new HashSet<>();
+    private final Set<Long> attachmentIds = new HashSet<>();
 
     @IsProperty
     @Title(value = "Attachment", desc = "The last attachment instance in a set of uploaded attachments.")
@@ -55,11 +55,11 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
     protected AttachmentsUploadAction() {
         setKey(NO_KEY);
     }
-    
+
     @Observable
     protected AttachmentsUploadAction setAttachmentIds(final Set<Long> attachments) {
-        this.attachmentIds.clear();
-        this.attachmentIds.addAll(attachments);
+        attachmentIds.clear();
+        attachmentIds.addAll(attachments);
         return this;
     }
 
@@ -68,12 +68,12 @@ public class AttachmentsUploadAction extends AbstractFunctionalEntityWithCentreC
     }
 
     @Observable
-    public AttachmentsUploadAction setMasterEntity(final AbstractPersistentEntity<?> masterEntity) {
+    public AttachmentsUploadAction setMasterEntity(final AbstractEntity<?> masterEntity) {
         this.masterEntity = masterEntity;
         return this;
     }
 
-    public AbstractPersistentEntity<?> getMasterEntity() {
+    public AbstractEntity<?> getMasterEntity() {
         return masterEntity;
     }
 
