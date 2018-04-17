@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -28,7 +29,9 @@ public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithCo
 
     @Override
     protected AttachmentsUploadAction provideDefaultValues(final AttachmentsUploadAction entity) {
-        if (masterEntityNotEmpty() && masterEntityInstanceOf(AbstractEntity.class)) {
+        if (masterEntityNotEmpty() && masterEntityInstanceOf(AbstractEntity.class) &&
+            // Entities that represent menu items should not be considered -- their key will be considered on the next branch
+            !masterEntityInstanceOf(AbstractFunctionalEntityForCompoundMenuItem.class)) {
             // first assign the master entity
             final AbstractEntity<?> masterEntity = masterEntity();
             entity.setMasterEntity(masterEntity);
@@ -45,7 +48,6 @@ public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithCo
                     }
                 }
             }
-
         } else if (keyOfMasterEntityInstanceOf(AbstractEntity.class)) {
             entity.setMasterEntity(keyOfMasterEntity(AbstractEntity.class));
         } else if (selectedEntitiesOnlyOne()) {
