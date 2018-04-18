@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.SortedSet;
 
@@ -37,21 +38,28 @@ public interface IDomainDrivenData {
     <T> T getInstance(final Class<T> type);
 
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type);
-    
+
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type);
 
     Date date(final String dateTime);
 
     DateTime dateTime(final String dateTime);
-    
+
+    default BigDecimal decimal(final String value) {
+        return new BigDecimal(value);
+    }
+
+    default Integer integer(final String value) {
+        return Integer.valueOf(value);
+    }
+
     default boolean saveDataPopulationScriptToFile() {
         return false;
     }
-    
+
     default boolean useSavedDataPopulationScript() {
         return false;
     }
-
 
     default void setupUser(final User.system_users defaultUser, final String emailDomain) {
         if (useSavedDataPopulationScript()) {

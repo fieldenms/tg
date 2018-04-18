@@ -253,7 +253,8 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
     
     /**
-     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same if the one being assigned.
+     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same as the one being assigned.
+     *
      * @param value -- the value to be assigned.
      * @param enforce -- will force value assignment (with all the BCE and ACE related logic) even if it matches the current value
      */
