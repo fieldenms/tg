@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.io.ByteArrayOutputStream;
@@ -42,7 +44,7 @@ import ua.com.fielden.platform.ddl.MetadataProvider;
  *
  */
 public class DbUtils {
-    private final static Logger LOGGER = Logger.getLogger(DbUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(DbUtils.class);
     
     private DbUtils() {}
 
@@ -61,9 +63,9 @@ public class DbUtils {
                 try (final PreparedStatement preparedStatement = connection.prepareStatement( dialect.getSequenceNextValString(seqName));
                      final ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
-                        return Optional.ofNullable(rs.getLong(1));
+                        return ofNullable(rs.getLong(1));
                     } else {
-                        return Optional.empty();
+                        return empty();
                     }
                 }
             }
