@@ -102,7 +102,7 @@
         <tg-reflector id="reflector"></tg-reflector>
         <content id="menuItemActions" select=".menu-item-action"></content>
         
-        <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
+        <paper-drawer-panel id="paperDrawerPanel" disable-swipe="[[!mobile]]">
             <paper-scroll-header-panel drawer fixed id="drawer">
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
                     <content id="menuItems" select=".menu-item"></content>
@@ -125,6 +125,7 @@
         is: 'tg-master-menu',
 
         properties: {
+            mobile: Boolean,
         	sectionTitle: {
         		type: String,
         		value: '[[sectionTitle]]',
@@ -260,6 +261,8 @@
             }).bind(self);
             // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
             this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
+            //Configure the profile mobile or desktop
+            this.mobile = this.$.appConfig.mobile;
         }, // end of ready 
         
         attached: function () {
@@ -344,7 +347,8 @@
             this.fire('tg-dynamic-title-changed', this.sectionTitle);
             this.fire('tg-menu-appeared', {
                 appeared: true,
-                func: self._toggleMenu.bind(self)
+                func: self._toggleMenu.bind(self),
+                drawer: self.$.paperDrawerPanel
             });
         },
         

@@ -36,6 +36,7 @@
     .date-picker {
         line-height: normal;
         overflow: auto;
+        -webkit-overflow-scrolling: touch;
     }
 </style>
 <dom-module id="tg-datetime-picker">
@@ -93,7 +94,7 @@
     			disabled$="[[_disabled]]"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <content class=".property-action"></content>
-            <paper-icon-button id="openCalendarButton" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
+            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
     </template>
 </dom-module>
@@ -248,12 +249,14 @@
             },
 
             _showCalendar: function (e) {
-                var mve = this._createCalendarDialog();
-                Polymer.dom(document.body).appendChild(mve);
-                Polymer.dom.flush();
-                
-                this.$.openCalendarButton.disabled = true;
-                mve.open();
+                if (!this._isCalendarOpen) {
+                    this._isCalendarOpen = true;
+                    var mve = this._createCalendarDialog();
+                    Polymer.dom(document.body).appendChild(mve);
+                    Polymer.dom.flush();
+                    //Opening date picker dialog itself.
+                    mve.open();
+                }
             },
             
             _isCalendarDisabled: function (_disabled, datePortion) {
@@ -276,9 +279,9 @@
             		Polymer.dom(document.body).removeChild(this);
             		Polymer.dom.flush();
                     
-                    //Setting focus on input and restoring icon button state.
-                    self.$.openCalendarButton.disabled = false;
+                    //Setting focus on input.
                     self.decoratedInput().focus();
+                    self._isCalendarOpen = false;
             	}.bind(domBind);
             	
             	domBind._acceptDateBind = function() {

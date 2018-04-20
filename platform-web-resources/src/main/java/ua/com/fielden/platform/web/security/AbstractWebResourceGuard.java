@@ -71,6 +71,12 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
     @Override
     public boolean authenticate(final Request request, final Response response) {
+        // uncomment following lines to be able to use http (StartOverHttp) server instead of https (Start) server for development purposes:
+//        if(true) {
+//            final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
+//            userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
+//            return true;
+//        }
         try {
             logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
 
