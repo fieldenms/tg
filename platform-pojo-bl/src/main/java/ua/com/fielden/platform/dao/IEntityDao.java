@@ -2,16 +2,20 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.companion.IPersistentEntityMutator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
 
 /**
  * The contract for any Entity Companion object to implement. It extends both {@link IEntityReader} and {@link IPersistentEntityMutator} contracts.
- * 
+ *
  * @author TG Team
  *
  */
@@ -51,7 +55,15 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
     default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         throw new UnsupportedOperationException("This method should be overriden by descendants.");
     }
-    
+
+    @Override
+    default <E extends AbstractEntity<?>, O extends AbstractEntity<?>> Optional<E> fetchEntityForPropOf(final String propName, final Class<O> entityType, final Object... keyValues) {
+        final Class<E> entityClass = (Class<E>) PropertyTypeDeterminator.determinePropertyType(entityType, propName);
+        final IFetchProvider<O> fetchProvider = co(entityType).getFetchProvider();
+        final fetch<E> eFetch = fetchProvider.<E> fetchFor(propName).fetchModel();
+        return co(entityClass).findByKeyAndFetchOptional(eFetch, keyValues);
+    }
+
     /**
      * Returns provided name.
      *
@@ -65,7 +77,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      * @return
      */
     abstract User getUser();
-    
+
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>

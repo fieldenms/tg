@@ -15,7 +15,7 @@ import ua.com.fielden.platform.pagination.IPage;
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
  * It provides various methods to read entities from a persistent data store.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -36,6 +36,25 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     IFetchProvider<T> getFetchProvider();
 
     /**
+     * A convenient method to fetch an optional instance of entity, which is
+     * intended to be used to populate a value of the specified property of some
+     * other entity, using the fetch model as defined by the fetch provider of
+     * that other entity.
+     * <p>
+     * For example:
+     *
+     * <pre>
+     * final WorkActivityType waType = fetchEntityForPropOf("waType", WorkActivity.class, "FU").orElseThrow(...);
+     * </pre>
+     *
+     * @param propName
+     * @param entityType
+     * @param keyValues
+     * @return
+     */
+    <E extends AbstractEntity<?>, O extends AbstractEntity<?>> Optional<E> fetchEntityForPropOf(final String propName, final Class<O> entityType, final Object... keyValues);
+
+    /**
      * Should return true if entity with provided id and version value is stale, i.e. its version is older then the latest persisted entity with the same id.
      *
      * @param entityId
@@ -54,9 +73,9 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findById(final Long id, final fetch<T> fetchModel);
-    
+
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
-        return Optional.ofNullable(findById(id, fetchModel)); 
+        return Optional.ofNullable(findById(id, fetchModel));
     }
 
     /**
@@ -69,7 +88,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findById(final Long id);
-    
+
     default Optional<T> findByIdOptional(final Long id) {
         return Optional.ofNullable(findById(id));
     }
@@ -82,7 +101,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findByKey(final Object... keyValues);
-    
+
     default Optional<T> findByKeyOptional(final Object... keyValues) {
         return Optional.ofNullable(findByKey(keyValues));
     }
@@ -95,7 +114,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
-    
+
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
         return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
     }
@@ -108,7 +127,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
-    
+
     default Optional<T> findByEntityAndFetchOptional(final fetch<T> fetchModel, final T entity) {
         return Optional.ofNullable(findByEntityAndFetch(fetchModel, entity));
     }
@@ -190,7 +209,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
             return Optional.empty();
         }
     }
-    
+
     /**
      * Should return true if the passed entity exists in the persistent state.
      *
