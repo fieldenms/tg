@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -40,6 +41,7 @@ import org.joda.time.DateTime;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
@@ -53,10 +55,12 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -118,10 +122,10 @@ public class EntityUtils {
         }
         return toString(value, value.getClass());
     }
-    
+
     /**
      * Converts {@link Number} to {@link BigDecimal} with the specified {@code scale}.
-     * 
+     *
      * @param number
      * @return
      */
@@ -132,10 +136,10 @@ public class EntityUtils {
         }
         return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
     }
-    
+
     /**
      * The same as {@link #toDecimal(Number, int)}, but with scale set to 2.
-     * 
+     *
      * @param number
      * @return
      */
@@ -1285,6 +1289,73 @@ public class EntityUtils {
      */
     public static String getEntityIdentity(final AbstractEntity<?> entity) {
         return entity.getType().getName() + System.identityHashCode(entity);
+    }
+
+    /**
+     * A convenient method to fetch using keyValues an optional instance of
+     * entity, which is intended to be used to populate a value of the specified
+     * property of some other entity, using the fetch model as defined by the
+     * fetch provider of that other entity.
+     * <p>
+     * For example:
+     *
+     * <pre>
+     * final WorkActivityType waType = fetchEntityForPropOf("waType", coWorkActivity, "FU").orElseThrow(...);
+     * </pre>
+     *
+     * @param propName
+     * @param coOther
+     * @param keyValues
+     * @return
+     */
+    public static <E extends AbstractEntity<?>, O extends AbstractEntity<?>> Optional<E> fetchEntityForPropOf(final String propName, final IEntityDao<O> coOther, final Object... keyValues) {
+        final Class<E> entityClass = (Class<E>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
+        final fetch<E> eFetch = coOther.getFetchProvider().<E> fetchFor(propName).fetchModel();
+        return coOther.co(entityClass).findByKeyAndFetchOptional(eFetch, keyValues);
+    }
+
+    /**
+     * A convenient method to fetch using id an optional instance of entity,
+     * which is intended to be used to populate a value of the specified
+     * property of some other entity, using the fetch model as defined by the
+     * fetch provider of that other entity.
+     * <p>
+     * For example:
+     *
+     * <pre>
+     * final PmRoutine pmRoutine = EntityUtils.fetchEntityForPropOf(pmId, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
+     * </pre>
+     *
+     * @param propName
+     * @param coOther
+     * @param keyValues
+     * @return
+     */
+    public static <E extends AbstractEntity<?>, O extends AbstractEntity<?>> Optional<E> fetchEntityForPropOf(final Long id, final String propName, final IEntityDao<O> coOther) {
+        final Class<E> entityClass = (Class<E>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
+        final fetch<E> eFetch = coOther.getFetchProvider().<E> fetchFor(propName).fetchModel();
+        return coOther.co(entityClass).findByIdOptional(id, eFetch);
+    }
+
+    /**
+     * A convenient method to fetch using an existing entity instance an
+     * optional instance of entity, which is intended to be used to populate a
+     * value of the specified property of some other entity, using the fetch
+     * model as defined by the fetch provider of that other entity.
+     * <p>
+     * For example:
+     *
+     * <pre>
+     * final PmRoutine freshPmRoutine = EntityUtils.fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
+     * </pre>
+     *
+     * @param propName
+     * @param coOther
+     * @param keyValues
+     * @return
+     */
+    public static <E extends AbstractEntity<?>, O extends AbstractEntity<?>> Optional<E> fetchEntityForPropOf(final E instance, final String propName, final IEntityDao<O> coOther) {
+        return fetchEntityForPropOf(instance.getId(), propName, coOther);
     }
 
 }

@@ -36,25 +36,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     IFetchProvider<T> getFetchProvider();
 
     /**
-     * A convenient method to fetch an optional instance of entity, which is
-     * intended to be used to populate a value of the specified property of some
-     * other entity, using the fetch model as defined by the fetch provider of
-     * that other entity.
-     * <p>
-     * For example:
-     *
-     * <pre>
-     * final WorkActivityType waType = fetchEntityForPropOf("waType", WorkActivity.class, "FU").orElseThrow(...);
-     * </pre>
-     *
-     * @param propName
-     * @param entityType
-     * @param keyValues
-     * @return
-     */
-    <E extends AbstractEntity<?>, O extends AbstractEntity<?>> Optional<E> fetchEntityForPropOf(final String propName, final Class<O> entityType, final Object... keyValues);
-
-    /**
      * Should return true if entity with provided id and version value is stale, i.e. its version is older then the latest persisted entity with the same id.
      *
      * @param entityId
