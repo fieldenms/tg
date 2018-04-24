@@ -28,6 +28,8 @@ import ua.com.fielden.platform.entity.EntityNewActionDao;
 import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
+import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
+import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -215,6 +217,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
+        bind(ISecurityMatrixInsertionPoint.class).to(SecurityMatrixInsertionPointDao.class);
 
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
