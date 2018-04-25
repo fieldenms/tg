@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/components/tg-tree-table.html">
+<link rel='import' href='/resources/master/actions/tg-action.html'>
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 
@@ -25,7 +26,9 @@
                 <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]">
                     <!-- columns goes here also hierarchy column -->
                 </tg-tree-table>
-                <div class="layout horizontal center-justified">
+                <div class="layout horizontal center-justified" style="padding:20px;">
+                    <tg-action enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='[[_actions.REFRESH.shortDesc]]' long-desc='[[_actions.REFRESH.longDesc]]' current-state='[[currentState]]' shortcut='ctrl+r meta+r' role='refresh' action='[[_actions.REFRESH.action]]' post-action='{{_postRetrievedDefault}}' post-action-error='{{_postRetrievedDefaultError}}' style="margin:10px;"></tg-action>
+                    <tg-action enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='[[_actions.SAVE.shortDesc]]' long-desc='[[_actions.SAVE.longDesc]]' current-state='[[currentState]]' shortcut='ctrl+s meta+s' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                     <!-- save and cancel buttons goes here -->
                 </div>
                 <div class="lock-layer fit" lock$="[[lock]]"></div>
@@ -72,7 +75,12 @@
                     });
                 },
 
-                _entityChanged: function () {}
+                _entityChanged: function (newBindingEntity, oldOne) {
+                    const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
+                    if (newEntity) {
+                        console.log(newEntity);
+                    }
+                },
 
             });
         })();

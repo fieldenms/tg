@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -26,9 +27,11 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
     private final SecurityTokenProvider tokenProvider;
 
     @Inject
-    public SecurityMatrixInsertionPointDao(final IFilter filter, final SecurityTokenProvider tokenProvider) {
+    public SecurityMatrixInsertionPointDao(final IFilter filter,
+            @Named("tokens.path") final String tokenPath,
+            @Named("tokens.package") final String tokenPackage) {
         super(filter);
-        this.tokenProvider = tokenProvider;
+        this.tokenProvider = new SecurityTokenProvider(tokenPath, tokenPackage);
     }
 
     @Override

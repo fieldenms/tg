@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.ui.menu.security.MiSecurityMatrix;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -32,6 +33,11 @@ public class SecurityMatrixWebUiConfig {
         builder.register(centre);
 
         builder.register(createSecurityMatrixInsertionPoint(injector));
+        builder.register(createSecurityMatrixSaveActionMaster(injector));
+    }
+
+    private EntityMaster<SecurityMatrixSaveAction> createSecurityMatrixSaveActionMaster(final Injector injector) {
+        return new EntityMaster<>(SecurityMatrixSaveAction.class, null, null, injector);
     }
 
     private EntityMaster<SecurityMatrixInsertionPoint> createSecurityMatrixInsertionPoint(final Injector injector) {
