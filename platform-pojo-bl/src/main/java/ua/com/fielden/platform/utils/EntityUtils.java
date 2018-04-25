@@ -41,6 +41,7 @@ import org.joda.time.DateTime;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -1308,7 +1309,7 @@ public class EntityUtils {
      * @param keyValues
      * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final String propName, final IEntityDao<?> coOther, final Object... keyValues) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final String propName, final IEntityReader<?> coOther, final Object... keyValues) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByKeyAndFetchOptional(eFetch, keyValues);
@@ -1331,7 +1332,7 @@ public class EntityUtils {
      * @param keyValues
      * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final String propName, final IEntityDao<?> coOther) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final String propName, final IEntityReader<?> coOther) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByIdOptional(id, eFetch);
@@ -1346,7 +1347,7 @@ public class EntityUtils {
      * For example:
      *
      * <pre>
-     * final PmRoutine freshPmRoutine = EntityUtils.fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
+     * final PmRoutine freshPmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
      *
      * @param propName
@@ -1354,7 +1355,7 @@ public class EntityUtils {
      * @param keyValues
      * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityDao<?> coOther) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityReader<?> coOther) {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
     }
 
