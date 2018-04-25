@@ -29,7 +29,11 @@ import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
+import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
+import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
+import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -218,6 +222,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ISecurityMatrixInsertionPoint.class).to(SecurityMatrixInsertionPointDao.class);
+        bind(ISecurityTokenTreeNodeEntity.class).to(SecurityTokenTreeNodeEntityDao.class);
+        bind(ISecurityMatrixSaveAction.class).to(SecurityMatrixSaveActionDao.class);
 
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);

@@ -1,0 +1,80 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tg-tree-table.html">
+<link rel="import" href="/resources/master/tg-entity-master.html">
+<link rel="import" href="/resources/master/tg-entity-master-behavior.html">
+
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
+
+<dom-module id="tg-security-matrix">
+    <template>
+        <style>
+            :host {
+                height: 100%;
+                width: 100%;
+                @apply(--layout-vertical);
+
+            }
+        </style>
+        <tg-entity-master id="masterDom" entity-type="[[entityType]]" entity-id="new" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _saver-loading="{{_saverLoading}}">
+            <div style="width:100%;height:100%" class="relative layout vertical">
+                <div>
+                    <!-- filtering editors goes here -->
+                </div>
+                <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]">
+                    <!-- columns goes here also hierarchy column -->
+                </tg-tree-table>
+                <div class="layout horizontal center-justified">
+                    <!-- save and cancel buttons goes here -->
+                </div>
+                <div class="lock-layer fit" lock$="[[lock]]"></div>
+            </div>
+        </tg-entity-master>
+    </template>
+    <script>
+        (function () {
+            'use strict'
+            Polymer({
+                is: 'tg-security-matrix',
+
+                behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgEntityMasterBehavior],
+
+                properties: {
+                    entityType: String,
+
+                    /**
+                     * The entity that comes from insertion point and holds the information for schduling.
+                     */
+                    entity: {
+                        type: Object,
+                        observer: "_entityChanged"
+                    },
+                    /**
+                     * Need for locking schduling component during insertion point activation or refreshing.
+                     */
+                    lock: {
+                        type: Boolean,
+                        value: false
+                    }
+                },
+
+                ready: function () {
+                    //Configuring the security matrix master
+                    this.entityType = "ua.com.fielden.platform.entity.SecurityMatrixSaveAction"
+                },
+
+                attached: function () {
+                    this.async(function () {
+                        if (!this._currBindingEntity) {
+                            this.retrieve();
+                        }
+                    });
+                },
+
+                _entityChanged: function () {}
+
+            });
+        })();
+    </script>
+</dom-module>
