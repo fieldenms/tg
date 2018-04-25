@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -67,6 +70,36 @@ public class FinalPersistentOnlyPropsValidationTest extends AbstractDaoTestCase 
         assertTrue(cat.getProperty("finalProp").isValid());
         assertEquals(Integer.valueOf(42), cat.getFinalProp());
         assertTrue(cat.getProperty("finalProp").isEditable());
+    }
+
+    @Test
+    public void immediately_final_prooperty_becomes_non_editable_immediately_upon_assignment_for_a_persisted_entity() {
+        final TgCategory catBeforChanged = co$(TgCategory.class).findByKey("Cat1");
+        assertTrue(catBeforChanged.getProperty("immediatelyFinalProp").isEditable());
+        assertNull(catBeforChanged.getImmediatelyFinalProp());
+        
+        catBeforChanged.setImmediatelyFinalProp(42);
+        assertFalse(catBeforChanged.getProperty("immediatelyFinalProp").isEditable());
+        assertEquals(Integer.valueOf(42), catBeforChanged.getImmediatelyFinalProp());
+        
+        catBeforChanged.setImmediatelyFinalProp(43);
+        assertFalse(catBeforChanged.getProperty("immediatelyFinalProp").isValid());
+        assertEquals(Integer.valueOf(42), catBeforChanged.getImmediatelyFinalProp());
+    }
+    
+    @Test
+    public void immediately_final_prooperty_becomes_non_editable_immediately_upon_assignment_for_a_new_entity() {
+        final TgCategory newCat = new_(TgCategory.class, "Cat1");
+        assertTrue(newCat.getProperty("immediatelyFinalProp").isEditable());
+        assertNull(newCat.getImmediatelyFinalProp());
+        
+        newCat.setImmediatelyFinalProp(42);
+        assertFalse(newCat.getProperty("immediatelyFinalProp").isEditable());
+        assertEquals(Integer.valueOf(42), newCat.getImmediatelyFinalProp());
+        
+        newCat.setImmediatelyFinalProp(43);
+        assertFalse(newCat.getProperty("immediatelyFinalProp").isValid());
+        assertEquals(Integer.valueOf(42), newCat.getImmediatelyFinalProp());
     }
 
     @Override

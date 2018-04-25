@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.SortedSet;
 
@@ -24,34 +25,43 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 public interface IDomainDrivenData {
 
+    public static final String SUPER_SECRET_PASSWORD = "cooking with rocket fuel";
+
     <T extends AbstractEntity<?>> T save(final T instance);
 
-    <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass);
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass);
 
-    <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key);
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key);
 
-    <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc);
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc);
 
     <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys);
 
     <T> T getInstance(final Class<T> type);
 
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type);
-    
+
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type);
 
     Date date(final String dateTime);
 
     DateTime dateTime(final String dateTime);
-    
+
+    default BigDecimal decimal(final String value) {
+        return new BigDecimal(value);
+    }
+
+    default Integer integer(final String value) {
+        return Integer.valueOf(value);
+    }
+
     default boolean saveDataPopulationScriptToFile() {
         return false;
     }
-    
+
     default boolean useSavedDataPopulationScript() {
         return false;
     }
-
 
     default void setupUser(final User.system_users defaultUser, final String emailDomain) {
         if (useSavedDataPopulationScript()) {
@@ -69,7 +79,7 @@ public interface IDomainDrivenData {
             up.setUser(u);
 
             final User _su = coUser.save(new_(User.class, defaultUser.name()).setBase(true).setEmail(defaultUser + "@" + emailDomain).setActive(true));
-            final User su = coUser.resetPasswd(_su, _su.getKey());
+            final User su = coUser.resetPasswd(_su, SUPER_SECRET_PASSWORD);
 
             final UserRole admin = save(new_(UserRole.class, "ADMIN", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
 
@@ -79,7 +89,7 @@ public interface IDomainDrivenData {
                 final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
                 final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
                 final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-                final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+                final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
                 for (final SecurityTokenNode securityNode : topNodes) {
                     alg.search(securityNode, predicate);
                 }

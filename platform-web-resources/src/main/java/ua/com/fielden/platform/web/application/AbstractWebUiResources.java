@@ -34,12 +34,15 @@ import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFact
 import ua.com.fielden.platform.web.factories.webui.TgElementLoaderComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
 /**
- * Represents the web application that is running on the server as a resource provider for browser client. Extend this abstract web application in order to provide custom entity
- * centres, entity masters and other custom views.
+ * Represents a web application that is running on the server.
+ * It is responsible for request routing and serving web resources.
+ * <p>
+ * This abstract implementation should be extend in concrete TG-based web applications to registers domain specific entity centres, entity masters and other views.
  *
  * @author TG Team
  *
@@ -50,6 +53,8 @@ public abstract class AbstractWebUiResources extends Application {
     protected final Logger logger = Logger.getLogger(getClass());
     private final IWebUiConfig webApp;
     private final ISourceController sourceController;
+    protected final IUserProvider userProvider;
+    protected final IDeviceProvider deviceProvider;
 
     /**
      * Creates an instance of {@link AbstractWebUiResources} with custom application name, description, author, owner and resource paths.
@@ -83,13 +88,14 @@ public abstract class AbstractWebUiResources extends Application {
         this.injector = injector;
 
         this.sourceController = injector.getInstance(ISourceController.class);
+        this.userProvider = injector.getInstance(IUserProvider.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
 
         setName(appName);
         setDescription(desc);
         setOwner(owner);
         setAuthor(author);
     }
-
 
     /**
      * An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
@@ -102,7 +108,7 @@ public abstract class AbstractWebUiResources extends Application {
     }
 
     /**
-     * Creates router and configures it with default resources and their paths.
+     * Creates the application router and configures it with default web resources.
      *
      */
     @Override
@@ -113,13 +119,13 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(sourceController, restUtil, injector.getInstance(IServerGlobalDomainTreeManager.class), webApp, injector.getInstance(IUserProvider.class)));
-        router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController, restUtil));
-        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, restUtil));
+        router.attach("/", new AppIndexResourceFactory(sourceController, injector.getInstance(IServerGlobalDomainTreeManager.class), webApp, userProvider, deviceProvider));
+        router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
-        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(sourceController, restUtil));
-        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(sourceController, restUtil));
-        router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, restUtil));
+        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
@@ -172,11 +178,11 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
         router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
         router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(injector));
-        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(sourceController, restUtil));
+        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(sourceController, restUtil, deviceProvider));
     }
 
     private void attachCustomViewResources(final Router router, final RestServerUtil restUtil) {
-        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(sourceController, restUtil));
+        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(sourceController, restUtil, deviceProvider));
     }
 
     /**
@@ -200,8 +206,8 @@ public abstract class AbstractWebUiResources extends Application {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}", new CentreResourceFactory(webUiConfig, injector));
-        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil));
-        router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(sourceController, restUtil));
+        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil, deviceProvider));
+        router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(sourceController, restUtil, deviceProvider));
     }
 
     /**
@@ -211,6 +217,6 @@ public abstract class AbstractWebUiResources extends Application {
      */
     private void attachResources(final Router router, final RestServerUtil restUtil) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
-        router.attach("/resources/", new FileResourceFactory(sourceController, restUtil, webApp.resourcePaths()), Template.MODE_STARTS_WITH);
+        router.attach("/resources/", new FileResourceFactory(sourceController, webApp.resourcePaths(), deviceProvider), Template.MODE_STARTS_WITH);
     }
 }

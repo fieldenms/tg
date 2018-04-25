@@ -13,9 +13,11 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
-import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Represents web server resource that returns custom view component for specified view name to the client.
@@ -23,9 +25,11 @@ import com.google.common.base.Charsets;
  * @author TG Team
  *
  */
-public class CustomViewResource extends DeviceProfileDifferentiatorResource {
+public class CustomViewResource extends AbstractWebResource {
     private final String viewName;
-
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
+    
     /**
      * Creates {@link CustomViewResource} and initialises it view name.
      *
@@ -37,19 +41,22 @@ public class CustomViewResource extends DeviceProfileDifferentiatorResource {
     public CustomViewResource(
             final ISourceController sourceController,//
             final RestServerUtil restUtil,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response, deviceProvider);
         this.viewName = (String) request.getAttributes().get("viewName");
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
 
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController().loadSource("/custom_view/" + this.viewName, deviceProfile());
+            final String source = sourceController.loadSource("/custom_view/" + this.viewName, device());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
-        }, restUtil());
+        }, restUtil);
     }
 }

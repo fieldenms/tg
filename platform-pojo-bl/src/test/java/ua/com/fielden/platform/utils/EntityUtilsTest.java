@@ -20,12 +20,20 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
+import static ua.com.fielden.platform.utils.EntityUtils.toDecimal;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -271,6 +279,62 @@ public class EntityUtilsTest {
     @Test(expected = NoSuchElementException.class)
     public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
         coalesce(null, null, null /*this is an array argument*/);
+    }
+
+    @Test
+    public void equalEx_considers_type_hierchies_before_calling_equals() {
+        final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        final Date date = jodaFormatter.parseDateTime("2023-10-10 00:00:00").toDate();
+        final Timestamp timestamp = new Timestamp(date.getTime());
+
+        assertTrue(date.equals(timestamp));
+        assertFalse(timestamp.equals(date));
+        assertTrue(EntityUtils.equalsEx(timestamp, date));
+        assertTrue(EntityUtils.equalsEx(date, timestamp));
+    }
+
+    @Test
+    public void equalEx_supports_coerstion_of_joda_datetime_to_date() {
+        final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        final DateTime dateTime = jodaFormatter.parseDateTime("2023-10-10 00:00:00");
+        final Date date = dateTime.toDate();
+        final Timestamp timestamp = new Timestamp(date.getTime());
+
+        assertFalse(date.equals(dateTime));
+        assertTrue(date.equals(timestamp));
+
+        assertFalse(timestamp.equals(date));
+        assertFalse(timestamp.equals(dateTime));
+
+        assertFalse(dateTime.equals(date));
+        assertFalse(dateTime.equals(timestamp));
+
+        assertTrue(EntityUtils.equalsEx(date, dateTime));
+        assertTrue(EntityUtils.equalsEx(dateTime, date));
+        assertTrue(EntityUtils.equalsEx(dateTime, timestamp));
+        assertTrue(EntityUtils.equalsEx(timestamp, dateTime));
+    }
+
+    @Test
+    public void toDecimal_converts_Integer_to_BigDecimal() {
+        final Integer value = 42;
+        assertEquals(new BigDecimal(value, new MathContext(2, RoundingMode.HALF_UP)), toDecimal(value));
+        assertEquals(new BigDecimal(value, new MathContext(4, RoundingMode.HALF_UP)), toDecimal(value, 4));
+    }
+
+    @Test
+    public void toDecimal_converts_Double_to_BigDecimal() {
+        final Double value = 42.46;
+        assertEquals(new BigDecimal(value, new MathContext(2, RoundingMode.HALF_UP)), toDecimal(value));
+        assertEquals(new BigDecimal(value, new MathContext(4, RoundingMode.HALF_UP)), toDecimal(value, 4));
+    }
+
+    @Test
+    public void toDecimal_rescales_BigDecimal_only_if_needed() {
+        final BigDecimal value = new BigDecimal("42.46");
+        assertEquals(2, value.scale());
+        assertEquals(value, toDecimal(value));
+        assertEquals(value.setScale(4, RoundingMode.HALF_UP), toDecimal(value, 4));
     }
     
     @Test

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -34,6 +35,7 @@ public class EntityValidationResourceFactory extends Restlet {
     private final ICriteriaGenerator critGenerator;
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
 
     /**
      * Instantiates a factory for entity validation resources.
@@ -50,6 +52,7 @@ public class EntityValidationResourceFactory extends Restlet {
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
     }
 
     @Override
@@ -68,6 +71,7 @@ public class EntityValidationResourceFactory extends Restlet {
                     webUiConfig,
                     serverGdtm,
                     userProvider,
+                    deviceProvider,
                     getContext(),
                     request,
                     response //

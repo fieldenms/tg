@@ -27,7 +27,6 @@ import ua.com.fielden.platform.security.user.User;
 @CompanionObject(ITgPerson.class)
 @DeactivatableDependencies({TgAuthoriser.class, TgOriginator.class})
 public class TgPerson extends ActivatableAbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Invisible
@@ -46,7 +45,7 @@ public class TgPerson extends ActivatableAbstractEntity<String> {
     }
 
     /** A convenient method to identify whether the current person instance has an application user. */
-    public boolean isUser() {
+    public boolean isAUser() {
         return getUser() != null;
     }
 

@@ -27,6 +27,9 @@
         .metavalue-editor {
             padding-top: 15px;
         }
+        .criterion-container {
+            margin-right: 10px;
+        }
         .mnemonic-layer, .criterion-container ::content .mnemonic-layer {
             margin-bottom: 8px;
             margin-top: 28px;
@@ -59,6 +62,18 @@
             );
             pointer-events: none;
         }
+        #iconButton::shadow #ink {
+            width: 32px;
+            height: 32px;
+            top: -4px;
+            left: -4px;
+        }
+        #iconButton {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            margin-bottom: 8px;
+        }
     </style>
     <template>
         <tg-reflector id="reflector"></tg-reflector>
@@ -70,7 +85,7 @@
                 <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
                 <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
             </div>
-            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert" tooltip-text="Show additional criteria constraints"></paper-icon-buton>
+            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-horiz" tooltip-text="Show additional criteria constraints"></paper-icon-buton>
         </div>
     </template>
 </dom-module>

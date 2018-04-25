@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Hibernate;
+import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -195,7 +195,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
                     throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + javaType + "] is not annotated  no MapTo ");
                 }
                 final PropertyColumn column = new PropertyColumn(getColumn() + "_" + (StringUtils.isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
-                result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_ENTITY_DETAILS).hibType(Hibernate.LONG).build());
+                result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_ENTITY_DETAILS).hibType(LongType.INSTANCE).build());
             }
         }
         return result;

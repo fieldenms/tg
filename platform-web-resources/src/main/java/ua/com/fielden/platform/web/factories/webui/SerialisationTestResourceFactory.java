@@ -7,12 +7,13 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.SerialisationTestResource;
-
-import com.google.inject.Injector;
 
 /**
  * Resource factory for integration test of Java and JavaScript serialisation.
@@ -24,12 +25,14 @@ public class SerialisationTestResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final FactoryForTestingEntities testingEntitiesFactory;
     private SerialisationTestResource cachedResource;
+    private final IDeviceProvider deviceProvider;
 
     public SerialisationTestResourceFactory(final Injector injector) {
         this.restUtil = injector.getInstance(RestServerUtil.class);
         // this 'testingEntitiesFactory' should be the same across all resources! (two resources will be created during test lifecycle -- one for GET request and one for POST,
         // but they should use the same getEntities() not to create additional generated types for createGeneratedEntity() in FactoryForTestingEntities)
         this.testingEntitiesFactory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), new Date());
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
     }
 
     @Override
@@ -37,10 +40,10 @@ public class SerialisationTestResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            cachedResource = new SerialisationTestResource(restUtil, getContext(), request, response, testingEntitiesFactory);
+            cachedResource = new SerialisationTestResource(restUtil, deviceProvider, getContext(), request, response, testingEntitiesFactory);
             cachedResource.handle();
         } else if (Method.POST == request.getMethod()) {
-            new SerialisationTestResource(restUtil, getContext(), request, response, testingEntitiesFactory, cachedResource.getEntities()).handle();
+            new SerialisationTestResource(restUtil, deviceProvider, getContext(), request, response, testingEntitiesFactory, cachedResource.getEntities()).handle();
             cachedResource = null;
         }
     }

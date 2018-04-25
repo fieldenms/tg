@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.companion;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -15,12 +17,34 @@ import ua.com.fielden.platform.pagination.IPage;
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
  * It provides various methods to read entities from a persistent data store.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
  */
-public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T> {
+public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T>, IEntityStreamer<T> {
+
+    /**
+     * Should return an entity type the DAO is managing.
+     *
+     * @return
+     */
+    Class<T> getEntityType();
+
+    /**
+     * Should return entity's key type.
+     *
+     * @return
+     */
+    Class<? extends Comparable<?>> getKeyType();
+
+    /**
+     * A factory method that creates an instance of a companion object for the specified entity type.
+     * The reader methods of such companion return <code>uninstrumented</code> entities.
+     *
+     * @return
+     */
+    <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type);
 
     /**
      * Returns default {@link FetchProvider} for the entity.
@@ -54,9 +78,9 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findById(final Long id, final fetch<T> fetchModel);
-    
+
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
-        return Optional.ofNullable(findById(id, fetchModel)); 
+        return Optional.ofNullable(findById(id, fetchModel));
     }
 
     /**
@@ -69,7 +93,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findById(final Long id);
-    
+
     default Optional<T> findByIdOptional(final Long id) {
         return Optional.ofNullable(findById(id));
     }
@@ -82,7 +106,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findByKey(final Object... keyValues);
-    
+
     default Optional<T> findByKeyOptional(final Object... keyValues) {
         return Optional.ofNullable(findByKey(keyValues));
     }
@@ -95,7 +119,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
-    
+
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
         return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
     }
@@ -108,7 +132,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
-    
+
     default Optional<T> findByEntityAndFetchOptional(final fetch<T> fetchModel, final T entity) {
         return Optional.ofNullable(findByEntityAndFetch(fetchModel, entity));
     }
@@ -175,6 +199,20 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
+     * Returns all entities produced by the provided query.
+     * <p> 
+     * Getting all entities matching the query could be a very expensive operation.
+     * It should only be used if there is a certainty that the resultant list won't be too large.
+     * <p>
+     * In all other cases consider using Stream API. 
+     *
+     * @param quert
+     * @return
+     * 
+     */
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
+
+    /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
      * found then a null value is returned.
      *
@@ -184,27 +222,12 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     T getEntity(final QueryExecutionModel<T, ?> model);
 
     default Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
-        return Optional.ofNullable(getEntity(model));
+        try {
+            return Optional.ofNullable(getEntity(model));
+        } catch (final UnexpectedNumberOfReturnedEntities ex) {
+            return Optional.empty();
+        }
     }
-    
-    /**
-     * Returns a non-parallel stream with the data based on the provided query.
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     * 
-     * @param qem -- EQL model
-     * @param fetchSize -- a batch size for retrieve the next lot of data to feed the stream
-     * @return
-     */
-    Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize);
-    
-    /**
-     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default fetch size. 
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     * 
-     * @param qem
-     * @return
-     */
-    Stream<T> stream(final QueryExecutionModel<T, ?> qem);
 
     /**
      * Should return true if the passed entity exists in the persistent state.

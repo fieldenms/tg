@@ -26,6 +26,8 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  */
 public class HibernateMappingsGenerator {
     private static final Logger LOGGER = Logger.getLogger(HibernateMappingsGenerator.class);
+
+    public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     
     public String generateMappings(final DomainMetadata domainMetadata) {
         final Collection<PersistedEntityMetadata<?>> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
@@ -40,7 +42,6 @@ public class HibernateMappingsGenerator {
             try {
                 sb.append(generateEntityClassMapping(entityMetadata, domainMetadata.dbVersion));
             } catch (final Exception e) {
-                e.printStackTrace();
                 throw new RuntimeException("Couldn't generate mapping for " + entityMetadata.getType().getName() + " due to: " + e.getMessage());
             }
             sb.append("\n");
@@ -53,19 +54,8 @@ public class HibernateMappingsGenerator {
     }
 
     private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName, final DbVersion dbVersion) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        if (dbVersion != DbVersion.ORACLE) {
-            sb.append("\t\t<generator class=\"hilo\">\n");
-            sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
-            sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
-            sb.append("\t\t\t<param name=\"max_lo\">0</param>\n");
-            sb.append("\t\t</generator>\n");
-        } else {
-            sb.append("\t\t<generator class=\"sequence-identity\">\n");
-            sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
-            sb.append("\t\t</generator>\n");
-        }
         sb.append("\t</id>\n");
         return sb.toString();
     }

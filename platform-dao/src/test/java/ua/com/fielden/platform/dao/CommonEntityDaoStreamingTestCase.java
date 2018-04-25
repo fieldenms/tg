@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -17,6 +18,9 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -37,6 +41,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
 
     @Test
+    @SessionRequired
     public void streaming_of_unconditional_query_result_with_different_fetch_size_contains_all_available_entities_at_all_times() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
         final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
@@ -52,6 +57,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void there_is_streaming_API_with_default_fetch_size() {
         try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model())) {
             assertEquals("Incorrect number of entities in the stream", 4, stream.count());
@@ -59,6 +65,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void streaming_based_on_ordered_qem_should_have_the_same_traversal_order() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
         final OrderingModel orderBy = orderBy().prop("key").asc().model();
@@ -71,6 +78,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void streaming_based_on_conditional_qem_should_contain_only_matching_entities() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class)
                 .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
@@ -83,6 +91,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void stream_should_not_be_parallel() {
         try (final Stream<EntityWithMoney> streamBy3 = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model(), 2)) {
             assertFalse("The stream should not be parallel", streamBy3.isParallel());
@@ -90,6 +99,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    @SessionRequired
     public void stream_should_not_be_accecible_once_traversed() {
         final Either<Exception, Long> result = Try(() -> {
             try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model(), 2)) {
@@ -169,7 +179,43 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         assertFalse("Session should already be closed", co.getSession().isOpen());
     }
 
+    @Test
+    @SessionRequired
+    public void streaming_of_aggregates_with_default_fetch_size_is_supported() {
+        final AggregatedResultQueryModel qry = select(EntityWithMoney.class).yield().countOfDistinct().prop("desc").as("kount").modelAsAggregate();
+        
+        final List<EntityAggregates> values;
+        try (final Stream<EntityAggregates> stream = co(EntityAggregates.class).stream(from(qry).model())) {
+            values = stream.collect(toList());
+            
+        }
+        assertEquals(1, values.size());
+        assertEquals(2, values.get(0).<Number>get("kount").intValue());
+    }
+
+    @Test
+    @SessionRequired
+    public void streaming_of_aggregates_with_custom_fetch_size_is_supported() {
+        final AggregatedResultQueryModel qry = select(EntityWithMoney.class).
+                groupBy().prop("desc").
+                yield().prop("desc").as("distinctDesc").
+                yield().countAll().as("kount").
+                modelAsAggregate();
+        final OrderingModel orderByDesc = orderBy().yield("distinctDesc").asc().model();
+        
+        final List<EntityAggregates> values;
+        try (final Stream<EntityAggregates> stream = co(EntityAggregates.class).stream(from(qry).with(orderByDesc).model(), 1)) {
+            values = stream.collect(toList());
+        }
+        assertEquals(2, values.size());
+        assertEquals("desc X", values.get(0).get("distinctDesc"));
+        assertEquals(2, values.get(0).<Number>get("kount").intValue());
+        assertEquals("desc Y", values.get(1).get("distinctDesc"));
+        assertEquals(2, values.get(1).<Number>get("kount").intValue());
+    }
+    
     @Override
+    @SessionRequired
     protected void populateDomain() {
         super.populateDomain();
         
@@ -178,10 +224,10 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         
         save(new_(User.class, "USER_1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
         
-        save(new_(EntityWithMoney.class, "key1").setMoney(Money.of("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")).setDesc("desc"));
-        save(new_(EntityWithMoney.class, "key2").setMoney(Money.of("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")).setDesc("desc"));
-        save(new_(EntityWithMoney.class, "key3").setMoney(Money.of("40.00")).setDesc("desc"));
-        save(new_(EntityWithMoney.class, "key4").setMoney(Money.of("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")).setDesc("desc"));
+        save(new_(EntityWithMoney.class, "key1").setMoney(Money.of("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")).setDesc("desc X"));
+        save(new_(EntityWithMoney.class, "key2").setMoney(Money.of("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")).setDesc("desc X"));
+        save(new_(EntityWithMoney.class, "key3").setMoney(Money.of("40.00")).setDesc("desc Y"));
+        save(new_(EntityWithMoney.class, "key4").setMoney(Money.of("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")).setDesc("desc Y"));
     }
     
 }

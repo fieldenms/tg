@@ -1,7 +1,9 @@
 <link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
@@ -12,6 +14,7 @@
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/views/tg-back-button-behavior.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -25,7 +28,6 @@
                 /* this is to make host scorable when needed */
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
                 @apply(--layout-vertical);
-
             }
             .title-bar {
                 padding: 0 16px;
@@ -59,51 +61,77 @@
                 height: 1.5em;
                 margin: 0 5px
             }
-            paper-icon-button {
+            #menuToggler,#backButton {
+                color: white;
+            }
+            .close-button {
                 width: 22px;
                 height: 22px;
                 padding: 0px;
-            }
-            paper-icon-button.close-button {
                 stroke: var(--paper-grey-100);
                 fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
             }
-            paper-icon-button.close-button:hover {
+            .close-button:hover {
                 stroke: var(--paper-grey-300);
                 fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
-            paper-icon-button.minimize-button {
+            .minimise-button,.maximise-button {
                 width: 19px;
                 height: 19px;
-                stroke: var(--paper-grey-100);
-                fill: var(--paper-grey-100);
-                color: var(--paper-grey-100);
+                padding: 0px;
+                margin-bottom: 2px;
+                --paper-icon-button: {
+                    color: var(--paper-grey-100);
+                };
+                --paper-icon-button-disabled: {
+                    color: var(--paper-grey-300);
+                };
+                --paper-icon-button-hover: {
+                    color: var(--paper-grey-300);
+                };
             }
-            paper-icon-button.minimize-button:hover {
-                stroke: var(--paper-grey-300);
-                fill: var(--paper-grey-300);
-                color: var(--paper-grey-300);
+            #resizer {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                --iron-icon-fill-color: var(--paper-grey-600);
+            }
+            #resizer:hover {
+                cursor: nwse-resize;
+            }
+            .reverse {
+                flex-direction: row-reverse;
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+            <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
             <div class="title-text layout horizontal center flex">
                 <span class="static-title truncate">[[staticTitle]]</span>
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog" tooltip-text="Expand"></paper-icon-button>
-                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog" tooltip-text="Collapse"></paper-icon-button>
-                <paper-icon-button hidden="[[_lastAction.continuous]]" class="close-button" icon="icons:cancel" on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
+                <!-- collapse/expand buttons -->
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+
+                <!-- maximize/restore buttons -->
+                <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore"></paper-icon-button>
+
+                <!-- close/next buttons -->
+                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close"></paper-icon-button>
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Next"></paper-icon-button>
             </div>
         </div>
-        <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
+        <div id="dialogBody" class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
+        <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+        <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     </template>
 </dom-module>
 <script>
@@ -119,12 +147,19 @@
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [
+                Polymer.IronA11yKeysBehavior,
+                Polymer.IronOverlayBehavior,
+                Polymer.TgBehaviors.TgFocusRestorationBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior,
+                Polymer.TgBehaviors.TgBackButtonBehavior
+            ],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed',
-                'tg-dynamic-title-changed': '_updateDynamicTitle'
+                'tg-dynamic-title-changed': '_updateDynamicTitle',
+                'tg-menu-appeared': '_updateMenuButton'
             },
 
             hostAttributes: {
@@ -151,17 +186,39 @@
                 prefDim: {
                     type: Object
                 },
-
+                
+                /**
+                 * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
+                 */
                 _wasMoved: {
                     type: Boolean,
                     value: false
                 },
-
+                
+                /**
+                 * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
+                 */
+                _wasResized: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                /**
+                 * Indicates whether dialog has been collapsed using 'Collapse' button.
+                 */
                 _minimised: {
                     type: Boolean,
                     value: false
                 },
-
+                
+                /**
+                 * Indicates whether dialog has been maximised using 'Maximise' button.
+                 */
+                _maximised: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
                  */
@@ -209,13 +266,20 @@
                  */
                 _windowWidth: Number,
                 _windowHeight: Number,
+                
+                /**
+                 * Binds to the property 'appConfig.mobile'.
+                 */
+                mobile: {
+                    type: Boolean
+                }
             },
             
-            observers: ["_dialogMinimised(prefDim, _minimised)"],
+            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
 
             keyBindings: {
                 'alt+x': 'closeDialog',
-                'alt+m': 'minimizeDialog'
+                'alt+m': '_invertMinimiseState'
             },
 
             ready: function () {
@@ -237,8 +301,14 @@
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
 
                 this._setIsRunning(false);
+                
+                if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
+                    Polymer.dom(this.$.titleBar).appendChild(this.createBackButton());
+                    Polymer.dom.flush();
+                    this.$.titleBar.classList.add('reverse');
+                }
             },
-
+            
             attached: function () {
                 var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
                 this.addEventListener(clickEvent, this._onCaptureClick, true);
@@ -289,19 +359,99 @@
                     }
                 }
             },
-
-            minimizeDialog: function () {
-                if (!this._minimised) {
+            
+            _invertDialogState: function (stateName) {
+                if (!this[stateName]) {
                     this.persistActiveElement();
                     this.focus();
+                    this.persistDialogLocationAndDimensions();
                 }
-                this._minimised = !this._minimised;
-                this.notifyResize();
-                if (!this._minimised) {
+                this[stateName] = !this[stateName];
+                this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
+                if (!this[stateName]) {
                     this.restoreActiveElement();
+                    this.restoreDialogLocationAndDimensions();
+                    this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
                 }
             },
-
+            
+            _invertMinimiseState: function () {
+                if (!this._maximised) { // need to skip the action if dialog is in maximised state: this is needed for alt+m collapsing
+                    this._invertDialogState('_minimised');
+                }
+            },
+            
+            _invertMaximiseState: function () {
+                if (!this.prefDim) { // define prefDim (maximise action) if it was not defined using action configuration
+                    this.prefDim = this._lastElement.makeResizable();
+                }
+                this._invertDialogState('_maximised');
+            },
+            
+            /**
+             * Dialog resizing handler assigned to resizing button in bottom right corner of the dialog.
+             */
+            resizeDialog: function (event) {
+                const target = event.target || event.srcElement;
+                if (target === this.$.resizer) {
+                    switch (event.detail.state) {
+                        case 'start':
+                            document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
+                            break;
+                        case 'track':
+                            if (!this._wasResized) {
+                                this._wasResized = true;
+                                this.heightBeforeResizing = this.style.height;
+                                this.widthBeforeResizing = this.style.width;
+                                if (!this.prefDim) { // define prefDim (resize action) if it was not defined using action configuration
+                                    this.prefDim = this._lastElement.makeResizable();
+                                }
+                            }
+                            const resizedHeight = this.offsetHeight + event.detail.ddy;
+                            const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */;
+                            if (heightNeedsResize) {
+                                this.style.height = resizedHeight + 'px';
+                            }
+                            const resizedWidth = this.offsetWidth + event.detail.ddx;
+                            const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */
+                            if (widthNeedsResize) {
+                                this.style.width = resizedWidth + 'px';
+                            }
+                            if (heightNeedsResize || widthNeedsResize) {
+                                this.notifyResize();
+                            }
+                            break;
+                        case 'end':
+                            document.styleSheets[0].deleteRule(0);
+                            break;
+                    }
+                }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+            },
+            
+            /**
+             * Persists current dialog location (top, left) and dimensions (height, width) to be restored later.
+             */
+            persistDialogLocationAndDimensions: function () {
+                this.persistedTop = this.style.top;
+                this.persistedLeft = this.style.left;
+                this.persistedHeight = this.style.height;
+                this.persistedWidth = this.style.width;
+            },
+            
+            /**
+             * Restores previously persisted dialog location (top, left) and dimensions (height, width).
+             */
+            restoreDialogLocationAndDimensions: function () {
+                this.style.top = this.persistedTop;
+                this.style.left = this.persistedLeft;
+                this.style.height = this.persistedHeight;
+                this.style.width = this.persistedWidth;
+            },
+            
             closeDialog: function () {
                 var canClose = true;
                 //Try to close children first.
@@ -314,7 +464,12 @@
                         // for example, when closing a master for a functional entity, the reason states the need to save changes,
                         // while it is also possible and safe to simple cancel them
                         // so, the message below is a good compromise
-                        this.$.toaster.text = "Please save or cancel changes.";
+                        // however, the reason can still insist by providing an imperative hint
+					    if (reason.imperative === true) {
+					        this.$.toaster.text = reason.msg;
+                        } else {
+					        this.$.toaster.text = "Please save or cancel changes.";
+                        }
                         this.$.toaster.hasMore = false;
                         this.$.toaster.msgText = "";
                         this.$.toaster.showProgress = false;
@@ -335,31 +490,53 @@
                     dialog.closeDialog();
                     if (dialog.opened) {
                         canClose = false;
+                        if (dialog._minimised) {
+                            dialog._invertDialogState('_minimised');
+                        }
+                        if (!dialog._maximised) {
+                            dialog.center();
+                        }
                         if (dialog._childDialogs.length === 0) {
                             dialog._focusDialogWithInput();
                         }
                     }
                 });
-
                 return canClose;
             },
-
-            _dialogMinimised: function (prefDim, minimised) {
-                var width = "";
-                var height = "";
-                if (!minimised && prefDim) {
-                    width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                    height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+            
+            /**
+             * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+             */
+            _updateDialogDimensions: function (prefDim, minimised, maximised) {
+                if (!minimised && !maximised && prefDim) {
+                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    this.style.width = width;
+                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                    this.style.overflow = 'auto';
+                } else if (!minimised && maximised) {
+                    this.style.top = this.mobile === true ? '0%' : '2%';
+                    this.style.left = this.mobile === true ? '0%' : '2%';
+                    this.style.width = this.mobile === true ? '100%' : '96%';
+                    this.style.height = this.mobile === true ? '100%' : '96%';
+                    this.style.overflow = 'auto';
+                } else if (minimised && !maximised) {
+                    this.style.height = '44px';
+                    this.style.overflow = 'hidden';
+                } else {
+                    this.style.width = '';
+                    this.style.height = '';
+                    this.style.overflow = 'auto';
                 }
-                this._setDialogBodyDimensions(width, height);
             },
-
-            _setDialogBodyDimensions: function (width, height) {
-                this.style.width = width;
-                // +44px - height of the title bar please see styles for .title-bar selector.
-                this.style.height = height && "calc(" + height + " + 44px)";
+            
+            /**
+             * Indicates whether maximising / collapsing / resizing interaction buttons should be disabled (or even hidden) depending on minimised / normal / maximised state of the dialog.
+             */
+            _dialogInteractionsDisabled: function (minimised, maximised) {
+                return minimised || maximised;
             },
-
+            
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
                 return !(staticTitle && dynamicTitle);
             },
@@ -367,10 +544,29 @@
             _updateDynamicTitle: function (e) {
                 this.dynamicTitle = e.detail;
             },
-
+            
+            /**
+             * 'menu-toggler' function to invoke dialog menu. It will be replaced by concrete function from loaded into dialog component in 'updateMenuButton' method.
+             */
+            _toggleMenu: function () {},
+            
+            /**
+             * Updates 'hidden' state of the menu toggler button and assigns _toogleMenu function.
+             */
+            _updateMenuButton: function (event) {
+                const appearedAndFunc = event.detail;
+                this.$.menuToggler.hidden = !appearedAndFunc.appeared;
+                if (appearedAndFunc.appeared) {
+                    this._toggleMenu = appearedAndFunc.func;
+                    if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
+                        appearedAndFunc.drawer.rightDrawer = true;
+                    }
+                }
+            },
+            
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
-                if (target === this.$.titleBar) {
+                if (target === this.$.titleBar && this._maximised === false) {
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';
@@ -381,10 +577,12 @@
                         const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
                         if (_titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx  <= this._windowWidth - 44) {
                             this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
+                            this.persistedLeft = this.style.left;
                             this._wasMoved = true;
                         }
                         if (_titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy  <= this._windowHeight) { 
                             this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                            this.persistedTop = this.style.top;
                             this._wasMoved = true;
                         }
                         break;
@@ -540,6 +738,15 @@
                 }
             },
             
+            refit: function () {
+                Polymer.IronFitBehavior.refit.call(this);
+                
+                // There is a need to reset max-width and max-height styles after every refit call.
+                // This is necessary to make dialog being able to 'maximise' to large dimensions.
+                this.style.maxWidth = 'none';
+                this.style.maxHeight = 'none';
+            },
+            
             /**
              * Starts actual opening of the dialog: adds 'closing' subscriptions, performs refitting and invokes this.open().
              */
@@ -570,6 +777,11 @@
                         this._parentDialog = actionsDialog;
                     }
                     this._focusAndRefit(); // this is a legacy support
+                    
+                    if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
+                        this._invertMaximiseState();
+                    }
+                    
                     this.open();
                 }.bind(this), 200);
             },
@@ -610,7 +822,10 @@
              * Listener that listens binding entity appeared event and focuses first input.
              */
             _focusDialogWithInput: function (e) {
-                if (this._lastElement.focusFirstInput) {
+                // Desktop app specific: focus first input when opening dialog.
+                // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
+                // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor). 
+                if (this.$.appConfig.mobile === false && this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
                 }
             },
@@ -623,22 +838,20 @@
                     this.refit();
                 }.bind(this), 50);
                 this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
+                this.removeEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
             },
-
+            
             /** 
-             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound.
+             * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occured earlier than dialog .
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
             _focusAndRefit: function () {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
-                if (this._lastElement.focusFirstInput) {
-                    this._lastElement.focusFirstInput();
-                }
+                this._focusDialogWithInput();
             },
-
-
+            
             _dialogOpened: function (e, detail, source) {
                 // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
                 // a more appropriate place for refitting is post entity binding
@@ -660,8 +873,15 @@
                     }
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
+                    this._wasResized = false;
+                    if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
+                        this.style.height = this.heightBeforeResizing;
+                        this.style.width = this.widthBeforeResizing;
+                    }
                     this._minimised = false;
-
+                    this._maximised = false;
+                    this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
+                    
                     if (this._lastAction) {
                         this._lastAction.restoreActiveElement();
                     }
@@ -669,9 +889,30 @@
             },
 
             _onIronResize: function () {
-                if (!this._wasMoved && !this._minimised) {
+                if (!this._wasMoved && !this._wasResized && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
+            },
+            
+            /**
+             * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
+             */
+            _maximiseRestorerHidden: function (_maximised, mobile) {
+                return !_maximised || mobile === true;
+            },
+            
+            /**
+             * Returns 'true' if Closer button is hidden, 'false' otherwise.
+             */
+            _closerHidden: function (_lastAction, mobile) {
+                return _lastAction.continuous || mobile === true;
+            },
+            
+            /**
+             * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
+             */
+            _collapserHidden: function (_minimised, mobile) {
+                return _minimised || mobile === true;
             }
         });
     })();

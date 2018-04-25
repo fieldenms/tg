@@ -54,4 +54,25 @@ public class ResultTestCase {
             assertEquals("exception", ex.getMessage());
         }
     }
+    
+    @Test
+    public void getInstanceOrElseThrow_returns_an_instance_if_result_is_successful() {
+        final String value = "instance";
+        final Result result = Result.successful(value);
+        assertEquals(value, result.getInstanceOrElseThrow());
+        assertEquals(result.getInstance(), result.getInstanceOrElseThrow());
+    }
+    
+    @Test
+    public void getInstanceOrElseThrow_throws_exception_associated_with_unsuccessful_result() {
+        final String errMsg = "error message";
+        final Result result = Result.failure(errMsg);
+        try {
+            result.getInstanceOrElseThrow();
+            fail();
+        } catch(final Exception ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+    }
+
 }

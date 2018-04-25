@@ -175,21 +175,17 @@
                 },
 
                 /**
-                 * The context holder creator (SavingInfoHolder) which is used for entity and property actions in the context of non-functional entity master.
+                 * The context holder creator (SavingInfoHolder) which is used for entity / property / continuation actions in the context of entity master.
+                 *
+                 * Initially this function contained only the data that represents the entity (entity1) on this entity master.
+                 * However this was not sufficient for continuations: the parent context (masterEntity of entity1) was needed to properly restore entity1 through the chain of producer invocations.
+                 * For now we really have another example: property actions (as well as entity actions) on entity master could also be invoked from newly created entities, and this requires parent context
+                 * to be present too.
                  */
                 _createContextHolder: {
                     type: Function
                 },
                 
-                /**
-                 * The context holder creator (SavingInfoHolder) which is used for continuation actions in the context of non-functional entity master.
-                 * The difference from '_createContextHolder' is only in aspect of parent context -- it always exists for continuation master entity.
-                 */
-                _createContextHolderForContinuations: {
-                    type: Function,
-                    notify: true
-                },
-
                 /**
                  * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
                  * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
@@ -283,18 +279,21 @@
                 },
                 
                 /**
-                 * Indicates whether saving process has been initiated by using CTRL+S key or tapping on SAVE button (or even programatically).
-                 * Strictly speaking it becomes 'true' when 'save' function gets functioned.
-                 *
-                 * _savingInitiated is needed to disable master view only once during debouncing of multiple saving requests, which in turn will be turned into single ajax request,
-                 * and thus only single 'view enablement' action.
-                 *
-                 * Debouncing of saving actions is needed to avoid multiple concurrent saving requests. However it adds additional debouncing 50-second delay similarly
-                 * as in validation.
+                 * Postal subscription to 'detail.saved' events that redirects such events further to parent channels (centreUuid).
+                 * It gets populated in attached callback only once, even though the same master instance gets used several time.
                  */
-                _savingInitiated: {
-                    type: Boolean,
-                    value: false
+                _centreRefreshRedirector: {
+                    type: Object,
+                    value: null
+                },
+                
+                /**
+                 * Publishes data with 'canClose=true' to channel 'self.centreUuid', topic 'refresh.post.success' to close the master regardless of the state of the bound entity.
+                 * This request may or may not succeed, which depends on who is subscribed to the pulished event.
+                 * In general dialogs, holding entity mesters, do subscribe and can be closed this way.
+                 */
+                publishCloseForcibly: {
+                    type: Function
                 }
             },
 
@@ -321,36 +320,31 @@
 
                 self._createActions();
 
-                self._create_createContextHolder_function = (function (forContinuations) {
-                    return (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
-                    
-                        var getThisMasterEntity = function () {
-                            var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-
-                            // @@funcEntityType is really a master entity type, which in this case is not functional!!!
-                            var masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
-                                null, null, forContinuations ? (this.getMasterEntity ? 'true' : null) : null,
-                                null, null, forContinuations ? (this.getMasterEntity ? this.getMasterEntity : null) : null
-                            );
-                            this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
-                        }.bind(this);
-
-                        var contextHolder = this._reflector().createContextHolder(
-                            null, null, requireMasterEntity,
-                            null, null, getThisMasterEntity
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+                    const getThisMasterEntity = function () {
+                        const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                        
+                        // @@funcEntityType is really a master entity type, which in this case is not functional!!!
+                        const masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
+                            null, null, this.getMasterEntity ? 'true' : null,
+                            null, null, this.getMasterEntity ? this.getMasterEntity : null
                         );
+                        this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
+                        return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
+                    }.bind(this);
                     
-                        this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
-                        this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
-                        this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    const contextHolder = this._reflector().createContextHolder(
+                        null, null, requireMasterEntity,
+                        null, null, getThisMasterEntity
+                    );
                     
-                        return contextHolder;
-                    }).bind(this);
+                    this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    
+                    return contextHolder;
                 }).bind(self);
                 
-                self._createContextHolder = self._create_createContextHolder_function(false);
-
                 // calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postSavedDefault = (function (potentiallySavedOrNewEntity) {
                     // 'potentiallySavedOrNewEntity' can have two natures:
@@ -376,7 +370,7 @@
                     
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
-                        newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
+                        newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
                         
                         if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
                             this._originallyProducedEntity = potentiallySavedOrNewEntity;
@@ -418,9 +412,6 @@
                         
                         var action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                         if (!action) {
-                            if (!this._createContextHolderForContinuations) {
-                                this._createContextHolderForContinuations = this._create_createContextHolder_function(true);
-                            }
                             var actionModel = document.createElement('template', 'dom-bind');
                             actionModel.innerHTML = 
                                 "<tg-ui-action " +
@@ -437,7 +428,7 @@
                                      // "number-of-action='...' " + // numberOfAction is not needed (it is used directly for compound master menu items and insertion points -- no intersection with continuations)
                                      "element-alias='" + elementName + "_" + continuationProperty + "_CONTINUATION' " +
                                      "show-dialog='[[_showDialog]]' " +
-                                     "create-context-holder='[[_createContextHolderForContinuations]]' " +
+                                     "create-context-holder='[[_createContextHolder]]' " +
                                      "attrs='[[attrs]]' " +
                                      "pre-action='[[preAction]]' " +
                                      "post-action-success='[[postActionSuccess]]' " +
@@ -454,14 +445,16 @@
                             action = actionModel.$.continuationAction;
                             
                             actionModel._showDialog = self._showDialog;
-                            actionModel._createContextHolderForContinuations = self._createContextHolderForContinuations;
+                            actionModel._createContextHolder = self._createContextHolder;
                             actionModel.primaryAction = self.primaryAction;
                             
                             actionModel.preAction = function (action) {
+                                delete action['success'];
                                 console.log('preAction: ' + actionDesc);
                                 return Promise.resolve(true);
                             };
                             actionModel.postActionSuccess = function (functionalEntity) {
+                                action.success = true;
                                 console.log('postActionSuccess: ' + actionDesc, functionalEntity);
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
@@ -481,7 +474,7 @@
                             var _self = this;
                             action._actionProgressStatusChanged = (function (newValue, oldValue) {
                                 old_actionProgressStatusChanged(newValue, oldValue);
-                                if (newValue === false) {
+                                if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                                     _self.enableView();
                                     _self._savingInitiated = false;
                                 }
@@ -618,6 +611,10 @@
                         this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(self), 1);
                 }).bind(self);
+
+                self.publishCloseForcibly = (function () {
+                    postal.publish({channel: self.centreUuid, topic: 'refresh.post.success', data: {canClose: true}});
+                }).bind(self);
             }, // end of ready callback
 
             attached: function () {
@@ -697,7 +694,7 @@
                 self._actions['REFRESH'] = {
                     shortDesc: 'REFRESH',
                     longDesc: 'REFRESH ACTION...',
-                    enabledStates: ['EDIT', 'VIEW'],
+                    enabledStates: ['EDIT'],
                     action: function () {
                         return self.retrieve();
                     }
@@ -900,6 +897,46 @@
             /** A helper method to assist in making the caching decision. Used as an optimisation technique. */
             canBeCached: function () {
                 return typeof this._currBindingEntity['skipUi'] === 'undefined';
+            },
+            
+            /**
+             * Registers _centreRefreshRedirector if not registered yet.
+             * 
+             * In case where 'centre refresh' postal event occurs in entity master there is a need to generate similar event and pass it further to parent component in hierarchy.
+             * In this case the 'chain reaction' of such events will occur which will trigger 'centre refresh' in all centres in hierarchy of components up to top standalone centre.
+             *
+             * There are two cases:
+             *  1. master-with-centre 'embedded centre invoker' functional entity master will trigger postal event up;
+             *  2. simple master will trigger postal event up.
+             * 
+             * master-with-master employs its own mechanism through the use of the same 'postSaved' / 'postSavedError' callbacks for embedded and wrapping masters,
+             * that is why there is no need to use 'centre refresh' redirection for it.
+             *
+             * Please also note similar redirection inside tg-master-menu.
+             */
+            registerCentreRefreshRedirector: function () {
+                const self = this;
+                if (self._centreRefreshRedirector === null) {
+                    self._centreRefreshRedirector = postal.subscribe({
+                        channel: 'centre_' + self.uuid,
+                        topic: 'detail.saved',
+                        callback: function (data, envelope) {
+                            if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
+                                const newData = { 
+                                    savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
+                                    entity: data.entity,
+                                    shouldRefreshParentCentreAfterSave: true,
+                                    selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
+                                };
+                                postal.publish({
+                                    channel: 'centre_' + self.centreUuid,
+                                    topic: 'detail.saved',
+                                    data: newData
+                                });
+                            }
+                        }
+                    });
+                }
             }
         };
 

@@ -28,6 +28,11 @@
         	&& (typeof result.ex !== 'undefined');
     };
     
+    const _simpleClassName = function (fullClassName) {
+        const index = fullClassName.lastIndexOf('.') + 1;
+        return fullClassName.substring(index);
+    };
+    
     var _isContinuationError0 = function (result) {
         return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
     }
@@ -444,27 +449,31 @@
          * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
          */
         Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value) {
-            var result = this.set(propertyName, value);
+            const result = this.set(propertyName, value);
             
-            var touched = this["@@touchedProps"];
-            var names = touched.names;
-            var counts = touched.counts;
-            var index = names.indexOf(propertyName);
+            const touched = this["@@touchedProps"];
+            const names = touched.names;
+            const values = touched.values;
+            const counts = touched.counts;
+            const index = names.indexOf(propertyName);
             if (index > -1) {
-                var prevCount = counts[index];
+                const prevCount = counts[index];
                 names.splice(index, 1);
+                values.splice(index, 1);
                 counts.splice(index, 1);
                 names.push(propertyName);
+                values.push(value);
                 counts.push(prevCount + 1);
             } else {
                 names.push(propertyName);
+                values.push(value);
                 counts.push(1);
             }
             // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
             if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
                 delete this['@' + propertyName + '_id'];
             }
-            console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
+            console.debug('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             
             return result;
         }
@@ -710,8 +719,7 @@
          *
          */
         EntityType.prototype._simpleClassName = function () {
-            var ind = this.fullClassName().lastIndexOf(".") + 1;
-            return this.fullClassName().substring(ind);
+            return _simpleClassName(this.fullClassName());
         }
 
         /**
@@ -890,17 +898,17 @@
 	/////////////////////////////// EXCEPTIONS [END] /////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	var _SPEPrototype = _createStrictProxyExceptionPrototype();
-	var _UCEPrototype = _createUnsupportedConversionExceptionPrototype();
+	const _SPEPrototype = _createStrictProxyExceptionPrototype();
+	const _UCEPrototype = _createUnsupportedConversionExceptionPrototype();
 	
-	var _ETPPrototype = _createEntityTypePropPrototype();
-	var _ETPrototype = _createEntityTypePrototype(_ETPPrototype);
+	const _ETPPrototype = _createEntityTypePropPrototype();
+	const _ETPrototype = _createEntityTypePrototype(_ETPPrototype);
 	const _DEKPrototype = _createDynamicEntityKeyPrototype();
 	
 	/**
 	 * The prototype for entity's instance-scoped property. Can be reached by 'entity.prop("name")' call.
 	 */
-	var _EIPPrototype = _createEntityInstancePropPrototype();
+	const _EIPPrototype = _createEntityInstancePropPrototype();
 	/**
 	 * The prototype for entities.
 	 */
@@ -909,7 +917,7 @@
     /**
      * Determines whether the specified object represents the entity.
      */
-    var _isEntity = function (obj) {
+    const _isEntity = function (obj) {
         return obj !== null && (obj instanceof _EPrototype);
     };
     
@@ -946,7 +954,7 @@
     /**
      * Returns 'true' if the regular values are equal, 'false' otherwise.
      */
-    var _equalsEx = function (value1, value2) {
+    const _equalsEx = function (value1, value2) {
         // if (value1) {
         //     if (!value2) {
         //         return false;
@@ -1352,6 +1360,15 @@
                 var fullValue = entity.get(propertyName);
                 this._convertFullPropertyValue(bindingView, propertyName, fullValue);
                 
+                const touchedProps = bindingView['@@touchedProps'];
+                const touchedPropIndex = touchedProps.names.indexOf(propertyName);
+                if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex])) {
+                    // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
+                    touchedProps.names.splice(touchedPropIndex, 1);
+                    touchedProps.counts.splice(touchedPropIndex, 1);
+                    touchedProps.values.splice(touchedPropIndex, 1);
+                }
+                
                 if (this.isEntity(fullValue)) {
                     bindingView["@" + propertyName + "_desc"] = this.convert(fullValue.get("desc"));
                 }
@@ -1483,6 +1500,27 @@
          */
         isDotNotated: function(propertyName) {
             return propertyName.indexOf(".") > -1;
+        },
+
+        /**
+         * Returns an entity instance that is the value of the property refered to by 'dotNotatedPropertyName' without the last propert part.
+         * Effectively, the returned values if super-property value. 
+         * For example, for 'entity.entityValuedProp.someProp' the returned value should an entity referenced by 'entity.entityValuedProp'. 
+         */
+        entityPropOwner: function(entity, dotNotatedPropertyName) {
+            if (this.isDotNotated(dotNotatedPropertyName) === true) {
+                const lastDotIndex = dotNotatedPropertyName.lastIndexOf(".");
+                const propName = dotNotatedPropertyName.substring(0, lastDotIndex);
+                return entity.get(propName);
+            }
+            return undefined;
+        },
+
+        /**
+         * Extracts simple class name from full class name (removes package from it).
+         */
+        simpleClassName: function (fullClassName) {
+            return _simpleClassName(fullClassName);
         },
         
         /**

@@ -10,48 +10,51 @@
 
 <!-- <core-style id="toast-progress-indicator">
     paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
-   
+
     paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
 </core-style> -->
 
-    <style is="custom-style">
-        .paper-toast {
-            @apply(--layout-horizontal);
-            @apply(--layout-center);
-            max-width: 256px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-smooth: always;
-        }
-        
-        .more {
-        	padding-left: 8px;
-        	color: #03A9F4;
-        	font-weight: 800;
-        	font-smooth: always;
-            cursor: pointer;
-        }
-        
-        /* style to truncate the toast text */
-        body /deep/ paper-toast::shadow #label {
-            @apply(--layout-flex);
-            max-width: 248px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-	    .toast-dialog paper-button {
-	        color: var(--paper-light-blue-500);
-	        --paper-button-flat-focus-color: var(--paper-light-blue-50);
-	    }
-	    .toast-dialog paper-button:hover {
-	        background: var(--paper-light-blue-50);
-	    }
-    </style>
+<style is="custom-style">
+  .paper-toast {
+    @apply(--layout-horizontal);
+    @apply(--layout-center);
+    max-width: 256px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-smooth: always;
+  }
+
+  .more {
+    padding-left: 8px;
+    color: #03A9F4;
+    font-weight: 800;
+    font-smooth: always;
+    cursor: pointer;
+  }
+
+  /* style to truncate the toast text */
+
+  body /deep/ paper-toast::shadow #label {
+    @apply(--layout-flex);
+    max-width: 248px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .toast-dialog paper-button {
+    color: var(--paper-light-blue-500);
+    --paper-button-flat-focus-color: var(--paper-light-blue-50);
+  }
+
+  .toast-dialog paper-button:hover {
+    background: var(--paper-light-blue-50);
+  }
+</style>
 
 <dom-module id="tg-toast">
-    <template>
+  <template>
     	<style>
 	    	paper-spinner {
 	            width: 1.5em;
@@ -66,7 +69,7 @@
 	            --paper-spinner-layer-2-color: var(--paper-blue-500);
 	            --paper-spinner-layer-3-color: var(--paper-blue-500);
 	            --paper-spinner-layer-4-color: var(--paper-blue-500);
-	        }    	
+	        }
     	</style>
         <paper-toast id="toast" class="paper-toast" text="[[_text]]" always-on-top> <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
@@ -74,229 +77,241 @@
         </paper-toast>
     </template>
 </dom-module>
-    
+
 <script>
-    (function () {
-        Polymer({
-        	// attributes="msgHeading -- TODO was this ever needed?"
-        	
-        	is: 'tg-toast',
-        	
-        	properties: {
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
-            	// No default values are allowed in this case.														   //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
-            	text: {
-            		type: String
-            	},
-            	
-            	msgText: {
-            		type: String,
-            		value: ''
-            	},
-            	
-                showProgress: {
-                	type: Boolean
-                },
-                
-                hasMore: {
-                	type: Boolean
-                },
-                
-                isCritical: {
-                	type: Boolean,
-                	value: false
-                },
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-             	//   prefix. 																				           //
-             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-             	//   populate their default values in ready callback (to have these values populated in children)!     //
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	_text: {
-            		type: String
-            	},
-            	
-            	_msgText: {
-            		type: String,
-            		value: ''
-            	},
-            	
-                _showProgress: {
-                	type: Boolean
-                },
-                
-                _hasMore: {
-                	type: Boolean
-                },
-                
-                _isCritical: {
-                	type: Boolean,
-                	value: false
-                },
-             	
-                _skipShowProgress: {
-                	type: Boolean,
-                	computed: '_shouldSkipProgress(_showProgress, _hasMore)'
-                }
-        	},
+  (function() {
+    function containsRestictedTags(htmlText) {
+      const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
+      return offensiveTag.exec(htmlText) !== null;
+    }
 
-            _showMessageDlg: function (event) {
-                const self = this;
-                // need to open dialog asynchronously for it to open on mobile devices 
-                this.async(function () {
-                    // build and display the dialog
-                    var domBind = document.createElement('template', 'dom-bind');
+    Polymer({
+      // attributes="msgHeading -- TODO was this ever needed?"
 
-                    domBind._dialogClosed = function() {
-                        Polymer.dom(document.body).removeChild(this);
-                        Polymer.dom.flush();
-                    }.bind(domBind);
-                    
-                    var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
-                    Polymer.dom(paperDialog).setAttribute("class", "toast-dialog");
-                    Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
-                    Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
-                    Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
-                    Polymer.dom(paperDialog).setAttribute("entry-animation", "scale-up-animation");
-                    Polymer.dom(paperDialog).setAttribute("exit-animation", "fade-out-animation");
-                    
-                    var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
-                    var msgPar = domBind.content.ownerDocument.createElement('p');
-                    Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
-                    Polymer.dom(msgPar).innerHTML = this._msgText;
-                    Polymer.dom(paperDialogScrollable).appendChild(msgPar);
-                    
-                    var buttonsDiv = domBind.content.ownerDocument.createElement('div');
-                    Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
-                    
-                    var buttons = domBind.content.ownerDocument.createElement('paper-button');
-                    Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
-                    Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
-                    Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
-                    
-                    var textSpan = domBind.content.ownerDocument.createElement('span');
-                    Polymer.dom(textSpan).innerHTML = 'Close';
-                    Polymer.dom(buttons).appendChild(textSpan);
-                    
-                    Polymer.dom(buttonsDiv).appendChild(buttons);
-                    
-                    Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
-                    Polymer.dom(paperDialog).appendChild(buttonsDiv);
-                    
-                    Polymer.dom(domBind.content).appendChild(paperDialog);
-                    Polymer.dom(document.body).appendChild(domBind);
-                    Polymer.dom.flush();
+      is: 'tg-toast',
 
-                    this.async(function () {
-                        domBind.$.msgDialog.open();
-                    }, 100);
+      properties: {
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+        // No default values are allowed in this case.														   //
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                    self.$.toast.close();
-                }, 100);
-                
-            },
-            
-            _shouldSkipProgress: function (progress, hasMore) {
-                return !progress || hasMore;
-            },
+        text: {
+          type: String
+        },
 
-            _skipShowMore: function (progress, hasMore) {
-                return progress || !hasMore;
-            },
-            
-            _getPreviousToast() {
-                var toasts = document.querySelectorAll('#toast');
-                var toast = null;
-                var existingToastCount = 0;
-                for (var index = 0; index < toasts.length; index++) {
-                    var currToast = toasts.item(index);
-                    if (currToast.parentNode === document.body) {
-                        existingToastCount++;
-                        // console.debug('toast show() parentNode is [', existingToastCount ,']', Polymer.dom(currToast).parentNode, currToast.parentNode, ' body == ', Polymer.dom(document.body), document.body);
-                        if (existingToastCount > 1) {
-                            throw 'More than one toast exist in body direct children.';
-                        }
-                        toast = currToast;
-                    } else {
-                        // console.warn('toast show() parentNode is ', Polymer.dom(currToast).parentNode, currToast.parentNode, ' body == ', Polymer.dom(document.body), document.body);
-                    }
-                }
-                return toast;
-            },
-            
-            show: function () {
-                // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
-                var previousToast = this._getPreviousToast();
-                if (!previousToast) {
-                    // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
-                    this.$.toast.refit = function () {};
-                    Polymer.dom(document.body).appendChild(this.$.toast);
-                    Polymer.dom().flush();
-                    this._showNewToast();
-                } else if (previousToast.error === true && previousToast.opened) {
-                    console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
-                } else {
-                    // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
-                    // WARNING: 'dataHost' is not a public Polymer API.
-                    var previousTgToast = previousToast.dataHost;
-                    
-                    if (previousTgToast !== this) {
-                        previousTgToast.text = this.text;
-                        previousTgToast.msgText = this.msgText;
-                        previousTgToast.showProgress = this.showProgress;
-                        previousTgToast.hasMore = this.hasMore;
-                        previousTgToast.isCritical = this.isCritical;
-                    }
-                    previousTgToast._showNewToast();
-                }
-            },
-            
-            _showNewToast: function () {
-                this._text = this.text;
-                this._msgText = this.msgText; 
-                this._showProgress = this.showProgress;
-                this._hasMore = this.hasMore;
-                this._isCritical = this.isCritical;
-                
-                const oldDuration = this.$.toast.duration;
-                if (this._showProgress && !this._hasMore) {
-                    this.$.toast.duration = 3600000; //1 hour
-                } else if (this._isCritical === true) {
-                    this.$.toast.duration = 5000; //5 seconds
-                } else {
-                    this.$.toast.duration = 3000; //3 seconds
-                }
-                // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:
-                if (this.$.toast.duration !== oldDuration) { // if duration changed
-                    if (this.$.toast._autoClose !== null) {
-                        this.$.toast.cancelAsync(this.$.toast._autoClose);
-                        this.$.toast._autoClose = null;
-                    }
-                    this.$.toast._autoClose = this.$.toast.async(this.$.toast.close, this.$.toast.duration);
-                }
-                
-                this.$.toast.error = this._isCritical;//this._hasMore;
-                console.log('isCritical!!', this._isCritical);
-                if (this._isCritical === true) {
-                    this.$.toast.style.background = '#D50000';
-                    this.$.btnMore.style.color = '#FFCDD2';
-                } else {
-                    this.$.toast.style.background = 'black';
-                    this.$.btnMore.style.color = '#03A9F4';
-                }
-                this.$.toast.show();
-                
-                
-                // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
+        msgText: {
+          type: String,
+          value: ''
+        },
+
+        showProgress: {
+          type: Boolean
+        },
+
+        hasMore: {
+          type: Boolean
+        },
+
+        isCritical: {
+          type: Boolean,
+          value: false
+        },
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        //   prefix. 																				           //
+        // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        //   populate their default values in ready callback (to have these values populated in children)!     //
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        _text: {
+          type: String
+        },
+
+        _msgText: {
+          type: String,
+          value: ''
+        },
+
+        _showProgress: {
+          type: Boolean
+        },
+
+        _hasMore: {
+          type: Boolean
+        },
+
+        _isCritical: {
+          type: Boolean,
+          value: false
+        },
+
+        _skipShowProgress: {
+          type: Boolean,
+          computed: '_shouldSkipProgress(_showProgress, _hasMore)'
+        }
+      },
+      
+      ready: function () {
+          //Indicates whether toast overlay can be closed via history (back button or not)
+          this.$.toast.skipHistoryAction = true;
+      },
+
+      _showMessageDlg: function(event) {
+        const self = this;
+        // need to open dialog asynchronously for it to open on mobile devices
+        this.async(function() {
+          // build and display the dialog
+          var domBind = document.createElement('template', 'dom-bind');
+
+          domBind._dialogClosed = function() {
+            Polymer.dom(document.body).removeChild(this);
+            Polymer.dom.flush();
+          }.bind(domBind);
+
+          var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+          Polymer.dom(paperDialog).setAttribute("class", "toast-dialog");
+          Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
+          Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
+          Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
+          Polymer.dom(paperDialog).setAttribute("entry-animation", "scale-up-animation");
+          Polymer.dom(paperDialog).setAttribute("exit-animation", "fade-out-animation");
+
+          var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
+          var msgPar = domBind.content.ownerDocument.createElement('p');
+          Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
+          if (containsRestictedTags(this._msgText) === true) {
+            Polymer.dom(msgPar).textContent = this._msgText;
+          } else {
+            Polymer.dom(msgPar).innerHTML = this._msgText;
+          }
+          Polymer.dom(paperDialogScrollable).appendChild(msgPar);
+
+          var buttonsDiv = domBind.content.ownerDocument.createElement('div');
+          Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
+
+          var buttons = domBind.content.ownerDocument.createElement('paper-button');
+          Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
+          Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
+          Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
+
+          var textSpan = domBind.content.ownerDocument.createElement('span');
+          Polymer.dom(textSpan).textContent = 'Close';
+          Polymer.dom(buttons).appendChild(textSpan);
+
+          Polymer.dom(buttonsDiv).appendChild(buttons);
+
+          Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
+          Polymer.dom(paperDialog).appendChild(buttonsDiv);
+
+          Polymer.dom(domBind.content).appendChild(paperDialog);
+          Polymer.dom(document.body).appendChild(domBind);
+          Polymer.dom.flush();
+
+          this.async(function() {
+            domBind.$.msgDialog.open();
+          }, 100);
+
+          self.$.toast.close();
+        }, 100);
+
+      },
+
+      _shouldSkipProgress: function(progress, hasMore) {
+        return !progress || hasMore;
+      },
+
+      _skipShowMore: function(progress, hasMore) {
+        return progress || !hasMore;
+      },
+
+      _getPreviousToast() {
+        var toasts = document.querySelectorAll('#toast');
+        var toast = null;
+        var existingToastCount = 0;
+        for (var index = 0; index < toasts.length; index++) {
+          var currToast = toasts.item(index);
+          if (currToast.parentNode === document.body) {
+            existingToastCount++;
+            // console.debug('toast show() parentNode is [', existingToastCount ,']', Polymer.dom(currToast).parentNode, currToast.parentNode, ' body == ', Polymer.dom(document.body), document.body);
+            if (existingToastCount > 1) {
+              throw 'More than one toast exist in body direct children.';
             }
-        })
-    })();
+            toast = currToast;
+          } else {
+            // console.warn('toast show() parentNode is ', Polymer.dom(currToast).parentNode, currToast.parentNode, ' body == ', Polymer.dom(document.body), document.body);
+          }
+        }
+        return toast;
+      },
+
+      show: function() {
+        // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
+        var previousToast = this._getPreviousToast();
+        if (!previousToast) {
+          // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
+          this.$.toast.refit = function() {};
+          Polymer.dom(document.body).appendChild(this.$.toast);
+          Polymer.dom().flush();
+          this._showNewToast();
+        } else if (previousToast.error === true && previousToast.opened) {
+          console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
+        } else {
+          // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
+          // WARNING: 'dataHost' is not a public Polymer API.
+          var previousTgToast = previousToast.dataHost;
+
+          if (previousTgToast !== this) {
+            previousTgToast.text = this.text;
+            previousTgToast.msgText = this.msgText;
+            previousTgToast.showProgress = this.showProgress;
+            previousTgToast.hasMore = this.hasMore;
+            previousTgToast.isCritical = this.isCritical;
+          }
+          previousTgToast._showNewToast();
+        }
+      },
+
+      _showNewToast: function() {
+        this._text = this.text;
+        this._msgText = this.msgText;
+        this._showProgress = this.showProgress;
+        this._hasMore = this.hasMore;
+        this._isCritical = this.isCritical;
+
+        const oldDuration = this.$.toast.duration;
+        if (this._showProgress && !this._hasMore) {
+          this.$.toast.duration = 3600000; //1 hour
+        } else if (this._isCritical === true) {
+          this.$.toast.duration = 5000; //5 seconds
+        } else {
+          this.$.toast.duration = 3000; //3 seconds
+        }
+        // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:
+        if (this.$.toast.duration !== oldDuration) { // if duration changed
+          if (this.$.toast._autoClose !== null) {
+            this.$.toast.cancelAsync(this.$.toast._autoClose);
+            this.$.toast._autoClose = null;
+          }
+          this.$.toast._autoClose = this.$.toast.async(this.$.toast.close, this.$.toast.duration);
+        }
+
+        this.$.toast.error = this._isCritical; //this._hasMore;
+        console.log('isCritical!!', this._isCritical);
+        if (this._isCritical === true) {
+          this.$.toast.style.background = '#D50000';
+          this.$.btnMore.style.color = '#FFCDD2';
+        } else {
+          this.$.toast.style.background = 'black';
+          this.$.btnMore.style.color = '#03A9F4';
+        }
+        this.$.toast.show();
+        // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
+      }
+    })
+  })();
 </script>
 </polymer-element>

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource;
 import ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource;
@@ -33,7 +34,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityAutocompletionResourceFactory extends Restlet {
-    private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
     private final IWebUiConfig webApp;
@@ -41,8 +41,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     private final ICompanionObjectFinder coFinder;
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
-
-
+    private final IDeviceProvider deviceProvider;
+    
     /**
      * Instantiates a factory for entity autocompletion resources (for centres and masters).
      *
@@ -51,13 +51,13 @@ public class EntityAutocompletionResourceFactory extends Restlet {
      */
     public EntityAutocompletionResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.webApp = webUiConfig;
-        this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
     }
 
     @Override
@@ -80,7 +80,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         webApp, 
                         coFinder, 
                         serverGdtm, 
-                        userProvider, 
+                        userProvider,
+                        deviceProvider,
                         critGenerator, 
                         factory, 
                         miType,
@@ -108,10 +109,10 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         entityType,
                         propertyName,
                         entityProducer,
-                        factory,
                         valueMatcher,
                         coFinder,
                         restUtil,
+                        deviceProvider,
                         getContext(),
                         request,
                         response //

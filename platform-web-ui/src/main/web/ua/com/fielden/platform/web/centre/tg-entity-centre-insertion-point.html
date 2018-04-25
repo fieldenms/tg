@@ -1,5 +1,7 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
@@ -13,7 +15,6 @@
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
-<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
@@ -33,12 +34,13 @@
         text-overflow: ellipsis;
     }
     #insertionPointContent .title-bar {
-        padding: 0 2px 0 16px;
         height: 44px;
         min-height: 44px;
         font-size: 18px;
         cursor: default;
         color: white;
+        min-width: 0;
+        overflow: hidden;
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
@@ -46,11 +48,15 @@
         background-color: var(--paper-light-blue-600);
     }
     #insertionPointContent paper-icon-button.expand-colapse-button {
+        min-width: 40px;
+        min-height: 40px;
         stroke: var(--paper-grey-100);
         fill: var(--paper-grey-100);
         color: var(--paper-grey-100);
     }
     #insertionPointContent paper-icon-button.expand-colapse-button:hover {
+        min-width: 40px;
+        min-height: 40px;
         stroke: var(--paper-grey-300);
         fill: var(--paper-grey-300);
         color: var(--paper-grey-300);
@@ -66,18 +72,22 @@
     <template>
         <style include="tg-entity-centre-styles"></style>
         <style>
+            :host {
+                @apply(--layout-self-stretch);
+                overflow: auto;
+            }
             .truncate {
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
             .title-bar {
-                padding: 0 2px 0 16px;
                 height: 44px;
                 min-height: 44px;
                 font-size: 18px;
                 cursor: default;
                 color: white;
+                overflow: hidden;
                 -webkit-user-select: none;
                 -moz-user-select: none;
                 -ms-user-select: none;
@@ -85,11 +95,15 @@
                 background-color: var(--paper-light-blue-600);
             }
             paper-icon-button.expand-colapse-button {
+                min-width: 40px;
+                min-height: 40px;
                 stroke: var(--paper-grey-100);
                 fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
             }
             paper-icon-button.expand-colapse-button:hover {
+                min-width: 40px;
+                min-height: 40px;
                 stroke: var(--paper-grey-300);
                 fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
@@ -101,8 +115,8 @@
             </div>
             <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
-                    <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                    <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                    <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+                    <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
                 <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
@@ -239,12 +253,27 @@
             },
             
             attached: function () {
+                if (!this.egiBindingAdded) {
+                    // cache parent result view, that contains this insertion point
+                    this.resultView = this.findResultView();
+                    if (this.resultView) {
+                        // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
+                        this.addOwnKeyBinding(this.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
+                        this.egiBindingAdded = true;
+                    }
+                }
                 this.async(function () {
                     if (this.customActions) {
                         this.customActions.forEach(elem  => Polymer.dom(this.$.custom_actions_container).appendChild(elem));
                         Polymer.dom.flush();
                     }
                 }, 1);
+            },
+            
+            refreshEntitiesLocaly: function(entities, properties) {
+                if (this._element && typeof this._element.refreshEntitiesLocaly === 'function') {
+                    this._element.refreshEntitiesLocaly(entities, properties);
+                }
             },
             
             _customShortcutsChanged: function (newValue, oldValue) {
@@ -405,9 +434,11 @@
                 var self = this;
                 if (this.$.elementLoader.prefDim && detached === false) {
                     var prefDim = this.$.elementLoader.prefDim;
-                    this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
+                    this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
+                    this.$.loadableContent.style.removeProperty("width");
                     this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
                 } else {
+                    this.$.pm.style.removeProperty("width");
                     this.$.loadableContent.style.width = "100%";
                     this.$.loadableContent.style.height = "100%";
                 }
@@ -437,6 +468,26 @@
             _shortcutPressed: function (e) {
                 this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
             },
+            
+            /**
+             * Redirect EGI shortcut handling to parent result view which will redirect it further to EGI.
+             */
+            _egiShortcutPressed: function (e) {
+                if (this.resultView) {
+                    this.resultView._shortcutPressed(e);
+                }
+            },
+            
+            /**
+             * Finds parent result view for this insertion point. It should be done only in 'attached' insertion point state.
+             */
+            findResultView: function () {
+                let parent = this;
+                while (parent && !parent.classList.contains('centreResultView')) {
+                    parent = parent.parentElement;
+                }
+                return parent;
+            }
         });
     })();
 </script>

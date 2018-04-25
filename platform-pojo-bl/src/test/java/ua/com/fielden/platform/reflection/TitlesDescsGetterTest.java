@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -11,6 +15,8 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
+import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -26,9 +32,6 @@ public class TitlesDescsGetterTest {
     @EntityTitle(value = "Work Order", desc = "Domain entity representing an order for a maintenance of equipment.")
     @KeyType(String.class)
     private static class C extends AbstractEntity<String> {
-        public C() {
-        }
-
         @IsProperty
         @Title(value = "Veh/Eqp", desc = "Vehicle or other equipment")
         private Integer vehicle;
@@ -73,4 +76,29 @@ public class TitlesDescsGetterTest {
                 + add + add + add + add + add + add + "]</i></html>"), TitlesDescsGetter.getFullTitleAndDesc("c.c.c.c.c.c.incident", C.class));
     }
 
+    @Test
+    public void getTitleAndDesc_uses_entity_type_title_for_entity_typed_properties_that_miss_annotation_Title_as_their_title_and_desc() {
+        final Pair<String, String> propTitleAndDesc = TitlesDescsGetter.getTitleAndDesc("critOnlyAEProperty", FirstLevelEntity.class);
+        final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(SimpleEntity.class);
+        
+        assertEquals(entityTitleAndDesc.getKey(), propTitleAndDesc.getKey());
+        assertEquals(entityTitleAndDesc.getKey(), propTitleAndDesc.getValue());
+    }
+
+    
+    @Test
+    public void getTitleAndDescOfPropertyType_can_determine_title_and_desc_of_entity_type_by_property_path() {
+        final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("critOnlyAEProperty", FirstLevelEntity.class);
+        
+        assertTrue(titleAndDesc.isPresent());
+        assertEquals("Simple Entity", titleAndDesc.get().getKey());
+        assertEquals("Simple Entity entity", titleAndDesc.get().getValue());
+    }
+    
+    @Test
+    public void getTitleAndDescOfPropertyType_returns_empty_result_if_non_entity_typed_property_is_specified() {
+        final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("property", FirstLevelEntity.class);
+        
+        assertFalse(titleAndDesc.isPresent());
+    }
 }

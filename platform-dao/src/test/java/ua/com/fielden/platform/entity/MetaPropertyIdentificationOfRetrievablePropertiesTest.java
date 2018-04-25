@@ -56,7 +56,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream()
                 .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(12, retrievableProps.size());
+        assertEquals(13, retrievableProps.size());
 
         final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
         assertTrue(names.contains(KEY));

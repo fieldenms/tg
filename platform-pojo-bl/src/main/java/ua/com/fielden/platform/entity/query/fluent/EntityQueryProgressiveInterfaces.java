@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import java.util.Date;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -211,8 +213,17 @@ public interface EntityQueryProgressiveInterfaces {
 		IFunctionLastArgument<T, ET> monthOf();
 
 		IFunctionLastArgument<T, ET> yearOf();
+		
+		IFunctionLastArgument<T, ET> dayOfWeekOf();
 
 		IIfNullFunctionArgument<T, ET> ifNull();
+
+		/**
+		 * Start of an expression for adding a time interval, which is represented by an integer value, to some target value, property or a model result of type {@link Date}.
+		 * 
+		 * @return
+		 */
+		IDateAddIntervalFunctionArgument<T, ET> addTimeIntervalOf();
 
 		IFunctionWhere0<T, ET> caseWhen();
 
@@ -355,6 +366,16 @@ public interface EntityQueryProgressiveInterfaces {
 
 		IDateDiffFunction<T, ET> years();
 	}
+	
+	interface IDateAddIntervalFunctionTo<T, ET extends AbstractEntity<?>> {
+	    /**
+	     * A junction to be used for specifying where to the time interval should be added.
+	     * Whatever follows ({@code val}, {@code prop}, {@code model} or an expression) must be computable to a value of type {@link Date}.
+	     * 
+	     * @return
+	     */
+		IFunctionLastArgument<T, ET> to();
+	}
 
 	interface ICaseWhenFunction<T, ET extends AbstractEntity<?>> {
 		ICaseWhenFunctionArgument<T, ET> then();
@@ -386,6 +407,26 @@ public interface EntityQueryProgressiveInterfaces {
 		IFunctionWhere0<T, ET> when();
 	}
 
+	/**
+	 * A contract to specify the units of measure for time interval operations. 
+	 *
+	 * @param <T>
+	 * @param <ET>
+	 */
+	interface IDateAddIntervalUnit<T, ET extends AbstractEntity<?>> {
+		IDateAddIntervalFunctionTo<T, ET> seconds();
+
+		IDateAddIntervalFunctionTo<T, ET> minutes();
+
+		IDateAddIntervalFunctionTo<T, ET> hours();
+
+		IDateAddIntervalFunctionTo<T, ET> days();
+
+		IDateAddIntervalFunctionTo<T, ET> months();
+
+		IDateAddIntervalFunctionTo<T, ET> years();
+	}
+	
 	interface IIfNullFunctionThen<T, ET extends AbstractEntity<?>> {
 		IFunctionLastArgument<T, ET> then();
 	}
@@ -803,6 +844,10 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface ICaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 			extends IExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> {
+	}
+
+	interface IDateAddIntervalFunctionArgument<T, ET extends AbstractEntity<?>> //
+			extends IExprOperand<IDateAddIntervalUnit<T, ET>, IExprOperand0<IDateAddIntervalUnit<T, ET>, ET>, ET> {
 	}
 
 	interface IIfNullFunctionArgument<T, ET extends AbstractEntity<?>> //

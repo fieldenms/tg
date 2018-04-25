@@ -8,17 +8,12 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
 
@@ -38,6 +33,7 @@ public class CriteriaResourceFactory extends Restlet {
 
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
     private final EntityFactory entityFactory;
 
     /**
@@ -50,7 +46,8 @@ public class CriteriaResourceFactory extends Restlet {
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
-        this.userProvider = injector.getInstance(IUserProvider.class);;
+        this.userProvider = injector.getInstance(IUserProvider.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
         this.entityFactory = injector.getInstance(EntityFactory.class);
     }
     
@@ -66,6 +63,7 @@ public class CriteriaResourceFactory extends Restlet {
                     companionFinder,
                     serverGdtm,
                     userProvider,
+                    deviceProvider,
                     critGenerator,
                     entityFactory,
                     getContext(),

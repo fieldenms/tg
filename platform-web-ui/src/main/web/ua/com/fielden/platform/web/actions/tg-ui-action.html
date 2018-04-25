@@ -472,10 +472,8 @@
                 // This flag is configured from 'withNoParentCentreRefresh()' function call (or from non-existence of that call) in Java API functional action configuration.
                 // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
                 master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
-
+                
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                    //this.focusFirstInput();
-                    
                     postal.publish({
                         channel: "centre_" + this.centreUuid,
                         topic: "detail.saved",
@@ -504,17 +502,15 @@
                         self.restoreActiveElement();
                     }
                 };
-
+                
                 master.postSavedError = function (errorResult) {
-                	// if action has no UI part then even failed saving indicates the completion of action's execution
-                	// otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
-                	if (this.noUI === true) {
-                		// action execution completed, althoug in error from saving
-                    	self.isActionInProgress = false;
+                    // if action has no UI part then even failed saving indicates the completion of action's execution
+                    // otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
+                    if (this.noUI === true) {
+                        // action execution completed, althoug in error from saving
+                        self.isActionInProgress = false;
                         self.restoreActiveElement();
-                	} else {
-                        //this.focusFirstInput();
-                	}
+                    }
                 };
                 
                 master.entityId = master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id')));
@@ -530,7 +526,7 @@
                     }
                     
                     if (self.modifyFunctionalEntity) {
-                        self.modifyFunctionalEntity(master._currBindingEntity, master);
+                        self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
                     self._masterReferenceForTesting = master;
                     if (master.saveOnActivation === true) {

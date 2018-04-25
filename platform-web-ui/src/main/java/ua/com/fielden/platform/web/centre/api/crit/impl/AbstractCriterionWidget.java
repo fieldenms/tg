@@ -2,9 +2,13 @@ package ua.com.fielden.platform.web.centre.api.crit.impl;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.generateCriteriaPropertyName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -12,11 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -138,7 +139,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
     @Override
     public final DomElement render() {
-        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes()).add(editors());
+        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes()).add(editors()).clazz("criterion-widget");
     }
 
     /**
@@ -171,14 +172,14 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
     public static Pair<String, String> generateNames(final Class<?> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
+        final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, propertyName);
 
         final String firstPropertyName, secondPropertyName;
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-            firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
-            secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
+        if (isDoubleCriterion(managedType, propertyName)) {
+            firstPropertyName = generateCriteriaPropertyName(root, isBoolean(propertyType) ? is(propertyName) : from(propertyName));
+            secondPropertyName = generateCriteriaPropertyName(root, isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         } else {
-            firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName);
+            firstPropertyName = generateCriteriaPropertyName(root, propertyName);
             secondPropertyName = null;
         }
         return new Pair<>(firstPropertyName, secondPropertyName);

@@ -186,7 +186,7 @@ public class EntityAggregates extends AbstractEntity<String> {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("EntityAggregates:\n");
 
         int i = 0;

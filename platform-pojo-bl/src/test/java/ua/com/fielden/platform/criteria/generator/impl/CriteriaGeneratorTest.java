@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.annotation.Annotation;
@@ -20,6 +17,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.FirstParam;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
@@ -33,27 +32,23 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
+import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
+import ua.com.fielden.platform.sample.domain.crit_gen.SecondLevelEntity;
+import ua.com.fielden.platform.sample.domain.crit_gen.ThirdLevelEntity;
+import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 public class CriteriaGeneratorTest {
     private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
@@ -421,7 +416,6 @@ public class CriteriaGeneratorTest {
                 {
                     put(IsProperty.class, createAnnotationMap());
                     put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single entity property"), new Pair<String, Object>("desc", "single entity property description")));
-                    put(Required.class, createAnnotationMap());
                     put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", managedType), new Pair<String, Object>("propertyName", "critSingleEntity")));
                     put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
                 }
@@ -505,40 +499,6 @@ public class CriteriaGeneratorTest {
             criteriaEntity.set(valueEntry.getKey(), valueEntry.getValue());
         }
         assertNewPropertyValues(criteriaEntity, criteriaProperties);
-    }
-
-    @Test
-    public void test_that_crit_only_single_property_has_before_change_handler() {
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
-        final Field critField = Finder.findFieldByName(criteriaEntity.getType(), "topLevelEntity_critSingleEntity");
-        assertNotNull(critField);
-        final BeforeChange beforeChange = AnnotationReflector.getAnnotation(critField, BeforeChange.class);
-        assertNotNull(beforeChange);
-        final Handler[] handlers = beforeChange.value();
-        assertNotNull(handlers);
-        assertEquals("The number of handlers is incorrect", 1, handlers.length);
-        final Handler handler = handlers[0];
-        assertNotNull(handler);
-        final ClassParam[] classParams = handler.non_ordinary();
-        assertNotNull(classParams);
-        assertEquals("The number of class params is incorrect", 1, classParams.length);
-        final ClassParam classParam = classParams[0];
-        assertEquals("The name of class param property is incorrect", "coFinder", classParam.name());
-        assertEquals("The value of class param annottion is incorrect", ICompanionObjectFinder.class, classParam.value());
-    }
-
-    @Test
-    public void test_that_crit_only_single_validates_entity_exists() {
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
-        criteriaEntity.set("topLevelEntity_critSingleEntity", entityFactory.newByKey(LastLevelEntity.class, "invalid key"));
-        final Result res = criteriaEntity.isValid();
-        assertFalse(res.isSuccessful());
-        assertNull("The value for crit only single entity property is incorrect", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity"));
-        final AbstractEntity<?> value = entityFactory.newByKey(LastLevelEntity.class, "EntityKey").set(AbstractEntity.ID, 1L).setDirty(false);
-        criteriaEntity.set("topLevelEntity_critSingleEntity", value);
-        final Result newRes = criteriaEntity.isValid();
-        assertTrue(newRes.isSuccessful());
-        assertEquals("The value for crit only single entity property is incorrect", "EntityKey", ((LastLevelEntity) cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity")).getKey());
     }
 
     @Test

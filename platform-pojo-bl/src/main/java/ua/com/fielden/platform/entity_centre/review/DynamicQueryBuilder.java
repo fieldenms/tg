@@ -848,28 +848,35 @@ public class DynamicQueryBuilder {
         } else if (isString(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
-            final Map<Boolean, List<String>> searchValues = ((List<String>) property.getValue()).stream().collect(Collectors.groupingBy(str -> str.contains("*")));
-            
-            final ConditionModel condition;
-            final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyName);
-            final Class<? extends AbstractEntity<?>> propType = baseEntityType((Class<AbstractEntity<?>>) property.getType());
-            if (searchValues.containsKey(false) && searchValues.containsKey(true)) {
-                condition = cond()
-                        .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model())
-                        .or().prop(propertyName).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchValues.get(true))).model();
-            } else if (searchValues.containsKey(false) && !searchValues.containsKey(true)) {
-                condition = cond()
-                        .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchValues.get(false).toArray()).model()).model();
-            } else {
-                condition = cond().prop(propertyName).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchValues.get(true))).model();
-            }
-            
-            return condition;
+            return propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
     }
-
+    
+    /**
+     * Generates condition for entity-typed property with type <code>propType</code> and criteria <code>searchValues</code>.
+     * 
+     * @param propertyNameWithKey -- the name of property concatenated with ".key"
+     * @param searchValues
+     * @param propType
+     * @return
+     */
+    public static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(Collectors.groupingBy(str -> str.contains("*")));
+        final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
+        if (searchVals.containsKey(false) && searchVals.containsKey(true)) {
+            return cond()
+                    .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchVals.get(false).toArray()).model())
+                    .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
+        } else if (searchVals.containsKey(false) && !searchVals.containsKey(true)) {
+            return cond()
+                    .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchVals.get(false).toArray()).model()).model();
+        } else {
+            return cond().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
+        }
+    }
+    
     /**
      * Indicates the unsupported type exception for dynamic criteria.
      *

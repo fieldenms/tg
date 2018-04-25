@@ -100,13 +100,14 @@
             	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
             	//   alternatively, computing function needs to be specified). 									       //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
-            	/**
-            	 * The current fully-fledged entity, that is used to create '_currBindingEntity' and '_originalBindingEntity'.
-            	 */
+                
+                /**
+                 * The current fully-fledged entity, that is used to create '_currBindingEntity' and '_originalBindingEntity'.
+                 */
   	            _currEntity: {
-  	            	type: Object,
-  	            	value: null
+  	                type: Object,
+  	                value: null,
+  	                notify: true
   	            },
   	            
   	            /**
@@ -166,9 +167,10 @@
                  */
                 _bindingEntityNotPersistentOrNotPersistedOrModified: {
                     type: Boolean,
-                    observer: '_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged'
+                    observer: '_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged',
+                    notify: true
                 },
-
+                
                 /**
                  * '_createModifiedPropertiesHolder' function, that is designated for binding.
                  */
@@ -305,7 +307,8 @@
                  * Returns true in case where there exist some properties which were edited (but not yet committed) by tg-editor-behavior.
                  */
                 _editedPropsExist: {
-                    type: Boolean
+                    type: Boolean,
+                    notify: true
                 },
                 
                 /**
@@ -319,6 +322,21 @@
                  * as in validation.
                  */
                 _retrievalInitiated: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                /**
+                 * Indicates whether saving process has been initiated by using CTRL+S key or tapping on SAVE button (or even programatically).
+                 * Strictly speaking it becomes 'true' when 'save' function gets functioned.
+                 *
+                 * _savingInitiated is needed to disable master / selectionCriteria view only once during debouncing of multiple saving requests, which in turn will be turned into single ajax request,
+                 * and thus only single 'view enablement' action.
+                 *
+                 * Debouncing of saving actions is needed to avoid multiple concurrent saving requests. However it adds additional debouncing 50-second delay similarly
+                 * as in validation.
+                 */
+                _savingInitiated: {
                     type: Boolean,
                     value: false
                 }
@@ -351,7 +369,55 @@
                 this._currBindingEntity = null;
                 this._originalBindingEntity = null;
     		},
-            
+
+            /* Returns a function that accepts an instance of Attachment to start the download of the associated file. The passed in attachment must not be null.*/
+            mkDownloadAttachmentFunction: function () {
+                return attachment => {
+	                const self = this;
+	                const url = '/download-attachment/' + attachment.id;
+	                // AJAX approach to the file download
+	                const xhr = new XMLHttpRequest();
+	                xhr.open("GET", url, true);
+	                xhr.responseType = 'blob';
+	                xhr.onload = function (e) {
+	                    if (xhr.status === 200) {
+	                        console.log('File received', xhr.getResponseHeader('Content-Disposition'));
+	                        const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
+	                        const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
+	                        if (filename) {
+	                            // create a Blob object from the response and a URL for it
+	                            const blob = new Blob([xhr.response]);
+	                            const blobUrl = window.URL.createObjectURL(blob);
+	                            // the blob URL can be used for the <a> element for the user to download/open the file
+	                            const a = document.createElement("a");
+	                            a.href = blobUrl;
+	                            a.download = filename;
+	                            a.click();
+	                            // release the reference to the file by revoking the Object URL
+	                            window.URL.revokeObjectURL(url);                                        
+	                        }
+	                    } else {
+	                        console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
+	                        const reader = new FileReader();
+	                        reader.onload = function() {
+	                            const resultAsObj = JSON.parse(reader.result);
+	                            const result = self._serialiser().deserialise(resultAsObj);
+	                            self._openToastForError(result.message, self._toastMsgForError(result), true);
+	                        }
+	                        reader.readAsText(xhr.response);
+	                    }
+	                    
+	                }.bind(self);
+	                xhr.onerror = function (e) {
+	                    const msg = "Unknown error occured when sending request to download the attachment.";
+	                    console.error(msg, e);
+	                    self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
+	                    
+	                }.bind(self);
+	                xhr.send();
+                }
+            },
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
@@ -917,7 +983,7 @@
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
                 bindingView["@@origin"] = entity;
-                bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], counts: [] };
+                bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], values: [], counts: [] };
 
                 entity.traverseProperties(function (propertyName) {
                     // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');

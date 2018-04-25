@@ -14,7 +14,7 @@ import org.restlet.resource.ResourceException;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  *
@@ -23,7 +23,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class MainWebUiComponentResource  extends DeviceProfileDifferentiatorResource {
+public class MainWebUiComponentResource  extends AbstractWebResource {
+    private final ISourceController sourceController;
+    
     /**
      * Creates {@link MainWebUiComponentResource} instance.
      *
@@ -32,13 +34,15 @@ public class MainWebUiComponentResource  extends DeviceProfileDifferentiatorReso
      * @param request
      * @param response
      */
-    public MainWebUiComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        super(sourceController, restUtil, context, request, response);
+    public MainWebUiComponentResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider);
+        this.sourceController = sourceController;
     }
-
+    
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController().loadSource("/app/tg-app.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-app.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
+    
 }

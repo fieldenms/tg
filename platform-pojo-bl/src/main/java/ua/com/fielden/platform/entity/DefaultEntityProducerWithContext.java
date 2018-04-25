@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,11 +78,25 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         if (masterEntityInstanceOf(EntityEditAction.class)) {
             final EntityEditAction entityEditAction = masterEntity(EntityEditAction.class);
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
+            
+            // let's try the default behaviour... which may return a null either due to a programming error (most likely) or a case of chosen property being clicked, but ID is from a corresponding master entity
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
+            
             // let's be a more bit protective and try to provide a meaningful exception in cases where entity could not be found instead of the inevitable NPE downstream
             if (producedEntity == null) {
+                // before bailing out and throwing an exception, let's try to handle the case of edit-action being invoked on a chosen property for the current entity...
+                // need to use ofMasterEntity() here as the useful context is only present in the EntityEditAction instance itself 
+                if (ofMasterEntity().currentEntityNotEmpty() && ofMasterEntity().chosenPropertyNotEmpty()) {
+                    return Optional.ofNullable(ofMasterEntity().currentEntity().get(ofMasterEntity().chosenProperty()))
+                            .filter(v -> v instanceof AbstractEntity)
+                            .map(v -> ((AbstractEntity<?>) v).getId())
+                            .map(id -> refetchInstrumentedEntityById(id))
+                            .orElseThrow(() -> new EntityProducingException(format("Could not find %s.", getEntityTitleAndDesc(entityType).getKey())));
+                } // else there could potentially be some other valid cases that should be handled here once become apparent...
+                
+                // otherwise let's report the problem...
                 throw new EntityProducingException(format("Could not find entity of type [%s] with ID [%s].", entityEditAction.getEntityType(), entityEditAction.getEntityId()));
-            }
+            }            
         } else {
             final T entity = new_();
             

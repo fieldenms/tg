@@ -4,7 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-
 import java.util.HashSet;
 import java.util.List;
 
@@ -78,8 +77,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
             }
 
             @Override
-            public void setUser(User user) {
-                
+            public void setUser(final User user) {
             }
         };
         return baseUserProvider;

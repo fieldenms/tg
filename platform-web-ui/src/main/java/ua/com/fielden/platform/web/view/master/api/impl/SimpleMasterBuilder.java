@@ -48,8 +48,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
 
-    private final FlexLayout layout = new FlexLayout();
-    private final FlexLayout actionBarLayout = new FlexLayout();
+    private final FlexLayout layout = new FlexLayout("editors");
+    private final FlexLayout actionBarLayout = new FlexLayout("actions");
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
@@ -101,7 +101,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return this;
     }
 
-    private Optional<String> getFocusingCallback(final MasterActions masterAction) {
+    public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
         if (MasterActions.SAVE == masterAction) {
             return Optional.of("focusFirstInputBound");
         } else {
@@ -109,11 +109,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
     }
 
-    private Optional<String> getShortcut(final MasterActions masterAction) {
+    public static Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return Optional.of("ctrl+r");
+            return Optional.of("ctrl+r meta+r");
         } else if (MasterActions.SAVE == masterAction) {
-            return Optional.of("ctrl+s");
+            return Optional.of("ctrl+s meta+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {
             return Optional.empty();
         } else {
@@ -121,7 +121,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
     }
 
-    private String getPostActionError(final MasterActions masterAction) {
+    public static String getPostActionError(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
@@ -137,7 +137,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
     }
 
-    private String getPostAction(final MasterActions masterAction) {
+    public static String getPostAction(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
@@ -251,7 +251,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     primaryActionObjects.append(prefix + el.createActionObject());
                 }
             }
-
         }
 
         final StringBuilder prefDimBuilder = new StringBuilder();
@@ -276,6 +275,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                       + actionBarLayout.code().toString() + "\n"
                       + entityActionsStr.toString() + "\n"
                       + propertyActionsStr.toString())
+                .replace("//@attached-callback", "self.registerCentreRefreshRedirector();\n")
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
@@ -285,13 +285,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivation + "");
 
-        final IRenderable representation = new IRenderable() {
-            @Override
-            public DomElement render() {
-                return new InnerTextElement(entityMasterStr);
-            }
-        };
-
+        final IRenderable representation = () -> new InnerTextElement(entityMasterStr);
         return new SimpleMaster(representation, valueMatcherForProps);
     }
 

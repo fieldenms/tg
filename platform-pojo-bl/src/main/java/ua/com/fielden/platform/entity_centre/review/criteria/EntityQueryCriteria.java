@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -78,6 +81,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
     private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
     private Optional<User> createdByUserConstraint = Optional.empty();
+    private AbstractEntity<?> critOnlySinglePrototype;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
@@ -745,10 +749,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), actualProperty);
 
         queryProperty.setValue(tickManager.getValue(root, actualProperty));
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(getManagedType(), actualProperty)) {
+        if (isDoubleCriterion(getManagedType(), actualProperty)) {
             queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
         }
-        if (AbstractDomainTree.isDoubleCriterion(getManagedType(), actualProperty)) {
+        if (isDoubleCriterion(getManagedType(), actualProperty) && !isBooleanCriterion(getManagedType(), actualProperty)) {
             queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
             queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
         }
@@ -800,4 +804,38 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public ICompanionObjectFinder getControllerProvider() {
         return controllerProvider;
     }
+    
+    /**
+     * Initialises crit-only single prototype entity if it was not initialised before. Returns it as a result.
+     * 
+     * @param entityType -- the type of the prototype (only for initialisation)
+     * @param id -- id for the prototype (only for initialisation)
+     * @return
+     */
+    public AbstractEntity<?> critOnlySinglePrototypeInit(final Class<AbstractEntity<?>> entityType, final Long id) {
+        if (critOnlySinglePrototype == null) {
+            critOnlySinglePrototype = getEntityFactory().newEntity(entityType, id);
+            critOnlySinglePrototype.resetMetaState();
+        }
+        return critOnlySinglePrototype();
+    }
+    
+    /**
+     * Returns crit-only single prototype entity.
+     * 
+     * @return
+     */
+    public AbstractEntity<?> critOnlySinglePrototype() {
+        return critOnlySinglePrototype;
+    }
+    
+    /**
+     * Returns crit-only single prototype entity if exists.
+     * 
+     * @return
+     */
+    public Optional<AbstractEntity<?>> critOnlySinglePrototypeOptional() {
+        return ofNullable(critOnlySinglePrototype);
+    }
+    
 }

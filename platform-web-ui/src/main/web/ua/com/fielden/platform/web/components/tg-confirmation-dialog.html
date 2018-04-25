@@ -49,10 +49,19 @@
 
             Polymer({
                 is: 'tg-confirmation-dialog',
+                
+                showConfirmationDialog: function (message, buttons) {
+                    if (this._lastPromise) {
+                        this._lastPromise = this._lastPromise.then(
+                            value => this._showConfirmationDialog(message, buttons), 
+                            reason => this._showConfirmationDialog(message, buttons));
+                    } else {
+                        this._lastPromise = this._showConfirmationDialog(message, buttons);
+                    }
+                    return this._lastPromise;
+                },
 
                 _showConfirmationDialog: function (message, buttons) {
-                    dialogModel.message = message;
-                    dialogModel.buttons = buttons;
 
                     return new Promise(function (resolve, reject) {
 
@@ -63,11 +72,14 @@
                                 resolve("ENTER");
                             }
                         }
-
+                        
                         dialogModel.dialogCanceled = function (e) {
                             reject("ESC");
                         };
-
+                        dialogModel.closeDialog = function () {
+                            reject("ESC");
+                        };
+                        
                         dialogModel._action = function (e) {
                             var button = e.model.item;
                             if (button.confirm) {
@@ -76,7 +88,9 @@
                                 reject(button.name);
                             }
                         };
-
+                        
+                        dialogModel.message = message;
+                        dialogModel.buttons = buttons;
                         dialogModel.showDialog();
                     });
                 }

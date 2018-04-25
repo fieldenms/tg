@@ -38,6 +38,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -252,9 +253,8 @@ public class DomainMetadata {
         return new ModelledEntityMetadata(baseInfoForDomainMetadata.getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType, UNION));
     }
 
-    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata)
-            throws Exception {
-        return new PureEntityMetadata(baseInfoForDomainMetadata.getTableClause(entityType), entityType, generatePropertyMetadatasForEntity(entityType, PURE));
+    public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) {
+        return new PureEntityMetadata<>(baseInfoForDomainMetadata.getTableClause(entityType), entityType);
     }
 
     //    public void enhanceWithCalcProps(final Collection<EntityMetadata> entityMetadatas) {

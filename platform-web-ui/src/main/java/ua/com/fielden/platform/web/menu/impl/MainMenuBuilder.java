@@ -57,7 +57,7 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
         return new Menu().
                 setMenu(mainMenu.getModules()).
                 setMinCellWidth(tileLayout.getMinCellWidth() + "px").
-                setMincellHeight(tileLayout.getMinCellHeight() + "px").
+                setMinCellHeight(tileLayout.getMinCellHeight() + "px").
                 setWhenDesktop(tileLayout.getLayout(Device.DESKTOP, null).get()).
                 setWhenTablet(tileLayout.getLayout(Device.TABLET, null).get()).
                 setWhenMobile(tileLayout.getLayout(Device.MOBILE, null).get());

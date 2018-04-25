@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
@@ -32,7 +34,8 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  */
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
-    public static final String WAS_NOT_FOUND_ERR = "%s [%s] was not found.";
+    private static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
+    private static final String WAS_NOT_FOUND_ERR = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
     
     private final Class<T> type;
@@ -63,7 +66,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
-
+            
+            if (EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+                return successful(entity);
+            }
             // the notion of existence is different for activatable and non-activatable entities,
             // where for activatable entities to exists mens also to be active
             final boolean exists;
@@ -90,10 +96,11 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
 
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
+                final String newValueStr = newValue.toString();
                 if (!exists) {
-                    return failure(entity, format(WAS_NOT_FOUND_ERR, entityTitle, newValue));
+                    return failure(entity, KEY_NOT_ASSIGNED.equals(newValueStr) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValueStr));
                 } else {
-                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue));
+                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValueStr));
                 }
             } else {
                 return successful(entity);

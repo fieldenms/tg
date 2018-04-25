@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.g
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getPropertyNameWithoutKeyPart;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForEntityTypedProp;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -17,6 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,7 +122,12 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
-        hibConf.addXML(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)));
+        try {
+            hibConf.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)).getBytes("UTF8")));
+        } catch (final MappingException | UnsupportedEncodingException e) {
+            throw new HibernateException("Could not add mappings.", e);
+        }
+        
         final List<String> propertyNames = Arrays.asList(new String[] { //
         "integerProp", //
         "doubleProp", //

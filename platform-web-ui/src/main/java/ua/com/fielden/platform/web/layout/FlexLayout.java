@@ -14,14 +14,23 @@ import ua.com.fielden.platform.web.minijs.JsCode;
  */
 public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>> implements IImportable, IExecutable {
     private final String flexLayoutPath = "layout/tg-flex-layout";
+    private final String name;
+    
+    /**
+     * Constructs {@link FlexLayout} instance with <code>name</code> providing uniqueness inside the same source file where it is generated into.
+     * 
+     * @param name
+     */
+    public FlexLayout(final String name) {
+        this.name = name;
+    }
 
     @Override
     public DomElement render() {
         final DomElement flexElement = new DomElement("tg-flex-layout");
-        final int hashCode = hashCode();
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
-                flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout_" + hashCode + "]]");
+                flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout_" + name + "]]");
             }
         }
         return flexElement;
@@ -40,10 +49,9 @@ public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>>
     @Override
     public JsCode code() {
         final StringBuilder code = new StringBuilder();
-        final int hashCode = hashCode();
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
-                code.append("this._" + layout.getKey().toString() + "Layout_" + hashCode + " = " + layouts.get(layout).get() + ";\n");
+                code.append("this._" + layout.getKey().toString() + "Layout_" + name + " = " + layouts.get(layout).get() + ";\n");
             }
         }
         return new JsCode(code.toString());

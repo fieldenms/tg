@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreJSONResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.IdentityHashMap;
@@ -21,7 +20,6 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -46,6 +44,7 @@ import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -56,18 +55,18 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <T>
  * @param <DAO>
  */
-public class SerialisationTestResource extends ServerResource {
+public class SerialisationTestResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
-        init(context, request, response);
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
+        super(context, request, response, deviceProvider);
         this.restUtil = restUtil;
         this.entities.addAll(entities);
     }
     
-    public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
-        this(restUtil, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, deviceProvider, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**

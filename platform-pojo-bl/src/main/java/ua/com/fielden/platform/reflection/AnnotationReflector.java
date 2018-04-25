@@ -179,7 +179,6 @@ public final class AnnotationReflector {
      * @return this element's annotation for the specified annotation type if present on this element, else null
      * @throws NullPointerException
      *             if the given annotation class is null
-     * @since 1.5
      */
     public static <T extends Annotation> T getAnnotation(final AnnotatedElement annotatedElement, final Class<T> annotationClass) {
         if (annotatedElement instanceof Class) {
@@ -196,6 +195,17 @@ public final class AnnotationReflector {
                     : annByAccObjectAndAnnClass;
             return annByAccObjectAndAnnClassNotNull instanceof Empty ? null : (T) annByAccObjectAndAnnClassNotNull;
         }
+    }
+    
+    /**
+     * The same as {@link #getAnnotation(AnnotatedElement, Class)}, but with an {@link Optional} result.
+     * 
+     * @param annotatedElement
+     * @param annotationClass
+     * @return
+     */
+    public static <T extends Annotation> Optional<T> getAnnotationOptionally(final AnnotatedElement annotatedElement, final Class<T> annotationClass) {
+        return Optional.ofNullable(getAnnotation(annotatedElement, annotationClass));
     }
 
     // //////////////////////////////////METHOD RELATED ////////////////////////////////////////
@@ -365,6 +375,18 @@ public final class AnnotationReflector {
         } else {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
+    }
+    
+    /**
+     * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result;
+     * 
+     * @param annotationType
+     * @param forType
+     * @param dotNotationExp
+     * @return
+     */
+    public static <T extends Annotation> Optional<T> getPropertyAnnotationOptionally(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
+        return Optional.ofNullable(getPropertyAnnotation(annotationType, forType, dotNotationExp));
     }
 
     /**

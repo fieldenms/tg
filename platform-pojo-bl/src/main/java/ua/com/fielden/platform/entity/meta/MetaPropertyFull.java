@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -37,6 +40,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -119,7 +123,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean visible = true;
     private boolean required = false;
     public final boolean isRequiredByDefinition;
-    public final boolean isCritOnly;
     private final boolean calculated;
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +183,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         final Final finalAnnotation = field.getAnnotation(Final.class);
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
         this.isRequiredByDefinition = isRequiredByDefinition(field, entity.getType());
-        this.isCritOnly = field.isAnnotationPresent(CritOnly.class);
     }
 
     /**
@@ -455,24 +457,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Returns the first warning associated with property validators.
-     *
-     * @return
-     */
-    @Override
-    public synchronized final Warning getFirstWarning() {
-        for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
-            for (final Result result : annotationHandlers.values()) {
-                if (result != null && result.isWarning()) {
-                    return (Warning) result;
-                }
-            }
-        }
-        return null;
-    }
-    
-    /**
      * Removes all validation warnings (not errors) from the property.
      */
     @Override
@@ -495,7 +479,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final synchronized boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
         final boolean result = isValid();
-        if (result && (!ignoreRequirednessForCritOnly || !isCritOnly)) {
+        if (result && (!ignoreRequirednessForCritOnly || !isCritOnly())) {
             // if valid check whether it's requiredness sound
             final Object value = getEntity().get(getName());
             // this is a potential alternative approach to validating requiredness for proxied properties
@@ -535,7 +519,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public synchronized final Result getFirstFailure() {
+    public final synchronized Result getFirstFailure() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
             for (final Result result : annotationHandlers.values()) {
@@ -547,6 +531,35 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return null;
     }
 
+    /**
+     * Returns the first warning associated with property validators.
+     *
+     * @return
+     */
+    @Override
+    public synchronized final Warning getFirstWarning() {
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+            for (final Result result : annotationHandlers.values()) {
+                if (result != null && result.isWarning()) {
+                    return (Warning) result;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Result validationResult() {
+        final Stream<Result> streamOfErrorsAndWarnings = validators.values().stream().flatMap(v -> v.values().stream()).filter(r -> r != null && (r.isWarning() || !r.isSuccessful()));
+        final T2<Result, Result> filureAndWarning = streamOfErrorsAndWarnings
+                .reduce(t2(successful(this), successful(this)), 
+                        (p, result) -> t2(!result.isSuccessful() ? result : p._1, result.isWarning() ? result : p._2), 
+                        (o1, o2) -> {throw Result.failure("Parallel processing is not supported.");});
+        
+        return !filureAndWarning._1.isSuccessful() ? filureAndWarning._1 : filureAndWarning._2;
+    }
+    
     /**
      * Returns the first failure associated with <code>annotation</code> value.
      *
@@ -938,7 +951,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getSimpleName()));
         }
 
-        if (!required && isRequiredByDefinition && !isCritOnly && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
+        if (!required && isRequiredByDefinition && !isCritOnly() && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
             throw new EntityDefinitionException(format("Property [%s] in entity [%s] is declared as required and cannot have this constraint relaxed.", name, getEntity().getType().getSimpleName()));
         }
     }

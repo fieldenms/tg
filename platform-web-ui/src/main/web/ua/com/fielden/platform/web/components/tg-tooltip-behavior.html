@@ -6,11 +6,11 @@ mark element with tooltip-text attribute.
 -->
 <script>
     (function () {
-        var toolTipElement = document.createElement("tg-tooltip");
+        const toolTipElement = document.createElement("tg-tooltip");
         /**
          * Returns the element in hierarchy that has tooltip-id attribute set otherwise returns null.
          */
-        var extractActiveElement = function (currentElement, thisElement) {
+        const extractActiveElement = function (currentElement, thisElement) {
             if (currentElement && currentElement !== thisElement.parentElement) {
                 if (currentElement.hasAttribute("tooltip-text")) {
                     return currentElement;
@@ -60,9 +60,13 @@ mark element with tooltip-text attribute.
             },
 
             ready: function () {
+                //Bind mouse events
                 this._handleMouseMove = this._handleMouseMove.bind(this);
                 this._handleTooltipAtMousePos = this._handleTooltipAtMousePos.bind(this);
                 this._hideTooltip = this._hideTooltip.bind(this);
+                //Bind touch events
+                this._handleTouchStart = this._handleTouchStart.bind(this);
+                this._handleTouchEnd = this._handleTouchEnd.bind(this);
                 this.triggerElement = this;
                 //Set the default values for properties.
                 this.triggerManual = false;
@@ -107,27 +111,48 @@ mark element with tooltip-text attribute.
                     //Unregister mouse move listener for old trigger element.
                     oldTrigger.removeEventListener('mousemove', this._handleMouseMove);
                     if (!manual) {
-                        //Unregister mouse move event for old trigger element when tooltips were trigered automatically.
                         //If tooltips were triggerd manually then don't remove anything.
-                        oldTrigger.removeEventListener('mousemove', this._handleTooltipAtMousePos);
-                        oldTrigger.removeEventListener('mouseleave', this._hideTooltip);
+                        this._unregisterTooltipRelatedEvents(oldTrigger);
                     }
                 }
                 if (newTrigger) {
                     //Register mouse listeners for new trigger element.     
                     newTrigger.addEventListener('mousemove', this._handleMouseMove);
                     if (!manual) {
-                        //Register mouse listener for new trigger element in order to trigger tooltips automatically
-                        newTrigger.addEventListener('mousemove', this._handleTooltipAtMousePos);
-                        newTrigger.addEventListener('mouseleave', this._hideTooltip);
+                        this._registerTooltipRelatedEvents(newTrigger);
                     } else {
-                        //Unregister mouse listeners for new trigger element in order to trigger tooltips manually.
-                        newTrigger.removeEventListener('mousemove', this._handleTooltipAtMousePos);
-                        newTrigger.removeEventListener('mouseleave', this._hideTooltip);
+                        this._unregisterTooltipRelatedEvents(newTrigger);
                     }
                 }
             },
-            
+
+            _registerTooltipRelatedEvents: function (trigger) {
+                //Register mouse listener for new trigger element in order to trigger tooltips automatically
+                trigger.addEventListener('mousemove', this._handleTooltipAtMousePos);
+                trigger.addEventListener('mouseleave', this._hideTooltip);
+                //Register touch listener for new trigger element in order to trigger tooltips automatically
+                trigger.addEventListener('touchstart', this._handleTouchStart);
+                trigger.addEventListener('touchend', this._handleTouchEnd);
+            },
+
+            _unregisterTooltipRelatedEvents: function (trigger) {
+                //Unregister mouse listener for new trigger element in order to trigger tooltips automatically
+                trigger.removeEventListener('mousemove', this._handleTooltipAtMousePos);
+                trigger.removeEventListener('mouseleave', this._hideTooltip);
+                //Unregister touch listener for new trigger element in order to trigger tooltips automatically
+                trigger.removeEventListener('touchstart', this._handleTouchStart);
+                trigger.removeEventListener('touchend', this._handleTouchEnd);
+            },
+
+            _handleTouchStart: function (event) {
+                this.touchEventTriggered = true;
+                this._startTooltipTimer();
+            },
+
+            _handleTouchEnd: function (event) {
+                this._hideTooltip();
+            },
+
             /**
              * Saves the mouse position in _mousePosX and _mousePosY properties.
              */
@@ -140,13 +165,21 @@ mark element with tooltip-text attribute.
              * Handler that determines when to show tooltip on mouse move event amd when to hide it.
              */
             _handleTooltipAtMousePos: function (event) {
-                var currentActiveElement = extractActiveElement(event.target, this.triggerElement);
+                if (!this.touchEventTriggered) {
+                    this._startTooltipTimer();
+                } else {
+                    this.touchEventTriggered = false;
+                }
+            },
+
+            _startTooltipTimer: function (e) {
+                const currentActiveElement = extractActiveElement(event.target, this.triggerElement);
 
                 if (currentActiveElement !== this._activeComponent) {
                     this._hideTooltip();
                     this._activeComponent = currentActiveElement;
                 }
-                var tooltipText = this._activeComponent && this._activeComponent.getAttribute("tooltip-text");
+                const tooltipText = this._activeComponent && this._activeComponent.getAttribute("tooltip-text");
                 if (tooltipText !== null && tooltipText.length > 0) {
                     if (this._tooltipTimer) {
                         this.cancelAsync(this._tooltipTimer);
@@ -154,7 +187,7 @@ mark element with tooltip-text attribute.
                     }
                     this._tooltipTimer = this.async(function () {
                         this.showTooltip(tooltipText);
-                    }, 1000);
+                    }.bind(this), 1000);
                 }
             },
 

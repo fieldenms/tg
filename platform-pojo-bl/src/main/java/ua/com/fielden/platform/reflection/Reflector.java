@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -46,6 +47,8 @@ public final class Reflector {
      */
     public static final String UP_LEVEL = "←";
 
+    private static final Logger LOGGER = Logger.getLogger(Reflector.class);
+    
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -246,6 +249,33 @@ public final class Reflector {
             }
         }
         throw new NoSuchMethodException(methodName);
+    }
+
+    
+    /**
+     * Returns <code>true</code> if the specified method <code>methodName</code> is overridden in <code>type</code> or its super types that extend <code>baseType</code> where this method is inherited from.
+     * Or the method is declared in <code>type</code> (i.e. it is not ingerited).
+     * <p>
+     * Basically, <code>true</code> is returned if <code>methodName</code> appears anywhere in the type hierarchy but the base type. 
+     * 
+     * @param baseType
+     * @param type
+     * @param methodName
+     * @param arguments
+     * @return
+     */
+    public static <BASE> boolean isMethodOverriddenOrDeclared(final Class<BASE> baseType, final Class<? extends BASE> type, final String methodName, final Class<?>... arguments) {
+        try {
+            
+            final Method method = Reflector.getMethod(type, methodName, arguments);
+            if (method.getDeclaringClass() != baseType) {
+                return true;
+            }
+        } catch (NoSuchMethodException | SecurityException ex) {
+            LOGGER.debug(format("Checking the oberriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+        }
+        
+        return false;
     }
 
     /**

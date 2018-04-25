@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -24,6 +28,7 @@ import com.google.inject.Inject;
 
 import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
+import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -101,10 +106,13 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties5;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.PrefDim.Unit;
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -113,8 +121,10 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
@@ -181,7 +191,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
     private EntityMaster<ExportAction> createExportActionMaster() {
         final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
-        final String actionButton = "'margin: 10px', 'width: 110px'";
+        final String actionButton = MASTER_ACTION_SPECIFICATION;
         final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
                 .forEntity(ExportAction.class)
                 .addProp("count").asSpinner()
@@ -243,7 +253,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
         final SimpleMasterBuilder<TgDeletionTestEntity> masterBuilder = new SimpleMasterBuilder<TgDeletionTestEntity>();
-        final String actionStyle = "'margin: 10px', 'width: 110px'";
+        final String actionStyle = MASTER_ACTION_SPECIFICATION;
         final String outer = "'flex', 'min-width:200px'";
 
         final String desktopTabletMasterLayout = ("['padding:20px',"
@@ -301,7 +311,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                          .build(), injector(), null);
           configApp().addCentre(collectionalSerialisationTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true, true));
+        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true, true, false));
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
                 .runAutomatically()
@@ -381,12 +391,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                 .build(), injector(), null);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false, true));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentreNotGenerated = createEntityCentre(MiEntityCentreNotGenerated.class, "MiEntityCentreNotGenerated", createEntityCentreConfig(true, true, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false, true));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false, true));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentreNotGenerated = createEntityCentre(MiEntityCentreNotGenerated.class, "MiEntityCentreNotGenerated", createEntityCentreConfig(true, true, false, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre5 = createEntityCentre(MiTgPersistentEntityWithProperties5.class, "TgPersistentEntityWithProperties 5", createEntityCentreConfig(false, false, false, true, true));
 
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
@@ -397,6 +408,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(entityCentre2);
         configApp().addCentre(entityCentre3);
         configApp().addCentre(entityCentre4);
+        configApp().addCentre(entityCentre5);
         configApp().addCentre(detailsCentre);
         configApp().addCentre(propDependencyCentre);
         configApp().addCentre(propDescriptorCentre);
@@ -414,7 +426,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final String mr = "'margin-right: 20px', 'width:300px'";
         final String fmr = "'flex', 'margin-right: 20px'";
-        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
+        final String actionMr = format("'margin-top: 20px', 'margin-left: 20px', 'width: %s'", MASTER_ACTION_DEFAULT_WIDTH + "px");
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<TgPersistentEntityWithProperties>();
         @SuppressWarnings("unchecked")
@@ -692,26 +704,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final IMaster<TgEntityWithPropertyDependency> masterConfigForPropDependencyExample = new SimpleMasterBuilder<TgEntityWithPropertyDependency>()
             .forEntity(TgEntityWithPropertyDependency.class)
             .addProp("property").asSinglelineText()
-            .also()
-            .addProp("dependentProp").asSinglelineText()
-            .also()
-            .addProp("roles").asSinglelineText()
-            .also()
-            .addProp("key").asSinglelineText()
+            .also().addProp("dependentProp").asSinglelineText()
+            .also().addProp("roles").asSinglelineText()
+            .also().addProp("key").asSinglelineText()
+            .also().addProp("propX").asSinglelineText()
+            .also().addProp("propY").asSinglelineText()
+            .also().addProp("prop1").asSinglelineText()
+            .also().addProp("prop2").asSinglelineText()
             .also()
             .addAction(MasterActions.REFRESH)
-            //      */.icon("trending-up") SHORT-CUT
-            /*      */.shortDesc("CANCEL")
-            /*      */.longDesc("Cancel action")
+                .shortDesc("CANCEL")
+                .longDesc("Cancel action")
             .addAction(MasterActions.VALIDATE)
             .addAction(MasterActions.SAVE)
             .addAction(MasterActions.EDIT)
             .addAction(MasterActions.VIEW)
 
             .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                    format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
+                format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                     "['padding:20px', "
+                    + format("[[%s], [%s], [%s], ['flex']], ", fmr, fmr, fmr)
                     + format("[[%s], [%s], [%s], ['flex']]", fmr, fmr, fmr)
                     + "]"))
             .done();
@@ -776,7 +789,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
+
+        final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
+                .createAttachmentsUploadMaster(injector(), mkDim(400, Unit.PX, 400, Unit.PX), 10240,
+                        "image/png", "image/jpeg",
+                        "application/pdf,application/zip",
+                        ".csv", ".txt", "text/plain", "text/csv",
+                        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
         configApp().
+            addMaster(attachmentsUploadActionMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).
@@ -897,6 +920,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
                 /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
                 /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
+                /*  */.addMenuItem("Criteria Validation / Defining").description("Criteria Validation / Defining").centre(entityCentre5).done()
                 /*  */.addMenuItem("Collectional Serialisation Test").description("Collectional Serialisation Test description").centre(collectionalSerialisationTestCentre).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
                 /*.menu()
@@ -1030,7 +1054,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 + "      ['width:300px', 'flex'], "
                 + "      ['width:300px', 'flex']"
                 + "  ]]";
-        final String actionBarLayout = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]";
+        final String part = format("'margin: 10px', 'width: %s', 'flex'", MASTER_ACTION_DEFAULT_WIDTH + "px");
+        final String actionBarLayout = format("['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', %s, %s]", part, part);
         final IMaster<TgCreatePersistentStatusAction> config =
                 new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
                 .addProp("statusCode").asSinglelineText()
@@ -1255,7 +1280,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final boolean isComposite, final boolean runAutomatically, final boolean withQueryEnhancer, final boolean withCalculatedAndCustomProperties) {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final boolean isComposite, final boolean runAutomatically, final boolean withQueryEnhancer, final boolean withCalculatedAndCustomProperties, final boolean critOnlySingleValidation) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
@@ -1315,7 +1340,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @SuppressWarnings("unchecked")
-        final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = actionConf
+        final IAlsoCrit<TgPersistentEntityWithProperties> afterAddCritConf = actionConf
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -1362,6 +1387,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
                                 .withNoParentCentreRefresh()
+                                .build()
+                )
+                .also()
+                .addTopAction(
+                        action(AttachmentsUploadAction.class)
+                                .withContext(context().withSelectedEntities().build())
+                                .icon("icons:attachment")
+                                .shortDesc("Attach file to a selected entity")
                                 .build()
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
@@ -1418,7 +1451,145 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
-                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
+                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value());
+
+        final ILayoutConfigWithResultsetSupport<TgPersistentEntityWithProperties> layoutConfig;
+        if (critOnlySingleValidation) {
+            layoutConfig = afterAddCritConf
+                    //////////////////////////////////////////CRIT-ONLY SINGLE PROPERTIES (SELECTION CRITERIA VALIDATION / DEFINING #979) //////////////////////////////////////////
+                  .also().addCrit("cosStaticallyRequired")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosStaticallyReadonly")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosEmptyValueProhibited")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+                  .also().addCrit("cosConcreteValueProhibited")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+                  .also().addCrit("cosStaticallyRequiredWithDefaultValue")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+                  .also().addCrit("cosStaticallyReadonlyWithDefaultValue")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+                  .also().addCrit("cosWithValidator")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithDependency")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithWarner")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosStaticallyRequiredWithNonEmptyDefaultValue")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+
+                  .also().addCrit("cosWithACE1")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE1Child1")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE1Child2")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE1WithDefaultValue")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+                  .also().addCrit("cosWithACE1WithDefaultValueChild1")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE1WithDefaultValueChild2")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+
+                  .also().addCrit("cosWithACE2")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE2Child1")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE2Child2")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE2WithDefaultValue")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                      .withDefaultValueAssigner(CosCritAssigner.class)
+                  .also().addCrit("cosWithACE2WithDefaultValueChild1")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                  .also().addCrit("cosWithACE2WithDefaultValueChild2")
+                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+
+                  .setLayoutFor(Device.DESKTOP, Optional.empty(),
+                          //                        ("[['center-justified', 'start', mrLast]]")
+                          ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]" +
+                                  "]")
+                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                  )
+                  .setLayoutFor(Device.TABLET, Optional.empty(),
+                          ("[['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]," +
+                                  "['center-justified', 'start', mr, mrLast]]")
+                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                  )
+                  .setLayoutFor(Device.MOBILE, Optional.empty(),
+                          ("[['center-justified', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]," +
+                                  "['center-justified', 'start', mrLast]]")
+                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                  );
+        } else {
+            layoutConfig = afterAddCritConf
                 .setLayoutFor(Device.DESKTOP, Optional.empty(),
                         //                        ("[['center-justified', 'start', mrLast]]")
                         ("[['center-justified', 'start', mr, mr, mrLast]," +
@@ -1426,12 +1597,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
+                                "['center-justified', 'start', mrLast]" +
+                                "]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
@@ -1458,12 +1629,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
-                )
+                );
+        }
                 //.hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(2).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
+                final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
+                        .withScrollingConfig(ScrollConfig.configScroll()
+                                .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
+                                .withFixedSecondaryActions()
+                                .withFixedHeader()
+                                .withFixedSummary()
+                                .done())
+                .draggable()
                 .setPageCapacity(20)
+                //.setHeight("100%")
                 .setVisibleRowsCount(10)
+                //.fitToHeight()
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
@@ -1563,6 +1744,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("stringProp").minWidth(50).also()
                 .addProp("colourProp").width(40).also()
+                .addProp("numberOfAttachments").width(100).also()
                 .addProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
@@ -1679,20 +1861,67 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .also()
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-        //        if (isComposite) {
-        //            return scl.addInsertionPoint(
-        //                    action(TgCentreInvokerWithCentreContext.class)
-        //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-        //                            .icon("assignment-ind")
-        //                            .shortDesc("Insertion Point")
-        //                            .longDesc("Functional context-dependent Insertion Point")
-        //                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-        //                            .withNoParentCentreRefresh()
-        //                            .build(),
-        //                    InsertionPoints.RIGHT)
-        //                    .build();
-        //        }
+        if (isComposite) {
+//            return scl.addInsertionPoint(
+//                    action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("''", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.RIGHT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                                    .icon("assignment-ind")
+//                                    .shortDesc("Insertion Point")
+//                                    .longDesc("Functional context-dependent Insertion Point")
+//                                    .prefDimForView(mkDim("''", "'500px'"))
+//                                    .withNoParentCentreRefresh()
+//                                    .build(),
+//                            InsertionPoints.RIGHT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.LEFT)
+//                    .build();
+        }
         return scl.build();
+    }
+
+    /**
+     * Default value assigner for crit-only single criteria validation example.
+     *
+     * @author TG Team
+     *
+     */
+    private static class CosCritAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>, TgPersistentEntityWithProperties> {
+        private final ITgPersistentEntityWithProperties co;
+
+        @Inject
+        public CosCritAssigner(final ITgPersistentEntityWithProperties co) {
+            this.co = co;
+        }
+
+        @Override
+        public Optional<SingleCritOtherValueMnemonic<TgPersistentEntityWithProperties>> getValue(final CentreContext<TgPersistentEntityWithProperties, ?> entity, final String name) {
+            if ("cosEmptyValueProhibited".equals(name) || "cosStaticallyRequiredWithDefaultValue".equals(name)) {
+                return empty();
+            } else if ("cosConcreteValueProhibited".equals(name) || "cosStaticallyReadonlyWithDefaultValue".equals(name) || "cosStaticallyRequiredWithNonEmptyDefaultValue".equals(name) || "cosWithACE1WithDefaultValue".equals(name)) {
+                return of(single().entity(TgPersistentEntityWithProperties.class).setValue(co.findByKey("KEY8")).value());
+            } else if ("cosWithACE2WithDefaultValue".equals(name)) {
+                return of(single().entity(TgPersistentEntityWithProperties.class).setValue(co.findByKey("KEY7")).value());
+            }
+            return empty();
+        }
     }
 
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {

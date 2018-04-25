@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.sample.domain.stream_processors;
 
+import static ua.com.fielden.platform.error.Result.failure;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.inject.Inject;
 
@@ -32,8 +35,10 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
     public DumpCsvTxtProcessor save(final DumpCsvTxtProcessor entity) {
         
         if (entity.getInputStream() == null) {
-            throw Result.failure("Input stream was not provided.");
+            throw failure("Input stream was not provided.");
         }
+        
+        System.out.println("ORIGINAL FILE NAME: " + entity.getOrigFileName());
         
         // lets read the data from file line by line
         final BufferedReader br = new BufferedReader(new InputStreamReader(entity.getInputStream()));
@@ -48,7 +53,7 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
         }
 
         // now let's emulate data processing and report progress update if a corresponding subject was provided
-        int prc = -1;
+        final AtomicInteger prc = new AtomicInteger(-1);
         final double total = data.size();
         final Random rnd = new Random();
         for (int index = 0; index < data.size(); index++) {
@@ -59,22 +64,20 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
             } catch (InterruptedException e) {
             }
             
-            if (entity.getEventSourceSubject().isPresent()) {
+            final double x = index;
+            entity.getEventSourceSubject().ifPresent(ess -> {
                 // in practice there is no need to report every percent completed
                 // instead a time based stepping function could have been used
-                final double x = index;
                 final int currPrc = (int) (x / total * 100.0);
-                if (currPrc > prc || currPrc >= 100) {
-                    prc = currPrc;
-                    entity.getEventSourceSubject().get().publish(prc);
+                if (currPrc > prc.get() || currPrc >= 100) {
+                    prc.set(currPrc);
+                    ess.publish(prc.get());
                 }
-            }
+            });
         }
         
         // make sure we report 100% completion
-        if (entity.getEventSourceSubject().isPresent()) {
-            entity.getEventSourceSubject().get().publish(100);
-        }
+        entity.getEventSourceSubject().ifPresent(ess -> ess.publish(100));
 
         
         return entity.setNoOfProcessedLines(Integer.valueOf(data.size()));

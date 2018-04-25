@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -25,7 +26,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-import org.restlet.resource.ServerResource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -53,6 +53,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -69,7 +71,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class EntityResource<T extends AbstractEntity<?>> extends ServerResource {
+public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final Long entityId;
     private final EntityIdKind entityIdKind;
@@ -110,11 +112,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final IWebUiConfig webUiConfig,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
 
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider);
 
         this.companionFinder = companionFinder;
         this.critGenerator = critGenerator;
@@ -149,7 +152,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         logger.debug("ENTITY_RESOURCE: save started.");
         final Representation result = handleUndesiredExceptions(getResponse(), () -> {
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
-            final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, serverGdtm, userProvider, companion);
+            final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, serverGdtm, userProvider, companion, device());
             return restUtil.singleJSONRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
         }, restUtil);
         logger.debug("ENTITY_RESOURCE: save finished.");
@@ -175,7 +178,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     } catch (final ClassNotFoundException e) {
                         throw new IllegalStateException(e);
                     }
-                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0, device());
 
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null, 
@@ -195,7 +198,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
-                    final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, factory, centreContextHolder, 0);
+                    final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, factory, centreContextHolder, 0, device());
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
@@ -204,7 +207,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             CentreResourceUtils.createCentreContext(
                                     masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
-                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, serverGdtm, userProvider, webUiConfig, factory),
+                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, serverGdtm, userProvider, webUiConfig, factory, device()),
                                     actionConfig,
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
                             ),
@@ -258,12 +261,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final IWebUiConfig webUiConfig,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
-            final IEntityDao<T> companion) {
+            final IEntityDao<T> companion,
+            final DeviceProfile device) {
         final List<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
                 EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
+        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0, device);
 
         final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
         return potentiallySavedWithException;
@@ -299,7 +303,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final ICompanionObjectFinder companionFinder,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
-            final ICriteriaGenerator critGenerator, final int tabCount) {
+            final ICriteriaGenerator critGenerator,
+            final int tabCount,
+            final DeviceProfile device) {
         final DateTime start = new DateTime();
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): started.");
         final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
@@ -312,9 +318,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): utils.");
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
-        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1);
+        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device);
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity has been restored.");
-        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, serverGdtm, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, gdtm, critGenerator, funcEntity /* master context */, tabCount + 1);
+        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, serverGdtm, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, gdtm, critGenerator, funcEntity /* master context */, tabCount + 1, device);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -329,7 +335,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final IUserProvider userProvider,
             final ICriteriaGenerator critGenerator,
             final EntityFactory entityFactory,
-            final CentreContextHolder centreContextHolder, final int tabCount) {
+            final CentreContextHolder centreContextHolder,
+            final int tabCount,
+            final DeviceProfile device) {
         logger.debug(tabs(tabCount) + "restoreMasterFunctionalEntity: started.");
         final DateTime start = new DateTime();
         AbstractEntity<?> entity = null;
@@ -348,7 +356,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             }
 
             if (entityType != null) {
-                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, tabCount + 1);
+                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, tabCount + 1, device);
             }
         }
         final DateTime end = new DateTime();
@@ -372,7 +380,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final IGlobalDomainTreeManager gdtm,
             final ICriteriaGenerator critGenerator,
             final AbstractEntity<?> masterContext,
-            final int tabCount) {
+            final int tabCount,
+            final DeviceProfile device) {
         logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
         final T originallyProducedEntity = disregardOriginallyProducedEntities ? null : // in case where full context should be used for entity restoration -- originallyProducedEntity will be disregarded
@@ -385,7 +394,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         } else {
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started.");
-            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity = CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, gdtm, critGenerator, serverGdtm, userProvider, webUiConfig, entityFactory);
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity = CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, gdtm, critGenerator, serverGdtm, userProvider, webUiConfig, entityFactory, device);
 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. criteriaEntity.");
             final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);

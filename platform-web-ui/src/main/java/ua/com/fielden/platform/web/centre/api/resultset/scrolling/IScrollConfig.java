@@ -14,5 +14,7 @@ public interface IScrollConfig {
 
     boolean isSummaryFixed();
 
+    boolean isDragAnchorFixed();
+
     int getNumberOfFixedColumns();
 }

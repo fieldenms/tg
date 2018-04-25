@@ -6,7 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
 
 /**
@@ -17,11 +17,11 @@ import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
  */
 public class TgReflectorComponentResourceFactory extends Restlet {
     private final ISourceController sourceController;
-    private final RestServerUtil restUtil;
+    private final IDeviceProvider deviceProvider;
 
-    public TgReflectorComponentResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+    public TgReflectorComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
-        this.restUtil = restUtil;
+        this.deviceProvider = deviceProvider;
     }
 
     @Override
@@ -29,8 +29,9 @@ public class TgReflectorComponentResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final TgReflectorComponentResource resource = new TgReflectorComponentResource(sourceController, restUtil, getContext(), request, response);
+            final TgReflectorComponentResource resource = new TgReflectorComponentResource(sourceController, deviceProvider, getContext(), request, response);
             resource.handle();
         }
     }
+
 }

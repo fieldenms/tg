@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
+import static java.lang.Integer.valueOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -38,12 +39,12 @@ import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -139,9 +140,9 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_ordering_by_yielded_prop() {
         final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
-        yield().prop("model.make.key").as("makeKey"). //
-        yield().countAll().as("count"). //
-        modelAsAggregate();
+                yield().prop("model.make.key").as("makeKey"). //
+                yield().countAll().as("count"). //
+                modelAsAggregate();
 
         final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).with(orderBy().yield("count").desc().model()).model());
     }
@@ -195,6 +196,87 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
+
+    @Test
+    public void day_of_week_function_correctly_attributes_range_1_7_to_days_against_h2_database() {
+        final AggregatedResultQueryModel qryMonday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-02 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(1), aggregateDao.getEntity(from(qryMonday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryTuesday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-03 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(2), aggregateDao.getEntity(from(qryTuesday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryWednesday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-04 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(3), aggregateDao.getEntity(from(qryWednesday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryThursday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-05 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(4), aggregateDao.getEntity(from(qryThursday).model()).get("result"));
+
+        final AggregatedResultQueryModel qryFriday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-06 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(5), aggregateDao.getEntity(from(qryFriday).model()).get("result"));
+
+        final AggregatedResultQueryModel qrySaturday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-07 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(6), aggregateDao.getEntity(from(qrySaturday).model()).get("result"));
+
+        final AggregatedResultQueryModel qrySunday = singleResultQueryStub.yield().dayOfWeekOf().val(date("2018-04-08 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(valueOf(7), aggregateDao.getEntity(from(qrySunday).model()).get("result"));
+    }
+
+    @Test
+    public void day_of_week_function_can_be_used_for_data_querying_against_h2_database() {
+        assertEquals(1, co(TgFuelUsage.class).count(select(TgFuelUsage.class).where().dayOfWeekOf().prop("date").eq().val(4).model()));
+        assertEquals(1, co(TgFuelUsage.class).count(select(TgFuelUsage.class).where().dayOfWeekOf().addTimeIntervalOf().val(1).days().to().prop("date").eq().val(5).model()));
+    }
+
+    @Test
+    public void add_seconds_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).seconds().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-01 00:00:10"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+
+    @Test
+    public void add_minutes_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).minutes().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-01 00:10:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void add_hours_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).hours().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-01 10:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+
+    @Test
+    public void add_days_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).days().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-01-11 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void add_months_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).months().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2007-11-01 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void add_years_function_works_against_h2_database() {
+        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).years().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
+        assertEquals(date("2017-01-01 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
+    }
+    
+    @Test
+    public void can_query_date_prop_using_add_time_interval_operations_against_h2_database() {
+        final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class)
+                .where().prop("key").eq().val("CAR2")
+                .and()  .prop("initDate").le().addTimeIntervalOf().val(10).hours().to().prop("initDate").model();
+        assertEquals(1, co(TgVehicle.class).count(query));
+    }
+
+    @Test
+    public void can_query_date_prop_using_add_time_interval_operations_with_negative_values_against_h2_database() {
+        final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class)
+                .where().prop("initDate").le().addTimeIntervalOf().val(-5).years().to().val(date("2007-01-01 00:00:00")).model();
+        assertEquals(1, co(TgVehicle.class).count(query));
+    }
 
     @Test
     public void count_seconds_function_works_correctly_against_h2_database() {
@@ -326,7 +408,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final ConditionModel c2 = d.eq().val(111).or().prop("bbb").isNotNull().model();
         assertEquals(expected, c2.getTokens());
 
-        System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
+        //System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
     }
 
     ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
@@ -748,6 +830,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore("Support for yielding values as ordinary properties for non-synthetic entities is no longer available.")
     public void test_retrieval_of_non_persisted_entity_prop_from_model() {
         final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
         where().prop("key").eq().val("MERC"). //
@@ -1070,7 +1153,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect count", 1, values.size());
         assertEquals("Incorrect value", "3", values.get(0).get("aa").toString());
     }
-
+    
     @Test
     public void test12() {
         final AggregatedResultQueryModel model = select(TgVehicleModel.class). //
@@ -1808,8 +1891,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
-        
-        System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
     }
 
 }

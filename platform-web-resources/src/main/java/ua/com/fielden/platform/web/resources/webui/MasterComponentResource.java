@@ -16,6 +16,7 @@ import org.restlet.resource.ResourceException;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -24,9 +25,11 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class MasterComponentResource extends DeviceProfileDifferentiatorResource {
+public class MasterComponentResource extends AbstractWebResource {
     private final String entityTypeString;
-
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
+    
     /**
      * Creates {@link MasterComponentResource} and initialises it with master instance.
      *
@@ -38,19 +41,23 @@ public class MasterComponentResource extends DeviceProfileDifferentiatorResource
     public MasterComponentResource(
             final ISourceController sourceController,//
             final RestServerUtil restUtil,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(sourceController, restUtil, context, request, response);
+        super(context, request, response, deviceProvider);
         this.entityTypeString = (String) request.getAttributes().get("entityType");
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
-
+    
     @Override
     protected Representation get() throws ResourceException {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController().loadSource("/master_ui/" + this.entityTypeString, deviceProfile());
+            final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString, device());
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
-        }, restUtil());
+        }, restUtil);
     }
+    
 }

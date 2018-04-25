@@ -24,6 +24,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CASE_W
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CONCAT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_ALL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ADD_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_DISTINCT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.DATE;
@@ -398,6 +399,10 @@ final class Tokens {
         return add(SET_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
+    public Tokens addDateInterval() {
+        return add(FUNCTION, ADD_DATE_INTERVAL);
+    }
+
     public Tokens countDateIntervalFunction() {
         return add(FUNCTION, COUNT_DATE_INTERVAL);
     }
@@ -480,6 +485,10 @@ final class Tokens {
 
     public Tokens yearOf() {
         return add(FUNCTION, Functions.YEAR);
+    }
+
+    public Tokens dayOfWeekOf() {
+        return add(FUNCTION, Functions.DAY_OF_WEEK);
     }
 
     public Tokens dateOf() {

@@ -14,8 +14,8 @@ import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.WIDTH;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterionOrBoolean;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
@@ -25,6 +25,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
@@ -58,13 +61,41 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
-
+    
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
+    }
+    
+    /**
+     * Returns device-specific surrogate name for the centre based on original <code>surrogateName</code>.
+     * <p>
+     * Every centre, defined by miType and surrogateName, when accessed through {@link CentreUpdater} API could have two counterparts: DESKTOP and MOBILE.
+     * This is needed to differentiate between actual centres on different devices for the same user (for example, only a subset of columns could be visible in
+     * MOBILE app, but a full set in DESKTOP app).
+     * <p>
+     * This need has arisen mainly from embedded [into actions] centres, because copying of miTypes and those actions (and their full hierarchy with invocation points)
+     * seems heavily impractical.
+     * 
+     * @param surrogateName
+     * @param device
+     * @return
+     */
+    public static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
+        if (DESKTOP.equals(device)) {
+            return surrogateName;
+        } else if (MOBILE.equals(device)) {
+            // Please note that in case where the need arise to 'use the same configuration for both MOBILE and DESKTOP apps' 
+            // then it is quite trivial to support such functionality.
+            // In that case we can provide annotation for menu item types like @TheSameForMobileAndDesktop and check here whether this annotation is present.
+            // If yes then 'surrogateName' should be returned just like for DESKTOP device.
+            return surrogateName + "_" + MOBILE.name();
+        } else {
+            throw new CentreUpdaterException(format("Device [%s] is unknown.", device));
+        }
     }
     
     /**
@@ -78,7 +109,7 @@ public class CentreUpdater {
     private static String userSpecificName(final String surrogateName, final IGlobalDomainTreeManager gdtm) {
         return surrogateName + "_FOR_USER_" + gdtm.getUserProvider().getUser().getId();
     }
-
+    
     /**
      * Returns the current version of centre manager (it assumes that it should be initialised!).
      *
@@ -399,7 +430,7 @@ public class CentreUpdater {
         final Class<?> diffManagedType = managedType(root, differencesCentre);
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
-                if (isDoubleCriterion(diffManagedType, property)) {
+                if (isDoubleCriterion(diffManagedType, property) && !isBooleanCriterion(diffManagedType, property)) {
                     if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
                         targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
                     }
@@ -430,7 +461,7 @@ public class CentreUpdater {
                 if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
                     targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
                 }
-                if (isDoubleCriterionOrBoolean(diffManagedType, property)
+                if (isDoubleCriterion(diffManagedType, property)
                         && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
                     targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
                 }
@@ -563,7 +594,7 @@ public class CentreUpdater {
 
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property)) {
-                if (isDoubleCriterion(managedType(root, differencesCentre), property)) {
+                if (isDoubleCriterion(managedType(root, differencesCentre), property) && !isBooleanCriterion(managedType(root, differencesCentre), property)) {
                     if (!equalsEx(differencesCentre.getFirstTick().getExclusive(root, property), originalCentre.getFirstTick().getExclusive(root, property))) {
                         differencesCentre.getFirstTick().markMetaValuePresent(EXCLUSIVE, root, property);
                     }
@@ -594,7 +625,7 @@ public class CentreUpdater {
                 if (!equalsEx(differencesCentre.getFirstTick().getValue(root, property), originalCentre.getFirstTick().getValue(root, property))) {
                     differencesCentre.getFirstTick().markMetaValuePresent(VALUE, root, property);
                 }
-                if (isDoubleCriterionOrBoolean(managedType(root, differencesCentre), property)) {
+                if (isDoubleCriterion(managedType(root, differencesCentre), property)) {
                     if (!equalsEx(differencesCentre.getFirstTick().getValue2(root, property), originalCentre.getFirstTick().getValue2(root, property))) {
                         differencesCentre.getFirstTick().markMetaValuePresent(VALUE2, root, property);
                     }
@@ -693,23 +724,25 @@ public class CentreUpdater {
     }
 
     /**
-     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager}.
+     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager} and concrete {@link DeviceProfile}.
      *
      * @param gdtm
+     * @param device
      */
-    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm) {
-        for (final Class<?> miType: gdtm.entityCentreMenuItemTypes()) {
+    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
+        for (final Class<?> miKlass: gdtm.entityCentreMenuItemTypes()) {
             final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miKlass;
             globalManager.overrideCentre(miType, null, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(FRESH_CENTRE_NAME, gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(FRESH_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(FRESH_CENTRE_NAME, device), gdtm) + DIFFERENCES_SUFFIX, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(PREVIOUSLY_RUN_CENTRE_NAME, gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(PREVIOUSLY_RUN_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device), gdtm) + DIFFERENCES_SUFFIX, null);
 
-            globalManager.overrideCentre(miType, userSpecificName(SAVED_CENTRE_NAME, gdtm), null);
-            globalManager.overrideCentre(miType, userSpecificName(SAVED_CENTRE_NAME, gdtm) + DIFFERENCES_SUFFIX, null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device), gdtm), null);
+            globalManager.overrideCentre(miType, userSpecificName(deviceSpecific(SAVED_CENTRE_NAME, device), gdtm) + DIFFERENCES_SUFFIX, null);
         }
     }
 }

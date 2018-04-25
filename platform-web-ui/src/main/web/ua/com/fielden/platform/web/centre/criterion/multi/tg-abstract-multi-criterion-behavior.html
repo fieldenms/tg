@@ -54,11 +54,11 @@
         	this._not = false;
         },
 
-        _acceptMetaValues: function() {
+        _acceptMetaValues: function(validate) {
             this.orNull = this._orNull;
             this.not = this._not;
 
-            Polymer.TgBehaviors.TgAbstractCriterionBehavior[1]._acceptMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractCriterionBehavior[1]._acceptMetaValues.call(this, validate);
         },
         _cancelMetaValues: function() {
             this._orNull = this.orNull;

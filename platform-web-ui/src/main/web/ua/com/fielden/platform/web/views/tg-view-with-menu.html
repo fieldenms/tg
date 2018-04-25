@@ -12,7 +12,6 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
-<link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -21,6 +20,7 @@
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
+<link rel="import" href="/resources/views/tg-back-button-behavior.html">
 
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
@@ -29,40 +29,26 @@
 <dom-module id="tg-view-with-menu">
     <style>
         :host {
-            --paper-fab-background: #fcfcfc;
             --paper-menu-color: var(--paper-light-blue-700);
             --paper-menu-undone-color: var(--paper-light-blue-100);
             --paper-item-min-height: 40px;
-            --paper-fab: {
-                color: #666464;
-                position: absolute;
-                top: 16px;
-                right: 16px;
-                z-index: 1;
-                width: 50px;
-                height: 50px;
-            }
-            ;
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
-            }
-            ;
+            };
             --paper-item: {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            }
-            ;
+            };
         }
         paper-menu.menu-content {
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: hidden;
-            }
-            ;
+            };
         }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
@@ -133,10 +119,18 @@
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .reverse {
+            flex-direction: row-reverse;
+        }
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" disable-swipe force-narrow>
+        <paper-drawer-panel id="drawerPanel" force-narrow disable-swipe="[[!mobile]]">
 
             <div class="layout vertical" drawer>
 
@@ -172,10 +166,11 @@
             <div class="layout vertical" main>
 
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
-                    <div class="layout horizontal center flex">
+                    <div id="viewToolBarContainer" class="layout horizontal center flex" style="display: contents">
                         <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                         <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-                        <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                        <div class="flex truncate">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                        <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu" on-tap="_showMenu"></paper-icon-button>
                     </div>
                 </div>
 
@@ -192,8 +187,6 @@
                         </template>
                     </template>
                 </neon-animated-pages>
-
-                <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             </div>
 
 
@@ -236,6 +229,7 @@
             is: "tg-view-with-menu",
 
             properties: {
+                mobile: Boolean,
                 menu: Array,
                 menuItem: Object,
                 selectedModule: String,
@@ -255,12 +249,6 @@
                                 }, {
                                     name: 'slide-from-bottom-animation',
                                     node: this.$.pages
-                                }, {
-                                    name: 'scale-up-animation',
-                                    node: this.$.fab,
-                                    timing: {
-                                        delay: 400
-                                    }
                                 }
                             ],
                             'exit': [
@@ -270,9 +258,6 @@
                                 }, {
                                     name: 'slide-down-animation',
                                     node: this.$.pages
-                                }, {
-                                    name: 'scale-down-animation',
-                                    node: this.$.fab
                                 }
                             ]
                         };
@@ -290,7 +275,8 @@
                 Polymer.NeonAnimatableBehavior,
                 Polymer.TgBehaviors.TgTooltipBehavior,
                 Polymer.IronA11yKeysBehavior,
-                Polymer.TgBehaviors.TgFocusRestorationBehavior
+                Polymer.TgBehaviors.TgFocusRestorationBehavior,
+                Polymer.TgBehaviors.TgBackButtonBehavior
             ],
 
             keyBindings: {
@@ -319,6 +305,16 @@
                         delete this._wasClosedByEsc;
                     }
                 });
+                
+                this.mobile = this.$.app_config.mobile;
+                if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
+                    Polymer.dom(this.$.viewToolBarContainer).removeChild(this.$.mainMenu);
+                    Polymer.dom(this.$.viewToolBarContainer).insertBefore(this.$.mainMenu, this.$.menuButton);
+                    Polymer.dom(this.$.viewToolBarContainer).appendChild(this.createBackButton());
+                    Polymer.dom.flush();
+                    this.$.viewToolBar.classList.add('reverse');
+                    this.$.drawerPanel.rightDrawer = true;
+                }
             },
 
             attached: function () {
@@ -331,7 +327,7 @@
                     }
                 });
             },
-
+            
             getSelectedPage: function () {
                 return this._selectedPage;
             },
@@ -549,6 +545,8 @@
                     if (viewToLoad) {
                         if (!viewToLoad.wasLoaded()) {
                             viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                            const currentState = window.history.state;
+                            window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
                         } else {
                             viewToLoad.focusLoadedView();
                         }

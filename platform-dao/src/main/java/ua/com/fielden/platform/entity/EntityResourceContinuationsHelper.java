@@ -7,17 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 public class EntityResourceContinuationsHelper {
-    private final static Logger logger = Logger.getLogger(EntityResourceContinuationsHelper.class);
-
+    
     /**
      * Saves the <code>entity</code> with its <code>continuations</code>.
      *
@@ -32,21 +33,15 @@ public class EntityResourceContinuationsHelper {
      */
     private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
         final boolean continuationsPresent = !continuations.isEmpty();
-
-        // iterate over properties in search of the first invalid one with required checks, but not for @CritOnly properties
-        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
-                .filter(mp -> !mp.isValidWithRequiredCheck(true) && mp.getFirstFailure() != null)
-                .findFirst().map(mp -> mp.getFirstFailure());
         
-        // returns first failure if exists or successful result if there was no failure.
-        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
-        
-        if (isValid.isSuccessful()) {
-            final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
-            if (entity.hasWarnings() && (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null)) {
-                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
-            } else if (entity.hasWarnings() && continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
-                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+        if (validateWithoutCritOnlyRequired(entity)) {
+            if (entity.warnings().stream().anyMatch(EntityResourceUtils::isNonConflicting)) {
+                final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
+                if (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null) {
+                    throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
+                } else if (continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
+                    entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+                }
             }
         }
 
@@ -55,7 +50,7 @@ public class EntityResourceContinuationsHelper {
         // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
         // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
         // 5) persistent+persisted+notDirty+valid entities saving should be skipped
-        if (!entity.isDirty() && entity.isValid().isSuccessful()) { // this isValid validation does not really do additional validation (but, perhaps, cleared warnings could appear again), but is provided for additional safety
+        if (!entity.isDirty() && validateWithoutCritOnlyRequired(entity)) { // this isValid validation does not really do additional validation (but, perhaps, cleared warnings could appear again), but is provided for additional safety
             throw Result.failure("There are no changes to save.");
         }
 
@@ -70,7 +65,24 @@ public class EntityResourceContinuationsHelper {
         }
         return saved;
     }
-
+    
+    /**
+     * Validates entity skipping required checks for its {@link CritOnly} {@link Required} properties and not skipping these checks for other properties.
+     * 
+     * @param entity
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> boolean validateWithoutCritOnlyRequired(final T entity) {
+        // iterate over properties in search of the first invalid one with required checks, but not for @CritOnly properties
+        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+                .filter(mp -> !mp.isValidWithRequiredCheck(true) && mp.getFirstFailure() != null)
+                .findFirst().map(mp -> mp.getFirstFailure());
+        
+        // returns first failure if exists or successful result if there was no failure.
+        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
+        return isValid.isSuccessful();
+    }
+    
     /**
      * Performs saving of <code>validatedEntity</code>.
      * <p>

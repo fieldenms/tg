@@ -1,8 +1,13 @@
 package ua.com.fielden.platform.web.app.config;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -10,8 +15,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -42,6 +50,8 @@ public class WebUiBuilder implements IWebUiBuilder {
      * Holds the map between entity centre's menu item type and entity centre.
      */
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
+    
+    private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
 
     /**
      * Holds the map between custom view name and custom view instance.
@@ -127,13 +137,38 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     @Override
+    public <T extends AbstractEntity<?>> IWebUiBuilder registerOpenMasterAction(final Class<T> entityType, final EntityActionConfig openMasterActionConfig) {
+        if (entityType == null || openMasterActionConfig == null) {
+            throw new WebUiBuilderException("None of the arguments to register open master actions can be null.");
+        }
+        
+        if (openMasterActions.containsKey(entityType)) {
+            throw new WebUiBuilderException(format("An open-master action config is already present for entity [%s].", entityType.getName()));
+        }
+        
+        openMasterActions.putIfAbsent(entityType, openMasterActionConfig);
+        return this;
+    }
+    
+
+    @Override
+    public <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType) {
+        return () -> {
+            if (openMasterActions.containsKey(entityType)) {
+                return Optional.of(openMasterActions.get(entityType));
+            }
+            throw new WebUiBuilderException(format("An attempt is made to obtain open-master action configuration for entity [%s], but none is found. Please register a corresonding action configuration by using WebUiBuilder.registerOpenMasterAction.", entityType.getName()));
+        };
+    }
+
+    @Override
     public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre) {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
             if (centreOptional.get() != centre) {
                 throw new WebUiBuilderException(String.format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.info(String.format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                logger.info(format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
@@ -170,7 +205,7 @@ public class WebUiBuilder implements IWebUiBuilder {
      *
      * @return
      */
-    public String genWebUiPrefComponent() {
+    public String genWebUiPrefComponent(final DeviceProfile deviceProfile) {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
@@ -180,7 +215,8 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@locale", "\"" + this.locale + "\"").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
+                replace("@mobile", Boolean.toString(MOBILE.equals(deviceProfile)));
     }
 
     @Override

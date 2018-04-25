@@ -6,15 +6,17 @@ import java.util.Properties;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.attachment.AttachmentDao;
+import ua.com.fielden.platform.attachment.AttachmentUploaderDao;
+import ua.com.fielden.platform.attachment.AttachmentsUploadActionDao;
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
+import ua.com.fielden.platform.attachment.IAttachmentUploader;
+import ua.com.fielden.platform.attachment.IAttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
-import ua.com.fielden.platform.dao.AttachmentDao;
-import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
@@ -176,9 +178,10 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
         bind(IKeyNumber.class).to(KeyNumberDao.class);
 
-        // bind attachment controllers
+        // bind attachment related companions
         bind(IAttachment.class).to(AttachmentDao.class);
-        bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
+        bind(IAttachmentUploader.class).to(AttachmentUploaderDao.class);
+        bind(IAttachmentsUploadAction.class).to(AttachmentsUploadActionDao.class);
 
         // configuration menu related binding
         bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);

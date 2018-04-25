@@ -7,7 +7,7 @@
 <dom-module id="tg-file-upload-paper-button">
     <template>
     	<style>
-    	
+
     		:host {
 		      display: inline-block;
 		      position: relative;
@@ -22,11 +22,11 @@
 		      cursor: pointer;
 		      z-index: 0;
 		    }
-		    
+
     		.over {
 				background: var(--paper-green-100);
 			}
-			
+
 			#fileSelect {
 				cursor: pointer;
 			}
@@ -58,25 +58,24 @@
 	            --paper-spinner-layer-3-color: var(--paper-blue-500);
 	            --paper-spinner-layer-4-color: var(--paper-blue-500);
 	        }
-						
+
     	</style>
 
 		<paper-button raised roll="button" id="fileSelect" on-tap='openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_fpInProgress]]">
             <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
             </paper-spinner>
-            
+
 			<!-- instead a span based approach is used to indicate the progress -->
 	  		<span class="meter-span" id="progressBar" style="width: 0%"></span>
-			<span>[[title]]</span>            
+			<span>[[title]]</span>
         </paper-button>
-		
-		
+
 		<!-- need also support some debug information on a selected file -->
 		<template is='dom-if' if='[[debug]]'>
 			<ul style='text-align: left;overflow: scroll'>
 		    	<li>names of selected files: <span style='color: #6a1b9a'>[[_debug_fileNames]]</span></li>
-				<li>number of selected files: <span style='color: #6a1b9a'>[[_debug_fileNum]]</span></li> 
-				<li>total size: <span style='color: #6a1b9a'>[[_debug_fileSize]]</span></li> 
+				<li>number of selected files: <span style='color: #6a1b9a'>[[_debug_fileNum]]</span></li>
+				<li>total size: <span style='color: #6a1b9a'>[[_debug_fileSize]]</span></li>
 				<li>mime type(s): <span style='color: #6a1b9a'>[[_debug_mimeTypes]]</span></li>
 			</ul>
 		</template>
@@ -86,92 +85,92 @@
 
 <script>
     Polymer({
-    	is: 'tg-file-upload-paper-button',
+        is: 'tg-file-upload-paper-button',
 
-    	behaviors: [ Polymer.TgBehaviors.TgFileProcessingBehavior ],
-    	
-    	properties: {
-    	    
-    	    title: {
-    	        type: String,
-    	        value: 'Tap or D`n`D'
-    	    },
-    	    
-    	    processResponse: {
-    	        type: Function
-    	    },
-    	    
-    	    processError: {
-    	        type: Function
-    	    },
-    	    
-    	    processFileUploadedEvent: {
-    	        type: Function
-    	    }
+        behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior],
 
-		},
+        properties: {
+
+            title: {
+                type: String,
+                value: 'Tap or D`n`D'
+            },
+
+            processResponse: {
+                type: Function
+            },
+
+            processError: {
+                type: Function
+            },
+
+            processFileUploadedEvent: {
+                type: Function
+            }
+
+        },
 
         ready: function() {
-        	this.fpResponseHandler = function (e) {
-               	this.$.progressBar.style.width = '0%';
-               	this.title = 'Tap or D`n`D';
+            this.fpResponseHandler = function(e) {
+                this.$.progressBar.style.width = '0%';
+                this.title = 'Tap or D`n`D';
 
-               	if (this.processResponse) {
-               		this.processResponse(e);
-               	}
-        	}.bind(this);
-        	
-        	this.fpErrorHanlder = function (e) {
-        	    this.title = 'Tap or D`n`D';
+                if (this.processResponse) {
+                    this.processResponse(e);
+                }
+            }.bind(this);
+
+            this.fpErrorHandler = function(e) {
+                this.title = 'Tap or D`n`D';
                 this.$.progressBar.style.width = '0%';
 
-               	if (this.processError) {
-               		this.processError(e);
-               	}
-        	}.bind(this);
-        	
-        	this.fpAbortEventHandler = function (e) {
-        	    this.title = 'Tap or D`n`D';
-                this.$.progressBar.style.width = '0%';
-        	}.bind(this);
+                if (this.processError) {
+                    this.processError(e);
+                }
+            }.bind(this);
 
-        	this.fpFileUploadingProgressEventHandler = function (prc) {
+            this.fpAbortEventHandler = function(e) {
+                this.title = 'Tap or D`n`D (aborted)';
+                this.$.progressBar.style.width = '0%';
+            }.bind(this);
+
+            this.fpFileUploadingProgressEventHandler = function(prc) {
                 this.title = 'Uploading...';
                 this.$.progressBar.style.width = prc + '%';
-        	}.bind(this);
-        	
-        	this.fpFileProcessingProgressEventHandler = function (prc) {
-            	this.title = "Processing...";
+            }.bind(this);
+
+            this.fpFileProcessingProgressEventHandler = function(prc) {
+                this.title = "Processing...";
                 this.$.progressBar.style.width = prc + '%';
-        	}
-        	
-        	this.fpFileUploadedEventHandler = function () {
-        	    if (this.processFileUploadedEvent) {
-        	        this.processFileUploadedEvent();
-        	    }
-        	}.bind(this);
+            }
+
+            this.fpFileUploadedEventHandler = function() {
+                if (this.processFileUploadedEvent) {
+                    this.processFileUploadedEvent();
+                }
+            }.bind(this);
 
         },
-		
-        _dragenter: function (e) {
+
+        _dragenter: function(e) {
             e.stopPropagation();
             e.preventDefault();
             this.$.fileSelect.classList.add('over');
         },
 
-        _dragover: function (e) {
+        _dragover: function(e) {
             e.stopPropagation();
             e.preventDefault();
             this.$.fileSelect.classList.add('over');
         },
-        
-        _dragleave: function (e) {
+
+        _dragleave: function(e) {
             e.stopPropagation();
             e.preventDefault();
             this.$.fileSelect.classList.remove('over');
         },
 
-        _drop: function (e) {
+        _drop: function(e) {
             e.stopPropagation();
             e.preventDefault();
 
@@ -179,7 +178,7 @@
             var files = dt.files;
 
             this.$.fileSelect.classList.remove('over');
-            
+
             // _handleFiles is mixed in from TgFileProcessingBehavior
             this._handleFiles(files);
         }

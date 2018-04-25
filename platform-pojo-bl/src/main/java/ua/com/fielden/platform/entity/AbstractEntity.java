@@ -4,17 +4,19 @@ import static java.lang.String.format;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_ONE2ONE_ASSOCIATION_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
@@ -319,6 +321,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String KEY = "key";
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
+    public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
     public static final Set<String> COMMON_PROPS = unmodifiableSet(new HashSet<>(Arrays.asList(new String[] {KEY, DESC, "referencesCount", "referenced"})));
 
     /**
@@ -344,19 +347,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
      */
-    private transient EntityFactory entityFactory;
+    private EntityFactory entityFactory;
 
     /**
      * Property factory is responsible for meta-property instantiation. The actual instantiation happens in the setter.
      */
-    private transient java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
+    private java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
 
     /**
      * Preferred property should be used by custom logic to set what property is from certain perspective is preferred.
      * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master.
      * So, the place where in the application logic an entity was instantiated can determine which of its properties should be focused by default.
      */
-    private transient String preferredProperty;
+    private String preferredProperty;
 
     /**
      * This is a default constructor, which is required for reflective construction.
@@ -496,7 +499,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     @Override
     public String toString() {
-        return getKey() != null ? getKey().toString() : "[key is assigned]";
+        if (isIdOnlyProxy()) {
+            return format("ID = %s", getId());
+        }
+        return getKey() != null ? getKey().toString() : KEY_NOT_ASSIGNED;
     }
 
     /**
@@ -1248,22 +1254,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return validation result
      */
     protected Result validate() {
-        if (!isInstrumented()) {
-            throw new EntityException(format("Uninstrumented entity [%s] should not be validated.", getType().getName()));
-        }
-        // iterate over properties in search of the first invalid one, including requiredness for any kind of property
-        final java.util.Optional<Result> firstFailure = nonProxiedProperties()
-        .filter(mp -> !mp.isValidWithRequiredCheck(false) && mp.getFirstFailure() != null)
-        .findFirst().map(mp -> mp.getFirstFailure());
-
-        // returns first failure if exists or successful result if there was no failure.
-        if (firstFailure.isPresent()) {
-            return firstFailure.get();
-        } else if (hasWarnings()) {
-            return Result.warning(this, "There are warnings.");
-        } else {
-            return  Result.successful(this);
-        }
+        return validateWithCritOnly.validate(this);
     }
 
     /**
@@ -1275,25 +1266,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (!isInstrumented()) {
             throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
         }
-        // iterate over properties to collect all warnings
-        final List<Warning> warnings = nonProxiedProperties()
-        .filter(mp -> mp.hasWarnings())
-        .map(mp -> mp.getFirstWarning())
-        .collect(Collectors.toList());
 
-        return warnings;
+        // collect all warnings as the result
+        return nonProxiedProperties()
+               .filter(MetaProperty::hasWarnings)
+               .map(MetaProperty::getFirstWarning)
+               .collect(toList());
     }
 
     public boolean hasWarnings() {
         if (!isInstrumented()) {
             throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
         }
-        // iterate over properties in search of the first with warning
-        final java.util.Optional<Boolean> res = nonProxiedProperties()
-        .filter(mp -> mp.hasWarnings())
-        .findFirst().map(mp -> true);
-
-        return res.isPresent();
+        // identify if there are any warnings
+        return nonProxiedProperties().anyMatch(MetaProperty::hasWarnings);
     }
 
     /**
@@ -1353,15 +1339,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public final boolean isDirty() {
         return !isPersisted() ||
-                nonProxiedProperties().filter(mp -> mp.isDirty()).findFirst().isPresent() ;
+                nonProxiedProperties().anyMatch(MetaProperty::isDirty);
     }
 
     public final AbstractEntity<K> setDirty(final boolean dirty) {
         // reset dirty state for properties in case where entity becomes not dirty
         if (!dirty) {
-            for (final MetaProperty<?> prop : getDirtyProperties()) {
-                prop.setDirty(false);
-            }
+            getDirtyProperties().forEach(prop -> prop.setDirty(false));
         }
         return this;
     }
@@ -1381,16 +1365,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     public final List<MetaProperty<?>> getDirtyProperties() {
-        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(Collectors.toList());
+        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(toList());
     }
 
     public AbstractEntity<?> resetMetaState() {
-        nonProxiedProperties().forEach(mp -> mp.resetState());
+        nonProxiedProperties().forEach(MetaProperty::resetState);
         return this;
     }
 
     public AbstractEntity<?> resetMetaValue() {
-        nonProxiedProperties().forEach(mp -> mp.resetValues());
+        nonProxiedProperties().forEach(MetaProperty::resetValues);
         return this;
     }
 

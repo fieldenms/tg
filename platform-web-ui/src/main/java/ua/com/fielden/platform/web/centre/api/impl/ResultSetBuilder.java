@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionP
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -34,7 +34,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolba
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
@@ -67,7 +69,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
-    private EntityActionConfig entityActionConfig;
+    private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -90,7 +92,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -141,7 +143,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -169,7 +171,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = actionConfig;
+        this.entityActionConfig = () -> Optional.of(actionConfig);
+        completePropIfNeeded();
+        return this;
+    }
+
+    @Override
+    public IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+        if (actionConfigSupplier == null) {
+            throw new IllegalArgumentException("Property action configuration supplier should not be null.");
+        }
+
+        this.entityActionConfig = actionConfigSupplier;
         completePropIfNeeded();
         return this;
     }
@@ -315,7 +328,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
     }
 
     @Override
@@ -410,7 +423,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> notScrollable() {
+    public IResultSetBuilder2aDraggable<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -427,13 +440,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> setVisibleRowsCount(final int visibleRowsCount) {
+    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
         this.builder.visibleRowsCount = visibleRowsCount;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
         return this;
     }
@@ -441,6 +454,24 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
         this.builder.toolbarConfig = toolbar;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> draggable() {
+        builder.draggable = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+        this.builder.egiHeight = height;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> fitToHeight() {
+        this.builder.fitToHeight = true;
         return this;
     }
 }

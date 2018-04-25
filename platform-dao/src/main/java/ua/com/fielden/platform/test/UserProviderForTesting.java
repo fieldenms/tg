@@ -19,7 +19,7 @@ public class UserProviderForTesting implements IUserProvider {
         user.setKey("TEST-USER");
         user.setDesc("test user");
     }
-    
+
     @Override
     public User getUser() {
         return user;

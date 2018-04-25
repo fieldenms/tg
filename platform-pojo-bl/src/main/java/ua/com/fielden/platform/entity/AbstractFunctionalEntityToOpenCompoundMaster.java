@@ -29,6 +29,20 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
     @Title("Section Title")
     private String sectionTitle;
     
+    @IsProperty
+    @Title("Menu To Open")
+    private Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen;
+    
+    @Observable
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen) {
+        this.menuToOpen = menuToOpen;
+        return this;
+    }
+    
+    public Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> getMenuToOpen() {
+        return menuToOpen;
+    }
+    
     @Observable
     public AbstractFunctionalEntityToOpenCompoundMaster<K> setSectionTitle(final String sectionTitle) {
         this.sectionTitle = sectionTitle;

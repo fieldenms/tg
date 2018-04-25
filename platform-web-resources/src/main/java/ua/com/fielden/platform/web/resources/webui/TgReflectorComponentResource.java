@@ -14,7 +14,7 @@ import org.restlet.resource.ResourceException;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * Resource for tg-reflector component.
@@ -24,9 +24,12 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <T>
  * @param <DAO>
  */
-public class TgReflectorComponentResource extends DeviceProfileDifferentiatorResource {
-    public TgReflectorComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        super(sourceController, restUtil, context, request, response);
+public class TgReflectorComponentResource extends AbstractWebResource {
+    private final ISourceController sourceController;
+    
+    public TgReflectorComponentResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider);
+        this.sourceController = sourceController;
     }
 
     /**
@@ -34,7 +37,8 @@ public class TgReflectorComponentResource extends DeviceProfileDifferentiatorRes
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController().loadSource("/app/tg-reflector.html", deviceProfile());
+        final String source = sourceController.loadSource("/app/tg-reflector.html", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
+
 }

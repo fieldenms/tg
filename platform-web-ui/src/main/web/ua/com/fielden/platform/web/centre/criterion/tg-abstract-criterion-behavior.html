@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/components/tg-scrollable-component.html">
 
 <style is="custom-style">
     .meta-value-editor paper-button {
@@ -13,9 +14,17 @@
          background: var(--paper-light-blue-50);
     }
     
-    .meta-value-editor > paper-dialog-scrollable {
+    .metavalue-editor > * {
+        flex-grow : 0;
+        flex-shrink: 0;
+    }
+    
+    .meta-value-editor > tg-scrollable-component {
         margin: 0;
         padding: 0;
+        --tg-scrollable-layout: {
+            padding: 0 24px;
+        };
     }
     
     .metavalue-editor {
@@ -103,6 +112,20 @@
             this._cancelMetaValuesForBinding = this._cancelMetaValues.bind(this);
             this._computeIconButtonStyleForBinding = this._computeIconButtonStyle.bind(this);
         },
+        
+        /**
+         * Clears all meta value parameters foir this criterion.
+         */
+        clearMetaValues: function () {
+            this._datePrefix = null;
+            this._dateMnemonic = null;
+            this._andBefore = null;
+            this._exclusive = false;
+            this._exclusive2 = false;
+            this._orNull = false;
+            this._not = false;
+            this._acceptMetaValues(false);
+        },
 
         /**
          * Creates dynamically the 'dom-bind' template, which hold the dialog with all meta value editors.
@@ -175,7 +198,7 @@
                 self._exclusive2 = domBind._exclusive2Bind;
                 self._orNull = domBind._orNullBind;
                 self._not = domBind._notBind;
-                self._acceptMetaValues();
+                self._acceptMetaValues(true);
             };
 
             domBind.open = function () {
@@ -192,15 +215,15 @@
             }.bind(domBind);
 
             var div = domBind.content.ownerDocument.createElement('div');
-            div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_openedBind">' +
+            div.innerHTML = '<paper-dialog id="metaValueEditor" class="layout vertical meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_openedBind">' +
 
-            '<paper-dialog-scrollable>' +
+            '<tg-scrollable-component class="relative">' +
                 '<div class="metavalue-editor layout vertical">' +
                 self._createMetaValueEditors() +
                 '</div>' +
-                '</paper-dialog-scrollable>' +
+                '</tg-scrollable-component>' +
 
-            '<div class="layout horizontal justified" style="padding:8px; margin:0;">' +
+            '<div class="layout horizontal justified" style="flex-shrink:0; flex-grow:0; padding:8px; margin:0;">' +
                 '<paper-button class="blue" on-tap="_clearMetaValues">Clear</paper-button>' +
                 '<div class="layout horizontal">' +
                     '<paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValuesBind">Cancel</paper-button>' +
@@ -224,8 +247,10 @@
         /**
          * Accepts all new meta-values. Should be overridden to provide acceptance in specific descendants.
          */
-        _acceptMetaValues: function () {
-            this.validationCallback();
+        _acceptMetaValues: function (validate) {
+            if (validate) {
+                this.validationCallback();
+            }
         },
 
         /**

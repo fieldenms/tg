@@ -2,6 +2,7 @@ package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -25,9 +26,7 @@ import ua.com.fielden.platform.utils.ClassComparator;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("SECURITY_ROLE_ASSOCIATION")
 @CompanionObject(ISecurityRoleAssociation.class)
-public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
-
-    private static final long serialVersionUID = -4411308363510017782L;
+public class SecurityRoleAssociation extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(1)

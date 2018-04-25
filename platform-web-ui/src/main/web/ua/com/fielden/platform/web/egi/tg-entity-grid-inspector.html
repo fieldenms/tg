@@ -2,13 +2,18 @@
 
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-drag-from-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
+<link rel="import" href="/resources/images/tg-icons.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
@@ -19,13 +24,16 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
-<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-progress/paper-progress.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
+        :host {
+            @apply(--layout-vertical);
+
+        }
         /*miscellanea styles*/
         .lock-layer {
             opacity: 0.5;
@@ -73,18 +81,24 @@
             bottom: 0;
             right: 0;
             width: 10px;
+            pointer-events: none;
         }
-        .table-cell:hover > .resizing-box,
-        .resizing-box:hover,
-        .resizing-action {
-            cursor: col-resize;
+        .table-cell:hover:not([is-resizing]):not([is-mobile]) > .resizing-box,
+        .resizing-action > .resizing-box {
             border-right: 4px solid var(--paper-light-blue-100);
+        }
+        .resizing-action {
+             cursor: col-resize;
         }
         paper-material {
             border-radius: 2px;
         }
+        paper-material[fit-to-height] {
+            flex-grow: 1;
+        }
         #scrollContainer {
             overflow: auto;
+            -webkit-overflow-scrolling: touch;
         }
         #lockContainer {
             pointer-events: none;
@@ -116,6 +130,8 @@
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-data-row {
             font-size: 1rem;
@@ -126,6 +142,8 @@
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-data-row:last-of-type,
         .table-footer-row:last-of-type,
@@ -147,6 +165,8 @@
             text-rendering: optimizeLegibility;
             min-width: fit-content;
             background-color: white;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .table-cell,
         .table-data-cell {
@@ -159,6 +179,8 @@
             height: auto;
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
         .grid-toolbar-content::content > * {
             margin-top: 8px;
@@ -181,6 +203,26 @@
         .table-icon {
             --iron-icon-width: 1.3rem;
             --iron-icon-height: 1.3rem;
+        }
+        .drag-anchor {
+            --iron-icon-width: 1.5rem;
+            --iron-icon-height: 1.5rem;
+        }
+        .drag-anchor[selected]:hover {
+            cursor: move;
+            /* fallback if grab cursor is unsupported */
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+        }
+        .drag-anchor[selected]:active {
+            cursor: grabbing;
+            cursor: -moz-grabbing;
+            cursor: -webkit-grabbing;
+        }
+        .dummy-drag-box {
+            width: 1.5rem;
+            height: 1.5rem;
         }
         /* Action cell related styles*/
         .action-cell {
@@ -219,9 +261,10 @@
         <content id="insertion_point_action_selector" select=".insertion-point-action" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
+        <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
-            <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
+        <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
+            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -232,11 +275,12 @@
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <div id="baseContainer" class="relative layout horizontal" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
-                    <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
+                <div id="baseContainer" class="relative layout horizontal flex" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
+                    <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
-                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                            <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
+                            <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                 <paper-checkbox class="all-checkbox blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
@@ -245,9 +289,9 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                <div class="table-cell layout horizontal center-center relative" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                     <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
-                                    <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                    <div class="resizing-box"></div>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -259,7 +303,8 @@
                         <!-- Table body -->
                         <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                             <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                                <iron-icon draggable="true" class="drag-anchor" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style="[[_calcDragAnchorStyle(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, egiEntity.selected)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                     <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[primaryAction]]">
@@ -270,7 +315,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]">
                                         <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                             <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
                                             <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
@@ -294,10 +339,12 @@
                             </div>
                         </template>
                         <!-- Table footer -->
+                        <!--div class="flex"></div-->
                         <template is="dom-if" if="[[totals]]">
                             <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex)]]">
-                                    <div class="table-cell layout horizontal center no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
+                                <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed, summaryIndex, fitToHeight)]]">
+                                    <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
+                                    <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!checkboxVisible]]">
                                         <!-- checkbox stub for table footer -->
                                     </div>
                                     <template is="dom-if" if="[[primaryAction]]">
@@ -331,11 +378,12 @@
                     </div>
                     <!-- Fixed container -->
                     <div id="lockContainer" class="absolute fit" style="overflow:hidden" on-focusin="_lockContainerFocusIn" on-focusout="_lockContainerFocusOut">
-                        <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                        <template is="dom-if" on-dom-change="_leftLockPanelRendered" if="[[_isLeftLockPanelVisble(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                             <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                 <!--header-->
                                 <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
-                                    <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                    <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
+                                    <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                     </div>
                                     <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
@@ -344,16 +392,17 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center-center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                            <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                            <div class="resizing-box"></div>
                                         </div>
                                     </template>
                                 </div>
                                 <!--body-->
                                 <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                     <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                        <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                                        <iron-icon draggable="true" class="drag-anchor" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style="[[_calcFixedDragAnchorStyle(canDragFrom, egiEntity.selected)]]" icon="tg-icons:dragVertical"></iron-icon>
+                                        <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                             <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                         </div>
                                         <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
@@ -362,7 +411,7 @@
                                             </div>
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]" as="column">
-                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
+                                            <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property)]]"></div>
                                                 <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(egiEntity.entity, column)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                 <a class="truncate" hidden$="[[!_isHyperlinkProp(egiEntity.entity, column)]]" href$="[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity.renderingHints.*, entityIndex, column.property, 'false')]]">[[_getBindedValue(egiEntity.entity.*, column.property, column.type)]]</a>
@@ -374,8 +423,9 @@
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                     <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                                        <div class="layout horizontal table-footer-row">
-                                            <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
+                                        <div class="layout horizontal table-footer-row" style$="[[_calcFixedFooterRowStyle(summaryIndex, fitToHeight)]]">
+                                            <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
+                                            <div class="table-cell no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <!-- checkbox stub for table footer -->
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
@@ -402,8 +452,8 @@
                                 </template>
                             </div>
                         </template>
-                        <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                            <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
+                        <template is="dom-if" if="[[_isLeftLockPanelVisble(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                            <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
                         </template>
                         <template is="dom-if" on-dom-change="_rightLockPanelRendered" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                             <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed, columns)]]">
@@ -427,7 +477,7 @@
                                 <!--footer-->
                                 <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                     <template is="dom-repeat" items="[[_totalsRows]]">
-                                        <div class="layout horizontal table-footer-row">
+                                        <div class="layout horizontal table-footer-row" style$="[[_calcFixedFooterRowStyle(index, fitToHeight)]]">
                                             <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Secondary actions header goes here-->
                                             </div>
@@ -440,8 +490,9 @@
                             <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth)]]"></div>
                         </template>
                         <template is="dom-if" on-dom-change="_topLockPanelRendered" if="[[_isHeaderFixed(headerFixed)]]">
-                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
-                                <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(canDragFrom, dragAnchorFixed, checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
+                                <div class="dummy-drag-box" hidden$="[[!_isDragAnchorNotFixedAndVisble(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]"></div>
+                                <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
@@ -450,9 +501,9 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box"></div>
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
@@ -463,11 +514,12 @@
                             </div>
                         </template>
                         <template is="dom-if" on-dom-change="_bottomLockPanelRendered" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                            <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
+                            <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(canDragFrom, dragAnchorFixed, checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth)]]">
                                 <div class="layout vertical flex" style="background-color:white;">
                                     <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                         <div class="layout horizontal table-footer-row">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                            <div class="dummy-drag-box" hidden$="[[!_isDragAnchorNotFixedAndVisble(canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]"></div>
+                                            <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
@@ -499,9 +551,10 @@
                                 </div>
                             </div>
                         </template>
-                        <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
+                        <template is="dom-if" if="[[_isTopLeftPanelVisible(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
                             <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal table-header-row" style="top:0;left:0">
-                                <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
+                                <div class="table-cell layout horizontal center no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
@@ -510,9 +563,9 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-mouseenter="_showResizingCue" on-mouseup="_showResizingCue" on-mouseleave="_hideResizingCue" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="table-cell layout horizontal center relative" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
-                                        <div class="resizing-box" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize"></div>
+                                        <div class="resizing-box"></div>
                                     </div>
                                 </template>
                             </div>
@@ -522,14 +575,15 @@
                                 <!-- secondary action header column -->
                             </div>
                         </template>
-                        <template is="dom-if" if="[[_isBottomLeftPanelVisible(totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                        <template is="dom-if" if="[[_isBottomLeftPanelVisible(totals, summaryFixed, canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                             <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;left:0">
                                 <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                                     <div class="layout horizontal table-footer-row">
-                                        <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
+                                        <div class="dummy-drag-box" hidden$="[[!canDragFrom]]"></div>
+                                        <div class="table-cell no-flexible" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" hidden$="[[!_isCheckboxesVisibleAndFixed(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                             <!-- checkbox stub for table footer -->
                                         </div>
-                                        <template is="dom-if" if="[[_isPrimaryActionSummaryVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed, numOfFixedCols)]]">
+                                        <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                             <div class="action-cell no-flexible">
                                                 <!--Primary action footer goes here-->
                                             </div>
@@ -578,7 +632,7 @@
 <script>
     (function () {
         const _areEqual = function (a, b) {
-            return a.get('id') === b.get('id');
+            return a && b && a.get('id') === b.get('id');
         };
         const _findEntity = function (entity, entities) {
             for (var i = 0; i < entities.length; i += 1) {
@@ -589,7 +643,7 @@
             return -1;
         };
         const _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = selectedEntities.indexOf(entity);
+            var selectedIndex = _findEntity(entity, selectedEntities);
             if (select) {
                 if (selectedIndex < 0) {
                     selectedEntities.push(entity);
@@ -612,19 +666,6 @@
                 });
                 return subEntity.get(key);
             });
-        };
-        const getRelativePos = function (x, y, container) {
-            let reference = container;
-            let newPos = {
-                x: x,
-                y: y
-            }
-            while (reference) {
-                newPos.x -= reference.offsetLeft;
-                newPos.y -= reference.offsetTop;
-                reference = reference.offsetParent;
-            }
-            return newPos;
         };
         const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
@@ -672,9 +713,19 @@
             is: "tg-entity-grid-inspector",
 
             properties: {
+                mobile: Boolean,
+                /** An extrenally assigned function that accepts an instance of type Attachment as an argument and starts the download of the associated file. */
+                downloadAttachment: {
+                    type: Function
+                },
+                
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
+                },
+                filteredEntities: {
+                    type: Array,
+                    observer: "_filteredEntitiesChanged"
                 },
                 totals: Object,
                 columns: {
@@ -707,19 +758,47 @@
                     observer: "_renderingHintsChanged"
                 },
                 /**
+                 * Indicates whether margin should be visible around egi or not.
+                 */
+                showMarginAround: {
+                    type: Boolean,
+                    value: true
+                },
+                /**
                  * Defines the number of visible rows.
                  */
                 visibleRowCount: {
                     type: Number,
                     value: 0
                 },
-
+                /**
+                 * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
+                 */
+                constantHeight: {
+                    type: String,
+                    value: ""
+                },
+                /**
+                 * Indicates whether content should be extended to EGI's height or not.
+                 */
+                fitToHeight: {
+                    type: Boolean,
+                    value: false
+                },
                 //Controls visibility of the toolbar.
                 toolbarVisible: {
                     type: Boolean,
                     value: true
                 },
-
+                //Determines whether entities can be dragged from this EGI.
+                canDragFrom: {
+                    type: Boolean,
+                    value: false
+                },
+                dragAnchorFixed: {
+                    type: Boolean,
+                    value: false
+                },
                 //Controls visiblity of checkboxes at the beginnig of the header and each data row.
                 checkboxVisible: {
                     type: Boolean,
@@ -800,7 +879,11 @@
                 _lastSelectedIndex: Number
             },
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
+            observers: [
+          '_heightRelatedPropertiesChanged(visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
+            ],
+
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior, Polymer.TgBehaviors.TgDragFromBehavior],
 
             _leftLockPanelRendered: function (e) {
                 this._leftLockPanel = this.$$("#leftLockPanel");
@@ -833,6 +916,10 @@
              */
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
+                
+                //Configure device profile
+                this.mobile = this.$.appConfig.mobile;
+                
                 this._totalsRowCount = 0;
                 this._showProgress = false;
 
@@ -909,32 +996,67 @@
              * Updates entity when some of the properties were changed.
              */
             updateEntity: function (entity, propPath) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
                 }
             },
-            
+
             setRenderingHints: function (entity, property, renderingHints) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
             selectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.entities);
+                const entityIndex = _findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.entities[entityIndex], select, this);
+                    _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], select, this);
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
                         entities: [{
-                            entity: this.entities[entityIndex],
+                            entity: this.filteredEntities[entityIndex],
                             select: select
                         }]
                     });
+                }
+            },
+
+            filter: function () {
+                const tempFilteredEntities = [];
+                this.entities.forEach(entity => {
+                    if (this.isVisible(entity)) {
+                        tempFilteredEntities.push(entity);
+                    }
+                });
+                this.filteredEntities = tempFilteredEntities;
+            },
+            
+            isVisible: function (entity) {
+                return true;
+            },
+
+            getElementToDragFrom: function (target) {
+                const elem = document.createElement('div');
+                const entities = this.getSelectedEntities();
+                elem.innerHTML = entities.map(entity => this._getValueFromEntity(entity, "key")).join(", ");
+                elem.style["white-space"] = "nowrap";
+                elem.style["overflow"] = "hidden";
+                elem.style["text-overflow"] = "ellipsis";
+                elem.style["width"] = "300px"
+                return elem;
+            },
+
+            getDataToDragFrom: function (target) {
+                const entities = this.getSelectedEntities();
+                if (entities.length > 0) {
+                    const type = "tg/" + entities[0].type()._simpleClassName();
+                    const data = {};
+                    data[type] = JSON.stringify(this.$.serialiser.serialise(this.getSelectedEntities()));
+                    return data;
                 }
             },
 
@@ -1134,31 +1256,33 @@
             },
 
             /**
-             * Resize event handler that adjasts the lock container size and position.
+             * Resize event handler that adjusts the lock container size and position.
              */
             _resizeEventListener: function (event, details) {
-                const propertyToSet = this.visibleRowCount > 0 ? "max-height" : "height";
-                const propertyToRemove = this.visibleRowCount > 0 ? "height" : "max-height";
-                const bottomPosition = this._calcHorizontalScrollBarHeight();
-                let rowCount, height;
-                if (this.visibleRowCount > 0) {
-                    rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
-                    height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
-                } else {
-                    rowCount = this.entities.length + this._totalsRowCount;
-                    height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
-                }
-                const previousHeight = this.$.baseContainer.style[propertyToSet];
-                this.$.baseContainer.style.removeProperty(propertyToRemove);
-                this.$.scrollContainer.style.removeProperty(propertyToRemove);
-                this.$.baseContainer.style[propertyToSet] = height;
-                this.$.scrollContainer.style[propertyToSet] = height;
-                this.$.lockContainer.style.bottom = bottomPosition + "px";
+                this.$.lockContainer.style.bottom = this._calcHorizontalScrollBarHeight() + "px";
                 this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                 this._handleScrollEvent();
-                if (previousHeight !== height) {
-                    this.fire("tg-egi-resizied", height);
+            },
+
+            _heightRelatedPropertiesChanged: function (visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
+                //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
+                this.style.removeProperty("height");
+                this.style.removeProperty("min-height");
+                this.$.scrollContainer.style.removeProperty("height");
+                this.$.scrollContainer.style.removeProperty("max-height");
+                if (constantHeight) { //Set the height for the egi
+                    this.style["height"] = constantHeight;
+                } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+                    this.style["min-height"] = "fit-content";
+                    const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+                    const height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
+                    if (fitToHeight) {
+                        this.$.scrollContainer.style["height"] = height;
+                    } else {
+                        this.$.scrollContainer.style["max-height"] = height;
+                    }
                 }
+                this._resizeEventListener();
             },
 
             _updateShadows: function () {
@@ -1188,6 +1312,10 @@
                 this._updateShadows();
             },
 
+            _isAnchorFixed: function (dargAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return dargAnchorFixed || this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+            },
+
             _isCheckboxesOrHeaderFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols) {
                 return this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) || headerFixed;
             },
@@ -1196,8 +1324,12 @@
                 return checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0);
             },
 
+            _isDragAnchorNotFixedAndVisble: function (canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+            },
+
             _isCheckboxesNotFixedAndVisible: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
-                return checkboxVisible && !checkboxesFixed && !checkboxesWithPrimaryActionsFixed && (numOfFixedCols <= 0);
+                return checkboxVisible && !this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
             },
 
             _isPrimaryActionsFixed: function (checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
@@ -1240,12 +1372,16 @@
                 return totals && !summaryFixed;
             },
 
-            _isLeftLockPanelVisble: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
-                return (checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || (numOfFixedCols > 0);
+            _isLeftLockPanelVisble: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return (canDragFrom && (dragAnchorFixed || checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || (numOfFixedCols > 0);
             },
 
-            _isTopLeftPanelVisible: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed) {
-                return ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || numOfFixedCols > 0) && headerFixed;
+            _isTopLeftPanelVisible: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed) {
+                return this._isLeftLockPanelVisble(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && headerFixed;
+            },
+
+            _isCheckboxesVisibleAndFixed: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return checkboxVisible && this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
             },
 
             _isPrimaryActionVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
@@ -1256,12 +1392,8 @@
                 return this._isSecondaryActionsPresent(secondaryActions) && secondaryActionsFixed && headerFixed;
             },
 
-            _isBottomLeftPanelVisible: function (totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
-                return totals && summaryFixed && ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || numOfFixedCols > 0);
-            },
-
-            _isPrimaryActionSummaryVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed, numOfFixedCols) {
-                return primaryAction && (checkboxesWithPrimaryActionsFixed || summaryFixed || numOfFixedCols > 0);
+            _isBottomLeftPanelVisible: function (totals, summaryFixed, canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return totals && summaryFixed && this._isLeftLockPanelVisble(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
             },
 
             _isBottomRightPanelVisible: function (totals, summaryFixed, secondaryActions, secondaryActionsFixed) {
@@ -1281,31 +1413,50 @@
 
             _getTooltip: function (entity, column, action) {
                 try {
-                    var property = entity.prop(column.property);
-                    var validationResult = property.validationResult();
-                    var value;
-                    var tooltip = "";
-                    if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                        tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
-                    } else if (column.tooltipProperty) {
-                        value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                        tooltip = value && ("<b>" + value + "</b>");
-                    } else if (this.$.reflector.findTypeByName(column.type)) {
-                        tooltip = this._generateEntityTooltip(entity, column);
-                    } else {
-                        value = this._getValue(entity, column.property, column.type).toString();
-                        tooltip = value && ("<b>" + value + "</b>");
-                    }
-                    if (column.columnDesc) {
-                        tooltip += (tooltip && "<br><br>") + column.columnDesc;
-                    }
-                    if (action && (action.shortDesc || action.longDesc)) {
-                        tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
-                    }
+                    let tooltip = this.getValueTooltip(entity, column);
+                    const columnDescPart = this.getDescTooltip(entity, column);
+                    const actionDescPart = this.getActionTooltip(entity, column, action);
+                    tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
+                    tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
                     return tooltip;
                 } catch (e) {
                     return '';
                 }
+            },
+
+            getValueTooltip: function (entity, column) {
+                const validationResult = entity.prop(column.property).validationResult();
+                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                    return validationResult.message && ("<b>" + validationResult.message + "</b>");
+                } else if (column.tooltipProperty) {
+                    const value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                    return value && ("<b>" + value + "</b>");
+                } else if (this.$.reflector.findTypeByName(column.type)) {
+                    return this._generateEntityTooltip(entity, column);
+                } else {
+                    const value = this._getValue(entity, column.property, column.type).toString();
+                    return value && ("<b>" + value + "</b>");
+                }
+                return "";
+            },
+
+            getDescTooltip: function (entity, column) {
+                if (column.columnDesc) {
+                    return column.columnDesc;
+                }
+                return "";
+            },
+
+            getActionTooltip: function (entity, column, action) {
+                if (action && (action.shortDesc || action.longDesc)) {
+                    return this._generateActionTooltip(action);
+                } else if (this._getAttachmentIfPossible(entity, column)) {
+                    return this._generateActionTooltip({
+                        shortDesc: 'Download',
+                        longDesc: 'Click to download attachment.'
+                    });
+                }
+                return "";
             },
 
             _generateEntityTooltip: function (entity, column) {
@@ -1388,11 +1539,15 @@
                     return "padding: 8px;";
                 }
             },
+            
+            _entitiesChanged: function (newValue, oldValue) {
+                this.filter();
+            },
 
             /**
              * Observs the changes to entities property.
              */
-            _entitiesChanged: function (newValue, oldValue) {
+            _filteredEntitiesChanged: function (newValue, oldValue) {
                 const tempEgiModel = [];
                 const self = this;
                 newValue.forEach(function (newEntity) {
@@ -1404,8 +1559,9 @@
                 newValue.forEach(function (newEntity) {
                     const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
                     const oldIndex = _findEntity(newEntity, oldValue);
-                    const newRendHints = oldIndex < 0 ? {} : self.renderingHints[oldIndex] || {};
+                    const newRendHints = oldIndex < 0 ? {} : (self.renderingHints && self.renderingHints[oldIndex]) || {};
                     const egiEntity = {
+                        over: false,
                         selected: isSelected,
                         entity: newEntity,
                         renderingHints: newRendHints
@@ -1415,8 +1571,9 @@
                 updateSelectAll(this, tempEgiModel);
                 self.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
+                this.fire("tg-egi-entities-loaded", newValue);
             },
-            
+
             _renderingHintsChanged: function (newValue, oldValue) {
                 if (this.egiModel) {
                     this.egiModel.forEach((egiEntity, index) => {
@@ -1433,7 +1590,7 @@
                     removeColumn(col, this.allColumns);
                     columnsChanged = removeColumn(col, columnsCopy);
                 });
-                
+
                 addedColumns.forEach(col => {
                     const index = this.allColumns.findIndex(column => column.property === col.property);
                     if (index < 0) {
@@ -1491,10 +1648,15 @@
                 let numOfSelected = 0;
                 let lastSelectedIndex = -1;
                 newSelection.entities.forEach(entitySelection => {
-                    const entityIndex = _findEntity(entitySelection.entity, this.entities);
+                    const entityIndex = _findEntity(entitySelection.entity, this.filteredEntities);
                     if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
                         this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                        _processEntitySelection(this.selectedEntities, this.entities[entityIndex], entitySelection.select, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], entitySelection.select, this);
+                    } else {
+                        const hiddenEntityIndex = _findEntity(entitySelection.entity, this.entities);
+                        if (hiddenEntityIndex >= 0) {
+                            _processEntitySelection(this.selectedEntities, this.entities[hiddenEntityIndex], entitySelection.select, this);
+                        }
                     }
                     if (entitySelection.select) {
                         numOfSelected += 1;
@@ -1504,7 +1666,7 @@
                 //update selectAll parameter according to entity selection.
                 updateSelectAll(this, this.egiModel);
                 //Scroll to the selected one if it is the only one and should scroll is true.
-                if (newSelection.shouldScrollToSelected && numOfSelected === 1) {
+                if (newSelection.shouldScrollToSelected && numOfSelected === 1 && lastSelectedIndex >= 0) {
                     const entityRows = this.$.scrollContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
                     if (entityRow) {
@@ -1538,9 +1700,9 @@
                     for (let i = 0; i < this.egiModel.length; i += 1) {
                         if (this.egiModel[i].selected !== checked) {
                             this.set("egiModel." + i + ".selected", checked);
-                            _processEntitySelection(this.selectedEntities, this.entities[i], checked);
+                            _processEntitySelection(this.selectedEntities, this.filteredEntities[i], checked);
                             selectionDetails.push({
-                                entity: this.entities[i],
+                                entity: this.filteredEntities[i],
                                 select: checked
                             });
                         }
@@ -1567,11 +1729,11 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[index], target.checked, this);
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
                             entities: [{
-                                entity: this.entities[index],
+                                entity: this.filteredEntities[index],
                                 select: target.checked
                         }]
                         });
@@ -1601,9 +1763,9 @@
                 for (let i = from; i <= to; i++) {
                     if (!this.egiModel[i].selected) {
                         this.set("egiModel." + i + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], true);
+                        _processEntitySelection(this.selectedEntities, this.filteredEntities[i], true);
                         selectionDetails.push({
-                            entity: this.entities[i],
+                            entity: this.filteredEntities[i],
                             select: true
                         });
                     }
@@ -1621,6 +1783,15 @@
              */
             _isSecondaryActionsPresent: function (secondaryActions) {
                 return secondaryActions && secondaryActions.length > 0;
+            },
+            /**
+             * Calculates the style for egi's paper material
+             */
+            _calcMaterialStyle: function (showMarginAround) {
+                if (showMarginAround) {
+                    return "margin:10px;";
+                }
+                return "";
             },
             /**
              * Calculates the column's header style.
@@ -1650,8 +1821,31 @@
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
              */
-            _calcFooterRowStyle: function (summaryFixed, summaryIndex) {
-                return summaryFixed ? "visibility:hidden" : "";
+            _calcFooterRowStyle: function (summaryFixed, summaryIndex, fitToHeight) {
+                let styleStr = summaryFixed ? "visibility:hidden;" : "";
+                if (fitToHeight && summaryIndex === 0) {
+                    styleStr += "margin-top:auto;"
+                }
+                return styleStr;
+            },
+
+            _calcFixedFooterRowStyle: function (summaryIndex, fitToHeight) {
+                return (summaryIndex === 0 && fitToHeight) ? "margin-top: auto" : "";
+            },
+
+            /**
+             * Calculates style for the visibility of drag anchor.
+             */
+            _calcDragAnchorStyle: function (canDragFrom, dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols, isSelected, isSelected) {
+                return canDragFrom && !this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) && isSelected ? "" : "visibility:hidden";
+            },
+
+            _calcFixedDragAnchorStyle: function (canDragFrom, isSelected) {
+                return canDragFrom && isSelected ? "" : "visibility:hidden";
+            },
+
+            _calcSelectCheckBoxStyle: function (canDragFrom) {
+                return "width:18px; padding-left:" + (canDragFrom ? "0;" : "0.6rem;");
             },
             /**
              * Calculates the style for cell that represents rendering hints.
@@ -1732,23 +1926,33 @@
              * Below are function related to lock panels position calculation logic.
              */
             _calculateLeftLockPanelStyle: function (_showLeftShadow, _scrollTop, headerFixed) {
-                return "left:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
+                return "left:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);bottom:0";
             },
 
             _calculateRightLockPanelStyle: function (_showRightShadow, _scrollTop, headerFixed) {
-                return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
+                return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);bottom:0";
             },
 
-            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
-                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+            _calculateTopLockPanelStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
+                const anchorFixed = this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                const checkboxFixed = this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                const primaryActionFixed = this._isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                return "top:0;left:calc(" + this._calculateDragAnchorWidth(canDragFrom, anchorFixed) + " + " + this._calculateCheckboxWidth(canDragFrom, checkboxVisible, checkboxFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, primaryActionFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
-            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
-                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+            _calculateBottomLockPanelStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft, _fixedColumnWidth, _scrollableColumnWidth) {
+                const anchorFixed = this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                const checkboxFixed = this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                const primaryActionFixed = this._isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                return "bottom:0;left:calc(" + this._calculateDragAnchorWidth(canDragFrom, anchorFixed) + " + " + this._calculateCheckboxWidth(canDragFrom, checkboxVisible, checkboxFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, primaryActionFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
-            _calculateCheckboxWidth: function (checkboxVisible, fixed) {
-                return (checkboxVisible && fixed) ? "18px + 1.2rem" : "0px";
+            _calculateCheckboxWidth: function (canDragFrom, checkboxVisible, fixed) {
+                return (checkboxVisible && fixed) ? "18px + " + (canDragFrom ? "0.6" : "1.2") + "rem" : "0px";
+            },
+
+            _calculateDragAnchorWidth: function (canDragFrom, fixed) {
+                return (fixed && canDragFrom) ? "1.5rem" : "0px";
             },
 
             _calculatePrimaryActionWidth: function (primaryAction, fixed) {
@@ -1821,7 +2025,7 @@
             containsAnyEntity: function (entitiesToSearch) {
                 var entityIndex;
                 for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
-                    if (_findEntity(entitiesToSearch[entityIndex], this.entities) !== -1) {
+                    if (_findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
                         return true;
                     }
                 }
@@ -1840,6 +2044,27 @@
             _isHyperlinkProp: function (entity, column) {
                 return column.type === 'Hyperlink' && this._getValueFromEntity(entity, column.property) !== null
             },
+
+            /**
+             * Determines whether property is or belongs to type Attachment.
+             */
+            _getAttachmentIfPossible: function (entity, column) {
+                if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                    return entity;
+                } else if (this._getValueFromEntity(entity, column.property) && this._getValueFromEntity(entity, column.property).type &&
+                    this._getValueFromEntity(entity, column.property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                    return this._getValueFromEntity(entity, column.property);
+                } else if (this.$.reflector.entityPropOwner(entity, column.property)) {
+                    const owner = this.$.reflector.entityPropOwner(entity, column.property);
+                    if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                        return owner;
+                    }
+                    return null;
+                } else {
+                    return null;
+                }
+            },
+
             /**
              * Determines whether property is not boolean property or is.
              */
@@ -1864,25 +2089,30 @@
             },
 
             /** Identifies if there is a column action for the specified entity and column. */
-            _hasAction: function (entity, column) {
-                return column.customAction || this._isHyperlinkProp(entity, column) === true;
+            hasAction: function (entity, column) {
+                return column.customAction || this._isHyperlinkProp(entity, column) === true || this._getAttachmentIfPossible(entity, column);
             },
 
             /**
              * Tap action on data column. TODO: implement this.
              */
             _tapAction: function (e, detail) {
-                this.tap(this.entities[e.model.entityIndex], this.columns[e.model.index].property, this.columns[e.model.index]);
+                this.tap(this.filteredEntities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
             },
 
-            tap: function (entity, property, column) {
+            tap: function (entity, index, column) {
                 if (column.runAction(entity) === false) {
-                    // if the property is a hyperlink and there was no custom action associted with it
+                    // if the clicked property is a hyperlink and there was no custom action associted with it
                     // then let's open the linked resources
                     if (this._isHyperlinkProp(entity, column) === true) {
-                        var url = this._getValue(entity, column.property, column.type);
-                        var win = window.open(url, '_blank');
+                        const url = this._getValue(entity, column.property, column.type);
+                        const win = window.open(url, '_blank');
                         win.focus();
+                    } else {
+                        const attachment = this._getAttachmentIfPossible(entity, column);
+                        if (attachment && this.downloadAttachment) {
+                            this.downloadAttachment(attachment);
+                        }
                     }
                 }
             },
@@ -1967,8 +2197,11 @@
                 return shadowStyle;
             },
 
-            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth) {
-                var shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
+            _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _fixedColumnWidth, _scrollableColumnWidth) {
+                const anchorFixed = this._isAnchorFixed(dragAnchorFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                const checkboxFixed = this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                const primaryActionFixed = this._isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols);
+                let shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateDragAnchorWidth(canDragFrom, anchorFixed) + " + " + this._calculateCheckboxWidth(canDragFrom, checkboxVisible, checkboxFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, primaryActionFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
                     shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
                 }
@@ -2012,7 +2245,7 @@
             _startColumnResize: function (e) {
                 //Change the style to visualise column resizing.
                 //this.style.cursor = "col-resize";
-                e.target.classList.toggle("resizing-action", true);
+                e.currentTarget.classList.toggle("resizing-action", true);
                 //Calculate all properties needed for column resizing logic and create appropriate object
                 const columnElements = this.$.scrollContainer.querySelector(".table-header-row").querySelectorAll(".table-cell, .action-cell");
                 let containerWidth = this.$.lockContainer.offsetWidth;
@@ -2034,14 +2267,14 @@
                     containerWidth: containerWidth,
                     containerLeft: containerLeft,
                     otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length, () => true, () => true, () => true),
-                    widthCorrection: e.target.parentElement.offsetWidth - e.target.previousElementSibling.offsetWidth,
+                    widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
-
+            
             _trackColumnSize: function (e) {
                 if (this._columnResizingObject) {
-                    const columnWidth = e.target.previousElementSibling.offsetWidth;
+                    const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
                     let newWidth = columnWidth + e.detail.ddx;
                     //Correct size for mouse out of EGI.
                     const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.lockContainer);
@@ -2093,12 +2326,12 @@
 
             _endColumnResizing: function (e) {
                 //this.style.cursor = "default";
-                e.target.classList.toggle("resizing-action", false);
+                e.currentTarget.classList.toggle("resizing-action", false);
                 if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     const columnParameter = columnParameters[e.model.item.property] || {};
                     if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
-                        columnParameter.width = e.model.item.width;
+                        columnParameter.width = (+(e.model.item.width.toFixed(0)));
                     }
                     if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
                         columnParameter.growFactor = e.model.item.growFactor;
@@ -2109,27 +2342,24 @@
                 if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
                     this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
                 }
-                delete this._columnResizingObject;
+                this._columnResizingObject = null;
             },
 
             _makeEgiUnselectable: function (e) {
+                if (this.$.appConfig.mobile) {
+                    e.currentTarget.classList.toggle("resizing-action", true);
+                    console.log("set resizing action");
+                }
                 this.$.baseContainer.classList.toggle("noselect", true);
                 document.body.style["cursor"] = "col-resize";
             },
 
             _makeEgiSelectable: function (e) {
+                if (this.$.appConfig.mobile) {
+                    e.currentTarget.classList.toggle("resizing-action", false);
+                }
                 this.$.baseContainer.classList.toggle("noselect", false);
                 document.body.style["cursor"] = "";
-            },
-
-            _showResizingCue: function (e) {
-                if (!e.buttons) {
-                    e.currentTarget.classList.toggle("resizing-column", true);
-                }
-            },
-
-            _hideResizingCue: function (e) {
-                e.currentTarget.classList.toggle("resizing-column", false);
             }
         })
     })()

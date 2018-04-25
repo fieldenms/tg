@@ -57,12 +57,16 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
     protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
+    protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected int pageCapacity = 30;
+    //EGI height related properties
     protected int visibleRowsCount = 0;
+    protected String egiHeight = "";
+    protected boolean fitToHeight = false;
 
     ////////////////////////////////////////////////
     //////////////// SELECTION CRITERIA ////////////
@@ -107,11 +111,12 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
     protected final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
+    protected final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
-    protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
-    protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout();
-    protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout();
-    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout();
+    protected final FlexLayout selectionCriteriaLayout = new FlexLayout("sel_crit");
+    protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout("collapsed_card");
+    protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout("expansion_card");
+    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout("summary_card");
 
     /////////////////////////////////////////
     ////////////// RESULT SET ///////////////
@@ -157,13 +162,16 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
-        return new EntityCentreConfig<T>(
-        		hideCheckboxes,
+        return new EntityCentreConfig<>(
+                draggable,
+                hideCheckboxes,
                 toolbarConfig,
-        		hideToolbar,
+                hideToolbar,
                 scrollConfig,
                 pageCapacity,
                 visibleRowsCount,
+                egiHeight,
+                fitToHeight,
                 topLevelActions,
                 insertionPointConfigs,
                 selectionCriteria,
@@ -191,6 +199,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 defaultSingleValuesForDateSelectionCriteria,
                 valueMatchersForSelectionCriteria,
                 additionalPropsForAutocompleter,
+                providedTypesForAutocompletedSelectionCriteria,
                 runAutomatically,
                 enforcePostSaveRefresh,
                 sseUri,

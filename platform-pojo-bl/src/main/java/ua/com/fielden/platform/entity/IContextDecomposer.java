@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -369,7 +368,7 @@ public interface IContextDecomposer {
      * @return
      */
     default Set<Long> selectedEntityIds() {
-        return selectedEntities().stream().map(ent -> ent.getId()).collect(toCollection(LinkedHashSet::new));
+        return selectedEntities().stream().map(AbstractEntity::getId).collect(toCollection(LinkedHashSet::new));
     }
     
     /**
@@ -528,6 +527,14 @@ public interface IContextDecomposer {
             return decompose(context()).chosenProperty();
         }
         
+        public boolean chosenPropertyEmpty() {
+            return chosenProperty() == null;
+        }
+
+        public boolean chosenPropertyNotEmpty() {
+            return !chosenPropertyEmpty();
+        }
+
         // CURRENT ENTITY:
         /**
          * Returns <code>true</code> if the masterEntity's current entity is not present, <code>false</code> otherwise.

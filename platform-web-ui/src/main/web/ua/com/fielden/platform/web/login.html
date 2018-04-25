@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    <!-- Startup configuration -->
+    <link rel="manifest" href="/resources/manifest.webmanifest">
+    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
@@ -41,6 +44,7 @@
             background: #eee;
             background-image: url(#bg-svg), none;
             -webkit-font-smoothing: antialiased;
+            margin: 0px; /* overrides user agent stylesheet's margin if there is one */
         }
         h1 {
         	font-weight: 700;
@@ -55,7 +59,7 @@
             margin-top: 4em;
         }
         form {
-            width: 300px;
+            width: 270px;
             margin: 2em auto;
             padding: 3em 2em 2em 2em;
             background: #fafafa;
@@ -116,8 +120,10 @@
         <h1>Application Login</h1>
         <h3>Please enter valid credentials.</h3>
     </hgroup>
-
-    <form id="form" is="iron-form" action="login" method="post">
+    
+    <!-- Autocompletion of fields from other un-related forms is prevented, however in-browser Save Password capabilities are always stronger than this.-->
+    <!-- See https://developer.mozilla.org/en-US/docs/Web/Security/Securing_your_site/Turning_off_form_autocompletion for more details. -->
+    <form id="form" is="iron-form" action="login" method="post" autocomplete="off">
         <div class="vertical-section">
             <paper-input-container id="in-username-container">
                 <label>User name</label>

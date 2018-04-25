@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.validators;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import org.junit.Test;
@@ -7,15 +12,11 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends AbstractDomainDrivenTestCase {
+public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends AbstractDaoTestCase {
 
     private final ITgTimesheet dao = getInstance(ITgTimesheet.class);
 

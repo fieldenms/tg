@@ -60,8 +60,8 @@
 
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
-            <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-down="_onDown" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]" />
-            <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+            <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]" />
+            <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
             <div class="input-layer"><span>[[_formatKey(entity)]]</span><span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>
@@ -507,17 +507,24 @@
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-
+                
                 this.async(function () {
                     if (result.opened) {
                         this._resultOpened();
                     } else {
-                        result.open();
+                        if (result.visibleHeightUnderEditorIsSmall()) {
+                            this.scrollIntoView({block: "center", inline: "center", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
+                            this.async(function () { // need to wait at least 300 ms for scrolling to complete..
+                                result.open();
+                            }.bind(this), 300);
+                        } else {
+                            result.open();
+                        }
                     }
                     result.notifyResize();
                 }.bind(this), 100);
             },
-
+            
             /**
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
@@ -553,7 +560,8 @@
 
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
-                if (this.$.input === activeElement || /* if the autocompleter in focus */
+                if (this.$.searcherButton === activeElement || /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
+                    this.$.input === activeElement || /* if autocompleter's input is in focus */
                     document.body === activeElement   /* or no other input or button in focus then show found values */) {
                     this.opened = true;
                     this.$.result.highlightMatchedParts();

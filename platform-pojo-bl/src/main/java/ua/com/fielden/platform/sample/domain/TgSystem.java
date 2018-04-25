@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
+
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -53,7 +56,22 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @Title(value = "Forth Cat", desc = "Desc")
     @SkipActivatableTracking
     private TgCategory forthCat;
-
+    
+    @IsProperty
+    @CritOnly(SINGLE)
+    @Title(value = "Crit-only Single Category", desc = "Desc")
+    private TgCategory critOnlySingleCategory;
+    
+    @Observable
+    public TgSystem setCritOnlySingleCategory(final TgCategory critOnlySingleCategory) {
+        this.critOnlySingleCategory = critOnlySingleCategory;
+        return this;
+    }
+    
+    public TgCategory getCritOnlySingleCategory() {
+        return critOnlySingleCategory;
+    }
+    
     @Observable
     public TgSystem setForthCat(final TgCategory forthCat) {
         this.forthCat = forthCat;
