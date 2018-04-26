@@ -27,12 +27,26 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
 
     @IsProperty
+    @Title("Title")
+    private String title;
+
+    @IsProperty
     @Title(value = "Parent token", desc = "Desc")
     private SecurityTokenTreeNodeEntity parent;
 
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Children", desc = "Desc")
     private List<SecurityTokenTreeNodeEntity> children = new ArrayList<SecurityTokenTreeNodeEntity>();
+
+    @Observable
+    public SecurityTokenTreeNodeEntity setTitle(final String title) {
+        this.title = title;
+        return this;
+    }
+
+    public String getTitle() {
+        return title;
+    }
 
     @Observable
     public SecurityTokenTreeNodeEntity setChildren(final Set<SecurityTokenTreeNodeEntity> children) {

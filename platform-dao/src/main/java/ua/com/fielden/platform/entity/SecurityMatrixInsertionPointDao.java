@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -13,12 +14,14 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.SecurityTokenInfo;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
 @EntityType(SecurityMatrixInsertionPoint.class)
@@ -42,6 +45,9 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
             entity.setUserRoles(stream.collect(Collectors.toList()));
         }
         entity.setTokens(tokenEntities);
+        final ISecurityRoleAssociation coTokenRoleAssociation = co(SecurityRoleAssociation.class);
+        final Map<String, List<Long>> tokenRoleMap = coTokenRoleAssociation.findAllAssociations().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().stream().map(UserRole::getId).collect(Collectors.toList())));
+        entity.setTokenRoleMap(tokenRoleMap);
         return super.save(entity);
     }
 
@@ -49,7 +55,8 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
         final SecurityTokenTreeNodeEntity tokenTreeNode = new SecurityTokenTreeNodeEntity();
         tokenTreeNode.setParent(parentNode.orElse(null))
                      .setChildren(tokenNode.daughters().stream().map(child -> createTokenNodeEntity(Optional.of(tokenTreeNode), child)).collect(Collectors.toSet()))
-                     .setKey(SecurityTokenInfo.shortDesc(tokenNode.getToken()))
+                     .setTitle(SecurityTokenInfo.shortDesc(tokenNode.getToken()))
+                     .setKey(tokenNode.getToken().getName())
                      .setDesc(SecurityTokenInfo.longDesc(tokenNode.getToken()));
         return tokenTreeNode;
     }

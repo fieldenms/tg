@@ -4,7 +4,9 @@ import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -27,6 +29,10 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
     @Title(value = "User roles", desc = "Available user roles")
     private List<UserRole> userRoles = new ArrayList<>();
 
+    @IsProperty(Object.class)
+    @Title(value = "Token - Role association", desc = "Desc")
+    private Map<String, List<Long>> tokenRoleMap = new HashMap<>();
+
     protected SecurityMatrixInsertionPoint() {
         setKey(NO_KEY);
     }
@@ -36,6 +42,17 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
         this.userRoles.clear();
         this.userRoles.addAll(userRoles);
         return this;
+    }
+
+    @Observable
+    public SecurityMatrixInsertionPoint setTokenRoleMap(final Map<String, List<Long>> tokenRoleMap) {
+        this.tokenRoleMap.clear();
+        this.tokenRoleMap.putAll(tokenRoleMap);
+        return this;
+    }
+
+    public Map<String, List<Long>> getTokenRoleMap() {
+        return Collections.unmodifiableMap(tokenRoleMap);
     }
 
     public List<UserRole> getUserRoles() {

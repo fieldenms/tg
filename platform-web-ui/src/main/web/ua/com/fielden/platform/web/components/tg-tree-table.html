@@ -1,0 +1,48 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
+
+<dom-module id="tg-tree-table">
+    <template>
+        <style>
+        </style>
+        <content id="column_selector" select="tg-property-column" hidden></content>
+        <content id="column_selector" select="tg-hierarchy-property-column" hidden></content>
+    </template>
+    <script>
+        (function () {
+            'use strict'
+            Polymer({
+                is: 'tg-tree-table',
+
+                behaviors: [Polymer.IronResizableBehavior],
+
+                properties: {
+                    entities: Array,
+                },
+
+                ready: function () {
+                    //Configuring the security matrix master
+                    this.entityType = "ua.com.fielden.platform.entity.SecurityMatrixSaveAction"
+                },
+
+                attached: function () {
+                    this.async(function () {
+                        if (!this._currBindingEntity) {
+                            this.retrieve();
+                        }
+                    });
+                },
+
+                _entityChanged: function (newBindingEntity, oldOne) {
+                    const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
+                    if (newEntity) {
+                        console.log(newEntity);
+                    }
+                },
+
+            });
+        })();
+    </script>
+</dom-module>
