@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.companion;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,6 +23,28 @@ import ua.com.fielden.platform.pagination.IPage;
  * @param <T>
  */
 public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T>, IEntityStreamer<T> {
+
+    /**
+     * Should return an entity type the DAO is managing.
+     *
+     * @return
+     */
+    Class<T> getEntityType();
+
+    /**
+     * Should return entity's key type.
+     *
+     * @return
+     */
+    Class<? extends Comparable<?>> getKeyType();
+
+    /**
+     * A factory method that creates an instance of a companion object for the specified entity type.
+     * The reader methods of such companion return <code>uninstrumented</code> entities.
+     *
+     * @return
+     */
+    <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type);
 
     /**
      * Returns default {@link FetchProvider} for the entity.
@@ -173,6 +197,20 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      */
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
+
+    /**
+     * Returns all entities produced by the provided query.
+     * <p> 
+     * Getting all entities matching the query could be a very expensive operation.
+     * It should only be used if there is a certainty that the resultant list won't be too large.
+     * <p>
+     * In all other cases consider using Stream API. 
+     *
+     * @param quert
+     * @return
+     * 
+     */
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity

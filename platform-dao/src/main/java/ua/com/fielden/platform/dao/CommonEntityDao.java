@@ -25,6 +25,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.companion.DeleteOperations;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.companion.PersistentEntitySaver;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -380,7 +381,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+    public <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         if (!instrumented() && getEntityType().equals(type)) {
             return (C) this;
         }

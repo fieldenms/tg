@@ -19,26 +19,12 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
     /**
-     * Should return an entity type the DAO is managing.
-     *
-     * @return
-     */
-    Class<T> getEntityType();
-
-    /**
-     * Should return entity's key type.
-     *
-     * @return
-     */
-    Class<? extends Comparable<?>> getKeyType();
-
-    /**
      * A factory method that creates an instance of a companion object for the specified entity type.
      * The reader methods of such companion return <code>uninstrumented</code> entities.
      *
      * @return
      */
-    default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+    default <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         throw new UnsupportedOperationException("This method should be overriden by descendants.");
     }
 
@@ -80,16 +66,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      * @return
      */
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
-
-    /**
-     * Returns all entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     * @deprecated Streaming API must be used instead.
-     */
-    @Deprecated
-    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
      * Returns first entities produced by the provided query.

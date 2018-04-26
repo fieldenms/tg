@@ -57,10 +57,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     
     protected abstract Session getSession();
     
-    protected abstract Class<T> getEntityType();
-    
-    protected abstract Class<? extends Comparable<?>> getKeyType();
-    
     protected abstract boolean instrumented();
     
     protected abstract boolean isFilterable();
