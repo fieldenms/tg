@@ -6,13 +6,88 @@
 <dom-module id="tg-tree-table">
     <template>
         <style>
+            :host {
+                @apply(--layout-vertical);
+
+            }
+            .data-table {
+                background-color: white;
+                border-radius: 2px;
+                position: relative;
+            }
+            .lock-layer {
+                opacity: 0.5;
+                display: none;
+                background-color: white;
+            }
+            .lock-layer[lock] {
+                display: initial;
+            }
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .tree-table-header-row {
+                font-size: 0.9rem;
+                font-weight: 400;
+                color: #757575;
+                height: 3rem;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
+            .hierarchy-header-cell,
+            .header-cell {
+                padding: 0 0.6rem;
+            }
+            .header-cell {
+                transform: rotate(-90deg);
+            }
         </style>
         <content id="column_selector" select="tg-property-column" hidden></content>
-        <content id="column_selector" select="tg-hierarchy-property-column" hidden></content>
+
+        <paper-material elevation="1" class="layout vertical">
+            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
+
+                <div id="baseContainer" class="relative layout horizontal flex">
+                    <!--Scroll Container-->
+                    <div id="scrollContainer" class="layout vertical flex">
+                        <div class="layout horizontal tree-table-header-row">
+                            <div class="hierarchy-header-cell layout horizontal center-center" tooltip-text$="[[hierarchyColumn.columnDesc]]">
+                                <div class="truncate" style="width:100%">[[hierarchyColumn.columnTitle]]</div>
+                            </div>
+                            <template is="dom-repeat" items="[[columns]]">
+                                <div class="header-cell layout horizontal center-center" tooltip-text$="[[item.columnDesc]]">
+                                    <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                                </div>
+                            </template>
+                        </div>
+                        <!-- Scrollable container goes here -->
+                    </div>
+                    <!--Fixed Container-->
+                    <div id="lockContainer" class="fit" style="overflow:hidden">
+
+                    </div>
+                </div>
+                <!-- table lock layer -->
+                <div class="lock-layer fit" lock$="[[lock]]"></div>
+            </div>
+        </paper-material>
     </template>
     <script>
         (function () {
             'use strict'
+            const removeColumn = function (column, fromColumns) {
+                const index = fromColumns.indexOf(column);
+                if (index >= 0) {
+                    fromColumns.splice(index, 1);
+                    return true;
+                }
+                return false;
+            };
             Polymer({
                 is: 'tg-tree-table',
 
@@ -20,26 +95,32 @@
 
                 properties: {
                     entities: Array,
+                    columns: Array,
+                    hierarchyColumn: Object
                 },
 
                 ready: function () {
-                    //Configuring the security matrix master
-                    this.entityType = "ua.com.fielden.platform.entity.SecurityMatrixSaveAction"
+                    //Initialising the secondary actions' list.
+                    const columnsList = [];
+                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
+                        columnsList.push(item);
+                    }.bind(this));
+                    if (columnsList.length > 0 && !columnsList[0].isHierarchyProperty()) {
+                        throw {
+                            msg: "First column should be a hierarchy propertyy column"
+                        };
+                    } else if (columnsList.length > 0) {
+                        this.hierarchyColumn = columnList[0];
+                        this.columns = columnsList.length > 1 ? columnsList.slice(1) : [];
+                    }
                 },
 
                 attached: function () {
-                    this.async(function () {
-                        if (!this._currBindingEntity) {
-                            this.retrieve();
-                        }
-                    });
+
                 },
 
-                _entityChanged: function (newBindingEntity, oldOne) {
-                    const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
-                    if (newEntity) {
-                        console.log(newEntity);
-                    }
+                _calcColumnHeaderStyle: function (column, columnWidth, columnGrowFactor) {
+                    
                 },
 
             });

@@ -53,6 +53,8 @@
                         type: Object,
                         observer: "_entityChanged"
                     },
+
+                    columns: Array,
                     /**
                      * Need for locking schduling component during insertion point activation or refreshing.
                      */
@@ -78,6 +80,24 @@
                 _entityChanged: function (newBindingEntity, oldOne) {
                     const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
                     if (newEntity) {
+                        const columnList = [];
+                        columnList.push({
+                            title: "Security Tokens",
+                            property: "token",
+                            width: 200,
+                            growFacor: 1,
+                            minWidth: 200,
+                            type: "String"
+                        });
+                        newEntity.get("userRoles").forEach(role => {
+                            columnList.push({
+                                title: role.get("key"),
+                                property: role.get("key").replace(/\s+/gi, "_"),
+                                width: 50,
+                                minWidth: 50,
+                                type: "Boolean"
+                            });
+                        })
                         console.log(newEntity);
                     }
                 },
