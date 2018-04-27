@@ -1127,8 +1127,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (user == null) { // the user is unknown at this stage!
             return null; // no user-specific global exists for unknown user!
         }
-        final String userName = user.getKey();
-        return serverGdtm.get(userName);
+        return serverGdtm.get(user.getId());
     }
 
     private String queryEnhancerContextConfigString() {

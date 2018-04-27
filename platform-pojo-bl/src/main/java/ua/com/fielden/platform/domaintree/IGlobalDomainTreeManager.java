@@ -2,8 +2,10 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
 
@@ -51,6 +53,16 @@ public interface IGlobalDomainTreeManager {
      * @return
      */
     IGlobalDomainTreeRepresentation getGlobalRepresentation();
+    
+    /**
+     * If {@link #getUserProvider()} contains base user then this method returns empty {@link Optional}.
+     * Otherwise returns global manager for parent user (aka the user which this global manager's user {@link #getUserProvider()} is based on).
+     * <p>
+     * This method is used to initialise centre configurations for non-base users from base configurations. 
+     * 
+     * @return
+     */
+    Optional<IGlobalDomainTreeManager> basedOnManager();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////// ENTITY CENTRE MANAGERS //////////////////////////////////////////////

@@ -24,12 +24,12 @@ import com.google.inject.Injector;
 public class ResourceFactoryUtils {
 
     /**
-     * Returns the user's name for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     * Returns the user's id for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
      *
      * @return
      */
-    static String getUsername(final Injector injector) {
-        return injector.getInstance(IUserProvider.class).getUser().getKey();
+    static Long getUserId(final Injector injector) {
+        return injector.getInstance(IUserProvider.class).getUser().getId();
     }
 
     /**
@@ -38,7 +38,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     static IGlobalDomainTreeManager getUserSpecificGlobalManager(final Injector injector) {
-        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(getUsername(injector));
+        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(getUserId(injector));
     }
 
     /**
@@ -47,7 +47,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     public static IGlobalDomainTreeManager getUserSpecificGlobalManager(final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider) {
-        return serverGdtm.get(userProvider.getUser().getKey());
+        return serverGdtm.get(userProvider.getUser().getId());
     }
 
     /**

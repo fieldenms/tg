@@ -179,7 +179,7 @@ public class CentreUpdater {
             final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, EntityResourceUtils.getEntityType(miType), gdtm);
 
             // override old 'diff centre' with recently created one and save it
-            overrideAndSaveDifferencesCentre(gdtm, miType, userSpecificName, differencesCentre);
+            overrideAndSaveDifferencesCentreIfChanged(gdtm, miType, userSpecificName, differencesCentre);
 
             final DateTime end = new DateTime();
             final Period pd = new Period(start, end);
@@ -372,12 +372,25 @@ public class CentreUpdater {
             globalManager.initEntityCentreManager(miType, userSpecificDiffName);
         } catch (final DomainTreeException e) {
             if (e.getMessage().startsWith("Unable to initialise a non-existent entity-centre instance for type")) {
-                // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
-                //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
-                //   this makes diff centre nicely synchronised with Web UI default values)
-                getDefaultCentre(globalManager, miType);
-
-                globalManager.saveAsEntityCentreManager(miType, null, userSpecificDiffName);
+                // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
+                // Default centre is now needed for both cases: base or non-base user.
+                final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(globalManager, miType);
+                if (globalManager.getUserProvider().getUser().isBase()) {
+                    // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
+                    //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
+                    //   this makes diff centre nicely synchronised with Web UI default values)
+                    globalManager.saveAsEntityCentreManager(miType, null, userSpecificDiffName);
+                } else { // non-base user
+                    // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
+                    final IGlobalDomainTreeManager basedOnManager = globalManager.basedOnManager().get();
+                    // TODO here we have a problem with basedOnManager.getUserProvider() which contains the user from current thread!
+                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, userSpecificName(SAVED_CENTRE_NAME, basedOnManager));
+                    
+                    // creates differences centre from the differences between 'default centre' and 'basedOnCentre'
+                    final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, EntityResourceUtils.getEntityType(miType), globalManager);
+                    // promotes diff to local cache and saves it into persistent storage
+                    overrideAndSaveDifferencesCentre(globalManager, miType, differencesCentre, userSpecificDiffName);
+                }
             } else {
                 throw e;
             }
@@ -692,7 +705,7 @@ public class CentreUpdater {
     }
 
     /**
-     * Overrides old 'differences centre' with new one and saves it.
+     * Overrides old 'differences centre' with new one and saves it if it was changed from previous 'differences centre'.
      *
      * @param gdtm
      * @param miType
@@ -701,7 +714,7 @@ public class CentreUpdater {
      *
      * @return
      */
-    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName, final ICentreDomainTreeManagerAndEnhancer newDiffCentre) {
+    private static void overrideAndSaveDifferencesCentreIfChanged(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName, final ICentreDomainTreeManagerAndEnhancer newDiffCentre) {
         logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
@@ -714,13 +727,27 @@ public class CentreUpdater {
         final boolean diffChanged = !equalsEx(staleDiffCentre, newDiffCentre);
 
         if (diffChanged) {
-            initCentre(gdtm, miType, userSpecificDiffName, newDiffCentre);
-            gdtm.saveEntityCentreManager(miType, userSpecificDiffName);
+            overrideAndSaveDifferencesCentre(gdtm, miType, newDiffCentre, userSpecificDiffName);
         }
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), userSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+    }
+
+    /**
+     * Overrides old 'differences centre' with new one and saves it.
+     *
+     * @param gdtm
+     * @param miType
+     * @param userSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.) with user ID at the end
+     * @param newDiffCentre
+     *
+     * @return
+     */
+    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer newDiffCentre, final String userSpecificDiffName) {
+        initCentre(gdtm, miType, userSpecificDiffName, newDiffCentre);
+        gdtm.saveEntityCentreManager(miType, userSpecificDiffName);
     }
 
     /**

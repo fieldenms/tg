@@ -87,8 +87,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 if (user == null) { // the user is unknown at this stage!
                     throw new SerialisationTypeEncoderException(String.format("User is somehow unknown during decoding of entity type inside deserialisation process."));
                 }
-                final String userName = user.getKey();
-                final IGlobalDomainTreeManager userSpecificGdtm = serverGdtm.get(userName);
+                final IGlobalDomainTreeManager userSpecificGdtm = serverGdtm.get(user.getId());
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 

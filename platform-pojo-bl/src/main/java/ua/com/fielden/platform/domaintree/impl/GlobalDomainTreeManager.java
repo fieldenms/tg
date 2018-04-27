@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
@@ -1163,5 +1164,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     protected void avoidPersistentCentres() {
         this.persistentCentres = null;
+    }
+    
+    @Override
+    public Optional<IGlobalDomainTreeManager> basedOnManager() {
+        throw new DomainTreeException("Non-applicable.");
     }
 }
