@@ -1359,4 +1359,16 @@ public class EntityUtils {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
     }
 
+    /**
+     * Finds entity by {@code id} and retrieves it with a fetch model suitable for mutation (i.e. the same as for entity masters).
+     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance. 
+     *
+     * @param id
+     * @param co -- either pure reader or mutator if the resultant entity needs to be changed
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> findByIdWithMasterFetch(final long id, final IEntityReader<T> co) {
+        return co.findByIdOptional(id, co.getFetchProvider().fetchModel());
+    }
+
 }
