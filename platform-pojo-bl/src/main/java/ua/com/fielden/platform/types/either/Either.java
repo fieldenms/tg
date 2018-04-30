@@ -4,12 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * A container type that represent one of two possible values of some computed.
