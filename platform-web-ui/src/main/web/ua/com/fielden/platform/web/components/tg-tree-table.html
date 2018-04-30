@@ -1,50 +1,51 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <dom-module id="tg-tree-table">
     <template>
         <style>
+            /* Container styles*/
             :host {
                 @apply(--layout-vertical);
-
+            }
+            paper-material {
+                margin: 10px;
             }
             .data-table {
                 background-color: white;
                 border-radius: 2px;
                 position: relative;
             }
-            .lock-layer {
-                opacity: 0.5;
-                display: none;
-                background-color: white;
+            #lockContainer {
+                pointer-events: none;
             }
-            .lock-layer[lock] {
-                display: initial;
-            }
-            .truncate {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
+            /*Table elements styles*/
             .tree-table-header-row {
                 font-size: 0.9rem;
                 font-weight: 400;
                 color: #757575;
-                height: 3rem;
                 -webkit-font-smoothing: antialiased;
                 text-rendering: optimizeLegibility;
                 min-width: fit-content;
                 flex-grow: 0;
                 flex-shrink: 0;
             }
-            .hierarchy-header-cell,
-            .header-cell {
+            .hierarchy-header-cell {
                 padding: 0 0.6rem;
             }
             .header-cell {
-                transform: rotate(-90deg);
+                padding: 0.6rem;
+                writing-mode: vertical-lr;
+                transform: rotate(180deg);
+            }
+            /* Miscelenia styles */
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         </style>
         <content id="column_selector" select="tg-property-column" hidden></content>
@@ -56,11 +57,11 @@
                     <!--Scroll Container-->
                     <div id="scrollContainer" class="layout vertical flex">
                         <div class="layout horizontal tree-table-header-row">
-                            <div class="hierarchy-header-cell layout horizontal center-center" tooltip-text$="[[hierarchyColumn.columnDesc]]">
+                            <div class="hierarchy-header-cell layout horizontal center-center flex" tooltip-text$="[[hierarchyColumn.columnDesc]]">
                                 <div class="truncate" style="width:100%">[[hierarchyColumn.columnTitle]]</div>
                             </div>
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="header-cell layout horizontal center-center" tooltip-text$="[[item.columnDesc]]">
+                                <div class="header-cell layout horizontal start-justified center" tooltip-text$="[[item.columnDesc]]">
                                     <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                 </div>
                             </template>
@@ -72,8 +73,6 @@
 
                     </div>
                 </div>
-                <!-- table lock layer -->
-                <div class="lock-layer fit" lock$="[[lock]]"></div>
             </div>
         </paper-material>
     </template>
@@ -88,10 +87,11 @@
                 }
                 return false;
             };
+            const columnFilter = node => node.nodeType === Node.ELEMENT_NODE && node.tagName === "TG-PROPERTY-COLUMN";
             Polymer({
                 is: 'tg-tree-table',
 
-                behaviors: [Polymer.IronResizableBehavior],
+                behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
                 properties: {
                     entities: Array,
@@ -100,27 +100,56 @@
                 },
 
                 ready: function () {
-                    //Initialising the secondary actions' list.
-                    const columnsList = [];
-                    Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
-                        columnsList.push(item);
-                    }.bind(this));
-                    if (columnsList.length > 0 && !columnsList[0].isHierarchyProperty()) {
-                        throw {
-                            msg: "First column should be a hierarchy propertyy column"
-                        };
-                    } else if (columnsList.length > 0) {
-                        this.hierarchyColumn = columnList[0];
-                        this.columns = columnsList.length > 1 ? columnsList.slice(1) : [];
-                    }
+                    //Initiates columns
+                    this.columns = [];
+                    this.hierarchyColumn = null;
+                    //Observe column DOM changes
+                    Polymer.dom(this.$.column_selector).observeNodes(info => {
+                        this._columnDomChanged(info.addedNodes.filter(columnFilter), info.removedNodes.filter(columnFilter));
+                    });
                 },
 
                 attached: function () {
 
                 },
 
+                _columnDomChanged: function (addedColumns, removedColumns) {
+                    const columnsCopy = this.columns.slice();
+                    if (this.hierarchyColumn) {
+                        columnsCopy.unshift(this.hierarchyColumn);
+                    }
+                    let columnsChanged = false;
+                    removedColumns.forEach(col => {
+                        columnsChanged = removeColumn(col, columnsCopy);
+                    });
+
+                    addedColumns.forEach(col => {
+                        const index = this.columns.findIndex(column => column.property === col.property);
+                        if (index < 0) {
+                            columnsCopy.push(col);
+                            columnsChanged = true;
+                        }
+                    });
+                    if (columnsChanged) {
+                        this._validateColumns(columnsCopy);
+                        this.hierarchyColumn = columnsCopy[0];
+                        this.columns = columnsCopy.length > 1 ? columnsCopy.slice(1) : [];
+                    }
+                },
+
+                /**
+                 * Adjusts columns visibility and order.
+                 */
+                _validateColumns: function (columnsList) {
+                    if (columnsList.length > 0 && !columnsList[0].isHierarchyProperty()) {
+                        throw {
+                            msg: "First column should be a hierarchy property column"
+                        };
+                    }
+                },
+
                 _calcColumnHeaderStyle: function (column, columnWidth, columnGrowFactor) {
-                    
+
                 },
 
             });

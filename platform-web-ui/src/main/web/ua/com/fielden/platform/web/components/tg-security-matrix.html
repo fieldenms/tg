@@ -15,7 +15,14 @@
                 height: 100%;
                 width: 100%;
                 @apply(--layout-vertical);
-
+            }
+            .lock-layer {
+                opacity: 0.5;
+                display: none;
+                background-color: white;
+            }
+            .lock-layer[lock] {
+                display: initial;
             }
         </style>
         <tg-entity-master id="masterDom" entity-type="[[entityType]]" entity-id="new" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _saver-loading="{{_saverLoading}}">
@@ -24,7 +31,9 @@
                     <!-- filtering editors goes here -->
                 </div>
                 <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]">
-                    <!-- columns goes here also hierarchy column -->
+                    <template is="dom-repeat" items="[[columns]]">
+                        <tg-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]"></tg-property-column>
+                    </template>
                 </tg-tree-table>
                 <div class="layout horizontal center-justified" style="padding:20px;">
                     <tg-action enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='[[_actions.REFRESH.shortDesc]]' long-desc='[[_actions.REFRESH.longDesc]]' current-state='[[currentState]]' shortcut='ctrl+r meta+r' role='refresh' action='[[_actions.REFRESH.action]]' post-action='{{_postRetrievedDefault}}' post-action-error='{{_postRetrievedDefaultError}}' style="margin:10px;"></tg-action>
@@ -53,6 +62,8 @@
                         type: Object,
                         observer: "_entityChanged"
                     },
+
+                    hierarchyColumn: Object,
 
                     columns: Array,
                     /**
@@ -83,7 +94,10 @@
                         const columnList = [];
                         columnList.push({
                             title: "Security Tokens",
-                            property: "token",
+                            desc: "Security Tokens Hierarchy",
+                            property: "title",
+                            childrenProperty: "children",
+                            parentProperty: "parent",
                             width: 200,
                             growFacor: 1,
                             minWidth: 200,
@@ -92,15 +106,63 @@
                         newEntity.get("userRoles").forEach(role => {
                             columnList.push({
                                 title: role.get("key"),
+                                desc: role.get("desc"),
                                 property: role.get("key").replace(/\s+/gi, "_"),
                                 width: 50,
                                 minWidth: 50,
                                 type: "Boolean"
                             });
-                        })
+                        });
+                        this.columns = columnList;
                         console.log(newEntity);
                     }
                 },
+
+                _masterDom: function () {
+                    return this.$.masterDom;
+                },
+
+                /**
+                 * The core-ajax component for entity retrieval.
+                 */
+                _ajaxRetriever: function () {
+                    return this._masterDom()._ajaxRetriever();
+                },
+
+                /**
+                 * The core-ajax component for entity saving.
+                 */
+                _ajaxSaver: function () {
+                    return this._masterDom()._ajaxSaver();
+                },
+
+                /**
+                 * The validator component.
+                 */
+                _validator: function () {
+                    return this._masterDom()._validator();
+                },
+
+                /**
+                 * The component for entity serialisation.
+                 */
+                _serialiser: function () {
+                    return this._masterDom()._serialiser();
+                },
+
+                /**
+                 * The reflector component.
+                 */
+                _reflector: function () {
+                    return this._masterDom()._reflector();
+                },
+
+                /**
+                 * The toast component.
+                 */
+                _toastGreeting: function () {
+                    return this._masterDom()._toastGreeting();
+                }
 
             });
         })();
