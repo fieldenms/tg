@@ -605,6 +605,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return keyType;
     }
 
+    @Override
     public final IFetchProvider<T> getFetchProvider() {
         if (fetchProvider == null) {
             fetchProvider = createFetchProvider();
