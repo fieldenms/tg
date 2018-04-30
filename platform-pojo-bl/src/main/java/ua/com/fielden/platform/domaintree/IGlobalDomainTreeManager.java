@@ -7,7 +7,9 @@ import java.util.Optional;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * This interface defines how domain tree can be managed in the global client application scope. It manages all entity-centres as well as locator managers in entity-masters. To
@@ -38,7 +40,14 @@ public interface IGlobalDomainTreeManager {
     //     * @return
     //     */
     //    Map<Class<?>, Map<String, List<String>>> loadEntityCentreSkeleton();
-
+    
+    /**
+     * {@link User} companion.
+     * 
+     * @return
+     */
+    IUser coUser();
+    
     /**
      * Returns a user provider. The user is a part of domain tree context. Some domain tree actions is permitted only for base users. Some behaviour also can differ for different
      * types of users.

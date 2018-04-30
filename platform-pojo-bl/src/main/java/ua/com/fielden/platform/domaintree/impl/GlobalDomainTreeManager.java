@@ -42,6 +42,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -84,9 +85,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final transient EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
 
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
+    private final IUser coUser;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController, final IUser coUser) {
         super(serialiser);
         this.factory = factory;
         this.userProvider = userProvider;
@@ -105,6 +107,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
         this.persistentMasters = createRootsMap();
         this.currentMasters = createRootsMap();
+        this.coUser = coUser;
     }
 
     @Override
@@ -1170,4 +1173,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public Optional<IGlobalDomainTreeManager> basedOnManager() {
         throw new DomainTreeException("Non-applicable.");
     }
+    
+    @Override
+    public IUser coUser() {
+        return coUser;
+    }
+    
 }

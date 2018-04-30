@@ -19,6 +19,8 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -44,6 +46,7 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
@@ -360,7 +363,8 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String userSpecificName) {
-        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), globalManager.getUserProvider().getUser()));
+        final User currentUser = globalManager.getUserProvider().getUser();
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), currentUser));
         final DateTime start = new DateTime();
 
         // the name consists of 'userSpecificName' and 'DIFFERENCES_SUFFIX'
@@ -375,7 +379,7 @@ public class CentreUpdater {
                 // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
                 // Default centre is now needed for both cases: base or non-base user.
                 final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(globalManager, miType);
-                if (globalManager.getUserProvider().getUser().isBase()) {
+                if (currentUser.isBase()) {
                     // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                     //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                     //   this makes diff centre nicely synchronised with Web UI default values)
@@ -383,13 +387,19 @@ public class CentreUpdater {
                 } else { // non-base user
                     // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                     final IGlobalDomainTreeManager basedOnManager = globalManager.basedOnManager().get();
-                    // TODO here we have a problem with basedOnManager.getUserProvider() which contains the user from current thread!
+                    // insert appropriate user into IUserProvider for a very brief period of time to facilitate 'updateCentre' call against basedOnManager
+                    basedOnManager.getUserProvider().setUser(basedOnManager.coUser().findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), currentUser.getBasedOnUser()));
+                    // update and retrieve saved version of centre config from basedOn user
                     final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, userSpecificName(SAVED_CENTRE_NAME, basedOnManager));
+                    // return currentUser into user provider
+                    basedOnManager.getUserProvider().setUser(currentUser);
                     
                     // creates differences centre from the differences between 'default centre' and 'basedOnCentre'
                     final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, EntityResourceUtils.getEntityType(miType), globalManager);
                     // promotes diff to local cache and saves it into persistent storage
-                    overrideAndSaveDifferencesCentre(globalManager, miType, differencesCentre, userSpecificDiffName);
+                    initCentre(globalManager, miType, null, differencesCentre);
+                    globalManager.saveAsEntityCentreManager(miType, null, userSpecificDiffName);
+                    initCentre(globalManager, miType, null, defaultCentre);
                 }
             } else {
                 throw e;
@@ -399,7 +409,7 @@ public class CentreUpdater {
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), globalManager.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", userSpecificName, miType.getSimpleName(), currentUser, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return differencesCentre;
     }
 

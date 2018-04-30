@@ -10,6 +10,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -35,8 +36,8 @@ public class WebGlobalDomainTreeManager extends GlobalDomainTreeManager implemen
     private final IServerGlobalDomainTreeManager serverManager;
     
     @Inject
-    public WebGlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController, final IWebUiConfig webApp, final IServerGlobalDomainTreeManager serverManager) {
-        super(serialiser, serialiser0, factory, userProvider, mainMenuItemController, entityCentreConfigController, entityCentreAnalysisConfigController, entityMasterConfigController, entityLocatorConfigController);
+    public WebGlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController, final IWebUiConfig webApp, final IServerGlobalDomainTreeManager serverManager, final IUser coUser) {
+        super(serialiser, serialiser0, factory, userProvider, mainMenuItemController, entityCentreConfigController, entityCentreAnalysisConfigController, entityMasterConfigController, entityLocatorConfigController, coUser);
         
         this.webApp = webApp;
         this.serverManager = serverManager;
