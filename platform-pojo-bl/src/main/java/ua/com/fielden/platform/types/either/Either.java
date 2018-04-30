@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.types.either;
 
+import static java.util.Objects.requireNonNull;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * A container type that represent one of two possible values of some computed.
@@ -51,7 +56,7 @@ public abstract class Either<L, R> {
             return (Right<L, R>) this;
         }
 
-        throw Result.failure("Attempty to covernt Left to Right.");
+        throw failure("Attempty to covernt Left to Right.");
     }
 
     public Left<L, R> asLeft() {
@@ -59,7 +64,19 @@ public abstract class Either<L, R> {
             return (Left<L, R>) this;
         }
 
-        throw Result.failure("Attempty to covernt Right to Left.");
+        throw failure("Attempty to covernt Right to Left.");
+    }
+
+    /**
+     * A right associative getter, returning the right value if {@code this} represents {@link Right}.
+     * Otherwise, a value supplied by {@code supplier} is returned.
+     *
+     * @param supplierOfAlternative
+     * @return
+     */
+    public <T extends R> R getOrElse(final Supplier<T> supplierOfAlternative) {
+        requireNonNull(supplierOfAlternative);
+        return isRight() ? asRight().value : supplierOfAlternative.get();
     }
 
     /**
@@ -69,13 +86,45 @@ public abstract class Either<L, R> {
      * @return
      */
     public <T> Either<L, T> map(final Function<? super R, ? extends T> f) {
-        Objects.requireNonNull(f);
-        if (isRight()) {
-            final R value = ((Right<L, R>) this).value;
-            return right(f.apply(value));
+        requireNonNull(f);
+        return isRight() ? right(f.apply(asRight().value)) : left(asLeft().value);
+    }
+
+    /**
+     * Flatmaps on the right value.
+     *
+     * @param f
+     * @return
+     */
+    public <T> Either<? super L, T> flatMap(final Function<? super R, Either<? super L, T>> f) {
+        requireNonNull(f);
+        return isRight() ? f.apply(asRight().value) : left(asLeft().value);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof Either)) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        final Either<?,?> that = (Either<?,?>) obj;
+        if (this.isLeft()) {
+            return that.isLeft() && equalsEx(this.asLeft().value, that.asLeft().value);
         } else {
-            final L value = ((Left<L, R>) this).value;
-            return left(value);
+            return that.isRight() && equalsEx(this.asRight().value, that.asRight().value);
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        if (isLeft()) {
+            return asLeft().value != null ? (asLeft().value.hashCode() * 29) : 31;
+        } else {
+            return asRight().value != null ? (asRight().value.hashCode() * 29) : 11;
         }
     }
 }
