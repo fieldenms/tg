@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
@@ -33,7 +34,6 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -104,7 +104,7 @@ public class CentreUpdater {
     /**
      * Returns user-specific version of surrogate centre name.
      *
-     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param gdtm
      *
      * @return
@@ -118,7 +118,7 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      *
      * @return
      */
@@ -141,7 +141,7 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      *
      * @return
      */
@@ -160,10 +160,21 @@ public class CentreUpdater {
         }
     }
     
-    public static void removeCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        final String userSpecificName = userSpecificName(name, gdtm);
+    /**
+     * Removes the current version of centre from local cache and persistent storage (its diff).
+     *
+     * @param gdtm
+     * @param miType
+     * @param names -- surrogate names of the centres (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     */
+    public static void removeCentres(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String ... names) {
         synchronized (gdtm) {
-            ((GlobalDomainTreeManager) gdtm).removeCentre2(miType, userSpecificName);
+            final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+            
+            // remove locally cached centre instances
+            globalManager.removeCentresLocally(miType, stream(names).map(name -> userSpecificName(name, gdtm)).toArray(String[]::new));
+            // remove corresponding diff centre instances from persistent storage
+            globalManager.removeCentres(miType, stream(names).map(name -> userSpecificName(name, gdtm) + DIFFERENCES_SUFFIX).toArray(String[]::new));
         }
     }
     
@@ -172,7 +183,7 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      */
     public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         return commitCentre0(gdtm, miType, userSpecificName(name, gdtm));
@@ -203,7 +214,7 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param centreToBeInitialisedAndCommitted
      */
     public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
@@ -396,8 +407,10 @@ public class CentreUpdater {
                     final IGlobalDomainTreeManager basedOnManager = globalManager.basedOnManager().get();
                     // insert appropriate user into IUserProvider for a very brief period of time to facilitate 'updateCentre' call against basedOnManager
                     basedOnManager.getUserProvider().setUser(basedOnManager.coUser().findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), currentUser.getBasedOnUser()));
+                    // determine current device from userSpecificName. TODO external CentreUpdater's methods should get 'device' from outside and 'deviceSpecific' need to be embedded here
+                    final DeviceProfile device = userSpecificName.contains("_" + MOBILE.name()) ? MOBILE : DESKTOP;
                     // update and retrieve saved version of centre config from basedOn user
-                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME);
+                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, deviceSpecific(SAVED_CENTRE_NAME, device));
                     // return currentUser into user provider
                     basedOnManager.getUserProvider().setUser(currentUser);
                     

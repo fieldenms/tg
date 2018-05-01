@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -376,6 +377,23 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 /*    */select(EntityCentreConfig.class).where().//
                 /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
                 /*    */prop("title").eq().val(title).and().//
+                /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
+        return model1;
+    }
+    
+    /**
+     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>menuItemTypeName</code>
+     * specified.
+     *
+     * @param menuItemTypeName
+     * @param titles
+     * @return
+     */
+    private EntityResultQueryModel<EntityCentreConfig> multiModelForCurrentUser(final String menuItemTypeName, final String ... titles) {
+        final EntityResultQueryModel<EntityCentreConfig> model1 =
+                /*    */select(EntityCentreConfig.class).where().//
+                /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
+                /*    */prop("title").in().values(titles).and().//
                 /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
         return model1;
     }
@@ -1009,15 +1027,16 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
     }
     
-    public void removeCentre2(final Class<?> menuItemType, final String userSpecificName) {
-        currentCentres.remove(key(menuItemType, userSpecificName));
-        
-        // the name consists of 'userSpecificName' and 'DIFFERENCES_SUFFIX'
-        final String userSpecificDiffName = userSpecificName + "__________DIFFERENCES"; // TODO CentreUpdater.DIFFERENCES_SUFFIX;
-        
-        entityCentreConfigController.delete(modelForCurrentUser(menuItemType.getName(), title(menuItemType, userSpecificDiffName)));
+    public void removeCentresLocally(final Class<?> menuItemType, final String ... names) {
+        for (final String name: names) {
+            currentCentres.remove(key(menuItemType, name));
+        }
     }
-
+    
+    public void removeCentres(final Class<?> menuItemType, final String ... names) {
+        entityCentreConfigController.delete(multiModelForCurrentUser(menuItemType.getName(), stream(names).map(name -> title(menuItemType, name)).toArray(String[]::new)));
+    }
+    
     public void removeCentre(final Class<?> menuItemType, final String name) {
         if (persistentCentres != null) {
             currentCentres.remove(key(menuItemType, name));

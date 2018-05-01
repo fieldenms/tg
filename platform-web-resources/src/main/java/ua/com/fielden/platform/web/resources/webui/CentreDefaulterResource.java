@@ -82,18 +82,9 @@ public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> ex
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
             
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device()));
-            final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, device()));
+            CentreUpdater.removeCentres(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device()), deviceSpecific(SAVED_CENTRE_NAME, device()));
             
-            CentreUpdater.removeCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device()));
-            CentreUpdater.removeCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, device()));
-            
-//            // discards fresh centre's changes (fresh centre could have no changes)
-//            if (CentreUtils.isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
-//                CentreUpdater.initAndCommit(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device()), updatedSavedCentre);
-//            }
-            
-            // it is necessary to use "fresh" instance of cdtme (after the discarding process)
+            // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device()));
             final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, newFreshCentre, miType, gdtm, companionFinder, critGenerator, device());
             return CriteriaResource.createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
