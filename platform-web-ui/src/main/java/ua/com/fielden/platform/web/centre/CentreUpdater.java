@@ -159,7 +159,14 @@ public class CentreUpdater {
             }
         }
     }
-
+    
+    public static void removeCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+        final String userSpecificName = userSpecificName(name, gdtm);
+        synchronized (gdtm) {
+            ((GlobalDomainTreeManager) gdtm).removeCentre2(miType, userSpecificName);
+        }
+    }
+    
     /**
      * Commits the centre's diff to the database and removes it from cache (needs to be updated to be able to be used).
      *

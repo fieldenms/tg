@@ -1008,6 +1008,15 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
     }
+    
+    public void removeCentre2(final Class<?> menuItemType, final String userSpecificName) {
+        currentCentres.remove(key(menuItemType, userSpecificName));
+        
+        // the name consists of 'userSpecificName' and 'DIFFERENCES_SUFFIX'
+        final String userSpecificDiffName = userSpecificName + "__________DIFFERENCES"; // TODO CentreUpdater.DIFFERENCES_SUFFIX;
+        
+        entityCentreConfigController.delete(modelForCurrentUser(menuItemType.getName(), title(menuItemType, userSpecificDiffName)));
+    }
 
     public void removeCentre(final Class<?> menuItemType, final String name) {
         if (persistentCentres != null) {
