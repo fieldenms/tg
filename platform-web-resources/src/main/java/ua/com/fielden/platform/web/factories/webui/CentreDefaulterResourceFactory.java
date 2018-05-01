@@ -15,17 +15,17 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.CentreResource;
+import ua.com.fielden.platform.web.resources.webui.CentreDefaulterResource;
 
 /**
- * A factory for centre resources which instantiate resources based on mi type.
+ * A factory for centre defaulting resources which instantiate resources based on mi type.
  *
- * The centre identification information is a part of the URI: "/centre/{mitype}".
+ * The centre identification information is a part of the URI: "/centre/default/{mitype}".
  *
  * @author TG Team
  *
  */
-public class CentreResourceFactory extends Restlet {
+public class CentreDefaulterResourceFactory extends Restlet {
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
@@ -38,7 +38,7 @@ public class CentreResourceFactory extends Restlet {
      * Instantiates a factory for centre resources.
      *
      */
-    public CentreResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
+    public CentreDefaulterResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
@@ -52,8 +52,8 @@ public class CentreResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
         
-        if (Method.POST == request.getMethod() || Method.PUT == request.getMethod()) {
-            new CentreResource<AbstractEntity<?>>(
+        if (Method.PUT == request.getMethod()) {
+            new CentreDefaulterResource<AbstractEntity<?>>(
                     restUtil,
                     ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
                     serverGdtm,

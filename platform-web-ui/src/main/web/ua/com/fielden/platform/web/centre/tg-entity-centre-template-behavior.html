@@ -87,14 +87,21 @@
             _dom: function () {
                 return this.$.dom;
             },
-
+            
             /**
              * The iron-ajax component for centre discarding.
              */
             _ajaxDiscarder: function () {
                 return this._dom()._ajaxDiscarder();
             },
-
+            
+            /**
+             * The iron-ajax component for centre defaulting.
+             */
+            _ajaxDefaulter: function () {
+                return this._dom()._ajaxDefaulter();
+            },
+            
             /**
              * The iron-ajax component for centre saving.
              */

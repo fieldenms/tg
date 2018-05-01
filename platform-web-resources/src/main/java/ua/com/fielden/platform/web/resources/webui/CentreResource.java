@@ -50,34 +50,34 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends AbstractWebResource {
     private final static Logger logger = Logger.getLogger(CentreResource.class);
-
+    
     private final RestServerUtil restUtil;
-
+    
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
-
+    
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
     private final ICompanionObjectFinder companionFinder;
     private final ICriteriaGenerator critGenerator;
-
+    
     public CentreResource(
             final RestServerUtil restUtil,
-
+            
             final EntityCentre centre,
-
+            
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
-
+            
             final Context context,
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider);
-
+        
         this.restUtil = restUtil;
-
+        
         miType = centre.getMenuItemType();
         this.serverGdtm = serverGdtm;
         this.userProvider = userProvider;
@@ -133,7 +133,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
-
+            
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device()));
             final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(SAVED_CENTRE_NAME, device()));
             // discards fresh centre's changes (fresh centre could have no changes)
@@ -147,4 +147,5 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             return CriteriaResource.createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
         }, restUtil);
     }
+    
 }
