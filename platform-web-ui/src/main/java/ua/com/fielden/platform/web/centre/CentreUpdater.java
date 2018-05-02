@@ -145,7 +145,7 @@ public class CentreUpdater {
     }
     
     /**
-     * Removes the current version of centre from local cache and persistent storage (its diff).
+     * Removes centres from local cache and persistent storage (diffs) by their <code>names</code>.
      *
      * @param gdtm
      * @param miType
@@ -157,8 +157,10 @@ public class CentreUpdater {
             
             // remove locally cached centre instances
             globalManager.removeCentresLocally(miType, names);
-            // remove corresponding diff centre instances from persistent storage
-            globalManager.removeCentres(miType, stream(names).map(name -> name + DIFFERENCES_SUFFIX).toArray(String[]::new));
+            // remove corresponding diff centre instances locally and from persistent storage
+            final String [] diffNames = stream(names).map(name -> name + DIFFERENCES_SUFFIX).toArray(String[]::new);
+            globalManager.removeCentresLocally(miType, diffNames);
+            globalManager.removeCentres(miType, diffNames);
         }
     }
     
@@ -774,10 +776,8 @@ public class CentreUpdater {
             globalManager.removeCentresLocally(miType, 
                 null,
                 deviceSpecific(FRESH_CENTRE_NAME, device),
-                deviceSpecific(FRESH_CENTRE_NAME, device) + DIFFERENCES_SUFFIX, // TODO consider removing of diff centres in method 'removeCentres'
+                deviceSpecific(FRESH_CENTRE_NAME, device) + DIFFERENCES_SUFFIX,
                 deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device), 
-                // TODO changing of non-base configuration fails with error "Unable to save a NON-PRINCIPLE entity-centre instance for type [MiReWorkActivity] with title [__________FRESH__________DIFFERENCES] for current user [JM1] -- the base user [id = 1513] owns this entity centre.";
-                // TODO -- this is something to do with recent refactoring
                 deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device) + DIFFERENCES_SUFFIX,
                 deviceSpecific(SAVED_CENTRE_NAME, device),
                 deviceSpecific(SAVED_CENTRE_NAME, device) + DIFFERENCES_SUFFIX
