@@ -303,7 +303,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
             final String title = title(menuItemType, name);
             final String menuItemTypeName = menuItemType.getName();
-            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, title);
+            
+            // for the new generation of Web UI centres (where persistentCentres == null and avoidPersistentCentres switch is on)
+            // the model for initialised configuration existence should not look on base configurations.
+            final EntityResultQueryModel<EntityCentreConfig> model = persistentCentres == null ? modelForCurrentUser(menuItemTypeName, title) : modelForCurrentAndBaseUsers(menuItemTypeName, title);
             final int count = entityCentreConfigController.count(model);
             if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
                 retrieveAndInit(menuItemType, name, root, centreConfigurator, model);
@@ -938,12 +941,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             // save an instance of EntityCentreConfig with overridden body, which should exist in DB
             final String menuItemTypeName = menuItemType.getName();
             final String newTitle = title(menuItemType, newName);
-
-            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
+            
+            // for the new generation of Web UI centres (where persistentCentres == null and avoidPersistentCentres switch is on)
+            // the model for saveAs configuration existence should not look on base configurations.
+            final EntityResultQueryModel<EntityCentreConfig> model = persistentCentres == null ? modelForCurrentUser(menuItemTypeName, newTitle) : modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
             // entityCentreConfigController.getAllEntities(from(model).model());
-
+            
             final int count = entityCentreConfigController.count(model);
-            if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
+            if (count == 0) { // for current user [or its base] => there are no entity-centres, so persist a copy with a new title
                 final User user = currentUser();
                 final MainMenuItem menuItemToUse;
                 final MainMenuItem menuItem = mainMenuItemController.findByKey(menuItemTypeName);
@@ -958,7 +963,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 init(menuItemType, newName, copyMgr, true);
             } else { // > 1
                 error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser()
-                        + "] or its base [id = " + baseOfTheCurrentUser().getId() + "].");
+                        + (persistentCentres == null ? "]" : "] or its base [id = " + baseOfTheCurrentUser().getId()) + "].");
             }
             return this;
         }
