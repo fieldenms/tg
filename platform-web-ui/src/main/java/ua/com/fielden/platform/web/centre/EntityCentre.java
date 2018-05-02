@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
@@ -740,7 +740,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (userSpecificGlobalManager == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, deviceSpecific(FRESH_CENTRE_NAME, device));
+            return updateCentre(userSpecificGlobalManager, menuItemType, FRESH_CENTRE_NAME, device);
         }
     }
 

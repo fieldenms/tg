@@ -30,6 +30,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +88,7 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    public static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
+    private static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {
@@ -106,15 +107,19 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      *
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        if (gdtm.getEntityCentreManager(miType, name) == null) {
-            throw new IllegalStateException(String.format("The '%s' centre should be initialised.", name));
+    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device) {
+        return centre0(gdtm, miType, deviceSpecific(name, device));
+    }
+    private static ICentreDomainTreeManagerAndEnhancer centre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName) {
+        if (gdtm.getEntityCentreManager(miType, deviceSpecificName) == null) {
+            throw new IllegalStateException(String.format("The '%s' centre should be initialised.", deviceSpecificName));
         }
-        return gdtm.getEntityCentreManager(miType, name);
+        return gdtm.getEntityCentreManager(miType, deviceSpecificName);
     }
     
     /**
@@ -126,19 +131,23 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.);
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      *
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer updateCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+    public static ICentreDomainTreeManagerAndEnhancer updateCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device) {
+        return updateCentre0(gdtm, miType, deviceSpecific(name, device), device);
+    }
+    private static ICentreDomainTreeManagerAndEnhancer updateCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device) {
         synchronized (gdtm) {
-            if (gdtm.getEntityCentreManager(miType, name) == null) {
-                return updateOrLoadCentre(gdtm, miType, name, false);
+            if (gdtm.getEntityCentreManager(miType, deviceSpecificName) == null) {
+                return updateOrLoadCentre(gdtm, miType, deviceSpecificName, device, false);
             } else {
-                if (isDiffCentreStale(gdtm, miType, name)) {
-                    return updateOrLoadCentre(gdtm, miType, name, true);
+                if (isDiffCentreStale(gdtm, miType, deviceSpecificName)) {
+                    return updateOrLoadCentre(gdtm, miType, deviceSpecificName, device, true);
                 } else {
-                    return centre(gdtm, miType, name);
+                    return centre0(gdtm, miType, deviceSpecificName);
                 }
             }
         }
@@ -150,17 +159,21 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param names -- surrogate names of the centres (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      */
-    public static void removeCentres(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String ... names) {
+    public static void removeCentres(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String ... names) {
+        removeCentres0(gdtm, miType, stream(names).map(name -> deviceSpecific(name, device)).toArray(String[]::new));
+    }
+    private static void removeCentres0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String ... deviceSpecificNames) {
         synchronized (gdtm) {
             final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
             
             // remove locally cached centre instances
-            globalManager.removeCentresLocally(miType, names);
+            globalManager.removeCentresLocally(miType, deviceSpecificNames);
             // remove corresponding diff centre instances locally and from persistent storage
-            final String [] diffNames = stream(names).map(name -> name + DIFFERENCES_SUFFIX).toArray(String[]::new);
-            globalManager.removeCentresLocally(miType, diffNames);
-            globalManager.removeCentres(miType, diffNames);
+            final String [] deviceSpecificDiffNames = stream(deviceSpecificNames).map(name -> name + DIFFERENCES_SUFFIX).toArray(String[]::new);
+            globalManager.removeCentresLocally(miType, deviceSpecificDiffNames);
+            globalManager.removeCentres(miType, deviceSpecificDiffNames);
         }
     }
     
@@ -170,24 +183,28 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      */
-    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device) {
+        return commitCentre0(gdtm, miType, deviceSpecific(name, device), device);
+    }
+    private static ICentreDomainTreeManagerAndEnhancer commitCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device) {
         synchronized (gdtm) {
-            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Committing", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Committing", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
             final DateTime start = new DateTime();
             // gets the centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'centre')
-            final ICentreDomainTreeManagerAndEnhancer centre = centre(gdtm, miType, name);
+            final ICentreDomainTreeManagerAndEnhancer centre = centre0(gdtm, miType, deviceSpecificName);
             
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType);
             // creates differences centre from the differences between 'default centre' and 'centre'
-            final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, EntityResourceUtils.getEntityType(miType), gdtm);
+            final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, getEntityType(miType), gdtm);
             
             // override old 'diff centre' with recently created one and save it
-            overrideAndSaveDifferencesCentreIfChanged(gdtm, miType, name, differencesCentre);
+            overrideAndSaveDifferencesCentreIfChanged(gdtm, miType, deviceSpecificName, device, differencesCentre);
             
             final DateTime end = new DateTime();
             final Period pd = new Period(start, end);
-            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return centre;
         }
     }
@@ -198,24 +215,28 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param centreToBeInitialisedAndCommitted
      */
-    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
+    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
+        return initAndCommit0(gdtm, miType, deviceSpecific(name, device), device, centreToBeInitialisedAndCommitted);
+    }
+    private static ICentreDomainTreeManagerAndEnhancer initAndCommit0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
         synchronized (gdtm) {
-            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
             final DateTime start = new DateTime();
             
             // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g.
             //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
             final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, gdtm);
             // initialises centre from copied instance
-            initCentre(gdtm, miType, name, copiedInstance);
+            initCentre(gdtm, miType, deviceSpecificName, copiedInstance);
             // and then commit it to the database (save its diff)
-            commitCentre(gdtm, miType, name);
+            commitCentre0(gdtm, miType, deviceSpecificName, device);
             
             final DateTime end = new DateTime();
             final Period pd = new Period(start, end);
-            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return copiedInstance;
         }
     }
@@ -225,22 +246,24 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param update -- <code>true</code> if update process is done, <code>false</code> if init process is done
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * 
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer updateOrLoadCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final boolean update) {
-        logger.debug(format("%s '%s' centre for miType [%s] %sfor user %s...", update ? "Updating of stale" : "Initialising", name, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser()));
+    private static ICentreDomainTreeManagerAndEnhancer updateOrLoadCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device, final boolean update) {
+        logger.debug(format("%s '%s' centre for miType [%s] %sfor user %s...", update ? "Updating of stale" : "Initialising", deviceSpecificName, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
         
-        final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, name);
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, name, updatedDiffCentre);
-        initCentre(gdtm, miType, name, loadedCentre);
+        final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, deviceSpecificName, device);
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, deviceSpecificName, updatedDiffCentre);
+        initCentre(gdtm, miType, deviceSpecificName, loadedCentre);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("%s the '%s' centre for miType [%s] %sfor user %s... done in [%s].", update ? "Updated stale" : "Initialised", name, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-        return centre(gdtm, miType, name);
+        logger.debug(format("%s the '%s' centre for miType [%s] %sfor user %s... done in [%s].", update ? "Updated stale" : "Initialised", deviceSpecificName, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        return centre0(gdtm, miType, deviceSpecificName);
     }
     
     /**
@@ -248,15 +271,15 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @return
      */
-    private static boolean isDiffCentreStale(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
-        final String diffName = name + DIFFERENCES_SUFFIX;
+    private static boolean isDiffCentreStale(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName) {
+        // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
+        final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
         // ensure that diff centre exists (it should)
-        final CentreDomainTreeManagerAndEnhancer currentDiffCentre = (CentreDomainTreeManagerAndEnhancer) centre(gdtm, miType, diffName);
+        final CentreDomainTreeManagerAndEnhancer currentDiffCentre = (CentreDomainTreeManagerAndEnhancer) centre0(gdtm, miType, deviceSpecificDiffName);
         return ((GlobalDomainTreeManager) gdtm).isStale(currentDiffCentre);
     }
     
@@ -265,13 +288,13 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param updatedDiffCentre -- updated differences centre
      *
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre) {
-        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+    private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre) {
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
         
         // TODO consider not copying of default centre for performance reasons:
@@ -290,7 +313,7 @@ public class CentreUpdater {
         }
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "loadCentreFromDefaultAndDiff", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "loadCentreFromDefaultAndDiff", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return loadedCentre;
     }
     
@@ -336,17 +359,18 @@ public class CentreUpdater {
      *
      * @param globalManager
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      *
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
-        final String diffName = name + DIFFERENCES_SUFFIX;
-        if (globalManager.getEntityCentreManager(miType, diffName) == null) {
-            return updateDifferencesCentre(globalManager, miType, name);
+    private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device) {
+        // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
+        final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
+        if (globalManager.getEntityCentreManager(miType, deviceSpecificDiffName) == null) {
+            return updateDifferencesCentre(globalManager, miType, deviceSpecificName, device);
         }
-        return globalManager.getEntityCentreManager(miType, diffName);
+        return globalManager.getEntityCentreManager(miType, deviceSpecificDiffName);
     }
     
     /**
@@ -359,22 +383,23 @@ public class CentreUpdater {
      *
      * @param globalManager
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      *
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+    private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device) {
         final User currentUser = globalManager.getUserProvider().getUser();
-        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", name, miType.getSimpleName(), currentUser));
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", deviceSpecificName, miType.getSimpleName(), currentUser));
         final DateTime start = new DateTime();
         
-        // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
-        final String diffName = name + DIFFERENCES_SUFFIX;
+        // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
+        final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         try {
             // init (or update) diff centre from persistent storage if exists
-            globalManager.initEntityCentreManager(miType, diffName);
+            globalManager.initEntityCentreManager(miType, deviceSpecificDiffName);
         } catch (final DomainTreeException e) {
             if (e.getMessage().startsWith("Unable to initialise a non-existent entity-centre instance for type")) {
                 // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
@@ -384,35 +409,33 @@ public class CentreUpdater {
                     // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                     //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                     //   this makes diff centre nicely synchronised with Web UI default values)
-                    globalManager.saveAsEntityCentreManager(miType, null, diffName);
+                    globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName);
                 } else { // non-base user
                     // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                     final IGlobalDomainTreeManager basedOnManager = globalManager.basedOnManager().get();
                     // insert appropriate user into IUserProvider for a very brief period of time to facilitate 'updateCentre' call against basedOnManager
                     basedOnManager.getUserProvider().setUser(basedOnManager.coUser().findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), currentUser.getBasedOnUser()));
-                    // determine current device from userSpecificName. TODO external CentreUpdater's methods should get 'device' from outside and 'deviceSpecific' need to be embedded here, into CentreUpdater.
-                    final DeviceProfile device = name.endsWith("_" + MOBILE.name()) ? MOBILE : DESKTOP;
                     // update and retrieve saved version of centre config from basedOn user
-                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, deviceSpecific(SAVED_CENTRE_NAME, device));
+                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, device);
                     // return currentUser into user provider
                     basedOnManager.getUserProvider().setUser(currentUser);
                     
                     // creates differences centre from the differences between 'default centre' and 'basedOnCentre'
-                    final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, EntityResourceUtils.getEntityType(miType), globalManager);
+                    final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, getEntityType(miType), globalManager);
                     // promotes diff to local cache and saves it into persistent storage
                     initCentre(globalManager, miType, null, differencesCentre);
-                    globalManager.saveAsEntityCentreManager(miType, null, diffName);
+                    globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName);
                     initCentre(globalManager, miType, null, defaultCentre);
                 }
             } else {
                 throw e;
             }
         }
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = globalManager.getEntityCentreManager(miType, diffName);
+        final ICentreDomainTreeManagerAndEnhancer differencesCentre = globalManager.getEntityCentreManager(miType, deviceSpecificDiffName);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", name, miType.getSimpleName(), currentUser, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", deviceSpecificName, miType.getSimpleName(), currentUser, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return differencesCentre;
     }
     
@@ -421,7 +444,7 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param name -- name of the centre to be initialised; used for surrogate device-specific centres, their diff counterparts and for 'null'-named aka 'default' centres  
      * @param centre
      *
      * @return
@@ -722,30 +745,31 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param newDiffCentre
      *
      * @return
      */
-    private static void overrideAndSaveDifferencesCentreIfChanged(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer newDiffCentre) {
-        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+    private static void overrideAndSaveDifferencesCentreIfChanged(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer newDiffCentre) {
+        logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
         
-        // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
-        final String diffName = name + DIFFERENCES_SUFFIX;
+        // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
+        final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
         // In case where diff centre was not ever initialised from persistent storage -- it should be initialised for the first time.
         // It guarantees that at the point of diff centre saving, the empty diff was already saved. See method 'updateDifferencesCentre' for more details.
-        final ICentreDomainTreeManagerAndEnhancer staleDiffCentre = updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, name);
+        final ICentreDomainTreeManagerAndEnhancer staleDiffCentre = updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, deviceSpecificName, device);
         final boolean diffChanged = !equalsEx(staleDiffCentre, newDiffCentre);
         
         if (diffChanged) {
-            overrideAndSaveDifferencesCentre(gdtm, miType, newDiffCentre, diffName);
+            overrideAndSaveDifferencesCentre(gdtm, miType, newDiffCentre, deviceSpecificDiffName);
         }
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
     /**
@@ -753,14 +777,14 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param diffName -- surrogate name of the centre's diff (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param deviceSpecificDiffName -- surrogate name of the centre's diff (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param newDiffCentre
      *
      * @return
      */
-    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer newDiffCentre, final String diffName) {
-        initCentre(gdtm, miType, diffName, newDiffCentre);
-        gdtm.saveEntityCentreManager(miType, diffName);
+    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer newDiffCentre, final String deviceSpecificDiffName) {
+        initCentre(gdtm, miType, deviceSpecificDiffName, newDiffCentre);
+        gdtm.saveEntityCentreManager(miType, deviceSpecificDiffName);
     }
     
     /**

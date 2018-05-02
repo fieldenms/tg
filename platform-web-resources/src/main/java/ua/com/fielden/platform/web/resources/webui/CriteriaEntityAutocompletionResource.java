@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntity;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
@@ -33,10 +36,8 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -77,7 +78,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Request request, 
             final Response response) {
         super(context, request, response, deviceProvider);
-
+        
         this.miType = miType;
         this.criterionPropertyName = criterionPropertyName;
         this.restUtil = restUtil;
@@ -102,26 +103,25 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
-
-            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-
+            
+            final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
+            
             final M criteriaEntity;
             final Class<M> criteriaType;
-            final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>();
+            final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<>();
             if (CentreResourceUtils.isEmpty(modifHolder)) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, deviceSpecific(FRESH_CENTRE_NAME, device())), critGenerator, 0L, gdtm, device());
+                final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(miType, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, device()), critGenerator, 0L, gdtm, device());
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
-
             } else {
-                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, gdtm, device());
+                criteriaEntity = (M) createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, gdtm, device());
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
-
+            
             // TODO criteriaType is necessary to be used for 1) value matcher creation 2) providing value matcher fetch model
             // Please, investigate whether such items can be done without 'criteriaType', and this will eliminate the need to create 'criteriaEntity' (above).
-
+            
             final Pair<IValueMatcherWithCentreContext<T>, Optional<CentreContextConfig>> valueMatcherAndContextConfig;
             if (centre != null) {
                 valueMatcherAndContextConfig = centre.<T> createValueMatcherAndContextConfig(criteriaType, criterionPropertyName);
@@ -130,10 +130,10 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 logger.error(msg);
                 throw new IllegalStateException(msg);
             }
-
+            
             final IValueMatcherWithCentreContext<T> valueMatcher = valueMatcherAndContextConfig.getKey();
             final Optional<CentreContextConfig> contextConfig = valueMatcherAndContextConfig.getValue();
-
+            
             // create context, if any
             final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(
                     true, // full context, fully-fledged restoration. This means that IValueMatcherWithCentreContext descendants (centre matchers) could use IContextDecomposer for context decomposition on deep levels.
@@ -156,15 +156,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 // TODO check whether such setting is needed (need to test autocompletion in centres without that setting) or can be removed:
                 valueMatcher.setContext(new CentreContext<>());
             }
-
+            
             // prepare search string
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
             final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             logger.debug(String.format("SEARCH STRING %s", searchString));
-
+            
             // find matches with a fetch model that should be defined at the custom matcher level or based on the fall-back logic
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
-
+            
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJSONRepresentation(entities);
         }, restUtil);

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.app;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 
 import java.util.regex.Pattern;
 
@@ -13,7 +15,6 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -24,7 +25,6 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
@@ -73,26 +73,26 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
             
             try {
-                decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
+                decodedEntityType = (Class<T>) findClass(entityTypeName);
             } catch (final IllegalArgumentException doesNotExistException) {
                 final String[] parts = entityTypeId.split(":");
                 if (parts.length != 3) {
-                    throw new SerialisationTypeEncoderException(String.format("Generated type has unknown format for its identifier %s.", entityTypeId));
+                    throw new SerialisationTypeEncoderException(format("Generated type has unknown format for its identifier %s.", entityTypeId));
                 }
                 final String miTypeName = parts[1];
                 final String saveAsName = parts[2];
-                final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(miTypeName);
+                final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) findClass(miTypeName);
                 
                 final User user = userProvider.getUser();
                 if (user == null) { // the user is unknown at this stage!
-                    throw new SerialisationTypeEncoderException(String.format("User is somehow unknown during decoding of entity type inside deserialisation process."));
+                    throw new SerialisationTypeEncoderException(format("User is somehow unknown during decoding of entity type inside deserialisation process."));
                 }
                 final IGlobalDomainTreeManager userSpecificGdtm = serverGdtm.get(user.getId());
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, deviceProvider.getDeviceProfile()));
-                decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(userSpecificGdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, deviceProvider.getDeviceProfile());
+                decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
                     throw new SerialisationTypeEncoderException(String.format("Somehow decoded entity type %s was already registered in TgJackson.", decodedEntityType.getName()));
@@ -101,7 +101,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             }
         } else {
             entityTypeName = entityTypeId;
-            decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
+            decodedEntityType = (Class<T>) findClass(entityTypeName);
         }
         
         return decodedEntityType;
