@@ -1,0 +1,71 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tree-table/tg-tree-table-data-cell.html">
+
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<dom-module id="tg-hierarchy-tree-table-cell">
+    <style>
+        :host {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        iron-icon[collapsed] {
+            transform: rotate(-90deg);
+        }
+        paper-checkbox {
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
+        }
+        iron-icon[invisible] {
+            visibility: hidden;
+        }
+    </style>
+    <template>
+        <iron-icon icon="icons:arrow-drop-down" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.entity.collapsed]]"></iron-icon>
+        <div class="layout horizontal center" style$="[[_calcHierarchyCellStyle(entity, column)]]">
+            <template is="dom-if" if="[[column.containsCheckbox]]">
+                <paper-checkbox checked="[[column.isChecked(entity)]]" on-change="_stateChanged"></paper-checkbox>
+            </template>
+            <tg-tree-table-data-cell entity="[[entity.entity]]" column="[[column]]"></tg-tree-table-data-cell>
+        </div>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+
+                is: "tg-hierarchy-tree-table-cell",
+
+                properties: {
+                    column: Object,
+                    entity: Object
+                },
+
+                _isLeaf: function (entity) {
+                    return !(entity.entity.children && entity.entity.children.length > 0);
+                },
+
+                _stateChanged: function (e) {
+                    const target = e.target || e.srcElement;
+                },
+                
+                _calcHierarchyCellStyle: function (entity, column) {
+                    let paddingLeft = 0;
+                    let parentEntity = entity.entity[column.parentProperty];
+                    while (parentEntity) {
+                        paddingLeft += 26;
+                        parentEntity = parentEntity[column.parentProperty];
+                    }
+                    return "padding-left: " + paddingLeft + "px;";
+                }
+            });
+        })();
+    </script>
+</dom-module>

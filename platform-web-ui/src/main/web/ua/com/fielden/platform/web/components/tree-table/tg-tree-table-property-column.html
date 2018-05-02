@@ -1,0 +1,36 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<dom-module id="tg-tree-table-property-column">
+    <script>
+        (function () {
+            Polymer({
+
+                is: "tg-tree-table-property-column",
+
+                properties: {
+                    property: String,
+                    childrenProperty: String,
+                    parentProperty: String,
+                    containsCheckbox: Boolean,
+                    tooltipProperty: String,
+                    type: String,
+                    width: Number,
+                    minWidth: Number,
+                    growFactor: Number,
+                    columnTitle: String,
+                    columnDesc: String,
+                    isChecked: Function,
+                    check: Function
+                },
+
+                hostAttributes: {
+                    hidden: true
+                },
+
+                isHierarchyProperty: function () {
+                    return this.childrenProperty && this.parentProperty;
+                }
+            });
+        })();
+    </script>
+</dom-module>

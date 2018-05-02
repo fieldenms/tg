@@ -1,0 +1,226 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tree-table/tg-tree-table-cell.html">
+
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
+<dom-module id="tg-tree-table">
+    <template>
+        <style>
+            /* Container styles*/
+            :host {
+                @apply(--layout-vertical);
+
+            }
+            paper-material {
+                margin: 10px;
+            }
+            .data-table {
+                background-color: white;
+                border-radius: 2px;
+                position: relative;
+            }
+            #lockContainer {
+                pointer-events: none;
+            }
+            /*Table elements styles*/
+            .tree-table-header-row {
+                font-size: 0.9rem;
+                font-weight: 400;
+                min-height: 3rem;
+                color: #757575;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
+            .tree-table-data-row {
+                font-size: 1rem;
+                font-weight: 400;
+                color: #212121;
+                height: 1.5rem;
+                border-top: 1px solid #e3e3e3;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
+            .tree-table-data-row:last-of-type {
+                margin-bottom: 15px;
+            }
+            .header-column {
+                box-sizing: border-box;
+                @apply(--layout-center);
+            }
+            .header-column[column-type=hierarchy] {
+                padding: 0 0.6rem;
+            }
+            .header-column[column-type=regular] {
+                padding: 0.6rem;
+                writing-mode: vertical-lr;
+                transform: rotate(180deg);
+                @apply(--layout-start-justified);
+            }
+            .table-data-cell {
+                padding: 0 0.6rem;
+                box-sizing: border-box;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            .table-data-cell[column-type=regular] {
+                @apply(--layout-center-justified);
+            }
+            .table-data-cell[column-type=hierarchy] {
+                @apply(--layout-center);
+            }
+            /* Miscelenia styles */
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
+        <content id="column_selector" select="tg-tree-table-property-column" hidden></content>
+
+        <paper-material elevation="1" class="layout vertical">
+            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
+
+                <div id="baseContainer" class="relative layout horizontal flex">
+                    <!--Scroll Container-->
+                    <div id="scrollContainer" class="layout vertical flex">
+                        <!--Tree table header-->
+                        <div class="layout horizontal tree-table-header-row">
+                            <template is="dom-repeat" items="[[columns]]">
+                                <div class="layout horizontal header-column" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
+                                    <div class="truncate">[[item.columnTitle]]</div>
+                                </div>
+                            </template>
+                        </div>
+                        <!--table body-->
+                        <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
+                            <div class="layout horizontal tree-table-data-row" selected$="[[treeEntity.selected]]" over$="[[treeEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                                <template is="dom-repeat" items="[[columns]]" as="column">
+                                    <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" column="[[column]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]" tooltip-text$="[[_getTooltip(treeEntity.entity, column)]]"></tg-tree-table-cell>
+                                </template>
+                            </div>
+                        </template>
+                        <!-- Scrollable container goes here -->
+                    </div>
+                    <!--Fixed Container-->
+                    <div id="lockContainer" class="fit" style="overflow:hidden">
+
+                    </div>
+                </div>
+            </div>
+        </paper-material>
+    </template>
+    <script>
+        (function () {
+            'use strict'
+            const removeColumn = function (column, fromColumns) {
+                const index = fromColumns.indexOf(column);
+                if (index >= 0) {
+                    fromColumns.splice(index, 1);
+                    return true;
+                }
+                return false;
+            };
+            Polymer({
+                is: 'tg-tree-table',
+
+                behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+
+                properties: {
+                    entities: {
+                        type: Array,
+                        observer: "_entitiesChanged"
+                    },
+                    columns: Array,
+                    hierarchyColumn: Object
+                },
+
+                ready: function () {
+                    //Initiates columns
+                    this.columns = [];
+                    this.hierarchyColumn = null;
+                    //Observe column DOM changes
+                    Polymer.dom(this.$.column_selector).observeNodes(info => {
+                        this._columnDomChanged(info.addedNodes, info.removedNodes);
+                    });
+                },
+
+                attached: function () {
+
+                },
+
+                _entitiesChanged: function (newEntities, oldEntities) {
+                    const tempTreeModel = [];
+                    this._pushChildren(newEntities, tempTreeModel);
+                    this.treeModel = tempTreeModel;
+                },
+
+                _pushChildren: function (children, toList) {
+                    children.forEach(child => {
+                        const treeEntity = {
+                            over: false,
+                            entity: child,
+                            collapsed: true,
+                            visible: true
+                        };
+                        toList.push(treeEntity);
+                        if (child.children && child.children.length > 0) {
+                            this._pushChildren(child.children, toList);
+                        }
+                    });
+                },
+
+                _columnDomChanged: function (addedColumns, removedColumns) {
+                    const columnsCopy = this.columns.slice();
+                    let columnsChanged = false;
+                    removedColumns.forEach(col => {
+                        columnsChanged = removeColumn(col, columnsCopy);
+                    });
+
+                    addedColumns.forEach(col => {
+                        const index = this.columns.findIndex(column => column.property === col.property);
+                        if (index < 0) {
+                            columnsCopy.push(col);
+                            columnsChanged = true;
+                        }
+                    });
+                    if (columnsChanged) {
+                        this.columns = columnsCopy;
+                    }
+                },
+
+                _columnType: function (item) {
+                    return item.isHierarchyProperty() ? "hierarchy" : "regular";
+                },
+
+                _mouseRowEnter: function (event, detail) {
+                    const index = event.model.treeEntityIndex;
+                    this.set("treeModel." + index + ".over", true);
+                },
+
+                _mouseRowLeave: function (event, detail) {
+                    const index = event.model.treeEntityIndex;
+                    this.set("treeModel." + index + ".over", false);
+                },
+
+                _calcColumnStyle: function (column, columnWidth, columnGrowFactor) {
+                    let colStyle = "min-width: " + columnWidth + "px;" + "width: " + columnWidth + "px;"
+                    if (columnGrowFactor === 0) {
+                        colStyle += "flex-grow: 0;flex-shrink:0;";
+                    } else {
+                        colStyle += "flex-grow: " + columnGrowFactor + ";";
+                    }
+                    return colStyle;
+                },
+
+            });
+        })();
+    </script>
+</dom-module>
