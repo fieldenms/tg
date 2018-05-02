@@ -22,7 +22,9 @@
                 position: relative;
             }
             #scrollContainer {
-                margin-bottom: 15px;
+                padding-bottom: 15px;
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
             }
             #lockContainer {
                 pointer-events: none;
@@ -67,20 +69,17 @@
 
             }
             .table-data-cell {
-                padding: 0 0.6rem;
                 box-sizing: border-box;
                 @apply(--layout-horizontal);
-
-@apply(--layout-center);
-
+                @apply(--layout-center);
             }
             .table-data-cell[column-type=regular] {
+                padding: 0 0.6rem;
                 @apply(--layout-center-justified);
-
             }
             .table-data-cell[column-type=hierarchy] {
+                padding-right: 0.6rem;
                 @apply(--layout-center);
-
             }
             /* Miscelenia styles */
             .truncate {

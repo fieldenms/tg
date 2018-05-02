@@ -1,7 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/components/tree-table/tg-tree-table-data-cell.html">
-
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
@@ -24,6 +22,10 @@
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
         }
+        paper-checkbox[checked-state=SEMICHECKED] {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+        }
         iron-icon[invisible] {
             visibility: hidden;
         }
@@ -31,10 +33,8 @@
     <template>
         <iron-icon icon="icons:arrow-drop-down" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
         <div class="layout horizontal center" style$="[[_calcHierarchyCellStyle(entity, column)]]">
-            <template is="dom-if" if="[[column.containsCheckbox]]">
-                <paper-checkbox checked="[[column.isChecked(entity)]]" on-change="_stateChanged"></paper-checkbox>
-            </template>
-            <tg-tree-table-data-cell entity="[[entity.entity]]" column="[[column]]"></tg-tree-table-data-cell>
+            <paper-checkbox checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" on-change="_stateChanged"></paper-checkbox>
+            <div>[[_getCellValue(entity.entity, column.property)]]</div>
         </div>
     </template>
     <script>
@@ -48,6 +48,15 @@
                     entity: Object,
                     entityIndex: Number
                 },
+                
+                attached: function() {
+                    this.state = this.entity.entity._getState("_tokenChecked");
+                    this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
+                        this.notifyPath("entity.entity._tokenChecked", value);
+                        this.state = state;
+                        this.updateStyles();
+                    };
+                },
 
                 _isLeaf: function (entity) {
                     return !(entity.entity.children && entity.entity.children.length > 0);
@@ -55,6 +64,7 @@
 
                 _stateChanged: function (e) {
                     const target = e.target || e.srcElement;
+                    this.column.check(this.entity.entity, "_tokenChecked", target.checked);
                 },
                 
                 _toggle: function(e) {
@@ -70,6 +80,10 @@
                         parentEntity = parentEntity[column.parentProperty];
                     }
                     return "padding-left: " + paddingLeft + "px;";
+                },
+                
+                _getCellValue: function(entity, property) {
+                    return entity.get(property);
                 }
             });
         })();

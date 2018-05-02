@@ -1,0 +1,72 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
+<dom-module id="tg-tree-table-regular-cell">
+    <style>
+        :host {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        paper-checkbox {
+            --paper-checkbox-label-spacing: 0px;
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
+        }
+        paper-checkbox[checked-state=SEMICHECKED] {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+        }
+    </style>
+    <template>
+        <paper-checkbox checked="[[checked]]" checked-state$="[[state]]" on-change="_stateChanged"></paper-checkbox>
+    </template>
+    <script>
+        (function () {
+            const generateShortCollection = function (entity, property, typeObject) {
+                var collectionValue = entity.get(property);
+                var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
+                var keys = typeObject.compositeKeyNames();
+                return collectionValue.map(function (subEntity) {
+                    var key = keys.find(function (key) {
+                        if (subEntity.get(key) !== containerPropertyValue) {
+                            return key;
+                        }
+                    });
+                    return subEntity.get(key);
+                });
+            };
+            Polymer({
+
+                is: "tg-tree-table-regular-cell",
+
+                properties: {
+                    column: Object,
+                    entity: Object
+                },
+                
+                attached: function() {
+                    this.checked = this.entity.get(this.column.property);
+                    this.state = this.entity._getState(this.column.property);
+                    this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
+                        this.checked = value;
+                        this.state = state;
+                        this.updateStyles();
+                    };
+                },
+                
+                _stateChanged: function (e) {
+                    const target = e.target || e.srcElement;
+                    this.column.check(this.entity, this.column.property, target.checked);
+                },
+            });
+        })();
+    </script>
+</dom-module>

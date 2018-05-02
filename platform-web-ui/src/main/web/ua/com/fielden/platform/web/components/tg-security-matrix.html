@@ -36,7 +36,7 @@
                 <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]">
                     <tg-test></tg-test>
                     <template is="dom-repeat" items="[[columns]]">
-                        <tg-tree-table-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" contains-checkbox="[[item.containsCheckbox]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]"></tg-tree-table-property-column>
+                        <tg-tree-table-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" contains-checkbox="[[item.containsCheckbox]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]" check="[[check]]"></tg-tree-table-property-column>
                     </template>
                 </tg-tree-table>
                 <div class="layout horizontal center-justified" style="padding:20px;">
@@ -64,15 +64,15 @@
                         this.children = securityTokenEntity.children.map(securityToken => new SecurityMatrixEntity(securityToken, userRoles, tokenRoleMap, this));
                     }
                     this.roleIdMap = {};
-                    const idRoleMap = {};
+                    this.idRoleMap = {};
                     Object.values(userRoles).forEach(role => {
                         const roleKey = replaceWhitespacesWithUnderscore(role.get("key"));
                         this.roleIdMap[roleKey] = role.get("id");
                         this[roleKey] = false;
-                        idRoleMap[role.get("id")] = roleKey;
+                        this.idRoleMap[role.get("id")] = roleKey;
                     });
                     tokenRoleMap[securityTokenEntity.get("key")].forEach(roleId => {
-                        this[idRoleMap[roleId]] = true;
+                        this[this.idRoleMap[roleId]] = true;
                     });
                     //Initiate 
                     if (this.children && this.children.length > 0) {
@@ -91,7 +91,7 @@
                     if (typeof this._tokenRoleAssociationHandler[property] === "function") {
                         this._tokenRoleAssociationHandler[property](value, this._getState(property));
                     }
-                    if (Object.keys(this.roleIdMap).incldes(property) && oldValue !== value) {
+                    if (Object.keys(this.roleIdMap).includes(property) && oldValue !== value) {
                         if (value) {
                             updateAssociations(this.roleIdMap[property], this._newAssociations, this._removedAssociations);
                         } else {
@@ -100,41 +100,41 @@
                     }
                 }
 
-                _isChecked(property) {
-                    if (property === "title") {
-                        return this._tokenChecked;
-                    } else {
-                        return this[property];
-                    }
-                }
-
                 _check(property, value) {
                     this._checkWithoutParent(property, value);
-                    this._checkParent(property, value);
+                    this._checkColumnParent(property);
                 }
 
                 _checkWithoutParent(property, value) {
                     if (this.children && this.children.length > 0) {
                         this.children.forEach(child => child._checkWithoutParent(property, value));
                     }
-                    if (property === "title") {
-                        Object.keys(roleIdMap).forEach(roleKey => this.set(roleKey, value));
-                        this.set("_tokenChecked", value);
-                    } else {
+                    if (property === "_tokenChecked") {
+                        Object.keys(this.roleIdMap).forEach(roleKey => {
+                            this.set(roleKey, value);
+                            this._checkColumnParent(roleKey);
+                        });
                         this.set(property, value);
+                    } else if (Object.keys(this.roleIdMap).includes(property)){
+                        this.set(property, value);
+                        this._checkRowParent();
                     }
                 }
+                
+                _checkRowParent() {
+                    this.set("_tokenChecked", this._getState("_tokenChecked") !== "UNCHECKED");
+                }
 
-                _checkParent(property) {
+                _checkColumnParent(property) {
                     if (this.parent) {
-                        const newState = this._getState(property);
-                        const currentValue = property === "title" ? this.get("_tokenChecked") : this.get(property);
-                        if (property === "title") {
-                            this.parent.set("_tokenChecked", newState === "CHECKED");
-                        } else if (Object.keys(this.roleIdMap).incldes(property)) {
-                            this.parent.set(property, newState === "CHECKED");
+                        const newState = this.parent._getState(property);
+                        if (property === "_tokenChecked") {
+                            this.parent.set(property, newState !== "UNCHECKED");
+                        } else if (Object.keys(this.roleIdMap).includes(property)) {
+                            this.parent.set(property, newState !== "UNCHECKED");
+                            this.parent._checkRowParent();
                         }
-                        this.parent._checkParent(property);
+                        this.parent._checkColumnParent(property);
                     }
                 }
 
@@ -142,9 +142,9 @@
                     if (this.children && this.children.length > 0) {
                         return calculateState(this.children.map(child => child._getState(property)));
                     } else {
-                        if (property === "title") {
+                        if (property === "_tokenChecked") {
                             return calculateState(Object.keys(this.roleIdMap).map(roleKey => this._getState(roleKey)));
-                        } else if (Object.keys(this.roleIdMap).incldes(property)) {
+                        } else if (Object.keys(this.roleIdMap).includes(property)) {
                             return this.get(property) ? "CHECKED" : "UNCHECKED";
                         }
                     }
@@ -204,12 +204,21 @@
                     lock: {
                         type: Boolean,
                         value: false
-                    }
+                    },
+                    
+                    check: Function,
+                    isChecked: Function
                 },
 
                 ready: function () {
                     //Configuring the security matrix master
                     this.entityType = "ua.com.fielden.platform.entity.SecurityMatrixSaveAction"
+                    this.check = function(entity, property, value) {
+                        entity._check(property, value);
+                    };
+                    this.isChecked = function(entity, property) {
+                        return entity._isChecked(property);
+                    }
                 },
 
                 attached: function () {
@@ -234,7 +243,9 @@
                             width: 200,
                             growFactor: 2,
                             minWidth: 200,
-                            type: "String"
+                            type: "String",
+                            check: this.check,
+                            isChecked: this.isChecked
                         });
                         newEntity.get("userRoles").forEach(role => {
                             columnList.push({
@@ -244,7 +255,9 @@
                                 width: 30,
                                 growFactor: 0,
                                 minWidth: 50,
-                                type: "Boolean"
+                                type: "Boolean",
+                                check: this.check,
+                                isChecked: this.isChecked
                             });
                         });
                         this.columns = columnList;

@@ -1,7 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/components/tree-table/tg-hierarchy-tree-table-cell.html">
-<link rel="import" href="/resources/components/tree-table/tg-tree-table-data-cell.html">
+<link rel="import" href="/resources/components/tree-table/tg-tree-table-regular-cell.html">
 
 <dom-module id="tg-tree-table-cell">
     <template>
@@ -9,7 +9,7 @@
             <tg-hierarchy-tree-table-cell column="[[column]]" entity="[[entity]]" entity-index="[[entityIndex]]"></tg-hierarchy-tree-table-cell>
         </template>
         <template is="dom-if" if="[[!_isHierarchyColumn(column)]]">
-            <tg-tree-table-data-cell column="[[column]]" entity="[[entity.entity]]"></tg-tree-table-data-cell>
+            <tg-tree-table-regular-cell column="[[column]]" entity="[[entity.entity]]"></tg-tree-table-regular-cell>
         </template>
     </template>
 </dom-module>
