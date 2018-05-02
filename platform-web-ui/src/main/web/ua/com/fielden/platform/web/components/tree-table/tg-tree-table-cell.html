@@ -6,7 +6,7 @@
 <dom-module id="tg-tree-table-cell">
     <template>
         <template is="dom-if" if="[[_isHierarchyColumn(column)]]">
-            <tg-hierarchy-tree-table-cell column="[[column]]" entity="[[entity]]"></tg-hierarchy-tree-table-cell>
+            <tg-hierarchy-tree-table-cell column="[[column]]" entity="[[entity]]" entity-index="[[entityIndex]]"></tg-hierarchy-tree-table-cell>
         </template>
         <template is="dom-if" if="[[!_isHierarchyColumn(column)]]">
             <tg-tree-table-data-cell column="[[column]]" entity="[[entity.entity]]"></tg-tree-table-data-cell>
@@ -21,7 +21,8 @@
 
             properties: {
                 column: Object,
-                entity: Object
+                entity: Object,
+                entityIndex: Number
             },
 
             _isHierarchyColumn: function(column) {

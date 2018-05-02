@@ -21,6 +21,9 @@
                 border-radius: 2px;
                 position: relative;
             }
+            #scrollContainer {
+                margin-bottom: 15px;
+            }
             #lockContainer {
                 pointer-events: none;
             }
@@ -48,12 +51,10 @@
                 flex-grow: 0;
                 flex-shrink: 0;
             }
-            .tree-table-data-row:last-of-type {
-                margin-bottom: 15px;
-            }
             .header-column {
                 box-sizing: border-box;
                 @apply(--layout-center);
+
             }
             .header-column[column-type=hierarchy] {
                 padding: 0 0.6rem;
@@ -63,18 +64,23 @@
                 writing-mode: vertical-lr;
                 transform: rotate(180deg);
                 @apply(--layout-start-justified);
+
             }
             .table-data-cell {
                 padding: 0 0.6rem;
                 box-sizing: border-box;
                 @apply(--layout-horizontal);
-                @apply(--layout-center);
+
+@apply(--layout-center);
+
             }
             .table-data-cell[column-type=regular] {
                 @apply(--layout-center-justified);
+
             }
             .table-data-cell[column-type=hierarchy] {
                 @apply(--layout-center);
+
             }
             /* Miscelenia styles */
             .truncate {
@@ -101,9 +107,9 @@
                         </div>
                         <!--table body-->
                         <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
-                            <div class="layout horizontal tree-table-data-row" selected$="[[treeEntity.selected]]" over$="[[treeEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                            <div class="layout horizontal tree-table-data-row" hidden$="[[treeEntity.parent.collapsed]]" over$="[[treeEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                 <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" column="[[column]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]" tooltip-text$="[[_getTooltip(treeEntity.entity, column)]]"></tg-tree-table-cell>
+                                    <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" column="[[column]]" entity-index="[[treeEntityIndex]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]" tooltip-text$="[[_getTooltip(treeEntity.entity, column)]]"></tg-tree-table-cell>
                                 </template>
                             </div>
                         </template>
@@ -142,6 +148,10 @@
                     hierarchyColumn: Object
                 },
 
+                listeners: {
+                    "tg-tree-toggle-collapse-state": "_toggleTreeEntityToggleState"
+                },
+
                 ready: function () {
                     //Initiates columns
                     this.columns = [];
@@ -156,25 +166,31 @@
 
                 },
 
+                ///////////////////Observer related functions//////////////////////////////
                 _entitiesChanged: function (newEntities, oldEntities) {
-                    const tempTreeModel = [];
+                    const tempTreeModel = []
                     this._pushChildren(newEntities, tempTreeModel);
                     this.treeModel = tempTreeModel;
                 },
 
-                _pushChildren: function (children, toList) {
-                    children.forEach(child => {
+                _pushChildren: function (children, toList, parent) {
+                    const childrenList = children.map(child => {
                         const treeEntity = {
                             over: false,
                             entity: child,
-                            collapsed: true,
+                            parent: parent,
+                            collapsed: child.children && child.children.length > 0,
                             visible: true
                         };
                         toList.push(treeEntity);
                         if (child.children && child.children.length > 0) {
-                            this._pushChildren(child.children, toList);
+                            this._pushChildren(child.children, toList, treeEntity);
                         }
+                        return treeEntity;
                     });
+                    if (parent) {
+                        parent.children = childrenList;
+                    }
                 },
 
                 _columnDomChanged: function (addedColumns, removedColumns) {
@@ -196,10 +212,7 @@
                     }
                 },
 
-                _columnType: function (item) {
-                    return item.isHierarchyProperty() ? "hierarchy" : "regular";
-                },
-
+                //////////////////////Event listeners/////////////////////
                 _mouseRowEnter: function (event, detail) {
                     const index = event.model.treeEntityIndex;
                     this.set("treeModel." + index + ".over", true);
@@ -210,6 +223,17 @@
                     this.set("treeModel." + index + ".over", false);
                 },
 
+                _toggleTreeEntityToggleState: function (e) {
+                    const entityIndex = e.detail.entityIndex;
+                    const newState = e.detail.state;
+                    const entity = e.detail.entity;
+                    this.set("treeModel." + entityIndex + ".collapsed", newState);
+                    if (entity.children && entity.children.length > 0) {
+                        entity.children.forEach((child, childIndex) => this.notifyPath("treeModel." + (entityIndex + 1 + childIndex) + ".parent.collapsed", newState));
+                    }
+                },
+
+                ////////////////////////Style calculation methods.//////////////////////////////////////
                 _calcColumnStyle: function (column, columnWidth, columnGrowFactor) {
                     let colStyle = "min-width: " + columnWidth + "px;" + "width: " + columnWidth + "px;"
                     if (columnGrowFactor === 0) {
@@ -220,6 +244,9 @@
                     return colStyle;
                 },
 
+                _columnType: function (item) {
+                    return item.isHierarchyProperty() ? "hierarchy" : "regular";
+                },
             });
         })();
     </script>

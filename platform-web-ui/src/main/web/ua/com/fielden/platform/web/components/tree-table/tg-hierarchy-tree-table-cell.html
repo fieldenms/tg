@@ -29,7 +29,7 @@
         }
     </style>
     <template>
-        <iron-icon icon="icons:arrow-drop-down" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.entity.collapsed]]"></iron-icon>
+        <iron-icon icon="icons:arrow-drop-down" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
         <div class="layout horizontal center" style$="[[_calcHierarchyCellStyle(entity, column)]]">
             <template is="dom-if" if="[[column.containsCheckbox]]">
                 <paper-checkbox checked="[[column.isChecked(entity)]]" on-change="_stateChanged"></paper-checkbox>
@@ -45,7 +45,8 @@
 
                 properties: {
                     column: Object,
-                    entity: Object
+                    entity: Object,
+                    entityIndex: Number
                 },
 
                 _isLeaf: function (entity) {
@@ -54,6 +55,11 @@
 
                 _stateChanged: function (e) {
                     const target = e.target || e.srcElement;
+                },
+                
+                _toggle: function(e) {
+                    this.fire("tg-tree-toggle-collapse-state", {entity: this.entity, entityIndex: this.entityIndex, state: !this.entity.collapsed});
+                    this.notifyPath("entity.collapsed", this.entity.collapsed);
                 },
                 
                 _calcHierarchyCellStyle: function (entity, column) {
