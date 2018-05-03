@@ -9,6 +9,8 @@
 
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+
 
 <dom-module id="tg-security-matrix">
     <template>
@@ -40,8 +42,8 @@
                     </template>
                 </tg-tree-table>
                 <div class="layout horizontal center-justified" style="padding:20px;">
-                    <tg-action enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='[[_actions.REFRESH.shortDesc]]' long-desc='[[_actions.REFRESH.longDesc]]' current-state='[[currentState]]' shortcut='ctrl+r meta+r' role='refresh' action='[[_actions.REFRESH.action]]' post-action='{{_postRetrievedDefault}}' post-action-error='{{_postRetrievedDefaultError}}' style="margin:10px;"></tg-action>
-                    <tg-action enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='[[_actions.SAVE.shortDesc]]' long-desc='[[_actions.SAVE.longDesc]]' current-state='[[currentState]]' shortcut='ctrl+s meta+s' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
+                    <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
+                    <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                     <!-- save and cancel buttons goes here -->
                 </div>
                 <div class="lock-layer fit" lock$="[[lock]]"></div>
@@ -75,14 +77,10 @@
                         this[this.idRoleMap[roleId]] = true;
                     });
                     //Initiate 
-                    if (this.children && this.children.length > 0) {
-                        this._tokenChecked = this.children.every(child => child._tokenChecked);
-                    } else {
-                        this._tokenChecked = Object.keys(this.roleIdMap).every(role => this[role]);
-                    }
+                    this._tokenChecked = Object.keys(this.roleIdMap).some(role => this[role]) || (this.children && this.children.length > 0 && this.children.some(child => child._tokenChecked));
                     this._tokenRoleAssociationHandler = {};
                     this._newAssociations = [];
-                    this._removedAssociations = [];
+                    this._removedAssociations  = [];
                 }
 
                 set(property, value) {
@@ -98,6 +96,30 @@
                             updateAssociations(this.roleIdMap[property], this._removedAssociations, this._newAssociations);
                         }
                     }
+                }
+                
+                isChanged() {
+                    return this._isChanged() || (this.children && this.children.length > 0 && this.children.some(child => child.isChanged()));
+                }
+                
+                reset() {
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => child.reset());
+                    }
+                    this._newAssociations.slice().forEach(associationId => {
+                        this.set(this.idRoleMap[associationId], false);
+                        this._checkColumnParent(this.idRoleMap[associationId]);
+                    });
+                    this._removedAssociations.slice().forEach(associationId => {
+                        this.set(this.idRoleMap[associationId], true);
+                        this._checkColumnParent(this.idRoleMap[associationId]);
+                    });
+                    this._checkRowParent();
+                    this._checkColumnParent("_tokenChecked");
+                }
+                
+                _isChanged() {
+                    this._newAssociations.length > 0 || this._removedAssociations.length > 0;
                 }
 
                 _check(property, value) {
@@ -115,12 +137,12 @@
                             this._checkColumnParent(roleKey);
                         });
                         this.set(property, value);
-                    } else if (Object.keys(this.roleIdMap).includes(property)){
+                    } else if (Object.keys(this.roleIdMap).includes(property)) {
                         this.set(property, value);
                         this._checkRowParent();
                     }
                 }
-                
+
                 _checkRowParent() {
                     this.set("_tokenChecked", this._getState("_tokenChecked") !== "UNCHECKED");
                 }
@@ -205,20 +227,29 @@
                         type: Boolean,
                         value: false
                     },
-                    
+
                     check: Function,
-                    isChecked: Function
+                    isChecked: Function,
+                    _resetSecurityMatrix: Function,
+                    _postResetSecurityMatrix: Function,
+                    _postResetSecurityMatrixError: Function
                 },
 
                 ready: function () {
                     //Configuring the security matrix master
                     this.entityType = "ua.com.fielden.platform.entity.SecurityMatrixSaveAction"
-                    this.check = function(entity, property, value) {
+                    this.check = function (entity, property, value) {
                         entity._check(property, value);
                     };
-                    this.isChecked = function(entity, property) {
+                    this.isChecked = function (entity, property) {
                         return entity._isChecked(property);
-                    }
+                    };
+                    this._resetSecurityMatrix = function () {
+                        this.entities.forEach(entity => entity.reset());
+                        this.$.cancelButton.postAction();
+                    }.bind(this);
+                    this._postResetSecurityMatrix = function () {};
+                    this._postResetSecurityMatrixError = function () {};
                 },
 
                 attached: function () {
