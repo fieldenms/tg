@@ -43,7 +43,7 @@
                 </tg-tree-table>
                 <div class="layout horizontal center-justified" style="padding:20px;">
                     <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
-                    <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
+                    <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_saveSecurityMatrix]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                     <!-- save and cancel buttons goes here -->
                 </div>
                 <div class="lock-layer fit" lock$="[[lock]]"></div>
@@ -95,6 +95,20 @@
                         } else {
                             updateAssociations(this.roleIdMap[property], this._removedAssociations, this._newAssociations);
                         }
+                    }
+                }
+                
+                getAssociationsToSave(objToSave) {
+                    objToSave[this.get("id")] = this._newAssociations.slice();
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => this.getAssociationsToSave(objToSave));
+                    }
+                }
+                
+                getAssociationsToRemove(objToSave) {
+                    objToSave[this.get("id")] = this._removedAssociations.slice();
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => this.getAssociationsToRemove(objToSave));
                     }
                 }
                 
@@ -232,7 +246,8 @@
                     isChecked: Function,
                     _resetSecurityMatrix: Function,
                     _postResetSecurityMatrix: Function,
-                    _postResetSecurityMatrixError: Function
+                    _postResetSecurityMatrixError: Function,
+                    _saveSecurityMatrix: Function
                 },
 
                 ready: function () {
@@ -250,6 +265,15 @@
                     }.bind(this);
                     this._postResetSecurityMatrix = function () {};
                     this._postResetSecurityMatrixError = function () {};
+                    this._saveSecurityMatrix = function () {
+                        const associationsToSave = {};
+                        const associationsToRemove = {};
+                        this.entities.forEach(entity => entity.getAssociationsToSave(associationsToSave));
+                        this.entities.forEach(entity => entity.getAssociationsToRemove(associationsToRemove));
+                        this._currBindingEntity['associationsToSave'] = associationsToSave;
+                        this._currBindingEntity['associationsToRemove'] = associationsToRemove;
+                        this.save();
+                    }.bind(this);
                 },
 
                 attached: function () {
@@ -258,6 +282,10 @@
                             this.retrieve();
                         }
                     });
+                },
+                
+                _isNecessaryForConversion: function (propertyName) {
+                    return ['associationsToSave', 'associationsToRemove'].includes(propertyName);
                 },
 
                 _entityChanged: function (newBindingEntity, oldOne) {
