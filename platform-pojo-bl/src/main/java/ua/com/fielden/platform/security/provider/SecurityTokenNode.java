@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isSuperTokenOf;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isTopLevel;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.longDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.shortDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 
 import java.util.ArrayList;
 import java.util.Collections;

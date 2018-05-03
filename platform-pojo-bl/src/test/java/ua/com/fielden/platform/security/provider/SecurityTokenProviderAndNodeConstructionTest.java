@@ -3,8 +3,8 @@ package ua.com.fielden.platform.security.provider;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.longDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.shortDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 
 import java.util.Iterator;
 import java.util.SortedSet;

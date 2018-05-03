@@ -7,11 +7,13 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 /**
  * A convenient utility class for obtaining static security tone information such as key, description, super token etc.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
-public class SecurityTokenInfo {
+public class SecurityTokenInfoUtils {
 
+    private SecurityTokenInfoUtils() {}
+    
     /**
      * Determines security token's key, which represents its short description.
      * 

@@ -4,16 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isSuperTokenOf;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isTopLevel;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.longDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.shortDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.superToken;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.superToken;
 
 import org.junit.Test;
 
 /**
- * Ensures correct behaviour of the static class {@link SecurityTokenInfo}.
+ * Ensures correct behaviour of the static class {@link SecurityTokenInfoUtils}.
  * 
  * @author 01es
  * 

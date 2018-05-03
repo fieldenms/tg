@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isSuperTokenOf;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isTopLevel;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +54,7 @@ public class SecurityTokenProvider {
     }
 
     private SortedSet<SecurityTokenNode> buildTokenNodes(final List<Class<?>> allTokens) {
-        final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<SecurityTokenNode>();
+        final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<>();
         // iterate over all tokens and determine top level tokens
         // add them to a separate list and remove from a list over which iteration occurs
         for (final Iterator<Class<?>> iter = allTokens.iterator(); iter.hasNext();) {
@@ -82,7 +82,7 @@ public class SecurityTokenProvider {
      */
     @SuppressWarnings("unchecked")
     private void digg(final SecurityTokenNode superTokenNode, final List<Class<?>> remainingTokens) {
-        final List<SecurityTokenNode> toBeRemoved = new ArrayList<SecurityTokenNode>();
+        final List<SecurityTokenNode> toBeRemoved = new ArrayList<>();
         // find all direct sub tokens of the current super token
         for (final Iterator<Class<?>> iter = remainingTokens.iterator(); iter.hasNext();) {
             final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
