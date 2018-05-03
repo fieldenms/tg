@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.error;
 
+import static java.lang.String.format;
+
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import com.google.common.base.Objects;
 
 /**
  * Represents a result (an error or success) of some custom logic. That could been the result of some validation or application of some other business rules.
@@ -99,6 +103,17 @@ public class Result extends RuntimeException {
      */
     public static Result failure(final String reason) {
         return new Result(null, new Exception(reason));
+    }
+
+    /**
+     * The same as {@link #failure(String)} with with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} string.
+     *
+     * @param reason
+     * @param args
+     * @return
+     */
+    public static Result failure(final String reason, final Object...args) {
+        return new Result(null, new Exception(format(reason, args)));
     }
 
     ///////////////////////////////////////////////
