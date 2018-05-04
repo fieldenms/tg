@@ -55,6 +55,7 @@
                         this.notifyPath("entity.entity._tokenChecked", value);
                         this.state = state;
                         this.updateStyles();
+                        this.fire("tg-tree-state-changed");
                     };
                 },
 

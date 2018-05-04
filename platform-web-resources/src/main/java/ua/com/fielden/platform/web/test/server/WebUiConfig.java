@@ -416,7 +416,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(propDescriptorCentre);
         configApp().addCentre(userWebUiConfig.centre);
         configApp().addCentre(userRoleWebUiConfig.centre);
-        configApp().addCentre(securityConfig.centre);
 
         //Add custom view
         final CustomTestView customView = new CustomTestView();
@@ -995,7 +994,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.menu()
                 /*      */.addMenuItem("Users").description("User centre").centre(userWebUiConfig.centre).done()
                 /*      */.addMenuItem("User Roles").description("User role centre").centre(userRoleWebUiConfig.centre).done()
-                /*      */.addMenuItem("Security Matrix").description("Security matrix").centre(securityConfig.centre).done()
+                /*      */.addMenuItem("Security Matrix").description("Security matrix").master(securityConfig.master).done()
                 /*  */.done()
                 /*  */.done()
                 .addModule("Online reports")

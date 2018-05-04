@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import static java.lang.String.format;
+
 import ua.com.fielden.platform.menu.CustomView;
 import ua.com.fielden.platform.menu.EntityCentreView;
 import ua.com.fielden.platform.menu.EntityMasterView;
@@ -54,7 +55,7 @@ public class WebView implements IExecutable {
                 attrs
                 .append("{")
                 .append("entityId: \"new\",")
-                .append("centreUuid: \"menu\",")
+//                .append("centreUuid: \"menu\",")
                 .append("currentState: \"EDIT\",")
                 .append("entityType: \"" + entityMaster.getEntityType().getName() + "\",")
                 .append("uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\",")

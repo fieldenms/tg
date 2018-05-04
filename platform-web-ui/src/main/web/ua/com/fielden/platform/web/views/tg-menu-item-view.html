@@ -13,17 +13,24 @@
         .view {
             background-color: white;
         }
+        .master-insertion-point {
+            height: 100%;
+            width: 100%;
+            overflow: auto;
+        }
         paper-material {
-            margin: 10px 30px;
             border-radius: 2px;
             overflow: hidden;
+            background-color: white;
         }
     </style>
     <template>
         <template is="dom-if" if="[[menuItem.view]]" restamp>
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
-                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    <div class="master-insertion-point">
+                        <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    </div>
                 </paper-material>
             </template>
             <template is="dom-if" if="[[_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
@@ -72,12 +79,12 @@
                 hostAttributes: {
                     "class": "layout vertical"
                 },
-                
+
                 // ready: function () {
                 //     This setting could be helpful in case where master / centre views will need to be supported.
                 //     this._afterInitLoading = true;
                 // },
-                
+
                 attached: function () {
                     var self = this;
                     self.async(function () {
@@ -87,7 +94,7 @@
                         }
                     }, 1);
                 },
-                
+
                 focusLoadedView: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.focusView === 'function') {
@@ -114,12 +121,15 @@
                                     delete detail.queryPart;
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);
-                                detail.postRetrieved = oldPostRetrieved; 
+                                detail.postRetrieved = oldPostRetrieved;
                             };
                             detail.retrieve();
                         } else if (this.menuItem.view.viewType === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 self.fire("menu-item-view-loaded", self.menuItem);
+                                if (detail.saveOnActivation === true) {
+                                    detail.save();
+                                }
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                             detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};

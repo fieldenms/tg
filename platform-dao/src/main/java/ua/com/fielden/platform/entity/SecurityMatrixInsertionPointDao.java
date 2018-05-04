@@ -15,6 +15,7 @@ import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -38,6 +39,7 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
     }
 
     @Override
+    @SessionRequired
     public SecurityMatrixInsertionPoint save(final SecurityMatrixInsertionPoint entity) {
         final List<SecurityTokenTreeNodeEntity> tokenEntities = tokenProvider.getTopLevelSecurityTokenNodes().stream().map(token -> createTokenNodeEntity(Optional.empty(), token)).collect(Collectors.toList());
         final EntityResultQueryModel<UserRole> userRoleQueryModel = select(UserRole.class).model();

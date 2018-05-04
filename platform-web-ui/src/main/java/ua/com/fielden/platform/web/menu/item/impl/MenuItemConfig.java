@@ -12,6 +12,7 @@ import ua.com.fielden.platform.web.menu.item.IModuleMenuConfigWithView;
 import ua.com.fielden.platform.web.menu.module.impl.ModuleMenuConfig;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuItem;
 import ua.com.fielden.platform.web.menu.module.impl.WebView;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, IModuleMenuConfigWithView, IModuleMenuConfig2, IModuleMenuConfig2WithDone {
 
@@ -36,6 +37,12 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, I
     }
 
     @Override
+    public IModuleMenuConfigWithView master(final EntityMaster<?> entityMaster) {
+        menuItem.view(new WebView(entityMaster));
+        return this;
+    }
+
+    @Override
     public IModuleMenuConfigWithView view(final AbstractCustomView view) {
         menuItem.view(new WebView(view));
         return this;
@@ -50,5 +57,4 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, I
     public IModuleMenuConfig3 addMenuItem(final String title) {
         return new SubMenuItemConfig(menuItem.addMenuItem(title), this);
     }
-
 }
