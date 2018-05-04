@@ -61,14 +61,23 @@
                  * 'null' -- if not applicable, for e.g. in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
                  */
                 requireMasterEntity: String,
-
+                
                 /**
                  * The menu item type, which identifies this centre.
                  */
                 miType: {
                     type: String
                 },
-
+                
+                /**
+                 * The 'saveAs' name, which identifies this centre; or empty string if the centre represents unnamed configuration.
+                 * This parameter could be changed during centre's lifecycle in case where user loads different centre or copies currently loaded centre.
+                 */
+                saveAsName: {
+                    type: String,
+                    value: '' // this default value means that unnamed configuration is loaded by default 
+                },
+                
                 /**
                  * Custom callback that will be invoked after successfull run.
                  *
@@ -637,7 +646,7 @@
                     return self._reset(modifHolder);
                 }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
             },
-
+            
             /**
              * Create context holder with custom '@@miType' property.
              */
@@ -647,11 +656,19 @@
                     modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
+                this._reflector().setCustomProperty(contextHolder, "@@saveAsName", this.saveAsName);
                 this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
                 this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
                 return contextHolder;
             },
-
+            
+            /**
+             * Computes identifier of centre for its autocompleters.
+             */
+            _computeCentreIdentifier: function (miType, saveAsName) {
+                return miType + ':' + saveAsName;
+            },
+            
             /**
              * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or
              *   concrete entities refresh processes.

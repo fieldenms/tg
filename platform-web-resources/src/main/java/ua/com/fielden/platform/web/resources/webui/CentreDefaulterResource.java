@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -43,6 +44,7 @@ public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> ex
     private final RestServerUtil restUtil;
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
+    private final Optional<String> saveAsName;
     
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
@@ -53,6 +55,7 @@ public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> ex
             final RestServerUtil restUtil,
             
             final EntityCentre centre,
+            final Optional<String> saveAsName,
             
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
@@ -68,6 +71,7 @@ public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> ex
         this.restUtil = restUtil;
         
         miType = centre.getMenuItemType();
+        this.saveAsName = saveAsName;
         this.serverGdtm = serverGdtm;
         this.userProvider = userProvider;
         this.companionFinder = companionFinder;
@@ -84,12 +88,12 @@ public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> ex
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
             
-            removeCentres(gdtm, miType, device(), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+            removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
             
             // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, device());
-            final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, gdtm, companionFinder, critGenerator, device());
-            return createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+            final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device());
+            return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
         }, restUtil);
     }
     

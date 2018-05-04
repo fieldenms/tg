@@ -25,7 +25,7 @@ public class EntityMultiCritAutocompletionWidget extends AbstractEntityCritAutoc
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("autocompletion-type", "[[miType]]");
+        attrs.put("autocompletion-type", "[[_computeCentreIdentifier(miType, saveAsName)]]");
 
         attrs.put("multi", "true");
         addCentreContextBindings(attrs, centreContextConfig);

@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import static java.util.Optional.ofNullable;
+
+import java.util.Optional;
+
 import org.restlet.Request;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -12,8 +18,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-
-import com.google.inject.Injector;
 
 /**
  * Contains a set of utilities for Web UI resource factories.
@@ -82,6 +86,16 @@ public class ResourceFactoryUtils {
      */
     static EntityCentre<AbstractEntity<?>> getEntityCentre(final Request request, final IWebUiConfig webUiConfig) {
         return getEntityCentre((String) request.getAttributes().get("mitype"), webUiConfig);
+    }
+
+    /**
+     * Determines 'saveAsName' from corresponding centre's request attribute.
+     *
+     * @param request
+     * @return
+     */
+    static Optional<String> saveAsName(final Request request) {
+        return ofNullable((String) request.getAttributes().get("saveAsName"));
     }
 
     /**

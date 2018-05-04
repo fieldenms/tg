@@ -49,6 +49,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
+    private final Optional<String> saveAsName;
     private final String criterionPropertyName;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder coFinder;
@@ -61,7 +62,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final EntityFactory entityFactory; 
     
     private final Logger logger = Logger.getLogger(getClass());
-
+    
     public CriteriaEntityAutocompletionResource(
             final IWebUiConfig webUiConfig, 
             final ICompanionObjectFinder companionFinder, 
@@ -71,6 +72,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final ICriteriaGenerator critGenerator, 
             final EntityFactory entityFactory, 
             final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
             final String criterionPropertyName,
             final EntityCentre<T> centre,
             final RestServerUtil restUtil, 
@@ -80,6 +82,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
         super(context, request, response, deviceProvider);
         
         this.miType = miType;
+        this.saveAsName = saveAsName;
         this.criterionPropertyName = criterionPropertyName;
         this.restUtil = restUtil;
         this.coFinder = companionFinder;
@@ -91,7 +94,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
         this.userProvider = userProvider;
         this.entityFactory = entityFactory; 
     }
-
+    
     /**
      * Handles POST request resulting from tg-entity-search-criteria's / tg-entity-editor's (both they are used as criteria editors in centres) <code>search()</code> method.
      */
@@ -112,10 +115,10 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             if (CentreResourceUtils.isEmpty(modifHolder)) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(miType, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, device()), critGenerator, 0L, gdtm, device());
+                final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(miType, saveAsName, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device()), critGenerator, 0L, gdtm, device());
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
-                criteriaEntity = (M) createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, gdtm, device());
+                criteriaEntity = (M) createCriteriaEntity(modifHolder, coFinder, critGenerator, miType, saveAsName, gdtm, device());
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
             
@@ -169,4 +172,5 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             return restUtil.listJSONRepresentation(entities);
         }, restUtil);
     }
+    
 }

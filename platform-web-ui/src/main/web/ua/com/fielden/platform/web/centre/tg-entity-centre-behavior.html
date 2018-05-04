@@ -151,13 +151,23 @@
                 centreSelection: {
                     type: Object
                 },
+                
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
                 miType: {
                     type: String
                 },
-
+                
+                /**
+                 * The 'saveAs' name, which identifies this centre; or empty string if the centre represents unnamed configuration.
+                 * This parameter could be changed during centre's lifecycle in case where user loads different centre or copies currently loaded centre.
+                 */
+                saveAsName: {
+                    type: String,
+                    value: '' // this default value means that unnamed configuration is loaded by default 
+                },
+                
                 /**
                  * Universal identifier of this element instance (used for pub / sub communication).
                  *
@@ -311,12 +321,12 @@
                 
                 _url: {
                     type: String,
-                    computed: '_computeUrl(miType)'
+                    computed: '_computeUrl(miType, saveAsName)'
                 },
                 
                 _defaulterUrl: {
                     type: String,
-                    computed: '_computeDefaulterUrl(miType)'
+                    computed: '_computeDefaulterUrl(miType, saveAsName)'
                 },
                 
                 /**
@@ -1065,16 +1075,16 @@
             /**
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
              */
-            _computeUrl: function (miType) {
-                return "/centre/" + miType;
+            _computeUrl: function (miType, saveAsName) {
+                return '/centre/' + miType + '/' + saveAsName;
             },
             
             
             /**
              * Computes URL for 'ajaxDefaulter'.
              */
-            _computeDefaulterUrl: function (miType) {
-                return "/centre/default/" + miType;
+            _computeDefaulterUrl: function (miType, saveAsName) {
+                return '/centre/default/' + miType + '/' + saveAsName;
             },
             
             runInsertionPointActions: function () {

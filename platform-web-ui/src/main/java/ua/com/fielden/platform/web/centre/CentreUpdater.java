@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -102,18 +103,22 @@ public class CentreUpdater {
         }
     }
     
+    private static String saveAsSpecific(final String name, final Optional<String> saveAsName) {
+        return saveAsName.map(san -> format("%s[%s]", name, san)).orElse(name);
+    }
+    
     /**
      * Returns the current version of centre manager (it assumes that it should be initialised!).
      *
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     *
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device) {
-        return centre0(gdtm, miType, deviceSpecific(name, device));
+    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device) {
+        return centre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device));
     }
     private static ICentreDomainTreeManagerAndEnhancer centre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName) {
         if (gdtm.getEntityCentreManager(miType, deviceSpecificName) == null) {
@@ -132,12 +137,12 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.);
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     *
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer updateCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device) {
-        return updateCentre0(gdtm, miType, deviceSpecific(name, device), device);
+    public static ICentreDomainTreeManagerAndEnhancer updateCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device) {
+        return updateCentre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), device);
     }
     private static ICentreDomainTreeManagerAndEnhancer updateCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device) {
         synchronized (gdtm) {
@@ -158,11 +163,12 @@ public class CentreUpdater {
      *
      * @param gdtm
      * @param miType
-     * @param names -- surrogate names of the centres (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param names -- surrogate names of the centres (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      */
-    public static void removeCentres(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String ... names) {
-        removeCentres0(gdtm, miType, stream(names).map(name -> deviceSpecific(name, device)).toArray(String[]::new));
+    public static void removeCentres(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final String ... names) {
+        removeCentres0(gdtm, miType, stream(names).map(name -> deviceSpecific(saveAsSpecific(name, saveAsName), device)).toArray(String[]::new));
     }
     private static void removeCentres0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String ... deviceSpecificNames) {
         synchronized (gdtm) {
@@ -183,10 +189,11 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      */
-    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device) {
-        return commitCentre0(gdtm, miType, deviceSpecific(name, device), device);
+    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device) {
+        return commitCentre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), device);
     }
     private static ICentreDomainTreeManagerAndEnhancer commitCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device) {
         synchronized (gdtm) {
@@ -215,11 +222,12 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param centreToBeInitialisedAndCommitted
      */
-    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
-        return initAndCommit0(gdtm, miType, deviceSpecific(name, device), device, centreToBeInitialisedAndCommitted);
+    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
+        return initAndCommit0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), device, centreToBeInitialisedAndCommitted);
     }
     private static ICentreDomainTreeManagerAndEnhancer initAndCommit0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
         synchronized (gdtm) {
@@ -416,7 +424,7 @@ public class CentreUpdater {
                     // insert appropriate user into IUserProvider for a very brief period of time to facilitate 'updateCentre' call against basedOnManager
                     basedOnManager.getUserProvider().setUser(basedOnManager.coUser().findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), currentUser.getBasedOnUser()));
                     // update and retrieve saved version of centre config from basedOn user
-                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, device);
+                    final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, saveAsName, device);
                     // return currentUser into user provider
                     basedOnManager.getUserProvider().setUser(currentUser);
                     
@@ -797,6 +805,7 @@ public class CentreUpdater {
         for (final Class<?> miKlass: gdtm.entityCentreMenuItemTypes()) {
             final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
             final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miKlass;
+            // TODO all saveAs instances not only unnamed ones
             globalManager.removeCentresLocally(miType, 
                 null,
                 deviceSpecific(FRESH_CENTRE_NAME, device),

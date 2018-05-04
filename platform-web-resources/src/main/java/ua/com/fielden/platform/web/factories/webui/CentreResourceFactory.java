@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
+
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -55,7 +58,8 @@ public class CentreResourceFactory extends Restlet {
         if (Method.POST == request.getMethod() || Method.PUT == request.getMethod()) {
             new CentreResource<AbstractEntity<?>>(
                     restUtil,
-                    ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
+                    getEntityCentre(request, webUiConfig),
+                    saveAsName(request),
                     serverGdtm,
                     userProvider,
                     deviceProvider,

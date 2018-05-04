@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.web.app;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -59,7 +61,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             throw new IllegalStateException("The type [" + entityTypeName + "] should be already registered at this stage.");
         }
         
-        return isGenerated ? entityType.getName() + ":" + miType.getName() + ":%main%": entityType.getName();
+        return isGenerated ? entityType.getName() + ":" + miType.getName() + ":" + saveAsName : entityType.getName();
     }
 
     @Override
@@ -80,7 +82,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     throw new SerialisationTypeEncoderException(format("Generated type has unknown format for its identifier %s.", entityTypeId));
                 }
                 final String miTypeName = parts[1];
-                final String saveAsName = parts[2];
+                final Optional<String> saveAsName = ofNullable(parts[2]);
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) findClass(miTypeName);
                 
                 final User user = userProvider.getUser();
@@ -91,7 +93,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(userSpecificGdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, deviceProvider.getDeviceProfile());
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(userSpecificGdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, deviceProvider.getDeviceProfile());
                 decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {

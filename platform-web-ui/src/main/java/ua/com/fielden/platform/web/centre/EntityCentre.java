@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -740,7 +741,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (userSpecificGlobalManager == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return updateCentre(userSpecificGlobalManager, menuItemType, FRESH_CENTRE_NAME, device);
+            return updateCentre(userSpecificGlobalManager, menuItemType, FRESH_CENTRE_NAME, empty(), device);
         }
     }
 

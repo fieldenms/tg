@@ -205,9 +205,9 @@ public abstract class AbstractWebUiResources extends Application {
      */
     private void attachCentreResources(final Router router, final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
         logger.info("\t\tCentre resources attaching...");
-        router.attach("/criteria/{mitype}", new CriteriaResourceFactory(webUiConfig, injector));
-        router.attach("/centre/{mitype}", new CentreResourceFactory(webUiConfig, injector));
-        router.attach("/centre/default/{mitype}", new CentreDefaulterResourceFactory(webUiConfig, injector));
+        router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
+        router.attach("/centre/{mitype}/{saveAsName}", new CentreResourceFactory(webUiConfig, injector));
+        router.attach("/centre/default/{mitype}/{saveAsName}", new CentreDefaulterResourceFactory(webUiConfig, injector));
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil, deviceProvider));
         router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(sourceController, restUtil, deviceProvider));
     }

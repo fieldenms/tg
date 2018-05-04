@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import java.util.Optional;
+
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -63,19 +65,21 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-
+        
         if (Method.POST == request.getMethod()) {
-            final String typeString = (String) request.getAttributes().get("type");
+            final String typeAndSaveAsName = (String) request.getAttributes().get("type");
+            final String[] splitted = typeAndSaveAsName.split(":"); 
             final String propertyName = (String) request.getAttributes().get("property");
-
+            
             // the type represents 'autocompletion type', to which autocompleter was bound. It can be "miType" (the identifier of corresponding centre) or "entity master entity" (not generated)
-            final Class<?> type = ClassesRetriever.findClass(typeString);
+            final Class<?> type = ClassesRetriever.findClass(splitted[0]);
             if (MiWithConfigurationSupport.class.isAssignableFrom(type)) {
+                final Optional<String> saveAsName = Optional.ofNullable(splitted[1]);
                 final String criterionPropertyName = propertyName;
-
+                
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) type;
                 final EntityCentre<? extends AbstractEntity<?>> centre = this.webApp.getCentres().get(miType);
-
+                
                 new CriteriaEntityAutocompletionResource(
                         webApp, 
                         coFinder, 
@@ -85,6 +89,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         critGenerator, 
                         factory, 
                         miType,
+                        saveAsName,
                         criterionPropertyName,
                         centre,
                         restUtil,
