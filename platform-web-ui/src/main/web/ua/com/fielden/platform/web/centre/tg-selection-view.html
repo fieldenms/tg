@@ -1,10 +1,12 @@
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
 <link rel="import" href="/resources/components/tg-scrollable-component.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <dom-module id="tg-selection-view">
     <style>
@@ -17,8 +19,31 @@
                 flex: 1;
             };
         }
+        .toolbar {
+            padding: 0 12px;
+            height: auto;
+            position: relative;
+            overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+        .toolbar-content::content > * {
+            margin-top: 8px;
+        }
     </style>
     <template>
+        <!--Selection view toolbar-->
+        <div class="toolbar layout horizontal wrap">
+            <div class="toolbar-content layout horizontal center">
+                <tg-ui-action ui-role='ICON' short-desc='Copy' long-desc='Copy this configuration' icon='icons:content-copy' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Load' long-desc='Load configuration' icon='icons:folder-open' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Edit' long-desc='Edit configuration' icon='icons:create' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Remove' long-desc='Remove configuration' icon='icons:remove-circle-outline' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+            </div>
+            <div class="toolbar-content layout horizontal center" style="margin-left:auto">
+                <tg-ui-action ui-role='ICON' short-desc='Settings' long-desc='Open configuration settings' icon='icons:settings' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+            </div>
+        </div>
         <tg-scrollable-component class="flex relative">
             <content select=".custom-selection-criteria"></content>
         </tg-scrollable-component>
