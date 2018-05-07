@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
@@ -15,6 +16,10 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDeleteToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownloadToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentModuleToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentSaveToken;
 import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
 import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
 import ua.com.fielden.platform.security.tokens.user.UserRoleDeleteToken;
@@ -265,34 +270,34 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRole userRole = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         
         final SecurityTokenInfo alwaysAccessible = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AlwaysAccessibleToken.class.getName());
+
         final SecurityTokenInfo userReview = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserReviewToken.class.getName());
         final SecurityTokenInfo userDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserDeleteToken.class.getName());
         final SecurityTokenInfo userSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserSaveToken.class.getName());
         final SecurityTokenInfo userRoleReview = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleReviewToken.class.getName());
         final SecurityTokenInfo userRoleDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleDeleteToken.class.getName());
         final SecurityTokenInfo userRoleSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleSaveToken.class.getName());
-        
+
+        final SecurityTokenInfo attachmentSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentSaveToken.class.getName());
+        final SecurityTokenInfo attachmentDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDeleteToken.class.getName());
+        final SecurityTokenInfo attachmentDownload = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDownloadToken.class.getName());
+        final SecurityTokenInfo attachmentModule = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentModuleToken.class.getName());
+
         final UserRoleTokensUpdater updater = createUpdater(userRole);
-        assertEquals(listOf(
+        final HashSet<SecurityTokenInfo> expectedTokens = setOf(
             alwaysAccessible,
             userReview, userDelete, userSave,
-            userRoleReview, userRoleDelete, userRoleSave
-        ), new ArrayList<>(updater.getTokens()));
+            userRoleReview, userRoleDelete, userRoleSave,
+            attachmentSave, attachmentDelete, attachmentDownload, attachmentModule
+        );
+        assertEquals(expectedTokens, updater.getTokens());
         
         updater.setAddedIds(linkedSetOf(userDelete.getKey(), userRoleSave.getKey()));
-        assertEquals(listOf(
-            alwaysAccessible,
-            userReview, userDelete, userSave,
-            userRoleReview, userRoleDelete, userRoleSave
-        ), new ArrayList<>(updater.getTokens()));
+        assertEquals(expectedTokens, updater.getTokens());
         
         save(updater);
         
         final UserRoleTokensUpdater newUpdater = createUpdater(userRole);
-        assertEquals(listOf(
-            alwaysAccessible,
-            userReview, userDelete, userSave,
-            userRoleReview, userRoleDelete, userRoleSave
-        ), new ArrayList<>(newUpdater.getTokens()));
+        assertEquals(expectedTokens, newUpdater.getTokens());
     }
 }
