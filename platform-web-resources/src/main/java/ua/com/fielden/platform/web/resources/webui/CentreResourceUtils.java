@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -639,7 +640,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<String> saveAsName;
         try {
             miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
-            saveAsName = ofNullable((String) centreContextHolder.getCustomObject().get("@@saveAsName"));
+            final String saveAsNameString = (String) centreContextHolder.getCustomObject().get("@@saveAsName");
+            saveAsName = "".equals(saveAsNameString) ? empty() : of(saveAsNameString);
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }

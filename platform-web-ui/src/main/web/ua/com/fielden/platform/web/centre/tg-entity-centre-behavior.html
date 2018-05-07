@@ -1076,7 +1076,7 @@
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
              */
             _computeUrl: function (miType, saveAsName) {
-                return '/centre/' + miType + '/' + saveAsName;
+                return '/centre/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
             
             
@@ -1084,7 +1084,7 @@
              * Computes URL for 'ajaxDefaulter'.
              */
             _computeDefaulterUrl: function (miType, saveAsName) {
-                return '/centre/default/' + miType + '/' + saveAsName;
+                return '/centre/default/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
             
             runInsertionPointActions: function () {

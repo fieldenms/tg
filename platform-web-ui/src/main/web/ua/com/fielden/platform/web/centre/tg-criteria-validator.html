@@ -110,7 +110,7 @@
              * Computes URL for 'ajaxSender'.
              */
             _computeUrl: function (miType, saveAsName) {
-                return '/criteria/' + miType + '/' + saveAsName;
+                return '/criteria/' + this.$.serialiser.$.reflector._centreKey(miType, saveAsName);
             }
         });
     })();

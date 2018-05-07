@@ -80,7 +80,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     throw new SerialisationTypeEncoderException(format("Generated type has unknown format for its identifier %s.", entityTypeId));
                 }
                 final String miTypeName = parts[1];
-                final Optional<String> saveAsName = parts.length == 3 ? of(parts[2]) : empty();
+                final Optional<String> saveAsName = parts.length > 2 ? of(parts[2]) : empty();
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) findClass(miTypeName);
                 
                 final User user = userProvider.getUser();

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import static java.util.Optional.ofNullable;
-
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import java.util.Optional;
 
 import org.restlet.Request;
@@ -87,7 +87,7 @@ public class ResourceFactoryUtils {
     static EntityCentre<AbstractEntity<?>> getEntityCentre(final Request request, final IWebUiConfig webUiConfig) {
         return getEntityCentre((String) request.getAttributes().get("mitype"), webUiConfig);
     }
-
+    
     /**
      * Determines 'saveAsName' from corresponding centre's request attribute.
      *
@@ -95,9 +95,10 @@ public class ResourceFactoryUtils {
      * @return
      */
     static Optional<String> saveAsName(final Request request) {
-        return ofNullable((String) request.getAttributes().get("saveAsName"));
+        final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "");
+        return "".equals(saveAsName) ? empty() : of(saveAsName);
     }
-
+    
     /**
      * Finds the entity centre using 'mitypeString' inside 'webUiConfig'.
      *

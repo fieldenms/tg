@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import java.util.Optional;
 
 import org.restlet.Request;
@@ -74,7 +76,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             // the type represents 'autocompletion type', to which autocompleter was bound. It can be "miType" (the identifier of corresponding centre) or "entity master entity" (not generated)
             final Class<?> type = ClassesRetriever.findClass(splitted[0]);
             if (MiWithConfigurationSupport.class.isAssignableFrom(type)) {
-                final Optional<String> saveAsName = Optional.ofNullable(splitted[1]);
+                final Optional<String> saveAsName = splitted.length > 1 ? of(splitted[1]) : empty();
                 final String criterionPropertyName = propertyName;
                 
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) type;

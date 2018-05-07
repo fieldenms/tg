@@ -92,14 +92,14 @@
     	_isLoadingChanged: function (newValue, oldValue) {
     	    this.isRunning = newValue;
     	},
-    	
-    	/**
-    	 * Computes URLs for 'ajaxRetriever' and 'ajaxRunner'.
-    	 */
-    	_computeUrl: function (miType, saveAsName) {
-    		return '/criteria/' + miType + '/' + saveAsName;
-    	},
-
+        
+        /**
+         * Computes URLs for 'ajaxRetriever' and 'ajaxRunner'.
+         */
+        _computeUrl: function (miType, saveAsName) {
+            return '/criteria/' + this._reflector()._centreKey(miType, saveAsName);
+        },
+        
         /**
          * The iron-ajax component for entity retrieval.
          */
