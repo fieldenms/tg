@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.util.Optional;
 
 import com.google.inject.Inject;
@@ -57,6 +60,7 @@ public class WebGlobalDomainTreeManager extends GlobalDomainTreeManager implemen
     @Override
     public Optional<IGlobalDomainTreeManager> basedOnManager() {
         final User user = getUserProvider().getUser();
-        return user.isBase() ? Optional.empty() : Optional.of(serverManager.get(user.getBasedOnUser().getId()));
+        return user.isBase() ? empty() : of(serverManager.get(user.getBasedOnUser().getId()));
     }
+    
 }

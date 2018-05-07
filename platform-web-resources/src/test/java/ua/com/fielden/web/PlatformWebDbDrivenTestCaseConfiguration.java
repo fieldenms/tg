@@ -47,6 +47,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
@@ -92,6 +93,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(CentreConfigUpdaterDefaultAction.class);
             domainTypes.add(CustomisableColumn.class);
             domainTypes.add(CentreColumnWidthConfigUpdater.class);
+            domainTypes.add(CentreConfigCopyAction.class);
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);

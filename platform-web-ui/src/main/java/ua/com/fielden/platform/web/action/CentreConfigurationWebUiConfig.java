@@ -10,13 +10,13 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-
 import java.util.Optional;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
@@ -42,13 +42,15 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
-
+    public final EntityMaster<CentreConfigCopyAction> centreConfigCopyActionMaster;
+    
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
         centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
+        centreConfigCopyActionMaster = createCentreConfigCopyActionMaster(injector);
     }
-
+    
     /**
      * Creates entity master for {@link CentreConfigUpdater}.
      *
@@ -93,7 +95,7 @@ public class CentreConfigurationWebUiConfig {
                         .build())
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
-
+                
                 .setActionBarLayoutFor(DESKTOP, Optional.empty(), actionLayout.toString())
                 .setActionBarLayoutFor(TABLET, Optional.empty(), actionLayout.toString())
                 .setActionBarLayoutFor(MOBILE, Optional.empty(), actionLayout.toString())
@@ -109,7 +111,7 @@ public class CentreConfigurationWebUiConfig {
                 masterConfig,
                 injector);
     }
-
+    
     /**
      * Creates no-ui entity master for {@link CentreConfigUpdaterDefaultAction}.
      *
@@ -118,7 +120,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigUpdaterDefaultAction> createCentreConfigUpdaterDefaultAction(final Injector injector) {
         return new EntityMaster<CentreConfigUpdaterDefaultAction>(CentreConfigUpdaterDefaultAction.class, CentreConfigUpdaterDefaultActionProducer.class, null, injector);
     }
-
+    
     /**
      * Creates no-ui entity master for {@link CentreColumWidthConfigUpdater}.
      *
@@ -127,7 +129,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreColumnWidthConfigUpdater> createCentreColumnWidthConfigUpdater(final Injector injector) {
         return new EntityMaster<CentreColumnWidthConfigUpdater>(CentreColumnWidthConfigUpdater.class, CentreColumnWidthConfigUpdaterProducer.class, null, injector);
     }
-
+    
     public enum CentreConfigActions {
         CUSTOMISE_COLUMNS_ACTION {
             @Override
@@ -154,7 +156,42 @@ public class CentreConfigurationWebUiConfig {
                         .build();
             }
         };
-
+        
         public abstract EntityActionConfig mkAction();
     }
+    
+    
+    /**
+     * Creates entity master for {@link CentreConfigCopyAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigCopyAction> createCentreConfigCopyActionMaster(final Injector injector) {
+//        final String layout = LayoutComposer
+//        
+//        final IMaster<CentreConfigCopyAction> masterConfig = new SimpleMasterBuilder<CentreConfigCopyAction>()
+//            .forEntity(CentreConfigCopyAction.class)
+//            .addProp("title").asSinglelineText().also()
+//            .addProp("desc").asMultilineText().also()
+//            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of centre copy.")
+//            .addAction(SAVE).shortDesc("COPY").longDesc("Saves new centre configuration.")
+//            
+//            .setActionBarLayoutFor(DESKTOP, empty(), actionLayout.toString())
+//            .setActionBarLayoutFor(TABLET, empty(), actionLayout.toString())
+//            .setActionBarLayoutFor(MOBILE, empty(), actionLayout.toString())
+//            .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+//                    "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
+//                    + format("['flex', ['flex']]")
+//                    + "    ]"))
+//            .withDimensions(mkDim("'30%'", "'50%'"))
+//            .done();
+//        return new EntityMaster<CentreConfigUpdater>(
+//                CentreConfigUpdater.class,
+//                CentreConfigUpdaterProducer.class,
+//                masterConfig,
+//                injector);
+        // TODO continue...
+        return null;
+    }
+    
 }
