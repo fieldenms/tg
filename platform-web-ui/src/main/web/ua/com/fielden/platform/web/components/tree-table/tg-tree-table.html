@@ -98,7 +98,7 @@
                         <!--Tree table header-->
                         <div class="layout horizontal tree-table-header-row">
                             <template is="dom-repeat" items="[[columns]]">
-                                <div class="layout horizontal header-column" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
+                                <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
                                     <div class="truncate">[[item.columnTitle]]</div>
                                 </div>
                             </template>
@@ -107,7 +107,7 @@
                         <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
                             <div class="layout horizontal tree-table-data-row" hidden$="[[_isEntityHidden(treeEntity.parent.collapsed, treeEntity.visible)]]" over$="[[treeEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                 <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" column="[[column]]" highlight="[[treeEntity.highlight]]" entity-index="[[treeEntityIndex]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
+                                    <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" highlight="[[treeEntity.highlight]]" entity-index="[[treeEntityIndex]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
                                     <!--tooltip-text$="[[_getTooltip(treeEntity.entity, column)]]"-->
                                 </template>
                             </div>
@@ -161,6 +161,7 @@
                     });
                 },
 
+                //////////////////////////Security token filtering related functions//////////////////////////////
                 filterTokens: function (text) {
                     if (this.treeModel) {
                         this._expandAll();
@@ -189,6 +190,21 @@
                     if (this.treeModel) {
                         this.treeModel.forEach(treeEntity => {
                             this.set("treeModel." + (treeEntity.entityIndex) + ".collapsed", !(treeEntity.entity.children && treeEntity.entity.children.length > 0));
+                        });
+                    }
+                },
+                
+                //////////////////////////User role filtering related functions//////////////////////////////
+                filterRoles: function (text) {
+                    if (this.columns) {
+                        this.columns.forEach((column, index) => {
+                            if (!column.isHierarchyProperty()) {
+                                if (column.columnTitle.toLowerCase().search(text.toLowerCase()) >= 0) {
+                                    this.set("columns." + index + ".visible", true);
+                                } else {
+                                    this.set("columns." + index + ".visible", false);
+                                }
+                            }
                         });
                     }
                 },

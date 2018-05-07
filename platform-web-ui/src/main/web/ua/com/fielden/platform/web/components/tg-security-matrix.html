@@ -19,10 +19,8 @@
                 width: 100%;
                 @apply(--layout-vertical);
             }
-            .filter-panel {
-                margin: 0 8px;
-            }
             .filter-panel::content > .filter-element {
+                margin: 0 10px;
                 @apply(--layout-flex);
             }
             .lock-layer {
@@ -42,7 +40,7 @@
                 <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]">
                     <tg-test></tg-test>
                     <template is="dom-repeat" items="[[columns]]">
-                        <tg-tree-table-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" contains-checkbox="[[item.containsCheckbox]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]" check="[[check]]"></tg-tree-table-property-column>
+                        <tg-tree-table-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" contains-checkbox="[[item.containsCheckbox]]" width="[[item.width]]" visible="[[item.visible]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]" check="[[check]]"></tg-tree-table-property-column>
                     </template>
                 </tg-tree-table>
                 <div class="layout horizontal center-justified" style="padding:20px;">
@@ -256,7 +254,6 @@
                     },
 
                     check: Function,
-                    isChecked: Function,
                     _resetSecurityMatrix: Function,
                     _postResetSecurityMatrix: Function,
                     _postResetSecurityMatrixError: Function,
@@ -273,9 +270,6 @@
                     this.entityType = "ua.com.fielden.platform.entity.SecurityMatrixSaveAction"
                     this.check = function (entity, property, value) {
                         entity._check(property, value);
-                    };
-                    this.isChecked = function (entity, property) {
-                        return entity._isChecked(property);
                     };
                     this._resetSecurityMatrix = function () {
                         this.entities.forEach(entity => entity.reset());
@@ -315,6 +309,10 @@
                     this.$.securityMatrix.filterTokens(text);
                 },
                 
+                filterRoles: function (text) {
+                    this.$.securityMatrix.filterRoles(text);
+                },
+                
                 _isNecessaryForConversion: function (propertyName) {
                     return ['associationsToSave', 'associationsToRemove'].includes(propertyName);
                 },
@@ -334,8 +332,8 @@
                             growFactor: 2,
                             minWidth: 200,
                             type: "String",
+                            visible: true,
                             check: this.check,
-                            isChecked: this.isChecked
                         });
                         newEntity.get("userRoles").forEach(role => {
                             columnList.push({
@@ -346,8 +344,8 @@
                                 growFactor: 0,
                                 minWidth: 50,
                                 type: "Boolean",
+                                visible: true,
                                 check: this.check,
-                                isChecked: this.isChecked
                             });
                         });
                         this.columns = columnList;

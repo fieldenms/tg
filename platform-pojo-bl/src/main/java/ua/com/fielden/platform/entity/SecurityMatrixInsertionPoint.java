@@ -25,6 +25,10 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
     @Title("Security token filter")
     private String tokenFilter;
 
+    @IsProperty
+    @Title(value = "User role filter", desc = "Desc")
+    private String roleFilter;
+
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Tokens", desc = "Security Tokens")
     private List<SecurityTokenTreeNodeEntity> tokens = new ArrayList<>();
@@ -49,6 +53,16 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
 
     public String getTokenFilter() {
         return tokenFilter;
+    }
+
+    @Observable
+    public SecurityMatrixInsertionPoint setRoleFilter(final String roleFilter) {
+        this.roleFilter = roleFilter;
+        return this;
+    }
+
+    public String getRoleFilter() {
+        return roleFilter;
     }
 
     @Observable
