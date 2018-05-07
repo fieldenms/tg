@@ -12,6 +12,13 @@
         :host {
             @apply(--layout-horizontal);
             @apply(--layout-center);
+            @apply(--layout-flex);
+            overflow: hidden;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         iron-icon[collapsed] {
             transform: rotate(-90deg);
@@ -34,10 +41,10 @@
         }
     </style>
     <template>
-        <iron-icon icon="icons:arrow-drop-down" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
-        <div class="layout horizontal center" style$="[[_calcHierarchyCellStyle(entity, column)]]">
+        <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
+        <div class="layout horizontal center flex" style$="[[_calcHierarchyCellStyle(entity, column)]]">
             <paper-checkbox checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" on-change="_stateChanged"></paper-checkbox>
-            <div highlighted$="[[highlight]]">[[_getCellValue(entity.entity, column.property)]]</div>
+            <div class="flex truncate" highlighted$="[[highlight]]">[[_getCellValue(entity.entity, column.property)]]</div>
         </div>
     </template>
     <script>
@@ -52,8 +59,8 @@
                     entityIndex: Number,
                     highlight: Boolean
                 },
-                
-                attached: function() {
+
+                attached: function () {
                     this.state = this.entity.entity._getState("_tokenChecked");
                     this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
                         this.notifyPath("entity.entity._tokenChecked", value);
@@ -71,12 +78,16 @@
                     const target = e.target || e.srcElement;
                     this.column.check(this.entity.entity, "_tokenChecked", target.checked);
                 },
-                
-                _toggle: function(e) {
-                    this.fire("tg-tree-toggle-collapse-state", {entity: this.entity, entityIndex: this.entityIndex, state: !this.entity.collapsed});
+
+                _toggle: function (e) {
+                    this.fire("tg-tree-toggle-collapse-state", {
+                        entity: this.entity,
+                        entityIndex: this.entityIndex,
+                        state: !this.entity.collapsed
+                    });
                     this.notifyPath("entity.collapsed", this.entity.collapsed);
                 },
-                
+
                 _calcHierarchyCellStyle: function (entity, column) {
                     let paddingLeft = 0;
                     let parentEntity = entity.entity[column.parentProperty];
@@ -84,10 +95,10 @@
                         paddingLeft += 26;
                         parentEntity = parentEntity[column.parentProperty];
                     }
-                    return "padding-left: " + paddingLeft + "px;";
+                    return "padding-left: " + paddingLeft + "px; overflow:hidden;";
                 },
-                
-                _getCellValue: function(entity, property) {
+
+                _getCellValue: function (entity, property) {
                     return entity.get(property);
                 }
             });
