@@ -24,9 +24,19 @@
             --paper-checkbox-checked-color: #acdbfe;
             --paper-checkbox-checked-ink-color: var(--paper-menu-color);
         }
+        paper-checkbox[group-checkbox] {
+            --paper-checkbox-checked-color: var(--paper-light-green-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-green-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
+        }
+        paper-checkbox[group-checkbox][checked-state=SEMICHECKED] {
+            --paper-checkbox-checked-color: #bee5bf;
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+        }
     </style>
     <template>
-        <paper-checkbox checked="[[checked]]" checked-state$="[[state]]" on-change="_stateChanged"></paper-checkbox>
+        <paper-checkbox checked="[[checked]]" checked-state$="[[state]]" group-checkbox$="[[_isGroupCheckbox(entity.children)]]" on-change="_stateChanged"></paper-checkbox>
     </template>
     <script>
         (function () {
@@ -66,6 +76,10 @@
                 _stateChanged: function (e) {
                     const target = e.target || e.srcElement;
                     this.column.check(this.entity, this.column.property, target.checked);
+                },
+                
+                _isGroupCheckbox: function(children) {
+                    return !!(children && children.length > 0);
                 },
             });
         })();
