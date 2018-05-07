@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -13,7 +14,6 @@ import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -459,7 +459,7 @@ public class SerialisationTestResource extends AbstractWebResource {
             emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
                     cl.startModification(EmptyEntity.class.getName())
                         .modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName()))
-                        .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
+                        .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class, empty()))
                     .endModification();
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);

@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.app;
 
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 
@@ -17,7 +19,6 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -46,24 +47,21 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     
     @Override
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
-        // need to register the type into EntityTypeInfoGetter in caser where it wasn't registered
-        final Class<? extends MiWithConfigurationSupport<?>> miType;
-        final boolean isGenerated = DynamicEntityClassLoader.isGenerated(entityType);
-        if (isGenerated) {
-            miType = entityType.getAnnotation(MiType.class).value();
-            logger.debug("============encode============== " + miType);
-        } else {
-            miType = null;
-        }
-        
         final String entityTypeName = entityType.getName();
         if (entityTypeInfoGetter.get(entityTypeName) == null) {
             throw new IllegalStateException("The type [" + entityTypeName + "] should be already registered at this stage.");
         }
-        
-        return isGenerated ? entityType.getName() + ":" + miType.getName() + ":" + saveAsName : entityType.getName();
+        if (isGenerated(entityType)) {
+            final MiType miTypeAnnotation = entityType.getAnnotation(MiType.class);
+            final Class<? extends MiWithConfigurationSupport<?>> miType = miTypeAnnotation.value();
+            final String saveAsName = miTypeAnnotation.saveAsName();
+            logger.debug(format("============encode============== miType = [%s], saveAsName = [%s]", miType, saveAsName));
+            return entityTypeName + ":" + miType.getName() + ":" + saveAsName;
+        } else {
+            return entityTypeName;
+        }
     }
-
+    
     @Override
     public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
         final boolean isGenerated = entityTypeId.contains(":");
@@ -71,18 +69,18 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         Class<T> decodedEntityType = null;
         
         if (isGenerated) {
-            logger.debug("-------------decode------------- " + entityTypeId);
+            logger.debug(format("-------------decode------------- entityTypeId = [%s]", entityTypeId));
             entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
             
             try {
                 decodedEntityType = (Class<T>) findClass(entityTypeName);
             } catch (final IllegalArgumentException doesNotExistException) {
                 final String[] parts = entityTypeId.split(":");
-                if (parts.length != 3) {
+                if (parts.length < 2 || parts.length > 3) {
                     throw new SerialisationTypeEncoderException(format("Generated type has unknown format for its identifier %s.", entityTypeId));
                 }
                 final String miTypeName = parts[1];
-                final Optional<String> saveAsName = ofNullable(parts[2]);
+                final Optional<String> saveAsName = parts.length == 3 ? of(parts[2]) : empty();
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) findClass(miTypeName);
                 
                 final User user = userProvider.getUser();
@@ -108,11 +106,12 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         
         return decodedEntityType;
     }
-
+    
     @Override
     public ISerialisationTypeEncoder setTgJackson(final ISerialiserEngine tgJackson) {
         this.tgJackson = (TgJackson) tgJackson;
         this.entityTypeInfoGetter = this.tgJackson.getEntityTypeInfoGetter();
         return this;
     }
+    
 }

@@ -283,10 +283,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Generates annotation with mi type.
      *
      * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @return
      */
-    private static MiType createMiTypeAnnotation(final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        return new MiTypeAnnotation().newInstance(miType);
+    private static MiType createMiTypeAnnotation(final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName) {
+        return new MiTypeAnnotation().newInstance(miType, saveAsName);
     }
 
     /**
@@ -414,7 +415,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IGlobalDomainTreeManager gdtm,
             final DeviceProfile device) {
         final Class<T> entityType = getEntityType(miType);
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
+        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType, saveAsName));
         validationPrototype.setFreshCentreSupplier(() -> updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
         validationPrototype.setDefaultCentreSupplier(() -> getDefaultCentre(gdtm, miType));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
