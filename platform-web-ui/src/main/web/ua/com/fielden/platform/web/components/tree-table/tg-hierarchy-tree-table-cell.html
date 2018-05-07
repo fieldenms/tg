@@ -29,12 +29,15 @@
         iron-icon[invisible] {
             visibility: hidden;
         }
+        [highlighted] {
+            font-weight: bold;
+        }
     </style>
     <template>
         <iron-icon icon="icons:arrow-drop-down" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
         <div class="layout horizontal center" style$="[[_calcHierarchyCellStyle(entity, column)]]">
             <paper-checkbox checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" on-change="_stateChanged"></paper-checkbox>
-            <div>[[_getCellValue(entity.entity, column.property)]]</div>
+            <div highlighted$="[[highlight]]">[[_getCellValue(entity.entity, column.property)]]</div>
         </div>
     </template>
     <script>
@@ -46,7 +49,8 @@
                 properties: {
                     column: Object,
                     entity: Object,
-                    entityIndex: Number
+                    entityIndex: Number,
+                    highlight: Boolean
                 },
                 
                 attached: function() {

@@ -29,16 +29,32 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-security-matrix");
+        importPaths.add("editors/tg-singleline-text-editor");
+
+        final DomElement tokenFilter = new DomElement("tg-singleline-text-editor")
+                .attr("id", "tokenFilter")
+                .attr("class", "filter-element")
+                .attr("entity", "{{_currBindingEntity}}")
+                .attr("original-entity", "{{_originalBindingEntity}}")
+                .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
+                .attr("property-name", "tokenFilter")
+                .attr("validation-callback", "[[doNotValidate]]")
+                .attr("prop-title", "Type to filter security tokens")
+                .attr("prop-desc", "Displays only tokens those matched entered text")
+                .attr("current-state", "[[currentState]]");
 
         final DomElement securityMatrix = new DomElement("tg-security-matrix")
                 .attr("id", "securityMatrix")
-                .attr("entity", "[[_currBindingEntity]]")
+                .attr("entity", "{{_currBindingEntity}}")
+                .attr("original-entity", "{{_originalBindingEntity}}")
+                .attr("parent-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("custom-event-target", "[[customEventTarget]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("is-centre-running", "[[isCentreRunning]]")
                 .attr("uuid", "[[centreUuid]]")
-                .attr("lock", "[[lock]]");
+                .attr("lock", "[[lock]]")
+                .add(tokenFilter);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
@@ -60,8 +76,25 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
 
     private String readyCallback() {
         return "self.classList.remove('canLeave');\n"
-                + "//The method for retrieving work activities to update\n"
-                + "//Locks/Unlocks tg-security-matrix lock layer during insertion point activation\n"
+                +"//Need for security marix editors binding.\n"
+                + "self._isNecessaryForConversion = function (propertyName) { \n"
+                + "    return ['tokenFilter'].indexOf(propertyName) >= 0; \n"
+                + "}; \n"
+                + "self.$.tokenFilter._onInput = function () {\n"
+                + "    // clear token filter timer if it is in progress.\n"
+                + "    this._cancelTokenFilterTimer();\n"
+                + "    this._filterTokenTimer = this.async(this._filterToken, 500);\n"
+                + "}.bind(self);\n"
+                + "self._cancelTokenFilterTimer = function () {\n"
+                + "    if (this._filterTokenTimer) {\n"
+                + "        this.cancelAsync(this._filterTokenTimer);\n"
+                + "        this._filterTokenTimer = null;\n"
+                + "    }\n"
+                + "}.bind(self);\n"
+                + "self._filterToken = function () {\n"
+                + "    this.$.securityMatrix.filterTokens(this.$.tokenFilter._editingValue);\n"
+                + "}.bind(self);\n"
+                + "//Locks/Unlocks tg-security-matrix lock layer during insertion point activation.\n"
                 + "self.disableViewForDescendants = function () {\n"
                 + "    Polymer.TgBehaviors.TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
                 + "    self.lock = true;\n"

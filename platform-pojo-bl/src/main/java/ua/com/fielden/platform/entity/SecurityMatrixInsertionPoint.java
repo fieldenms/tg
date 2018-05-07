@@ -21,6 +21,10 @@ import ua.com.fielden.platform.security.user.UserRole;
 @CompanionObject(ISecurityMatrixInsertionPoint.class)
 public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
+    @IsProperty
+    @Title("Security token filter")
+    private String tokenFilter;
+
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Tokens", desc = "Security Tokens")
     private List<SecurityTokenTreeNodeEntity> tokens = new ArrayList<>();
@@ -35,6 +39,16 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
 
     protected SecurityMatrixInsertionPoint() {
         setKey(NO_KEY);
+    }
+
+    @Observable
+    public SecurityMatrixInsertionPoint setTokenFilter(final String tokenFilter) {
+        this.tokenFilter = tokenFilter;
+        return this;
+    }
+
+    public String getTokenFilter() {
+        return tokenFilter;
     }
 
     @Observable
