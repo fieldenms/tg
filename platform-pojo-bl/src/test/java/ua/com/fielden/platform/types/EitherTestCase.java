@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.error.Result.failure;
 
 import org.junit.Test;
@@ -63,6 +64,37 @@ public class EitherTestCase {
     }
 
     @Test
+    public void orElseThrow_returns_Right_value_for_Right_either() {
+        final String value = "value";
+        final Either<Exception, String> right = Either.right(value);
+        assertEquals(value, right.orElseThrow(Result::asRuntime));
+    }
+
+    @Test
+    public void orElseThrow_throws_runtime_exception_for_Left_either() {
+        final Exception ex = new Exception("Exception");
+        final Either<Exception, String> left = Either.left(ex);
+        try {
+            final String gotValue = left.orElseThrow(Result::asRuntime);
+            fail("Should have thrown an exception");
+        } catch (final Result r) {
+            assertEquals(ex, r.getEx());
+        }
+    }
+
+    @Test
+    public void orElseThrow_works_as_designed_for_super_class_of_L() {
+        final Result result = Result.failure("Exception");
+        final Either<Result, String> left = Either.left(result);
+        try {
+            final String gotValue = left.orElseThrow(Result::asRuntime);
+            fail("Should have thrown an exception");
+        } catch (final Result r) {
+            assertEquals(result, r);
+        }
+    }
+
+    @Test
     public void map_for_Left_either_return_Left_with_the_same_value() {
         final Either<Exception, String> either = Either.left(failure("error"));
         assertEquals(either, either.map(str -> str.length()));
@@ -98,7 +130,7 @@ public class EitherTestCase {
     public void equals_is_false_for_nulls() {
         final Either<String, Integer> eitherR1 = Either.right(42);
         final Either<String, Integer> eitherL1 = Either.left("error");
-        
+
         assertFalse(eitherR1.equals(null));
         assertFalse(eitherL1.equals(null));
     }
@@ -107,7 +139,7 @@ public class EitherTestCase {
     public void equals_is_reflexive() {
         final Either<String, Integer> eitherR1 = Either.right(42);
         final Either<String, Integer> eitherL1 = Either.left("error");
-        
+
         assertTrue(eitherR1.equals(eitherR1));
         assertTrue(eitherL1.equals(eitherL1));
         assertFalse(eitherR1.equals(null));
@@ -120,7 +152,7 @@ public class EitherTestCase {
         final Either<String, Integer> eitherR2 = Either.right(42);
         final Either<String, Integer> eitherL1 = Either.left("error");
         final Either<String, Integer> eitherL2 = Either.left("error");
-        
+
         assertTrue(eitherR1.equals(eitherR2));
         assertTrue(eitherR2.equals(eitherR1));
         assertTrue(eitherL1.equals(eitherL2));
@@ -135,7 +167,7 @@ public class EitherTestCase {
         final Either<String, Integer> eitherL1 = Either.left("error");
         final Either<String, Integer> eitherL2 = Either.left("error");
         final Either<String, Integer> eitherL3 = Either.left("error");
-        
+
         assertTrue(eitherR1.equals(eitherR2));
         assertTrue(eitherR2.equals(eitherR3));
         assertTrue(eitherR1.equals(eitherR3));
@@ -143,7 +175,7 @@ public class EitherTestCase {
         assertTrue(eitherL2.equals(eitherL3));
         assertTrue(eitherL1.equals(eitherL3));
     }
-    
+
     @Test
     public void hashCode_is_consistent_with_equals() {
         final Either<String, Integer> eitherR1 = Either.right(42);
