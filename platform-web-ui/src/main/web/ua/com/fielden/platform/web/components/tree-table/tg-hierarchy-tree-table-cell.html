@@ -13,7 +13,6 @@
             @apply(--layout-horizontal);
             @apply(--layout-center);
             @apply(--layout-flex);
-            overflow: hidden;
         }
         .truncate {
             white-space: nowrap;
@@ -51,11 +50,9 @@
         }
     </style>
     <template>
-        <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
-        <div class="layout horizontal center flex" style$="[[_calcHierarchyCellStyle(entity, column)]]">
-            <paper-checkbox checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" group-checkbox$="[[_isGroupCheckbox(entity.children)]]" on-change="_stateChanged"></paper-checkbox>
-            <div class="flex truncate" highlighted$="[[highlight]]" tooltip-text$="[[entity.entity.desc]]">[[_getCellValue(entity.entity, column.property)]]</div>
-        </div>
+        <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[_isLeaf(entity)]]" collapsed$="[[collapsed]]" on-tap="_toggle"></iron-icon>
+        <paper-checkbox class="center" checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" group-checkbox$="[[_isGroupCheckbox(entity.children)]]" on-change="_stateChanged"></paper-checkbox>
+        <div class="flex truncate" highlighted$="[[highlighted]]" tooltip-text$="[[entity.entity.desc]]">[[_getCellValue(entity.entity, column.property)]]</div>
     </template>
     <script>
         (function () {
@@ -66,10 +63,15 @@
                 properties: {
                     column: Object,
                     entity: Object,
-                    entityIndex: Number,
-                    highlight: Boolean
+                    highlighted: Boolean,
+                    collapsed: {
+                        type: Boolean,
+                        notify: true
+                    }
                 },
-                
+
+                observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)"],
+
                 attached: function () {
                     this.state = this.entity.entity._getState("_tokenChecked");
                     this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
@@ -90,25 +92,29 @@
                 },
 
                 _toggle: function (e) {
-                    this.fire("tg-tree-toggle-collapse-state", {
-                        entity: this.entity,
-                        entityIndex: this.entityIndex,
-                        state: !this.entity.collapsed
-                    });
-                    this.notifyPath("entity.collapsed", this.entity.collapsed);
+                    this.collapsed = !this.collapsed;
                 },
 
-                _calcHierarchyCellStyle: function (entity, column) {
+                _calcHierarchyCellStyle: function (entity, column, columnWidth, columnGrowFactor) {
                     let paddingLeft = 0;
                     let parentEntity = entity.entity[column.parentProperty];
                     while (parentEntity) {
                         paddingLeft += 26;
                         parentEntity = parentEntity[column.parentProperty];
                     }
-                    return "padding-left: " + paddingLeft + "px; overflow:hidden;";
+                    this.style["padding-left"] = paddingLeft + "px";
+                    this.style["width"] = columnWidth + "px";
+                    this.style["min-width"] = columnWidth + "px";
+                    if (columnGrowFactor === 0) {
+                        this.style["flex-grow"] = 0;
+                        this.style["flex-shrink"] = 0;
+                    } else {
+                        this.style["flex-grow"] = columnGrowFactor;
+                    }
+                    this.style["box-sizing"] = "border-box";
                 },
-                
-                _isGroupCheckbox: function(children) {
+
+                _isGroupCheckbox: function (children) {
                     return !!(children && children.length > 0);
                 },
 

@@ -1,0 +1,137 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tree-table/tg-tree-table-cell.html">
+
+<dom-module id="tg-tree-table-row">
+    <template>
+        <style>
+            :host {
+                @apply(--layout-vertical);
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
+            .tree-table-data-row {
+                font-size: 1rem;
+                font-weight: 400;
+                color: #212121;
+                height: 1.5rem;
+                border-top: 1px solid #e3e3e3;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
+            .tree-table-data-row[over] {
+                background-color: #EEEEEE;
+            }
+            .table-data-cell {
+                box-sizing: border-box;
+                @apply(--layout-horizontal);
+                @apply(--layout-center);
+            }
+            .table-data-cell[column-type=regular] {
+                padding: 0 0.6rem;
+                @apply(--layout-center-justified);
+
+            }
+            .table-data-cell[column-type=hierarchy] {
+                padding-right: 0.6rem;
+                @apply(--layout-center);
+
+            }
+        </style>
+
+        <div class="layout horizontal tree-table-data-row" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+            <template is="dom-repeat" items="[[columns]]" as="column">
+                <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" collapsed="{{collapsed}}" highlighted="[[highlighted]]" entity="[[entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
+            </template>
+        </div>
+        <div hidden$="[[_isChildrenHidden(entity.children, collapsed)]]">
+            <template is="dom-repeat" items="[[entity.children]]" as="treeEntity">
+                <tg-tree-table-row entity="[[treeEntity]]" columns="[[columns]]"></tg-tree-table-row>
+            </template>
+        </div>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+
+                is: "tg-tree-table-row",
+
+                properties: {
+                    columns: Array,
+                    entity: {
+                        type: Object,
+                        observer: "_entityChanged"
+                    },
+                    collapsed: Boolean,
+                    highlight: Boolean
+                },
+                
+                ready: function () {
+                    this.collapsed = true;
+                    this.highlighted = false;
+                },
+
+                ///////////////////////Observers implementation//////////////////
+                _entityChanged: function (newEntity, oldEntity) {
+                    const expandFunctions = newEntity.expandFunctions || [];
+                    expandFunctions.push(function () {
+                        this.collapsed = false;
+                        if (newEntity.children && newEntity.children.length > 0) {
+                            newEntity.children.forEach(child => {
+                                if (child.expandFunctions) {
+                                    child.expandFunctions.forEach(expandFunction => expandFunction());
+                                }
+                            });
+                        }
+                    }.bind(this));
+                    newEntity.expandFunctions = expandFunctions;
+                    const highlightFunctions = newEntity.highlightFunctions || [];
+                    highlightFunctions.push(function (highlighted) {
+                        this.highlighted = highlighted;
+                    }.bind(this));
+                    newEntity.highlightFunctions = highlightFunctions;
+                    const visibilityFunctions = newEntity.visibilityFunctions || [];
+                    visibilityFunctions.push(function(visible) {
+                        if (visible) {
+                            this.style.removeProperty("display");
+                        } else {
+                            this.style.display = "none";
+                        }
+                    }.bind(this));
+                    newEntity.visibilityFunctions = visibilityFunctions;
+                },
+
+                //////////////////////Event listeners/////////////////////
+                _mouseRowEnter: function (event, detail) {
+                    this.set("entity.over", true);
+                },
+
+                _mouseRowLeave: function (event, detail) {
+                    this.set("entity.over", false);
+                },
+
+                ////////////////////////Style calculation methods.//////////////////////////////////////
+                _calcColumnStyle: function (column, columnWidth, columnGrowFactor) {
+                    let colStyle = "min-width: " + columnWidth + "px;" + "width: " + columnWidth + "px;"
+                    if (columnGrowFactor === 0) {
+                        colStyle += "flex-grow: 0;flex-shrink:0;";
+                    } else {
+                        colStyle += "flex-grow: " + columnGrowFactor + ";";
+                    }
+                    return colStyle;
+                },
+
+                _columnType: function (item) {
+                    return item.isHierarchyProperty() ? "hierarchy" : "regular";
+                },
+
+                _isChildrenHidden: function (children, collapsed) {
+                    return !children || children.length === 0 || collapsed;
+                }
+            });
+        })();
+    </script>
+</dom-module>
