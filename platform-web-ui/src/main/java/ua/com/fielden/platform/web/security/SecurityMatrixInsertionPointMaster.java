@@ -136,7 +136,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 + "    self.showDataLoadedPromt();\n"
                 + "};\n"
                 + "self.showDataLoadingPromt = function () {\n"
-                + "    this._toastGreeting().text = 'Loading scheduling data...';\n"
+                + "    this._toastGreeting().text = 'Loading security matrix...';\n"
                 + "    this._toastGreeting().hasMore = false;\n"
                 + "    this._toastGreeting().showProgress = true;\n"
                 + "    this._toastGreeting().msgHeading = 'Info';\n"

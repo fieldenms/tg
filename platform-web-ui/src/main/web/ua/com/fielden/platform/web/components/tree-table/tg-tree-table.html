@@ -11,7 +11,6 @@
             /* Container styles*/
             :host {
                 @apply(--layout-vertical);
-
             }
             #elementToFocus {
                 margin: 10px;
@@ -62,6 +61,11 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+            .absolutely-white {
+                position: absolute;
+                background-color: white;
+                pointer-events: auto;
+            }
         </style>
         <content id="column_selector" select="tg-tree-table-property-column" hidden></content>
 
@@ -86,7 +90,15 @@
                 </div>
                 <!--Fixed Container-->
                 <div id="lockContainer" class="fit" style="overflow:hidden">
-
+<!--
+                    <div id="topLockContainer" class="absolutely-white layout horizontal tree-table-header-row" style="top:0;left:0;right:0">
+                        <template is="dom-repeat" items="[[columns]]">
+                            <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
+                                <div class="truncate">[[item.columnTitle]]</div>
+                            </div>
+                        </template>
+                    </div>
+-->
                 </div>
             </div>
         </div>

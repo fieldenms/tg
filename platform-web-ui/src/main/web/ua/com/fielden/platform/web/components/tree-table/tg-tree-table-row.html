@@ -47,11 +47,13 @@
                 <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" collapsed="{{collapsed}}" highlighted="[[highlighted]]" entity="[[entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
             </template>
         </div>
-        <div hidden$="[[_isChildrenHidden(entity.children, collapsed)]]">
+        <template is="dom-if" if="[[_isChildrenVisible(entity.children, collapsed)]]">
+        <!--<div hidden$="[[_isChildrenHidden(entity.children, collapsed)]]">-->
             <template is="dom-repeat" items="[[entity.children]]" as="treeEntity">
                 <tg-tree-table-row entity="[[treeEntity]]" columns="[[columns]]"></tg-tree-table-row>
             </template>
-        </div>
+        <!--</div>-->
+        </template>
     </template>
     <script>
         (function () {
@@ -128,6 +130,10 @@
                     return item.isHierarchyProperty() ? "hierarchy" : "regular";
                 },
 
+                _isChildrenVisible: function (children, collapsed) {
+                    return children && children.length >0 && !collapsed;
+                },
+                
                 _isChildrenHidden: function (children, collapsed) {
                     return !children || children.length === 0 || collapsed;
                 }
