@@ -36,7 +36,7 @@ public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
 
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Children", desc = "Desc")
-    private List<SecurityTokenTreeNodeEntity> children = new ArrayList<SecurityTokenTreeNodeEntity>();
+    private List<SecurityTokenTreeNodeEntity> children = new ArrayList<>();
 
     @Observable
     public SecurityTokenTreeNodeEntity setTitle(final String title) {

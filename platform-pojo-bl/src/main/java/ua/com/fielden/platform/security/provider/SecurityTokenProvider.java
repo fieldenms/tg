@@ -3,7 +3,6 @@ package ua.com.fielden.platform.security.provider;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +42,7 @@ public class SecurityTokenProvider {
      * @throws Exception
      */
     public SecurityTokenProvider(final String path, final String packageName) {
-        final List<Class<?>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
+        final List<Class<? extends ISecurityToken>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
         allTokens.add(UserReviewToken.class);
         allTokens.add(UserSaveToken.class);
         allTokens.add(UserDeleteToken.class);
@@ -53,12 +52,12 @@ public class SecurityTokenProvider {
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 
-    private SortedSet<SecurityTokenNode> buildTokenNodes(final List<Class<?>> allTokens) {
+    private SortedSet<SecurityTokenNode> buildTokenNodes(final List<Class<? extends ISecurityToken>> allTokens) {
         final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<>();
         // iterate over all tokens and determine top level tokens
         // add them to a separate list and remove from a list over which iteration occurs
-        for (final Iterator<Class<?>> iter = allTokens.iterator(); iter.hasNext();) {
-            final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
+        for (final Iterator<Class<? extends ISecurityToken>> iter = allTokens.iterator(); iter.hasNext();) {
+            final Class<? extends ISecurityToken> token = iter.next();
             if (isTopLevel(token)) {
                 topTokenNodes.add(new SecurityTokenNode(token));
                 iter.remove();
@@ -80,20 +79,18 @@ public class SecurityTokenProvider {
      * @param remainingTokens
      *            -- a list of remaining tokens used for search; all found sub tokens are removed from this list.
      */
-    @SuppressWarnings("unchecked")
-    private void digg(final SecurityTokenNode superTokenNode, final List<Class<?>> remainingTokens) {
-        final List<SecurityTokenNode> toBeRemoved = new ArrayList<>();
+    private void digg(final SecurityTokenNode superTokenNode, final List<Class<? extends ISecurityToken>> remainingTokens) {
+        final SortedSet<SecurityTokenNode> toBeRemoved = new TreeSet<>();
         // find all direct sub tokens of the current super token
-        for (final Iterator<Class<?>> iter = remainingTokens.iterator(); iter.hasNext();) {
-            final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
+        for (final Iterator<Class<? extends ISecurityToken>> iter = remainingTokens.iterator(); iter.hasNext();) {
+            final Class<? extends ISecurityToken> token = iter.next();
             if (isSuperTokenOf(superTokenNode.getToken(), token)) {
                 toBeRemoved.add(new SecurityTokenNode(token, superTokenNode));
+                // remove the found sub-token from the list of remaining tokens to reduce the number of items used further in the search
+                iter.remove();
             }
         }
-        // remove all found sub tokens from the list of remaining tokens -- this reduces the number of items used in the search
-        for (final SecurityTokenNode node : toBeRemoved) {
-            remainingTokens.remove(node.getToken());
-        }
+
         // recursively find all sub tokens of just found sub tokens
         for (final SecurityTokenNode node : toBeRemoved) {
             digg(node, remainingTokens);
