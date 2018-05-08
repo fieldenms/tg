@@ -1,10 +1,16 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.Map;
+
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.error.Result;
 
 /**
  * A producer for new instances of entity {@link CentreConfigCopyAction}.
@@ -21,9 +27,28 @@ public class CentreConfigCopyActionProducer extends DefaultEntityProducerWithCon
     
     @Override
     protected CentreConfigCopyAction provideDefaultValues(final CentreConfigCopyAction entity) {
-        // TODO take chosenProperty and init 'key'
-        // TODO after that init some initial value for 'title'
-        return super.provideDefaultValues(entity);
+        if (contextNotEmpty()) {
+            entity.setCentreContextHolder(selectionCrit().centreContextHolder());
+            
+            final EnhancedCentreEntityQueryCriteria<?, ?> previouslyRunSelectionCrit = selectionCrit();
+            
+            // get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
+            final Map<String, Object> freshModifHolder = previouslyRunSelectionCrit.centreContextHolder().getModifHolder();
+            
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedFreshSelectionCrit = previouslyRunSelectionCrit.freshCentreApplier().apply(freshModifHolder);
+            
+            // 'saveAs' will not be created if current recently applied 'fresh' centre configuration is invalid
+            appliedFreshSelectionCrit.isValid().ifFailure(Result::throwRuntime);
+            
+            entity.setKey("default" + chosenProperty());
+            if (chosenPropertyRepresentsThisColumn()) {
+                entity.setTitle("Default config (copy)"); // TODO perhaps actual default centre name is needed (like 'Work Activities (copy)' ?)
+            } else {
+                entity.setTitle(chosenProperty() + " (copy)");
+            }
+        }
+        // TODO perhaps desc copying is also needed
+        return entity;
     }
     
 }

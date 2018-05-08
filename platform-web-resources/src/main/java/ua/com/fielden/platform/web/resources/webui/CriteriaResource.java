@@ -177,7 +177,7 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device
                     ) {
         return restUtil.rawListJSONRepresentation(
-                createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, critGenerator, -1L, gdtm, device),
+                createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
                 createCriteriaMetaValuesCustomObject(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device))
@@ -197,7 +197,7 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device
                     ) {
         return restUtil.rawListJSONRepresentation(
-                createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, critGenerator, -1L, gdtm, device),
+                createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
                 createCriteriaMetaValuesCustomObject(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
@@ -312,7 +312,7 @@ public class CriteriaResource extends AbstractWebResource {
             }
             
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device());
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, critGenerator, 0L, gdtm, device());
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, gdtm, device());
             
             final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext = createQueryEnhancerAndContext(
                     webUiConfig,

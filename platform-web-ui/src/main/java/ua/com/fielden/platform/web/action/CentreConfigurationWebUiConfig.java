@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
@@ -10,6 +11,11 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForMasterFitWidth;
+import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
+import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
+
 import java.util.Optional;
 
 import com.google.inject.Injector;
@@ -17,6 +23,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
+import ua.com.fielden.platform.web.centre.CentreConfigCopyActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
@@ -160,38 +167,34 @@ public class CentreConfigurationWebUiConfig {
         public abstract EntityActionConfig mkAction();
     }
     
-    
     /**
      * Creates entity master for {@link CentreConfigCopyAction}.
      *
      * @return
      */
     private static EntityMaster<CentreConfigCopyAction> createCentreConfigCopyActionMaster(final Injector injector) {
-//        final String layout = LayoutComposer
-//        
-//        final IMaster<CentreConfigCopyAction> masterConfig = new SimpleMasterBuilder<CentreConfigCopyAction>()
-//            .forEntity(CentreConfigCopyAction.class)
-//            .addProp("title").asSinglelineText().also()
-//            .addProp("desc").asMultilineText().also()
-//            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of centre copy.")
-//            .addAction(SAVE).shortDesc("COPY").longDesc("Saves new centre configuration.")
-//            
-//            .setActionBarLayoutFor(DESKTOP, empty(), actionLayout.toString())
-//            .setActionBarLayoutFor(TABLET, empty(), actionLayout.toString())
-//            .setActionBarLayoutFor(MOBILE, empty(), actionLayout.toString())
-//            .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-//                    "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
-//                    + format("['flex', ['flex']]")
-//                    + "    ]"))
-//            .withDimensions(mkDim("'30%'", "'50%'"))
-//            .done();
-//        return new EntityMaster<CentreConfigUpdater>(
-//                CentreConfigUpdater.class,
-//                CentreConfigUpdaterProducer.class,
-//                masterConfig,
-//                injector);
-        // TODO continue...
-        return null;
+        final String actionLayout = mkActionLayoutForMaster();
+        final String layout = mkGridForMasterFitWidth(2, 1);
+        
+        final IMaster<CentreConfigCopyAction> masterConfig = new SimpleMasterBuilder<CentreConfigCopyAction>()
+            .forEntity(CentreConfigCopyAction.class)
+            .addProp("title").asSinglelineText().also()
+            .addProp("desc").asMultilineText().also()
+            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of centre copy.")
+            .addAction(SAVE).shortDesc("COPY").longDesc("Saves new centre configuration.")
+            .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
+            .setActionBarLayoutFor(TABLET, empty(), actionLayout)
+            .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
+            .setLayoutFor(DESKTOP, empty(), layout)
+            .setLayoutFor(TABLET, empty(), layout)
+            .setLayoutFor(MOBILE, empty(), layout)
+            .withDimensions(mkDim(400, 300))
+            .done();
+        return new EntityMaster<CentreConfigCopyAction>(
+                CentreConfigCopyAction.class,
+                CentreConfigCopyActionProducer.class,
+                masterConfig,
+                injector);
     }
     
 }

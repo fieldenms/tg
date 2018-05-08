@@ -5,9 +5,11 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
  * Functional entity for copying centre configuration.
@@ -18,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @CompanionObject(ICentreConfigCopyAction.class)
+@KeyType(String.class)
 @DescTitle("Description")
 @DescRequired
 public class CentreConfigCopyAction extends AbstractFunctionalEntityWithCentreContext<String> {
@@ -27,6 +30,20 @@ public class CentreConfigCopyAction extends AbstractFunctionalEntityWithCentreCo
     @Required
     // TODO @BeforeChange(CentreConfigCopyActionTitleValidator.class)
     private String title;
+    
+    @IsProperty
+    @Title("Context Holder")
+    private CentreContextHolder centreContextHolder;
+    
+    @Observable
+    public CentreConfigCopyAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {
+        this.centreContextHolder = centreContextHolder;
+        return this;
+    }
+    
+    public CentreContextHolder getCentreContextHolder() {
+        return centreContextHolder;
+    }
     
     @Observable
     public CentreConfigCopyAction setTitle(final String title) {

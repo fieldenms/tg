@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
@@ -411,6 +412,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final ICentreDomainTreeManagerAndEnhancer cdtmae,
+            final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final Long previousVersion,
             final IGlobalDomainTreeManager gdtm,
@@ -428,6 +430,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+        });
+        validationPrototype.setFreshCentreApplier((modifHolder) -> {
+            return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
+        });
+        
+        validationPrototype.setCentreCopier((oldAndNewNames) -> {
+            final Optional<String> oldName = oldAndNewNames._1;
+            final Optional<String> newName = oldAndNewNames._2;
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, oldName, device);
+            final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, oldName, device);
+            
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre);
+            final ICentreDomainTreeManagerAndEnhancer newSavedCentre = initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre);
+            
+            return t2(newFreshCentre, newSavedCentre);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
@@ -730,7 +747,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
-        return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, critGenerator, 0L, gdtm, device);
+        return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, gdtm, device);
     }
 
     /**
@@ -751,7 +768,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // load / update fresh centre if it is not loaded yet / stale
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, critGenerator, getVersion(modifiedPropertiesHolder), gdtm, device);
+        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, getVersion(modifiedPropertiesHolder), gdtm, device);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,
