@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.tokens.Template;
  */
 @KeyTitle(value = "Attachment delete", desc = "Controls permission to delete attachments.")
 public class AttachmentDeleteToken extends AttachmentModuleToken {
-    private static final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(Attachment.class).getKey();
-    public static final String TITLE = format(Template.DELETE.forTitle(), entityTitle);
-    public static final String DESC = format(Template.DELETE.forDesc(), entityTitle);
+    private static final String ENTITY_TITLE = TitlesDescsGetter.getEntityTitleAndDesc(Attachment.class).getKey();
+    public static final String TITLE = format(Template.DELETE.forTitle(), ENTITY_TITLE);
+    public static final String DESC = format(Template.DELETE.forDesc(), ENTITY_TITLE);
 }
