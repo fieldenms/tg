@@ -105,7 +105,7 @@
                 </div>
                 <!--Fixed Container-->
                 <div id="lockContainer" class="fit" style="overflow:hidden">
-                    <div id="topLockContainer" class="absolutely-white layout horizontal tree-table-header-row" style="top:0;left:0;right:0">
+                    <div id="topLockContainer" class="absolutely-white layout horizontal tree-table-header-row" style$="[[_calculateTopLockPanelStyle(_scrollLeft)]]">
                         <div id="topShadow" class="fit" hidden$="[[!_showTopShadow]]"></div>
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
@@ -146,7 +146,11 @@
                     
                     //Properties for managing shadow visibility
                     _showTopShadow: Boolean,
-                    _showBottomShadow: Boolean
+                    _showBottomShadow: Boolean,
+                    
+                    //Properties for managing lock container scrolling
+                    _scrollLeft: Number,
+                    _scrollTop: Number
                 },
 
                 ready: function () {
@@ -337,6 +341,10 @@
 
                 _columnType: function (item) {
                     return item.isHierarchyProperty() ? "hierarchy" : "regular";
+                },
+                
+                _calculateTopLockPanelStyle: function(_scrollLeft) {
+                    return "top:0;right:0;left:-" + _scrollLeft + "px;"; 
                 }
             });
         })();
