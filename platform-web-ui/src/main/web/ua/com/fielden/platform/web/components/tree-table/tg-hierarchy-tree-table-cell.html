@@ -93,6 +93,7 @@
 
                 _toggle: function (e) {
                     this.collapsed = !this.collapsed;
+                    this.fire("tg-tree-toggle-collapse-state");
                 },
 
                 _calcHierarchyCellStyle: function (entity, column, columnWidth, columnGrowFactor) {

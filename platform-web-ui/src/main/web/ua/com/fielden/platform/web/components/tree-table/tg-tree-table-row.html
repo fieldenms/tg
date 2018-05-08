@@ -47,13 +47,13 @@
                 <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" collapsed="{{collapsed}}" highlighted="[[highlighted]]" entity="[[entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
             </template>
         </div>
-        <template is="dom-if" if="[[_isChildrenVisible(entity.children, collapsed)]]">
-        <!--<div hidden$="[[_isChildrenHidden(entity.children, collapsed)]]">-->
+        <!--<template is="dom-if" if="[[_isChildrenVisible(entity.children, collapsed)]]">-->
+        <div hidden$="[[_isChildrenHidden(entity.children, collapsed)]]">
             <template is="dom-repeat" items="[[entity.children]]" as="treeEntity">
                 <tg-tree-table-row entity="[[treeEntity]]" columns="[[columns]]"></tg-tree-table-row>
             </template>
-        <!--</div>-->
-        </template>
+        </div>
+        <!--</template>-->
     </template>
     <script>
         (function () {

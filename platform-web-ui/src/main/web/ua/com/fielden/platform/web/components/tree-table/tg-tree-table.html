@@ -28,6 +28,18 @@
             #lockContainer {
                 pointer-events: none;
             }
+            #topShadow {
+                box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);
+                pointer-events: none;
+            }
+            #bottomShadow {
+                top: 100%;
+                height: 20px;
+                left: 0;
+                right: 0;
+                box-shadow: 0px -3px 6px -2px rgba(0,0,0,0.7);
+                pointer-events: none;
+            }
             /*Table elements styles*/
             .tree-table-header-row {
                 font-size: 0.9rem;
@@ -61,19 +73,22 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+            .absolute,
             .absolutely-white {
                 position: absolute;
+            }   
+            .absolutely-white {
                 background-color: white;
                 pointer-events: auto;
             }
         </style>
         <content id="column_selector" select="tg-tree-table-property-column" hidden></content>
 
-        <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
+        <div id="elementToFocus" class="layout vertical flex data-table">
 
             <div id="baseContainer" class="relative layout horizontal flex">
                 <!--Scroll Container-->
-                <div id="scrollContainer" class="layout vertical flex">
+                <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                     <!--Tree table header-->
                     <div class="layout horizontal tree-table-header-row">
                         <template is="dom-repeat" items="[[columns]]">
@@ -90,15 +105,15 @@
                 </div>
                 <!--Fixed Container-->
                 <div id="lockContainer" class="fit" style="overflow:hidden">
-<!--
                     <div id="topLockContainer" class="absolutely-white layout horizontal tree-table-header-row" style="top:0;left:0;right:0">
+                        <div id="topShadow" class="fit" hidden$="[[!_showTopShadow]]"></div>
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
                                 <div class="truncate">[[item.columnTitle]]</div>
                             </div>
                         </template>
                     </div>
--->
+                    <div id="bottomShadow" class="absolute" hidden$="[[!_showBottomShadow]]"></div>
                 </div>
             </div>
         </div>
@@ -118,6 +133,8 @@
                 is: 'tg-tree-table',
 
                 behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+                
+                listeners: {"tg-tree-toggle-collapse-state": "_toggleTreeEntityToggleState"},
 
                 properties: {
                     entities: {
@@ -125,7 +142,11 @@
                         observer: "_entitiesChanged"
                     },
                     columns: Array,
-                    hierarchyColumn: Object
+                    hierarchyColumn: Object,
+                    
+                    //Properties for managing shadow visibility
+                    _showTopShadow: Boolean,
+                    _showBottomShadow: Boolean
                 },
 
                 ready: function () {
@@ -136,6 +157,60 @@
                     Polymer.dom(this.$.column_selector).observeNodes(info => {
                         this._columnDomChanged(info.addedNodes, info.removedNodes);
                     });
+                    
+                    //Initialising event listeners.
+                    this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+                },
+                
+                /////////////////////////////Event listeners////////////////////////////////////
+                _toggleTreeEntityToggleState: function (e) {
+                    this._updateTableSizeAsync();
+                },
+                
+                /**
+                 * Resize event handler that adjusts the lock container size and position.
+                 */
+                _resizeEventListener: function (event, details) {
+                    this.$.lockContainer.style.bottom = this._calcHorizontalScrollBarHeight() + "px";
+                    this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
+                    this._handleScrollEvent();
+                },
+                
+                /**
+                 * Calculates the vertical scrollbar width.
+                 */
+                _calcVerticalScrollBarWidth: function () {
+                    return this.$.scrollContainer.offsetWidth - this.$.scrollContainer.clientWidth;
+                },
+
+                /**
+                 * Calculates the horizontal scrollbar height.
+                 */
+                _calcHorizontalScrollBarHeight: function () {
+                    return this.$.scrollContainer.offsetHeight - this.$.scrollContainer.clientHeight;
+                },
+
+                /**
+                 * Scrolling related functions.
+                 */
+                _handleScrollEvent: function () {
+                    this._scrollLeft = this.$.scrollContainer.scrollLeft;
+                    this._scrollTop = this.$.scrollContainer.scrollTop;
+                    this._updateShadows();
+                },
+                
+                _updateShadows: function () {
+                    this._showTopShadow = this.$.scrollContainer.scrollTop !== 0;
+                    this._showBottomShadow = (this.$.scrollContainer.clientHeight + this.$.scrollContainer.scrollTop) !== this.$.scrollContainer.scrollHeight;
+                },
+                
+                /**
+                 * invokes resize event listener on asynch.
+                 */
+                _updateTableSizeAsync: function () {
+                    this.async(function () {
+                        this._resizeEventListener();
+                    }.bind(this), 1);
                 },
 
                 //////////////////////////Security token filtering related functions//////////////////////////////
@@ -143,6 +218,7 @@
                     if (this.treeModel) {
                         this._expandAll();
                         this._filterTreeModel(text, this.treeModel);
+                        this._updateTableSizeAsync();
                     }
                 },
 
@@ -204,12 +280,14 @@
                                 }
                             }
                         });
+                        this._updateTableSizeAsync();
                     }
                 },
 
                 ///////////////////Observer related functions//////////////////////////////
                 _entitiesChanged: function (newEntities, oldEntities) {
                     this.treeModel = this._createTreeModel(newEntities);
+                    this._updateTableSizeAsync();
                 },
 
                 _createTreeModel: function (children, parent) {
