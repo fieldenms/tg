@@ -19,9 +19,15 @@
                 width: 100%;
                 @apply(--layout-vertical);
             }
+            tg-entity-master {
+                @apply(--layout-vertical);
+            }
             .filter-panel::content > .filter-element {
                 margin: 0 10px;
                 @apply(--layout-flex);
+            }
+            .filter-panel {
+                flex-shrink: 0;
             }
             .lock-layer {
                 opacity: 0.5;
@@ -43,7 +49,7 @@
                         <tg-tree-table-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" contains-checkbox="[[item.containsCheckbox]]" width="[[item.width]]" visible="[[item.visible]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]" check="[[check]]"></tg-tree-table-property-column>
                     </template>
                 </tg-tree-table>
-                <div class="layout horizontal center-justified" style="padding:20px;">
+                <div class="layout horizontal center-justified" style="padding:20px; flex-shrink:0;">
                     <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
                     <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_saveSecurityMatrix]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                     <!-- save and cancel buttons goes here -->
@@ -60,6 +66,7 @@
                 constructor(securityTokenEntity, userRoles, tokenRoleMap, parent) {
                     super(securityTokenEntity.get("key"));
                     this.title = securityTokenEntity.get("title");
+                    this.desc = securityTokenEntity.get("desc");
                     if (parent) {
                         this.parent = parent;
                     }

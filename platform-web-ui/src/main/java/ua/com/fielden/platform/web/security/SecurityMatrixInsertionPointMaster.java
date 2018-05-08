@@ -88,7 +88,11 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
 
     private String readyCallback() {
         return "self.classList.remove('canLeave');\n"
-                +"//Need for security marix editors binding.\n"
+                + "self.classList.add('layout');\n"
+                + "self.classList.add('vertical');\n"
+                + "self._masterDom().classList.add('layout');\n"
+                + "self._masterDom().classList.add('vertical');\n"
+                + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
                 + "    return ['tokenFilter', 'roleFilter'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"

@@ -11,8 +11,9 @@
             /* Container styles*/
             :host {
                 @apply(--layout-vertical);
+
             }
-            paper-material {
+            #elementToFocus {
                 margin: 10px;
             }
             .data-table {
@@ -22,8 +23,8 @@
             }
             #scrollContainer {
                 padding-bottom: 15px;
-                overflow: auto;
                 -webkit-overflow-scrolling: touch;
+                overflow: auto;
             }
             #lockContainer {
                 pointer-events: none;
@@ -58,6 +59,7 @@
             .header-column {
                 box-sizing: border-box;
                 @apply(--layout-center);
+
             }
             .header-column[column-type=hierarchy] {
                 padding: 0 0.6rem;
@@ -77,10 +79,12 @@
             .table-data-cell[column-type=regular] {
                 padding: 0 0.6rem;
                 @apply(--layout-center-justified);
+
             }
             .table-data-cell[column-type=hierarchy] {
                 padding-right: 0.6rem;
                 @apply(--layout-center);
+
             }
             /* Miscelenia styles */
             .truncate {
@@ -91,38 +95,36 @@
         </style>
         <content id="column_selector" select="tg-tree-table-property-column" hidden></content>
 
-        <paper-material elevation="1" class="layout vertical">
-            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
+        <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
 
-                <div id="baseContainer" class="relative layout horizontal flex">
-                    <!--Scroll Container-->
-                    <div id="scrollContainer" class="layout vertical flex">
-                        <!--Tree table header-->
-                        <div class="layout horizontal tree-table-header-row">
-                            <template is="dom-repeat" items="[[columns]]">
-                                <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
-                                    <div class="truncate">[[item.columnTitle]]</div>
-                                </div>
-                            </template>
-                        </div>
-                        <!--table body-->
-                        <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
-                            <div class="layout horizontal tree-table-data-row" hidden$="[[_isEntityHidden(treeEntity.parent.collapsed, treeEntity.visible)]]" over$="[[treeEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                <template is="dom-repeat" items="[[columns]]" as="column">
-                                    <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" highlight="[[treeEntity.highlight]]" entity-index="[[treeEntityIndex]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
-                                    <!--tooltip-text$="[[_getTooltip(treeEntity.entity, column)]]"-->
-                                </template>
+            <div id="baseContainer" class="relative layout horizontal flex">
+                <!--Scroll Container-->
+                <div id="scrollContainer" class="layout vertical flex">
+                    <!--Tree table header-->
+                    <div class="layout horizontal tree-table-header-row">
+                        <template is="dom-repeat" items="[[columns]]">
+                            <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
+                                <div class="truncate">[[item.columnTitle]]</div>
                             </div>
                         </template>
-                        <!-- Scrollable container goes here -->
                     </div>
-                    <!--Fixed Container-->
-                    <div id="lockContainer" class="fit" style="overflow:hidden">
+                    <!--table body-->
+                    <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
+                        <div class="layout horizontal tree-table-data-row" hidden$="[[_isEntityHidden(treeEntity.parent.collapsed, treeEntity.visible)]]" over$="[[treeEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                            <template is="dom-repeat" items="[[columns]]" as="column">
+                                <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" highlight="[[treeEntity.highlight]]" entity-index="[[treeEntityIndex]]" entity="[[treeEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
+                                <!--tooltip-text$="[[_getTooltip(treeEntity.entity, column)]]"-->
+                            </template>
+                        </div>
+                    </template>
+                    <!-- Scrollable container goes here -->
+                </div>
+                <!--Fixed Container-->
+                <div id="lockContainer" class="fit" style="overflow:hidden">
 
-                    </div>
                 </div>
             </div>
-        </paper-material>
+        </div>
     </template>
     <script>
         (function () {
@@ -171,7 +173,7 @@
                             if (treeEntity.entity.get("title").toLowerCase().search(text.toLowerCase()) >= 0) {
                                 this.set("treeModel." + (treeEntity.entityIndex) + ".visible", true);
                                 this._makeParentVisible(treeEntity);
-                                this.set("treeModel." + (treeEntity.entityIndex) + ".highlight", text ? true: false);
+                                this.set("treeModel." + (treeEntity.entityIndex) + ".highlight", text ? true : false);
                             } else {
                                 this.set("treeModel." + (treeEntity.entityIndex) + ".visible", false);
                                 this.set("treeModel." + (treeEntity.entityIndex) + ".highlight", false);
@@ -187,7 +189,7 @@
                         parent = parent.parent;
                     }
                 },
-                
+
                 _expandAll: function () {
                     if (this.treeModel) {
                         this.treeModel.forEach(treeEntity => {
@@ -195,7 +197,7 @@
                         });
                     }
                 },
-                
+
                 //////////////////////////User role filtering related functions//////////////////////////////
                 filterRoles: function (text) {
                     if (this.columns) {
@@ -210,7 +212,7 @@
                         });
                     }
                 },
-                
+
                 ///////////////////Observer related functions//////////////////////////////
                 _entitiesChanged: function (newEntities, oldEntities) {
                     const tempTreeModel = []
@@ -223,8 +225,10 @@
                         const treeEntity = {
                             over: false,
                             entity: child,
-                            entityIndex: toList.length, 
-                            parent: parent ? parent: {collapsed: false},
+                            entityIndex: toList.length,
+                            parent: parent ? parent : {
+                                collapsed: false
+                            },
                             collapsed: !!(child.children && child.children.length > 0),
                             visible: true,
                             highlight: false
@@ -290,7 +294,7 @@
                     }
                     return colStyle;
                 },
-                
+
                 _isEntityHidden: function (parentCollapsed, isVisible) {
                     return parentCollapsed || !isVisible;
                 },

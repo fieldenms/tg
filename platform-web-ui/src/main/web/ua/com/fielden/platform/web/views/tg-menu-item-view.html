@@ -2,6 +2,7 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 
 <dom-module id="tg-menu-item-view">
     <style>
@@ -14,14 +15,15 @@
             background-color: white;
         }
         .master-insertion-point {
-            height: 100%;
-            width: 100%;
             overflow: auto;
+            @apply(--layout-vertical);
         }
         paper-material {
+            @apply(--layout-vertical);
             border-radius: 2px;
             overflow: hidden;
             background-color: white;
+            max-height: 100%;
         }
     </style>
     <template>
@@ -29,7 +31,7 @@
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
                     <div class="master-insertion-point">
-                        <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                        <tg-element-loader id="elementToLoad" class="layout vertical" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                     </div>
                 </paper-material>
             </template>

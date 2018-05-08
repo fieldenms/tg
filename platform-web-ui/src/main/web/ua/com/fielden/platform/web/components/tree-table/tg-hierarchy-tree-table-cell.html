@@ -54,7 +54,7 @@
         <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[_isLeaf(entity)]]" collapsed$="[[entity.collapsed]]" on-tap="_toggle"></iron-icon>
         <div class="layout horizontal center flex" style$="[[_calcHierarchyCellStyle(entity, column)]]">
             <paper-checkbox checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" group-checkbox$="[[_isGroupCheckbox(entity.children)]]" on-change="_stateChanged"></paper-checkbox>
-            <div class="flex truncate" highlighted$="[[highlight]]">[[_getCellValue(entity.entity, column.property)]]</div>
+            <div class="flex truncate" highlighted$="[[highlight]]" tooltip-text$="[[entity.entity.desc]]">[[_getCellValue(entity.entity, column.property)]]</div>
         </div>
     </template>
     <script>
@@ -69,7 +69,7 @@
                     entityIndex: Number,
                     highlight: Boolean
                 },
-
+                
                 attached: function () {
                     this.state = this.entity.entity._getState("_tokenChecked");
                     this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
