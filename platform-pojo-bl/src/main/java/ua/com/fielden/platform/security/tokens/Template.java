@@ -8,12 +8,12 @@ package ua.com.fielden.platform.security.tokens;
  */
 public enum Template {
     
-    SAVE("%s_CanSave", "%s Can Save", "Authorises saving of new or modified data."),
-    DELETE("%s_CanDelete", "%s Can Delete", "Authorises deletion of data."),
-    MODIFY("%s_CanModify_%s", "%s Can Modify property [%s]", "Authorises modification of the specified property."),
-    EXECUTE("%s_CanExecute", "%s Can Execute", "Authorises action execution."),
-    MASTER_OPEN("%s_CanOpen", "%s Can Open", "Authorises opening of a compound master."),
-    MASTER_MENU_ITEM_ACCESS("%s_CanAccess", "%s Can Access", "Authorises access to a menu item of a compound master.");
+    SAVE("%s_CanSave_Token", "%s Can Save", "Authorises saving of new or modified data."),
+    DELETE("%s_CanDelete_Token", "%s Can Delete", "Authorises deletion of data."),
+    MODIFY("%s_CanModify_%s_Token", "%s Can Modify property [%s]", "Authorises modification of the specified property."),
+    EXECUTE("%s_CanExecute_Token", "%s Can Execute", "Authorises action execution."),
+    MASTER_OPEN("%s_CanOpen_Token", "%s Can Open", "Authorises opening of a compound master."),
+    MASTER_MENU_ITEM_ACCESS("%s_CanAccess_Token", "%s Can Access", "Authorises access to a menu item of a compound master.");
     
     private final String forClassName;
     private final String forTitle;
