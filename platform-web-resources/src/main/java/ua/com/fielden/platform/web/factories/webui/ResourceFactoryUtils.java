@@ -95,7 +95,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     static Optional<String> saveAsName(final Request request) {
-        final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "");
+        final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "").replace("%20", " ");
         return "".equals(saveAsName) ? empty() : of(saveAsName);
     }
     
