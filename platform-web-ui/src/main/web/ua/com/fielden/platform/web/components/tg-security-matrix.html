@@ -1,7 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/components/tree-table/tg-tree-table.html">
-<link rel="import" href="/resources/components/tree-table/tg-tree-table-property-column.html">
 <link rel='import' href='/resources/master/actions/tg-action.html'>
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
@@ -39,17 +38,12 @@
             }
         </style>
         <tg-entity-master id="masterDom" entity-type="[[entityType]]" entity-id="new" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _saver-loading="{{_saverLoading}}">
-            <div style="width:100%;height:100%" class="relative layout vertical">
-                <div class="layout horizontal filter-panel">
+            <div id="treeTableContainer" style="width:100%;height:100%" class="relative layout vertical">
+                <div id="filterPanel" class="layout horizontal filter-panel">
                     <content select=".filter-element"></content>
                 </div>
-                <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]">
-                    <tg-test></tg-test>
-                    <template is="dom-repeat" items="[[columns]]">
-                        <tg-tree-table-property-column property="[[item.property]]" children-property="[[item.childrenProperty]]" parent-property="[[item.parentProperty]]" contains-checkbox="[[item.containsCheckbox]]" width="[[item.width]]" visible="[[item.visible]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" type="[[item.type]]" column-title="[[item.title]]" column-desc="[[item.desc]]" check="[[check]]"></tg-tree-table-property-column>
-                    </template>
-                </tg-tree-table>
-                <div class="layout horizontal center-justified" style="padding:20px; flex-shrink:0;">
+                <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table>
+                <div id="actionPanel" class="layout horizontal center-justified" style="padding:20px; flex-shrink:0;">
                     <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
                     <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_saveSecurityMatrix]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                     <!-- save and cancel buttons goes here -->
@@ -246,11 +240,8 @@
                         type: Object,
                         observer: "_entityChanged"
                     },
-
                     hierarchyColumn: Object,
-
                     columns: Array,
-
                     entities: Array,
                     /**
                      * Need for locking schduling component during insertion point activation or refreshing.
@@ -259,7 +250,6 @@
                         type: Boolean,
                         value: false
                     },
-
                     check: Function,
                     _resetSecurityMatrix: Function,
                     _postResetSecurityMatrix: Function,
@@ -326,32 +316,31 @@
 
                 _entityChanged: function (newBindingEntity, oldOne) {
                     const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
-                    if (newEntity) {
-                        const columnList = [];
-                        columnList.push({
-                            title: "Security Tokens",
-                            desc: "Security Tokens Hierarchy",
+                    if (newEntity && newEntity.calculated) {
+                        this.hierarchyColumn = {
                             property: "title",
+                            visible: true,
                             childrenProperty: "children",
                             parentProperty: "parent",
-                            containsCheckbox: true,
-                            width: 200,
-                            growFactor: 2,
-                            minWidth: 200,
                             type: "String",
-                            visible: true,
+                            width: 200,
+                            minWidth: 200,
+                            growFactor: 1,
+                            columnTitle: "Security Tokens",
+                            columnDesc: "Security Tokens Hierarchy",
                             check: this.check,
-                        });
+                        };
+                        const columnList = [];
                         newEntity.get("userRoles").forEach(role => {
                             columnList.push({
-                                title: role.get("key"),
-                                desc: role.get("desc"),
                                 property: replaceWhitespacesWithUnderscore(role.get("key")),
-                                width: 30,
-                                growFactor: 0,
-                                minWidth: 50,
-                                type: "Boolean",
                                 visible: true,
+                                type: "Boolean",
+                                width: 30,
+                                minWidth: 30,
+                                growFactor: 0,
+                                columnTitle: role.get("key"),
+                                columnDesc: role.get("desc"),
                                 check: this.check,
                             });
                         });
@@ -360,7 +349,7 @@
                         this._toggleButtonStates();
                     }
                 },
-
+                
                 _masterDom: function () {
                     return this.$.masterDom;
                 },

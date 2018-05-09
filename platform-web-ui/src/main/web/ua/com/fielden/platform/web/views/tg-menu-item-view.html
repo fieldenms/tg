@@ -129,13 +129,15 @@
                         } else if (this.menuItem.view.viewType === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 self.fire("menu-item-view-loaded", self.menuItem);
-                                if (detail.saveOnActivation === true) {
-                                    detail.save();
-                                }
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                             detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
-                            detail.retrieve();
+                            detail.retrieve().then(function(ironRequest) {
+                                if (detail.saveOnActivation === true) {
+                                    return detail.save(); // saving promise
+                                }
+                                return Promise.resolve(ironRequest); // retrieval promise; resolves immediately
+                            });
                         } else {
                             self.fire("menu-item-view-loaded", self.menuItem);
                         }

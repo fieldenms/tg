@@ -41,8 +41,22 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
     @Title(value = "Token - Role association", desc = "Desc")
     private Map<String, List<Long>> tokenRoleMap = new HashMap<>();
 
+    @IsProperty
+    @Title(value = "Was Calculated", desc = "Desc")
+    private boolean calculated = false;
+
     protected SecurityMatrixInsertionPoint() {
         setKey(NO_KEY);
+    }
+
+    @Observable
+    public SecurityMatrixInsertionPoint setCalculated(final boolean calculated) {
+        this.calculated = calculated;
+        return this;
+    }
+
+    public boolean isCalculated() {
+        return calculated;
     }
 
     @Observable

@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/components/tree-table/tg-tree-table-cell.html">
+<link rel="import" href="/resources/components/tree-table/tg-hierarchy-tree-table-cell.html">
+<link rel="import" href="/resources/components/tree-table/tg-tree-table-regular-cell.html">
 
 <dom-module id="tg-tree-table-row">
     <template>
@@ -33,27 +34,26 @@
             .table-data-cell[column-type=regular] {
                 padding: 0 0.6rem;
                 @apply(--layout-center-justified);
-
             }
             .table-data-cell[column-type=hierarchy] {
                 padding-right: 0.6rem;
                 @apply(--layout-center);
-
             }
         </style>
 
         <div class="layout horizontal tree-table-data-row" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+            <tg-hierarchy-tree-table-cell class="table-data-cell" column-type="hierarchy" column="[[hierarchyColumn]]" entity="[[entity]]" highlighted="[[entity.highlighted]]" collapsed="{{entity.collapsed}}"></tg-hierarchy-tree-table-cell>
             <template is="dom-repeat" items="[[columns]]" as="column">
-                <tg-tree-table-cell class="table-data-cell" column-type$="[[_columnType(column)]]" hidden$="[[!column.visible]]" column="[[column]]" collapsed="{{collapsed}}" highlighted="[[highlighted]]" entity="[[entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-cell>
+                <tg-tree-table-regular-cell class="table-data-cell" column-type="regular" hidden$="[[!column.visible]]" column="[[column]]" entity="[[entity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-regular-cell>
             </template>
         </div>
-        <!--<template is="dom-if" if="[[_isChildrenVisible(entity.children, collapsed)]]">-->
-        <div hidden$="[[_isChildrenHidden(entity.children, collapsed)]]">
-            <template is="dom-repeat" items="[[entity.children]]" as="treeEntity">
-                <tg-tree-table-row entity="[[treeEntity]]" columns="[[columns]]"></tg-tree-table-row>
-            </template>
-        </div>
-        <!--</template>-->
+        <template is="dom-if" if="[[_isChildrenVisible(entity.children, entity.collapsed)]]">
+            <div><!--hidden$="[[!_isChildrenVisible(entity.children, entity.collapsed)]]"-->
+                <template is="dom-repeat" items="[[entity.children]]" as="treeEntity">
+                    <tg-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table-row>
+                </template>
+            </div>
+        </template>
     </template>
     <script>
         (function () {
@@ -62,48 +62,41 @@
                 is: "tg-tree-table-row",
 
                 properties: {
+                    hierarchyColumn: Object,
                     columns: Array,
                     entity: {
                         type: Object,
                         observer: "_entityChanged"
-                    },
-                    collapsed: Boolean,
-                    highlight: Boolean
+                    }
                 },
-                
-                ready: function () {
-                    this.collapsed = true;
-                    this.highlighted = false;
-                },
+
+                observers: ["_visibilityChanged(entity.visible)"],
 
                 ///////////////////////Observers implementation//////////////////
                 _entityChanged: function (newEntity, oldEntity) {
                     const expandFunctions = newEntity.expandFunctions || [];
                     expandFunctions.push(function () {
-                        this.collapsed = false;
-                        if (newEntity.children && newEntity.children.length > 0) {
-                            newEntity.children.forEach(child => {
-                                if (child.expandFunctions) {
-                                    child.expandFunctions.forEach(expandFunction => expandFunction());
-                                }
-                            });
-                        }
+                        this.notifyPath("entity.collapsed", false);
                     }.bind(this));
                     newEntity.expandFunctions = expandFunctions;
                     const highlightFunctions = newEntity.highlightFunctions || [];
                     highlightFunctions.push(function (highlighted) {
-                        this.highlighted = highlighted;
+                        this.notifyPath("entity.highlighted", highlighted);
                     }.bind(this));
                     newEntity.highlightFunctions = highlightFunctions;
                     const visibilityFunctions = newEntity.visibilityFunctions || [];
-                    visibilityFunctions.push(function(visible) {
-                        if (visible) {
-                            this.style.removeProperty("display");
-                        } else {
-                            this.style.display = "none";
-                        }
+                    visibilityFunctions.push(function (visible) {
+                        this.notifyPath("entity.visible", visible);
                     }.bind(this));
                     newEntity.visibilityFunctions = visibilityFunctions;
+                },
+
+                _visibilityChanged: function (visible) {
+                    if (visible) {
+                        this.style.removeProperty("display");
+                    } else {
+                        this.style.display = "none";
+                    }
                 },
 
                 //////////////////////Event listeners/////////////////////
@@ -126,16 +119,8 @@
                     return colStyle;
                 },
 
-                _columnType: function (item) {
-                    return item.isHierarchyProperty() ? "hierarchy" : "regular";
-                },
-
                 _isChildrenVisible: function (children, collapsed) {
-                    return children && children.length >0 && !collapsed;
-                },
-                
-                _isChildrenHidden: function (children, collapsed) {
-                    return !children || children.length === 0 || collapsed;
+                    return children && children.length > 0 && !collapsed;
                 }
             });
         })();

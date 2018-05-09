@@ -10,6 +10,7 @@
 <dom-module id="tg-hierarchy-tree-table-cell">
     <style>
         :host {
+            box-sizing: border-box;
             @apply(--layout-horizontal);
             @apply(--layout-center);
             @apply(--layout-flex);
@@ -112,7 +113,6 @@
                     } else {
                         this.style["flex-grow"] = columnGrowFactor;
                     }
-                    this.style["box-sizing"] = "border-box";
                 },
 
                 _isGroupCheckbox: function (children) {

@@ -91,15 +91,18 @@
                 <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                     <!--Tree table header-->
                     <div class="layout horizontal tree-table-header-row">
+                        <div class="layout horizontal header-column" column-type="hierarchy" tooltip-text$="[[hierarchyColumn.columnDesc]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]">
+                                <div class="truncate">[[hierarchyColumn.columnTitle]]</div>
+                        </div>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
+                            <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type="regular" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
                                 <div class="truncate">[[item.columnTitle]]</div>
                             </div>
                         </template>
                     </div>
                     <!--table body-->
                     <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
-                        <tg-tree-table-row entity="[[treeEntity]]" columns="[[columns]]" highlight="[[treeEntity.highlight]]"></tg-tree-table-row>
+                        <tg-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table-row>
                     </template>
                     <!-- Scrollable container goes here -->
                 </div>
@@ -107,8 +110,11 @@
                 <div id="lockContainer" class="fit" style="overflow:hidden">
                     <div id="topLockContainer" class="absolutely-white layout horizontal tree-table-header-row" style$="[[_calculateTopLockPanelStyle(_scrollLeft)]]">
                         <div id="topShadow" class="fit" hidden$="[[!_showTopShadow]]"></div>
+                        <div class="layout horizontal header-column" column-type="hierarchy" tooltip-text$="[[hierarchyColumn.columnDesc]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]">
+                                <div class="truncate">[[hierarchyColumn.columnTitle]]</div>
+                        </div>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type$="[[_columnType(item)]]" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
+                            <div class="layout horizontal header-column" hidden$="[[!item.visible]]" column-type="regular" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
                                 <div class="truncate">[[item.columnTitle]]</div>
                             </div>
                         </template>
@@ -121,14 +127,6 @@
     <script>
         (function () {
             'use strict'
-            const removeColumn = function (column, fromColumns) {
-                const index = fromColumns.indexOf(column);
-                if (index >= 0) {
-                    fromColumns.splice(index, 1);
-                    return true;
-                }
-                return false;
-            };
             Polymer({
                 is: 'tg-tree-table',
 
@@ -141,8 +139,8 @@
                         type: Array,
                         observer: "_entitiesChanged"
                     },
-                    columns: Array,
                     hierarchyColumn: Object,
+                    columns: Array,
                     
                     //Properties for managing shadow visibility
                     _showTopShadow: Boolean,
@@ -153,15 +151,7 @@
                     _scrollTop: Number
                 },
 
-                ready: function () {
-                    //Initiates columns
-                    this.columns = [];
-                    this.hierarchyColumn = null;
-                    //Observe column DOM changes
-                    Polymer.dom(this.$.column_selector).observeNodes(info => {
-                        this._columnDomChanged(info.addedNodes, info.removedNodes);
-                    });
-                    
+                ready: function () {                    
                     //Initialising event listeners.
                     this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
                 },
@@ -243,12 +233,14 @@
                 },
 
                 _setHighlight: function (treeEntity, highlight) {
+                    treeEntity.highlighted = highlight;
                     if (treeEntity.highlightFunctions) {
                         treeEntity.highlightFunctions.forEach(highlightFunction => highlightFunction(highlight));
                     }
                 },
 
                 _setVisible: function (treeEntity, visible) {
+                    treeEntity.visible = visible;
                     if (treeEntity.visibilityFunctions) {
                         treeEntity.visibilityFunctions.forEach(visibilityFunction => visibilityFunction(visible));
                     }
@@ -265,10 +257,18 @@
                 _expandAll: function () {
                     if (this.treeModel) {
                         this.treeModel.forEach(treeEntity => {
-                            if (treeEntity.expandFunctions) {
-                                treeEntity.expandFunctions.forEach(expandFunction => expandFunction());
-                            }
+                            this._expandEntity(treeEntity);
                         });
+                    }
+                },
+                
+                _expandEntity: function(treeEntity) {
+                    if (treeEntity.children && treeEntity.children.length > 0) {
+                        treeEntity.collapsed = false;
+                        if (treeEntity.expandFunctions) {
+                            treeEntity.expandFunctions.forEach(expandFunction => expandFunction());
+                        }
+                        treeEntity.children.forEach(child => this._expandEntity(child));
                     }
                 },
 
@@ -276,12 +276,10 @@
                 filterRoles: function (text) {
                     if (this.columns) {
                         this.columns.forEach((column, index) => {
-                            if (!column.isHierarchyProperty()) {
-                                if (column.columnTitle.toLowerCase().search(text.toLowerCase()) >= 0) {
-                                    this.set("columns." + index + ".visible", true);
-                                } else {
-                                    this.set("columns." + index + ".visible", false);
-                                }
+                            if (column.columnTitle.toLowerCase().search(text.toLowerCase()) >= 0) {
+                                this.set("columns." + index + ".visible", true);
+                            } else {
+                                this.set("columns." + index + ".visible", false);
                             }
                         });
                         this._updateTableSizeAsync();
@@ -298,6 +296,9 @@
                     const childrenList = children && children.map(child => {
                         const treeEntity = {
                             over: false,
+                            collapsed: true,
+                            highlighted: false,
+                            visible: true,
                             entity: child,
                             parent: parent
                         };
@@ -307,25 +308,6 @@
                         return treeEntity;
                     });
                     return childrenList;
-                },
-
-                _columnDomChanged: function (addedColumns, removedColumns) {
-                    const columnsCopy = this.columns.slice();
-                    let columnsChanged = false;
-                    removedColumns.forEach(col => {
-                        columnsChanged = removeColumn(col, columnsCopy);
-                    });
-
-                    addedColumns.forEach(col => {
-                        const index = this.columns.findIndex(column => column.property === col.property);
-                        if (index < 0) {
-                            columnsCopy.push(col);
-                            columnsChanged = true;
-                        }
-                    });
-                    if (columnsChanged) {
-                        this.columns = columnsCopy;
-                    }
                 },
 
                 ////////////////////////Style calculation methods.//////////////////////////////////////
@@ -339,10 +321,6 @@
                     return colStyle;
                 },
 
-                _columnType: function (item) {
-                    return item.isHierarchyProperty() ? "hierarchy" : "regular";
-                },
-                
                 _calculateTopLockPanelStyle: function(_scrollLeft) {
                     return "top:0;right:0;left:-" + _scrollLeft + "px;"; 
                 }
