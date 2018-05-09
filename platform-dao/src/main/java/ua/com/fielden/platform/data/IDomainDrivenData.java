@@ -25,6 +25,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 public interface IDomainDrivenData {
 
+    public static final String ADMIN = "ADMIN";
     public static final String SUPER_SECRET_PASSWORD = "cooking with rocket fuel";
 
     <T extends AbstractEntity<?>> T save(final T instance);
@@ -81,7 +82,7 @@ public interface IDomainDrivenData {
             final User _su = coUser.save(new_(User.class, defaultUser.name()).setBase(true).setEmail(defaultUser + "@" + emailDomain).setActive(true));
             final User su = coUser.resetPasswd(_su, SUPER_SECRET_PASSWORD);
 
-            final UserRole admin = save(new_(UserRole.class, "ADMIN", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
+            final UserRole admin = createOrRetrieveAdminUserRole();
 
             save(new_composite(UserAndRoleAssociation.class, su, admin));
             try {
@@ -99,6 +100,11 @@ public interface IDomainDrivenData {
 
             up.setUser(su);
         }
+    }
+
+    default UserRole createOrRetrieveAdminUserRole() {
+        return co(UserRole.class).findByKeyOptional(ADMIN)
+                .orElseGet(() -> save(new_(UserRole.class, ADMIN, "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true)));
     }
 
 }
