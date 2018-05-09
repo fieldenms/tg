@@ -89,7 +89,8 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    private static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
+    /* TODO make private again? */
+    public static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {

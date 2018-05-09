@@ -36,7 +36,7 @@
         <div class="toolbar layout horizontal wrap">
             <div class="toolbar-content layout horizontal center">
                 <tg-ui-action ui-role='ICON' short-desc='Copy' long-desc='Copy this configuration' icon='icons:content-copy' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigCopyAction' element-name='tg-CentreConfigCopyAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigCopyAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="[[saveAsName]]" attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Load' long-desc='Load configuration' icon='icons:folder-open' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Load' long-desc='Load configuration' icon='icons:folder-open' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigLoadAction' element-name='tg-CentreConfigLoadAction-master' number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigLoadAction-master_1_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="[[saveAsName]]" attrs='[[topLevelActions.1.attrs]]' pre-action='[[topLevelActions.1.preAction]]' post-action-success='[[topLevelActions.1.postActionSuccess]]' post-action-error='[[topLevelActions.1.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
                 <tg-ui-action ui-role='ICON' short-desc='Edit' long-desc='Edit configuration' icon='icons:create' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
                 <tg-ui-action ui-role='ICON' short-desc='Remove' long-desc='Remove configuration' icon='icons:remove-circle-outline' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
             </div>
@@ -88,20 +88,32 @@
                 self.topLevelActions = [
                     {
                         preAction: function (action) {
-                            console.log('preAction: Copy');
                             return Promise.resolve(true);
                         },
                         postActionSuccess: function (functionalEntity, action) {
-                            console.log('postActionSuccess: Copy', functionalEntity);
                             // update saveAsName with new name after successful copy action
                             self.saveAsName = functionalEntity.get('title');
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigCopyAction', currentState:'EDIT', centreUuid: self.uuid
                         },
-                        postActionError: function (functionalEntity, action) {
-                            console.log('postActionError: Copy', functionalEntity);
-                        }
+                        postActionError: function (functionalEntity, action) {}
+                    },
+                    {
+                        preAction: function (action) {
+                            return Promise.resolve(true);
+                        },
+                        postActionSuccess: function (functionalEntity, action) {
+                            // update saveAsName with new name after successful load action
+                            console.error();
+                            const chosenId = functionalEntity.get('chosenIds')[0];
+                            console.error('AAA', chosenId === 'DEFAULT!' ? '' : chosenId);
+                            self.saveAsName = chosenId === 'DEFAULT!' ? '' : chosenId;
+                        },
+                        attrs: {
+                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigLoadAction', currentState:'EDIT', centreUuid: self.uuid
+                        },
+                        postActionError: function (functionalEntity, action) {}
                     }
                 ];
             },

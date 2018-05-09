@@ -67,14 +67,18 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigCopyActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigCopyAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
+import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -115,6 +119,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
+        bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
@@ -145,5 +150,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         bind(ICentreConfigCopyAction.class).to(CentreConfigCopyActionDao.class);
+        bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
     }
 }

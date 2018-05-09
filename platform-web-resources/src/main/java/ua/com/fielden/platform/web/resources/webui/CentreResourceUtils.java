@@ -5,6 +5,9 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -13,12 +16,15 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -50,6 +56,9 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -58,6 +67,8 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -67,7 +78,9 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -392,7 +405,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             cdtmae.getFirstTick().setNot(root, prop, mValues.get("not") != null ? (Boolean) mValues.get("not") : null);
         }
     }
-
+    
+    private static DeviceProfile opposite(final DeviceProfile device) {
+        return DESKTOP.equals(device) ? MOBILE : DESKTOP;
+    }
+    
     /**
      * Creates the validation prototype for criteria entity of concrete [miType].
      * <p>
@@ -434,7 +451,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
-        
         validationPrototype.setCentreCopier((oldAndNewNames) -> {
             final Optional<String> oldName = oldAndNewNames._1;
             final Optional<String> newName = oldAndNewNames._2;
@@ -445,6 +461,44 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer newSavedCentre = initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre);
             
             return t2(newFreshCentre, newSavedCentre);
+        });
+        validationPrototype.setLoadableCentresSupplier(() -> {
+            final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
+            
+            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
+            
+            final User currentUser = gdtm.getUserProvider().getUser();
+            // final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
+            if (currentUser.isBase()) {
+                // Need to update 'default' centre -- this will initiate diff creation in case where it was not created yet. All named configurations are always existent in database.
+                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+                
+                final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
+                final EntityResultQueryModel<EntityCentreConfig> query =
+                    select(EntityCentreConfig.class).where().
+                    begin().prop("owner").eq().val(currentUser)/*.or().prop("owner").eq().val(baseOfTheCurrentUser)*/.end().and().
+                    prop("title").like().val(surrogateNamePrefix + "%").and().
+                    prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
+                    prop("menuItem.key").eq().val(miType.getName()).model();
+                
+                final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
+                final OrderingModel orderBy = orderBy().prop("title").asc().model();
+                try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(query).with(fetch).with(orderBy).model()) ) {
+                    stream.forEach(ecc -> {
+                        final LoadableCentreConfig lcc = lccCompanion.new_();
+                        final String surrogateWithSuffix = ecc.getTitle().replaceFirst(surrogateNamePrefix, "");
+                        final String title = surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : "DEFAULT!";
+                        lcc.setKey(title).setDesc("UNKNOWN YET");
+                        loadableConfigurations.add(lcc);
+                    });
+                    Collections.sort(loadableConfigurations);
+                    return t2(new LinkedHashSet<>(loadableConfigurations), saveAsName);
+                }
+            } else {
+                // TODO implement
+                throw new IllegalStateException("Not supported yet.");
+            }
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
