@@ -165,7 +165,8 @@
                  */
                 saveAsName: {
                     type: String,
-                    value: '' // this default value means that unnamed configuration is loaded by default 
+                    value: '', // this default value means that unnamed configuration is loaded by default
+                    observer: '_saveAsNameChanged'
                 },
                 
                 /**
@@ -1087,6 +1088,13 @@
                 return '/centre/default/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
             
+            _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {
+                if (oldSaveAsName !== undefined) { // initial 'saveAsName' definition (value '', that means default config) will be disregarded
+                    this.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
+                    this.retrieve(); // perform full centre refresh on each and every change of 'saveAsName'
+                }
+            },
+            
             runInsertionPointActions: function () {
                 var self = this;
                 var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
@@ -1098,7 +1106,7 @@
                     });
                 }
             },
-
+            
             disableView: function () {
                 this._disablementCounter += 1;
                 if (this._disablementCounter > 0 && this.currentState !== 'VIEW') {
@@ -1124,8 +1132,8 @@
                 this.$.egi.lock = false;
             }
         };
-
+        
         Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior];
-
+        
     })();
 </script>
