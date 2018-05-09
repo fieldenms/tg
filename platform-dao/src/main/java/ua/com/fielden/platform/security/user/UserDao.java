@@ -45,8 +45,8 @@ import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
-import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
+import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
@@ -81,6 +81,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     @SessionRequired
+    // Do not annotate with @Authorise(User_CanSave_Token.class). Refer ordinarySave.
     public User save(final User user) {
         if (User.system_users.VIRTUAL_USER.matches(user)) {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
@@ -95,7 +96,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     }
 
-    @Authorise(UserSaveToken.class)
+    @Authorise(User_CanSave_Token.class)
     protected User ordinarySave(final User user) {
         // remove all authenticated sessions in case the user is being deactivated
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
@@ -144,9 +145,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private void updateUser(final User user, final Set<UserRole> checkedRoles) {
         // remove list at the first stage of the algorithm contains the associations of the given user.
         // At the last stage of the algorithm that list contains only associations those must be removed from the data base
-        final Set<UserAndRoleAssociation> removeList = new HashSet<UserAndRoleAssociation>(user.getRoles());
+        final Set<UserAndRoleAssociation> removeList = new HashSet<>(user.getRoles());
         // contains the list of associations those must be saved
-        final Set<UserAndRoleAssociation> saveList = new HashSet<UserAndRoleAssociation>();
+        final Set<UserAndRoleAssociation> saveList = new HashSet<>();
 
         for (final UserRole role : checkedRoles) {
             final UserAndRoleAssociation roleAssociation = user.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, role);
@@ -312,7 +313,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     @SessionRequired
-    @Authorise(UserDeleteToken.class)
+    @Authorise(User_CanDelete_Token.class)
     public int batchDelete(final Collection<Long> userIds) {
         // first clear and remove all user sessions
         for (final Long userId: userIds) {

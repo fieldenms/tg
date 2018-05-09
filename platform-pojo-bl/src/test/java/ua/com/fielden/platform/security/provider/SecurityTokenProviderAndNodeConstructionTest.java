@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.provider;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -7,14 +8,16 @@ import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
 /**
  * A test case to ensure correct configuration of security tokens as provided for security tooling (the tree structure).
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 public class SecurityTokenProviderAndNodeConstructionTest {
@@ -54,9 +57,10 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     public void testThatSecurityTokenHierarchyIsDeterminedCorrectly() throws Exception {
         final SecurityTokenProvider provider = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider");
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        assertEquals("Incorrect number of top security tokens.", 4, topNodes.size());
+        assertEquals("Incorrect number of top security tokens.", 11, topNodes.size());
 
-        final Iterator<SecurityTokenNode> superIter = topNodes.iterator();
+        // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
+        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(3).collect(toList()).iterator();
 
         final SecurityTokenNode top1 = superIter.next();
         assertEquals("Incorrect first top token.", Top1LevelSecurityToken.class, top1.getToken());

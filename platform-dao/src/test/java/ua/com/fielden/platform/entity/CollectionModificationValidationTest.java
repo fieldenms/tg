@@ -16,16 +16,15 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentDeleteToken;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownloadToken;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentModuleToken;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentSaveToken;
-import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleReviewToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
-import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -271,24 +270,24 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         
         final SecurityTokenInfo alwaysAccessible = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AlwaysAccessibleToken.class.getName());
 
-        final SecurityTokenInfo userReview = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserReviewToken.class.getName());
-        final SecurityTokenInfo userDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserDeleteToken.class.getName());
-        final SecurityTokenInfo userSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserSaveToken.class.getName());
-        final SecurityTokenInfo userRoleReview = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleReviewToken.class.getName());
-        final SecurityTokenInfo userRoleDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleDeleteToken.class.getName());
-        final SecurityTokenInfo userRoleSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleSaveToken.class.getName());
+        final SecurityTokenInfo userDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanDelete_Token.class.getName());
+        final SecurityTokenInfo userSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanSave_Token.class.getName());
+        final SecurityTokenInfo userRoleDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRole_CanDelete_Token.class.getName());
+        final SecurityTokenInfo userRoleSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRole_CanSave_Token.class.getName());
+        final SecurityTokenInfo userRolesUpdater_CanExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRolesUpdater_CanExecute_Token.class.getName());
+        final SecurityTokenInfo userRoleTokensUpdater_CanExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRoleTokensUpdater_CanExecute_Token.class.getName());
 
-        final SecurityTokenInfo attachmentSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentSaveToken.class.getName());
-        final SecurityTokenInfo attachmentDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDeleteToken.class.getName());
-        final SecurityTokenInfo attachmentDownload = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDownloadToken.class.getName());
-        final SecurityTokenInfo attachmentModule = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentModuleToken.class.getName());
+        final SecurityTokenInfo attachmentSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(Attachment_CanSave_Token.class.getName());
+        final SecurityTokenInfo attachmentDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(Attachment_CanDelete_Token.class.getName());
+        final SecurityTokenInfo attachmentDownload = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDownload_CanExecute_Token.class.getName());
 
         final UserRoleTokensUpdater updater = createUpdater(userRole);
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
             alwaysAccessible,
-            userReview, userDelete, userSave,
-            userRoleReview, userRoleDelete, userRoleSave,
-            attachmentSave, attachmentDelete, attachmentDownload, attachmentModule
+            userDelete, userSave,
+            userRoleDelete, userRoleSave,
+            userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
+            attachmentSave, attachmentDelete, attachmentDownload
         );
         assertEquals(expectedTokens, updater.getTokens());
         

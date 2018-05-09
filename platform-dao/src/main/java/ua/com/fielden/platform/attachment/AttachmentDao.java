@@ -13,27 +13,11 @@ import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
 import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
 import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalcAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,16 +39,16 @@ import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
 
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
@@ -82,6 +66,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     }
     
     @Override
+    @Authorise(AttachmentDownload_CanExecute_Token.class)
     public Optional<File> asFile(final Attachment attachment) {
         final File file = new File(attachmentsLocation + File.separatorChar + attachment.getSha1());
         return file.canRead() ? of(file) : empty();
@@ -89,6 +74,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
 
     @Override
     @SessionRequired
+    @Authorise(Attachment_CanSave_Token.class)
     public Attachment save(final Attachment attachment) {
         attachment.isValid().ifFailure(Result::throwRuntime);
 
@@ -191,6 +177,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
      * This method should not be annotated with {@link SessionRequired} to ensure consistency of deleted attachments and associated with them files.
      */
     @Override
+    @Authorise(Attachment_CanDelete_Token.class)
     public int batchDelete(final Collection<Long> ids) {
         final AtomicInteger count = new AtomicInteger(0);
         try {
@@ -211,6 +198,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     
     @Override
     @SessionRequired
+    @Authorise(Attachment_CanDelete_Token.class)
     public void delete(final Attachment attachment) {
         // first delete the attachment record
         defaultDelete(attachment);

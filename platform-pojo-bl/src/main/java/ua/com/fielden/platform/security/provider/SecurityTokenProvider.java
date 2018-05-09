@@ -11,12 +11,15 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleReviewToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
-import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name. The result is presented as as a tree-like structure containing all
@@ -43,12 +46,16 @@ public class SecurityTokenProvider {
      */
     public SecurityTokenProvider(final String path, final String packageName) {
         final List<Class<? extends ISecurityToken>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
-        allTokens.add(UserReviewToken.class);
-        allTokens.add(UserSaveToken.class);
-        allTokens.add(UserDeleteToken.class);
-        allTokens.add(UserRoleReviewToken.class);
-        allTokens.add(UserRoleSaveToken.class);
-        allTokens.add(UserRoleDeleteToken.class);
+        allTokens.add(User_CanSave_Token.class);
+        allTokens.add(User_CanDelete_Token.class);
+        allTokens.add(UserRole_CanSave_Token.class);
+        allTokens.add(UserRole_CanDelete_Token.class);
+        allTokens.add(UserRolesUpdater_CanExecute_Token.class);
+        allTokens.add(UserRoleTokensUpdater_CanExecute_Token.class);
+        allTokens.add(Attachment_CanSave_Token.class);
+        allTokens.add(Attachment_CanDelete_Token.class);
+        allTokens.add(AttachmentDownload_CanExecute_Token.class);
+
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 
