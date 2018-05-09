@@ -146,7 +146,7 @@
         <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
             <div class="fit layout vertical">
                 <paper-material class="selection-material layout vertical">
-                    <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="[[saveAsName]]" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]">
+                    <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]">
                         <content select=".custom-selection-criteria"></content>
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
@@ -227,7 +227,10 @@
             _default: Function,
             run: Function,
             _showDialog: Function,
-            saveAsName: String,
+            saveAsName: {
+                type: String,
+                notify: true
+            },
             _createContextHolder: Function,
             uuid: String,
             _activateResultSetView: Function,

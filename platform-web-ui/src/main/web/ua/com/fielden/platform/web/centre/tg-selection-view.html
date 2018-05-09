@@ -64,7 +64,13 @@
             
             properties: {
                 _showDialog: Function,
-                saveAsName: String,
+                /**
+                 * Current saveAsName for centre configuration. This will flow upward to main centre elements and will trigger centre reload immediately after change.
+                 */
+                saveAsName: {
+                    type: String,
+                    notify: true
+                },
                 _createContextHolder: Function,
                 uuid: String
             },
@@ -87,6 +93,8 @@
                         },
                         postActionSuccess: function (functionalEntity, action) {
                             console.log('postActionSuccess: Copy', functionalEntity);
+                            // update saveAsName with new name after successful copy action
+                            self.saveAsName = functionalEntity.get('title');
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigCopyAction', currentState:'EDIT', centreUuid: self.uuid
