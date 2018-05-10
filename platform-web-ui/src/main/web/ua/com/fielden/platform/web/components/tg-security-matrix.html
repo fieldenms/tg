@@ -17,13 +17,16 @@
                 height: 100%;
                 width: 100%;
                 @apply(--layout-vertical);
+
             }
             tg-entity-master {
                 @apply(--layout-vertical);
+
             }
             .filter-panel::content > .filter-element {
                 margin: 0 10px;
                 @apply(--layout-flex);
+
             }
             .filter-panel {
                 flex-shrink: 0;
@@ -57,9 +60,10 @@
             'use strict'
             class SecurityMatrixEntity extends EntityStub {
 
-                constructor(securityTokenEntity, userRoles, tokenRoleMap, parent) {
+                constructor(securityTokenEntity, userRoles, tokenRoleMap, columnList, parent) {
                     super(securityTokenEntity.get("key"));
                     this.$visible = true;
+                    this.$columnList = columnList;
                     this.title = securityTokenEntity.get("title");
                     this.desc = securityTokenEntity.get("desc");
                     if (parent) {
@@ -67,140 +71,172 @@
                     }
                     this.children = [];
                     if (securityTokenEntity.children && securityTokenEntity.children.length > 0) {
-                        this.children = securityTokenEntity.children.map(securityToken => new SecurityMatrixEntity(securityToken, userRoles, tokenRoleMap, this));
+                        this.children = securityTokenEntity.children.map(securityToken => new SecurityMatrixEntity(securityToken, userRoles, tokenRoleMap, columnList, this));
                     }
                     this.roleIdMap = {};
                     this.idRoleMap = {};
+
                     Object.values(userRoles).forEach(role => {
                         const roleKey = replaceWhitespacesWithUnderscore(role.get("key"));
                         this.roleIdMap[roleKey] = role.get("id");
-                        this[roleKey] = false;
                         this.idRoleMap[role.get("id")] = roleKey;
+                        this[roleKey] = false;
                     });
-                    const availTokenList = tokenRoleMap[securityTokenEntity.get("key")];
-                    if (availTokenList) {
-                        availTokenList.forEach(roleId => {
-                            this[this.idRoleMap[roleId]] = true;
-                        });
-                    }
-                    //Initiate 
-                    this._tokenChecked = Object.keys(this.roleIdMap).some(role => this[role]) || (this.children && this.children.length > 0 && this.children.some(child => child._tokenChecked));
-                    this._tokenRoleAssociationHandler = {};
-                    this._newAssociations = [];
-                    this._removedAssociations  = [];
-                }
-
-                set(property, value) {
-                    const oldValue = this.get(property);
-                    super.set(property, value);
-                    if (Object.keys(this.roleIdMap).includes(property) && oldValue !== value) {
-                        if (value) {
-                            updateAssociations(this.roleIdMap[property], this._newAssociations, this._removedAssociations);
-                        } else {
-                            updateAssociations(this.roleIdMap[property], this._removedAssociations, this._newAssociations);
+                    if (!this.children || this.children.length == 0) {
+                        const availTokenList = tokenRoleMap[securityTokenEntity.get("key")];
+                        if (availTokenList) {
+                            availTokenList.forEach(roleId => {
+                                this[this.idRoleMap[roleId]] = true;
+                            });
                         }
                     }
-                    if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-                        this._tokenRoleAssociationHandler[property](value, this._getState(property));
-                    }
-                }
-                
-                getAssociationsToSave(objToSave) {
-                    objToSave[this.get("id")] = this._newAssociations.slice();
-                    if (this.children && this.children.length > 0) {
-                        this.children.forEach(child => child.getAssociationsToSave(objToSave));
-                    }
-                }
-                
-                getAssociationsToRemove(objToSave) {
-                    objToSave[this.get("id")] = this._removedAssociations.slice();
-                    if (this.children && this.children.length > 0) {
-                        this.children.forEach(child => child.getAssociationsToRemove(objToSave));
-                    }
-                }
-                
-                isChanged() {
-                    return this._isChanged() || (this.children && this.children.length > 0 && this.children.some(child => child.isChanged()));
-                }
-                
-                reset() {
-                    if (this.children && this.children.length > 0) {
-                        this.children.forEach(child => child.reset());
-                    }
-                    this._newAssociations.slice().forEach(associationId => {
-                        this.set(this.idRoleMap[associationId], false);
-                        this._checkColumnParent(this.idRoleMap[associationId]);
-                    });
-                    this._removedAssociations.slice().forEach(associationId => {
-                        this.set(this.idRoleMap[associationId], true);
-                        this._checkColumnParent(this.idRoleMap[associationId]);
-                    });
-                    this._checkRowParent();
-                    this._checkColumnParent("_tokenChecked");
-                }
-                
-                clearCurrentState() {
-                    if (this.children && this.children.length > 0) {
-                        this.children.forEach(child => child.clearCurrentState());
-                    }
+                    //Initiate
+                    this._tokenRoleAssociationHandler = {};
                     this._newAssociations = [];
                     this._removedAssociations = [];
                 }
-                
+
+                set(property, value) {
+                    if (!this.children || this.children.length === 0) {
+                        const oldValue = this.get(property);
+                        super.set(property, value);
+                        if (Object.keys(this.roleIdMap).includes(property) && oldValue !== value) {
+                            if (value) {
+                                updateAssociations(this.roleIdMap[property], this._newAssociations, this._removedAssociations);
+                            } else {
+                                updateAssociations(this.roleIdMap[property], this._removedAssociations, this._newAssociations);
+                            }
+                        }
+                        if (typeof this._tokenRoleAssociationHandler[property] === "function") {
+                            this._tokenRoleAssociationHandler[property](value, value ? "CHECKED" : "UNCHECKED");
+                        }
+                    }
+                }
+
+                _updatePropertyState(property, value) {
+                    const state = this._getState(property);
+                    if (typeof this._tokenRoleAssociationHandler[property] === "function") {
+                        const newAllState = this._getState(property);
+                        const newVisibleState = this._getState(property, true);
+                        const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
+                        this._tokenRoleAssociationHandler[property](newValue, newAllState);
+                    }
+                }
+
+                getAssociationsToSave(objToSave) {
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => child.getAssociationsToSave(objToSave));
+                    } else {
+                        objToSave[this.get("id")] = this._newAssociations.slice();
+                    }
+                }
+
+                getAssociationsToRemove(objToSave) {
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => child.getAssociationsToRemove(objToSave));
+                    } else {
+                        objToSave[this.get("id")] = this._removedAssociations.slice();
+                    }
+                }
+
+                isChanged() {
+                    return (this.children && this.children.length > 0 && this.children.some(child => child.isChanged())) || this._isChanged();
+                }
+
+                reset() {
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => child.reset());
+                    } else {
+                        this._newAssociations.slice().forEach(associationId => {
+                            this.set(this.idRoleMap[associationId], false);
+                            this._checkColumnParent(this.idRoleMap[associationId], false);
+                        });
+                        this._removedAssociations.slice().forEach(associationId => {
+                            this.set(this.idRoleMap[associationId], true);
+                            this._checkColumnParent(this.idRoleMap[associationId], true);
+                        });
+                        this._updatePropertyState("_tokenChecked", this._getState("_tokenChecked") === "CHECKED");
+                    }
+                }
+
+                clearCurrentState() {
+                    if (this.children && this.children.length > 0) {
+                        this.children.forEach(child => child.clearCurrentState());
+                    } else {
+                        this._newAssociations = [];
+                        this._removedAssociations = [];
+                    }
+                }
+
+                _isPropertyVisible(property) {
+                    const column = this.$columnList.find(column => replaceWhitespacesWithUnderscore(column.columnTitle) === property);
+                    return column ? column.visible : true;
+                }
+
                 _isChanged() {
                     return this._newAssociations.length > 0 || this._removedAssociations.length > 0;
                 }
 
                 _check(property, value) {
-                    if (this.$visible) {
+                    if (this.$visible && this._isPropertyVisible(property)) {
                         this._checkWithoutParent(property, value);
-                        this._checkColumnParent(property);
+                        this._checkColumnParent(property, value);
                     }
                 }
 
                 _checkWithoutParent(property, value) {
                     if (this.children && this.children.length > 0) {
                         this.children.forEach(child => {
-                            if (child.$visible) {
+                            if (child.$visible && this._isPropertyVisible(property)) {
                                 child._checkWithoutParent(property, value);
                             }
                         });
-                    }
-                    if (property === "_tokenChecked") {
-                        Object.keys(this.roleIdMap).forEach(roleKey => {
-                            this.set(roleKey, value);
-                            this._checkColumnParent(roleKey);
-                        });
-                        this.set(property, value);
-                    } else if (Object.keys(this.roleIdMap).includes(property)) {
-                        this.set(property, value);
-                        this._checkRowParent();
-                    }
-                }
-
-                _checkRowParent() {
-                    this.set("_tokenChecked", this._getState("_tokenChecked") !== "UNCHECKED");
-                }
-
-                _checkColumnParent(property) {
-                    if (this.parent) {
-                        const newState = this.parent._getState(property);
                         if (property === "_tokenChecked") {
-                            this.parent.set(property, newState !== "UNCHECKED");
+                            Object.keys(this.roleIdMap).forEach(roleKey => {
+                                if (this._isPropertyVisible(roleKey)) {
+                                    this._updatePropertyState(roleKey, value);
+                                }
+                                this._updatePropertyState("_tokenChecked", value);
+                            });
                         } else if (Object.keys(this.roleIdMap).includes(property)) {
-                            this.parent.set(property, newState !== "UNCHECKED");
-                            this.parent._checkRowParent();
+                            if (this._isPropertyVisible(property)) {
+                                this._updatePropertyState(property, value);
+                                this._updatePropertyState("_tokenChecked", value);
+                            }
                         }
-                        this.parent._checkColumnParent(property);
-                    }
-                }
-
-                _getState(property) {
-                    if (this.children && this.children.length > 0) {
-                        return calculateState(this.children.map(child => child._getState(property)));
                     } else {
                         if (property === "_tokenChecked") {
-                            return calculateState(Object.keys(this.roleIdMap).map(roleKey => this._getState(roleKey)));
+                            Object.keys(this.roleIdMap).forEach(roleKey => {
+                                if (this._isPropertyVisible(roleKey)) {
+                                    this.set(roleKey, value);
+                                }
+                            });
+                            this._updatePropertyState("_tokenChecked", value);
+                        } else if (Object.keys(this.roleIdMap).includes(property)) {
+                            if (this._isPropertyVisible(property)) {
+                                this.set(property, value);
+                                this._updatePropertyState("_tokenChecked", value);
+                            }
+                        }
+                    }
+                }
+
+                _checkColumnParent(property, value) {
+                    if (this.parent) {
+                        if (Object.keys(this.roleIdMap).includes(property)) {
+                            this.parent._updatePropertyState(property, value);
+                        }
+                        this.parent._updatePropertyState("_tokenChecked", value);
+                        this.parent._checkColumnParent(property, value);
+                    }
+                }
+
+                _getState(property, visible) {
+                    if (this.children && this.children.length > 0) {
+                        return calculateState(this.children.filter(child => visible ? child.$visible : true).map(child => child._getState(property)));
+                    } else {
+                        if (property === "_tokenChecked") {
+                            return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this._getState(roleKey)));
                         } else if (Object.keys(this.roleIdMap).includes(property)) {
                             return this.get(property) ? "CHECKED" : "UNCHECKED";
                         }
@@ -264,7 +300,7 @@
                     _saveSecurityMatrix: Function,
                     _postSecurityMatrixSaved: Function
                 },
-                
+
                 listeners: {
                     "tg-tree-state-changed": "_toggleButtonStates"
                 },
@@ -308,15 +344,15 @@
                         }
                     });
                 },
-                
+
                 filterTokens: function (text) {
                     this.$.securityMatrix.filterTokens(text);
                 },
-                
+
                 filterRoles: function (text) {
                     this.$.securityMatrix.filterRoles(text);
                 },
-                
+
                 _isNecessaryForConversion: function (propertyName) {
                     return ['associationsToSave', 'associationsToRemove'].includes(propertyName);
                 },
@@ -352,11 +388,11 @@
                             });
                         });
                         this.columns = columnList;
-                        this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap")));
+                        this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList));
                         this._toggleButtonStates();
                     }
                 },
-                
+
                 _masterDom: function () {
                     return this.$.masterDom;
                 },

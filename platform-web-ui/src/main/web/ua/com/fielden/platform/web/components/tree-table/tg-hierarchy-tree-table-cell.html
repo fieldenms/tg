@@ -28,7 +28,7 @@
     </style>
     <template>
         <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[_isLeaf(entity)]]" collapsed$="[[collapsed]]" on-tap="_toggle"></iron-icon>
-        <input id="checkbox" type="checkbox" checked$="[[entity.entity._tokenChecked]]" on-change="_stateChanged">
+        <input id="checkbox" type="checkbox" on-change="_stateChanged">
         <div class="flex truncate" highlighted$="[[highlighted]]" tooltip-text$="[[entity.entity.desc]]">[[_getCellValue(entity.entity, column.property)]]</div>
     </template>
     <script>
@@ -47,19 +47,19 @@
                     }
                 },
 
-                observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)",
-                            "_indeterminedSateChanged(state)"],
+                observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)"],
 
                 attached: function () {
-                    this.state = this.entity.entity._getState("_tokenChecked");
+                    const state = this.entity.entity._getState("_tokenChecked");
+                    this._setState(state === "CHECKED", state);
                     this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
-                        this.$.checkbox.checked = value;
-                        this.state = state; 
+                        this._setState(value, state);
                         this.fire("tg-tree-state-changed");
                     };
                 },
                 
-                _indeterminedSateChanged: function (state) {
+                _setState(value, state) {
+                    this.$.checkbox.checked = value;
                     this.$.checkbox.indeterminate = state === "SEMICHECKED";
                 },
 

@@ -13,7 +13,7 @@
         }
     </style>
     <template>
-        <input id="checkbox" type="checkbox" checked$="[[checked]]" on-change="_stateChanged">
+        <input id="checkbox" type="checkbox" on-change="_stateChanged">
     </template>
     <script>
         (function () {
@@ -39,20 +39,17 @@
                     entity: Object
                 },
                 
-                observers: [ "_indeterminedSateChanged(state)"],
-                
                 attached: function() {
-                    this.checked = this.entity.get(this.column.property);
-                    this.state = this.entity._getState(this.column.property);
+                    const state = this.entity._getState(this.column.property);
+                    this._setState(state === "CHECKED", state);
                     this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
-                        this.checked = value;
-                        this.$.checkbox.checked = value;
-                        this.state = state; 
+                        this._setState(value, state);
                         this.fire("tg-tree-state-changed");
                     };
                 },
                 
-                _indeterminedSateChanged: function (state) {
+                _setState(value, state) {
+                    this.$.checkbox.checked = value;
                     this.$.checkbox.indeterminate = state === "SEMICHECKED";
                 },
                 
