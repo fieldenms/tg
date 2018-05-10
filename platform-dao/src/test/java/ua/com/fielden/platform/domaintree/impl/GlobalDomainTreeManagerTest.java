@@ -51,7 +51,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     private IGlobalDomainTreeManager initGlobalManagerWithEntityCentre() {
         final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
         managerForNonBaseUser.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        managerForNonBaseUser.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, NON_BASE_USERS_SAVE_AS);
+        managerForNonBaseUser.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, NON_BASE_USERS_SAVE_AS, null);
         return managerForNonBaseUser;
     }
 
@@ -73,18 +73,18 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 
         // should be accepted before saving
         try {
-            managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
+            managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS, null);
             fail("The save operation should be performed for fully accepted instance of entity-centre manager.");
         } catch (final DomainTreeException e) {
         }
         locatorManager.acceptLocatorManager(ROOT, property);
         // save a box with locators
-        managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
+        managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS, null);
 
         test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART2(property, locatorManager);
         assertNull("Should be null.", locatorManager.getLocatorManager(ROOT, property));
         // save a box with locators
-        managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
+        managerForNonBaseUser.saveEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS, null);
         assertNull("Should be null.", locatorManager.getLocatorManager(ROOT, property));
     }
 
@@ -147,7 +147,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     public void test_that_centre_owning_works() {
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
+        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null, null);
 
         assertTrue("Should be owner.", baseMgr.isEntityCentreManagerOwner(MENU_ITEM_TYPE, null));
 
@@ -156,7 +156,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 
         assertFalse("Should be NOT owner.", nonBaseMgr.isEntityCentreManagerOwner(MENU_ITEM_TYPE, null));
 
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "CENTRE");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "CENTRE", null);
         assertTrue("Should be owner.", nonBaseMgr.isEntityCentreManagerOwner(MENU_ITEM_TYPE, "CENTRE"));
     }
 
@@ -179,7 +179,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         assertNotNull("Should be initialised.", baseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null));
-        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null); // uploading
+        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null, null); // uploading
 
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
@@ -213,7 +213,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
 
         baseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).setRunAutomatically(true);
-        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
+        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null, null);
 
         final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), baseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).model();
         final EntityCentreConfig centre = getInstance(IEntityCentreConfig.class).getEntity(model);
@@ -228,7 +228,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).setRunAutomatically(true);
         try {
-            nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
+            nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null, null);
             fail("Should fail.");
         } catch (final DomainTreeException e) {
         }
@@ -259,7 +259,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and BASE SAVE AS REPORT for user USER1
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT", null);
 
         // check init methods for another instance of application for user USER1
         final IGlobalDomainTreeManager newBaseMgr = createManagerForNonBaseUser();
@@ -274,20 +274,20 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and BASE/NON-BASE SAVE AS REPORTS for user USER2
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "b");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "b", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("b");
             }
         }, baseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "a");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "a", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("a");
                 add("b");
             }
         }, baseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "c");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "c", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("a");
@@ -302,20 +302,20 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create principle and non-principle reports for user USER1 and check the order
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "d");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "d", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("d");
             }
         }, baseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "c");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "c", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("c");
                 add("d");
             }
         }, baseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "e");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "e", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("c");
@@ -335,7 +335,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         }, newNonBaseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
         newNonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         assertNotNull("Should be initialised.", newNonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null));
-        newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "b");
+        newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "b", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("b");
@@ -344,7 +344,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
                 add("e");
             }
         }, newNonBaseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
-        newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "m");
+        newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "m", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("b");
@@ -361,7 +361,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and BASE/NON-BASE SAVE AS REPORTS for user USER2
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("BASE SAVE AS REPORT");
@@ -369,7 +369,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         }, baseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("BASE SAVE AS REPORT");
@@ -398,7 +398,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and BASE/NON-BASE SAVE AS REPORTS for user USER2
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("BASE SAVE AS REPORT");
@@ -406,7 +406,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         }, baseMgr.nonPrincipleEntityCentreNames(MENU_ITEM_TYPE));
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT", null);
         assertEquals("Incorrect non-principle names of entity-centres.", new ArrayList<String>() {
             {
                 add("BASE SAVE AS REPORT");
@@ -433,11 +433,11 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).getFirstTick().check(ROOT, "integerProp", true);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "SAME");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "SAME", null);
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         baseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).getFirstTick().check(ROOT, "integerProp", false);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "SAME");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "SAME", null);
 
         // check init methods for another instance of application for user USER2
         final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
@@ -463,7 +463,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and REPORT report for USER2
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         // check init methods for another instance of application for user USER2
         final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
@@ -473,12 +473,12 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         } catch (final DomainTreeException e) {
         }
         try {
-            newNonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+            newNonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT", null);
             fail("Should be initialised before.");
         } catch (final DomainTreeException e) {
         }
         try {
-            newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "REPORT", "NEW-REPORT");
+            newNonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "REPORT", "NEW-REPORT", null);
             fail("Should be initialised before.");
         } catch (final DomainTreeException e) {
         }
@@ -500,12 +500,12 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).getFirstTick().check(ROOT, "integerProp", true);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         assertFalse("Should not be changed after saveAs.", nonBaseMgr.isChangedEntityCentreManager(MENU_ITEM_TYPE, "REPORT"));
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").getFirstTick().check(ROOT, "integerProp", false);
         assertTrue("Should be changed after modification.", nonBaseMgr.isChangedEntityCentreManager(MENU_ITEM_TYPE, "REPORT"));
-        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT", null);
         assertFalse("Should not be changed after save.", nonBaseMgr.isChangedEntityCentreManager(MENU_ITEM_TYPE, "REPORT"));
         assertFalse("Should NOT be modified.", nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").getFirstTick().isChecked(ROOT, "integerProp"));
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").getFirstTick().check(ROOT, "integerProp", true);
@@ -523,7 +523,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).getFirstTick().check(ROOT, "integerProp", true);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         assertFalse("Should not be changed.", nonBaseMgr.isChangedEntityCentreManager(MENU_ITEM_TYPE, "REPORT"));
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").getFirstTick().check(ROOT, "integerProp", false);
@@ -556,7 +556,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         } catch (final DomainTreeException e) {
         }
         try {
-            nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "REPORT", "NEW_REPORT_TITLE");
+            nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "REPORT", "NEW_REPORT_TITLE", null);
             fail("Saving As is not permitted while report is freezed. Please do you job -- save/discard and SaveAs if you need!");
         } catch (final DomainTreeException e) {
         }
@@ -596,7 +596,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         currentMgrBeforeFreeze = nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
 
         // save (precisely "apply") after-freezing changes
-        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT", null);
 
         assertFalse("The current mgr after 'acceptance unfreezing' should not be identical to currentMgrBeforeFreeze.", nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT") == currentMgrBeforeFreeze);
         assertTrue("The current mgr after 'acceptance unfreezing' should be equal to currentMgrBeforeFreeze.", nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").equals(currentMgrBeforeFreeze));
@@ -619,7 +619,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).setRunAutomatically(true);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         // init analysis => it should become 'changed' within CENTRE
         final String name = "A brand new PIVOT analysis";
@@ -647,13 +647,13 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).setRunAutomatically(true);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         // init analysis => it should become 'changed' within CENTRE
         final String name = "A brand new PIVOT analysis";
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").initAnalysisManagerByDefault(name, AnalysisType.PIVOT);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").acceptAnalysisManager(name);
-        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT", null);
         assertFalse("The CENTRE should be 'unchanged'.", nonBaseMgr.isChangedEntityCentreManager(MENU_ITEM_TYPE, "REPORT"));
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").getAnalysisManager(name).setVisible(false);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").freezeAnalysisManager(name);
@@ -683,7 +683,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null).setRunAutomatically(true);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         // modify and reload instantly
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").setRunAutomatically(false);
@@ -730,7 +730,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and REPORT report for USER2
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         // remove report
         nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
@@ -748,10 +748,10 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and REPORT report for USER2
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").initAnalysisManagerByDefault("Analysis", AnalysisType.SIMPLE);
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").acceptAnalysisManager("Analysis");
-        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
+        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "REPORT", null);
 
         // remove report
         nonBaseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
@@ -769,7 +769,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and REPORT report for USER1
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "REPORT", null);
 
         // remove report
         baseMgr.removeEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
@@ -787,26 +787,26 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and BASE/NON-BASE reports for user USER2
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE", null);
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE", "BASE-DERIVED");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE", "BASE-DERIVED", null);
 
-        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE");
+        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null, null);
+        baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE", null);
 
         try {
-            nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
+            nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null, null);
             fail("It is not own report. Should not be able to save.");
         } catch (final DomainTreeException e) {
         }
         try {
-            nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE");
+            nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE", null);
             fail("It is not own report. Should not be able to save.");
         } catch (final DomainTreeException e) {
         }
-        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE-DERIVED");
+        nonBaseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, "BASE-DERIVED", null);
     }
 
     @Test
@@ -814,16 +814,16 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         // create PRINCIPLE and BASE/NON-BASE reports for user USER2
         final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE");
-        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE", "BASE-DERIVED-1");
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE", null);
+        baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE", "BASE-DERIVED-1", null);
         final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE");
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE-DERIVED-1");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "PRINCIPLE-DERIVED");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE", "BASE-DERIVED-2");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE-DERIVED-1", "BASE-DERIVED-1-DERIVED-2");
-        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "PRINCIPLE-DERIVED", "PRINCIPLE-DERIVED-DERIVED-1");
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "PRINCIPLE-DERIVED", null);
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE", "BASE-DERIVED-2", null);
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE-DERIVED-1", "BASE-DERIVED-1-DERIVED-2", null);
+        nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "PRINCIPLE-DERIVED", "PRINCIPLE-DERIVED-DERIVED-1", null);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////

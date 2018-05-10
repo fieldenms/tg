@@ -44,7 +44,7 @@ public class CentreConfigCopyActionDao extends CommonEntityDao<CentreConfigCopyA
         final Optional<String> currentSaveAsName = "".equals(currentSaveAsNameStr) ? empty() : of(currentSaveAsNameStr);
         
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-        final T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer> freshAndSaved = criteriaEntity.centreCopier().apply(t2(currentSaveAsName, of(entity.getTitle())));
+        final T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer> freshAndSaved = criteriaEntity.centreCopier().apply(t2(currentSaveAsName, of(entity.getTitle())), entity.getDesc());
         System.out.println("freshAndSaved = " + freshAndSaved);
         
         return super.save(entity);

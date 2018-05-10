@@ -585,7 +585,7 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
 
         final GlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
         managerForNonBaseUser.initEntityCentreManager(MENU_ITEM_TYPE, null);
-        managerForNonBaseUser.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, NON_BASE_USERS_SAVE_AS);
+        managerForNonBaseUser.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, NON_BASE_USERS_SAVE_AS, null);
 
         final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
         // initialise analysis to ensure that equals / serialisation / copying works

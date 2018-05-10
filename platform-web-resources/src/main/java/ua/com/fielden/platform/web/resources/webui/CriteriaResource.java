@@ -308,7 +308,7 @@ public class CriteriaResource extends AbstractWebResource {
             }
             
             if (isRunning) {
-                initAndCommit(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), updatedFreshCentre);
+                initAndCommit(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), updatedFreshCentre, null);
             }
             
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device());

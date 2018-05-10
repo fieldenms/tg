@@ -826,7 +826,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name) {
+    public IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final String newDesc) {
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         if (isFreezedEntityCentreManager(menuItemType, name)) {
@@ -845,6 +845,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             if (count == 1) { // for current user => 1 entity-centre
                 final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
                 ecc.setConfigBody(getSerialiser().serialise(currentMgr));
+                ecc.setDesc(newDesc == null ? "entity centre for " + menuItemType.getSimpleName() : newDesc);
                 saveCentre(currentMgr, ecc);
                 // TODO entityCentreAnalysisConfigController.save(entity)
                 if (persistentCentres != null) {
@@ -858,9 +859,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                         // In this case the centre can exist virtually, without its cloud counter-part
                         // But explicit save has been requested by base user => in this case save should be done.
                         final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemType.getName()));
+                        ecc.setDesc("entity centre for " + menuItemType.getSimpleName());
                         ecc.setPrincipal(true);
                         final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
                         ecc.setConfigBody(getSerialiser().serialise(centre));
+                        ecc.setDesc(newDesc == null ? "entity centre for " + menuItemType.getSimpleName() : newDesc);
                         saveCentre(centre, ecc);
                         if (persistentCentres != null) {
                             persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
@@ -924,7 +927,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
+    public IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName, final String newDesc) {
         synchronized (this) {
             validateMenuItemType(menuItemType);
             validateMenuItemTypeRootType(menuItemType);
@@ -958,6 +961,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                     menuItemToUse = mainMenuItemController.save(factory.newByKey(MainMenuItem.class, menuItemTypeName));
                 }
                 final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, user, newTitle, menuItemToUse);
+                ecc.setDesc(newDesc == null ? "entity centre for " + menuItemType.getSimpleName() : newDesc);
                 ecc.setConfigBody(getSerialiser().serialise(copyMgr));
                 saveCentre(copyMgr, ecc);
                 init(menuItemType, newName, copyMgr, true);

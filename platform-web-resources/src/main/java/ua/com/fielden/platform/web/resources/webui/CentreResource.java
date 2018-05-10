@@ -122,7 +122,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             }
             
             final ICentreDomainTreeManagerAndEnhancer freshCentre = centre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
-            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device(), freshCentre);
+            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device(), freshCentre, null);
             
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
             return createCriteriaRetrievalEnvelope(freshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device());
@@ -145,7 +145,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device());
             // discards fresh centre's changes (fresh centre could have no changes)
             if (isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
-                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre);
+                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre, null);
             }
             
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)

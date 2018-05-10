@@ -454,14 +454,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
-        validationPrototype.setCentreCopier((oldAndNewNames) -> {
+        validationPrototype.setCentreCopier((oldAndNewNames, newDesc) -> {
             final Optional<String> oldName = oldAndNewNames._1;
             final Optional<String> newName = oldAndNewNames._2;
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, oldName, device);
             final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, oldName, device);
             
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre);
-            final ICentreDomainTreeManagerAndEnhancer newSavedCentre = initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre);
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
+            final ICentreDomainTreeManagerAndEnhancer newSavedCentre = initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
             
             return t2(newFreshCentre, newSavedCentre);
         });
@@ -484,7 +484,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
                     stream.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE");
+                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE " + ecc.getDesc());
                         loadableConfigurations.add(lcc);
                     });
                     Collections.sort(loadableConfigurations);
@@ -502,15 +502,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                      final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                     streamForCurrentUser.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE");
+                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE " + ecc.getDesc());
                         loadableConfigurations.add(lcc);
                     });
                     streamForBaseUser.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(true)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("INHERITED");
+                        lcc/*TODO .setInherited(true)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("INHERITED " + ecc.getDesc());
                         if (loadableConfigurations.contains(lcc)) {
                             final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
-                            foundLcc/*TODO .setInherited(true)*/.setDesc("INHERITED");
+                            foundLcc/*TODO .setInherited(true)*/.setDesc("INHERITED " + ecc.getDesc());
                         } else {
                             loadableConfigurations.add(lcc);
                         }
