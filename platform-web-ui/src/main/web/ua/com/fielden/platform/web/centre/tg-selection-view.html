@@ -105,9 +105,7 @@
                         },
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful load action
-                            console.error();
                             const chosenId = functionalEntity.get('chosenIds')[0];
-                            console.error('AAA', chosenId === 'DEFAULT!' ? '' : chosenId);
                             self.saveAsName = chosenId === 'DEFAULT!' ? '' : chosenId;
                         },
                         attrs: {

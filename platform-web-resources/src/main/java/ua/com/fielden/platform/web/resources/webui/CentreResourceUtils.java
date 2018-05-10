@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteri
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
@@ -58,7 +57,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -410,6 +408,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return DESKTOP.equals(device) ? MOBILE : DESKTOP;
     }
     
+    private static String obtainTitleFrom(final String surrogateName, final String surrogateNamePrefix) {
+        final String surrogateWithSuffix = surrogateName.replaceFirst(surrogateNamePrefix, "");
+        return surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : "DEFAULT!";
+    }
+    
     /**
      * Creates the validation prototype for criteria entity of concrete [miType].
      * <p>
@@ -469,35 +472,52 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
             
             final User currentUser = gdtm.getUserProvider().getUser();
-            // final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
+            final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
+            final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser =
+                select(EntityCentreConfig.class).where().
+                begin().prop("owner").eq().val(currentUser).end().and().
+                prop("title").like().val(surrogateNamePrefix + "%").and().
+                prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
+                prop("menuItem.key").eq().val(miType.getName()).model();
+            final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
             if (currentUser.isBase()) {
-                // Need to update 'default' centre -- this will initiate diff creation in case where it was not created yet. All named configurations are always existent in database.
-                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
-                
-                final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-                final EntityResultQueryModel<EntityCentreConfig> query =
-                    select(EntityCentreConfig.class).where().
-                    begin().prop("owner").eq().val(currentUser)/*.or().prop("owner").eq().val(baseOfTheCurrentUser)*/.end().and().
-                    prop("title").like().val(surrogateNamePrefix + "%").and().
-                    prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
-                    prop("menuItem.key").eq().val(miType.getName()).model();
-                
-                final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
-                final OrderingModel orderBy = orderBy().prop("title").asc().model();
-                try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(query).with(fetch).with(orderBy).model()) ) {
+                try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
                     stream.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        final String surrogateWithSuffix = ecc.getTitle().replaceFirst(surrogateNamePrefix, "");
-                        final String title = surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : "DEFAULT!";
-                        lcc.setKey(title).setDesc("UNKNOWN YET");
+                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE");
                         loadableConfigurations.add(lcc);
                     });
                     Collections.sort(loadableConfigurations);
                     return t2(new LinkedHashSet<>(loadableConfigurations), saveAsName);
                 }
             } else {
-                // TODO implement
-                throw new IllegalStateException("Not supported yet.");
+                final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
+                final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser =
+                    select(EntityCentreConfig.class).where().
+                    begin().prop("owner").eq().val(baseOfTheCurrentUser).end().and().
+                    prop("title").like().val(surrogateNamePrefix + "%").and().
+                    prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
+                    prop("menuItem.key").eq().val(miType.getName()).model();
+                try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
+                     final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
+                    streamForCurrentUser.forEach(ecc -> {
+                        final LoadableCentreConfig lcc = lccCompanion.new_();
+                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE");
+                        loadableConfigurations.add(lcc);
+                    });
+                    streamForBaseUser.forEach(ecc -> {
+                        final LoadableCentreConfig lcc = lccCompanion.new_();
+                        lcc/*TODO .setInherited(true)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("INHERITED");
+                        if (loadableConfigurations.contains(lcc)) {
+                            final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
+                            foundLcc/*TODO .setInherited(true)*/.setDesc("INHERITED");
+                        } else {
+                            loadableConfigurations.add(lcc);
+                        }
+                    });
+                    Collections.sort(loadableConfigurations);
+                    return t2(new LinkedHashSet<>(loadableConfigurations), saveAsName);
+                }
             }
         });
         
