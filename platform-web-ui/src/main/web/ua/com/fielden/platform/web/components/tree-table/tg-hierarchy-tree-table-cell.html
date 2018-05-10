@@ -3,10 +3,6 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
-<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
-<link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
-<link rel="import" href="/resources/polymer/paper-styles/color.html">
-
 <dom-module id="tg-hierarchy-tree-table-cell">
     <style>
         :host {
@@ -23,26 +19,6 @@
         iron-icon[collapsed] {
             transform: rotate(-90deg);
         }
-        paper-checkbox {
-            --paper-checkbox-checked-color: var(--paper-light-blue-700);
-            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
-            --paper-checkbox-unchecked-color: var(--paper-grey-900);
-            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
-        }
-        paper-checkbox[checked-state=SEMICHECKED] {
-            --paper-checkbox-checked-color: #acdbfe;
-            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
-        }
-        paper-checkbox[group-checkbox] {
-            --paper-checkbox-checked-color: var(--paper-light-green-700);
-            --paper-checkbox-checked-ink-color: var(--paper-light-green-700);
-            --paper-checkbox-unchecked-color: var(--paper-grey-900);
-            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
-        }
-        paper-checkbox[group-checkbox][checked-state=SEMICHECKED] {
-            --paper-checkbox-checked-color: #bee5bf;
-            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
-        }
         iron-icon[invisible] {
             visibility: hidden;
         }
@@ -52,7 +28,7 @@
     </style>
     <template>
         <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[_isLeaf(entity)]]" collapsed$="[[collapsed]]" on-tap="_toggle"></iron-icon>
-        <paper-checkbox class="center" checked="[[entity.entity._tokenChecked]]" checked-state$="[[state]]" group-checkbox$="[[_isGroupCheckbox(entity.children)]]" on-change="_stateChanged"></paper-checkbox>
+        <input id="checkbox" type="checkbox" checked$="[[entity.entity._tokenChecked]]" on-change="_stateChanged">
         <div class="flex truncate" highlighted$="[[highlighted]]" tooltip-text$="[[entity.entity.desc]]">[[_getCellValue(entity.entity, column.property)]]</div>
     </template>
     <script>
@@ -71,16 +47,20 @@
                     }
                 },
 
-                observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)"],
+                observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)",
+                            "_indeterminedSateChanged(state)"],
 
                 attached: function () {
                     this.state = this.entity.entity._getState("_tokenChecked");
                     this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
-                        this.notifyPath("entity.entity._tokenChecked", value);
-                        this.state = state;
-                        this.updateStyles();
+                        this.$.checkbox.checked = value;
+                        this.state = state; 
                         this.fire("tg-tree-state-changed");
                     };
+                },
+                
+                _indeterminedSateChanged: function (state) {
+                    this.$.checkbox.indeterminate = state === "SEMICHECKED";
                 },
 
                 _isLeaf: function (entity) {
