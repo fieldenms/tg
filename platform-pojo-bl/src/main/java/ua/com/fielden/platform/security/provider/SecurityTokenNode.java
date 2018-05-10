@@ -61,8 +61,6 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     public SecurityTokenNode(final Class<? extends ISecurityToken> token, final SecurityTokenNode superTokenNode) {
         if (superTokenNode == null && !isTopLevel(token)) {
             throw new IllegalArgumentException("Security token " + token.getName() + " is not a top level token, but super toke node is not provided.");
-        } else if (superTokenNode != null && isTopLevel(token)) {
-            throw new IllegalArgumentException("Security token " + token.getName() + " is a top level token and should not have a super toke node, which was provided.");
         }
 
         this.shortDesc = shortDesc(token);
@@ -92,9 +90,6 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
      * @return
      */
     private SecurityTokenNode add(final SecurityTokenNode subTokenNode) {
-        if (!isSuperTokenOf(token, subTokenNode.getToken())) {
-            throw new IllegalArgumentException("Token " + token.getName() + " is not a super token for " + subTokenNode.getToken().getName() + ".");
-        }
         subTokenNodes.add(subTokenNode);
         return this;
     }

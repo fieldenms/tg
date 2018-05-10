@@ -23,7 +23,7 @@ import org.junit.Test;
 public class SecurityTokenProviderAndNodeConstructionTest {
 
     @Test
-    public void testThatSecurityTokenNodeIsConstructedCorrectly() {
+    public void the_default_type_hierarchy_based_association_between_tokens_does_not_have_to_be_followed() {
         final SecurityTokenNode superNode = new SecurityTokenNode(Top1LevelSecurityToken.class);
         assertEquals("Incorrect token.", Top1LevelSecurityToken.class, superNode.getToken());
         assertEquals("Incorrect short desc.", shortDesc(Top1LevelSecurityToken.class), superNode.getShortDesc());
@@ -39,18 +39,15 @@ public class SecurityTokenProviderAndNodeConstructionTest {
 
         final SecurityTokenNode subNode = new SecurityTokenNode(Lower1LevelSecurityToken.class, superNode);
 
-        try {
-            new SecurityTokenNode(Top1LevelSecurityToken.class, subNode);
-            fail("A super token node at incorrect state was allowed to be created.");
-        } catch (final Exception e) {
-        }
+        final SecurityTokenNode subSubNode = new SecurityTokenNode(Top1LevelSecurityToken.class, subNode);
 
         assertEquals("Incorrect token.", Lower1LevelSecurityToken.class, subNode.getToken());
         assertEquals("Incorrect short desc.", shortDesc(Lower1LevelSecurityToken.class), subNode.getShortDesc());
         assertEquals("Incorrect long desc.", longDesc(Lower1LevelSecurityToken.class), subNode.getLongDesc());
         assertEquals("Incorrect super node.", superNode, subNode.getSuperTokenNode());
-        assertEquals("Incorrect number of sub tokens", 0, subNode.getSubTokenNodes().size());
+        assertEquals("Incorrect number of sub tokens", 1, subNode.getSubTokenNodes().size());
         assertEquals("Incorrect number of sub tokens", 1, superNode.getSubTokenNodes().size());
+        assertEquals("Incorrect super node.", subNode, subSubNode.getSuperTokenNode());
     }
 
     @Test
