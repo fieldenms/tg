@@ -240,7 +240,7 @@
                 },
 
                 _setVisible: function (treeEntity, visible) {
-                    treeEntity.visible = visible;
+                    treeEntity.entity.$visible = visible;
                     if (treeEntity.visibilityFunctions) {
                         treeEntity.visibilityFunctions.forEach(visibilityFunction => visibilityFunction(visible));
                     }

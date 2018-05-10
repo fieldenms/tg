@@ -70,7 +70,7 @@
                     }
                 },
 
-                observers: ["_visibilityChanged(entity.visible)"],
+                observers: ["_visibilityChanged(entity.entity.$visible)"],
 
                 ///////////////////////Observers implementation//////////////////
                 _entityChanged: function (newEntity, oldEntity) {
@@ -86,7 +86,7 @@
                     newEntity.highlightFunctions = highlightFunctions;
                     const visibilityFunctions = newEntity.visibilityFunctions || [];
                     visibilityFunctions.push(function (visible) {
-                        this.notifyPath("entity.visible", visible);
+                        this.notifyPath("entity.entity.$visible", visible);
                     }.bind(this));
                     newEntity.visibilityFunctions = visibilityFunctions;
                 },

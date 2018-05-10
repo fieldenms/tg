@@ -59,6 +59,7 @@
 
                 constructor(securityTokenEntity, userRoles, tokenRoleMap, parent) {
                     super(securityTokenEntity.get("key"));
+                    this.$visible = true;
                     this.title = securityTokenEntity.get("title");
                     this.desc = securityTokenEntity.get("desc");
                     if (parent) {
@@ -151,13 +152,19 @@
                 }
 
                 _check(property, value) {
-                    this._checkWithoutParent(property, value);
-                    this._checkColumnParent(property);
+                    if (this.$visible) {
+                        this._checkWithoutParent(property, value);
+                        this._checkColumnParent(property);
+                    }
                 }
 
                 _checkWithoutParent(property, value) {
                     if (this.children && this.children.length > 0) {
-                        this.children.forEach(child => child._checkWithoutParent(property, value));
+                        this.children.forEach(child => {
+                            if (child.$visible) {
+                                child._checkWithoutParent(property, value);
+                            }
+                        });
                     }
                     if (property === "_tokenChecked") {
                         Object.keys(this.roleIdMap).forEach(roleKey => {
