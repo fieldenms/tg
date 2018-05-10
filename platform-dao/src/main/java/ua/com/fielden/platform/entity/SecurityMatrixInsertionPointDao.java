@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity;
 
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -22,6 +24,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -31,26 +34,29 @@ import ua.com.fielden.platform.security.user.UserRole;
 public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMatrixInsertionPoint> implements ISecurityMatrixInsertionPoint {
 
     private final SecurityTokenProvider tokenProvider;
+    private final ISecurityTokenNodeTransformation tokenTransformation;
 
     @Inject
     public SecurityMatrixInsertionPointDao(final IFilter filter,
             @Named("tokens.path") final String tokenPath,
-            @Named("tokens.package") final String tokenPackage) {
+            @Named("tokens.package") final String tokenPackage,
+            final ISecurityTokenNodeTransformation tokenTransformation) {
         super(filter);
         this.tokenProvider = new SecurityTokenProvider(tokenPath, tokenPackage);
+        this.tokenTransformation = tokenTransformation;
     }
 
     @Override
     @SessionRequired
     public SecurityMatrixInsertionPoint save(final SecurityMatrixInsertionPoint entity) {
-        final List<SecurityTokenTreeNodeEntity> tokenEntities = tokenProvider.getTopLevelSecurityTokenNodes().stream().map(token -> createTokenNodeEntity(Optional.empty(), token)).collect(Collectors.toList());
+        final List<SecurityTokenTreeNodeEntity> tokenEntities = tokenTransformation.transform(tokenProvider.getTopLevelSecurityTokenNodes()).stream().map(token -> createTokenNodeEntity(Optional.empty(), token)).collect(toList());
         final EntityResultQueryModel<UserRole> userRoleQueryModel = select(UserRole.class).model();
         try (Stream<UserRole> stream = co(UserRole.class).stream(from(userRoleQueryModel).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
-            entity.setUserRoles(stream.collect(Collectors.toList()));
+            entity.setUserRoles(stream.collect(toList()));
         }
         entity.setTokens(tokenEntities);
         final ISecurityRoleAssociation coTokenRoleAssociation = co(SecurityRoleAssociation.class);
-        final Map<String, List<Long>> tokenRoleMap = coTokenRoleAssociation.findAllAssociations().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().stream().map(UserRole::getId).collect(Collectors.toList())));
+        final Map<String, List<Long>> tokenRoleMap = coTokenRoleAssociation.findAllAssociations().entrySet().stream().collect(toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().stream().map(UserRole::getId).collect(toList())));
         entity.setTokenRoleMap(tokenRoleMap);
         entity.setCalculated(true);
         return super.save(entity);

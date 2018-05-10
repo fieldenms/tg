@@ -14,6 +14,7 @@ import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
@@ -86,8 +87,8 @@ public interface IDomainDrivenData {
             save(new_composite(UserAndRoleAssociation.class, su, admin));
             try {
                 final IApplicationSettings settings = getInstance(IApplicationSettings.class);
-                final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
-                final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
+                final ISecurityTokenNodeTransformation tokenTransformation = getInstance(ISecurityTokenNodeTransformation.class);
+                final SortedSet<SecurityTokenNode> topNodes = tokenTransformation.transform(new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()).getTopLevelSecurityTokenNodes());
                 final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
                 final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
                 for (final SecurityTokenNode securityNode : topNodes) {
