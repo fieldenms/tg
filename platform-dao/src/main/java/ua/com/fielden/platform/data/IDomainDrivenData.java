@@ -103,7 +103,7 @@ public interface IDomainDrivenData {
     }
 
     default UserRole createOrRetrieveAdminUserRole() {
-        return co(UserRole.class).findByKeyOptional(ADMIN)
+        return co$(UserRole.class).findByKeyOptional(ADMIN)
                 .orElseGet(() -> save(new_(UserRole.class, ADMIN, "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true)));
     }
 
