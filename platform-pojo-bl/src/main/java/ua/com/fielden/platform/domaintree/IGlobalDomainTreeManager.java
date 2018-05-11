@@ -257,9 +257,13 @@ public interface IGlobalDomainTreeManager {
      *            -- a menu item type relevant to an entity-centre manager.
      * @param name
      *            -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
-     * @param newDesc TODO
+     * @param newDesc
+     *            -- new description for configuration
      */
-    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, String newDesc);
+    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final String newDesc);
+    default IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name) {
+        return saveEntityCentreManager(menuItemType, name, null);
+    };
 
     /**
      * Duplicates an <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with <b>originalName</b> to an <b>entity-centre manager</b> with <b>newName</b> and then
@@ -291,6 +295,9 @@ public interface IGlobalDomainTreeManager {
      *            -- new description for configuration
      */
     IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName, final String newDesc);
+    default IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
+        return saveAsEntityCentreManager(menuItemType, originalName, newName, null);
+    };
 
     /**
      * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> has been changed since
