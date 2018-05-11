@@ -112,7 +112,7 @@ public class Result extends RuntimeException {
      * @param args
      * @return
      */
-    public static Result failure(final String reason, final Object...args) {
+    public static Result failuref(final String reason, final Object...args) {
         return new Result(null, new Exception(format(reason, args)));
     }
 
