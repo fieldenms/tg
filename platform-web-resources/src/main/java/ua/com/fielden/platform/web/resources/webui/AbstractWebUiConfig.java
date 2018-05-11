@@ -109,7 +109,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterDefaultAction)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
         .addMaster(centreConfigurationWebUiConfig.centreConfigCopyActionMaster)
-        .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster);
+        .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster);
     }
 
     @Override

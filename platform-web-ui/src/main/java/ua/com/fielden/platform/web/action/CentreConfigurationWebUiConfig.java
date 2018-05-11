@@ -21,6 +21,8 @@ import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
 import ua.com.fielden.platform.web.centre.CentreConfigCopyActionProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -47,6 +49,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
     public final EntityMaster<CentreConfigCopyAction> centreConfigCopyActionMaster;
     public final EntityMaster<CentreConfigLoadAction> centreConfigLoadActionMaster;
+    public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
     
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
@@ -54,6 +57,7 @@ public class CentreConfigurationWebUiConfig {
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
         centreConfigCopyActionMaster = createCentreConfigCopyActionMaster(injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector);
+        centreConfigDeleteActionMaster = createCentreConfigDeleteActionMaster(injector);
     }
     
     private static String createLayoutForCollectionalMaster() {
@@ -224,6 +228,15 @@ public class CentreConfigurationWebUiConfig {
             CentreConfigLoadActionProducer.class,
             masterConfig,
             injector);
+    }
+    
+    /**
+     * Creates no-ui entity master for {@link CentreConfigDeleteAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigDeleteAction> createCentreConfigDeleteActionMaster(final Injector injector) {
+        return new EntityMaster<CentreConfigDeleteAction>(CentreConfigDeleteAction.class, CentreConfigDeleteActionProducer.class, null, injector);
     }
     
 }

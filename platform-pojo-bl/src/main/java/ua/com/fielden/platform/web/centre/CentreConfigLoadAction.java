@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Collections.unmodifiableSet;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

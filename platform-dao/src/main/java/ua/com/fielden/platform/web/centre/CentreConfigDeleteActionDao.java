@@ -9,23 +9,23 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 
 /** 
- * DAO implementation for companion object {@link ICentreConfigLoadAction}.
+ * DAO implementation for companion object {@link ICentreConfigDeleteAction}.
  * 
  * @author TG Team
  *
  */
-@EntityType(CentreConfigLoadAction.class)
-public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadAction> implements ICentreConfigLoadAction {
+@EntityType(CentreConfigDeleteAction.class)
+public class CentreConfigDeleteActionDao extends CommonEntityDao<CentreConfigDeleteAction> implements ICentreConfigDeleteAction {
     
     @Inject
-    public CentreConfigLoadActionDao(final IFilter filter) {
+    public CentreConfigDeleteActionDao(final IFilter filter) {
         super(filter);
     }
     
     @Override
     @SessionRequired
-    public CentreConfigLoadAction save(final CentreConfigLoadAction entity) {
-        entity.isValid().ifFailure(Result::throwRuntime);
+    public CentreConfigDeleteAction save(final CentreConfigDeleteAction entity) {
+        entity.isValid().ifFailure(Result::throwRuntime); // TODO
         return super.save(entity);
     }
     

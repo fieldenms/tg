@@ -452,6 +452,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
+        validationPrototype.setCentreDeleter((name) -> {
+//            if (TODO check if the user owns this configuration) {
+//                
+//            }
+            removeCentres(gdtm, miType, device, of(name), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+        });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });

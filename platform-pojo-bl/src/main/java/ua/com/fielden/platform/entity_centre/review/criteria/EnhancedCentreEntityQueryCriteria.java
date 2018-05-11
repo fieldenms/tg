@@ -33,6 +33,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private BiFunction<T2<Optional<String>, Optional<String>>, String, T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> centreCopier;
+    private Consumer<String> centreDeleter;
     private Supplier<T2<LinkedHashSet<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     /**
@@ -81,6 +82,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public BiFunction<T2<Optional<String>, Optional<String>>, String, T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> centreCopier() {
         return centreCopier;
+    }
+
+    public Consumer<String> centreDeleter() {
+        return centreDeleter;
+    }
+
+    public void setCentreDeleter(final Consumer<String> centreDeleter) {
+        this.centreDeleter = centreDeleter;
     }
 
     public void setCentreCopier(final BiFunction<T2<Optional<String>, Optional<String>>, String, T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> centreCopier) {
