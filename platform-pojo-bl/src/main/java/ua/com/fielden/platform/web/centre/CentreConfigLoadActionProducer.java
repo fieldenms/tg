@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+
 import java.util.LinkedHashSet;
 import java.util.Optional;
 
@@ -43,7 +45,7 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
             entity.setCentreConfigurations(configsAndSaveAsName._1);
             
             final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
-            chosenIds.add(configsAndSaveAsName._2.orElse("DEFAULT!"));
+            chosenIds.add(configsAndSaveAsName._2.orElse(DEFAULT_CONFIG_TITLE));
             
             // provide chosenIds into the action
             entity.setChosenIds(chosenIds);

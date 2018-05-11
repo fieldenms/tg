@@ -68,6 +68,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
     private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
+    private final static String DEFAULT_CONFIG_DESC = "Default configuration";
+    public final static String DEFAULT_CONFIG_TITLE = "[Default]";
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
@@ -845,7 +847,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             if (count == 1) { // for current user => 1 entity-centre
                 final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
                 ecc.setConfigBody(getSerialiser().serialise(currentMgr));
-                ecc.setDesc(newDesc == null ? "entity centre for " + menuItemType.getSimpleName() : newDesc);
+                if (newDesc != null) {
+                    ecc.setDesc(newDesc);
+                }
                 saveCentre(currentMgr, ecc);
                 // TODO entityCentreAnalysisConfigController.save(entity)
                 if (persistentCentres != null) {
@@ -859,11 +863,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                         // In this case the centre can exist virtually, without its cloud counter-part
                         // But explicit save has been requested by base user => in this case save should be done.
                         final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemType.getName()));
-                        ecc.setDesc("entity centre for " + menuItemType.getSimpleName());
                         ecc.setPrincipal(true);
                         final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
                         ecc.setConfigBody(getSerialiser().serialise(centre));
-                        ecc.setDesc(newDesc == null ? "entity centre for " + menuItemType.getSimpleName() : newDesc);
+                        ecc.setDesc(newDesc == null ? DEFAULT_CONFIG_DESC : newDesc);
                         saveCentre(centre, ecc);
                         if (persistentCentres != null) {
                             persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
@@ -961,7 +964,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                     menuItemToUse = mainMenuItemController.save(factory.newByKey(MainMenuItem.class, menuItemTypeName));
                 }
                 final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, user, newTitle, menuItemToUse);
-                ecc.setDesc(newDesc == null ? "entity centre for " + menuItemType.getSimpleName() : newDesc);
+                ecc.setDesc(newDesc == null ? DEFAULT_CONFIG_DESC : newDesc);
                 ecc.setConfigBody(getSerialiser().serialise(copyMgr));
                 saveCentre(copyMgr, ecc);
                 init(menuItemType, newName, copyMgr, true);
@@ -1214,6 +1217,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     @Override
     public IUser coUser() {
         return coUser;
+    }
+    
+    @Override
+    public EntityCentreConfig findConfig(final Class<?> menuItemType, final String name) {
+        final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
+        return entityCentreConfigController.getEntity(from(model).model());
     }
     
 }

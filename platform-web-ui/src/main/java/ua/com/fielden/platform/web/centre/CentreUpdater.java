@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -49,6 +50,7 @@ import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
@@ -431,6 +433,9 @@ public class CentreUpdater {
                     basedOnManager.getUserProvider().setUser(basedOnManager.coUser().findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), currentUser.getBasedOnUser()));
                     // update and retrieve saved version of centre config from basedOn user
                     final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, saveAsName, device);
+                    // find description of the centre configuration to be copied from
+                    final String freshDeviceSpecificDiffNameForBaseUser = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX;
+                    final EntityCentreConfig eccWithDesc = basedOnManager.findConfig(miType, freshDeviceSpecificDiffNameForBaseUser);
                     // return currentUser into user provider
                     basedOnManager.getUserProvider().setUser(currentUser);
                     
@@ -438,7 +443,7 @@ public class CentreUpdater {
                     final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, getEntityType(miType), globalManager);
                     // promotes diff to local cache and saves it into persistent storage
                     initCentre(globalManager, miType, null, differencesCentre);
-                    globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, "upstream name");
+                    globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, eccWithDesc == null ? null : eccWithDesc.getDesc());
                     initCentre(globalManager, miType, null, defaultCentre);
                 }
             } else {

@@ -106,7 +106,7 @@
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful load action
                             const chosenId = functionalEntity.get('chosenIds')[0];
-                            self.saveAsName = chosenId === 'DEFAULT!' ? '' : chosenId;
+                            self.saveAsName = chosenId === '[Default]' ? '' : chosenId;
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigLoadAction', currentState:'EDIT', centreUuid: self.uuid

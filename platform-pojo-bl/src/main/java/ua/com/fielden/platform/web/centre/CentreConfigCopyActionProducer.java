@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+
 import java.util.Map;
 
 import com.google.inject.Inject;
@@ -42,12 +44,11 @@ public class CentreConfigCopyActionProducer extends DefaultEntityProducerWithCon
             
             entity.setKey("default" + chosenProperty());
             if (chosenPropertyRepresentsThisColumn()) {
-                entity.setTitle("Default config (copy)"); // TODO perhaps actual default centre name is needed (like 'Work Activities (copy)' ?)
+                entity.setTitle(DEFAULT_CONFIG_TITLE + " (copy)");
             } else {
                 entity.setTitle(chosenProperty() + " (copy)");
             }
         }
-        // TODO perhaps desc copying is also needed
         return entity;
     }
     
