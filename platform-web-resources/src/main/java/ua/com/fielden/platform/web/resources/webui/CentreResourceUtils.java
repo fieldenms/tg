@@ -453,9 +453,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
         validationPrototype.setCentreDeleter((name) -> {
-//            if (TODO check if the user owns this configuration) {
-//                
-//            }
             removeCentres(gdtm, miType, device, of(name), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
         });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
@@ -491,7 +488,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
                     stream.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE " + ecc.getDesc());
+                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
                         loadableConfigurations.add(lcc);
                     });
                     Collections.sort(loadableConfigurations);
@@ -509,15 +506,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                      final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                     streamForCurrentUser.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("MINE " + ecc.getDesc());
+                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
                         loadableConfigurations.add(lcc);
                     });
                     streamForBaseUser.forEach(ecc -> {
                         final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(true)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc("INHERITED " + ecc.getDesc());
+                        lcc/*TODO .setInherited(true)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
                         if (loadableConfigurations.contains(lcc)) {
                             final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
-                            foundLcc/*TODO .setInherited(true)*/.setDesc("INHERITED " + ecc.getDesc());
+                            foundLcc/*TODO .setInherited(true)*/.setDesc(ecc.getDesc());
                         } else {
                             loadableConfigurations.add(lcc);
                         }

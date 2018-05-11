@@ -25,7 +25,7 @@ public class CentreConfigDeleteActionDao extends CommonEntityDao<CentreConfigDel
     @Override
     @SessionRequired
     public CentreConfigDeleteAction save(final CentreConfigDeleteAction entity) {
-        entity.isValid().ifFailure(Result::throwRuntime); // TODO
+        entity.isValid().ifFailure(Result::throwRuntime);
         return super.save(entity);
     }
     
