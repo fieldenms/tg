@@ -18,13 +18,13 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit
 import static ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit.SECOND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit.YEAR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ABS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ADD_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.AVERAGE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.AVERAGE_DISTINCT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CASE_WHEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CONCAT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_ALL;
-import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ADD_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_DISTINCT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.DATE;
@@ -91,6 +91,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.LI
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.LOGICAL_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.NEGATED_COND_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.NULL_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
@@ -120,6 +121,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
@@ -555,6 +557,10 @@ final class Tokens {
         return add(ARITHMETICAL_OPERATOR, MOD);
     }
 
+    public Tokens order(OrderingModel order) {
+        return add(ORDER_TOKENS, order);
+    }
+    
     public Tokens asc() {
         return add(SORT_ORDER, ASC);
     }

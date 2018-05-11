@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
@@ -122,20 +127,36 @@ public class EntQueryGenerator {
         paramValues);
     }
 
+
+    
+    private List<Pair<TokenCategory, Object>> linearizeTokens(List<Pair<TokenCategory, Object>> tokens) {
+    	List<Pair<TokenCategory, Object>> result = new ArrayList<>();
+    	for (Pair<TokenCategory, Object> pair : tokens) {
+			if (ORDER_TOKENS.equals(pair.getKey())) {
+				result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
+			} else {
+				result.add(pair);
+			}
+		}
+    	
+    	return result;
+    }
+    
     private OrderBys produceOrderBys(final OrderingModel orderModel, final Map<String, Object> paramValues) {
-        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);
+        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);		
 
         if (orderModel != null) {
-            for (final Iterator<Pair<TokenCategory, Object>> iterator = orderModel.getTokens().iterator(); iterator.hasNext();) {
+        	List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
+            for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
                 final Pair<TokenCategory, Object> pair = iterator.next();
-                if (TokenCategory.SORT_ORDER.equals(pair.getKey())) {
+                if (SORT_ORDER.equals(pair.getKey())) {
                     orderBy.add(pair.getKey(), pair.getValue());
                     if (iterator.hasNext()) {
-                        orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
+                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
                     }
                 } else {
                     if (orderBy.getChild() == null) {
-                        orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
+                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
                     }
                     orderBy.add(pair.getKey(), pair.getValue());
                 }

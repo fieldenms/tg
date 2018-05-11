@@ -902,16 +902,21 @@ public interface EntityQueryProgressiveInterfaces {
 
 	///////////////////////////////////////////////////// ---ORDER BY
 	///////////////////////////////////////////////////// ---///////////////////////////////////////////////////
-	interface IOrder<T> {
-		T asc();
+//	interface IOrder<T> {
+//		T asc();
+//
+//		T desc();
+//	}
+//
+//	interface ISingleOperandOrderable //
+//			extends IOrder<IOrderingItemCloseable> {
+//	}
+    interface ISingleOperandOrderable  {
+        IOrderingItemCloseable asc();
+        IOrderingItemCloseable desc();
+    }
 
-		T desc();
-	}
-
-	interface ISingleOperandOrderable //
-			extends IOrder<IOrderingItemCloseable> {
-	}
-
+	
 	interface IOrderingItemCloseable //
 			extends IOrderingItem {
 		OrderingModel model();
@@ -921,5 +926,6 @@ public interface EntityQueryProgressiveInterfaces {
 			extends
 			IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
 		ISingleOperandOrderable yield(String yieldAlias);
+		IOrderingItemCloseable order(OrderingModel model);
 	}
 }
