@@ -10,8 +10,8 @@ import java.util.function.Supplier;
 /**
  * A container type that represent one of two possible values of some computed.
  * One of the values that is often referred to as the <code>Right</code> value has the semantics of being correct.
- * Another value, which is often referred to as the <code>Left</code> value, has the semantics of being invalid or alternative to the correct value. 
- * 
+ * Another value, which is often referred to as the <code>Left</code> value, has the semantics of being invalid or alternative to the correct value.
+ *
  * @author TG Team
  *
  * @param <E>
@@ -21,7 +21,7 @@ public abstract class Either<L, R> {
 
     /**
      * Convenient factory method.
-     * 
+     *
      * @param value
      * @return
      */
@@ -31,7 +31,7 @@ public abstract class Either<L, R> {
 
     /**
      * Convenient factory method.
-     * 
+     *
      * @param value
      * @return
      */
@@ -52,7 +52,7 @@ public abstract class Either<L, R> {
             return (Right<L, R>) this;
         }
 
-        throw failure("Attempty to covernt Left to Right.");
+        throw failure("Attempt to convert Left to Right.");
     }
 
     public Left<L, R> asLeft() {
@@ -60,7 +60,7 @@ public abstract class Either<L, R> {
             return (Left<L, R>) this;
         }
 
-        throw failure("Attempty to covernt Right to Left.");
+        throw failure("Attempt to convert Right to Left.");
     }
 
     /**
@@ -74,6 +74,25 @@ public abstract class Either<L, R> {
         requireNonNull(supplierOfAlternative);
         return isRight() ? asRight().value : supplierOfAlternative.get();
     }
+
+    /**
+     * A convenient method to get the right value if {@code this} represents
+     * {@link Right}. Otherwise, left value is transformed in
+     * {@link RuntimeException} and thrown.
+     *
+     * @param function
+     *            used to transform left value in {@link RuntimeException}
+     * @return
+     */
+    public R orElseThrow(final Function<? super L, ? extends RuntimeException> function) {
+        requireNonNull(function);
+        if (isRight()) {
+            return asRight().value;
+        } else {
+            throw function.apply(asLeft().value);
+        }
+    }
+
 
     /**
      * Maps on the right value.
@@ -118,9 +137,9 @@ public abstract class Either<L, R> {
     @Override
     public int hashCode() {
         if (isLeft()) {
-            return asLeft().value != null ? (asLeft().value.hashCode() * 29) : 31;
+            return asLeft().value != null ? asLeft().value.hashCode() * 29 : 31;
         } else {
-            return asRight().value != null ? (asRight().value.hashCode() * 29) : 11;
+            return asRight().value != null ? asRight().value.hashCode() * 29 : 11;
         }
     }
 }
