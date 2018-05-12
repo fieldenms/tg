@@ -1,0 +1,67 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<dom-module id="tg-tree-table-regular-cell">
+    <style>
+        :host {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <template>
+        <input id="checkbox" type="checkbox" on-change="_stateChanged">
+    </template>
+    <script>
+        (function () {
+            const generateShortCollection = function (entity, property, typeObject) {
+                var collectionValue = entity.get(property);
+                var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
+                var keys = typeObject.compositeKeyNames();
+                return collectionValue.map(function (subEntity) {
+                    var key = keys.find(function (key) {
+                        if (subEntity.get(key) !== containerPropertyValue) {
+                            return key;
+                        }
+                    });
+                    return subEntity.get(key);
+                });
+            };
+            Polymer({
+
+                is: "tg-tree-table-regular-cell",
+
+                properties: {
+                    column: Object,
+                    entity: Object
+                },
+                
+                attached: function() {
+                    const state = this.entity._getState(this.column.property);
+                    this._setState(state === "CHECKED", state);
+                    this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
+                        this._setState(value, state);
+                        this.fire("tg-tree-state-changed");
+                    };
+                },
+                
+                _setState(value, state) {
+                    this.$.checkbox.checked = value;
+                    this.$.checkbox.indeterminate = state === "SEMICHECKED";
+                },
+                
+                _stateChanged: function (e) {
+                    const target = e.target || e.srcElement;
+                    this.column.check(this.entity, this.column.property, target.checked);
+                },
+                
+                _isGroupCheckbox: function(children) {
+                    return !!(children && children.length > 0);
+                },
+            });
+        })();
+    </script>
+</dom-module>

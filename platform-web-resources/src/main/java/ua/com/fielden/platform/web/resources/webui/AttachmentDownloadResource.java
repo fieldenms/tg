@@ -4,9 +4,6 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
-import java.io.File;
-import java.util.Optional;
-
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;

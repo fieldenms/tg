@@ -25,7 +25,7 @@ public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollection
     
     @IsProperty(SecurityTokenInfo.class)
     @Title(value = "Security Tokens", desc = "A list of security tokens")
-    private Set<SecurityTokenInfo> tokens = new LinkedHashSet<SecurityTokenInfo>();
+    private Set<SecurityTokenInfo> tokens = new LinkedHashSet<>();
 
     @Observable
     protected UserRoleTokensUpdater setTokens(final Set<SecurityTokenInfo> tokens) {
