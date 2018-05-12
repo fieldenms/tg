@@ -92,7 +92,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
-        boolean searchModelNotOverriden =  queryModel.equals(select(companion.getEntityType()).where().condition(createSearchByKeyAndDescCondition(searchString)).model());
+        final boolean searchModelNotOverriden =  queryModel.equals(select(companion.getEntityType()).where().condition(createSearchByKeyAndDescCondition(searchString)).model());
         queryModel.setFilterable(true);
         final OrderingModel ordering = searchModelNotOverriden ? orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(makeOrderingModel()).model() : makeOrderingModel();
         final Map<String, Object> params = new HashMap<>();
