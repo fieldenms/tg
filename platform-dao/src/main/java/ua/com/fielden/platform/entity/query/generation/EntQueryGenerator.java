@@ -25,8 +25,8 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
-    public static final String NOW = "UC#NOW"; 
-    
+    public static final String NOW = "UC#NOW";
+
     private final DbVersion dbVersion;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IUniversalConstants universalConstants;
@@ -34,7 +34,7 @@ public class EntQueryGenerator {
     private final String username;
 
     public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
-        this.dbVersion = domainMetadataAnalyser.getDbVersion();
+        dbVersion = domainMetadataAnalyser.getDbVersion();
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.filter = filter;
         this.username = username;
@@ -42,13 +42,13 @@ public class EntQueryGenerator {
     }
 
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        final Map<String, Object> localParamValues = new HashMap<>();    
+        final Map<String, Object> localParamValues = new HashMap<>();
         localParamValues.putAll(paramValues);
-        
+
         if (universalConstants.now() != null) {
-            localParamValues.put(NOW, universalConstants.now().toDate());	
+            localParamValues.put(NOW, universalConstants.now().toDate());
         }
-    	
+
         return generateEntQuery(query, orderModel, resultType, fetchModel, localParamValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 
@@ -128,25 +128,25 @@ public class EntQueryGenerator {
     }
 
 
-    
-    private List<Pair<TokenCategory, Object>> linearizeTokens(List<Pair<TokenCategory, Object>> tokens) {
-    	List<Pair<TokenCategory, Object>> result = new ArrayList<>();
-    	for (Pair<TokenCategory, Object> pair : tokens) {
+
+    private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
+    	final List<Pair<TokenCategory, Object>> result = new ArrayList<>();
+    	for (final Pair<TokenCategory, Object> pair : tokens) {
 			if (ORDER_TOKENS.equals(pair.getKey())) {
 				result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
 			} else {
 				result.add(pair);
 			}
 		}
-    	
+
     	return result;
     }
-    
+
     private OrderBys produceOrderBys(final OrderingModel orderModel, final Map<String, Object> paramValues) {
-        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);		
+        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);
 
         if (orderModel != null) {
-        	List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
+        	final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
             for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
                 final Pair<TokenCategory, Object> pair = iterator.next();
                 if (SORT_ORDER.equals(pair.getKey())) {
