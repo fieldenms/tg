@@ -8,24 +8,22 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
-/** 
+/**
  * Master entity object.
- * 
- * @author Developers
+ *
+ * @author TG Team
  *
  */
 @CompanionObject(IUserRoleTokensUpdater.class)
-@MapEntityTo
 @KeyTitle(value = "User Role Id", desc = "Id of user role, whose 'tokens' collection modifies by this functional action.")
 public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
-    
+
     @IsProperty(SecurityTokenInfo.class)
     @Title(value = "Security Tokens", desc = "A list of security tokens")
-    private Set<SecurityTokenInfo> tokens = new LinkedHashSet<>();
+    private final Set<SecurityTokenInfo> tokens = new LinkedHashSet<>();
 
     @Observable
     protected UserRoleTokensUpdater setTokens(final Set<SecurityTokenInfo> tokens) {
@@ -37,5 +35,5 @@ public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollection
     public Set<SecurityTokenInfo> getTokens() {
         return Collections.unmodifiableSet(tokens);
     }
-    
+
 }
