@@ -12,7 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -51,7 +50,7 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
     public SecurityMatrixInsertionPoint save(final SecurityMatrixInsertionPoint entity) {
         final List<SecurityTokenTreeNodeEntity> tokenEntities = tokenTransformation.transform(tokenProvider.getTopLevelSecurityTokenNodes()).stream().map(token -> createTokenNodeEntity(Optional.empty(), token)).collect(toList());
         final EntityResultQueryModel<UserRole> userRoleQueryModel = select(UserRole.class).model();
-        try (Stream<UserRole> stream = co(UserRole.class).stream(from(userRoleQueryModel).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
+        try (final Stream<UserRole> stream = co(UserRole.class).stream(from(userRoleQueryModel).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
             entity.setUserRoles(stream.collect(toList()));
         }
         entity.setTokens(tokenEntities);
