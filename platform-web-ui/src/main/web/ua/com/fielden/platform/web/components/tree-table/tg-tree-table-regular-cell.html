@@ -40,7 +40,7 @@
                 },
                 
                 attached: function() {
-                    const state = this.entity._getState(this.column.property);
+                    const state = this.entity.getState(this.column.property);
                     this._setState(state === "CHECKED", state);
                     this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
                         this._setState(value, state);

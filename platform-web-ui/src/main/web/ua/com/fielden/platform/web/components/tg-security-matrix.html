@@ -63,8 +63,12 @@
                 constructor(securityTokenEntity, userRoles, tokenRoleMap, columnList, afterCheckCallback, parent) {
                     super(securityTokenEntity.get("key"));
                     this.$visible = true;
-                    this.$columnList = columnList;
+                    this.$columnListMap = {};
+                    columnList.forEach(column => {
+                        this.$columnListMap[column.property] = column;
+                    });
                     this.$afterCheckCallback = afterCheckCallback;
+                    this.$state = {};
                     this.title = securityTokenEntity.get("title");
                     this.desc = securityTokenEntity.get("desc");
                     if (parent) {
@@ -82,26 +86,36 @@
                         this.roleIdMap[roleKey] = role.get("id");
                         this.idRoleMap[role.get("id")] = roleKey;
                         this[roleKey] = false;
+                        if (!this.hasChildren()) {
+                            this.$state[roleKey] = "UNCHECKED";
+                        } else {
+                            this.$state[roleKey] = calculateState(this.children.map(child => child.$state[roleKey]));
+                        }
                     });
-                    if (!this.children || this.children.length == 0) {
+                    if (!this.hasChildren()) {
                         const availTokenList = tokenRoleMap[securityTokenEntity.get("key")];
                         if (availTokenList) {
                             availTokenList.forEach(roleId => {
                                 this[this.idRoleMap[roleId]] = true;
+                                this.$state[this.idRoleMap[roleId]] = "CHECKED";
                             });
                         }
+                        this.$state._token = calculateState(Object.keys(this.roleIdMap).map(roleKey => this.$state[roleKey]));
+                    } else {
+                        this.$state._token = calculateState(this.children.map(child => child.$state._token));
                     }
                     //Initiate
                     this._tokenRoleAssociationHandler = {};
                     this._newAssociations = [];
                     this._removedAssociations = [];
                 }
-
+                
                 set(property, value) {
-                    if (!this.children || this.children.length === 0) {
+                    if (!this.hasChildren()) {
                         const oldValue = this.get(property);
                         super.set(property, value);
-                        if (Object.keys(this.roleIdMap).includes(property) && oldValue !== value) {
+                        this.$state[property] = value ? "CHECKED" : "UNCHECKED"
+                        if (oldValue !== value) {
                             if (value) {
                                 updateAssociations(this.roleIdMap[property], this._newAssociations, this._removedAssociations);
                             } else {
@@ -109,13 +123,29 @@
                             }
                         }
                         if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-                            this._tokenRoleAssociationHandler[property](value, value ? "CHECKED" : "UNCHECKED");
+                            this._tokenRoleAssociationHandler[property](value, this.getState(property));
+                        }
+                    }
+                }
+                
+                getState(property, visible) {
+                    if (!visible) {
+                        return this.$state[property];
+                    } else {
+                        if (this.hasChildren()) {
+                            return calculateState(this.children.filter(child => child.$visible).map(child => child.getState(property, visible)));
+                        } else {
+                            if (property === "_token") {
+                                return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this.getState(roleKey)));
+                            } else {
+                                return this.$state[property] ? "CHECKED" : "UNCHECKED";
+                            }
                         }
                     }
                 }
 
                 getAssociationsToSave(objToSave) {
-                    if (this.children && this.children.length > 0) {
+                    if (this.hasChildren()) {
                         this.children.forEach(child => child.getAssociationsToSave(objToSave));
                     } else {
                         objToSave[this.get("id")] = this._newAssociations.slice();
@@ -123,7 +153,7 @@
                 }
 
                 getAssociationsToRemove(objToSave) {
-                    if (this.children && this.children.length > 0) {
+                    if (this.hasChildren()) {
                         this.children.forEach(child => child.getAssociationsToRemove(objToSave));
                     } else {
                         objToSave[this.get("id")] = this._removedAssociations.slice();
@@ -131,11 +161,11 @@
                 }
 
                 isChanged() {
-                    return (this.children && this.children.length > 0 && this.children.some(child => child.isChanged())) || this._isChanged();
+                    return (this.hasChildren() && this.children.some(child => child.isChanged())) || this._isChanged();
                 }
 
                 reset() {
-                    if (this.children && this.children.length > 0) {
+                    if (this.hasChildren()) {
                         this.children.forEach(child => child.reset());
                     } else {
                         this._newAssociations.slice().forEach(associationId => {
@@ -146,21 +176,25 @@
                             this.set(this.idRoleMap[associationId], true);
                             this._checkColumnParent(this.idRoleMap[associationId], true);
                         });
-                        this._updatePropertyState("_tokenChecked", this._getState("_tokenChecked") === "CHECKED");
+                        this._updatePropertyState("_token", this.getState("_token") === "CHECKED");
                     }
                 }
 
                 clearCurrentState() {
-                    if (this.children && this.children.length > 0) {
+                    if (this.hasChildren()) {
                         this.children.forEach(child => child.clearCurrentState());
                     } else {
                         this._newAssociations = [];
                         this._removedAssociations = [];
                     }
                 }
+                
+                hasChildren() {
+                    return this.children && this.children.length > 0;
+                }
 
                 _isPropertyVisible(property) {
-                    const column = this.$columnList.find(column => replaceWhitespacesWithUnderscore(column.columnTitle) === property);
+                    const column = this.$columnListMap[property];
                     return column ? column.visible : true;
                 }
 
@@ -180,68 +214,66 @@
                     if (this.parent) {
                         if (Object.keys(this.roleIdMap).includes(property)) {
                             this.parent._updatePropertyState(property, value);
+                        } else {
+                            Object.keys(this.roleIdMap).forEach(roleKey => this.parent._updatePropertyState(roleKey, value));
                         }
-                        this.parent._updatePropertyState("_tokenChecked", value);
+                        this.parent._updatePropertyState("_token", value);
                         this.parent._checkColumnParent(property, value);
                     }
                 }
 
                 _checkWithoutParent(property, value) {
-                    if (this.children && this.children.length > 0) {
+                    if (this.hasChildren()) {
                         this.children.forEach(child => {
                             if (child.$visible && this._isPropertyVisible(property)) {
                                 child._checkWithoutParent(property, value);
                             }
                         });
-                        if (property === "_tokenChecked") {
+                        if (property === "_token") {
                             Object.keys(this.roleIdMap).forEach(roleKey => {
                                 if (this._isPropertyVisible(roleKey)) {
                                     this._updatePropertyState(roleKey, value);
                                 }
-                                this._updatePropertyState("_tokenChecked", value);
                             });
-                        } else if (Object.keys(this.roleIdMap).includes(property)) {
+                            this._updatePropertyState("_token", value);
+                        } else {
                             if (this._isPropertyVisible(property)) {
                                 this._updatePropertyState(property, value);
-                                this._updatePropertyState("_tokenChecked", value);
+                                this._updatePropertyState("_token", value);
                             }
                         }
                     } else {
-                        if (property === "_tokenChecked") {
+                        if (property === "_token") {
                             Object.keys(this.roleIdMap).forEach(roleKey => {
                                 if (this._isPropertyVisible(roleKey)) {
                                     this.set(roleKey, value);
                                 }
                             });
-                            this._updatePropertyState("_tokenChecked", value);
-                        } else if (Object.keys(this.roleIdMap).includes(property)) {
+                            this._updatePropertyState("_token", value);
+                        } else {
                             if (this._isPropertyVisible(property)) {
                                 this.set(property, value);
-                                this._updatePropertyState("_tokenChecked", value);
+                                this._updatePropertyState("_token", value);
                             }
                         }
                     }
                 }
                 
                 _updatePropertyState(property, value) {
-                    const state = this._getState(property);
+                    if ("_token" === property) {
+                        this.$state._token = calculateState(Object.keys(this.roleIdMap).filter(roleKey => this._isPropertyVisible(roleKey)).map(roleKey => this.getState(roleKey)));
+                    } else {
+                        if (this.hasChildren()) {
+                            this.$state[property] = calculateState(this.children.map(child => child.getState(property)));
+                        } else {
+                            this.$state[property] = value ? "CHECKED" : "UNCHECKED";
+                        }
+                    }
                     if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-                        const newAllState = this._getState(property);
-                        const newVisibleState = this._getState(property, true);
+                        const newAllState = this.getState(property);
+                        const newVisibleState = this.getState(property, true);
                         const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
                         this._tokenRoleAssociationHandler[property](newValue, newAllState);
-                    }
-                }
-
-                _getState(property, visible) {
-                    if (this.children && this.children.length > 0) {
-                        return calculateState(this.children.filter(child => visible ? child.$visible : true).map(child => child._getState(property)));
-                    } else {
-                        if (property === "_tokenChecked") {
-                            return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this._getState(roleKey)));
-                        } else if (Object.keys(this.roleIdMap).includes(property)) {
-                            return this.get(property) ? "CHECKED" : "UNCHECKED";
-                        }
                     }
                 }
             };
@@ -267,6 +299,12 @@
                 }
                 return "SEMICHECKED";
             };
+            const calculateNextState = function (state, prevState) {
+                if (!prevState) {
+                    return state;
+                }
+                return calculateState([prevState, state]);
+            }
             const replaceWhitespacesWithUnderscore = function (str) {
                 return str.replace(/\s+/gi, "_");
             };

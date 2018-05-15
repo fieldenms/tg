@@ -50,9 +50,9 @@
                 observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)"],
 
                 attached: function () {
-                    const state = this.entity.entity._getState("_tokenChecked");
+                    const state = this.entity.entity.getState("_token");
                     this._setState(state === "CHECKED", state);
-                    this.entity.entity._tokenRoleAssociationHandler["_tokenChecked"] = (value, state) => {
+                    this.entity.entity._tokenRoleAssociationHandler["_token"] = (value, state) => {
                         this._setState(value, state);
                     };
                 },
@@ -68,7 +68,7 @@
 
                 _stateChanged: function (e) {
                     const target = e.target || e.srcElement;
-                    this.column.check(this.entity.entity, "_tokenChecked", target.checked);
+                    this.column.check(this.entity.entity, "_token", target.checked);
                 },
 
                 _toggle: function (e) {
