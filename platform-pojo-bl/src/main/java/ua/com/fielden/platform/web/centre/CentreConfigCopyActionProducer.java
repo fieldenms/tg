@@ -44,7 +44,7 @@ public class CentreConfigCopyActionProducer extends DefaultEntityProducerWithCon
             
             entity.setKey("default" + chosenProperty());
             if (chosenPropertyRepresentsThisColumn()) {
-                entity.setTitle(DEFAULT_CONFIG_TITLE + " (copy)");
+                entity.setTitle(DEFAULT_CONFIG_TITLE.replace("[", "").replaceAll("]", "") + " (copy)");
             } else {
                 entity.setTitle(chosenProperty() + " (copy)");
             }

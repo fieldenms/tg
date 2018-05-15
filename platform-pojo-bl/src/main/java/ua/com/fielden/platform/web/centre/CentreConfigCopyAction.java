@@ -9,6 +9,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
@@ -28,7 +30,7 @@ public class CentreConfigCopyAction extends AbstractFunctionalEntityWithCentreCo
     @IsProperty
     @Title(value = "Title", desc = "Title for centre configuration copy.")
     @Required
-    // TODO @BeforeChange(CentreConfigCopyActionTitleValidator.class)
+    @BeforeChange(@Handler(CentreConfigCopyActionTitleValidator.class))
     private String title;
     
     @IsProperty
