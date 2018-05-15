@@ -2,8 +2,10 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
@@ -88,10 +90,16 @@ public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> ex
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
             
+            final String customDesc = updateCentreDesc(gdtm, miType, saveAsName, device());
+            
             removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
             
             // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+            
+            // commit custom description after user-specific copy was deleted and default centre copy made 
+            commitCentreDesc(gdtm, miType, saveAsName, device(), customDesc);
+            
             final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device());
             return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
         }, restUtil);

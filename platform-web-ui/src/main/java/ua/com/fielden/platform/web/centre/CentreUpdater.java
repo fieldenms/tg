@@ -162,6 +162,48 @@ public class CentreUpdater {
     }
     
     /**
+     * Updates (retrieves) current version of centre description.
+     *
+     * @param gdtm
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static String updateCentreDesc(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device) {
+        return updateCentreDesc0(gdtm, miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device));
+    }
+    private static String updateCentreDesc0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName) {
+        synchronized (gdtm) {
+            // find description of the centre configuration to be copied from
+            final String freshDeviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
+            final EntityCentreConfig eccWithDesc = gdtm.findConfig(miType, freshDeviceSpecificDiffName);
+            return eccWithDesc == null ? null : eccWithDesc.getDesc();
+        }
+    }
+    
+    /**
+     * Commits new centre description.
+     *
+     * @param gdtm
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @param newDesc -- new description to be committed
+     * @return
+     */
+    public static void commitCentreDesc(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final String newDesc) {
+        commitCentreDesc0(gdtm, miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device), newDesc);
+    }
+    private static void commitCentreDesc0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final String newDesc) {
+        synchronized (gdtm) {
+            if (newDesc != null) {
+                gdtm.saveEntityCentreManager(miType, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc);
+            }
+        }
+    }
+    
+    /**
      * Removes centres from local cache and persistent storage (diffs) by their <code>names</code>.
      *
      * @param gdtm
@@ -434,8 +476,7 @@ public class CentreUpdater {
                     // update and retrieve saved version of centre config from basedOn user
                     final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, saveAsName, device);
                     // find description of the centre configuration to be copied from
-                    final String freshDeviceSpecificDiffNameForBaseUser = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX;
-                    final EntityCentreConfig eccWithDesc = basedOnManager.findConfig(miType, freshDeviceSpecificDiffNameForBaseUser);
+                    final String upstreamDesc = updateCentreDesc(basedOnManager, miType, saveAsName, device);
                     // return currentUser into user provider
                     basedOnManager.getUserProvider().setUser(currentUser);
                     
@@ -443,7 +484,7 @@ public class CentreUpdater {
                     final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, getEntityType(miType), globalManager);
                     // promotes diff to local cache and saves it into persistent storage
                     initCentre(globalManager, miType, null, differencesCentre);
-                    globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, eccWithDesc == null ? null : eccWithDesc.getDesc());
+                    globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, upstreamDesc);
                     initCentre(globalManager, miType, null, defaultCentre);
                 }
             } else {
