@@ -100,7 +100,7 @@ public class CentreUpdater {
             // then it is quite trivial to support such functionality.
             // In that case we can provide annotation for menu item types like @TheSameForMobileAndDesktop and check here whether this annotation is present.
             // If yes then 'surrogateName' should be returned just like for DESKTOP device.
-            return surrogateName + "_" + MOBILE.name();
+            return MOBILE.name() + surrogateName;
         } else {
             throw new CentreUpdaterException(format("Device [%s] is unknown.", device));
         }
