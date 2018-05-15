@@ -2,10 +2,15 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /**
  * This interface defines how domain tree can be managed in the global client application scope. It manages all entity-centres as well as locator managers in entity-masters. To
@@ -36,7 +41,21 @@ public interface IGlobalDomainTreeManager {
     //     * @return
     //     */
     //    Map<Class<?>, Map<String, List<String>>> loadEntityCentreSkeleton();
-
+    
+    /**
+     * {@link User} companion.
+     * 
+     * @return
+     */
+    IUser coUser();
+    
+    /**
+     * Finds configuration with some <code>name</code>.
+     * 
+     * @return
+     */
+    EntityCentreConfig findConfig(final Class<?> menuItemType, final String name);
+    
     /**
      * Returns a user provider. The user is a part of domain tree context. Some domain tree actions is permitted only for base users. Some behaviour also can differ for different
      * types of users.
@@ -51,6 +70,16 @@ public interface IGlobalDomainTreeManager {
      * @return
      */
     IGlobalDomainTreeRepresentation getGlobalRepresentation();
+    
+    /**
+     * If {@link #getUserProvider()} contains base user then this method returns empty {@link Optional}.
+     * Otherwise returns global manager for parent user (aka the user which this global manager's user {@link #getUserProvider()} is based on).
+     * <p>
+     * This method is used to initialise centre configurations for non-base users from base configurations. 
+     * 
+     * @return
+     */
+    Optional<IGlobalDomainTreeManager> basedOnManager();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////// ENTITY CENTRE MANAGERS //////////////////////////////////////////////
@@ -68,7 +97,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -93,7 +122,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -118,7 +147,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -133,7 +162,7 @@ public interface IGlobalDomainTreeManager {
 
     /**
      * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> is in freezed state. Use
-     * {@link #discardEntityCentreManager(Class, String)} or {@link #saveEntityCentreManager(Class, String)} to discard / accept the changes that were made after freezing (these
+     * {@link #discardEntityCentreManager(Class, String)} or {@link #saveEntityCentreManager(Class, String, String)} to discard / accept the changes that were made after freezing (these
      * actions trigger automatic unfreezing after that). The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br>
      * <br>
      * 
@@ -147,7 +176,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -171,7 +200,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -199,7 +228,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -227,7 +256,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -236,8 +265,13 @@ public interface IGlobalDomainTreeManager {
      *            -- a menu item type relevant to an entity-centre manager.
      * @param name
      *            -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
+     * @param newDesc
+     *            -- new description for configuration
      */
-    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name);
+    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final String newDesc);
+    default IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name) {
+        return saveEntityCentreManager(menuItemType, name, null);
+    };
 
     /**
      * Duplicates an <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with <b>originalName</b> to an <b>entity-centre manager</b> with <b>newName</b> and then
@@ -254,7 +288,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -265,8 +299,13 @@ public interface IGlobalDomainTreeManager {
      *            -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre, which should be copied.
      * @param newName
      *            -- should represent a not empty (if empty -- throws {@link DomainTreeException}) name of new entity-centre.
+     * @param newDesc 
+     *            -- new description for configuration
      */
-    IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName);
+    IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName, final String newDesc);
+    default IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
+        return saveAsEntityCentreManager(menuItemType, originalName, newName, null);
+    };
 
     /**
      * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> has been changed since
@@ -284,7 +323,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -321,7 +360,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>
@@ -344,7 +383,7 @@ public interface IGlobalDomainTreeManager {
      * <br>
      * 
      * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}), then can be altered by its methods, and
-     * then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded (
+     * then saved ({@link #saveEntityCentreManager(Class, String, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String, String)}) or discarded (
      * {@link #discardEntityCentreManager(Class, String)}). After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" (
      * {@link #isChangedEntityCentreManager(Class, String)}).<br>
      * <br>

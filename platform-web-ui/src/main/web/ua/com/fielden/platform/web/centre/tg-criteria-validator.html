@@ -13,35 +13,36 @@
 <script>
     (function () {
         Polymer({
-        	is: 'tg-criteria-validator',
-        	
-        	properties: {
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
-            	// No default values are allowed in this case.														   //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	miType: String,
-            	postValidatedDefault: Function,
-            	postValidatedDefaultError: Function,
-            	processResponse: Function,
-            	processError: Function,
-        		
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-             	//   prefix. 																				           //
-             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-             	//   populate their default values in ready callback (to have these values populated in children)!     //
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	_url: {
-             		type: String,
-             		computed: '_computeUrl(miType)'
-             	}
-        	},
-        	
+            is: 'tg-criteria-validator',
+            
+            properties: {
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+                // No default values are allowed in this case.														   //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                miType: String,
+                saveAsName: String,
+                postValidatedDefault: Function,
+                postValidatedDefaultError: Function,
+                processResponse: Function,
+                processError: Function,
+                
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix. 																				           //
+                // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+                //   populate their default values in ready callback (to have these values populated in children)!     //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                _url: {
+                    type: String,
+                    computed: '_computeUrl(miType, saveAsName)'
+                }
+            },
+            
             ready: function() { 
                 var self = this;
                 
@@ -105,12 +106,12 @@
             	}
             },
             
-        	/**
-        	 * Computes URL for 'ajaxSender'.
-        	 */
-        	_computeUrl: function (miType) {
-        		return "/criteria/" + miType;
-        	}
+            /**
+             * Computes URL for 'ajaxSender'.
+             */
+            _computeUrl: function (miType, saveAsName) {
+                return '/criteria/' + this.$.serialiser.$.reflector._centreKey(miType, saveAsName);
+            }
         });
     })();
 </script>

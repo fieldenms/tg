@@ -6,8 +6,8 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.mkActionLayoutForMaster;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 
 import java.util.Optional;
 

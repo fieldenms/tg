@@ -34,6 +34,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
     @Test
     public void test_insertion_and_retrieval_of_binary_data() {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+        config.setDesc("desc");
         config.setConfigBody(new byte[] { 1, 2, 3 });
         dao.save(config);
 
@@ -46,6 +47,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
     public void test_update_of_binary_data() {
         EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
+        config.setDesc("desc");
         dao.save(config);
 
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());

@@ -45,9 +45,13 @@ import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 
 /**
  * Default implementation of {@link ISerialisationClassProvider}, which relies on the application settings to provide the location of classes to be used in serialisation.
@@ -206,6 +210,10 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(CentreConfigUpdaterDefaultAction.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
+        types.add(CentreConfigCopyAction.class);
+        types.add(CentreConfigLoadAction.class);
+        types.add(LoadableCentreConfig.class);
+        types.add(CentreConfigDeleteAction.class);
         types.add(PropertyDescriptor.class);
         types.add(AcknowledgeWarnings.class);
         types.add(PropertyWarning.class);

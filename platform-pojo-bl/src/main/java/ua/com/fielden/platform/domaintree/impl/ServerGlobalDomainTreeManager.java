@@ -16,17 +16,18 @@ import com.google.inject.Provider;
  */
 public class ServerGlobalDomainTreeManager implements IServerGlobalDomainTreeManager {
     private final Provider<IGlobalDomainTreeManager> gdtmProvider;
-    private final ConcurrentHashMap<String, IGlobalDomainTreeManager> managersByUser;
-
+    private final ConcurrentHashMap<Long, IGlobalDomainTreeManager> managersByUser;
+    
     @Inject
     public ServerGlobalDomainTreeManager(final Provider<IGlobalDomainTreeManager> gdtmProvider) {
         this.gdtmProvider = gdtmProvider;
         this.managersByUser = new ConcurrentHashMap<>();
     }
-
+    
     @Override
-    public IGlobalDomainTreeManager get(final String username) {
+    public IGlobalDomainTreeManager get(final Long userId) {
         // lazy initialisation using computeIfAbsent and 'name -> gdtmProvider.get()' is required not to reinitialise gdtm every time after putting it into concurrent hash map
-        return managersByUser.computeIfAbsent(username, name -> gdtmProvider.get());
+        return managersByUser.computeIfAbsent(userId, name -> gdtmProvider.get());
     }
+    
 }
