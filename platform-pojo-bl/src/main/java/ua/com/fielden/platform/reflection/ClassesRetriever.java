@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,7 +12,6 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -49,7 +49,7 @@ public class ClassesRetriever {
          * @param testClass
          * @return
          */
-        boolean isSatisfies(Class<?> testClass);
+        boolean isSatisfies(final Class<?> testClass);
     }
 
     /**
@@ -65,14 +65,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getClassesInPackage(final String path, final String packageName, final IFilterClass filter) throws Exception {
-        final SortedSet<Class<?>> classes = new TreeSet<Class<?>>(new Comparator<Class>() {
-
-            @Override
-            public int compare(final Class o1, final Class o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-
-        });
+        final SortedSet<Class<?>> classes = new TreeSet<>((o1, o2) -> o1.getName().compareTo(o2.getName()));
         final String packagePath = packageName.replace('.', '/');
         addPath(path.replace("%20", " "));
         if (path.indexOf(".jar") > 0) {
@@ -83,7 +76,7 @@ public class ClassesRetriever {
             filePath = filePath.replace("%20", " ");
             classes.addAll(getFromDirectory(new File(filePath), packageName, filter));
         }
-        return new ArrayList<Class<?>>(classes);
+        return new ArrayList<>(classes);
     }
 
     /**
@@ -119,14 +112,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getAllClassesInPackageAnnotatedWith(final String path, final String packageName, final Class<? extends Annotation> annotation) throws Exception {
-        return getClassesInPackage(path, packageName, new IFilterClass() {
-
-            @Override
-            public boolean isSatisfies(final Class<?> testClass) {
-                return AnnotationReflector.isAnnotationPresentForClass(annotation, testClass);
-            }
-
-        });
+        return getClassesInPackage(path, packageName, (testClass) -> AnnotationReflector.isAnnotationPresentForClass(annotation, testClass));
     }
 
     /**
@@ -138,16 +124,10 @@ public class ClassesRetriever {
      * @return
      * @throws Exception
      */
-    public static List<Class<?>> getAllClassesInPackageDerivedFrom(final String path, final String packageName, final Class<?> superClass) {
+    public static <T> List<Class<? extends T>> getAllClassesInPackageDerivedFrom(final String path, final String packageName, final Class<T> superClass) {
         try {
-            return getClassesInPackage(path, packageName, new IFilterClass() {
-
-                @Override
-                public boolean isSatisfies(final Class<?> testClass) {
-                    return isClassDerivedFrom(testClass, superClass);
-                }
-
-            });
+            return getClassesInPackage(path, packageName, (testClass) -> isClassDerivedFrom(testClass, superClass)).stream()
+                    .map(type -> (Class<? extends T>) type).collect(toList());
         } catch (final Exception ex) {
             throw new ReflectionException(format("Could not get classes on pathe [%s] in package [%s].", path, packageName), ex);
         }
@@ -162,16 +142,9 @@ public class ClassesRetriever {
      * @return
      * @throws Exception
      */
-    public static List<Class<?>> getAllNonAbstractClassesInPackageDerivedFrom(final String path, final String packageName, final Class<?> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, new IFilterClass() {
-
-            @Override
-            public boolean isSatisfies(final Class<?> testClass) {
-                final int modifiers = testClass.getModifiers();
-                return !Modifier.isAbstract(modifiers) && isClassDerivedFrom(testClass, superClass);
-            }
-
-        });
+    public static <T> List<Class<? extends T>> getAllNonAbstractClassesInPackageDerivedFrom(final String path, final String packageName, final Class<T> superClass) throws Exception {
+        return getClassesInPackage(path, packageName, (testClass) -> !Modifier.isAbstract(testClass.getModifiers()) && isClassDerivedFrom(testClass, superClass)).stream()
+                .map(type -> (Class<? extends T>) type).collect(toList());
     }
 
     /**
@@ -184,14 +157,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getAllClassesInPackageDirectlyDerivedFrom(final String path, final String packageName, final Class<?> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, new IFilterClass() {
-
-            @Override
-            public boolean isSatisfies(final Class<?> testClass) {
-                return !superClass.equals(testClass) ? superClass.equals(testClass.getSuperclass()) : false;
-            }
-
-        });
+        return getClassesInPackage(path, packageName, (testClass) -> !superClass.equals(testClass) ? superClass.equals(testClass.getSuperclass()) : false);
     }
 
     /**
@@ -204,16 +170,8 @@ public class ClassesRetriever {
      * @return
      * @throws Exception
      */
-    public static List<Class<?>> getAllClassInPackageWithAnnotatedMethods(final String path, final String packageName, final Class<? extends Annotation> annotation)
-            throws Exception {
-        return getClassesInPackage(path, packageName, new IFilterClass() {
-
-            @Override
-            public boolean isSatisfies(final Class<?> testClass) {
-                return AnnotationReflector.isClassHasMethodAnnotatedWith(testClass, annotation);
-            }
-
-        });
+    public static List<Class<?>> getAllClassInPackageWithAnnotatedMethods(final String path, final String packageName, final Class<? extends Annotation> annotation) throws Exception {
+        return getClassesInPackage(path, packageName, (testClass) -> AnnotationReflector.isClassHasMethodAnnotatedWith(testClass, annotation));
     }
 
     /**
@@ -226,14 +184,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getAllNonAbstractClassesDerivedFrom(final String path, final String packageName, final Class<?> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, new IFilterClass() {
-
-            @Override
-            public boolean isSatisfies(final Class<?> testClass) {
-                return isClassDerivedFrom(testClass, superClass) && !Modifier.isAbstract(testClass.getModifiers()) && !testClass.getName().contains("$");
-            }
-
-        });
+        return getClassesInPackage(path, packageName, (testClass) -> isClassDerivedFrom(testClass, superClass) && !Modifier.isAbstract(testClass.getModifiers()) && !testClass.getName().contains("$"));
     }
 
     /**
@@ -246,7 +197,7 @@ public class ClassesRetriever {
         try {
             return ClassLoader.getSystemClassLoader().loadClass(className);
         } catch (final ClassNotFoundException e) {
-            throw new IllegalArgumentException(e);
+            throw new ReflectionException(format("Failed to load class [%s]", className),e);
         }
     }
 
@@ -306,7 +257,7 @@ public class ClassesRetriever {
      * @throws IOException
      */
     private static List<Class<?>> getFromJarFile(final String jar, final String packageName, final IFilterClass filter) throws ClassNotFoundException, IOException {
-        final List<Class<?>> classes = new ArrayList<Class<?>>();
+        final List<Class<?>> classes = new ArrayList<>();
         try (final JarInputStream jarFile = new JarInputStream(new FileInputStream(jar))) {
             JarEntry jarEntry;
             do {

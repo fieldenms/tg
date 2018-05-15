@@ -2,6 +2,7 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 
 <dom-module id="tg-menu-item-view">
     <style>
@@ -13,17 +14,25 @@
         .view {
             background-color: white;
         }
+        .master-insertion-point {
+            overflow: auto;
+            @apply(--layout-vertical);
+        }
         paper-material {
-            margin: 10px 30px;
+            @apply(--layout-vertical);
             border-radius: 2px;
             overflow: hidden;
+            background-color: white;
+            max-height: 100%;
         }
     </style>
     <template>
         <template is="dom-if" if="[[menuItem.view]]" restamp>
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
-                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    <div class="master-insertion-point">
+                        <tg-element-loader id="elementToLoad" class="layout vertical" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    </div>
                 </paper-material>
             </template>
             <template is="dom-if" if="[[_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
@@ -72,12 +81,12 @@
                 hostAttributes: {
                     "class": "layout vertical"
                 },
-                
+
                 // ready: function () {
                 //     This setting could be helpful in case where master / centre views will need to be supported.
                 //     this._afterInitLoading = true;
                 // },
-                
+
                 attached: function () {
                     var self = this;
                     self.async(function () {
@@ -87,7 +96,7 @@
                         }
                     }, 1);
                 },
-                
+
                 focusLoadedView: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.focusView === 'function') {
@@ -114,7 +123,7 @@
                                     delete detail.queryPart;
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);
-                                detail.postRetrieved = oldPostRetrieved; 
+                                detail.postRetrieved = oldPostRetrieved;
                             };
                             detail.retrieve();
                         } else if (this.menuItem.view.viewType === 'master') {
@@ -123,7 +132,12 @@
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                             detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
-                            detail.retrieve();
+                            detail.retrieve().then(function(ironRequest) {
+                                if (detail.saveOnActivation === true) {
+                                    return detail.save(); // saving promise
+                                }
+                                return Promise.resolve(ironRequest); // retrieval promise; resolves immediately
+                            });
                         } else {
                             self.fire("menu-item-view-loaded", self.menuItem);
                         }
