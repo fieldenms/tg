@@ -34,12 +34,16 @@ public class CentreConfigCopyActionDao extends CommonEntityDao<CentreConfigCopyA
     @Override
     @SessionRequired
     public CentreConfigCopyAction save(final CentreConfigCopyAction entity) {
+        // validate centre configuration copy action before performing actual copy
         entity.isValid().ifFailure(Result::throwRuntime);
         
+        // retrieve current saveAsName from entity key
         final String currentSaveAsNameStr = entity.getKey().replaceFirst("default", "");
         final Optional<String> currentSaveAsName = "".equals(currentSaveAsNameStr) ? empty() : of(currentSaveAsNameStr);
         
-        criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder()).centreCopier().apply(t2(currentSaveAsName, of(entity.getTitle())), entity.getDesc());
+        // perform actual copy using centreCopier() closure
+        criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder())
+            .centreCopier().apply(t2(currentSaveAsName, of(entity.getTitle())), entity.getDesc());
         return super.save(entity);
     }
     

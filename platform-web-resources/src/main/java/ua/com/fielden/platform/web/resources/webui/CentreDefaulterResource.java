@@ -15,7 +15,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifi
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -35,14 +34,12 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
- * The web resource for centre defaulting.
+ * The web resource for centre defaulting aka making user-specific configuration synchronised with its base configuration or base configuration synchronised with Centre DSL configured one.
  *
  * @author TG Team
  *
  */
 public class CentreDefaulterResource<CRITERIA_TYPE extends AbstractEntity<?>> extends AbstractWebResource {
-    private final static Logger logger = Logger.getLogger(CentreDefaulterResource.class);
-    
     private final RestServerUtil restUtil;
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;

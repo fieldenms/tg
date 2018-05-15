@@ -20,6 +20,8 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
+
 /**
  * This class is the base class to enhance with criteria and resultant properties.
  *
@@ -28,7 +30,6 @@ import ua.com.fielden.platform.types.tuples.T2;
  * @param <T>
  * @param <DAO>
  */
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;

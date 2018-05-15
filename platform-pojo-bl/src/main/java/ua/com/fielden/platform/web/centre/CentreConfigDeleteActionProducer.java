@@ -26,8 +26,10 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
     protected CentreConfigDeleteAction provideDefaultValues(final CentreConfigDeleteAction entity) {
         if (contextNotEmpty()) {
             if (chosenPropertyRepresentsThisColumn()) {
+                // default configuration will never be deleted; however it can be 'defaulted' 
                 throw failure(DEFAULT_CONFIG_TITLE + " could not be deleted.");
             } else {
+                // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
                 selectionCrit().centreDeleter().accept(chosenProperty());
             }
         }

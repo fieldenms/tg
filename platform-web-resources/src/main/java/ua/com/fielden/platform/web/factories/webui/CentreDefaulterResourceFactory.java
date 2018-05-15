@@ -21,9 +21,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreDefaulterResource;
 
 /**
- * A factory for centre defaulting resources which instantiate resources based on mi type.
+ * A factory for {@link CentreDefaulterResource}s which instantiate resources based on menu item type and saveAsName.
  *
- * The centre identification information is a part of the URI: "/centre/default/{mitype}".
+ * The centre identification information is a part of the URI: "/centre/default/{mitype}/{saveAsName}".
  *
  * @author TG Team
  *

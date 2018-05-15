@@ -387,7 +387,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
     
     /**
-     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>menuItemTypeName</code>
+     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with <code>titles</code> and <code>menuItemTypeName</code>
      * specified.
      *
      * @param menuItemTypeName
@@ -1039,12 +1039,24 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
     }
     
+    /**
+     * Removes locally cached instances of centre configuration on current server node.
+     * 
+     * @param menuItemType
+     * @param names
+     */
     public void removeCentresLocally(final Class<?> menuItemType, final String ... names) {
         for (final String name: names) {
             currentCentres.remove(key(menuItemType, name));
         }
     }
     
+    /**
+     * Removes centre configurations from persistent storage.
+     * 
+     * @param menuItemType
+     * @param names
+     */
     public void removeCentres(final Class<?> menuItemType, final String ... names) {
         entityCentreConfigController.delete(multiModelForCurrentUser(menuItemType.getName(), stream(names).map(name -> title(menuItemType, name)).toArray(String[]::new)));
     }
@@ -1211,7 +1223,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     
     @Override
     public Optional<IGlobalDomainTreeManager> basedOnManager() {
-        throw new DomainTreeException("Non-applicable.");
+        throw new DomainTreeException("Non-applicable in this implementation. Need to be overridden in descendants.");
     }
     
     @Override
@@ -1221,8 +1233,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     
     @Override
     public EntityCentreConfig findConfig(final Class<?> menuItemType, final String name) {
-        final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
-        return entityCentreConfigController.getEntity(from(model).model());
+        return entityCentreConfigController.getEntity(
+            from(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name))).model()
+        );
     }
     
 }
