@@ -26,6 +26,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 /**
  * DbDriven implementation of the {@link ISecurityRoleAssociation}
@@ -91,7 +92,8 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
-        createQueryByKeyFor(getEntityType(), getKeyType(), associations).map(query -> batchDelete(query));
+        SequentialGroupingStream.stream(associations.stream(), (assoc, group) -> group.size() < 1000)
+        .forEach(group -> createQueryByKeyFor(getEntityType(), getKeyType(), group).map(query -> batchDelete(query)));
     }
     
     @Override

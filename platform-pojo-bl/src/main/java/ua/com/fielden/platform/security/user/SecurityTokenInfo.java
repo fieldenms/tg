@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
- * Master entity object.
+ * An entity that represents a security token, which is predominantly used for data marshaling and use at the client side. 
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ISecurityTokenInfo.class)
 @DescTitle(value = "Description", desc = "Description of this security token")
 public class SecurityTokenInfo extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
     
     @IsProperty
     @Title(value = "Title", desc = "Title of this security token")

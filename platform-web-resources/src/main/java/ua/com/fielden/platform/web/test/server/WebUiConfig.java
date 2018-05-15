@@ -7,8 +7,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -112,8 +112,8 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
-import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -141,6 +141,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -401,6 +402,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
+        final SecurityMatrixWebUiConfig securityConfig = SecurityMatrixWebUiConfig.register(injector(), configApp());
 
         configApp().addCentre(entityCentre);
         configApp().addCentre(entityCentreNotGenerated);
@@ -992,6 +994,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.menu()
                 /*      */.addMenuItem("Users").description("User centre").centre(userWebUiConfig.centre).done()
                 /*      */.addMenuItem("User Roles").description("User role centre").centre(userRoleWebUiConfig.centre).done()
+                /*      */.addMenuItem("Security Matrix").description("Security matrix").master(securityConfig.master).done()
                 /*  */.done()
                 /*  */.done()
                 .addModule("Online reports")

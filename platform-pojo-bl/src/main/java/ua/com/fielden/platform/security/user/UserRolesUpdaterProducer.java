@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
+import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
 
 /**
  * A producer for new instances of entity {@link UserRolesUpdater}.
@@ -35,7 +35,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
     }
     
     @Override
-    @Authorise(UserReviewToken.class)
+    @Authorise(UserRolesUpdater_CanExecute_Token.class)
     protected UserRolesUpdater provideCurrentlyAssociatedValues(final UserRolesUpdater entity, final User masterEntity) {
         controller.setAvailableItems(entity, controller.refetchAvailableItems(masterEntity));
         entity.setChosenIds(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(toCollection(LinkedHashSet::new)));

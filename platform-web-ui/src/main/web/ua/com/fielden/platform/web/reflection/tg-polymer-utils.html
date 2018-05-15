@@ -46,4 +46,52 @@
         e.cancelBubble = true;
         e.returnValue = false;
     };
+
+    /**
+     * The class that can be used like an entity for entity grid inspector or any other place.
+     */
+    class EntityStub {
+        
+        constructor(id) {
+            this['id'] = id;
+        }
+
+        get(prop) {
+            if (prop === '') { // empty property name means 'entity itself'
+                return this;
+            }
+            const dotIndex = prop.indexOf(".");
+            if (dotIndex > -1) {
+                var first = prop.slice(0, dotIndex);
+                var rest = prop.slice(dotIndex + 1);
+                var firstVal = this[first];
+                if (firstVal === null) {
+                    return null;
+                }
+                return firstVal.get(rest);
+            }
+            return this[prop];
+        }
+
+        set(property, value) {
+            this[property] = value;
+        }
+
+        type() {
+            return {
+                prop: (prop) => {
+                    return {
+                        scale: () => 0,
+                        trailingZeros: () => true
+                    }
+                }
+            }
+        }
+
+        prop(propName) {
+            return {
+                validationResult: () => null
+            }
+        }
+    }
 </script>
