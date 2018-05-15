@@ -60,10 +60,11 @@
             'use strict'
             class SecurityMatrixEntity extends EntityStub {
 
-                constructor(securityTokenEntity, userRoles, tokenRoleMap, columnList, parent) {
+                constructor(securityTokenEntity, userRoles, tokenRoleMap, columnList, afterCheckCallback, parent) {
                     super(securityTokenEntity.get("key"));
                     this.$visible = true;
                     this.$columnList = columnList;
+                    this.$afterCheckCallback = afterCheckCallback;
                     this.title = securityTokenEntity.get("title");
                     this.desc = securityTokenEntity.get("desc");
                     if (parent) {
@@ -71,7 +72,7 @@
                     }
                     this.children = [];
                     if (securityTokenEntity.children && securityTokenEntity.children.length > 0) {
-                        this.children = securityTokenEntity.children.map(securityToken => new SecurityMatrixEntity(securityToken, userRoles, tokenRoleMap, columnList, this));
+                        this.children = securityTokenEntity.children.map(securityToken => new SecurityMatrixEntity(securityToken, userRoles, tokenRoleMap, columnList, afterCheckCallback, this));
                     }
                     this.roleIdMap = {};
                     this.idRoleMap = {};
@@ -110,16 +111,6 @@
                         if (typeof this._tokenRoleAssociationHandler[property] === "function") {
                             this._tokenRoleAssociationHandler[property](value, value ? "CHECKED" : "UNCHECKED");
                         }
-                    }
-                }
-
-                _updatePropertyState(property, value) {
-                    const state = this._getState(property);
-                    if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-                        const newAllState = this._getState(property);
-                        const newVisibleState = this._getState(property, true);
-                        const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
-                        this._tokenRoleAssociationHandler[property](newValue, newAllState);
                     }
                 }
 
@@ -181,6 +172,17 @@
                     if (this.$visible && this._isPropertyVisible(property)) {
                         this._checkWithoutParent(property, value);
                         this._checkColumnParent(property, value);
+                        this.$afterCheckCallback();
+                    }
+                }
+                
+                 _checkColumnParent(property, value) {
+                    if (this.parent) {
+                        if (Object.keys(this.roleIdMap).includes(property)) {
+                            this.parent._updatePropertyState(property, value);
+                        }
+                        this.parent._updatePropertyState("_tokenChecked", value);
+                        this.parent._checkColumnParent(property, value);
                     }
                 }
 
@@ -220,14 +222,14 @@
                         }
                     }
                 }
-
-                _checkColumnParent(property, value) {
-                    if (this.parent) {
-                        if (Object.keys(this.roleIdMap).includes(property)) {
-                            this.parent._updatePropertyState(property, value);
-                        }
-                        this.parent._updatePropertyState("_tokenChecked", value);
-                        this.parent._checkColumnParent(property, value);
+                
+                _updatePropertyState(property, value) {
+                    const state = this._getState(property);
+                    if (typeof this._tokenRoleAssociationHandler[property] === "function") {
+                        const newAllState = this._getState(property);
+                        const newVisibleState = this._getState(property, true);
+                        const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
+                        this._tokenRoleAssociationHandler[property](newValue, newAllState);
                     }
                 }
 
@@ -299,10 +301,6 @@
                     _postResetSecurityMatrixError: Function,
                     _saveSecurityMatrix: Function,
                     _postSecurityMatrixSaved: Function
-                },
-
-                listeners: {
-                    "tg-tree-state-changed": "_toggleButtonStates"
                 },
 
                 ready: function () {
@@ -388,7 +386,7 @@
                             });
                         });
                         this.columns = columnList;
-                        this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList));
+                        this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList, this._toggleButtonStates));
                         this._toggleButtonStates();
                     }
                 },

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>many checkbox spike</title>
+    <style>
+        #checkboxContainer {
+            display: flex;
+            flex-direction: column;
+        }
+        .row-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="checkboxContainer"></div>
+</body>
+<script>
+    (function () {
+        const container = document.getElementById("checkboxContainer");
+        const checkboxes = [];
+        for (let i = 0; i <= 1000; i++) {
+            const rowContainer = document.createElement("div");
+            const rowCheckboxes = [];
+            rowContainer.classList.add("row-container");
+            for (let j = 0; j <= 30; j++) {
+                const checkBox = document.createElement("input");
+                checkBox.setAttribute("type", "checkbox");
+                rowCheckboxes.push(checkBox);
+                rowContainer.appendChild(checkBox);
+            }
+            checkboxes.push(rowCheckboxes);
+            container.appendChild(rowContainer);
+        }
+        checkboxes[0][0].addEventListener("change", e => {
+            for (let i = 0; i <= 1000; i++) {
+                for(let j = 0;  j <= 30; j++) {
+                    if (i !== 0 || j !== 0) {
+                        checkboxes[i][j].checked = e.target.checked;
+                    }
+                }
+            }
+        });
+    }).call();
+</script>
+
+</html>

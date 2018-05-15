@@ -44,7 +44,6 @@
                     this._setState(state === "CHECKED", state);
                     this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
                         this._setState(value, state);
-                        this.fire("tg-tree-state-changed");
                     };
                 },
                 
