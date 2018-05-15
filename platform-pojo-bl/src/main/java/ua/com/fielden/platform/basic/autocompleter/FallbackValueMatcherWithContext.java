@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition1;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -58,7 +61,7 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
                     .prop(KEY).iLike().val(searchString);
 
         final ICompoundCondition0<T> condition;
-        if (EntityUtils.hasDescProperty(entityType)) {
+        if (hasDescProperty(entityType)) {
             condition = incompleteEql1.or().upperCase().prop(DESC).iLike().val("%" + searchString).end();
         } else {
             condition = incompleteEql1.end();
@@ -71,5 +74,12 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         }
 
     }
-
+    
+    @Override
+    protected OrderingModel makeOrderingModel(final String searchString) {
+    	if (hasDescProperty(entityType)) {
+    		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+    	} 
+        return super.makeOrderingModel(searchString);
+    }
 }

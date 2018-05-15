@@ -53,7 +53,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      * @return
      */
     protected ICompoundCondition0<T> startEqlBasedOnContext(final CentreContext<T, ?> context, final String searchString) {
-        return select(companion.getEntityType()).where().condition(createSearchByKeyAndDescCondition(searchString));
+        return select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
     }
 
     /**
@@ -84,19 +84,18 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      *
      * @return alternative ordering model
      */
-    protected OrderingModel makeOrderingModel() {
+    protected OrderingModel makeOrderingModel(final String searchString) {
         return orderBy().prop(KEY).asc().model();
     }
 
     private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
         final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
-        final boolean searchModelNotOverriden =  queryModel.equals(select(companion.getEntityType()).where().condition(createSearchByKeyAndDescCondition(searchString)).model());
         queryModel.setFilterable(true);
-        final OrderingModel ordering = searchModelNotOverriden ? orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(makeOrderingModel()).model() : makeOrderingModel();
+        final OrderingModel ordering = makeOrderingModel(searchString);
         final Map<String, Object> params = new HashMap<>();
         fillParamsBasedOnContext(getContext(), params);
-        return from(queryModel).with(ordering).with(defaultFetchModel).with(params).lightweight();
+        return from(queryModel).with(ordering).with(params).lightweight();
     }
     
     @Override
