@@ -20,6 +20,7 @@ import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -74,7 +75,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             
             try {
                 decodedEntityType = (Class<T>) findClass(entityTypeName);
-            } catch (final IllegalArgumentException doesNotExistException) {
+            } catch (final ReflectionException doesNotExistException) {
                 final String[] parts = entityTypeId.split(":");
                 if (parts.length < 2 || parts.length > 3) {
                     throw new SerialisationTypeEncoderException(format("Generated type has unknown format for its identifier %s.", entityTypeId));
