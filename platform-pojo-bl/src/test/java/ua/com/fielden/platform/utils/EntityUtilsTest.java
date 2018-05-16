@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -29,7 +28,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
@@ -348,12 +346,12 @@ public class EntityUtilsTest {
         
         entity1.setEntity(entity2.setEntity(entity3));
         
-        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.date").collect(toList());
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.date").collect(toList());
         assertEquals(2, trace.size());
-        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
         assertEquals("entity", t2_1._1);
         assertEquals(entity3, t2_1._2.get());
-        final T2<String, Optional<AbstractEntity<?>>> t2_2 = trace.get(1);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
         assertEquals("entity", t2_2._1);
         assertEquals(entity2, t2_2._2.get());
     }
@@ -369,12 +367,12 @@ public class EntityUtilsTest {
         
         entity1.setEntity(entity2.setEntity(entity3));
         
-        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity").collect(toList());
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity").collect(toList());
         assertEquals(2, trace.size());
-        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
         assertEquals("entity", t2_1._1);
         assertEquals(entity3, t2_1._2.get());
-        final T2<String, Optional<AbstractEntity<?>>> t2_2 = trace.get(1);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
         assertEquals("entity", t2_2._1);
         assertEquals(entity2, t2_2._2.get());
     }
@@ -390,15 +388,15 @@ public class EntityUtilsTest {
         
         entity1.setEntity(entity2.setEntity(entity3));
         
-        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.entity.date").collect(toList());
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.entity.date").collect(toList());
         assertEquals(3, trace.size());
-        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
         assertEquals("entity", t2_1._1);
         assertFalse(t2_1._2.isPresent());
-        final T2<String, Optional<AbstractEntity<?>>> t2_2 = trace.get(1);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
         assertEquals("entity", t2_2._1);
         assertEquals(entity3, t2_2._2.get());
-        final T2<String, Optional<AbstractEntity<?>>> t2_3 = trace.get(2);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_3 = trace.get(2);
         assertEquals("entity", t2_3._1);
         assertEquals(entity2, t2_3._2.get());
     }
@@ -425,7 +423,7 @@ public class EntityUtilsTest {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
         
-        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "date").collect(toList());
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "date").collect(toList());
         assertEquals(0, trace.size());
     }
 
@@ -434,10 +432,10 @@ public class EntityUtilsTest {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
         
-        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity").collect(toList());
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity").collect(toList());
         assertEquals(1, trace.size());
 
-        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
         assertEquals("entity", t2_1._1);
     }
 

@@ -1237,7 +1237,7 @@ public class EntityUtils {
      * @param propertyPath
      * @return
      */
-    public static Stream<T2<String, Optional<AbstractEntity<?>>>> traversePropPath(final AbstractEntity<?> root, final String propertyPath) {
+    public static Stream<T2<String, Optional<? extends AbstractEntity<?>>>> traversePropPath(final AbstractEntity<?> root, final String propertyPath) {
         final Stream<String> paths = Stream.iterate(propertyPath, path -> {
             final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
             return indexOfLastDot > 0 ? path.substring(0, indexOfLastDot) : "";
