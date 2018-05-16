@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.utils;
 
 import static java.math.RoundingMode.HALF_EVEN;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -26,6 +28,9 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -34,6 +39,7 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -48,6 +54,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntityUtilsTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -328,6 +335,110 @@ public class EntityUtilsTest {
         assertEquals(2, value.scale());
         assertEquals(value, toDecimal(value));
         assertEquals(value.setScale(4, RoundingMode.HALF_UP), toDecimal(value, 4));
+    }
+
+    @Test
+    public void traversing_valid_property_path_ending_with_non_entity_typed_property_produces_a_stream_of_prop_value_pairs_with_last_one_skipped() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+        final Entity entity2 = factory.newEntity(Entity.class);
+        entity2.setKey("E2");
+        final Entity entity3 = factory.newEntity(Entity.class);
+        entity3.setKey("E3");
+        
+        entity1.setEntity(entity2.setEntity(entity3));
+        
+        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.date").collect(toList());
+        assertEquals(2, trace.size());
+        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("entity", t2_1._1);
+        assertEquals(entity3, t2_1._2.get());
+        final T2<String, Optional<AbstractEntity<?>>> t2_2 = trace.get(1);
+        assertEquals("entity", t2_2._1);
+        assertEquals(entity2, t2_2._2.get());
+    }
+
+    @Test
+    public void traversing_valid_property_path_ending_with_entity_typed_property_produces_a_stream_of_prop_value_pairs_of_the_same_length_as_the_path() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+        final Entity entity2 = factory.newEntity(Entity.class);
+        entity2.setKey("E2");
+        final Entity entity3 = factory.newEntity(Entity.class);
+        entity3.setKey("E3");
+        
+        entity1.setEntity(entity2.setEntity(entity3));
+        
+        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity").collect(toList());
+        assertEquals(2, trace.size());
+        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("entity", t2_1._1);
+        assertEquals(entity3, t2_1._2.get());
+        final T2<String, Optional<AbstractEntity<?>>> t2_2 = trace.get(1);
+        assertEquals("entity", t2_2._1);
+        assertEquals(entity2, t2_2._2.get());
+    }
+
+    @Test
+    public void traversing_property_paths_with_intermediate_null_values_produces_a_stream_of_prop_value_pairs_where_the_value_member_is_empty_for_null_parts() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+        final Entity entity2 = factory.newEntity(Entity.class);
+        entity2.setKey("E2");
+        final Entity entity3 = factory.newEntity(Entity.class);
+        entity3.setKey("E3");
+        
+        entity1.setEntity(entity2.setEntity(entity3));
+        
+        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.entity.date").collect(toList());
+        assertEquals(3, trace.size());
+        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("entity", t2_1._1);
+        assertFalse(t2_1._2.isPresent());
+        final T2<String, Optional<AbstractEntity<?>>> t2_2 = trace.get(1);
+        assertEquals("entity", t2_2._1);
+        assertEquals(entity3, t2_2._2.get());
+        final T2<String, Optional<AbstractEntity<?>>> t2_3 = trace.get(2);
+        assertEquals("entity", t2_3._1);
+        assertEquals(entity2, t2_3._2.get());
+    }
+
+    @Test
+    public void traversing_invalid_property_paths_produces_empty_stream() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+        final Entity entity2 = factory.newEntity(Entity.class);
+        entity2.setKey("E2");
+        final Entity entity3 = factory.newEntity(Entity.class);
+        entity3.setKey("E3");
+        entity3.setDate(new Date());
+        
+        entity1.setEntity(entity2.setEntity(entity3));
+        assertNull(entity1.getEntity().getEntity().getEntity());
+        
+        final Stream<?> stream = EntityUtils.traversePropPath(entity1, "entity.entity.date.entity");
+        assertEquals(0, stream.count());
+    }
+
+    @Test
+    public void traversing_path_with_one_non_entity_typed_property_produces_empty_stream() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+        
+        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "date").collect(toList());
+        assertEquals(0, trace.size());
+    }
+
+    @Test
+    public void traversing_path_with_one_entity_typed_property_produces_stream_with_one_element() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+        
+        final List<T2<String, Optional<AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity").collect(toList());
+        assertEquals(1, trace.size());
+
+        final T2<String, Optional<AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("entity", t2_1._1);
     }
 
 }

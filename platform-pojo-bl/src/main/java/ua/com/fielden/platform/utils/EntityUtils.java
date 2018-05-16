@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
@@ -10,6 +11,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -34,7 +38,9 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
@@ -62,10 +68,12 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntityUtils {
     private static final Logger logger = Logger.getLogger(EntityUtils.class);
@@ -1214,5 +1222,34 @@ public class EntityUtils {
      */
     public static <T extends AbstractEntity<?>> Optional<T> findByKeyWithMasterFetch(final IEntityReader<T> co, final Object... keyValues) {
         return co.findByKeyAndFetchOptional(co.getFetchProvider().fetchModel(), keyValues);
+    }
+
+    /**
+     * Traverses a property path starting from the end of the path to generate a stream of tuples {@code (property, value)}. The last property in the path is excluded if it is not entity-typed.
+     * If the path only contains one non-entity-typed property then an empty stream is returned.
+     * <p>
+     * If the path is invalid then the resultant stream would be empty.
+     * If the path is valid, but there {@code null} values on some of the intermediate properties then corresponding sub-path values would be represented as empty {@link Optional}.
+     * <p>
+     * This functionality is useful if one needs to analyse the nested values of entities that conclude in the property described by {@code propertyPath} starting with entity {@code root}. 
+     * 
+     * @param root
+     * @param propertyPath
+     * @return
+     */
+    public static Stream<T2<String, Optional<AbstractEntity<?>>>> traversePropPath(final AbstractEntity<?> root, final String propertyPath) {
+        final Stream<String> paths = Stream.iterate(propertyPath, path -> {
+            final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
+            return indexOfLastDot > 0 ? path.substring(0, indexOfLastDot) : "";
+        });
+
+        // skip the first element (i.e. last property in the path) if it does not terminate with an entity-typed property
+        // if this check fails then the path itself is in error...
+        final Either<Exception, Stream<String>> either = TryWrapper.Try(() -> AbstractEntity.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root.getType(), propertyPath)) ? paths : paths.skip(1));
+        return takeWhile(either.getOrElse(Stream::empty), StringUtils::isNotEmpty).map(path -> {
+            final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
+            final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
+            return t2(propName, ofNullable(root.get(path)));
+        });
     }
 }
