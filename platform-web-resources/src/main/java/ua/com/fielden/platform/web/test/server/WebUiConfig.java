@@ -39,8 +39,8 @@ import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
@@ -1097,9 +1097,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @Override
-        protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
-            System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext() + " getContext().getComputation() = " + getContext().getComputation());
-            return incompleteEql.model();
+        protected ConditionModel makeSearchCriteriaModel(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString) {
+        	System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext() + " getContext().getComputation() = " + getContext().getComputation());
+        	return super.makeSearchCriteriaModel(context, searchString);
         }
     }
 
@@ -1130,7 +1130,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @Override
-        protected EntityResultQueryModel<PropertyDescriptor<TgPersistentEntityWithProperties>> completeEqlBasedOnContext(final CentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>, ?> context, final String searchString, final ICompoundCondition0<PropertyDescriptor<TgPersistentEntityWithProperties>> incompleteEql) {
+        protected ConditionModel makeSearchCriteriaModel(final CentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>, ?> context, final String searchString) {
             throw new UnsupportedOperationException("EQL queries should not be used for property descriptors retrieval.");
         }
     }
@@ -1142,9 +1142,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @Override
-        protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
+        protected ConditionModel makeSearchCriteriaModel(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString) {
             System.out.println("KeyPropValueMatcherForCentre: CONTEXT == " + getContext());
-            return incompleteEql.model();
+            return super.makeSearchCriteriaModel(context, searchString);
         }
     }
 
@@ -1155,9 +1155,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @Override
-        protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
+        protected ConditionModel makeSearchCriteriaModel(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString) {
             System.out.println("CritOnlySingleEntityPropValueMatcherForCentre: CONTEXT == " + getContext());
-            return incompleteEql.model();
+            return super.makeSearchCriteriaModel(context, searchString);
         }
     }
 
@@ -1168,9 +1168,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @Override
-        protected EntityResultQueryModel<TgPersistentCompositeEntity> completeEqlBasedOnContext(final CentreContext<TgPersistentCompositeEntity, ?> context, final String searchString, final ICompoundCondition0<TgPersistentCompositeEntity> incompleteEql) {
+        protected ConditionModel makeSearchCriteriaModel(final CentreContext<TgPersistentCompositeEntity, ?> context, final String searchString) {
             System.out.println("CompositePropValueMatcherForCentre: CONTEXT == " + getContext());
-            return incompleteEql.model();
+            return super.makeSearchCriteriaModel(context, searchString);
         }
     }
 

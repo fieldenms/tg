@@ -20,8 +20,10 @@ import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * Key based value matcher, which supports context assignment.
@@ -45,26 +47,14 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     }
 
     /**
-     * This method may be overriden to create a different start of EQL.
+     * This method may be overridden to create a different EQL condition model for search criteria.
      *
      * @param context
      * @param searchString
      * @return
      */
-    protected ICompoundCondition0<T> startEqlBasedOnContext(final CONTEXT context, final String searchString) {
-        return select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
-    }
-
-    /**
-     * This method may be overridden to enhance the resulting query based on the provided context.
-     *
-     * @param context
-     * @param searchString
-     * @param incompleteEql
-     * @return
-     */
-    protected EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final String searchString, final ICompoundCondition0<T> incompleteEql) {
-        return incompleteEql.model();
+    protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
+        return createSearchByKeyCriteriaModel(searchString);
     }
 
     /**
@@ -90,8 +80,8 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     }
 
     private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
-        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
+        final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
+        final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(companion.getEntityType()).where().condition(searchCriteria).model() : select(companion.getEntityType()).model();
         queryModel.setFilterable(true);
         final OrderingModel ordering = makeOrderingModel(searchString);
         final Map<String, Object> params = new HashMap<>();
