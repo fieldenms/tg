@@ -68,7 +68,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
-import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -294,17 +293,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
     
     /**
-     * Generates annotation with mi type.
-     *
-     * @param miType
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @return
-     */
-    private static MiType createMiTypeAnnotation(final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName) {
-        return new MiTypeAnnotation().newInstance(miType, saveAsName);
-    }
-
-    /**
      * Creates the holder of meta-values (missingValue, not, exclusive etc.) for criteria of concrete [miType].
      * <p>
      * The holder should contain only those meta-values, which are different from default values, that are defined in {@link DefaultValueContract}. Client-side logic should also be
@@ -439,7 +427,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IGlobalDomainTreeManager gdtm,
             final DeviceProfile device) {
         final Class<T> entityType = getEntityType(miType);
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType, saveAsName));
+        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
         validationPrototype.setFreshCentreSupplier(() -> updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
         validationPrototype.setDefaultCentreSupplier(() -> getDefaultCentre(gdtm, miType));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
