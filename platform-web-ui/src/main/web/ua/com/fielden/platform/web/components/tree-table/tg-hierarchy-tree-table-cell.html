@@ -39,7 +39,10 @@
 
                 properties: {
                     column: Object,
-                    entity: Object,
+                    entity: {
+                        type: Object,
+                        observer: "_entityChanged"
+                    },
                     highlighted: Boolean,
                     collapsed: {
                         type: Boolean,
@@ -49,7 +52,7 @@
 
                 observers: ["_calcHierarchyCellStyle(entity, column, column.width, column.growFactor)"],
 
-                attached: function () {
+                _entityChanged: function (newEntity, oldEntity) {
                     const state = this.entity.entity.getState("_token");
                     this._setState(state === "CHECKED", state);
                     this.entity.entity._tokenRoleAssociationHandler["_token"] = (value, state) => {

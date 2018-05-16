@@ -23,6 +23,10 @@
                 @apply(--layout-vertical);
 
             }
+            #actionPanel::content > tg-action,
+            tg-action {
+                margin: 10px;
+            }
             .filter-panel::content > .filter-element {
                 margin: 0 10px;
                 @apply(--layout-flex);
@@ -47,6 +51,7 @@
                 </div>
                 <tg-tree-table class="flex" id="securityMatrix" entities="[[entities]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table>
                 <div id="actionPanel" class="layout horizontal center-justified" style="padding:20px; flex-shrink:0;">
+                    <content select="#reloadAction"></content>
                     <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
                     <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_saveSecurityMatrix]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                     <!-- save and cancel buttons goes here -->
@@ -165,19 +170,28 @@
                 }
 
                 reset() {
+                    const roleTouched = {};
                     if (this.hasChildren()) {
-                        this.children.forEach(child => child.reset());
+                        this.children.forEach(child => {
+                            Object.assign(roleTouched, child.reset());
+                        });
+                        Object.keys(roleTouched).forEach(roleKey => {
+                            this._updatePropertyState(roleKey, true);
+                        });
                     } else {
                         this._newAssociations.slice().forEach(associationId => {
                             this.set(this.idRoleMap[associationId], false);
-                            this._checkColumnParent(this.idRoleMap[associationId], false);
+                            roleTouched[this.idRoleMap[associationId]] = true;
                         });
                         this._removedAssociations.slice().forEach(associationId => {
                             this.set(this.idRoleMap[associationId], true);
-                            this._checkColumnParent(this.idRoleMap[associationId], true);
+                            roleTouched[this.idRoleMap[associationId]] = true;
                         });
-                        this._updatePropertyState("_token", this.getState("_token") === "CHECKED");
                     }
+                    if (Object.keys(roleTouched).length > 0) {
+                        this._updatePropertyState("_token", true);
+                    }
+                    return roleTouched;
                 }
 
                 clearCurrentState() {
@@ -261,7 +275,7 @@
                 
                 _updatePropertyState(property, value) {
                     if ("_token" === property) {
-                        this.$state._token = calculateState(Object.keys(this.roleIdMap).filter(roleKey => this._isPropertyVisible(roleKey)).map(roleKey => this.getState(roleKey)));
+                        this.$state._token = calculateState(Object.keys(this.roleIdMap).map(roleKey => this.getState(roleKey)));
                     } else {
                         if (this.hasChildren()) {
                             this.$state[property] = calculateState(this.children.map(child => child.getState(property)));
@@ -292,9 +306,9 @@
                 }
             };
             const calculateState = function (states) {
-                if (states.every(state => state === "CHECKED")) {
+                if (states.length > 0 && states.every(state => state === "CHECKED")) {
                     return "CHECKED";
-                } else if (states.every(state => state === "UNCHECKED")) {
+                } else if (states.length > 0 && states.every(state => state === "UNCHECKED")) {
                     return "UNCHECKED";
                 }
                 return "SEMICHECKED";
@@ -350,6 +364,7 @@
                     this._resetSecurityMatrix = function () {
                         this.entities.forEach(entity => entity.reset());
                         this.$.cancelButton.postAction();
+                        this._toggleButtonStates();
                     }.bind(this);
                     this._postResetSecurityMatrix = function () {};
                     this._postResetSecurityMatrixError = function () {};

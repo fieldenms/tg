@@ -36,10 +36,13 @@
 
                 properties: {
                     column: Object,
-                    entity: Object
+                    entity: {
+                        type: Object,
+                        observer: "_entityChanged"
+                    }
                 },
                 
-                attached: function() {
+                _entityChanged: function (newEntity, oldEntity) {
                     const state = this.entity.getState(this.column.property);
                     this._setState(state === "CHECKED", state);
                     this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
