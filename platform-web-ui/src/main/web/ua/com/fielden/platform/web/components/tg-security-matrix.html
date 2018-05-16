@@ -382,11 +382,11 @@
                 },
 
                 filterTokens: function (text) {
-                    this.$.securityMatrix.filterTokens(text);
+                    this.$.securityMatrix.filterTokens(text.replace(/\s*,\s*/, "|"));
                 },
 
                 filterRoles: function (text) {
-                    this.$.securityMatrix.filterRoles(text);
+                    this.$.securityMatrix.filterRoles(text.replace(/\s*,\s*/, "|"));
                 },
 
                 _isNecessaryForConversion: function (propertyName) {
