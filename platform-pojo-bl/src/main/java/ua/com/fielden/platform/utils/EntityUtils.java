@@ -42,7 +42,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
@@ -67,7 +66,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 
 public class EntityUtils {
     private static final Logger logger = Logger.getLogger(EntityUtils.class);
@@ -245,142 +243,6 @@ public class EntityUtils {
             }
         }
         return -1;
-    }
-
-    /**
-     * This method chooses appropriate Converter for any types of property. Even for properties of [AbstractEntity's descendant type] or List<[AbstractEntity's descendant type]> or
-     * List<String>
-     *
-     * @param entity
-     * @param propertyName
-     * @return
-     */
-    public static Converter chooseConverterBasedUponPropertyType(final AbstractEntity<?> entity, final String propertyName, final ShowingStrategy showingStrategy) {
-        final MetaProperty<?> metaProperty = Finder.findMetaProperty(entity, propertyName);
-        return chooseConverterBasedUponPropertyType(metaProperty, showingStrategy);
-    }
-
-    /**
-     * this method chooses appropriate Converter for any types of property. Even for properties of [AbstractEntity's descendant type] or List<[AbstractEntity's descendant type]> or
-     * List<String>
-     *
-     * @param entity
-     * @param propertyName
-     * @return
-     */
-    public static Converter chooseConverterBasedUponPropertyType(final Class<?> propertyType, final Class<?> collectionType, final ShowingStrategy showingStrategy) {
-        if (propertyType.equals(String.class)) {
-            return null;
-        } else if (Number.class.isAssignableFrom(propertyType)) {
-            return ConverterFactory.createNumberConverter();
-        } else if (Money.class.isAssignableFrom(propertyType)) {
-            return ConverterFactory.createMoneyConverter();
-        } else if (Date.class.equals(propertyType) || DateTime.class.equals(propertyType)) {
-            return ConverterFactory.createDateConverter();
-        } else if (AbstractEntity.class.isAssignableFrom(propertyType)) {
-            return ConverterFactory.createAbstractEntityOrListConverter(showingStrategy);
-        } else if (List.class.isAssignableFrom(propertyType)) {
-            if (collectionType != null) {
-                final Class<?> typeArgClass = collectionType;
-                if (AbstractEntity.class.isAssignableFrom(typeArgClass)) {
-                    return ConverterFactory.createAbstractEntityOrListConverter(showingStrategy);
-                } else if (typeArgClass.equals(String.class)) {
-                    return ConverterFactory.createStringListConverter();
-                } else {
-                    System.out.println(new Exception("listType actualTypeArgument is not String or descendant of AbstractEntity!"));
-                    return null;
-                }
-            } else {
-                System.out.println(new Exception("listType is not Parameterized???!!"));
-                return null;
-            }
-        } else if (Enum.class.isAssignableFrom(propertyType)) {
-            return ConverterFactory.createTrivialConverter();
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Does the same as {@link #chooseConverterBasedUponPropertyType(AbstractEntity, String)}
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static Converter chooseConverterBasedUponPropertyType(final MetaProperty<?> metaProperty, final ShowingStrategy showingStrategy) {
-        return chooseConverterBasedUponPropertyType(metaProperty.getType(), metaProperty.getPropertyAnnotationType(), showingStrategy);
-    }
-
-    /**
-     * Obtains {@link MetaProperty} using {@link #findFirstFailedMetaProperty(AbstractEntity, String)} and returns {@link #getLabelText(MetaProperty, boolean)}
-     *
-     * @return the subject's text value
-     * @throws MissingConverterException
-     * @throws ClassCastException
-     *             if the subject value is not a String
-     */
-    public static String getLabelText(final AbstractEntity<?> entity, final String propertyName, final ShowingStrategy showingStrategy) {
-        final MetaProperty<?> metaProperty = findFirstFailedMetaProperty(entity, propertyName);
-        return getLabelText(metaProperty, false, showingStrategy);
-    }
-
-    public enum ShowingStrategy {
-        KEY_ONLY, DESC_ONLY, KEY_AND_DESC
-    }
-
-    /**
-     * Gets converter for passed {@link MetaProperty} with showKeyOnly param and returns {@link #getLabelText(MetaProperty, Converter)}
-     *
-     * @param metaProperty
-     * @param showKeyOnly
-     * @return
-     */
-    public static String getLabelText(final MetaProperty<?> metaProperty, final boolean returnEmptyStringIfInvalid, final ShowingStrategy showingStrategy) {
-        final ConverterFactory.Converter converter = chooseConverterBasedUponPropertyType(metaProperty, showingStrategy);
-        return getLabelText(metaProperty, returnEmptyStringIfInvalid, converter);
-    }
-
-    /**
-     * Returns text value for passed {@link MetaProperty} using passed {@link Converter}.
-     *
-     * @param returnEmptyStringIfInvalid
-     *            - if {@link Boolean#TRUE} passed as this parameter, then empty string will be returned if passed {@link MetaProperty} is invalid (converter is not used at all in
-     *            this case). Otherwise {@link MetaProperty#getLastInvalidValue()} will be obtained from invalid {@link MetaProperty}, converted using passed {@link Converter} and
-     *            returned.
-     *
-     * @return the subject's text value
-     * @throws MissingConverterException
-     * @throws ClassCastException
-     *             if the subject value is not a String
-     */
-    public static String getLabelText(final MetaProperty<?> metaProperty, final boolean returnEmptyStringIfInvalid, final Converter converter) {
-        if (metaProperty != null) {
-            // hierarchy is valid, only the last property could be invalid
-            final Object value = metaProperty.getLastAttemptedValue();
-            if (!metaProperty.isValid() && returnEmptyStringIfInvalid) {
-                return "";
-            }
-
-            return getLabelText(value, converter);
-        } else {
-            // some property (not the last) is invalid, thus showing empty string
-            return "";
-        }
-    }
-
-    /**
-     * Returns label text representation of value using specified converter.
-     *
-     * @param value
-     * @param converter
-     * @return
-     */
-    public static String getLabelText(final Object value, final Converter converter) {
-        if (value != null && !value.getClass().equals(String.class) && converter == null) {
-            return value.toString();
-        }
-        final String str = converter != null ? converter.convertToString(value) : (String) value;
-        return str == null ? "" : str;
     }
 
     /**
@@ -942,37 +804,8 @@ public class EntityUtils {
         //	}
     }
 
-    /**
-     * Returns the not enhanced copy of the specified enhancedEntity.
-     *
-     * @param enhancedEntity
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public static <T extends AbstractEntity<?>> T makeNotEnhanced(final T enhancedEntity) {
-        return enhancedEntity == null ? null : (T) enhancedEntity.copy(DynamicEntityClassLoader.getOriginalType(enhancedEntity.getType()));
-    }
-
-    /**
-     * Returns the not enhanced copy of the list of enhanced entities.
-     *
-     * @param enhancedEntities
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> List<T> makeNotEnhanced(final List<T> enhancedEntities) {
-        if (enhancedEntities == null) {
-            return null;
-        }
-        final List<T> notEnhnacedEntities = new ArrayList<>();
-        for (final T entry : enhancedEntities) {
-            notEnhnacedEntities.add(makeNotEnhanced(entry));
-        }
-        return notEnhnacedEntities;
-    }
-
     protected static IllegalStateException deepCopyError(final Object oldObj, final Exception e) {
         final String message = "The deep copy operation has been failed for object [" + oldObj + "]. Cause = [" + e.getMessage() + "].";
-        e.printStackTrace();
         logger.error(message);
         return new IllegalStateException(message);
     }
