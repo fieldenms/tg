@@ -188,8 +188,9 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setEntity(final Entity entity) {
+    public Entity setEntity(final Entity entity) {
         this.entity = entity;
+        return this;
     }
 
     public Date getDate() {
