@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 
 import com.google.inject.Inject;
@@ -39,10 +40,10 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
     @Override
     protected CentreConfigLoadAction provideCurrentlyAssociatedValues(final CentreConfigLoadAction entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         if (contextNotEmpty()) {
-            final T2<LinkedHashSet<LoadableCentreConfig>, Optional<String>> configsAndSaveAsName = selectionCrit().loadableCentresSupplier().get();
+            final T2<List<LoadableCentreConfig>, Optional<String>> configsAndSaveAsName = selectionCrit().loadableCentresSupplier().get();
             
             // provide loadable configurations into the action
-            entity.setCentreConfigurations(configsAndSaveAsName._1);
+            entity.setCentreConfigurations(new LinkedHashSet<>(configsAndSaveAsName._1));
             
             final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
             chosenIds.add(configsAndSaveAsName._2.orElse(DEFAULT_CONFIG_TITLE));

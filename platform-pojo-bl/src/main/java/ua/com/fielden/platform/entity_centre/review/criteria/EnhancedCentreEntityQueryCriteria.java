@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -35,7 +35,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private BiConsumer<Optional<String>, String> centreCopier;
     private Runnable centreDeleter;
-    private Supplier<T2<LinkedHashSet<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
+    private Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
@@ -97,11 +97,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         this.centreCopier = centreCopier;
     }
 
-    public Supplier<T2<LinkedHashSet<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier() {
+    public Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier() {
         return loadableCentresSupplier;
     }
 
-    public void setLoadableCentresSupplier(final Supplier<T2<LinkedHashSet<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier) {
+    public void setLoadableCentresSupplier(final Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier) {
         this.loadableCentresSupplier = loadableCentresSupplier;
     }
 

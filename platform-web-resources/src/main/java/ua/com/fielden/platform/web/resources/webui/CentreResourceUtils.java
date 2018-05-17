@@ -6,8 +6,6 @@ import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteri
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
@@ -17,15 +15,12 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -57,8 +52,6 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -67,8 +60,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -77,9 +68,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -394,15 +383,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
     }
     
-    private static DeviceProfile opposite(final DeviceProfile device) {
-        return DESKTOP.equals(device) ? MOBILE : DESKTOP;
-    }
-    
-    private static String obtainTitleFrom(final String surrogateName, final String surrogateNamePrefix) {
-        final String surrogateWithSuffix = surrogateName.replaceFirst(surrogateNamePrefix, "");
-        return surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : DEFAULT_CONFIG_TITLE;
-    }
-    
     /**
      * Creates the validation prototype for criteria entity of concrete [miType].
      * <p>
@@ -461,59 +441,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
-            final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
-            
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
-            
-            final User currentUser = gdtm.getUserProvider().getUser();
-            final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-            final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser =
-                select(EntityCentreConfig.class).where().
-                begin().prop("owner").eq().val(currentUser).end().and().
-                prop("title").like().val(surrogateNamePrefix + "%").and().
-                prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
-                prop("menuItem.key").eq().val(miType.getName()).model();
-            final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
-            if (currentUser.isBase()) {
-                try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
-                    stream.forEach(ecc -> {
-                        final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
-                        loadableConfigurations.add(lcc);
-                    });
-                    Collections.sort(loadableConfigurations);
-                    return t2(new LinkedHashSet<>(loadableConfigurations), saveAsName);
-                }
-            } else {
-                final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
-                final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser =
-                    select(EntityCentreConfig.class).where().
-                    begin().prop("owner").eq().val(baseOfTheCurrentUser).end().and().
-                    prop("title").like().val(surrogateNamePrefix + "%").and().
-                    prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
-                    prop("menuItem.key").eq().val(miType.getName()).model();
-                try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
-                     final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
-                    streamForCurrentUser.forEach(ecc -> {
-                        final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(false)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
-                        loadableConfigurations.add(lcc);
-                    });
-                    streamForBaseUser.forEach(ecc -> {
-                        final LoadableCentreConfig lcc = lccCompanion.new_();
-                        lcc/*TODO .setInherited(true)*/.setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
-                        if (loadableConfigurations.contains(lcc)) {
-                            final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
-                            foundLcc/*TODO .setInherited(true)*/.setDesc(ecc.getDesc());
-                        } else {
-                            loadableConfigurations.add(lcc);
-                        }
-                    });
-                    Collections.sort(loadableConfigurations);
-                    return t2(new LinkedHashSet<>(loadableConfigurations), saveAsName);
-                }
-            }
+            return t2(loadableConfigurations(gdtm, miType, device, companionFinder), saveAsName);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

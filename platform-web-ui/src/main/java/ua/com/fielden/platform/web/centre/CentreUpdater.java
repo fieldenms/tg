@@ -20,8 +20,11 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -33,9 +36,11 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -48,11 +53,16 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
@@ -91,8 +101,7 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    /* TODO make private again? */
-    public static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
+    private static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {
@@ -293,6 +302,111 @@ public class CentreUpdater {
             logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return copiedInstance;
         }
+    }
+    
+    /**
+     * Finds loadable configurations for current user (defined in <code>gdtm</code>) and specified <code>miType; device</code>.
+     * {@link LoadableCentreConfig} instances are sorted by title.
+     * Inherited configurations receive appropriate {@link LoadableCentreConfig#isInherited()} flag.
+     * <p>
+     * Please note that inheritance is purely defined by 'saveAsName' -- if both configuration for user and its base user have the same 'saveAsName' then they are in inheritance relationship.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param device -- device profile (mobile or desktop) for which loadable centres
+     * @param companionFinder
+     * @return
+     */
+    public static List<LoadableCentreConfig> loadableConfigurations(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
+        
+        final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+        final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
+        
+        final User currentUser = gdtm.getUserProvider().getUser();
+        final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(currentUser, miType, device);
+        final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
+        if (currentUser.isBase()) {
+            try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
+                stream.forEach(ecc -> {
+                    loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
+                });
+            }
+        } else {
+            final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
+            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = centreConfigQueryFor(baseOfTheCurrentUser, miType, device);
+            try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
+                 final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
+                streamForCurrentUser.forEach(ecc -> {
+                    loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
+                });
+                streamForBaseUser.forEach(ecc -> {
+                    final LoadableCentreConfig lcc = createLoadableCentreConfig(ecc, true, surrogateNamePrefix, lccCompanion);
+                    if (loadableConfigurations.contains(lcc)) {
+                        final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
+                        foundLcc.setInherited(true).setDesc(ecc.getDesc());
+                    } else {
+                        loadableConfigurations.add(lcc);
+                    }
+                });
+            }
+        }
+        Collections.sort(loadableConfigurations);
+        return loadableConfigurations;
+    }
+    
+    /**
+     * Creates {@link LoadableCentreConfig} instance from <code>ecc</code>'s title and description.
+     * 
+     * @param ecc
+     * @param inherited -- indicates whether {@link LoadableCentreConfig} instance being created needs to be 'inherited'
+     * @param surrogateNamePrefix
+     * @param lccCompanion
+     * @return
+     */
+    private static LoadableCentreConfig createLoadableCentreConfig(final EntityCentreConfig ecc, final boolean inherited, final String surrogateNamePrefix, final ILoadableCentreConfig lccCompanion) {
+        final LoadableCentreConfig lcc = lccCompanion.new_();
+        lcc.setInherited(inherited).setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
+        return lcc;
+    }
+    
+    /**
+     * Returns opposite device for the specified <code>device</code>.
+     * 
+     * @param device
+     * @return
+     */
+    private static DeviceProfile opposite(final DeviceProfile device) {
+        return DESKTOP.equals(device) ? MOBILE : DESKTOP;
+    }
+    
+    /**
+     * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()} (<code>surrogateName</code>).
+     * 
+     * @param surrogateName
+     * @param surrogateNamePrefix
+     * @return
+     */
+    private static String obtainTitleFrom(final String surrogateName, final String surrogateNamePrefix) {
+        final String surrogateWithSuffix = surrogateName.replaceFirst(surrogateNamePrefix, "");
+        return surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : DEFAULT_CONFIG_TITLE;
+    }
+    
+    /**
+     * Creates a query to find centre configurations persisted for <code>user</code>.
+     * 
+     * @param user
+     * @param miType
+     * @param device -- the device for which centre configurations are looked for
+     * @return
+     */
+    private static EntityResultQueryModel<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
+        return select(EntityCentreConfig.class).where().
+            begin().prop("owner").eq().val(user).end().and().
+            prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + "%").and().
+            prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
+            prop("menuItem.key").eq().val(miType.getName()).model();
     }
     
     /**
