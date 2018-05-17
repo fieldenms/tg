@@ -10,6 +10,7 @@ import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
  * Provides an API to consistently compose Web UI layouts for both entity centres and masters.
  */
 public class LayoutComposer {
+    public static final int MARGIN = 20;
     public final static String MARGIN_PIX = "20px";
     public static final String MARGIN_PIX_FOR_MASTER_ACTION = "10px";
 
