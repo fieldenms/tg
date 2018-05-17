@@ -36,36 +36,27 @@
         is: 'tg-scrollable-component',
 
         behaviors: [Polymer.IronResizableBehavior],
+        
+        ready: function () {
+            this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            this._mutationConfig = {childList: true, subtree: true};
+            const observer = mutationList => {
+                mutationList.forEach(mutation => {
+                    this._resizeEventListener();
+                })
+            };
+            this._mutationObserver = new MutationObserver(observer);
+           
+        },
 
         attached: function () {
-            this._waitForDimensions(0);
+             this._mutationObserver.observe(this.$.scrollablePanel, this._mutationConfig);
+        },
+        
+        detached: function () {
+             this._mutationObserver.disconnect();
         },
 
-        _waitForDimensions: function (time) {
-            const self = this;
-            self.async(function () {
-                // in case where dimensions are not empty and were not changed from last _waitForDimensions call then need to invoke resize event and assign resize listener
-                // this will trigger repaint of shadow after inner content re-flow will be completed (for e.g. tg-flex-layout has very dynamic nature, its height keeps reducing until re-flow is finished)
-                if (self.$.scrollablePanel.offsetWidth && self.$.scrollablePanel.offsetHeight && self._dimensionNotChanged() >= 1) {
-                    self.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-                    self._resizeEventListener();
-                } else {
-                    self._waitForDimensions(100);
-                }
-            }, time);
-        },
-        
-        _dimensionNotChanged: function () {
-            if (this.$.scrollablePanel.offsetWidth === this.oldWidth && this.$.scrollablePanel.offsetHeight === this.oldHeight) {
-                this._count += 1;
-            } else {
-                this._count = 0;
-            }
-            this.oldWidth = this.$.scrollablePanel.offsetWidth;
-            this.oldHeight = this.$.scrollablePanel.offsetHeight;
-            return this._count;
-        },
-        
         _resizeEventListener: function (event, details) {
             this._contentScrolled();
             
