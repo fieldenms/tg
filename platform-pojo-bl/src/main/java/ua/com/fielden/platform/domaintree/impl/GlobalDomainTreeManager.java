@@ -68,7 +68,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
     private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
-    private final static String DEFAULT_CONFIG_DESC = "Default configuration";
+    public final static String DEFAULT_CONFIG_DESC = "Default configuration";
     public final static String DEFAULT_CONFIG_TITLE = "[Default]";
     private final EntityFactory factory;
     private final IUserProvider userProvider;

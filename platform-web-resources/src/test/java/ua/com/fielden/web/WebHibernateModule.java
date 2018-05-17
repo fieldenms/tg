@@ -66,14 +66,14 @@ import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CentreConfigCopyActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICentreConfigCopyAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
@@ -151,7 +151,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IEntityExportAction.class).to(EntityExportActionDao.class);
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
-        bind(ICentreConfigCopyAction.class).to(CentreConfigCopyActionDao.class);
+        bind(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
         bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
     }

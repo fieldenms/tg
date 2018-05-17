@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -14,31 +17,48 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
- * Functional entity for copying centre configuration.
- * <p>
- * Key of this functional entity represents the name of configuration to be copied or empty string for the case of unnamed configuration.
+ * Functional entity for editing / copying centre configuration.
  * 
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigCopyAction.class)
-@KeyType(String.class)
-@DescTitle("Description")
+@CompanionObject(ICentreConfigEditAction.class)
+@KeyType(NoKey.class)
+@DescTitle(value = "Description", desc = "Centre configuration description.")
 @DescRequired
-public class CentreConfigCopyAction extends AbstractFunctionalEntityWithCentreContext<String> {
+public class CentreConfigEditAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+    public enum EditKind { COPY, EDIT }
+    
+    public CentreConfigEditAction() {
+        setKey(NO_KEY);
+    }
     
     @IsProperty
-    @Title(value = "Title", desc = "Title for centre configuration copy.")
+    @Title(value = "Title", desc = "Centre configuration title.")
     @Required
-    @BeforeChange(@Handler(CentreConfigCopyActionTitleValidator.class))
+    @BeforeChange(@Handler(CentreConfigEditActionTitleValidator.class))
     private String title;
     
     @IsProperty
     @Title("Context Holder")
     private CentreContextHolder centreContextHolder;
     
+    @IsProperty
+    @Title("Edit Kind")
+    private String editKind;
+    
     @Observable
-    public CentreConfigCopyAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {
+    public CentreConfigEditAction setEditKind(final String editKind) {
+        this.editKind = editKind;
+        return this;
+    }
+    
+    public String getEditKind() {
+        return editKind;
+    }
+    
+    @Observable
+    public CentreConfigEditAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {
         this.centreContextHolder = centreContextHolder;
         return this;
     }
@@ -48,7 +68,7 @@ public class CentreConfigCopyAction extends AbstractFunctionalEntityWithCentreCo
     }
     
     @Observable
-    public CentreConfigCopyAction setTitle(final String title) {
+    public CentreConfigEditAction setTitle(final String title) {
         this.title = title;
         return this;
     }

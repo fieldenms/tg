@@ -5,6 +5,7 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_DESC;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
@@ -65,6 +66,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -433,12 +435,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
-        validationPrototype.setCentreCopier((newName, newDesc) -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
-            final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
-            
-            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
-            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
+        validationPrototype.setCentreTitleAndDescGetter(() -> {
+            return saveAsName.map(name -> t2(name, "TODO")).orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC)); // TODO
+        });
+        validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
+            if (EditKind.COPY.equals(editKindAndNewName._1)) {
+                final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+                final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
+                
+                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, editKindAndNewName._2, device, freshCentre, newDesc);
+                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, editKindAndNewName._2, device, savedCentre, null);
+            } else {
+                throw failure("Not yet implemented."); // TODO
+            }
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
             return t2(loadableConfigurations(gdtm, miType, device, companionFinder), saveAsName);

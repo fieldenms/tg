@@ -11,12 +11,12 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 
 /**
- * Validator for centre configuration title in {@link CentreConfigCopyAction}.
+ * Validator for centre configuration title in {@link CentreConfigEditAction}.
  * 
  * @author TG Team
  *
  */
-public class CentreConfigCopyActionTitleValidator implements IBeforeChangeEventHandler<String> {
+public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventHandler<String> {
     
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {

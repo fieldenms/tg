@@ -35,10 +35,10 @@
         <!--Selection view toolbar-->
         <div class="toolbar layout horizontal wrap">
             <div class="toolbar-content layout horizontal center">
-                <tg-ui-action ui-role='ICON' short-desc='Add new configuration' long-desc='Adds new configuration copy' icon='icons:content-copy' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigCopyAction' element-name='tg-CentreConfigCopyAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigCopyAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="[[saveAsName]]" attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Add new configuration' long-desc='Adds new configuration copy' icon='icons:content-copy' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="COPY" attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
                 <tg-ui-action ui-role='ICON' short-desc='Load configuration' long-desc='Loads existing configuration for this centre' icon='icons:folder-open' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigLoadAction' element-name='tg-CentreConfigLoadAction-master' number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigLoadAction-master_1_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.1.attrs]]' pre-action='[[topLevelActions.1.preAction]]' post-action-success='[[topLevelActions.1.postActionSuccess]]' post-action-error='[[topLevelActions.1.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Edit' long-desc='Edit configuration' icon='icons:create' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress style="cursor:initial"></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Delete configuration' long-desc='Deletes currently loaded configuration' icon='icons:remove-circle-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' number-of-action='2' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_2_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.2.attrs]]' pre-action='[[topLevelActions.2.preAction]]' post-action-success='[[topLevelActions.2.postActionSuccess]]' post-action-error='[[topLevelActions.2.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Edit configuration' long-desc='Edits currently loaded configuration' icon='icons:create' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' number-of-action='2' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_2_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="EDIT" attrs='[[topLevelActions.2.attrs]]' pre-action='[[topLevelActions.2.preAction]]' post-action-success='[[topLevelActions.2.postActionSuccess]]' post-action-error='[[topLevelActions.2.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
+                <tg-ui-action ui-role='ICON' short-desc='Delete configuration' long-desc='Deletes currently loaded configuration' icon='icons:remove-circle-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' number-of-action='3' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'></tg-ui-action>
             </div>
             <div class="toolbar-content layout horizontal center" style="margin-left:auto">
                 <tg-ui-action ui-role='ICON' short-desc='Settings' long-desc='Open configuration settings' icon='icons:settings' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress style="cursor:initial"></tg-ui-action>
@@ -96,7 +96,7 @@
                             self.saveAsName = functionalEntity.get('title');
                         },
                         attrs: {
-                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigCopyAction', currentState:'EDIT', centreUuid: self.uuid
+                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
                         },
                         postActionError: function (functionalEntity, action) {}
                     },
@@ -111,6 +111,19 @@
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigLoadAction', currentState:'EDIT', centreUuid: self.uuid
+                        },
+                        postActionError: function (functionalEntity, action) {}
+                    },
+                    {
+                        preAction: function (action) {
+                            return Promise.resolve(true);
+                        },
+                        postActionSuccess: function (functionalEntity, action) {
+                            // update saveAsName with new name after successful edit action
+                            self.saveAsName = functionalEntity.get('title');
+                        },
+                        attrs: {
+                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
                         },
                         postActionError: function (functionalEntity, action) {}
                     },

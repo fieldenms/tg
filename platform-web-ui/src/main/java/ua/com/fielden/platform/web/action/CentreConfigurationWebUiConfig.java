@@ -19,8 +19,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
-import ua.com.fielden.platform.web.centre.CentreConfigCopyActionProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
@@ -47,7 +47,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
-    public final EntityMaster<CentreConfigCopyAction> centreConfigCopyActionMaster;
+    public final EntityMaster<CentreConfigEditAction> centreConfigEditActionMaster;
     public final EntityMaster<CentreConfigLoadAction> centreConfigLoadActionMaster;
     public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
     
@@ -55,7 +55,7 @@ public class CentreConfigurationWebUiConfig {
         centreConfigUpdater = createCentreConfigUpdater(injector);
         centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
-        centreConfigCopyActionMaster = createCentreConfigCopyActionMaster(injector);
+        centreConfigEditActionMaster = createCentreConfigEditActionMaster(injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector);
         centreConfigDeleteActionMaster = createCentreConfigDeleteActionMaster(injector);
     }
@@ -173,16 +173,16 @@ public class CentreConfigurationWebUiConfig {
     }
     
     /**
-     * Creates entity master for {@link CentreConfigCopyAction}.
+     * Creates entity master for {@link CentreConfigEditAction}.
      *
      * @return
      */
-    private static EntityMaster<CentreConfigCopyAction> createCentreConfigCopyActionMaster(final Injector injector) {
+    private static EntityMaster<CentreConfigEditAction> createCentreConfigEditActionMaster(final Injector injector) {
         final String actionLayout = mkActionLayoutForMaster();
         final String layout = mkGridForMasterFitWidth(2, 1);
         
-        final IMaster<CentreConfigCopyAction> masterConfig = new SimpleMasterBuilder<CentreConfigCopyAction>()
-            .forEntity(CentreConfigCopyAction.class)
+        final IMaster<CentreConfigEditAction> masterConfig = new SimpleMasterBuilder<CentreConfigEditAction>()
+            .forEntity(CentreConfigEditAction.class)
             .addProp("title").asSinglelineText().also()
             .addProp("desc").asMultilineText().also()
             .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of configuration copy.")
@@ -195,9 +195,9 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(MOBILE, empty(), layout)
             .withDimensions(mkDim(400, 300))
             .done();
-        return new EntityMaster<CentreConfigCopyAction>(
-            CentreConfigCopyAction.class,
-            CentreConfigCopyActionProducer.class,
+        return new EntityMaster<CentreConfigEditAction>(
+            CentreConfigEditAction.class,
+            CentreConfigEditActionProducer.class,
             masterConfig,
             injector);
     }

@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 
 /**
@@ -33,9 +34,10 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiConsumer<Optional<String>, String> centreCopier;
+    private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
     private Runnable centreDeleter;
     private Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
+    private Supplier<T2<String, String>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
@@ -81,28 +83,36 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public BiConsumer<Optional<String>, String> centreCopier() {
-        return centreCopier;
+    public void setCentreEditor(final BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor) {
+        this.centreEditor = centreEditor;
     }
 
-    public Runnable centreDeleter() {
-        return centreDeleter;
+    public BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor() {
+        return centreEditor;
     }
 
     public void setCentreDeleter(final Runnable centreDeleter) {
         this.centreDeleter = centreDeleter;
     }
 
-    public void setCentreCopier(final BiConsumer<Optional<String>, String> centreCopier) {
-        this.centreCopier = centreCopier;
+    public Runnable centreDeleter() {
+        return centreDeleter;
+    }
+
+    public void setLoadableCentresSupplier(final Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier) {
+        this.loadableCentresSupplier = loadableCentresSupplier;
     }
 
     public Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier() {
         return loadableCentresSupplier;
     }
 
-    public void setLoadableCentresSupplier(final Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier) {
-        this.loadableCentresSupplier = loadableCentresSupplier;
+    public void setCentreTitleAndDescGetter(final Supplier<T2<String, String>> centreTitleAndDescGetter) {
+        this.centreTitleAndDescGetter = centreTitleAndDescGetter;
+    }
+
+    public Supplier<T2<String, String>> centreTitleAndDescGetter() {
+        return centreTitleAndDescGetter;
     }
 
     public void setDefaultCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {

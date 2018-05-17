@@ -45,7 +45,7 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigCopyAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -68,7 +68,7 @@ public class PlatformDomainTypes {
         types.add(CentreConfigUpdaterDefaultAction.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
-        types.add(CentreConfigCopyAction.class);
+        types.add(CentreConfigEditAction.class);
         types.add(CentreConfigLoadAction.class);
         types.add(LoadableCentreConfig.class);
         types.add(CentreConfigDeleteAction.class);
