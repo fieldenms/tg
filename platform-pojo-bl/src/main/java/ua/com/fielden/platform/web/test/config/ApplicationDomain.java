@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgMachine;
@@ -111,6 +112,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityWithTimeZoneDates.class);
         add(TgGeneratedEntity.class);
         add(TgGeneratedEntityForTrippleDecAnalysis.class);
+        add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
         add(OtherEntity.class);
 
         add(TgMessage.class);

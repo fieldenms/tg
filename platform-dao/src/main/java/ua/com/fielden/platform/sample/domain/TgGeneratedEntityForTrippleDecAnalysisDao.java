@@ -32,6 +32,7 @@ import ua.com.fielden.platform.types.Money;
 public class TgGeneratedEntityForTrippleDecAnalysisDao extends CommonEntityDao<TgGeneratedEntityForTrippleDecAnalysis> implements ITgGeneratedEntityForTrippleDecAnalysis {
 
     private static final int maxRandNumber = 10000;
+
     @Inject
     public TgGeneratedEntityForTrippleDecAnalysisDao(final IFilter filter) {
         super(filter);

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.test.server.config;
 
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.MARGIN;
@@ -11,6 +14,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisDao;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
+import ua.com.fielden.platform.sample.domain.producers.TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -18,31 +23,37 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.with_master.impl.ChartDecMasterBuilder;
 /**
- * {@link TgGeneratedEntity} Web UI configuration.
+ * {@link TgGeneratedEntityForTrippleDecAnalysis} Web UI configuration.
  *
  * @author TG Team
  *
  */
 public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
 
-    public final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> centre;
-    public final EntityMaster<TgGeneratedEntityForTrippleDecAnalysis> master;
 
     public static TgGeneratedEntityForTrippleDecAnalysisWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
         return new TgGeneratedEntityForTrippleDecAnalysisWebUiConfig(injector, builder);
     }
 
     private TgGeneratedEntityForTrippleDecAnalysisWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
-        centre = createCentre(injector);
-        builder.register(centre);
-        master = createMaster(injector);
-        builder.register(master);
+        builder.register(createCentre(injector));
+        builder.register(createMaster(injector));
+        builder.register(createTripleDecInsertionPoint(injector));
+    }
+
+    private EntityMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> createTripleDecInsertionPoint(final Injector injector) {
+        final IMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> config = new ChartDecMasterBuilder<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint>()
+                .forEntityWithSaveOnActivation(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
+                .done();
+        return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class, TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer.class, config, injector);
     }
 
     /**
@@ -77,6 +88,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
                 .withGenerator(TgGeneratedEntityForTrippleDecAnalysis.class, TgGeneratedEntityForTrippleDecAnalysisDao.class)
+                .setPageCapacity(20)
                 .addProp("group").order(1).asc().width(100)
                     .withSummary("count_group_", "COUNT(SELF)", "The total number of generated entities.")
                     .withAction(standardEditAction).also()
@@ -88,6 +100,16 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .addProp("hours").minWidth(60)
                     .withSummary("sum_hours_", "SUM(hours)", "Sum of hours property")
                 .addPrimaryAction(standardEditAction)
+
+                .addInsertionPointWithPagination(
+                        action(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
+                             .withContext(context().withSelectionCrit().build())
+                             .icon("stub")
+                             .shortDesc("Triple decker analysis")
+                             .prefDimForView(mkDim("'auto'", "'60px'"))
+                             .withNoParentCentreRefresh()
+                             .build(),
+                         InsertionPoints.BOTTOM)
                 .build();
 
         final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> entityCentre = new EntityCentre<>(MiTgGeneratedEntityForTrippleDecAnalysis.class, "MiTgGeneratedEntityForTrippleDecAnalysis", ecc, injector, null);
