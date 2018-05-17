@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -440,22 +441,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
-        validationPrototype.setCentreDeleter((name) -> {
-            removeCentres(gdtm, miType, device, of(name), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+        validationPrototype.setCentreDeleter(() -> {
+            if (!saveAsName.isPresent()) {
+                // default configuration will never be deleted; however it can be 'defaulted'
+                throw failure(DEFAULT_CONFIG_TITLE + " could not be deleted.");
+            } else {
+                // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
+                removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            }
         });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
-        validationPrototype.setCentreCopier((oldAndNewNames, newDesc) -> {
-            final Optional<String> oldName = oldAndNewNames._1;
-            final Optional<String> newName = oldAndNewNames._2;
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, oldName, device);
-            final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, oldName, device);
+        validationPrototype.setCentreCopier((newName, newDesc) -> {
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
             
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
-            final ICentreDomainTreeManagerAndEnhancer newSavedCentre = initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
-            
-            return t2(newFreshCentre, newSavedCentre);
+            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
+            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
             final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();

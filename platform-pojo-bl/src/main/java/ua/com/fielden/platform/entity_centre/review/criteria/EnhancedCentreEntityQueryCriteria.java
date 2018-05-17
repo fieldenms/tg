@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity_centre.review.criteria;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -33,8 +33,8 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiFunction<T2<Optional<String>, Optional<String>>, String, T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> centreCopier;
-    private Consumer<String> centreDeleter;
+    private BiConsumer<Optional<String>, String> centreCopier;
+    private Runnable centreDeleter;
     private Supplier<T2<LinkedHashSet<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     /**
@@ -81,19 +81,19 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public BiFunction<T2<Optional<String>, Optional<String>>, String, T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> centreCopier() {
+    public BiConsumer<Optional<String>, String> centreCopier() {
         return centreCopier;
     }
 
-    public Consumer<String> centreDeleter() {
+    public Runnable centreDeleter() {
         return centreDeleter;
     }
 
-    public void setCentreDeleter(final Consumer<String> centreDeleter) {
+    public void setCentreDeleter(final Runnable centreDeleter) {
         this.centreDeleter = centreDeleter;
     }
 
-    public void setCentreCopier(final BiFunction<T2<Optional<String>, Optional<String>>, String, T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> centreCopier) {
+    public void setCentreCopier(final BiConsumer<Optional<String>, String> centreCopier) {
         this.centreCopier = centreCopier;
     }
 
