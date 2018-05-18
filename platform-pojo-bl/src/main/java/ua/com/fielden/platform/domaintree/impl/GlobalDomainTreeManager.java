@@ -1238,4 +1238,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         );
     }
     
+    @Override
+    public EntityCentreConfig saveConfig(final EntityCentreConfig config) {
+        return entityCentreConfigController.save(config);
+    }
+    
 }

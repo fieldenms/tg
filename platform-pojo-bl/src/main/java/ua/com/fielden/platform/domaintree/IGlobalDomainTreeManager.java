@@ -57,6 +57,13 @@ public interface IGlobalDomainTreeManager {
     EntityCentreConfig findConfig(final Class<?> menuItemType, final String name);
     
     /**
+     * Saves configuration.
+     * 
+     * @return
+     */
+    EntityCentreConfig saveConfig(final EntityCentreConfig config);
+    
+    /**
      * Returns a user provider. The user is a part of domain tree context. Some domain tree actions is permitted only for base users. Some behaviour also can differ for different
      * types of users.
      * 

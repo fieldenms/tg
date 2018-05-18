@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
+import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
@@ -57,6 +58,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -188,6 +190,41 @@ public class CentreUpdater {
             final String freshDeviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
             final EntityCentreConfig eccWithDesc = gdtm.findConfig(miType, freshDeviceSpecificDiffName);
             return eccWithDesc == null ? null : eccWithDesc.getDesc();
+        }
+    }
+    
+    /**
+     * Changes configuration title to <code>newTitle</code> and description to <code>newDesc</code> and saves these changes to persistent storage.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @param newTitle -- new title for configuration (aka 'saveAsName')
+     * @param newDesc -- new description for configuration
+     */
+    public static void editCentreTitleAndDesc(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final String newTitle, final String newDesc) {
+        final EntityCentreConfig freshConfig = gdtm.findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX);
+        final EntityCentreConfig savedConfig = gdtm.findConfig(miType, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX);
+        final EntityCentreConfig previouslyRunConfig = gdtm.findConfig(miType, deviceSpecific(saveAsSpecific(PREVIOUSLY_RUN_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX);
+        if (freshConfig == null || savedConfig == null) {
+            throw Result.failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
+        }
+        
+        // newTitle
+        freshConfig.setTitle(deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
+        savedConfig.setTitle(deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
+        if (previouslyRunConfig != null) { // previouslyRun centre may not exist
+            previouslyRunConfig.setTitle(deviceSpecific(saveAsSpecific(PREVIOUSLY_RUN_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
+        }
+        // newDesc
+        freshConfig.setDesc(newDesc);
+        
+        // save
+        gdtm.saveConfig(freshConfig);
+        gdtm.saveConfig(savedConfig);
+        if (previouslyRunConfig != null) { // previouslyRun centre may not exist
+            gdtm.saveConfig(previouslyRunConfig);
         }
     }
     
@@ -345,7 +382,7 @@ public class CentreUpdater {
                     final LoadableCentreConfig lcc = createLoadableCentreConfig(ecc, true, surrogateNamePrefix, lccCompanion);
                     if (loadableConfigurations.contains(lcc)) {
                         final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
-                        foundLcc.setInherited(true).setDesc(ecc.getDesc());
+                        foundLcc.setInherited(true); // description of specific config has a priority over base config
                     } else {
                         loadableConfigurations.add(lcc);
                     }

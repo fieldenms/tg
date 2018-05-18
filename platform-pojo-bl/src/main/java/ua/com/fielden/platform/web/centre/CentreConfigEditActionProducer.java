@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
-import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
 
@@ -57,7 +57,7 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             if (DEFAULT_CONFIG_TITLE.equals(title)) {
                 if (EDIT.name().equals(entity.getEditKind())) {
                     // default configuration can not be edited; however 'default' action is applicable
-                    throw failure(title + " could not be edited.");
+                    throw failuref("%s cannot be edited.", title);
                 }
                 // remove brackets from title when copying 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
                 entity.setTitle(title.replace("[", "").replaceAll("]", "") + actionKindSuffix);
