@@ -11,22 +11,23 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerConfig;
 
 public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T>{
 
     private final IRenderable renderable;
 
-    public ChartDeckerMaster(final Class<T> masterEntityType, final boolean saveOnActivation) {
+    public ChartDeckerMaster(final IChartDeckerConfig<T> deckerConfig) {
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", ""/*SimpleMasterBuilder.createImports(importPaths)*/)
-                .replace("@entity_type", masterEntityType.getSimpleName())
+                .replace("@entity_type", deckerConfig.getEntityType().getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", "")
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", readyCallback())
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
-                .replace("@saveOnActivationValue", String.valueOf(saveOnActivation));
+                .replace("@saveOnActivationValue", String.valueOf(deckerConfig.shouldSaveOnActivation()));
 
         renderable = new IRenderable() {
             @Override

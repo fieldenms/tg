@@ -12,49 +12,59 @@ import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWith
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxisTitle;
 
-public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithTitle<T>
-{
+public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithTitle<T> {
+
+    private final String aggregationProperty;
+    private final ChartDeckerMasterBuilder<T> deckerBuilder;
+
+    private String title = "";
+    private String xAxisTitle = "";
+    private String yAxisTitle = "";
+    private Colour barColour = new Colour("0288D1");
+    private EntityActionConfig actionConfig;
+
+    public ChartDeck(final String aggregationProperty, final ChartDeckerMasterBuilder<T> chartDeckerMasterBuilder) {
+        this.aggregationProperty = aggregationProperty;
+        this.deckerBuilder = chartDeckerMasterBuilder;
+    }
 
     @Override
     public IChartDeckerYAxisTitle<T> withXAxisTitle(final String title) {
-        // TODO Auto-generated method stub
-        return null;
+        this.xAxisTitle = title;
+        return this;
     }
 
     @Override
     public IChartDeckerBarColour<T> withYAxisTitle(final String title) {
-        // TODO Auto-generated method stub
-        return null;
+        this.yAxisTitle = title;
+        return this;
     }
 
     @Override
     public IChartDeckerWithAction<T> withBarColour(final Colour barColour) {
-        // TODO Auto-generated method stub
-        return null;
+        this.barColour = barColour;
+        return this;
     }
 
     @Override
     public IChartDeckerAlso<T> withAction(final EntityActionConfig action) {
-        // TODO Auto-generated method stub
-        return null;
+        this.actionConfig = action;
+        return this;
     }
 
     @Override
     public IChartDeckerAddDeck<T> also() {
-        // TODO Auto-generated method stub
-        return null;
+        return deckerBuilder;
     }
 
     @Override
     public IMaster<T> done() {
-        // TODO Auto-generated method stub
-        return null;
+        return deckerBuilder.done();
     }
 
     @Override
     public IChartDeckerXAxisTitle<T> withTitle(final String title) {
-        // TODO Auto-generated method stub
-        return null;
+        this.title = title;
+        return this;
     }
-
 }

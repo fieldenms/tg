@@ -4,6 +4,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public interface IChartDeckerGroup<T extends AbstractEntity<?>> {
 
-    IChartDeckerAddDeck<T> groupBy(final String propeorty);
+    IChartDeckerAddDeck<T> groupBy(final String property);
 
 }

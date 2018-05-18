@@ -16,6 +16,7 @@ import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnaly
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisDao;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
 import ua.com.fielden.platform.sample.domain.producers.TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -51,8 +52,25 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
 
     private EntityMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> createTripleDecInsertionPoint(final Injector injector) {
         final IMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> config = new ChartDeckerMasterBuilder<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint>()
-                .forEntityWithSaveOnActivation(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
-
+                .forEntityWithSaveOnActivation(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class).groupBy("group")
+                    .addDeckForProperty("count")
+                        .withTitle("Count")
+                        .withXAxisTitle("Groups")
+                        .withYAxisTitle("Number of Items")
+                        .withBarColour(new Colour("1976D2"))
+                        .withAction(null)
+                        .also()
+                    .addDeckForProperty("cost")
+                        .withXAxisTitle("Groups")
+                        .withYAxisTitle("Cost $")
+                        .withBarColour(new Colour("00796B"))
+                        .withAction(null)
+                        .also()
+                    .addDeckForProperty("hours")
+                        .withXAxisTitle("Groups")
+                        .withYAxisTitle("Hours")
+                        .withBarColour(new Colour("C2185B"))
+                        .withAction(null)
                 .done();
         return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class, TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer.class, config, injector);
     }
