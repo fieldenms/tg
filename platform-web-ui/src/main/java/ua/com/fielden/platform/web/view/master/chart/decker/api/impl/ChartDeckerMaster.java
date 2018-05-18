@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.view.master.api.impl;
+package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
 import java.util.Optional;
 
@@ -12,11 +12,11 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
-public class ChartDecMaster<T extends AbstractEntity<?>> implements IMaster<T>{
+public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T>{
 
     private final IRenderable renderable;
 
-    public ChartDecMaster(final Class<T> masterEntityType, final boolean saveOnActivation) {
+    public ChartDeckerMaster(final Class<T> masterEntityType, final boolean saveOnActivation) {
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", ""/*SimpleMasterBuilder.createImports(importPaths)*/)

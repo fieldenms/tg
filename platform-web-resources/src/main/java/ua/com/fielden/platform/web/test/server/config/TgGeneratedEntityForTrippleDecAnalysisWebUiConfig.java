@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.with_master.impl.ChartDecMasterBuilder;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.impl.ChartDeckerMasterBuilder;
 /**
  * {@link TgGeneratedEntityForTrippleDecAnalysis} Web UI configuration.
  *
@@ -50,8 +50,9 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
     }
 
     private EntityMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> createTripleDecInsertionPoint(final Injector injector) {
-        final IMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> config = new ChartDecMasterBuilder<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint>()
+        final IMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> config = new ChartDeckerMasterBuilder<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint>()
                 .forEntityWithSaveOnActivation(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
+
                 .done();
         return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class, TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer.class, config, injector);
     }
