@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -392,10 +393,9 @@ public final class Reflector {
         try {
             final Method method = annotation.getClass().getDeclaredMethod(paramName);
             method.setAccessible(true);
-            final Pair<Class<?>, Object> result = new Pair<Class<?>, Object>(method.getReturnType(), method.invoke(annotation));
-            return result;
+            return pair(method.getReturnType(), method.invoke(annotation));
         } catch (final Exception e) {
-            throw new IllegalStateException(e);
+            throw new ReflectionException("Could not get annotation param value.", e);
         }
     }
 

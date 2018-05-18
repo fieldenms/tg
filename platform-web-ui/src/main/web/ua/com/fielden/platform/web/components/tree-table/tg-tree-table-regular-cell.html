@@ -36,15 +36,17 @@
 
                 properties: {
                     column: Object,
-                    entity: Object
+                    entity: {
+                        type: Object,
+                        observer: "_entityChanged"
+                    }
                 },
                 
-                attached: function() {
-                    const state = this.entity._getState(this.column.property);
+                _entityChanged: function (newEntity, oldEntity) {
+                    const state = this.entity.getState(this.column.property);
                     this._setState(state === "CHECKED", state);
                     this.entity._tokenRoleAssociationHandler[this.column.property] = (value, state) => {
                         this._setState(value, state);
-                        this.fire("tg-tree-state-changed");
                     };
                 },
                 
