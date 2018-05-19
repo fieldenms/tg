@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.valueOf;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_WARNING;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -53,7 +54,7 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
                 .filter(lcc -> titleCanBeCurrent ? !lcc.getKey().equals(currentTitle) : true)
                 .anyMatch(lcc -> lcc.getKey().equals(newValue)))
             {
-                return warning("Configuration with this title already exists.");
+                return warning(CENTRE_CONFIG_CONFLICT_WARNING);
             }
         }
         return successful("ok");

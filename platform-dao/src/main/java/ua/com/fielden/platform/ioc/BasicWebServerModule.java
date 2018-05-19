@@ -103,7 +103,9 @@ import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
+import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -230,6 +232,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
+        bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);

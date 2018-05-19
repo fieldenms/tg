@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.html;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForMasterFitWidth;
@@ -19,16 +20,17 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -50,6 +52,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigEditAction> centreConfigEditActionMaster;
     public final EntityMaster<CentreConfigLoadAction> centreConfigLoadActionMaster;
     public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
+    public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
     
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
@@ -58,6 +61,7 @@ public class CentreConfigurationWebUiConfig {
         centreConfigEditActionMaster = createCentreConfigEditActionMaster(injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector);
         centreConfigDeleteActionMaster = createCentreConfigDeleteActionMaster(injector);
+        overrideCentreConfigMaster = createOverrideCentreConfigMaster(injector);
     }
     
     private static String createLayoutForCollectionalMaster() {
@@ -237,6 +241,28 @@ public class CentreConfigurationWebUiConfig {
      */
     private static EntityMaster<CentreConfigDeleteAction> createCentreConfigDeleteActionMaster(final Injector injector) {
         return new EntityMaster<CentreConfigDeleteAction>(CentreConfigDeleteAction.class, CentreConfigDeleteActionProducer.class, null, injector);
+    }
+    
+    private EntityMaster<OverrideCentreConfig> createOverrideCentreConfigMaster(final Injector injector) {
+        final FlexLayoutConfig padding = layout().withStyle("padding", "20px").end();
+        final String layout = cell( // TODO 
+            cell(html("<div style='color: #737373; font-size: 13px; font-weight: bold; margin-top: -16px; margin-bottom: -16px;'>Configuration with this title already exists. Override?<div>"), padding),
+            padding).toString();
+        
+        final String actionLayout = mkActionLayoutForMaster();
+        
+        final IMaster<OverrideCentreConfig> masterConfig = new SimpleMasterBuilder<OverrideCentreConfig>().forEntity(OverrideCentreConfig.class)
+                .addAction(REFRESH).shortDesc("NO")
+                .addAction(SAVE).shortDesc("YES")
+                .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
+                .setActionBarLayoutFor(TABLET, empty(), actionLayout)
+                .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
+                .setLayoutFor(DESKTOP, empty(), layout)
+                .setLayoutFor(TABLET, empty(), layout)
+                .setLayoutFor(MOBILE, empty(), layout)
+                .done();
+        
+        return new EntityMaster<OverrideCentreConfig>(OverrideCentreConfig.class, masterConfig, injector);
     }
     
 }

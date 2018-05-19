@@ -45,13 +45,14 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
@@ -71,6 +72,7 @@ public class PlatformDomainTypes {
         types.add(CentreConfigEditAction.class);
         types.add(CentreConfigLoadAction.class);
         types.add(LoadableCentreConfig.class);
+        types.add(OverrideCentreConfig.class);
         types.add(CentreConfigDeleteAction.class);
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);

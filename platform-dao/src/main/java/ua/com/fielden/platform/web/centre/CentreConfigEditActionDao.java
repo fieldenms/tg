@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 @EntityType(CentreConfigEditAction.class)
 public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditAction> implements ICentreConfigEditAction {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
+    private static final String CONTINUATION_KEY = "overrideConfig";
     
     @Inject
     public CentreConfigEditActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
@@ -34,6 +36,12 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
     public CentreConfigEditAction save(final CentreConfigEditAction entity) {
         // validate centre configuration edit / copy action before performing actual edit / copy
         entity.isValid().ifFailure(Result::throwRuntime);
+        
+        if (entity.hasWarnings()) {
+            if (!moreData(CONTINUATION_KEY).isPresent()) {
+                throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
+            }
+        }
         
         // perform actual copy using centreCopier() closure
         criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder())
