@@ -214,11 +214,16 @@ public class CentreUpdater {
         // newTitle
         freshConfig.setTitle(deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
         savedConfig.setTitle(deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
+        final String previouslyRunNewTitle = deviceSpecific(saveAsSpecific(PREVIOUSLY_RUN_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX;
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            previouslyRunConfig.setTitle(deviceSpecific(saveAsSpecific(PREVIOUSLY_RUN_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
+            previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }
         // newDesc
         freshConfig.setDesc(newDesc);
+        
+        // clear all centres with the same name
+        final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+        globalManager.removeCentres(miType, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
         
         // save
         gdtm.saveConfig(freshConfig);
