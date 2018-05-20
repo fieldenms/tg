@@ -243,12 +243,16 @@ public class CentreConfigurationWebUiConfig {
         return new EntityMaster<CentreConfigDeleteAction>(CentreConfigDeleteAction.class, CentreConfigDeleteActionProducer.class, null, injector);
     }
     
+    /**
+     * Creates entity master for {@link OverrideCentreConfig}.
+     *
+     * @return
+     */
     private EntityMaster<OverrideCentreConfig> createOverrideCentreConfigMaster(final Injector injector) {
-        final FlexLayoutConfig padding = layout().withStyle("padding", "20px").end();
-        final String layout = cell( // TODO 
-            cell(html("<div style='color: #737373; font-size: 13px; font-weight: bold; margin-top: -16px; margin-bottom: -16px;'>Configuration with this title already exists. Override?<div>"), padding),
-            padding).toString();
-        
+        final String layout = cell(
+            html("<div style='text-align: center; color: #737373; font-size: 14px; font-weight: bold;'>Configuration with this title already exists. Override?<div>"),
+            layout().withStyle("padding", "20px 20px 0 20px").end()
+        ).toString();
         final String actionLayout = mkActionLayoutForMaster();
         
         final IMaster<OverrideCentreConfig> masterConfig = new SimpleMasterBuilder<OverrideCentreConfig>().forEntity(OverrideCentreConfig.class)
@@ -260,6 +264,7 @@ public class CentreConfigurationWebUiConfig {
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
+                // initial dimensions are defined by 'Configuration with this title already exists. Override?' message length
                 .done();
         
         return new EntityMaster<OverrideCentreConfig>(OverrideCentreConfig.class, masterConfig, injector);
