@@ -26,6 +26,7 @@ import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDAT
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -58,7 +59,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -204,26 +204,31 @@ public class CentreUpdater {
      * @param newDesc -- new description for configuration
      */
     public static void editCentreTitleAndDesc(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final String newTitle, final String newDesc) {
-        final EntityCentreConfig freshConfig = gdtm.findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX);
-        final EntityCentreConfig savedConfig = gdtm.findConfig(miType, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX);
-        final EntityCentreConfig previouslyRunConfig = gdtm.findConfig(miType, deviceSpecific(saveAsSpecific(PREVIOUSLY_RUN_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX);
+        final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
+        final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
+        final EntityCentreConfig freshConfig = gdtm.findConfig(miType, currentNameOf.apply(FRESH_CENTRE_NAME));
+        final EntityCentreConfig savedConfig = gdtm.findConfig(miType, currentNameOf.apply(SAVED_CENTRE_NAME));
+        final EntityCentreConfig previouslyRunConfig = gdtm.findConfig(miType, currentNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME));
         if (freshConfig == null || savedConfig == null) {
-            throw Result.failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
+            throw failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
         }
         
         // newTitle
-        freshConfig.setTitle(deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
-        savedConfig.setTitle(deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX);
-        final String previouslyRunNewTitle = deviceSpecific(saveAsSpecific(PREVIOUSLY_RUN_CENTRE_NAME, of(newTitle)), device) + DIFFERENCES_SUFFIX;
+        final Function<String, String> newNameOf = nameOf.apply(of(newTitle));
+        freshConfig.setTitle(newNameOf.apply(FRESH_CENTRE_NAME));
+        savedConfig.setTitle(newNameOf.apply(SAVED_CENTRE_NAME));
+        final String previouslyRunNewTitle = newNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }
         // newDesc
         freshConfig.setDesc(newDesc);
         
-        // clear all centres with the same name
-        final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
-        globalManager.removeCentres(miType, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
+        // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
+        if (!equalsEx(saveAsName, of(newTitle))) {
+            final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+            globalManager.removeCentres(miType, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
+        }
         
         // save
         gdtm.saveConfig(freshConfig);

@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHA
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -1234,7 +1235,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     @Override
     public EntityCentreConfig findConfig(final Class<?> menuItemType, final String name) {
         return entityCentreConfigController.getEntity(
-            from(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name))).model()
+            from(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name))).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).fetchModel()).model()
         );
     }
     
