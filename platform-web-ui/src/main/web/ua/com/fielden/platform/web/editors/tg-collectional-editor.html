@@ -685,63 +685,70 @@
                 if (oldValue !== undefined) {
                     if (newValue) {
                         const added = newValue;
-                        if (addedIds.indexOf(self.idOrKey(added)) > -1) {
-                            throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
-                        } else {
-                            const foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
-                            if (foundInChosenIds > -1) {
-                                throw 'Cannot add ' + self.idOrKey(added) + ' which is chosen already (chosenIds = ' + chosenIds + ').';
-                            } else {
-                                const indexToInsert = self.findPlaceToInsert(added, self._entities, chosenIds);
-                                chosenIds.splice(indexToInsert, 0, self.idOrKey(added)); // insert 'added' key into 'indexToInsert' place in 'chosenIds'
-                                self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
-                                firstAdded = added;
-                            }
-                            
-                            if (!self._isCentreConfigEntity(self.entity)) {
-                                const foundId = removedIds.indexOf(self.idOrKey(added));
-                                if (foundId > -1) {
-                                    removedIds.splice(foundId, 1);
-                                    self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
-                                } 
-                                
-                                if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
-                                    addedIds.push(self.idOrKey(added));
-                                    self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
-                                }
-                            }
-                            // invoke validation after user has added some item to collection
-                            self._invokeValidation.bind(self)();
-                        }
+                        self._performAddition(addedIds, self, added, chosenIds, removedIds);
                     } else if (oldValue) {
                         const removed = oldValue;
-                        if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
-                            throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
-                        } else {
-                            const foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
-                            if (foundInChosenIds > -1) {
-                                chosenIds.splice(foundInChosenIds, 1);
-                                self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
-                            } else {
-                                throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
-                            }
-                            
-                            if (!self._isCentreConfigEntity(self.entity)) {
-                                const foundId = addedIds.indexOf(self.idOrKey(removed));
-                                if (foundId > -1) {
-                                    addedIds.splice(foundId, 1);
-                                    self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
-                                } else {
-                                    removedIds.push(self.idOrKey(removed));
-                                    self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
-                                }
-                            }
-                            
-                            // invoke validation after user has removed some item from collection
-                            self._invokeValidation.bind(self)();
-                        }
+                        self._performRemoval(removedIds, self, removed, chosenIds, addedIds);
                     }
                 }
+            }
+        },
+        
+        _performAddition: function (addedIds, self, added, chosenIds, removedIds) {
+            if (addedIds.indexOf(self.idOrKey(added)) > -1) {
+                throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
+            } else {
+                const foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
+                if (foundInChosenIds > -1) {
+                    throw 'Cannot add ' + self.idOrKey(added) + ' which is chosen already (chosenIds = ' + chosenIds + ').';
+                } else {
+                    const indexToInsert = self.findPlaceToInsert(added, self._entities, chosenIds);
+                    chosenIds.splice(indexToInsert, 0, self.idOrKey(added)); // insert 'added' key into 'indexToInsert' place in 'chosenIds'
+                    self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
+                }
+                
+                if (!self._isCentreConfigEntity(self.entity)) {
+                    const foundId = removedIds.indexOf(self.idOrKey(added));
+                    if (foundId > -1) {
+                        removedIds.splice(foundId, 1);
+                        self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
+                    } 
+                    
+                    if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
+                        addedIds.push(self.idOrKey(added));
+                        self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
+                    }
+                }
+                // invoke validation after user has added some item to collection
+                self._invokeValidation.bind(self)();
+            }
+        },
+        
+        _performRemoval: function (removedIds, self, removed, chosenIds, addedIds) {
+            if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
+                throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
+            } else {
+                const foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
+                if (foundInChosenIds > -1) {
+                    chosenIds.splice(foundInChosenIds, 1);
+                    self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
+                } else {
+                    throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
+                }
+                
+                if (!self._isCentreConfigEntity(self.entity)) {
+                    const foundId = addedIds.indexOf(self.idOrKey(removed));
+                    if (foundId > -1) {
+                        addedIds.splice(foundId, 1);
+                        self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
+                    } else {
+                        removedIds.push(self.idOrKey(removed));
+                        self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
+                    }
+                }
+                
+                // invoke validation after user has removed some item from collection
+                self._invokeValidation.bind(self)();
             }
         },
         
@@ -754,63 +761,12 @@
                 
                 changeRecord.indexSplices.forEach(function (s) {
                     s.removed.forEach(function (removed) {
-                        if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
-                            throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
-                        } else {
-                            const foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
-                            if (foundInChosenIds > -1) {
-                                chosenIds.splice(foundInChosenIds, 1);
-                                self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
-                            } else {
-                                throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
-                            }
-                            
-                            if (!self._isCentreConfigEntity(self.entity)) {
-                                const foundId = addedIds.indexOf(self.idOrKey(removed));
-                                if (foundId > -1) {
-                                    addedIds.splice(foundId, 1);
-                                    self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
-                                } else {
-                                    removedIds.push(self.idOrKey(removed));
-                                    self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
-                                }
-                            }
-                            
-                            // invoke validation after user has removed some item from collection
-                            self._invokeValidation.bind(self)();
-                        }
+                        self._performRemoval(removedIds, self, removed, chosenIds, addedIds);
                     });
                     
                     for (let i = s.index; i < s.index + s.addedCount; i++) {
                         const added = self._selectedEntities[i];
-                        
-                        if (addedIds.indexOf(self.idOrKey(added)) > -1) {
-                            throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
-                        } else {
-                            const foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
-                            if (foundInChosenIds > -1) {
-                                throw 'Cannot add ' + self.idOrKey(added) + ' which is chosen already (chosenIds = ' + chosenIds + ').';
-                            } else {
-                                const indexToInsert = self.findPlaceToInsert(added, self._entities, chosenIds);
-                                chosenIds.splice(indexToInsert, 0, self.idOrKey(added)); // insert 'added' key into 'indexToInsert' place in 'chosenIds'
-                                self.entity.setAndRegisterPropertyTouch('chosenIds', chosenIds);
-                            }
-                            
-                            if (!self._isCentreConfigEntity(self.entity)) {
-                                const foundId = removedIds.indexOf(self.idOrKey(added));
-                                if (foundId > -1) {
-                                    removedIds.splice(foundId, 1);
-                                    self.entity.setAndRegisterPropertyTouch('removedIds', removedIds);
-                                } 
-                                
-                                if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
-                                    addedIds.push(self.idOrKey(added));
-                                    self.entity.setAndRegisterPropertyTouch('addedIds', addedIds);
-                                }
-                            }
-                            // invoke validation after user has added some item to collection
-                            self._invokeValidation.bind(self)();
-                        }
+                        self._performAddition(addedIds, self, added, chosenIds, removedIds);
                     }
                 }, self);
             }
