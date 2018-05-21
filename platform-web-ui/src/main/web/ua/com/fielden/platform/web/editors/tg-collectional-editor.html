@@ -136,6 +136,12 @@
         .secondary {
             font-size: 8pt;
         }
+        .inherited-primary {
+            font-weight: bolder;
+        }
+        .inherited-secondary {
+            font-weight: bolder;
+        }
         .dim {
             color: gray;
         }
@@ -181,8 +187,8 @@
                                     <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                                 </div>
                                 <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
-                                    <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                                    <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                                    <tg-dom-stamper class$="[[_computedHeaderClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                                    <tg-dom-stamper class$="[[_computedDescriptionClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                                 </div>
                           </div>
                           <div class="border"></div>
@@ -512,6 +518,22 @@
               classes += ' pad';
             } else {
               classes += ' without-pad';
+            }
+            return classes;
+        },
+        
+        _computedHeaderClass: function (item) {
+            let classes = 'primary truncate';
+            if (item.inherited) {
+                classes += ' inherited-primary';
+            }
+            return classes;
+        },
+        
+        _computedDescriptionClass: function (item) {
+            let classes = 'secondary dim truncate';
+            if (item.inherited) {
+                classes += ' inherited-secondary';
             }
             return classes;
         },
