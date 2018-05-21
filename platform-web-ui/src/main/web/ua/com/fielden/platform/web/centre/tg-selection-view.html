@@ -93,6 +93,7 @@
                         },
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful copy action
+                            self.saveAsName = undefined;
                             self.saveAsName = functionalEntity.get('title');
                         },
                         attrs: {
@@ -107,6 +108,7 @@
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful load action
                             const chosenId = functionalEntity.get('chosenIds')[0];
+                            self.saveAsName = undefined;
                             self.saveAsName = chosenId === '[Default]' ? '' : chosenId;
                         },
                         attrs: {
@@ -120,6 +122,7 @@
                         },
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful edit action
+                            self.saveAsName = undefined;
                             self.saveAsName = functionalEntity.get('title');
                         },
                         attrs: {
@@ -133,6 +136,7 @@
                         },
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful delete action -- default config
+                            self.saveAsName = undefined;
                             self.saveAsName = '';
                         },
                         attrs: {

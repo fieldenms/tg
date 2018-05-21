@@ -122,7 +122,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         customObject.put("metaValues", criteriaMetaValues);
         return customObject;
     }
-
+    
+    /**
+     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' and 'saveAsDesc' flags.
+     *
+     * @param criteriaMetaValues
+     * @param isCentreChanged
+     * @param saveAsDesc
+     * @return
+     */
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsDesc(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String saveAsDesc) {
+        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
+        if (saveAsDesc != null) {
+            customObject.put("saveAsDesc", saveAsDesc);
+        }
+        return customObject;
+    }
+    
     /**
      * Creates the 'custom object' that contain 'critMetaValues' and 'isCentreChanged' flag.
      *

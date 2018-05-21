@@ -346,6 +346,9 @@
                 }
                 this._setPropertyModel(customObject.metaValues);
                 this._centreChanged = customObject.isCentreChanged;
+                if (typeof customObject.saveAsDesc !== 'undefined') {
+                    this._saveAsDesc = customObject.saveAsDesc;
+                }
             },
             
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {

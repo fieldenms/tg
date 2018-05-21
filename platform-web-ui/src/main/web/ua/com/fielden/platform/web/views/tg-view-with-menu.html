@@ -169,7 +169,7 @@
                     <div id="viewToolBarContainer" class="layout horizontal center flex" style="display: contents">
                         <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                         <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-                        <div class="flex truncate">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                        <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[_calcSelectedPageTitle(_selectedPage, saveAsName)]]</div>
                         <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu" on-tap="_showMenu"></paper-icon-button>
                     </div>
                 </div>
@@ -268,6 +268,14 @@
                 _selectedPage: {
                     type: String,
                     observer: '_selectedPageChanged'
+                },
+                saveAsName: {
+                    type: String,
+                    value: ''
+                },
+                saveAsDesc: {
+                    type: String,
+                    value: ''
                 }
             },
 
@@ -291,7 +299,11 @@
             observers: [
                 '_updatePage(menuItem, submodule)'
             ],
-
+            
+            listeners: {
+                'tg-save-as-name-changed': '_updateSaveAsNameAndDesc'
+            },
+            
             ready: function () {
                 this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
                 this.$.drawerPanel.$.scrim.addEventListener("transitionend", event => {
@@ -511,11 +523,28 @@
             _togglePanel: function (e, detail, source) {
                 this.$.drawerPanel.togglePanel();
             },
-
-            _calcSelectedPageTitle: function (page) {
-                return page === '_' ? '' : decodeURIComponent(page.split('/').pop());
+            
+            _saveAsNamesAndDescs: function () {
+                if (!this.saveAsNamesAndDescs) {
+                    this.saveAsNamesAndDescs = {};
+                }
+                return this.saveAsNamesAndDescs;
             },
-
+            
+            _calcSelectedPageTitle: function (page, saveAsName) {
+                if (page === '_') {
+                    return '';
+                }
+                return decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : '');
+            },
+            
+            _calcSelectedPageDesc: function (page, saveAsName, saveAsDesc) {
+                if (page === '_') {
+                    return '';
+                }
+                return saveAsDesc === '' ? '' : ('<b>' + saveAsName + '</b><br><br>' + saveAsDesc);
+            },
+            
             _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
                 return firtsLevelItem.key + (secondLevelItem ? '/' + secondLevelItem.key : '');
             },
@@ -528,6 +557,13 @@
             },
 
             _selectedPageChanged: function (newValue, oldValue) {
+                if (this._saveAsNamesAndDescs()[newValue]) {
+                    this.saveAsName = this._saveAsNamesAndDescs()[newValue].saveAsName;
+                    this.saveAsDesc = this._saveAsNamesAndDescs()[newValue].saveAsDesc;
+                } else {
+                    this.saveAsName = '';
+                    this.saveAsDesc = '';
+                }
                 var newFirstLevelItem = newValue && newValue.split('/')[0];
                 var oldFirstLevelItem = oldValue && oldValue.split('/')[0];
                 var shouldUnselect = oldValue && oldValue.split('/')[1];
@@ -568,6 +604,12 @@
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
                 event.returnValue = false;
+            },
+            
+            _updateSaveAsNameAndDesc: function (event) {
+                this._saveAsNamesAndDescs()[this._selectedPage] = event.detail;
+                this.saveAsName = event.detail.saveAsName;
+                this.saveAsDesc = event.detail.saveAsDesc;
             }
         });
     })();

@@ -1080,7 +1080,6 @@
                 return '/centre/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
             
-            
             /**
              * Computes URL for 'ajaxDefaulter'.
              */
@@ -1089,9 +1088,16 @@
             },
             
             _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {
-                if (oldSaveAsName !== undefined) { // initial 'saveAsName' definition (value '', that means default config) will be disregarded
-                    this.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
-                    this.retrieve(); // perform full centre refresh on each and every change of 'saveAsName'
+                const self = this;
+                if (!self.firstTimeLoaded) { // initial 'saveAsName' definition (value '', that means default config) will be disregarded
+                    self.firstTimeLoaded = true;
+                } else {
+                    if (newSaveAsName !== undefined) { // 'undefined' is a marker value to make saveAsName changed when setting actual value (including '')
+                        self.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
+                        self.retrieve().then(function () {
+                            self.fire('tg-save-as-name-changed', { saveAsName: newSaveAsName, saveAsDesc: self.$.selection_criteria._saveAsDesc });
+                        }); // perform full centre refresh on each and every change of 'saveAsName'
+                    }
                 }
             },
             

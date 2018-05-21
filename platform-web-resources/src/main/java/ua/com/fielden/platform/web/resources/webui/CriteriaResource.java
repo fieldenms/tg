@@ -12,12 +12,14 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CE
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntity;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsDesc;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
@@ -141,9 +143,8 @@ public class CriteriaResource extends AbstractWebResource {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
-            // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
-            // throw new IllegalStateException("Illegal state during criteria retrieval.");
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device());
+            final String customDesc = updateCentreDesc(gdtm, miType, saveAsName, device());
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), customDesc);
         }, restUtil);
     }
 
@@ -174,13 +175,15 @@ public class CriteriaResource extends AbstractWebResource {
             final RestServerUtil restUtil,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
-            final DeviceProfile device
+            final DeviceProfile device,
+            final String saveAsDesc
                     ) {
         return restUtil.rawListJSONRepresentation(
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
-                createCriteriaMetaValuesCustomObject(
+                createCriteriaMetaValuesCustomObjectWithSaveAsDesc(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                        isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device))
+                        isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
+                        saveAsDesc
                 )//
         );
     }
