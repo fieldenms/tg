@@ -542,7 +542,7 @@
                 if (page === '_') {
                     return '';
                 }
-                return saveAsDesc === '' ? '' : ('<b>' + saveAsName + '</b><br><br>' + saveAsDesc);
+                return (saveAsDesc === '' || saveAsName === '') ? '' : ('<b>' + saveAsName + '</b><br>' + saveAsDesc);
             },
             
             _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
