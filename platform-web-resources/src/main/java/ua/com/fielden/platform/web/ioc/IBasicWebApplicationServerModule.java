@@ -20,13 +20,9 @@ import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -79,8 +75,6 @@ public interface IBasicWebApplicationServerModule {
         bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
-        bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
-        bindType(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
     }
 
     /**
