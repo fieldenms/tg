@@ -1053,6 +1053,16 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
     
     /**
+     * Removes all locally cached instances of centre configurations on current server node.
+     * 
+     * @param menuItemType
+     * @param names
+     */
+    public void removeAllCentresLocally() {
+        currentCentres.clear();
+    }
+    
+    /**
      * Removes centre configurations from persistent storage.
      * 
      * @param menuItemType

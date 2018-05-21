@@ -1010,26 +1010,13 @@ public class CentreUpdater {
     }
     
     /**
-     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager} and concrete {@link DeviceProfile}.
+     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager}.
      *
      * @param gdtm
-     * @param device
      */
-    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
-        for (final Class<?> miKlass: gdtm.entityCentreMenuItemTypes()) {
-            final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
-            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miKlass;
-            // TODO all saveAs instances not only unnamed ones
-            globalManager.removeCentresLocally(miType, 
-                null,
-                deviceSpecific(FRESH_CENTRE_NAME, device),
-                deviceSpecific(FRESH_CENTRE_NAME, device) + DIFFERENCES_SUFFIX,
-                deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device), 
-                deviceSpecific(PREVIOUSLY_RUN_CENTRE_NAME, device) + DIFFERENCES_SUFFIX,
-                deviceSpecific(SAVED_CENTRE_NAME, device),
-                deviceSpecific(SAVED_CENTRE_NAME, device) + DIFFERENCES_SUFFIX
-            );
-        }
+    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm) {
+        final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+        globalManager.removeAllCentresLocally();
     }
     
 }
