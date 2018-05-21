@@ -2,382 +2,537 @@
 
 <script>
     (function () {
-        // Holds the default margins for bar chart.
-        const defaultMargin = {
-            top: 20,
-            right: 20,
-            bottom: 30,
-            left: 40
-        };
-        //Returns new margin that is a result of merge of two margin objects: old and new one.
-        const initMargins = (newMargin, oldMargin) => {
-            return {
-                top: newMargin.hasOwnProperty("top") ? newMargin.top : oldMargin.top,
-                bottom: newMargin.hasOwnProperty("bottom") ? newMargin.bottom : oldMargin.bottom,
-                right: newMargin.hasOwnProperty("right") ? newMargin.right : oldMargin.right,
-                left: newMargin.hasOwnProperty("left") ? newMargin.left : oldMargin.left
-            };
-        };
-
-        const initDataOptions = (newDataOptions, oldDataOptions) => {
-                return {
-                    groupPropName: newDataOptions.hasOwnProperty("groupPropName") ? newDataOptions.groupPropName : oldDataOptions.groupPropName,
-                    valuePropName: newDataOptions.hasOwnProperty("valuePropName") ? newDataOptions.valuePropName : oldDataOptions.valuePropName,
-                    colorPropName: newDataOptions.hasOwnProperty("colorPropName") ? newDataOptions.colorPropName : oldDataOptions.colorPropName
-                };
-            }
-            // The following two functions create domain values for x axis and y axis accordingly.
-        const xDomain = (data, dataOptions) => data.map(d => d[dataOptions.groupPropName]);
-        const yDomain = (data, h, dataOptions) => {
-            let maxRange = d3.max(data, d => d[dataOptions.valuePropName]);
-            return [0, maxRange + (0.1 + Math.abs(0.3 - 0.0001 * h)) * maxRange];
-        };
-        // The following two functions create scales for x axis and y axis accordingly.
-        const xScale = (w, data, dataOptions) => {
-            return d3.scaleBand()
-                .rangeRound([0, w])
-                .padding(0.1) // could be configurable 
-                .domain(xDomain(data, dataOptions));
-        };
-        const yScale = (h, data, dataOptions) => {
-            return d3.scaleLinear()
-                .range([h, 0])
-                .domain(yDomain(data, h, dataOptions))
-        };
-        // Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined.
-        const bar = (selection, dataOptions, x, y, h, tooltipCallback, clickCallback) => {
-            const selectedBar = selection
-                .style("fill", d => d[dataOptions.colorPropName])
-                .attr("x", d => x(d[dataOptions.groupPropName]))
-                .attr("y", d => y(d[dataOptions.valuePropName]))
-                .attr("height", d => h - y(d[dataOptions.valuePropName]))
-                .attr("width", x.bandwidth());
-            if (tooltipCallback) {
-                selectedBar.attr("tooltip-text", tooltipCallback);
-            }
-            if (clickCallback) {
-                selectedBar.on("click", clickCallback);
-            }
-        };
-
-        const marker = (selection, dataOptions, x, y, h, unscalableNodes, markerGenerator, draw) => {
-            const markerSelection = selection.attr("transform", d => "translate(" + (x(d[dataOptions.groupPropName]) + x.bandwidth() / 2) + ", " + (y(d[dataOptions.valuePropName]) - 10) + ")");
-            if (draw) {
-                selection.each(function (d) {
-                    let rect = d3.select(this).append("rect").attr("class", "mark-rect");
-                    let text = d3.select(this).append("text").attr("class", "mark-text").style("text-anchor", "middle").text(markerGenerator(d))
-                    upadateMarkerSize(rect, text);
-                }).each(function () {
-                    unscalableNodes.push(this);
-                });
-            } else {
-                selection.each(function (d) {
-                    upadateMarkerSize(d3.select(this).select(".mark-rect"), d3.select(this).select(".mark-text"));
-                });
-            }
-        };
-
-        const upadateMarkerSize = (rect, text) => {
-            let textBox = text.node().getBBox();
-            if (textBox.width !== 0 && textBox.height !== 0) {
-                rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
-            } else {
-                setTimeout(() => upadateMarkerSize(rect, text), 100);
-            }
-        };
-
-        // Counteract all transforms applied above to an element.
-        // Apply a translation to the element to have it remain at a local position
-        const unscale = (el, container) => {
-            let xf;
-            if (el.transform.baseVal.length < 2) {
-                // Keep a single transform matrix in the stack for fighting transformations
-                // Be sure to apply this transformation after existing transformations (translate)
-                xf = container.node().ownerSVGElement.createSVGTransform();
-                el.transform.baseVal.appendItem(xf);
-            } else {
-                xf = el.transform.baseVal[1];
-            }
-            let m = container.node().getTransformToElement(el.parentNode);
-            m.e = 0; // Ignore (preserve) any translations done up to this point
-            m.f = 10 * (1 - m.d);
-            xf.setMatrix(m);
-        };
-
-        const removeUnscalableNodes = (selection, unscalableNodes) => {
-            selection.each(function (d) {
-                unscalableNode.remove(this);
+        //Merges two objects up to two 
+        const merge2LevelData = function (oldOptions, newOptions) {
+            const newObj = mergeData(oldOptions, newOptions);
+            Object.keys(newObj).filter(key => typeof newObj[key] === 'object').forEach(key => {
+                newObj[key] = mergeData(oldOptions[key], newOptions[key]);
             });
-        }
-
-        const setXAxisLabelPosition = (xAxisLabel, xAxisGroup, w, h, options) => {
-            let axisBox = xAxisGroup.node().getBBox();
-            if (axisBox.width !== 0 && axisBox.height !== 0) {
-                xAxisLabel
-                    .attr("x", options.margin.left + w / 2)
-                    .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10);
-            } else if (w !== 0 && h !== 0) {
-                setTimeout(() => setXAxisLabelPosition(xAxisLabel, xAxisGroup, w, h, options), 100);
-            }
+            return newObj;
         };
-
-        const setYAxisLabelPosition = (yAxisLabel, yAxisGroup, w, h, options) => {
-            let axisBox = yAxisGroup.node().getBBox();
-            if (axisBox.width !== 0 && axisBox.height !== 0) {
-                yAxisLabel
-                    .attr("x", -options.margin.top - h / 2)
-                    .attr("y", options.margin.left - axisBox.width - 10);
-            } else if (w !== 0 && h !== 0) {
-                setTimeout(() => setYAxisLabelPosition(yAxisLabel, yAxisGroup, w, h, options), 100);
-            }
+        const mergeData = function (oldData, newData) {
+            return Object.assign({}, oldData, newData)
         };
-
-        d3.barChart = (container) => {
-            let options = {
-                width: defaultMargin.right + defaultMargin.left,
-                height: defaultMargin.bottom + defaultMargin.top,
-                margin: defaultMargin,
-                label: "",
-                xAxis: {
-                    label: ""
-                },
-                yAxis: {
-                    label: "",
-                    ticks: 10
-                },
-                dataOptions: {
-                    groupPropName: "name",
-                    valuePropName: "value",
-                    colorPropName: "color"
-                },
-                tooltipCallback: d => d[options.dataOptions.groupPropName] + ": " + d[options.dataOptions.valuePropName],
-                clickCallback: d => alert("you clicked " + d[options.dataOptions.groupPropName] + ": " + d[options.dataOptions.valuePropName]),
-                markerGenerator: d => d[options.dataOptions.valuePropName],
-            };
-            let data = [];
-            let currentTransform = d3.zoomIdentity;
-            let unscalableNodes = [];
-
-            // Drawing the chart 
-            let w = options.width - options.margin.left - options.margin.right;
-            let h = options.height - options.margin.bottom - options.margin.top;
-            // Create x and y scales for grid and axis.
-            let x = xScale(w, data, options.dataOptions);
-            let y = yScale(h, data, options.dataOptions);
-            // Creating grid that should be modifiable
-            const yGrid = d3.axisLeft(y).ticks(options.yAxis.ticks).tickSize(-w).tickFormat("").tickSizeOuter(0);
-            // Createing x and y axis they also should be modifiable.
-            const xAxis = d3.axisBottom(x);
-            const yAxis = d3.axisLeft(y).ticks(options.yAxis.ticks);
-            // Create a clip path so that zoomed or panned parts would be cut of
-            const clipPath = d3.select(container)
-                .append('defs')
-                .append("clipPath").attr("id", "chart-area")
-                .append("rect").attr("width", w).attr("height", h);
-            // Create the chart area
-            const g = d3.select(container).append("g")
-                .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
-            // Draw background
-            const background = g.append("rect")
-                .attr("class", "background")
-                .attr("width", w)
-                .attr("height", h);
-            // Draw y grid
-            const yGridGroup = g.append("g")
-                .attr("class", "grid y-grid")
-                .call(yGrid);
-            // Draw containr that will contain bar chart and its markers and should be clipped with clip-path
-            const graphContainer = g.append("g").attr("clip-path", "url(#chart-area)").append("g").attr("class", "chart-container");
-            // Create zoom behavior
-            const zoom = d3.zoom()
-                .scaleExtent([1, 10])
-                .translateExtent([[0, 0], [0, h]])
-                .extent([[0, 0], [0, h]])
-                .on("zoom", () => {
-                    currentTransform = d3.event.transform;
-                    yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
-                    yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
-                    graphContainer.attr("transform", "translate(0, " + currentTransform.y + ")scale(1, " + currentTransform.k + ")");
-                    unscalableNodes.forEach(el => unscale(el, g));
-                });
-            g.call(zoom).on("dblclick.zoom", null);
-            // Draw bars
-            graphContainer.selectAll(".bar")
-                .data(data)
-                .enter().append("rect").attr("class", "bar")
-                .call(bar, options.dataOptions, x, y, h, options.tooltipCallback, options.clickCallback);
-            // Draw markers
-            graphContainer.selectAll(".marker")
-                .data(data)
-                .enter().append("g").attr("class", "marker")
-                .call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator, true);
-            // Draw x axis
-            const xAxisGroup = g.append("g")
-                .attr("class", "axis x-axis")
-                .attr("transform", "translate(0," + h + ")")
-                .call(xAxis);
-            // Draw y axis
-            const yAxisGroup = g.append("g")
-                .attr("class", "axis y-axis")
-                .call(yAxis);
-            // Create labels for chart and axis
-            const chartLabel = d3.select(container)
-                .append("text")
-                .attr("class", "chart-label")
-                .style("text-anchor", "middle")
-                .style("alignment-baseline", "baseline")
-                .attr("x", options.margin.left + w / 2)
-                .attr("y", options.margin.top - 10)
-                .text(options.label);
-            const xAxisLabel = d3.select(container)
-                .append("text")
-                .attr("class", "x-axis-label")
-                .style("text-anchor", "middle")
-                .style("alignment-baseline", "hanging")
-                .text(options.xAxis.label)
-                .call(setXAxisLabelPosition, xAxisGroup, w, h, options);
-            const yAxisLabel = d3.select(container)
-                .append("text")
-                .attr("class", "y-axis-label")
-                .style("text-anchor", "middle")
-                .style("alignment-baseline", "baseline")
-                .text(options.yAxis.label)
-                .call(setYAxisLabelPosition, yAxisGroup, w, h, options)
-                .attr("transform", "rotate(-90)");
-
-            const updateChart = () => {
-                let oldY = yAxis.scale().invert(0);
-                // Calculate new width and height without margins.
-                w = options.width - options.margin.left - options.margin.right;
-                h = options.height - options.margin.bottom - options.margin.top;
-                if (w < 0) {
-                    options.width = options.margin.left + options.margin.right
-                    w = 0;
+        
+        /**
+         * Gets or sets the value for entity if value is undefined the it gets the value ortherwise it sets the value. Also obj might be a function it means that user has provided formatter for value.
+         */
+        const value = (obj, data, value) => {
+            if (typeof obj === 'function') {
+                return obj(data, value);
+            } else {
+                if (typeof value === 'undefined') {
+                    return data.get(obj.toString());
+                } else {
+                    const lastDotIndex = obj.lastIndexOf(".");
+                    const rest = lastDotIndex > -1 ? obj.slice(lastDotIndex + 1) : obj;
+                    const firstVal = lastDotIndex > -1 ? data.get(obj.slice(0, lastDotIndex)) : data;
+                    if (firstVal && rest) {
+                        firstVal.set(rest, value);
+                    }
                 }
-                if (h < 0) {
-                    options.height = options.margin.bottom + options.margin.top;
-                    h = 0;
+            }
+        };
+        
+        /**
+         * Fires the select event for provided entity and select parameter.
+         */
+        const fireSelectEvent = (entity, select, chartArea) => {
+            const event = new CustomEvent("bar-entity-selected", {
+                detail: {
+                    shouldScrollToSelected: true,
+                    entities: [{
+                        entity: entity,
+                        select: select
+                    }]
+                },
+                bubbles: true,
+                cancelable: true
+            });
+            chartArea.dispatchEvent(event);
+        };
+        
+        class BarChart {
+            
+            constructor (container, options, data) {
+                //////////////////////Private variables can be configured through the api//////////////////////////
+                //Most common configuration properties.
+                this._options = {
+                    width: 70,
+                    height: 70,
+                    margin: {
+                        top: 35,
+                        right: 35,
+                        bottom: 35,
+                        left: 45
+                    },
+                    label: "",
+                    xAxis: {
+                        label: ""
+                    },
+                    yAxis: {
+                        label: "",
+                        ticks: 10
+                    },
+                    dataPropertyNames: {
+                        id: "id",
+                        groupKeyProp: "groupKeyProp",
+                        groupDescProp: "groupDescProp",
+                        valueProp: "valueProp",
+                    },
+                    barColour: "#0288D1",
+                    selectedColor: entity => "white",
+                    tooltip: d => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
+                    click: d => {},
+                };
+                this._options = options ? merge2LevelData(this._options, options) : this._options;
+                this._data = [];
+                this._data = data ? data : this._data;
+
+                //////////////////////Functional private variables///////////////////
+                this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
+                this._actualHeight = this._options.height - this._options.margin.bottom - this._options.margin.top;
+                //This is needed to hold entiteis those were selected
+                this._selectedEntities = [];
+                //Field needed to track the selectd bars.
+                this._selectedBars = [];
+                //Holds the current transform 
+                this._currentTransform = d3.zoomIdentity;
+                // Holds the list of elements those can't be scaled and is used after current transforamation changed to unscale these elements.
+                this._elemToUnscale = [];
+
+                //Creating coordinate system.
+                this._xs = this._xScale();
+                this._ys = this._yScale();
+                // Createing x and y axis they also should be modifiable.
+                this._xAxis = this._createXAxis();
+                this._yAxis = this._createYAxis();
+                // Creating grid that should be modifiable
+                const yGrid = this._createYGrid();
+                //create clip path to cut off the chart area.
+                this._clipPath = this._createClipPath(container);
+                //Create area for zooming and panning that will contain axes, grids and chart area with bars.
+                this._chartArea = this._createChartArea(container);
+                //Create background area
+                this._background = this._createBackground();
+
+                //Draw grid
+                this._yGridGroup = this._drawYGrid();
+
+                //Creating bar container.
+                this._barContainer = this._createBarContainer();
+
+                //Draw axes
+                this._xAxisGroup = this._drawXAxes();
+                this._yAxisGroup = this._drawYAxes();
+
+                //Draw labels
+                this._chartLabel = this._drawChartLabel(container);
+                this._xAxisLabel = this._drawXAxisLabel(container);
+                this._yAxisLabel = this._drawYAxisLabel(container);
+
+                //Now draw job bars
+                this._drawBars(true);
+                //Creating zoom&pan behaviour.
+                this._zoom = d3.zoom()
+                    .scaleExtent([1, 10])
+                    .translateExtent([[0, 0], [0, this._actualHeight]])
+                    .extent([[0, 0], [0, this._actualHeight]])
+                    .on("zoom", () => {
+                        this._currentTransform = d3.event.transform;
+                        this._yAxisGroup.call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
+                        this._yGridGroup.call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
+                        this._barContainer.attr("transform", "translate(0, " + this._currentTransform.y + ")scale(1, " + this._currentTransform.k + ")");
+                        this._unscale();
+                        this._elemToUnscale.forEach(el => this._unscale(el));
+                    });
+                this._chartArea.call(this._zoom).on("dblclick.zoom", null);
+            }
+            
+            repaint(resetState) {
+                 //The old position of origin point.Needed to update the position of viewpoint after resizing.
+                let oldY = yAxis.scale().invert(0);
+                //Calculate new width and height without margins.
+                this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
+                this._actualHeight = this._options.height - this._options.margin.bottom - this._options.margin.top;
+                if (this._actualWidth < 0) {
+                    this._options.width = this._options.margin.left + this._options.margin.right
+                    this._actualWidth = 0;
+                }
+                if (this._actualHeight < 0) {
+                    this._options.height = this._options.margin.bottom + this._options.margin.top;
+                    this._actualHeight = 0;
+                }
+
+                // Reset visualy selected and activated bars.
+                if (resetState) {
+                    this._selectedBars = [];
                 }
                 // Create new scales acoording to new width and height.
-                x = xScale(w, data, options.dataOptions);
-                y = yScale(h, data, options.dataOptions);
+                this._xs = this._xScale();
+                this._ys = this._yScale();
                 // Update clip path according to new width and height.
-                clipPath.attr("width", w).attr("height", h);
+                this._clipPath.attr("width", this._actualWidth).attr("height", this._actualHeight);
                 // Update chart group node according to new margins. 
-                g.attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
+                this._chartArea.attr("transform", "translate(" + this._options.margin.left + "," + this._options.margin.top + ")");
                 // Update background rectangle according to new width and height
-                background.attr("width", w).attr("height", h);
-                // Update grids according to new viewport width and height.
-                yGridGroup.call(yGrid.scale(y).tickSize(-w));
-                xAxisGroup.attr("transform", "translate(0," + h + ")").call(xAxis.scale(x));
-                yAxisGroup.call(yAxis.scale(y));
-                // Trigger zoom event in order to retranslte the container according to new extents.
-                zoom.translateExtent([[0, 0], [0, h]])
-                    .extent([[0, 0], [0, h]]);
-                //g.call(zoom.translateBy, 0, 0);
-                // Update bars.
-                const barsData = graphContainer.selectAll(".bar").data(data).call(bar, options.dataOptions, x, y, h, options.tooltipCallback);
-                barsData.enter().append("rect").attr("class", "bar").call(bar, options.dataOptions, x, y, h, options.tooltipCallback, options.clickCallback);
-                barsData.exit().remove();
-                // Update markers.
-                const markers = graphContainer.selectAll(".marker").data(data).call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator);
-                markers.enter().append("g").attr("class", "marker").call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator, true);
-                markers.exit().call(removeUnscalableNodes, unscalableNodes).remove();
-                unscalableNodes.forEach(el => unscale(el, g));
-                // Rescale grid along y axis and also rescale y axis.
-                yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
-                yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
+                this._background.attr("width", this._actualWidth).attr("height", this._actualHeight);
+                this._yGridGroup.call(this._yGrid.tickSize(-this._actualWidth).scale(this._ys)).call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
+                this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")");
+                this._yAxisGroup.call(this._yAxis.scale(this._ys)).call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
                 // Update chart and axis captioins
-                chartLabel
-                    .attr("x", options.margin.left + w / 2)
-                    .attr("y", options.margin.top - 10)
-                    .text(options.label);
-                xAxisLabel
-                    .text(options.xAxis.label)
-                    .call(setXAxisLabelPosition, xAxisGroup, w, h, options);
-                yAxisLabel
-                    .text(options.yAxis.label)
-                    .call(setYAxisLabelPosition, yAxisGroup, w, h, options);
+                this._chartLabel.call(this._setChartLabelData.bind(this));
+                this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
+                this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
+                // Update bars.
+                this._drawBars();
+                // Trigger zoom event in order to retranslte the container according to new extents.
+                this._zoom.translateExtent([[0, 0], [0, this._actualHeight]])
+                    .extent([[0, 0], [0, this._actualHeight]]);
+                //Unscale nodes
+                this._unscale();
+                
                 //Update the container translation in order to remain current translate position when window size was changed
-                let newH = yAxis.scale()(oldY);
-                if (newH) {
-                    g.call(zoom.translateBy, 0, (0 - newH) / currentTransform.k);
+                let newH = this._yAxis.scale()(oldY);
+                if (resetState) {
+                    this._chartArea.call(this._zoom.transform, d3.zoomIdentity);
+                } else if (newH) {
+                    this._chartArea.call(this._zoom.translateBy, 0, (0 - newH) / this._currentTransform.k);
                 }
-            };
+            }
+            
+            set options(val) {
+                this._options = val ? merge2LevelData(this._options, val) : this._options;
+                this.repaint();
+            }
+
+            get options() {
+                return this._options;
+            }
+
+            set data(data) {
+                this._data = data || this._data;
+                this.repaint(true);
+            }
+
+            get data() {
+                return this._data;
+            }
+
+            selectEntity(entity, select) {
+                this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity)).node(), entity, select);
+            }
+            
+            _xDomain() {
+                return this._data.map(d => value(this._options.dataPropertyNames.groupKeyProp, d));
+            }
+            _yDomain() {
+                let maxRange = d3.max(ths._data, d => value(this._options.dataPropertyNames.valueProp, d));
+                return [0, maxRange + (0.1 + Math.abs(0.3 - 0.0001 * h)) * maxRange];
+            }
+            _xScale() {
+                return d3.scaleBand()
+                    .rangeRound([0, this._actualWidth])
+                    .padding(0.1) // could be configurable 
+                    .domain(this._xDomain());
+            }
+            _yScale() {
+                return d3.scaleLinear()
+                    .range([this._actualHeight, 0])
+                    .domain(this._yDomain())
+            }
+            
+            _createXAxis() {
+                return d3.axisBottom(this._xScale);
+            }
+            
+            _createYAxis() {
+                return d3.axisLeft(this._yScale).ticks(this._options.yAxis.ticks);
+            }
+            
+            _createYGrid() {
+                return this._createYAxis().tickSize(-this._actualWidth).tickFormat("").tickSizeOuter(0);
+            }
+            
+            _createClipPath(container) {
+                return d3.select(container).append('defs').append("clipPath").attr("id", "bar-" + this._options.dataPropertyNames.valueProp + "-clip")
+                    .append("rect").attr("width", this._actualWidth).attr("height", this._actualHeight);
+            }
+
+            _createChartArea(container) {
+                return d3.select(container).append("g")
+                    .attr("class", "chart-area")
+                    .attr("transform", "translate(" + this._options.margin.left + "," + this._options.margin.top + ")");
+            }
+
+            _createBackground() {
+                return this._chartArea.append("rect").attr("class", "chart-background").attr("width", this._actualWidth).attr("height", this._actualHeight);
+            }
+            
+            _drawYGrid() {
+                return this._chartArea.append("g").attr("class", "grid y-grid").call(this._yGrid);
+            }
+            
+            _createBarContainer() {
+                return this._chartArea.append("g").attr("clip-path", "url(#bar-" + this._options.dataPropertyNames.valueProp + "-clip)").append("g").attr("class", "bar-container");
+            }
+            
+            _drawXAxes() {
+                return this._chartArea.append("g").attr("class", "axis x-axis")
+                    .attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis);
+            }
+
+            _drawYAxes() {
+                return this._chartArea.append("g").attr("class", "axis y-axis").call(this._yAxis);
+            }
+            
+            _setChartLabelData(chartLabel) {
+                chartLabel.text(this._options.label)
+                    .attr("x", this._options.margin.left + this._actualWidth / 2)
+                    .attr("y", this._options.margin.top - 10);
+            }
+
+            _drawChartLabel(container) {
+                return d3.select(container)
+                    .append("text")
+                    .attr("class", "chart-label")
+                    .style("text-anchor", "middle")
+                    .style("alignment-baseline", "baseline")
+                    .call(this._setChartLabelData.bind(this));
+            }
+
+            _setXAxisLabelPosition(xAxisLabel) {
+                const axisBox = this._xAxisGroup.node().getBBox();
+                if (axisBox.width !== 0 && axisBox.height !== 0) {
+                    xAxisLabel
+                        .attr("x", this._options.margin.left + this._actualWidth / 2)
+                        .attr("y", this._actualHeight + this._options.margin.top + axisBox.height + 10);
+                } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
+                    setTimeout(() => this._setXAxisLabelPosition(xAxisLabel), 100);
+                }
+            }
+
+            _setXAxisLabelData(xAxisLabel) {
+                xAxisLabel.text(this._options.xAxis.label).call(this._setXAxisLabelPosition.bind(this));
+            }
+
+            _drawXAxisLabel(container) {
+                return d3.select(container)
+                    .append("text")
+                    .attr("class", "x-axis-label")
+                    .style("text-anchor", "middle")
+                    .style("alignment-baseline", "hanging")
+                    .call(this._setXAxisLabelData.bind(this));
+            }
+
+            _setYAxisLabelPosition(yAxisLabel) {
+                const axisBox = this._yAxisGroup.node().getBBox();
+                if (axisBox.width !== 0 && axisBox.height !== 0) {
+                    yAxisLabel
+                        .attr("x", -this._options.margin.top - this._actualHeight / 2)
+                        .attr("y", this._options.margin.left - axisBox.width - 10);
+                } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
+                    setTimeout(() => this._setYAxisLabelPosition(yAxisLabel), 100);
+                }
+            }
+
+            _setYAxisLabelData(yAxisLabel) {
+                yAxisLabel.text(this._options.yAxis.label).call(this._setYAxisLabelPosition.bind(this));
+            }
+
+            _drawYAxisLabel(container) {
+                return d3.select(container)
+                    .append("text")
+                    .attr("class", "y-axis-label")
+                    .style("text-anchor", "middle")
+                    .style("alignment-baseline", "baseline")
+                    .call(this._setYAxisLabelData.bind(this))
+                    .attr("transform", "rotate(-90)");
+            }
+            
+            _drawBars() {
+                const self = this;
+                const updateSelection = self._barContainer.selectAll(".bar").data(this._data);
+                const insertSelection = updateSelection.enter();
+                const removeSelection = updateSelection.exit();
+
+                //update bars
+                updateSelection.call(self._updateBar.bind(self));
+                //insert bars
+                insertSelection.call(self._insertNewBar.bind(self));
+                //removed unnedded tasks
+                removeSelection.remove();
+            }
+            
+            _insertNewBar(selection) {
+                const self = this;
+                const markerFunction = function (d) {
+                    const d3Bar = d3.select(this);
+                    d3Bar.append("rect").attr("class", "mark-rect");
+                    d3Bar.append("text").style("text-anchor", "middle").attr("class", "mark-text");
+                    self._elemToUnscale.push(this);
+                }
+                const newBars = insertSelection.append("g")
+                    .on("click", function (d) {
+                        if (d3.event.button == 0 && (d3.event.ctrlKey || d3.event.metaKey)) {
+                            self._selectEntity(this, d, !self._isEntitySelected(d), true);
+                        } else {
+                            self._options.click(d);
+                        }
+                    });
+                newBars.append("rect").attr("class", "bar-rect");
+                newBars.append("g").attr("class", "mark").each(markerFunction);
+                selection.call(self._updateBar.bind(self));
+            }
+            
+             _updateBar(selection) {
+                 selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
+                 
+                 selection.select(".bar-rect")
+                    .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor : this._options.barColor)
+                    .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
+                    .attr("y", d => this._ys(value(this._options.dataPropertyNames.valueProp, d)))
+                    .attr("height", d => this._actualHeight - this._ys(value(this._options.dataPropertyNames.valueProp, d)))
+                    .attr("width", this._xs.bandwidth())
+                    .attr("tooltip-text", this._options.tooltip);
+                 
+                 const rect = selection.select(".mark-rect")
+                    .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor : this._options.barColor);
+                 
+                 const text = selction.selct(".mark-text")
+                    .text(value(this._options.dataPropertyNames.valueProp, d));
+                 
+                 const self = this;
+                 selection.select(".mark").attr("transform", d => "translate(" + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) + ", - 10)")
+                    .each(function (d) {self._updateMarkerSize(rect, text);});
+            }
+            
+            _updateMarkerPosition(rect, text) {
+                let textBox = text.node().getBBox();
+                if (textBox.width !== 0 && textBox.height !== 0) {
+                    rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                } else {
+                    setTimeout(() => upadateMarkerSize(rect, text), 100);
+                }
+            }
+            
+            _isEntitySelected(entity) {
+                return !!this._selectedEntities.find(selectedEntity => value(this._options.dataPropertyNames.id, selectedEntity) === value(this._options.dataPropertyNames.id, entity));
+            }
+            
+            _selectEntity(bar, entity, select, fireEvent) {
+                if (entity) {
+                    const entityIndex = this._selectedEntities.findIndex(selectedEntity => value(this._options.dataPropertyNames.id, selectedEntity) === value(this._options.dataPropertyNames.id, entity));
+                    if (select) {
+                        // add entity to selected if it is not there yet
+                        if (entityIndex < 0) {
+                            this._selectedEntities.push(entity);
+                            if (fireEvent) {
+                                fireSelectEvent(entity, select, this._chartArea.node());
+                            }
+                        }
+                    } else {
+                        // remove entity from selected if it is there
+                        if (entityIndex >= 0) {
+                            this._selectedEntities.splice(entityIndex, 1);
+                            if (fireEvent) {
+                                fireSelectEvent(entity, select, this._chartArea.node());
+                            }
+                        }
+                    }
+                    if (bar) {
+                        this._selectBar(bar, entity, select);
+                    }
+                }
+            }
+            
+            _selectBar(bar, entity, select) {
+                const indexOfBar = this._selectedBars.indexOf(bar);
+                const d3Bar = d3.select(bar);
+                d3Bar.select(".bar-rect").style("fill", select ? this._options.selectedColor(entity) : value(this._options.dataPropertyNames.color, entity));
+                
+                d3Bar.select(".uncompleted-part")
+                    .style("fill", select ? this._options.selectedColor(entity) : value(this._options.dataPropertyNames.color, entity))
+                    .attr("tooltip-text", select ? "" : this._options.tooltip(entity));
+                d3Bar.classed("selected-task", select)
+                    .selectAll(".mark-rect").style("fill", select ? this._options.selectedColor(entity) : null);
+                if (select) {
+                    if (indexOfBar < 0) {
+                        this._selectedBars.push(bar);
+                        entity.__classes__.push("selected-task");
+                    }
+                } else {
+                    if (indexOfBar >= 0) {
+                        this._selectedBars.splice(indexOfBar, 1);
+                        entity.__classes__.splice(entity.__classes__.indexOf("selected-task"), 1);
+                    }
+                }
+            }
+            
+            _unscale() {
+                const elementsToRemove = [];
+                this._elemToUnscale.forEach(el => {
+                    const elementToRemove = this._unscaleElement(el);
+                    if (elementToRemove) {
+                        elementsToRemove.push(el);
+                    }
+                });
+                elementsToRemove.forEach(el => {
+                    cont elIndex = this._elemToUnscale.indexOf(el);
+                    if (elIndex >= 0) {
+                        this._elemToUnscale.splice(elIndex, 1);
+                    }
+                });
+            }
+            
+            _unscaleElement(el) {
+                if (el.parentElement) {
+                    let xf;
+                    if (el.transform.baseVal.length < 2) {
+                        // Keep a single transform matrix in the stack for fighting transformations
+                        // Be sure to apply this transformation after existing transformations (translate)
+                        xf = this._chartArea.node().ownerSVGElement.createSVGTransform();
+                        el.transform.baseVal.appendItem(xf);
+                    } else {
+                        xf = el.transform.baseVal[1];
+                    }
+                    let m = this._chartArea.node().getTransformToElement(el.parentNode);
+                    m.e = 0; // Ignore (preserve) any translations done up to this point
+                    m.f = 10 * (1 - m.d);
+                    xf.setMatrix(m);
+                } else {
+                    return el;
+                }
+            }
+        }
+
+        d3.barChart = (container, options, data) => {
+            const barChart = new BarChart(container, options, data);
 
             const chart = {
-                width: w => {
-                    if (w > 0) {
-                        options.width = w;
-                        updateChart();
-                        return chart;
-                    } else {
-                        return width;
-                    }
-                },
-                height: h => {
-                    if (h > 0) {
-                        options.height = h;
-                        updateChart();
-                        return chart;
-                    } else {
-                        return height;
-                    }
-                },
+                _chartForDebugging: barChart,
                 options: o => {
-                    if (options) {
-                        let shouldUpdateChart = (o.width || o.width === 0) || (o.height || o.height === 0) || o.margin || o.dataOptions;
-                        options.width = o.width || o.width === 0 ? o.width : options.width;
-                        options.height = o.height || o.height === 0 ? o.height : options.height;
-                        options.margin = o.margin ? initMargins(o.margin, options.margin) : options.margin;
-                        options.dataOptions = o.dataOptions ? initDataOptions(o.dataOptions, options.dataOptions) : options.dataOptions;
-                        if (o.label) {
-                            options.label = o.label;
-                            chartLabel.text(options.label);
-                        }
-                        if (o.xAxis && o.xAxis.label) {
-                            options.xAxis.label = o.xAxis.label;
-                            xAxisLabel.text(options.xAxis.label);
-                        }
-                        if (o.yAxis) {
-                            if (o.yAxis.label) {
-                                options.yAxis.label = o.yAxis.label;
-                                yAxisLabel.text(options.yAxis.label);
-                            }
-                            if (o.yAxis.ticks) {
-                                options.yAxis.ticks = o.yAxis.ticks;
-                                yAxisGroup.call(yAxis.ticks(options.yAxis.ticks));
-                                yGridGroup.call(yGrid.ticks(options.yAxis.ticks));
-                            }
-                        }
-                        if (o.tooltipCallback) {
-                            options.tooltipCallback = o.tooltipCallback;
-                            g.selectAll(".bar").attr("tooltip-text", options.tooltipCallback);
-                        }
-                        if (o.clickCallback) {
-                            options.clickCallback = o.clickCallback;
-                            g.selectAll(".bar").on("click", options.clickCallback);
-                        }
-                        if (o.markerGenerator) {
-                            options.markerGenerator = o.markerGenerator;
-                            g.selectAll(".marker").call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator);
-                        }
-                        if (shouldUpdateChart) {
-                            updateChart();
-                        }
+                    if (o) {
+                        barChart.options = o;
+                        return chart;
+                    } else {
+                        return barChart.options;
                     }
                 },
                 data: d => {
                     if (d) {
-                        data = d;
-                        updateChart();
+                        barChart.data = d;
                         return chart;
                     } else {
-                        return data;
+                        return barChart.data;
                     }
-                }
+                },
+                selectEntity: (entity, select) => {
+                    barChart.selectEntity(entity, select);
+                    return chart
+                },
+                repaint: () => barChart.repaint()
             };
-
             return chart;
         };
     })();

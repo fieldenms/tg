@@ -111,6 +111,18 @@
                 attached: function () {
                     this._waitForDimensions(0);
                 },
+                
+                selectEntity: function (entity, select) {
+                    if (this._chart) {
+                        this._chart.selectEntity(entity, select);
+                    }
+                },
+                
+                repaint: function () {
+                    if (this._chart) {
+                        this._chart.repaint();
+                    }
+                },
 
                 _waitForDimensions: function (time) {
                     var self = this;
