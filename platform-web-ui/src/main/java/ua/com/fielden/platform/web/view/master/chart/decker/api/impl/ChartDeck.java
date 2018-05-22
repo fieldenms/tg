@@ -67,4 +67,32 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithT
         this.title = title;
         return this;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getxAxisTitle() {
+        return xAxisTitle;
+    }
+
+    public String getyAxisTitle() {
+        return yAxisTitle;
+    }
+
+    public String getAggregationProperty() {
+        return aggregationProperty;
+    }
+
+    public String getGroupKeyProp() {
+        return deckerBuilder.getGroupKeyPropoerty();
+    }
+
+    public String getGroupDescProperty() {
+        return deckerBuilder.getGroupDescProperty();
+    }
+
+    public String getBarColour() {
+        return barColour.getColourValue();
+    }
 }

@@ -11,7 +11,9 @@ public interface IChartDeckerConfig<T extends AbstractEntity<?>> {
 
     boolean shouldSaveOnActivation();
 
-    String getGroupPropoerty();
+    String getGroupKeyPropoerty();
+
+    String getGroupDescProperty();
 
     List<ChartDeck<T>> getDecs();
 }

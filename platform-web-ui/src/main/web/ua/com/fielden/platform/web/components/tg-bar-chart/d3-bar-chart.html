@@ -52,19 +52,44 @@
             chartArea.dispatchEvent(event);
         };
         
+        
+        
+        
+        const marker = (selection, dataOptions, x, y, h, unscalableNodes, markerGenerator, draw) => {
+            const markerSelection = selection.attr("transform", d => "translate(" + (x(d[dataOptions.groupPropName]) + x.bandwidth() / 2) + ", " + (y(d[dataOptions.valuePropName]) - 10) + ")");
+            if (draw) {
+                selection.each(function (d) {
+                    let rect = d3.select(this).append("rect").attr("class", "mark-rect");
+                    let text = d3.select(this).append("text").attr("class", "mark-text").style("text-anchor", "middle").text(markerGenerator(d))
+                    upadateMarkerSize(rect, text);
+                }).each(function () {
+                    unscalableNodes.push(this);
+                });
+            } else {
+                selection.each(function (d) {
+                    upadateMarkerSize(d3.select(this).select(".mark-rect"), d3.select(this).select(".mark-text"));
+                });
+            }
+        };
+        
+        
+        
+        
+        
+        
         class BarChart {
             
             constructor (container, options, data) {
                 //////////////////////Private variables can be configured through the api//////////////////////////
                 //Most common configuration properties.
                 this._options = {
-                    width: 70,
-                    height: 70,
+                    width: 110,
+                    height: 80,
                     margin: {
                         top: 35,
                         right: 35,
-                        bottom: 35,
-                        left: 45
+                        bottom: 45,
+                        left: 75
                     },
                     label: "",
                     xAxis: {
@@ -81,7 +106,7 @@
                         valueProp: "valueProp",
                     },
                     barColour: "#0288D1",
-                    selectedColor: entity => "white",
+                    selectedColour: "white",
                     tooltip: d => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
                     click: d => {},
                 };
@@ -108,7 +133,7 @@
                 this._xAxis = this._createXAxis();
                 this._yAxis = this._createYAxis();
                 // Creating grid that should be modifiable
-                const yGrid = this._createYGrid();
+                this._yGrid = this._createYGrid();
                 //create clip path to cut off the chart area.
                 this._clipPath = this._createClipPath(container);
                 //Create area for zooming and panning that will contain axes, grids and chart area with bars.
@@ -132,7 +157,9 @@
                 this._yAxisLabel = this._drawYAxisLabel(container);
 
                 //Now draw job bars
-                this._drawBars(true);
+                this._drawBars();
+                //Draw markers after bars
+                this._drawBarLabels();
                 //Creating zoom&pan behaviour.
                 this._zoom = d3.zoom()
                     .scaleExtent([1, 10])
@@ -144,14 +171,13 @@
                         this._yGridGroup.call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
                         this._barContainer.attr("transform", "translate(0, " + this._currentTransform.y + ")scale(1, " + this._currentTransform.k + ")");
                         this._unscale();
-                        this._elemToUnscale.forEach(el => this._unscale(el));
                     });
                 this._chartArea.call(this._zoom).on("dblclick.zoom", null);
             }
             
             repaint(resetState) {
                  //The old position of origin point.Needed to update the position of viewpoint after resizing.
-                let oldY = yAxis.scale().invert(0);
+                let oldY = this._yAxis.scale().invert(0);
                 //Calculate new width and height without margins.
                 this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
                 this._actualHeight = this._options.height - this._options.margin.bottom - this._options.margin.top;
@@ -178,7 +204,7 @@
                 // Update background rectangle according to new width and height
                 this._background.attr("width", this._actualWidth).attr("height", this._actualHeight);
                 this._yGridGroup.call(this._yGrid.tickSize(-this._actualWidth).scale(this._ys)).call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
-                this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")");
+                this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis.scale(this._xs));
                 this._yAxisGroup.call(this._yAxis.scale(this._ys)).call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
                 // Update chart and axis captioins
                 this._chartLabel.call(this._setChartLabelData.bind(this));
@@ -186,7 +212,9 @@
                 this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
                 // Update bars.
                 this._drawBars();
-                // Trigger zoom event in order to retranslte the container according to new extents.
+                //update markers after bars
+                this._drawBarLabels();
+                //Update zoom behavior 
                 this._zoom.translateExtent([[0, 0], [0, this._actualHeight]])
                     .extent([[0, 0], [0, this._actualHeight]]);
                 //Unscale nodes
@@ -220,15 +248,17 @@
             }
 
             selectEntity(entity, select) {
-                this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity)).node(), entity, select);
+                this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity)).node(), 
+                                   this._barContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity)).node(),
+                                   entity, select);
             }
             
             _xDomain() {
                 return this._data.map(d => value(this._options.dataPropertyNames.groupKeyProp, d));
             }
             _yDomain() {
-                let maxRange = d3.max(ths._data, d => value(this._options.dataPropertyNames.valueProp, d));
-                return [0, maxRange + (0.1 + Math.abs(0.3 - 0.0001 * h)) * maxRange];
+                let maxRange = d3.max(this._data, d => value(this._options.dataPropertyNames.valueProp, d));
+                return [0, maxRange ? maxRange + (0.1 + Math.abs(0.3 - 0.0001 * this._actualHeight)) * maxRange : 0];
             }
             _xScale() {
                 return d3.scaleBand()
@@ -243,11 +273,11 @@
             }
             
             _createXAxis() {
-                return d3.axisBottom(this._xScale);
+                return d3.axisBottom(this._xs);
             }
             
             _createYAxis() {
-                return d3.axisLeft(this._yScale).ticks(this._options.yAxis.ticks);
+                return d3.axisLeft(this._ys).ticks(this._options.yAxis.ticks);
             }
             
             _createYGrid() {
@@ -270,6 +300,7 @@
             }
             
             _drawYGrid() {
+                console.log(this._yGrid.scale().domain);
                 return this._chartArea.append("g").attr("class", "grid y-grid").call(this._yGrid);
             }
             
@@ -366,45 +397,66 @@
             
             _insertNewBar(selection) {
                 const self = this;
-                const markerFunction = function (d) {
-                    const d3Bar = d3.select(this);
-                    d3Bar.append("rect").attr("class", "mark-rect");
-                    d3Bar.append("text").style("text-anchor", "middle").attr("class", "mark-text");
-                    self._elemToUnscale.push(this);
-                }
-                const newBars = insertSelection.append("g")
-                    .on("click", function (d) {
+                const newBars = selection.append("rect").attr("class", "bar").on("click", function (d) {
                         if (d3.event.button == 0 && (d3.event.ctrlKey || d3.event.metaKey)) {
                             self._selectEntity(this, d, !self._isEntitySelected(d), true);
                         } else {
                             self._options.click(d);
                         }
-                    });
-                newBars.append("rect").attr("class", "bar-rect");
-                newBars.append("g").attr("class", "mark").each(markerFunction);
-                selection.call(self._updateBar.bind(self));
+                    })
+                    .call(self._updateBar.bind(self));
             }
             
-             _updateBar(selection) {
-                 selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
-                 
-                 selection.select(".bar-rect")
-                    .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor : this._options.barColor)
+            _updateBar(selection) {
+                selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
+                
+                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor : this._options.barColour)
                     .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
                     .attr("y", d => this._ys(value(this._options.dataPropertyNames.valueProp, d)))
                     .attr("height", d => this._actualHeight - this._ys(value(this._options.dataPropertyNames.valueProp, d)))
-                    .attr("width", this._xs.bandwidth())
-                    .attr("tooltip-text", this._options.tooltip);
-                 
-                 const rect = selection.select(".mark-rect")
-                    .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor : this._options.barColor);
-                 
-                 const text = selction.selct(".mark-text")
-                    .text(value(this._options.dataPropertyNames.valueProp, d));
-                 
-                 const self = this;
-                 selection.select(".mark").attr("transform", d => "translate(" + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) + ", - 10)")
-                    .each(function (d) {self._updateMarkerSize(rect, text);});
+                    .attr("width", this._xs.bandwidth());
+                    //TODO add tooltips 
+                    //.attr("tooltip-text", this._options.tooltip);
+            }
+            
+            _drawBarLabels() {
+                const self = this;
+                const updateSelection = self._barContainer.selectAll(".marker").data(this._data);
+                const insertSelection = updateSelection.enter();
+                const removeSelection = updateSelection.exit();
+
+                //update markers
+                updateSelection.call(self._updateMarker.bind(self));
+                //insert new markers
+                insertSelection.call(self._insertNewMarker.bind(self));
+                //remove markers
+                removeSelection.remove();
+            }
+            
+            _insertNewMarker(selection) {
+                const self = this;
+                const markerGroup = selection.append("g")
+                    .attr("id", d => "marker_" + value(this._options.dataPropertyNames.id, d))
+                    .attr("class", "marker")
+                    .each(function () {
+                        self._elemToUnscale.push(this);
+                    });
+                markerGroup.append("rect").attr("class", "mark-rect");
+                markerGroup.append("text").attr("class", "mark-text").style("text-anchor", "middle")
+                markerGroup.call(this._updateMarker.bind(this));
+            }
+            
+            _updateMarker(selection) {
+                const self = this; 
+                selection.attr("transform", d => "translate(" 
+                    + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) 
+                    + ", " + (this._ys(value(this._options.dataPropertyNames.valueProp, d)) - 10) + ")")
+                    .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor(d) : null);
+                selection.each(function (d) {
+                    let rect = d3.select(this).select(".mark-rect");
+                    let text = d3.select(this).select(".mark-text").text(value(self._options.dataPropertyNames.valueProp, d));
+                    self._updateMarkerPosition(rect, text);
+                });
             }
             
             _updateMarkerPosition(rect, text) {
@@ -412,7 +464,7 @@
                 if (textBox.width !== 0 && textBox.height !== 0) {
                     rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
                 } else {
-                    setTimeout(() => upadateMarkerSize(rect, text), 100);
+                    setTimeout(() => this._updateMarkerPosition(rect, text), 100);
                 }
             }
             
@@ -420,7 +472,7 @@
                 return !!this._selectedEntities.find(selectedEntity => value(this._options.dataPropertyNames.id, selectedEntity) === value(this._options.dataPropertyNames.id, entity));
             }
             
-            _selectEntity(bar, entity, select, fireEvent) {
+            _selectEntity(bar, marker, entity, select, fireEvent) {
                 if (entity) {
                     const entityIndex = this._selectedEntities.findIndex(selectedEntity => value(this._options.dataPropertyNames.id, selectedEntity) === value(this._options.dataPropertyNames.id, entity));
                     if (select) {
@@ -440,31 +492,24 @@
                             }
                         }
                     }
-                    if (bar) {
-                        this._selectBar(bar, entity, select);
+                    if (bar && marker) {
+                        this._selectBar(bar, marker, entity, select);
                     }
                 }
             }
             
-            _selectBar(bar, entity, select) {
+            _selectBar(bar, marker, entity, select) {
                 const indexOfBar = this._selectedBars.indexOf(bar);
-                const d3Bar = d3.select(bar);
-                d3Bar.select(".bar-rect").style("fill", select ? this._options.selectedColor(entity) : value(this._options.dataPropertyNames.color, entity));
+                d3.select(bar).d3Bar.style("fill", select ? this._options.selectedColor(entity) : value(this._options.dataPropertyNames.color, entity));
+                d3.select(marker).d3Bar.style("fill", select ? this._options.selectedColor(entity) : null);
                 
-                d3Bar.select(".uncompleted-part")
-                    .style("fill", select ? this._options.selectedColor(entity) : value(this._options.dataPropertyNames.color, entity))
-                    .attr("tooltip-text", select ? "" : this._options.tooltip(entity));
-                d3Bar.classed("selected-task", select)
-                    .selectAll(".mark-rect").style("fill", select ? this._options.selectedColor(entity) : null);
                 if (select) {
                     if (indexOfBar < 0) {
                         this._selectedBars.push(bar);
-                        entity.__classes__.push("selected-task");
                     }
                 } else {
                     if (indexOfBar >= 0) {
                         this._selectedBars.splice(indexOfBar, 1);
-                        entity.__classes__.splice(entity.__classes__.indexOf("selected-task"), 1);
                     }
                 }
             }
@@ -478,7 +523,7 @@
                     }
                 });
                 elementsToRemove.forEach(el => {
-                    cont elIndex = this._elemToUnscale.indexOf(el);
+                    const elIndex = this._elemToUnscale.indexOf(el);
                     if (elIndex >= 0) {
                         this._elemToUnscale.splice(elIndex, 1);
                     }
