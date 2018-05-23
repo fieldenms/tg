@@ -390,9 +390,8 @@
                     .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
                     .attr("y", d => this._ys(value(this._options.dataPropertyNames.valueProp, d)))
                     .attr("height", d => this._actualHeight - this._ys(value(this._options.dataPropertyNames.valueProp, d)))
-                    .attr("width", this._xs.bandwidth());
-                    //TODO add tooltips 
-                    //.attr("tooltip-text", this._options.tooltip);
+                    .attr("width", this._xs.bandwidth())
+                    .attr("tooltip-text", this._options.tooltip);
             }
             
             _drawBarLabels() {
