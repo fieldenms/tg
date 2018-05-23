@@ -15,9 +15,11 @@ import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisDao;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
+import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
 import ua.com.fielden.platform.sample.domain.producers.TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
+import ua.com.fielden.platform.ui.menu.sample.MiTgOpenTrippleDecDetails;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -30,6 +32,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.impl.ChartDeckerMasterBuilder;
 /**
  * {@link TgGeneratedEntityForTrippleDecAnalysis} Web UI configuration.
@@ -48,6 +51,57 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
         builder.register(createCentre(injector));
         builder.register(createMaster(injector));
         builder.register(createTripleDecInsertionPoint(injector));
+        final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> detailsCentre = createDetailsCentre(injector);
+        builder.register(detailsCentre);
+        builder.register(createDetailsMaster(detailsCentre, injector));
+    }
+
+    private EntityMaster<TgOpenTrippleDecDetails> createDetailsMaster(final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> detailsCentre, final Injector injector) {
+        final IMaster<TgOpenTrippleDecDetails> config = new MasterWithCentreBuilder<TgOpenTrippleDecDetails>()
+                .forEntityWithSaveOnActivate(TgOpenTrippleDecDetails.class).withCentre(detailsCentre).done();
+
+                return new EntityMaster<>(
+                        TgOpenTrippleDecDetails.class,
+                        config,
+                        injector);
+    }
+
+    private EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> createDetailsCentre(final Injector injector) {
+        final EntityActionConfig standardNewAction = StandardActions.NEW_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
+        final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
+        final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
+        final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
+        final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
+        final EntityActionConfig customAction = action(TgOpenTrippleDecDetails.class)
+                .withContext(context().withSelectionCrit().withCurrentEntity().build())
+                .icon("icons:copyright")
+                .longDesc("Redo changes (Ctrl + Y)")
+                .shortcut("ctrl+y meta+y")
+                .build();
+
+        final EntityCentreConfig<TgGeneratedEntityForTrippleDecAnalysis> ecc = EntityCentreBuilder.centreFor(TgGeneratedEntityForTrippleDecAnalysis.class)
+                .runAutomatically()
+                .addTopAction(standardNewAction).also()
+                .addTopAction(standardDeleteAction).also()
+                .addTopAction(standardSortAction).also()
+                .addTopAction(standardExportAction)
+                .setPageCapacity(10)
+                .addProp("group").order(1).asc().width(100)
+                    .withSummary("count_group_", "COUNT(SELF)", "The total number of generated entities.")
+                    .withAction(standardEditAction).also()
+                .addProp("desc").minWidth(400).also()
+                .addProp("count").order(2).asc().minWidth(100)
+                    .withSummary("sum_count_", "SUM(count)", "Sum of count property").also()
+                .addProp("cost").minWidth(200)
+                    .withSummary("sum_cost_", "SUM(cost)", "Sum of cost property").also()
+                .addProp("hours").minWidth(60)
+                    .withSummary("sum_hours_", "SUM(hours)", "Sum of hours property")
+                .addPrimaryAction(standardEditAction).also()
+                .addSecondaryAction(customAction)
+                .build();
+
+        final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> entityCentre = new EntityCentre<>(MiTgOpenTrippleDecDetails.class, "MiTgOpenTrippleDecDetails", ecc, injector, null);
+        return entityCentre;
     }
 
     private EntityMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> createTripleDecInsertionPoint(final Injector injector) {

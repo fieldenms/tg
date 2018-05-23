@@ -75,11 +75,11 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithT
         return title;
     }
 
-    public String getxAxisTitle() {
+    public String getXAxisTitle() {
         return xAxisTitle;
     }
 
-    public String getyAxisTitle() {
+    public String getYAxisTitle() {
         return yAxisTitle;
     }
 

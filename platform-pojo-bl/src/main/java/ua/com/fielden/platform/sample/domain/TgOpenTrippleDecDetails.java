@@ -9,17 +9,17 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /**
- * Represents the insertion point for triple dec example.
+ * Action that opens triple dec details.
  *
  * @author TG Team
  *
  */
 @KeyType(NoKey.class)
-@EntityTitle("Triple Dec Insertion Point")
-@CompanionObject(ITgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
-public class TgGeneratedEntityForTrippleDecAnalysisInsertionPoint extends AbstractFunctionalEntityWithCentreContext<NoKey>{
+@EntityTitle("Triple Dec Details")
+@CompanionObject(ITgOpenTrippleDecDetails.class)
+public class TgOpenTrippleDecDetails extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
-    public TgGeneratedEntityForTrippleDecAnalysisInsertionPoint() {
+    public TgOpenTrippleDecDetails() {
         setKey(NO_KEY);
     }
 }

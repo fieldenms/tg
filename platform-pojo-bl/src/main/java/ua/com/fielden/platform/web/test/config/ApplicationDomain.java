@@ -45,6 +45,7 @@ import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -113,6 +114,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgGeneratedEntity.class);
         add(TgGeneratedEntityForTrippleDecAnalysis.class);
         add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
+        add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
 
         add(TgMessage.class);
