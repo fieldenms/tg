@@ -355,7 +355,21 @@
                     //  2) saved or unsaved entity that was tryied to be saving
                     //    a) if valid == saving was successful and id should be defined (not 'null')
                     //    b) if invalid == id can be defined (when persisted entity was trying to be saved but with failure) or can be 'null' (when new entity was trying to be saved but with failure)
-
+                    //    c) if invalid == saving was unsuccessful (exception occured) and id is defined (!) in case where new entity was trying to be saved (exception has occured AFTER actual save but transaction rollbacked)
+                    
+                    const newEntitySavingFailedButIdExists = potentiallySavedOrNewEntity.type().isPersistent()
+                        && potentiallySavedOrNewEntity.exceptionOccured() !== null
+                        && potentiallySavedOrNewEntity.isPersisted()
+                        && this.entityId === 'new';
+                    if (newEntitySavingFailedButIdExists) {
+                        // custom external action
+                        if (this.postSaved) {
+                            this.postSaved.bind(this)(potentiallySavedOrNewEntity, this._currBindingEntity);
+                        }
+                        this._postSavedDefaultPostExceptionHandler();
+                        return potentiallySavedOrNewEntity.isValidWithoutException();
+                    }
+                    
                     // 'isContinuouslyCreated' is calculated based on the fact that the newly created in DAO entity will be different from the entity that was bound previously
                     // by means of the keys assigned.
                     var isContinuouslyCreated = potentiallySavedOrNewEntity.type().isPersistent()
@@ -482,19 +496,23 @@
                         }
                         action._run();
                     } else if (_exceptionOccured !== null) {
-                        this.enableView();
-                        this._savingInitiated = false;
-                        
-                        // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after unsuccessful save due to non-continuation exception
-                        this._continuations = {};
+                        this._postSavedDefaultPostExceptionHandler();
                     } else {
                         this.enableView();
                         this._savingInitiated = false;
                     }
-
+                    
                     return potentiallySavedOrNewEntity.isValidWithoutException();
                 }).bind(self);
-
+                
+                self._postSavedDefaultPostExceptionHandler = (function () {
+                    this.enableView();
+                    this._savingInitiated = false;
+                    
+                    // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after unsuccessful save due to non-continuation exception
+                    this._continuations = {};
+                }).bind(self);
+                
                 self._postSavedDefaultError = (function (errorResult) {
                     // This function will be invoked after server-side error appear.
                     // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
