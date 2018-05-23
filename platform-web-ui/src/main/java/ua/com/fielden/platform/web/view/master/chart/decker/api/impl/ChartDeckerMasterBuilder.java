@@ -41,8 +41,8 @@ public class ChartDeckerMasterBuilder<T extends AbstractEntity<?>> implements IC
     }
 
     @Override
-    public IChartDeckerWithTitle<T> addDeckForProperty(final String aggregationProperty) {
-        final ChartDeck<T> newDeck = new ChartDeck<>(aggregationProperty, this);
+    public IChartDeckerWithTitle<T> addDeckForProperty(final Class<? extends AbstractEntity<?>> entityType, final String aggregationProperty) {
+        final ChartDeck<T> newDeck = new ChartDeck<>(entityType, aggregationProperty, this);
         decks.add(newDeck);
         return newDeck;
     }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxi
 public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithTitle<T> {
 
     private final String aggregationProperty;
+    private final Class<? extends AbstractEntity<?>> entityType;
     private final ChartDeckerMasterBuilder<T> deckerBuilder;
 
     private String title = "";
@@ -23,7 +25,8 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithT
     private Colour barColour = new Colour("0288D1");
     private EntityActionConfig actionConfig;
 
-    public ChartDeck(final String aggregationProperty, final ChartDeckerMasterBuilder<T> chartDeckerMasterBuilder) {
+    public ChartDeck(final Class<? extends AbstractEntity<?>> entityType, final String aggregationProperty, final ChartDeckerMasterBuilder<T> chartDeckerMasterBuilder) {
+        this.entityType = entityType;
         this.aggregationProperty = aggregationProperty;
         this.deckerBuilder = chartDeckerMasterBuilder;
     }
@@ -82,6 +85,10 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithT
 
     public String getAggregationProperty() {
         return aggregationProperty;
+    }
+
+    public Class<?> getPropertyType() {
+        return PropertyTypeDeterminator.determinePropertyType(this.entityType, aggregationProperty);
     }
 
     public String getGroupKeyProp() {

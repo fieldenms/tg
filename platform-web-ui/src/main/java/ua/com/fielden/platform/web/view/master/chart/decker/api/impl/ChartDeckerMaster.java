@@ -11,6 +11,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -30,7 +31,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
 
         final DomElement decks = createDeckElements(deckerConfig);
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.html")
                 .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
                 .replace("@entity_type", deckerConfig.getEntityType().getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", decks.toString())
@@ -76,12 +77,20 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    dataPropertyNames: {\n"
                     + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-                    + "        valueProp: '" + deck.getAggregationProperty() + "'\n"
+                    + "        valueProp: " + generateValueAccessor(deck.getPropertyType(), deck.getAggregationProperty()) + "\n"
                     + "    },\n"
-                    + "    barColour: '" + deck.getBarColour() + "'\n"
+                    + "    barColour: '" + deck.getBarColour() + "',\n"
+                    + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "')\n"
                     + "}");
         });
         return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
+    }
+
+    private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {
+        if (Money.class.isAssignableFrom(propertyType)) {
+            return "this._moneyPropAccessor('" + aggregationProperty + "')";
+        }
+        return "'" + aggregationProperty+ "'";
     }
 
     @Override

@@ -1,0 +1,49 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/app/tg-app-config.html">
+
+<link rel="import" href="/resources/master/tg-entity-master-template-behavior.html">
+
+<script>
+    (function () {
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgChartDeckerTemplateBehaviorImpl = {
+            
+            ready: function () {
+                this.appConfig = document.createElement("tg-app-config");
+            },
+
+            _moneyPropAccessor: function (propertyName) {
+                return function (entity, value) {
+                    if (!value) {
+                        return entity.get(propertyName).amount;
+                    }
+                }.bind(this);
+            },
+
+            _labelFormatter: function (type, property) {
+                return function (entity) {
+                    if (typeof entity.get(property) === 'number') {
+                        if (type === 'BigDecimal') {
+                            const metaProp = this._reflector().getEntityTypeProp(entity, property);
+                            return this._reflector().formatDecimal(entity.get(property), this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+                        } else {
+                            return this._reflector().formatNumber(entity.get(property), this.appConfig.locale);
+                        }
+                    } else if (type === 'Money') {
+                        const metaProp = this._reflector().getEntityTypeProp(entity, property);
+                        return this._reflector().formatMoney(entity.get(property), this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+                    }
+                }.bind(this);
+            }
+
+        };
+
+        Polymer.TgBehaviors.TgChartDeckerTemplateBehavior = [
+            Polymer.TgBehaviors.TgEntityMasterTemplateBehavior,
+            Polymer.TgBehaviors.TgChartDeckerTemplateBehaviorImpl
+        ];
+
+    })();
+</script>

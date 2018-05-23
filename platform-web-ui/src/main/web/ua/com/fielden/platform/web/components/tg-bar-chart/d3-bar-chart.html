@@ -52,31 +52,6 @@
             chartArea.dispatchEvent(event);
         };
         
-        
-        
-        
-        const marker = (selection, dataOptions, x, y, h, unscalableNodes, markerGenerator, draw) => {
-            const markerSelection = selection.attr("transform", d => "translate(" + (x(d[dataOptions.groupPropName]) + x.bandwidth() / 2) + ", " + (y(d[dataOptions.valuePropName]) - 10) + ")");
-            if (draw) {
-                selection.each(function (d) {
-                    let rect = d3.select(this).append("rect").attr("class", "mark-rect");
-                    let text = d3.select(this).append("text").attr("class", "mark-text").style("text-anchor", "middle").text(markerGenerator(d))
-                    upadateMarkerSize(rect, text);
-                }).each(function () {
-                    unscalableNodes.push(this);
-                });
-            } else {
-                selection.each(function (d) {
-                    upadateMarkerSize(d3.select(this).select(".mark-rect"), d3.select(this).select(".mark-text"));
-                });
-            }
-        };
-        
-        
-        
-        
-        
-        
         class BarChart {
             
             constructor (container, options, data) {
@@ -97,7 +72,7 @@
                     },
                     yAxis: {
                         label: "",
-                        ticks: 10
+                        ticks: 5
                     },
                     dataPropertyNames: {
                         id: "id",
@@ -106,6 +81,7 @@
                         valueProp: "valueProp",
                     },
                     barColour: "#0288D1",
+                    barLabel: d => value("valueProp", d),
                     selectedColour: "white",
                     tooltip: d => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
                     click: d => {},
@@ -454,7 +430,7 @@
                     .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor(d) : null);
                 selection.each(function (d) {
                     let rect = d3.select(this).select(".mark-rect");
-                    let text = d3.select(this).select(".mark-text").text(value(self._options.dataPropertyNames.valueProp, d));
+                    let text = d3.select(this).select(".mark-text").text(self._options.barLabel(d));
                     self._updateMarkerPosition(rect, text);
                 });
             }
