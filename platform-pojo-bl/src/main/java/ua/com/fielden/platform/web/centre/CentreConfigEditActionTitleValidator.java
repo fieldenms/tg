@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.error.Result.failure;
+import static java.util.regex.Pattern.quote;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
@@ -11,7 +12,6 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
@@ -37,10 +37,11 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
     
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
-        if (newValue != null && (newValue.contains("[") || newValue.contains("]"))) {
-            return failure("Brackets are not allowed.");
-        } else if (newValue != null && (newValue.contains("{") || newValue.contains("}"))) {
-            return failure("Curly braces are not allowed.");
+        final String space = quote(" "); // spaces are allowed and they must be encoded using %20 in URIs
+        final String specialCharacters = "$-_.+!*'(),";
+        final String specialCharactersQuoted = quote(specialCharacters); // these special characters are not required to be encoded in URIs (see https://perishablepress.com/stop-using-unsafe-characters-in-urls/ for more details)
+        if (newValue == null || !newValue.matches("[\\w" + specialCharactersQuoted + space + "]*")) {
+            return failuref("Only alfanumeric characters, spaces and %s are allowed.", specialCharacters);
         } else {
             final CentreConfigEditAction entity = property.getEntity();
             final T2<List<LoadableCentreConfig>, Optional<String>> configsAndSaveAsName = 
