@@ -102,4 +102,8 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithT
     public String getBarColour() {
         return barColour.getColourValue();
     }
+
+    public EntityActionConfig getAction() {
+        return actionConfig;
+    }
 }

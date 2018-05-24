@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server.config;
 
+import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -11,6 +12,10 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.IContextDecomposer;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisDao;
@@ -20,9 +25,12 @@ import ua.com.fielden.platform.sample.domain.producers.TgGeneratedEntityForTripp
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.ui.menu.sample.MiTgOpenTrippleDecDetails;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -72,12 +80,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
         final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
-        final EntityActionConfig customAction = action(TgOpenTrippleDecDetails.class)
-                .withContext(context().withSelectionCrit().withCurrentEntity().build())
-                .icon("icons:copyright")
-                .longDesc("Redo changes (Ctrl + Y)")
-                .shortcut("ctrl+y meta+y")
-                .build();
+
 
         final EntityCentreConfig<TgGeneratedEntityForTrippleDecAnalysis> ecc = EntityCentreBuilder.centreFor(TgGeneratedEntityForTrippleDecAnalysis.class)
                 .runAutomatically()
@@ -96,15 +99,36 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                     .withSummary("sum_cost_", "SUM(cost)", "Sum of cost property").also()
                 .addProp("hours").minWidth(60)
                     .withSummary("sum_hours_", "SUM(hours)", "Sum of hours property")
-                .addPrimaryAction(standardEditAction).also()
-                .addSecondaryAction(customAction)
+                .addPrimaryAction(standardEditAction)
+                .setQueryEnhancer(TgGeneratedEntityForTrippleDecAnalysisQueryEnhnacer.class, context().withMasterEntity().build())
                 .build();
 
         final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> entityCentre = new EntityCentre<>(MiTgOpenTrippleDecDetails.class, "MiTgOpenTrippleDecDetails", ecc, injector, null);
         return entityCentre;
     }
 
+    private static class TgGeneratedEntityForTrippleDecAnalysisQueryEnhnacer implements IQueryEnhancer<TgGeneratedEntityForTrippleDecAnalysis> {
+
+          @Override
+          public ICompleted<TgGeneratedEntityForTrippleDecAnalysis> enhanceQuery(final IWhere0<TgGeneratedEntityForTrippleDecAnalysis> where, final Optional<CentreContext<TgGeneratedEntityForTrippleDecAnalysis, ?>> context) {
+              final IContextDecomposer decompContext = decompose(context);
+              if (decompContext.contextNotEmpty() && decompContext.masterEntityNotEmpty()) {
+                  final AbstractEntity<?> currentEntity = decompContext.ofMasterEntity().currentEntity();
+                  return where.prop("id").eq().val(currentEntity);
+              }
+              return where.val(1).eq().val(1);
+          }
+
+    }
+
     private EntityMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> createTripleDecInsertionPoint(final Injector injector) {
+        final EntityActionConfig customAction = action(TgOpenTrippleDecDetails.class)
+                .withContext(context().withMasterEntity().withCurrentEntity().build())
+                .icon("icons:copyright")
+                .shortDesc("Some Action")
+                .longDesc("Some Action Description")
+                .prefDimForView(mkDim(600, Unit.PX, 300, Unit.PX))
+                .build();
         final IMaster<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> config = new ChartDeckerMasterBuilder<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint>()
                 .forEntityWithSaveOnActivation(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
                     .groupKeyProp("group")
@@ -114,21 +138,21 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Number of Items")
                         .withBarColour(new Colour("82B1FF"))
-                        .withAction(null)
+                        .withAction(customAction)
                         .also()
                     .addDeckForProperty(TgGeneratedEntityForTrippleDecAnalysis.class, "cost")
                         .withTitle("Cost")
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Cost $")
                         .withBarColour(new Colour("A7FFEB"))
-                        .withAction(null)
+                        .withAction(customAction)
                         .also()
                     .addDeckForProperty(TgGeneratedEntityForTrippleDecAnalysis.class, "hours")
                         .withTitle("Hours")
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Hours")
                         .withBarColour(new Colour("B388FF"))
-                        .withAction(null)
+                        .withAction(customAction)
                 .done();
         return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class, TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer.class, config, injector);
     }
@@ -177,7 +201,6 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .addProp("hours").minWidth(60)
                     .withSummary("sum_hours_", "SUM(hours)", "Sum of hours property")
                 .addPrimaryAction(standardEditAction)
-
                 .addInsertionPointWithPagination(
                         action(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
                              .withContext(context().withSelectionCrit().build())

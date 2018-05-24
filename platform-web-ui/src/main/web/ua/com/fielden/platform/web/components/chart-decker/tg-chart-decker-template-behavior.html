@@ -26,6 +26,7 @@
 
             ready: function () {
                 this.appConfig = document.createElement("tg-app-config");
+                this.actions = this._masterDom().querySelectorAll(".chart-action");
             },
 
             _moneyPropAccessor: function (propertyName) {
@@ -51,6 +52,13 @@
                     tooltip += (groupTooltip && tooltip && "<br>") + groupTooltip;
                     tooltip += (actionTooltip && tooltip && "<br><br>") + actionTooltip;
                     return tooltip;
+                }.bind(this);
+            },
+            
+            _click: function (chartIndex) {
+                return function (entity) {
+                    this.actions[chartIndex].currentEntity = entity;
+                    this.actions[chartIndex]._run();
                 }.bind(this);
             },
 
