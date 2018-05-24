@@ -18,7 +18,7 @@ import ua.com.fielden.platform.error.Result;
  */
 @EntityType(CentreConfigLoadAction.class)
 public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadAction> implements ICentreConfigLoadAction {
-    private static final String ERR_EXACTLY_ONE_CONFIGURATION_MUST_BE_SELECTED = "Exactly one configuration must be selected.";
+    private static final String ERR_EXACTLY_ONE_CONFIGURATION_MUST_BE_SELECTED = "Please select configuration to load.";
     
     @Inject
     public CentreConfigLoadActionDao(final IFilter filter) {
