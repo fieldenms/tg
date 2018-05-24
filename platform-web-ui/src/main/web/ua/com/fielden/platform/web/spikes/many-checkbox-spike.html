@@ -24,11 +24,13 @@
     (function () {
         const container = document.getElementById("checkboxContainer");
         const checkboxes = [];
-        for (let i = 0; i <= 1000; i++) {
+        const rowCount = 100;
+        const colCount = 25;
+        for (let i = 0; i <= rowCount; i++) {
             const rowContainer = document.createElement("div");
             const rowCheckboxes = [];
             rowContainer.classList.add("row-container");
-            for (let j = 0; j <= 30; j++) {
+            for (let j = 0; j <= colCount; j++) {
                 const checkBox = document.createElement("input");
                 checkBox.setAttribute("type", "checkbox");
                 rowCheckboxes.push(checkBox);
@@ -38,8 +40,8 @@
             container.appendChild(rowContainer);
         }
         checkboxes[0][0].addEventListener("change", e => {
-            for (let i = 0; i <= 1000; i++) {
-                for(let j = 0;  j <= 30; j++) {
+            for (let i = 0; i <= rowCount; i++) {
+                for(let j = 0;  j <= colCount; j++) {
                     if (i !== 0 || j !== 0) {
                         checkboxes[i][j].checked = e.target.checked;
                     }
