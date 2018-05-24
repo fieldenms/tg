@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBoole
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_DESC;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
-import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -440,13 +439,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
         validationPrototype.setCentreDeleter(() -> {
-            if (!saveAsName.isPresent()) {
-                // default configuration will never be deleted; however it can be 'defaulted'
-                throw failuref("%s cannot be deleted.", DEFAULT_CONFIG_TITLE);
-            } else {
-                // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
-                removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-            }
+            // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
+            removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
         });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
