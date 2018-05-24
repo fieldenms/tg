@@ -952,6 +952,51 @@
                 master.retrieve();
             });
             
+            test('works for new entity with exception thrown in companion save method after super.save was successful', function (done) {
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    master.save().then(function () {
+                        assert.isNull(master._currEntity.get('id'), 'Entity id should be null.');
+                        assert.strictEqual(master._currEntity.version, 0, 'Entity version should be the same.');
+                        assert.isNull(master._currBindingEntity.get('id'), 'Binding entity id should be null.');
+                        assert.strictEqual(master._currBindingEntity.version, 0, 'Binding entity version should be the same.');
+                        
+                        const arrivedValue = _millis('01/02/2003 06:22:00.000');
+                        
+                        // value ok?
+                        assert.ok(master._currEntity.get('dateProp'), 'Property value should be initialised.');
+                        assert.strictEqual(master._currEntity.get('dateProp'), arrivedValue, 'Property value should be correct.');
+                        
+                        // value is changed?
+                        assert.strictEqual(master._currEntity.prop('dateProp').isChangedFromOriginal(), true, 'Instance meta-prop should be changedFromOriginal.');
+                        
+                        // value validationresult?
+                        assert.isNull(master._currEntity.prop('dateProp').validationResult(), 'Instance meta-prop should have empty (successful) validation result.');
+                        
+                        // _editingValue ok?
+                        assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:22', 'Editing value should correspond to valid value [01/02/2003 06:22].');
+                        // binding value ok?
+                        assert.ok(master._currBindingEntity.get('dateProp'), 'Binding property should be initialised.');
+                        assert.strictEqual(master._currBindingEntity.get('dateProp'), arrivedValue, 'Binding property should contain the valid value that represents [1/2/3 6:22] date.');
+                        
+                        done();
+                    });
+                };
+                
+                master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
+                    
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:22] date is not permitted.', 'Entity\'s exceptionOccured should exist.');
+                };
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    _editProperties(master, '1/2/3 6:22');
+                };
+                
+                master.retrieve();
+            });
+            
 		    test('works for existing entity', function (done) {
 
 	            master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
