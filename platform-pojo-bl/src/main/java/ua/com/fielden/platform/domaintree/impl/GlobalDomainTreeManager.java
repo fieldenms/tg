@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
+import static java.util.Objects.isNull;
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
@@ -502,6 +504,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         throw new DomainTreeException(message);
     }
 
+    private static void errorf(final String message, final Object... args) {
+        error(format(message, args));
+    }
+
     /**
      * Retrieves and initialises a instance of manager.
      *
@@ -937,8 +943,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             validateMenuItemTypeRootType(menuItemType);
 
             if (isFreezedEntityCentreManager(menuItemType, originalName)) {
-                error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, originalName)
-                        + "] for current user [" + currentUser() + "].");
+                errorf("Unable to SaveAs the 'freezed' entity-centre instance for type [%s] with title [%s] for current user [%s].",
+                        menuItemType.getSimpleName(), title(menuItemType, originalName), currentUser());
             }
             final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(menuItemType, originalName);
             validateBeforeSaving(originationMgr, menuItemType, originalName);
@@ -970,8 +976,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 saveCentre(copyMgr, ecc);
                 init(menuItemType, newName, copyMgr, true);
             } else { // > 1
-                error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser()
-                        + (persistentCentres == null ? "]" : "] or its base [id = " + baseOfTheCurrentUser().getId()) + "].");
+                errorf("There are at least one entity-centre instance for type [%s] with title [%s] for current user [%s%s].",
+                        menuItemType.getSimpleName(), newTitle, currentUser(), isNull(persistentCentres) ? "" : "] or its base [id = " + baseOfTheCurrentUser().getId());
             }
             return this;
         }
