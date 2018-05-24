@@ -457,7 +457,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
         });
         validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
-            if (COPY.equals(editKindAndNewName._1)) {
+            if (COPY.equals(editKindAndNewName._1) || !saveAsName.isPresent()) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
                 final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
                 

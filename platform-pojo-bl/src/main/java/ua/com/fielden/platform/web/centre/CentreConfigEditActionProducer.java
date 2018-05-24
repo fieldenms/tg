@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
-import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
-
 import java.util.Map;
 
 import com.google.inject.Inject;
@@ -53,14 +50,10 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             final String title = titleAndDesc._1;
             final String desc = titleAndDesc._2;
             
-            final String actionKindSuffix = COPY.name().equals(entity.getEditKind()) ? COPY_ACTION_SUFFIX : "";
+            final String actionKindSuffix = COPY.name().equals(entity.getEditKind()) || DEFAULT_CONFIG_TITLE.equals(title) ? COPY_ACTION_SUFFIX : "";
             if (DEFAULT_CONFIG_TITLE.equals(title)) {
-                if (EDIT.name().equals(entity.getEditKind())) {
-                    // default configuration can not be edited; however 'default' action is applicable
-                    throw failuref("%s cannot be edited.", title);
-                }
                 // remove brackets from title when copying 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
-                entity.setTitle(title.replace("[", "").replaceAll("]", "") + actionKindSuffix);
+                entity.setTitle(title.replace("[", "").replace("]", "") + actionKindSuffix);
             } else {
                 entity.setTitle(title + actionKindSuffix);
             }

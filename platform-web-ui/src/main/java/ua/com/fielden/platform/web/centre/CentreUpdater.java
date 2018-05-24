@@ -206,9 +206,12 @@ public class CentreUpdater {
     public static void editCentreTitleAndDesc(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final String newTitle, final String newDesc) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
-        final EntityCentreConfig freshConfig = gdtm.findConfig(miType, currentNameOf.apply(FRESH_CENTRE_NAME));
-        final EntityCentreConfig savedConfig = gdtm.findConfig(miType, currentNameOf.apply(SAVED_CENTRE_NAME));
-        final EntityCentreConfig previouslyRunConfig = gdtm.findConfig(miType, currentNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME));
+        final String currentNameFresh = currentNameOf.apply(FRESH_CENTRE_NAME);
+        final String currentNameSaved = currentNameOf.apply(SAVED_CENTRE_NAME);
+        final String currentNamePreviouslyRun = currentNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME);
+        final EntityCentreConfig freshConfig = gdtm.findConfig(miType, currentNameFresh);
+        final EntityCentreConfig savedConfig = gdtm.findConfig(miType, currentNameSaved);
+        final EntityCentreConfig previouslyRunConfig = gdtm.findConfig(miType, currentNamePreviouslyRun);
         if (freshConfig == null || savedConfig == null) {
             throw failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
         }
@@ -228,6 +231,12 @@ public class CentreUpdater {
         if (!equalsEx(saveAsName, of(newTitle))) {
             final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
             globalManager.removeCentres(miType, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
+            // remove locally cached instances of centres
+            final Function<String, String> currentNameOfWithoutDiff = (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAsName), device);
+            final String currentNameFreshWithoutDiff = currentNameOfWithoutDiff.apply(FRESH_CENTRE_NAME);
+            final String currentNameSavedWithoutDiff = currentNameOfWithoutDiff.apply(SAVED_CENTRE_NAME);
+            final String currentNamePreviouslyRunWithoutDiff = currentNameOfWithoutDiff.apply(PREVIOUSLY_RUN_CENTRE_NAME);
+            globalManager.removeCentresLocally(miType, currentNameFresh, currentNameSaved, currentNamePreviouslyRun, currentNameFreshWithoutDiff, currentNameSavedWithoutDiff, currentNamePreviouslyRunWithoutDiff);
         }
         
         // save
