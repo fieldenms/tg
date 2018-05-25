@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import java.util.Optional;
+
 import org.restlet.Request;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -13,8 +19,6 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import com.google.inject.Injector;
-
 /**
  * Contains a set of utilities for Web UI resource factories.
  *
@@ -24,12 +28,12 @@ import com.google.inject.Injector;
 public class ResourceFactoryUtils {
 
     /**
-     * Returns the user's name for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     * Returns the user's id for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
      *
      * @return
      */
-    static String getUsername(final Injector injector) {
-        return injector.getInstance(IUserProvider.class).getUser().getKey();
+    static Long getUserId(final Injector injector) {
+        return injector.getInstance(IUserProvider.class).getUser().getId();
     }
 
     /**
@@ -38,7 +42,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     static IGlobalDomainTreeManager getUserSpecificGlobalManager(final Injector injector) {
-        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(getUsername(injector));
+        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(getUserId(injector));
     }
 
     /**
@@ -47,7 +51,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     public static IGlobalDomainTreeManager getUserSpecificGlobalManager(final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider) {
-        return serverGdtm.get(userProvider.getUser().getKey());
+        return serverGdtm.get(userProvider.getUser().getId());
     }
 
     /**
@@ -83,7 +87,18 @@ public class ResourceFactoryUtils {
     static EntityCentre<AbstractEntity<?>> getEntityCentre(final Request request, final IWebUiConfig webUiConfig) {
         return getEntityCentre((String) request.getAttributes().get("mitype"), webUiConfig);
     }
-
+    
+    /**
+     * Determines 'saveAsName' from corresponding centre's request attribute.
+     *
+     * @param request
+     * @return
+     */
+    static Optional<String> saveAsName(final Request request) {
+        final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "").replace("%20", " ");
+        return "".equals(saveAsName) ? empty() : of(saveAsName);
+    }
+    
     /**
      * Finds the entity centre using 'mitypeString' inside 'webUiConfig'.
      *
