@@ -103,16 +103,16 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    },\n"
                     + "    barColour: '" + deck.getBarColour() + "',\n"
                     + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
-                    + "    tooltip: " + generateTooltipRetriever(deck) + (deck.getAction() != null ? ",\n" : "\n")
+                    + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
                     + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
                     + "}");
         }
         return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
     }
 
-    private String generateTooltipRetriever(final ChartDeck<T> deck) {
+    private String generateTooltipRetriever(final ChartDeck<T> deck, final int deckIndex) {
         return "this._tooltip('" + deck.getGroupDescProperty() + "', '" + deck.getAggregationProperty() + "', '"
-                + deck.getPropertyType().getSimpleName() + "')";
+                + deck.getPropertyType().getSimpleName() + "', this.actions[" + deckIndex + "])";
     }
 
     private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {
