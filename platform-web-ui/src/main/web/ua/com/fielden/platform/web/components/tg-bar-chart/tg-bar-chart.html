@@ -35,10 +35,14 @@
                 fill: steelblue;
                 vector-effect: non-scaling-stroke;
             }
-            .bar:hover {
+            .bar:not[selected]:hover {
                 stroke: white;
                 stroke-width: 1px;
                 cursor: pointer;
+            }
+            .bar[selected] {
+                stroke: black;
+                stroke-width: 1px;
             }
             .chart-label,
             .x-axis-label,
@@ -51,6 +55,9 @@
             }
             .chart-label {
                 font-weight: bold;
+            }
+            .marker[selected] .mark-rect {
+                fill: white;
             }
             .mark-text {
                 font-family: sans-serif;

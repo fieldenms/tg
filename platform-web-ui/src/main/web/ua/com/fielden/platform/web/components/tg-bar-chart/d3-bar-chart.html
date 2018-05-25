@@ -375,7 +375,7 @@
                 const self = this;
                 const newBars = selection.append("rect").attr("class", "bar").on("click", function (d) {
                         if (d3.event.button == 0 && (d3.event.ctrlKey || d3.event.metaKey)) {
-                            self._selectEntity(this, d, !self._isEntitySelected(d), true);
+                            self._selectEntity(this, self._barContainer.select("#marker_" + value(self._options.dataPropertyNames.id, d)).node(), d, !self._isEntitySelected(d), true);
                         } else {
                             self._options.click(d);
                         }
@@ -386,7 +386,7 @@
             _updateBar(selection) {
                 selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
                 
-                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor : this._options.barColour)
+                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour : this._options.barColour)
                     .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
                     .attr("y", d => this._ys(value(this._options.dataPropertyNames.valueProp, d)))
                     .attr("height", d => this._actualHeight - this._ys(value(this._options.dataPropertyNames.valueProp, d)))
@@ -426,7 +426,7 @@
                 selection.attr("transform", d => "translate(" 
                     + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) 
                     + ", " + (this._ys(value(this._options.dataPropertyNames.valueProp, d)) - 10) + ")")
-                    .style("fill", d => this._isEntitySelected(d) ? this._options.selectedColor(d) : null);
+                    .attr("selected", d => this._isEntitySelected(d) ? "" : null);
                 selection.each(function (d) {
                     let rect = d3.select(this).select(".mark-rect");
                     let text = d3.select(this).select(".mark-text").text(self._options.barLabel(d));
@@ -475,8 +475,9 @@
             
             _selectBar(bar, marker, entity, select) {
                 const indexOfBar = this._selectedBars.indexOf(bar);
-                d3.select(bar).d3Bar.style("fill", select ? this._options.selectedColor(entity) : value(this._options.dataPropertyNames.color, entity));
-                d3.select(marker).d3Bar.style("fill", select ? this._options.selectedColor(entity) : null);
+                d3.select(bar).style("fill", select ? this._options.selectedColour : this._options.barColour)
+                              .attr("selected", select ? "" : null);
+                d3.select(marker).attr("selected", select ? "" : null);
                 
                 if (select) {
                     if (indexOfBar < 0) {

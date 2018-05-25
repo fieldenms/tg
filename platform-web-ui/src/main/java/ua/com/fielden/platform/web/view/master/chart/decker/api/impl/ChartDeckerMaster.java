@@ -77,7 +77,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         final List<ChartDeck<T>> charts = deckerConfig.getDecs();
         for (int chartIndex = 0; chartIndex < charts.size(); chartIndex++) {
             container.add(new DomElement("tg-bar-chart")
-                    .clazz("flex")
+                    .clazz("flex", "chart-deck")
                     .attr("data", "[[retrievedEntities]]")
                     .attr("options", "[[barOptions." + chartIndex + "]]"));
         }
