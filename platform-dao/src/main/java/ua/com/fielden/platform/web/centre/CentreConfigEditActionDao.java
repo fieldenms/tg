@@ -37,10 +37,8 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
         // validate centre configuration edit / copy action before performing actual edit / copy
         entity.isValid().ifFailure(Result::throwRuntime);
         
-        if (entity.hasWarnings()) {
-            if (!moreData(CONTINUATION_KEY).isPresent()) {
-                throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
-            }
+        if (entity.hasWarnings() && !moreData(CONTINUATION_KEY).isPresent()) {
+            throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
         }
         
         // perform actual copy using centreCopier() closure
