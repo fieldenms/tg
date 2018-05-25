@@ -36,6 +36,8 @@ import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgMachine;
@@ -43,6 +45,7 @@ import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -109,26 +112,29 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgDeletionTestEntity.class);
         add(TgEntityWithTimeZoneDates.class);
         add(TgGeneratedEntity.class);
+        add(TgGeneratedEntityForTrippleDecAnalysis.class);
+        add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
+        add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
-        
+
         add(TgMessage.class);
         add(TgMessageMap.class);
-        
+
         add(TgOrgUnit.class);
         add(TgMachine.class);
         add(TgMachineRealtimeMonitorMap.class);
-        
+
         add(TgStop.class);
         add(TgStopMap.class);
-        
+
         add(TgPolygon.class);
         add(TgCoordinate.class);
         add(TgPolygonMap.class);
-        
+
         add(UnionEntity.class);
         add(EntityOne.class);
         add(EntityTwo.class);
-        
+
         add(TgBogieLocation.class);
         add(TgWorkshop.class);
         add(TgWagonSlot.class);

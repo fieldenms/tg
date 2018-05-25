@@ -18,7 +18,7 @@
                 @apply(--layout-flex);
 
             }
-            .background {
+            .chart-background {
                 fill: white;
             }
             .grid path,
@@ -33,6 +33,7 @@
             }
             .bar {
                 fill: steelblue;
+                vector-effect: non-scaling-stroke;
             }
             .bar:hover {
                 stroke: white;
@@ -110,6 +111,18 @@
 
                 attached: function () {
                     this._waitForDimensions(0);
+                },
+                
+                selectEntity: function (entity, select) {
+                    if (this._chart) {
+                        this._chart.selectEntity(entity, select);
+                    }
+                },
+                
+                repaint: function () {
+                    if (this._chart) {
+                        this._chart.repaint();
+                    }
                 },
 
                 _waitForDimensions: function (time) {

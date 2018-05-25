@@ -99,6 +99,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
@@ -147,6 +148,7 @@ import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
+import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityForTrippleDecAnalysisWebUiConfig;
 import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
@@ -275,6 +277,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         TgEntityWithTimeZoneDatesWebUiConfig.register(injector(), configApp());
         TgGeneratedEntityWebUiConfig.register(injector(), configApp());
+        final TgGeneratedEntityForTrippleDecAnalysisWebUiConfig trippleDecConfig = TgGeneratedEntityForTrippleDecAnalysisWebUiConfig.register(injector(), configApp());
         TgCloseLeaveExampleWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
@@ -943,6 +946,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
                 /*  */.done()
                 /*  */.addMenuItem("Custom View").description("Custom view description").view(customView).done()
+                /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
                 /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 /*  */.addMenuItem("Last group").description("Last group")
                 /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
