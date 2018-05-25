@@ -357,10 +357,10 @@
                     //    b) if invalid == id can be defined (when persisted entity was trying to be saved but with failure) or can be 'null' (when new entity was trying to be saved but with failure)
                     //    c) if invalid == saving was unsuccessful (exception occured) and id is defined (!) in case where new entity was trying to be saved (exception has occured AFTER actual save but transaction rollbacked)
                     
-                    const newEntitySavingFailedButIdExists = potentiallySavedOrNewEntity.type().isPersistent()
-                        && potentiallySavedOrNewEntity.exceptionOccured() !== null
-                        && potentiallySavedOrNewEntity.isPersisted()
-                        && this.entityId === 'new';
+                    const newEntitySavingFailedButIdExists = potentiallySavedOrNewEntity.type().isPersistent() &&
+									                        potentiallySavedOrNewEntity.exceptionOccured() !== null &&
+									                        potentiallySavedOrNewEntity.isPersisted() &&
+									                        this.entityId === 'new';
                     if (newEntitySavingFailedButIdExists) {
                         // custom external action
                         if (this.postSaved) {
@@ -501,7 +501,7 @@
                         this.enableView();
                         this._savingInitiated = false;
                     }
-                    
+
                     return potentiallySavedOrNewEntity.isValidWithoutException();
                 }).bind(self);
                 
