@@ -7,11 +7,13 @@ package ua.com.fielden.platform.domaintree;
  *
  */
 public interface IServerGlobalDomainTreeManager {
+    
     /**
      * Returns the current version of {@link IGlobalDomainTreeManager} for concrete user.
      *
-     * @param username
+     * @param userId -- id for a user
      * @return
      */
-    IGlobalDomainTreeManager get(final String username);
+    IGlobalDomainTreeManager get(final Long userId);
+    
 }

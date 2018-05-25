@@ -1,10 +1,11 @@
-package ua.com.fielden.platform.web.test.server.config;
+package ua.com.fielden.platform.web.layout.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_CUSTOM_SPECIFICATION;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
-import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 
 /**
  * Provides an API to consistently compose Web UI layouts for both entity centres and masters.
@@ -104,7 +105,18 @@ public class LayoutComposer {
      */
     public static String mkGridForMaster(final int width, final int rowNumber, final int colNumber) {
         final StringBuilder layout = new StringBuilder();
-        layout.append("['padding:20px', 'width:").append(width).append("px',");
+        layout.append("['padding:20px', 'minWidth:").append(width).append("px',");
+        for (int row = 0; row < rowNumber; row++) {
+            appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colNumber);
+        }
+        layout.deleteCharAt(layout.length() - 1);
+        layout.append("]");
+        return layout.toString();
+    }
+
+    public static String mkGridForMasterFitWidth(final int rowNumber, final int colNumber) {
+        final StringBuilder layout = new StringBuilder();
+        layout.append("['padding:20px',");
         for (int row = 0; row < rowNumber; row++) {
             appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colNumber);
         }
@@ -129,7 +141,7 @@ public class LayoutComposer {
      */
     public static String mkVarGridForMaster(final int width, final int numColsInFirstRow, final int... colsPerSecondRowOnwards) {
         final StringBuilder layout = new StringBuilder();
-        layout.append("['padding:20px', 'width:").append(width).append("px',");
+        layout.append("['padding:20px', 'minWidth:").append(width).append("px',");
         //processing the first row
         appendRow(layout, MASTER_LAYOUT_SPECIFICATION, numColsInFirstRow);
         //processing the array
@@ -155,59 +167,18 @@ public class LayoutComposer {
         return layout.toString();
     }
 
-    /**
-     * Produces a consistent rectangular layout for embedded master with rowNumber by columnNum dimension.
-     *
-     * @param rowNumber
-     *            specifies number of rows in the layout that would be produced.
-     * @param colNumber
-     *            specifies number of columns in the layout that would be produced.
-     * @return String representation of the layout.
-     *         <p>
-     *         For example, mkGridForEmbeddedMaster(3, 2) will produce [[[],[]], [[],[]], [[],[]]]
-     * @return
-     */
-    public static String mkGridForEmbeddedMaster(final int rowNumber, final int colNumber) {
-        final StringBuilder layout = new StringBuilder();
-        layout.append("['padding:20px',");
-        for (int row = 0; row < rowNumber; row++) {
-            appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colNumber);
-        }
-        layout.deleteCharAt(layout.length() - 1);
-        layout.append("]");
-        return layout.toString();
-    }
-
-    /**
-     * Produces an inconsistent rectangular layout for embedded master with different number of columns in rows.
-     *
-     * @param numColsInFirstRow
-     *            specifies number of columns in the first row. Prevents incorrect usage of API without specifying number of columns and providing empty array.
-     * @param colsPerSecondRowOnwards
-     *            array that specifies number of columns in each rows in the layout that would be produced.
-     * @return String representation of the layout.
-     *         <p>
-     *         For example, mkVarGridForEmbeddedMaster(3, 1, 2 ) will produce three rows with 3 components in the first row, 1 component in the second row and 2 components in the
-     *         third row [[[],[],[]], [[]], [[],[]],]
-     */
-    public static String mkVarGridForEmbeddedMaster(final int numColsInFirstRow, final int... colsPerSecondRowOnwards) {
-        final StringBuilder layout = new StringBuilder();
-        layout.append("['padding:20px',");
-        //processing the first row
-        appendRow(layout, MASTER_LAYOUT_SPECIFICATION, numColsInFirstRow);
-        //processing the array
-        for (final int colsInRow : colsPerSecondRowOnwards) {
-            appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colsInRow);
-        }
-        layout.deleteCharAt(layout.length() - 1);
-        layout.append("]");
-        return layout.toString();
-    }
-
     public static String mkActionLayoutForMaster() {
+        return mkActionLayoutForMaster(2, MASTER_ACTION_DEFAULT_WIDTH);
+    }
+
+    public static String mkActionLayoutForMaster(final int buttonCount, final int buttonWidth) {
         final StringBuilder layout = new StringBuilder();
-        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
+        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION);
+        for (int i = 0; i < buttonCount; i++) {
+            layout.append(",[" + format(MASTER_ACTION_CUSTOM_SPECIFICATION, buttonWidth) + "]");
+        }
+        layout.append("]");
         return layout.toString();
     }
-}
 
+}
