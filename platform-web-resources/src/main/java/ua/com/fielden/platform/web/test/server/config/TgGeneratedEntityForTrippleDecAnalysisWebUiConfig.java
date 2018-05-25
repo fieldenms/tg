@@ -5,8 +5,8 @@ import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.test.server.config.LayoutComposer.MARGIN;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 
 import java.util.Optional;
 
@@ -36,6 +36,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
