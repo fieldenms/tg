@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/components/d3-lib.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <script>
     (function () {
@@ -82,7 +83,7 @@
                     },
                     barColour: "#0288D1",
                     barLabel: d => value("valueProp", d),
-                    selectedColour: "white",
+                    selectedColour: colour => shadeColor(colour, 0.3),
                     tooltip: d => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
                     click: d => {},
                 };
@@ -232,16 +233,19 @@
             _xDomain() {
                 return this._data.map(d => value(this._options.dataPropertyNames.groupKeyProp, d));
             }
+            
             _yDomain() {
                 let maxRange = d3.max(this._data, d => value(this._options.dataPropertyNames.valueProp, d));
                 return [0, maxRange ? maxRange + (0.1 + Math.abs(0.3 - 0.0001 * this._actualHeight)) * maxRange : 0];
             }
+            
             _xScale() {
                 return d3.scaleBand()
                     .rangeRound([0, this._actualWidth])
                     .padding(0.1) // could be configurable 
                     .domain(this._xDomain());
             }
+            
             _yScale() {
                 return d3.scaleLinear()
                     .range([this._actualHeight, 0])
@@ -386,7 +390,8 @@
             _updateBar(selection) {
                 selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
                 
-                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour : this._options.barColour)
+                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour(this._options.barColour) : this._options.barColour)
+                    .attr("selected", d => this._isEntitySelected(d) ? "" : null)
                     .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
                     .attr("y", d => this._ys(value(this._options.dataPropertyNames.valueProp, d)))
                     .attr("height", d => this._actualHeight - this._ys(value(this._options.dataPropertyNames.valueProp, d)))
@@ -411,7 +416,6 @@
             _insertNewMarker(selection) {
                 const self = this;
                 const markerGroup = selection.append("g")
-                    .attr("id", d => "marker_" + value(this._options.dataPropertyNames.id, d))
                     .attr("class", "marker")
                     .each(function () {
                         self._elemToUnscale.push(this);
@@ -422,7 +426,8 @@
             }
             
             _updateMarker(selection) {
-                const self = this; 
+                const self = this;
+                selection.attr("id", d => "marker_" + value(this._options.dataPropertyNames.id, d));
                 selection.attr("transform", d => "translate(" 
                     + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) 
                     + ", " + (this._ys(value(this._options.dataPropertyNames.valueProp, d)) - 10) + ")")
@@ -475,7 +480,7 @@
             
             _selectBar(bar, marker, entity, select) {
                 const indexOfBar = this._selectedBars.indexOf(bar);
-                d3.select(bar).style("fill", select ? this._options.selectedColour : this._options.barColour)
+                d3.select(bar).style("fill", select ? this._options.selectedColour(this._options.barColour) : this._options.barColour)
                               .attr("selected", select ? "" : null);
                 d3.select(marker).attr("selected", select ? "" : null);
                 
