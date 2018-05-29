@@ -14,7 +14,7 @@
         const mergeData = function (oldData, newData) {
             return Object.assign({}, oldData, newData)
         };
-        
+
         /**
          * Gets or sets the value for entity if value is undefined the it gets the value ortherwise it sets the value. Also obj might be a function it means that user has provided formatter for value.
          */
@@ -34,7 +34,7 @@
                 }
             }
         };
-        
+
         /**
          * Fires the select event for provided entity and select parameter.
          */
@@ -53,16 +53,20 @@
             chartArea.dispatchEvent(event);
         };
         
+//        const fireLabelPlacedEvent = (eventName, newRequiredMargin, chartArea) => {
+//            
+//        }
+
         class BarChart {
-            
-            constructor (container, options, data) {
+
+            constructor(container, options, data) {
                 //////////////////////Private variables can be configured through the api//////////////////////////
                 //Most common configuration properties.
                 this._options = {
                     width: 120,
-                    height: 80,
+                    height: 85,
                     margin: {
-                        top: 35,
+                        top: 40,
                         right: 35,
                         bottom: 45,
                         left: 85
@@ -151,9 +155,9 @@
                     });
                 this._chartArea.call(this._zoom).on("dblclick.zoom", null);
             }
-            
+
             repaint(resetState) {
-                 //The old position of origin point.Needed to update the position of viewpoint after resizing.
+                //The old position of origin point.Needed to update the position of viewpoint after resizing.
                 let oldY = this._yAxis.scale().invert(0);
                 //Calculate new width and height without margins.
                 this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
@@ -196,7 +200,7 @@
                     .extent([[0, 0], [0, this._actualHeight]]);
                 //Unscale nodes
                 this._unscale();
-                
+
                 //Update the container translation in order to remain current translate position when window size was changed
                 let newH = this._yAxis.scale()(oldY);
                 if (resetState) {
@@ -205,7 +209,7 @@
                     this._chartArea.call(this._zoom.translateBy, 0, (0 - newH) / this._currentTransform.k);
                 }
             }
-            
+
             set options(val) {
                 this._options = val ? merge2LevelData(this._options, val) : this._options;
                 this.repaint();
@@ -225,45 +229,56 @@
             }
 
             selectEntity(entity, select) {
-                this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity)).node(), 
-                                   this._barContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity)).node(),
-                                   entity, select);
+                this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity)).node(),
+                    this._barContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity)).node(),
+                    entity, select);
             }
-            
+
             _xDomain() {
                 return this._data.map(d => value(this._options.dataPropertyNames.groupKeyProp, d));
             }
-            
+
             _yDomain() {
-                let maxRange = d3.max(this._data, d => value(this._options.dataPropertyNames.valueProp, d));
-                return [0, maxRange ? maxRange + (0.1 + Math.abs(0.3 - 0.0001 * this._actualHeight)) * maxRange : 0];
+                let minRange = 0;
+                let maxRange = 0;
+                this.data.forEach(d => {
+                    const newValue = value(this._options.dataPropertyNames.valueProp, d);
+                    if (maxRange < newValue) {
+                        maxRange = newValue;
+                    }
+                    if (minRange > newValue) {
+                        minRange = newValue;
+                    }
+                })
+                const factor = (Math.abs(maxRange - minRange) / (this._actualHeight > 30 ? this._actualHeight - 30 : 1)) * 30;
+                return [minRange ? minRange - factor : minRange, maxRange + factor];
             }
-            
+
             _xScale() {
                 return d3.scaleBand()
                     .rangeRound([0, this._actualWidth])
                     .padding(0.1) // could be configurable 
                     .domain(this._xDomain());
             }
-            
+
             _yScale() {
                 return d3.scaleLinear()
                     .range([this._actualHeight, 0])
                     .domain(this._yDomain())
             }
-            
+
             _createXAxis() {
                 return d3.axisBottom(this._xs);
             }
-            
+
             _createYAxis() {
                 return d3.axisLeft(this._ys).ticks(this._options.yAxis.ticks);
             }
-            
+
             _createYGrid() {
                 return this._createYAxis().tickSize(-this._actualWidth).tickFormat("").tickSizeOuter(0);
             }
-            
+
             _createClipPath(container) {
                 return d3.select(container).append('defs').append("clipPath").attr("id", "bar-" + this._options.dataPropertyNames.valueProp + "-clip")
                     .append("rect").attr("width", this._actualWidth).attr("height", this._actualHeight);
@@ -278,16 +293,16 @@
             _createBackground() {
                 return this._chartArea.append("rect").attr("class", "chart-background").attr("width", this._actualWidth).attr("height", this._actualHeight);
             }
-            
+
             _drawYGrid() {
                 console.log(this._yGrid.scale().domain);
                 return this._chartArea.append("g").attr("class", "grid y-grid").call(this._yGrid);
             }
-            
+
             _createBarContainer() {
                 return this._chartArea.append("g").attr("clip-path", "url(#bar-" + this._options.dataPropertyNames.valueProp + "-clip)").append("g").attr("class", "bar-container");
             }
-            
+
             _drawXAxes() {
                 return this._chartArea.append("g").attr("class", "axis x-axis")
                     .attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis);
@@ -296,7 +311,7 @@
             _drawYAxes() {
                 return this._chartArea.append("g").attr("class", "axis y-axis").call(this._yAxis);
             }
-            
+
             _setChartLabelData(chartLabel) {
                 chartLabel.text(this._options.label)
                     .attr("x", this._options.margin.left + this._actualWidth / 2)
@@ -335,21 +350,29 @@
                     .style("alignment-baseline", "hanging")
                     .call(this._setXAxisLabelData.bind(this));
             }
-
+            
+            _setYAxisLabelData(yAxisLabel) {
+                yAxisLabel.text(this._options.yAxis.label).call(this._setYAxisLabelPosition.bind(this));
+            }
+            
             _setYAxisLabelPosition(yAxisLabel) {
                 const axisBox = this._yAxisGroup.node().getBBox();
                 if (axisBox.width !== 0 && axisBox.height !== 0) {
                     yAxisLabel
                         .attr("x", -this._options.margin.top - this._actualHeight / 2)
                         .attr("y", this._options.margin.left - axisBox.width - 10);
+                    //this._fireYAxisLabelWidthChanged(yAxisLabel, axisBox);
                 } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
                     setTimeout(() => this._setYAxisLabelPosition(yAxisLabel), 100);
                 }
             }
 
-            _setYAxisLabelData(yAxisLabel) {
-                yAxisLabel.text(this._options.yAxis.label).call(this._setYAxisLabelPosition.bind(this));
-            }
+             _fireYAxisLabelWidthChanged(label, xAxisBox) {
+                 const labelBox = label.node().getBBox();
+                 if (labelBox.width !== 0 && labelBox.height !== 0) {
+                     
+                 }
+             }
 
             _drawYAxisLabel(container) {
                 return d3.select(container)
@@ -360,7 +383,7 @@
                     .call(this._setYAxisLabelData.bind(this))
                     .attr("transform", "rotate(-90)");
             }
-            
+
             _drawBars() {
                 const self = this;
                 const updateSelection = self._barContainer.selectAll(".bar").data(this._data);
@@ -374,7 +397,7 @@
                 //removed unnedded tasks
                 removeSelection.remove();
             }
-            
+
             _insertNewBar(selection) {
                 const self = this;
                 const newBars = selection.append("rect").attr("class", "bar").on("click", function (d) {
@@ -386,19 +409,25 @@
                     })
                     .call(self._updateBar.bind(self));
             }
-            
+
             _updateBar(selection) {
                 selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
-                
+
                 selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour(this._options.barColour) : this._options.barColour)
                     .attr("selected", d => this._isEntitySelected(d) ? "" : null)
                     .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
-                    .attr("y", d => this._ys(value(this._options.dataPropertyNames.valueProp, d)))
-                    .attr("height", d => this._actualHeight - this._ys(value(this._options.dataPropertyNames.valueProp, d)))
+                    .attr("y", d => {
+                        const yValue = value(this._options.dataPropertyNames.valueProp, d);
+                        if (yValue > 0) {
+                            return this._ys(yValue);
+                        }
+                        return this._ys(0);
+                    })
+                    .attr("height", d => Math.abs(this._ys(value(this._options.dataPropertyNames.valueProp, d)) - this._ys(0)))
                     .attr("width", this._xs.bandwidth())
                     .attr("tooltip-text", this._options.tooltip);
             }
-            
+
             _drawBarLabels() {
                 const self = this;
                 const updateSelection = self._barContainer.selectAll(".marker").data(this._data);
@@ -412,7 +441,7 @@
                 //remove markers
                 removeSelection.remove();
             }
-            
+
             _insertNewMarker(selection) {
                 const self = this;
                 const markerGroup = selection.append("g")
@@ -424,21 +453,28 @@
                 markerGroup.append("text").attr("class", "mark-text").style("text-anchor", "middle")
                 markerGroup.call(this._updateMarker.bind(this));
             }
-            
+
             _updateMarker(selection) {
                 const self = this;
                 selection.attr("id", d => "marker_" + value(this._options.dataPropertyNames.id, d));
-                selection.attr("transform", d => "translate(" 
-                    + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) 
-                    + ", " + (this._ys(value(this._options.dataPropertyNames.valueProp, d)) - 10) + ")")
+                selection.attr("transform", d => {
+                    const newY = value(this._options.dataPropertyNames.valueProp, d);
+                    const increment = newY < 0 ? 10 : -10;
+                    return "translate(" + (this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + this._xs.bandwidth() / 2) + ", " + (this._ys(newY) + increment) + ")"})
                     .attr("selected", d => this._isEntitySelected(d) ? "" : null);
                 selection.each(function (d) {
                     let rect = d3.select(this).select(".mark-rect");
-                    let text = d3.select(this).select(".mark-text").text(self._options.barLabel(d));
+                    let text = d3.select(this).select(".mark-text").style("alignment-baseline", d => {
+                        const newY = value(self._options.dataPropertyNames.valueProp, d);
+                        if (newY < 0) {
+                            return "hanging";
+                        }
+                        return "auto";
+                    }).text(self._options.barLabel(d));
                     self._updateMarkerPosition(rect, text);
                 });
             }
-            
+
             _updateMarkerPosition(rect, text) {
                 let textBox = text.node().getBBox();
                 if (textBox.width !== 0 && textBox.height !== 0) {
@@ -447,11 +483,11 @@
                     setTimeout(() => this._updateMarkerPosition(rect, text), 100);
                 }
             }
-            
+
             _isEntitySelected(entity) {
                 return !!this._selectedEntities.find(selectedEntity => value(this._options.dataPropertyNames.id, selectedEntity) === value(this._options.dataPropertyNames.id, entity));
             }
-            
+
             _selectEntity(bar, marker, entity, select, fireEvent) {
                 if (entity) {
                     const entityIndex = this._selectedEntities.findIndex(selectedEntity => value(this._options.dataPropertyNames.id, selectedEntity) === value(this._options.dataPropertyNames.id, entity));
@@ -477,13 +513,13 @@
                     }
                 }
             }
-            
+
             _selectBar(bar, marker, entity, select) {
                 const indexOfBar = this._selectedBars.indexOf(bar);
                 d3.select(bar).style("fill", select ? this._options.selectedColour(this._options.barColour) : this._options.barColour)
-                              .attr("selected", select ? "" : null);
+                    .attr("selected", select ? "" : null);
                 d3.select(marker).attr("selected", select ? "" : null);
-                
+
                 if (select) {
                     if (indexOfBar < 0) {
                         this._selectedBars.push(bar);
@@ -494,7 +530,7 @@
                     }
                 }
             }
-            
+
             _unscale() {
                 const elementsToRemove = [];
                 this._elemToUnscale.forEach(el => {
@@ -510,8 +546,10 @@
                     }
                 });
             }
-            
+
             _unscaleElement(el) {
+                const dataValue = value(this._options.dataPropertyNames.valueProp, d3.select(el).datum());
+                const translationFromTopOfBar = dataValue < 0 ? -10 : 10;
                 if (el.parentElement) {
                     let xf;
                     if (el.transform.baseVal.length < 2) {
@@ -524,7 +562,7 @@
                     }
                     let m = this._chartArea.node().getTransformToElement(el.parentNode);
                     m.e = 0; // Ignore (preserve) any translations done up to this point
-                    m.f = 10 * (1 - m.d);
+                    m.f = translationFromTopOfBar * (1 - m.d);
                     xf.setMatrix(m);
                 } else {
                     return el;
