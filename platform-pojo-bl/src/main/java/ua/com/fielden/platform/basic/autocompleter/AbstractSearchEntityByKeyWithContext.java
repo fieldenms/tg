@@ -18,12 +18,10 @@ import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * Key based value matcher, which supports context assignment.
@@ -91,12 +89,12 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     
     @Override
     public List<T> findMatches(final String searchString) {
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize());
+        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize());
+        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize()).data();
     }
 
     @Override
@@ -123,5 +121,4 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     public Integer getPageSize() {
         return pageSize;
     }
-
 }

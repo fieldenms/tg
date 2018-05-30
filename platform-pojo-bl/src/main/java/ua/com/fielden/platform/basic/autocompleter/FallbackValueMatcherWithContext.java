@@ -33,7 +33,6 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
 
     public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
         super(co);
-
         entityType = co.getEntityType();
         this.activeOnly = activeOnly;
         if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
@@ -52,7 +51,8 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
         final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
 
-        final ConditionModel secondStepSearchCriteria = hasDescProperty(entityType) ? cond().condition(originalSearchCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : originalSearchCriteria;
+        final ConditionModel secondStepSearchCriteria = "%".equals(searchString) ? cond().val(1).eq().val(1).model() : 
+        	(hasDescProperty(entityType) ? cond().condition(originalSearchCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : originalSearchCriteria);
 
         final ConditionModel finalStepSearchCriteria = activeOnly ? cond().condition(secondStepSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : secondStepSearchCriteria;
 
@@ -61,7 +61,7 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
-    	if (hasDescProperty(entityType)) {
+    	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
     		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
     	} 
         return super.makeOrderingModel(searchString);

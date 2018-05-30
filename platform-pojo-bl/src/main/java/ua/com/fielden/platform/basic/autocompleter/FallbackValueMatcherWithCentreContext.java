@@ -27,7 +27,6 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
 
     public FallbackValueMatcherWithCentreContext(final IEntityDao<T> co) {
         super(co);
-
         entityType = co.getEntityType();
     }
 
@@ -38,7 +37,11 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
 
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
-        if (hasDescProperty(entityType)) {
+        if ("%".equals(searchString)) {
+        	return cond().val(1).eq().val(1).model();
+        }
+    	
+    	if (hasDescProperty(entityType)) {
             return cond().prop(KEY).iLike().val(searchString).or().prop(DESC).iLike().val("%" + searchString).model();
         } else {
             return super.makeSearchCriteriaModel(context, searchString);
@@ -47,7 +50,7 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
 
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
-    	if (hasDescProperty(entityType)) {
+    	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
     		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
     	} 
         return super.makeOrderingModel(searchString);
