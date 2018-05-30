@@ -110,7 +110,7 @@
             </paper-scroll-header-panel>
             <paper-scroll-header-panel main fixed class="relative">
                 <div>
-                    <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
+                    <iron-pages id="mainPages" attr-for-selected="data-route" selected="[[sectionRoute]]">
                         <content select=".menu-item-section"></content>
                     </iron-pages>
                 </div>
@@ -259,11 +259,34 @@
     				null, null, this.getMasterEntity);
                 return contextHolder;
             }).bind(self);
+            
+            // Need to switch actual dom nodes (main and drawer inside paper-drawer-panel) to facilitate desired order of keyboard focusing: menu first, main content second.
+            // This is dependent on paper-drawer-panel implementation and need to be carefully synchronised in case where paper-drawer-panel element upgrade occurs.
+            Polymer.dom(this.$.paperDrawerPanel.$$('iron-selector')).insertBefore(this.$.paperDrawerPanel.$.drawer, this.$.paperDrawerPanel.$.main);
+            Polymer.dom.flush();
+            
+            // add event listeners for 'binding-entity-appeared' / 'egi-entities-appeared'
+            const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
+            const resultsAppearedEvent = resultsName + '-appeared';
+            const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
+            
+            this.addEventListener('binding-entity-appeared', this._focusFocusableElement);
+            this.addEventListener('binding-entity-did-not-appear', this._focusFocusableElement);
+            this.addEventListener('egi-entities-appeared', this._focusFocusableElement);
+            this.addEventListener('egi-entities-did-not-appear', this._focusFocusableElement);
+            
             // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
             this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
             //Configure the profile mobile or desktop
             this.mobile = this.$.appConfig.mobile;
         }, // end of ready 
+        
+        _focusFocusableElement: function () {
+            const currentSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+            if (this.isMasterWithMaster(currentSection)) {
+                
+            }
+        },
         
         attached: function () {
         	var self = this;
@@ -451,6 +474,25 @@
          *
          * @param section
          */
+        isMasterWithMaster: function (section) {
+            if (section
+                && section._element
+                && section._element.masterWithMaster
+                && section._element.$.loader
+                && section._element.$.loader.loadedElement
+            ) {
+                const embeddedMaster = section._element.$.loader.loadedElement;
+                return true;
+            }
+            return false;
+        },
+        
+        /**
+         * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+         * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
+         *
+         * @param section
+         */
         isMasterWithMasterAndNonPersisted: function (section) {
             if (section
                 && section._element
@@ -483,7 +525,7 @@
             if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
                 oldSection._element.removeOwnKeyBindings();
             }
- 			action._run();
- 		}
+            action._run();
+        }
     });
 </script>
