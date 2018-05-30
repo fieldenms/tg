@@ -53,9 +53,14 @@
             chartArea.dispatchEvent(event);
         };
         
-//        const fireLabelPlacedEvent = (eventName, newRequiredMargin, chartArea) => {
-//            
-//        }
+        const fireLabelPlacedEvent = (eventName, newRequiredMargin, chartArea) => {
+            const event = new CustomEvent(eventName, {
+                detail: newRequiredMargin,
+                bubbles: true,
+                cancelable: true
+            });
+            chartArea.dispatchEvent(event);
+        }
 
         class BarChart {
 
@@ -63,13 +68,13 @@
                 //////////////////////Private variables can be configured through the api//////////////////////////
                 //Most common configuration properties.
                 this._options = {
-                    width: 120,
+                    width: 35,
                     height: 85,
                     margin: {
                         top: 40,
                         right: 35,
                         bottom: 45,
-                        left: 85
+                        left: 0
                     },
                     label: "",
                     xAxis: {
@@ -361,16 +366,16 @@
                     yAxisLabel
                         .attr("x", -this._options.margin.top - this._actualHeight / 2)
                         .attr("y", this._options.margin.left - axisBox.width - 10);
-                    //this._fireYAxisLabelWidthChanged(yAxisLabel, axisBox);
+                    this._fireYAxisLabelWidthChanged(yAxisLabel.node(), axisBox);
                 } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
                     setTimeout(() => this._setYAxisLabelPosition(yAxisLabel), 100);
                 }
             }
 
-             _fireYAxisLabelWidthChanged(label, xAxisBox) {
-                 const labelBox = label.node().getBBox();
+             _fireYAxisLabelWidthChanged(label, yAxisBox) {
+                 const labelBox = label.getBBox();
                  if (labelBox.width !== 0 && labelBox.height !== 0) {
-                     
+                     fireLabelPlacedEvent("y-axis-label-positioned", yAxisBox.width + labelBox.height + 20, this._chartArea.node());
                  }
              }
 
@@ -445,12 +450,21 @@
             _insertNewMarker(selection) {
                 const self = this;
                 const markerGroup = selection.append("g")
-                    .attr("class", "marker")
-                    .each(function () {
-                        self._elemToUnscale.push(this);
-                    });
+                    .attr("class", "marker");
                 markerGroup.append("rect").attr("class", "mark-rect");
-                markerGroup.append("text").attr("class", "mark-text").style("text-anchor", "middle")
+                markerGroup.append("text").attr("class", "mark-text").style("text-anchor", "middle");
+                //Observing style and class changes
+                markerGroup.each(function () {
+                    const group = d3.select(this);
+                    const observer = new MutationObserver(mutations => self._updateMarkerPosition(group.select(".mark-rect"), group.select(".mark-text")));
+                    observer.observe(this, {
+                        attributes: true,
+                        subtree: true,
+                        attributeFilter: ["class", "style"]
+                    });
+                    //Add to unsclable node in order to prevent zooming
+                    self._elemToUnscale.push(this);
+                });
                 markerGroup.call(this._updateMarker.bind(this));
             }
 
