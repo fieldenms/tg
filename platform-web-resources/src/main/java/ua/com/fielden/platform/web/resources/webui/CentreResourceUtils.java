@@ -427,7 +427,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
         validationPrototype.setFreshCentreSupplier(() -> updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
-        validationPrototype.setDefaultCentreSupplier(() -> getDefaultCentre(gdtm, miType));
+        validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);

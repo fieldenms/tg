@@ -670,6 +670,41 @@ public class CentreUpdater {
     }
     
     /**
+     * Returns the centre from which the specified centre is derived from. Parameters <code>saveAsName</code>, <code>device</code> and current user (<code>gdtm.getUserProvider().getUser()</code>) identify the centre for which
+     * base centre is looking for.
+     * <p>
+     * For non-base user the base centre is identified as SAVED_CENTRE_NAME version of <code>gdtm.basedOnManager()</code>'s centre of the same <code>saveAsName</code>. 
+     * For base user the base centre is identified as <code>gdtm.basedOnManager()</code>'s <code>getDefaultCentre()</code>. 
+     *
+     * @param gdtm
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static ICentreDomainTreeManagerAndEnhancer baseCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device) {
+        return baseCentre0(gdtm, miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device), saveAsName, device);
+    }
+    private static ICentreDomainTreeManagerAndEnhancer baseCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final Optional<String> saveAsName, final DeviceProfile device) {
+        synchronized (gdtm) {
+            final User currentUser = gdtm.getUserProvider().getUser();
+            final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType);
+            if (currentUser.isBase()) {
+                return defaultCentre;
+            } else { // non-base user
+                final IGlobalDomainTreeManager basedOnManager = gdtm.basedOnManager().get();
+                // insert appropriate user into IUserProvider for a very brief period of time to facilitate 'updateCentre' call against basedOnManager
+                basedOnManager.getUserProvider().setUser(basedOnManager.coUser().findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), currentUser.getBasedOnUser()));
+                // update and retrieve saved version of centre config from basedOn user
+                final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, saveAsName, device);
+                // return currentUser into user provider
+                basedOnManager.getUserProvider().setUser(currentUser);
+                return basedOnCentre;
+            }
+        }
+    }
+    
+    /**
      * Initialises 'virtual' (should never be persistent) centre -- caches it on the server (into currentCentres only).
      *
      * @param gdtm
