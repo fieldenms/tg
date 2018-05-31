@@ -227,7 +227,8 @@
              * Obtains a value of the specified by name property for the passed in entity.
              */
             _propValueByName: function (entity, propName) {
-                return this.reflector.convert(entity.get(propName)) + '';
+                const propValue = this.reflector.convert(entity.get(propName));
+                return (propValue === null ? '' : propValue) + '';
             },
             
             /**
@@ -333,7 +334,7 @@
 
 				
 				// add prop value
-				let propValueAsString = this._propValueByName(v, propName);
+				const propValueAsString = this._propValueByName(v, propName);
 				if (highlight === false) {
 					html = html + propValueAsString;
 				} else {
