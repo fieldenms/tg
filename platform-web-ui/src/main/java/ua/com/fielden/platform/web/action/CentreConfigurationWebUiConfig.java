@@ -96,12 +96,13 @@ public class CentreConfigurationWebUiConfig {
                                         + "const editor = self.$.masterDom.querySelector('[id=editor_4_customisableColumns]');\n"
                                         + "editor._originalChosenIds = null; // this should trigger full refresh \n"
                                         + "editor.entity.setAndRegisterPropertyTouch('chosenIds', functionalEntity.get('defaultVisibleProperties'));\n"
-                                        + "editor.entity.sortingVals = functionalEntity.get('defaultSortingVals');\n"
+                                        + "editor.entity.setAndRegisterPropertyTouch('sortingVals', functionalEntity.get('defaultSortingVals'));\n"
                                         + "editor._invokeValidation.bind(editor)();\n"
                                     ))
                         .shortDesc("Default")
                         .longDesc("Load default configuration")
                         .shortcut("ctrl+d")
+                        .withNoParentCentreRefresh() // avoid refreshing of parent centres; 'Default' button just loads default configuration but it should be either applied or canceled
                         .build())
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
