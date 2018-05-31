@@ -16,9 +16,10 @@ import java.util.Map;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
@@ -44,26 +45,14 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     }
 
     /**
-     * This method may be overriden to create a different start of EQL.
+     * This method may be overridden to create a different EQL condition model for search criteria.
      *
      * @param context
      * @param searchString
      * @return
      */
-    protected ICompoundCondition0<T> startEqlBasedOnContext(final CONTEXT context, final String searchString) {
-        return select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
-    }
-
-    /**
-     * This method may be overridden to enhance the resulting query based on the provided context.
-     *
-     * @param context
-     * @param searchString
-     * @param incompleteEql
-     * @return
-     */
-    protected EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final String searchString, final ICompoundCondition0<T> incompleteEql) {
-        return incompleteEql.model();
+    protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
+        return createSearchByKeyCriteriaModel(searchString);
     }
 
     /**
@@ -84,31 +73,28 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
      *
      * @return alternative ordering model
      */
-    protected OrderingModel makeOrderingModel() {
+    protected OrderingModel makeOrderingModel(final String searchString) {
         return orderBy().prop(KEY).asc().model();
     }
 
-    @Override
-    public List<T> findMatches(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
-        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
+    private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
+        final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
+        final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(companion.getEntityType()).where().condition(searchCriteria).model() : select(companion.getEntityType()).model();
         queryModel.setFilterable(true);
-        final OrderingModel ordering = makeOrderingModel();
+        final OrderingModel ordering = makeOrderingModel(searchString);
         final Map<String, Object> params = new HashMap<>();
         fillParamsBasedOnContext(getContext(), params);
-        return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).with(params).lightweight().model(), getPageSize());
+        return from(queryModel).with(ordering).with(params).lightweight();
     }
-
+    
+    @Override
+    public List<T> findMatches(final String searchString) {
+        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
+    }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = startEqlBasedOnContext(getContext(), searchString);
-        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
-        queryModel.setFilterable(true);
-        final OrderingModel ordering = makeOrderingModel();
-        final Map<String, Object> params = new HashMap<>();
-        fillParamsBasedOnContext(getContext(), params);
-        return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).with(params).lightweight().model(), getPageSize());
+        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize()).data();
     }
 
     @Override
@@ -135,5 +121,4 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     public Integer getPageSize() {
         return pageSize;
     }
-
 }
