@@ -69,6 +69,7 @@ import ua.com.fielden.platform.utils.MiscUtilities;
  */
 public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
+    public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
     
@@ -93,7 +94,7 @@ public class EntityResourceUtils {
      * @return
      */
     public static boolean isNonConflicting(final Warning warning) {
-        return !CONFLICT_WARNING.equals(warning.getMessage());
+        return !CONFLICT_WARNING.equals(warning.getMessage()) && !CENTRE_CONFIG_CONFLICT_WARNING.equals(warning.getMessage());
     }
     
     /**

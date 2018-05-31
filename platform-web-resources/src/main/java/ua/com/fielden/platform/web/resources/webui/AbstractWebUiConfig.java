@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.centre.CentreUpdater.clearAllCentres;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +32,6 @@ import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
-import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -104,9 +105,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig).master)
+        // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterDefaultAction)
-        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater);// centre configuration management
+        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigEditActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);
     }
 
     @Override
@@ -215,18 +221,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public Workflows workflow() {
         return workflow;
     }
-
+    
     @Override
-    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm, final DeviceProfile device) {
+    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
         logger.error("Clearing configurations...");
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
-
-        logger.error(String.format("Clearing centres for user [%s] and device [%s]...", gdtm.getUserProvider().getUser(), device));
-        CentreUpdater.clearAllCentres(gdtm, device);
-        logger.error(String.format("Clearing centres for user [%s] and device [%s]...done", gdtm.getUserProvider().getUser(), device));
+        
+        logger.error(String.format("Clearing centres for user [%s] and both devices (DESKTOP and MOBILE)...", gdtm.getUserProvider().getUser()));
+        clearAllCentres(gdtm);
+        logger.error(String.format("Clearing centres for user [%s] and both devices (DESKTOP and MOBILE)...done", gdtm.getUserProvider().getUser()));
     }
     
     @Override

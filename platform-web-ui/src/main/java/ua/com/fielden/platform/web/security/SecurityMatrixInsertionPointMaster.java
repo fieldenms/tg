@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.security;
 
+import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostAction;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostActionError;
+
 import java.util.LinkedHashSet;
 import java.util.Optional;
 
@@ -12,6 +16,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
@@ -24,6 +29,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatrixInsertionPoint> {
 
     private final IRenderable renderable;
+    private final DefaultEntityAction realodActionConfig;
 
     public SecurityMatrixInsertionPointMaster() {
 
@@ -55,6 +61,11 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("prop-desc", "Display user roles those matched entered text")
                 .attr("current-state", "[[currentState]]");
 
+        realodActionConfig = new DefaultEntityAction(SAVE.name(), getPostAction(SAVE), getPostActionError(SAVE));
+        realodActionConfig.setShortDesc("Reload");
+        realodActionConfig.setLongDesc("Cancels changes and reloads security matrix");
+        final DomElement reloadAction = realodActionConfig.render().attr("id", "reloadAction");
+
         final DomElement securityMatrix = new DomElement("tg-security-matrix")
                 .attr("id", "securityMatrix")
                 .attr("entity", "{{_currBindingEntity}}")
@@ -66,7 +77,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("is-centre-running", "[[isCentreRunning]]")
                 .attr("uuid", "[[centreUuid]]")
                 .attr("lock", "[[lock]]")
-                .add(tokenFilter, roleFilter);
+                .add(tokenFilter, roleFilter, reloadAction);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
@@ -87,7 +98,8 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
     }
 
     private String readyCallback() {
-        return "self.classList.remove('canLeave');\n"
+        return realodActionConfig.code().toString() + "\n"
+                +"self.classList.remove('canLeave');\n"
                 + "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
                 + "self._masterDom().classList.add('layout');\n"
@@ -157,7 +169,6 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
     public IRenderable render() {
         return renderable;
     }
-
 
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {

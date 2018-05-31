@@ -36,7 +36,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class PropertyTypeDeterminator {
-    private static final String PROPERTY_SPLITTER = ".";
+    public static final String PROPERTY_SPLITTER = ".";
     public static final String ERR_TYPE_AND_PROP_REQUIRED = "Property type cannot be determined without both property name and owning type specified.";
 
     /**

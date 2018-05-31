@@ -56,8 +56,10 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
         entity.setTokens(tokenEntities);
         final ISecurityRoleAssociation coTokenRoleAssociation = co(SecurityRoleAssociation.class);
         final Map<String, List<Long>> tokenRoleMap = coTokenRoleAssociation.findAllAssociations().entrySet().stream().collect(toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().stream().map(UserRole::getId).collect(toList())));
-        entity.setTokenRoleMap(tokenRoleMap);
-        entity.setCalculated(true);
+        entity.setTokenRoleMap(tokenRoleMap)
+              .setCalculated(true)
+              .setRoleFilter("")
+              .setTokenFilter("");
         return super.save(entity);
     }
 

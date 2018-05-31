@@ -46,6 +46,28 @@
         e.cancelBubble = true;
         e.returnValue = false;
     };
+    
+    /**
+     * Makes color lighter or darker depending on whether lum parameter is greater or less then 0.
+     */
+    const shadeColor = function (hex, lum) {
+        if (hex != null) {
+            hex = String(hex).replace(/[^0-9a-f]/gi, '');
+            if (hex.length < 6) {
+                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            }
+            lum = lum || 0;
+            var c, i, rgb = "#";
+            for (i = 0; i < 3; i++) {
+                c = parseInt(hex.substr(i * 2, 2), 16);
+                c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                rgb += ("00" + c).substr(c.length);
+            }
+            return rgb;
+        } else {
+            return hex;
+        }
+    };
 
     /**
      * The class that can be used like an entity for entity grid inspector or any other place.

@@ -58,7 +58,8 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         entity.getProperty("cosStaticallyRequired").setRequired(false);
         entity.getProperty("cosStaticallyRequiredWithDefaultValue").setRequired(false);
         entity.getProperty("cosStaticallyRequiredWithNonEmptyDefaultValue").setRequired(false);
-        if (!entity.isPersisted()) {
+        final boolean wasPersisted = entity.isPersisted();
+        if (!wasPersisted) {
             final Date dateValue = entity.getDateProp();
             if (dateValue != null && new DateTime(2003, 2, 1, 6, 20).equals(new DateTime(dateValue))) {
                 throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:20] date is not permitted."));
@@ -97,7 +98,14 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
-
+        
+        if (!wasPersisted) {
+            final Date dateValue = saved.getDateProp();
+            if (dateValue != null && new DateTime(2003, 2, 1, 6, 22).equals(new DateTime(dateValue))) {
+                throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:22] date is not permitted."));
+            }
+        }
+        
         // if the entity was new and just successfully saved then let's return a new entity to mimic "continuous" entry
         // otherwise simply return the same entity
         if (wasNew && saved.isValid().isSuccessful()) {

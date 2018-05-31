@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
+import static java.util.Optional.empty;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -303,7 +304,7 @@ public class FactoryForTestingEntities {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
                     cl.startModification(entityType.getName())
                     .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType, empty()))
                 .endModification();
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);
@@ -318,7 +319,7 @@ public class FactoryForTestingEntities {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
                     cl.startModification(entityType.getName())
                     .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType, empty()))
                 .endModification();
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);

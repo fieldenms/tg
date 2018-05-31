@@ -1695,6 +1695,13 @@
                 }
             }
             return context;
+        },
+        
+        /**
+         * Returns URI-fashined identification key for the centre.
+         */
+        _centreKey: function (miType, saveAsName) {
+            return miType + '/default' + saveAsName;
         }
     });
 })();    

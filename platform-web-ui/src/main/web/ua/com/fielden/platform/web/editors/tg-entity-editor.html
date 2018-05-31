@@ -64,7 +64,12 @@
             <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
-            <div class="input-layer"><span>[[_formatKey(entity)]]</span><span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>
+            <div class="input-layer">
+                <template is="dom-repeat" items="[[_customPropTitle]]">
+                    <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem;"><span>[[item.title]]</span>:  </span>
+                    <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
+                </template>
+                <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>
             </div>
             <content class=".property-action"></content>
         </tg-editor>
@@ -160,7 +165,7 @@
                 },
 
                 /**
-                 * The type that identifies the master (entity type) or centre (miType).
+                 * The type that identifies the master (entity type) or centre (miType + saveAsName).
                  */
                 autocompletionType: {
                     type: String
@@ -349,6 +354,8 @@
                     type: Function
                 }
             },
+            
+            observers: ["_changeTitle(entity)"],
 
             ready: function () {
                 var result = this.$.result;
@@ -754,22 +761,74 @@
                     } else if (typeof valueToFormat === 'string'){
                         return "<b>" + valueToFormat + "</b>";
                     } else if (this.reflector().isEntity(valueToFormat)) {
-                        return "<b>" + this.reflector().convert(valueToFormat) + "</b>" + (valueToFormat.get('desc') ? "<br>" + valueToFormat.get('desc') : "");
+                        return this._createEntityTooltip(valueToFormat)
                     } else {
                         return '';
                     }
                 }
                 return '';
             },
-
-            _formatKey: function (entity) {
+            
+            _createEntityTooltip: function (entity) {
+                const titles = this._createEntityTitleObject(entity);
+                if (titles.length === 1) {
+                    return "<b>" + this.reflector().convert(entity) + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+                } else {
+                    return "<table style='border-collapse: collapse;'>" +
+                        titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
+                    "</table>"  + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+                }
+            },
+            
+            _changeTitle: function (entity) {
+                this._customPropTitle = this._createTitleObject(entity);
+            },
+            
+            _valueStyle: function (item, index) {
+                if (this._customPropTitle && this._customPropTitle.length > 1) {
+                    if (index < this._customPropTitle.length - 1) {
+                        return "padding-right: 5px";
+                    }
+                }
+                return "";
+            },
+            
+            _createTitleObject: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
                     if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                        return this.reflector().convert(entityValue);
+                        return this._createEntityTitleObject(entityValue);
                     }
                 }
-                return '';
+                return [{value: ""}];
+            },
+            
+            _createEntityTitleObject: function (entity) {
+                if (entity.type().isCompositeEntity()) {
+                    return this._createCompositeTitle(entity);
+                }
+                return this._createSimpleTitle(entity);
+            },
+            
+            _createCompositeTitle: function (entityValue) {
+                const titles = [];
+                const entityType = entityValue.type();
+                entityType.compositeKeyNames().forEach(keyName => {
+                    if (entityValue.get(keyName)) {
+                        titles.push({
+                            title: entityType.prop(keyName).title(),
+                            value: this.reflector().convert(entityValue.get(keyName))
+                        });
+                    }
+                });
+                if (titles.length === 1) {
+                    return [{value: titles[0].value}];
+                }
+                return titles;
+            },
+            
+            _createSimpleTitle: function (entityValue) {
+                return [{value: this.reflector().convert(entityValue)}];
             },
 
             _hasDesc: function (entity) {

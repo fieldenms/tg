@@ -26,7 +26,7 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityCritAuto
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("autocompletion-type", "[[miType]]");
+        attrs.put("autocompletion-type", "[[_computeCentreIdentifier(miType, saveAsName)]]");
 
         attrs.put("as-part-of-entity-master", false);
         addCentreContextBindings(attrs, centreContextConfig);

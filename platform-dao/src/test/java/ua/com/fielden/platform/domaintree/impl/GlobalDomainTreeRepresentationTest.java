@@ -58,7 +58,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
     }
 
     private GlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
-        return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItem.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfig.class), getInstance(IEntityLocatorConfig.class)) {
+        return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItem.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfig.class), getInstance(IEntityLocatorConfig.class), getInstance(IUser.class)) {
             @Override
             protected void validateMenuItemType(final Class<?> menuItemType) { // no menu item validation due to non-existence of MiWithConfigurationSupport at platform-dao (it exists only on platform-ui level)
             }
