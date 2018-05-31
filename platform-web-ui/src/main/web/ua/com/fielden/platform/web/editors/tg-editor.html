@@ -41,6 +41,9 @@
         #input-container[has-layer]:not([focused])::content .input-layer {
             display: inherit;
         }
+        #input-container::content .input-layer {
+            color: var(--paper-input-container-input-color, --primary-text-color);
+        }
         #input-container[has-layer][disabled]::content .custom-input,
         #input-container[has-layer]:not([focused])::content .custom-input {
             opacity: 0;

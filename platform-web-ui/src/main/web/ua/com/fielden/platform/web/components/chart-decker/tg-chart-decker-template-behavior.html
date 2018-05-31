@@ -3,6 +3,7 @@
 <link rel="import" href="/app/tg-app-config.html">
 
 <link rel="import" href="/resources/master/tg-entity-master-template-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <script>
     (function () {
@@ -24,9 +25,56 @@
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgChartDeckerTemplateBehaviorImpl = {
 
+            properties: {
+                actions: Array,
+                charts: Array,
+                centreSelection: {
+                    type: Object,
+                    observer: "_centreSelectionChanged"
+                }
+            },
+
             ready: function () {
                 this.appConfig = document.createElement("tg-app-config");
                 this.actions = this._masterDom().querySelectorAll(".chart-action");
+                this.charts = this._masterDom().querySelectorAll(".chart-deck");
+                this._chartLeftMargins = [];
+                this.charts.forEach((chart, index) => {
+                    chart.addEventListener("bar-entity-selected", this._entitySelectedListener.bind(this));
+                    chart.addEventListener("y-axis-label-positioned", this._alignCharts(index))
+                });
+            },
+
+            _alignCharts: function (index) {
+                return function (event) {
+                    if (!this._chartLeftMargins[index]) {
+                        this._chartLeftMargins[index] = event.detail;
+                        let allDefined = true;
+                        this.charts.forEach((chart, index) => {
+                            if (!this._chartLeftMargins[index]) {
+                                allDefined = false;
+                            }
+                        });
+                        if (allDefined) {
+                            const maxLeftMargin = Math.max.apply(null, this._chartLeftMargins);
+                            if (!this._lastLeftMargin || maxLeftMargin !== this._lastLeftMargin) {
+                                this._lastLeftMargin = maxLeftMargin;
+                                this.charts.forEach(chart => chart.options = {
+                                    margin: {
+                                        left: this._lastLeftMargin
+                                    }
+                                });
+                            }
+                            this._chartLeftMargins = [];
+                        }
+                    }
+                }.bind(this);
+            },
+
+            _entitySelectedListener: function (event) {
+                const target = this.customEventTarget || this;
+                target.fire("tg-entity-selected", event.detail);
+                tearDownEvent(event);
             },
 
             _moneyPropAccessor: function (propertyName) {
@@ -54,7 +102,7 @@
                     return tooltip;
                 }.bind(this);
             },
-            
+
             _click: function (chartIndex) {
                 return function (entity) {
                     this.actions[chartIndex].currentEntity = entity;
@@ -74,6 +122,14 @@
                     const metaProp = this._reflector().getEntityTypeProp(entity, property);
                     return this._reflector().formatMoney(entity.get(property), this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 }
+            },
+
+            _centreSelectionChanged: function (newSelection, oldSelection) {
+                newSelection.entities.forEach(selectionEntity => this.selectChartEntity(selectionEntity.entity, selectionEntity.select));
+            },
+
+            selectChartEntity: function (entity, select) {
+                this.charts.forEach(chart => chart.selectEntity(entity, select));
             }
 
         };
