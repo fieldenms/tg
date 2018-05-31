@@ -186,7 +186,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final ICompanionObjectFinder coFinder;
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
-    private ICentreDomainTreeManagerAndEnhancer defaultCentre;
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
@@ -761,10 +760,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer getDefaultCentre() {
-        if (defaultCentre == null) {
-            defaultCentre = createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
-        }
-        return defaultCentre;
+        return createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
     }
 
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
