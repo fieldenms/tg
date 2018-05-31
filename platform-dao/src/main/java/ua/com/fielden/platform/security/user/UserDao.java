@@ -243,7 +243,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public boolean isPasswordStrong(final String passwd) {
         final Zxcvbn zxcvbn = new Zxcvbn();
         final Strength strength = zxcvbn.measure(passwd);
-        final double strengthTarget = 1 /* years */ * 90 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */;
+        final double strengthTarget = (1 * 365 /* years */ + 90 /* days */ ) * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */;
         final double secondsToCrack = strength.getCrackTimeSeconds().getOnlineNoThrottling10perSecond();
         return strengthTarget <= secondsToCrack;
     }
