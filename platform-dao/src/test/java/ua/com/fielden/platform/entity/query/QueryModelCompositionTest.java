@@ -341,7 +341,36 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
         final OrderingModel orderModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().prop("key").desc().model();
         final EntQuery act = entResultQry(qry, orderModel);
-        System.out.println(act.sql());
+
+        final List<OrderBy> orderings = new ArrayList<OrderBy>();
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
+        orderings.add(new OrderBy(prop("key"), true));
+        final OrderBys exp2 = new OrderBys(orderings);
+        assertEquals("models are different", exp2, act.getOrderings());
+    }
+    
+    @Test
+    public void test_query_ordering_with_standalone_order_model_combined_with_usual_order_by() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
+        final OrderingModel orderSubModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().model();
+
+        final OrderingModel orderModel = orderBy().order(orderSubModel).prop("key").desc().model();
+        final EntQuery act = entResultQry(qry, orderModel);
+
+        final List<OrderBy> orderings = new ArrayList<OrderBy>();
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
+        orderings.add(new OrderBy(prop("key"), true));
+        final OrderBys exp2 = new OrderBys(orderings);
+        assertEquals("models are different", exp2, act.getOrderings());
+    }
+    
+    @Test
+    public void test_query_ordering_with_standalone_order_model_only() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
+        final OrderingModel orderSubModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().prop("key").desc().model();
+
+        final OrderingModel orderModel = orderBy().order(orderSubModel).model();
+        final EntQuery act = entResultQry(qry, orderModel);
 
         final List<OrderBy> orderings = new ArrayList<OrderBy>();
         orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
