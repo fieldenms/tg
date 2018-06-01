@@ -647,11 +647,11 @@ public class CentreUpdater {
                     final ICentreDomainTreeManagerAndEnhancer basedOnCentre = updateCentre(basedOnManager, miType, SAVED_CENTRE_NAME, saveAsName, device);
                     // find description of the centre configuration to be copied from
                     final String upstreamDesc = updateCentreDesc(basedOnManager, miType, saveAsName, device);
+                    // creates differences centre from the differences between 'default centre' and 'basedOnCentre'
+                    final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, getDefaultCentre(basedOnManager, miType), getEntityType(miType), globalManager);
                     // return currentUser into user provider
                     basedOnManager.getUserProvider().setUser(currentUser);
                     
-                    // creates differences centre from the differences between 'default centre' and 'basedOnCentre'
-                    final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(basedOnCentre, defaultCentre, getEntityType(miType), globalManager);
                     // promotes diff to local cache and saves it into persistent storage
                     initCentre(globalManager, miType, null, differencesCentre);
                     globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, upstreamDesc);
