@@ -3,6 +3,8 @@ package ua.com.fielden.platform.reflection;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Method;
@@ -11,6 +13,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -21,6 +24,7 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
@@ -131,6 +135,16 @@ public class TitlesDescsGetter {
         final boolean containsDesc = DESC.equals(propertyName) || propertyName.endsWith("." + DESC);
         
         if (!containsKey && !containsDesc) {
+            if (isDotNotation(propertyName)) {
+                final String propName = firstAndRest(propertyName).getKey();
+                final Optional<Subtitles> subtitles = getPropertyAnnotationOptionally(Subtitles.class, entityType, propName);
+                final Optional<Pair<String, String>> pathTitle = subtitles.flatMap(sub -> Stream.of(sub.value()).filter(pt -> (propName + "." + pt.path()).equals(propertyName)).findFirst().map(pt -> Pair.pair(pt.title(), pt.desc()))); 
+
+                if (pathTitle.isPresent()) {
+                    return pathTitle.get();
+                }
+            }
+            
             return getPropertyAnnotationOptionally(Title.class, entityType, propertyName)
                    .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
                    .orElseGet(() -> getTitleAndDescOfPropertyType(propertyName, entityType).map(p -> pair(p.getKey(), p.getKey())).orElse(EMPTY_TITLE_AND_DESC));

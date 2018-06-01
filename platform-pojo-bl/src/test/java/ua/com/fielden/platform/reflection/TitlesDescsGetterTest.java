@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
+import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntityPathDependentTitles;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -85,7 +86,6 @@ public class TitlesDescsGetterTest {
         assertEquals(entityTitleAndDesc.getKey(), propTitleAndDesc.getValue());
     }
 
-    
     @Test
     public void getTitleAndDescOfPropertyType_can_determine_title_and_desc_of_entity_type_by_property_path() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("critOnlyAEProperty", FirstLevelEntity.class);
@@ -94,11 +94,20 @@ public class TitlesDescsGetterTest {
         assertEquals("Simple Entity", titleAndDesc.get().getKey());
         assertEquals("Simple Entity entity", titleAndDesc.get().getValue());
     }
-    
+
     @Test
     public void getTitleAndDescOfPropertyType_returns_empty_result_if_non_entity_typed_property_is_specified() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("property", FirstLevelEntity.class);
         
         assertFalse(titleAndDesc.isPresent());
     }
+
+    @Test
+    public void getTitleAndDescOfPropertyType_can_determine_path_dependent_title_and_desc_of_entity_type_by_property_path() {
+        final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc("critOnlyAEProperty.property", FirstLevelEntityPathDependentTitles.class);
+        
+        assertEquals("Nested title", titleAndDesc.getKey());
+        assertEquals("Nested desc", titleAndDesc.getValue());
+    }
+    
 }
