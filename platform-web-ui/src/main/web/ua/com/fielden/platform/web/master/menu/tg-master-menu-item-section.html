@@ -63,6 +63,12 @@
                     return self.$.elementLoader.reload();
                 }
             },
+            
+            focusView: function () {
+                if (this.activated === true && this._element && this._element.focusView) {
+                    this._element.focusView();
+                }
+            },
 
             /**
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)

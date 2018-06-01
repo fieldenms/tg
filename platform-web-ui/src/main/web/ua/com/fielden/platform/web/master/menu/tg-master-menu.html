@@ -266,9 +266,9 @@
             Polymer.dom.flush();
             
             // add event listeners for 'binding-entity-appeared' / 'egi-entities-appeared'
-            const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
-            const resultsAppearedEvent = resultsName + '-appeared';
-            const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
+//            const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
+//            const resultsAppearedEvent = resultsName + '-appeared';
+//            const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
             
             this.addEventListener('binding-entity-appeared', this._focusFocusableElement);
             this.addEventListener('binding-entity-did-not-appear', this._focusFocusableElement);
@@ -443,6 +443,16 @@
         _showMenuItemView: function (action) {
         	var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
         	section.activate(action);
+        },
+        
+        /**
+         * Focuses currently slected view
+         */
+        focusView: function () {
+            if (this.sectionRoute !== undefined) {
+                var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                section.focusView();
+            }
         },
         
         _routeChanged: function (newRoute, oldRoute) {

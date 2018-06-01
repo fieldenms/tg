@@ -723,7 +723,7 @@
                         const resultsAppearedEvent = resultsName + '-appeared';
                         const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
                         
-                        this.addEventListener(resultsAppearedEvent, this._focusDialogWithInput);
+                        //this.addEventListener(resultsAppearedEvent, this._focusDialogWithInput);
                         this.addEventListener(resultsAppearedEvent, this._fitWhenFirstTimeOpened);
                         
                         this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent);
@@ -731,7 +731,7 @@
                         this._doNotOpenConcrete = this._doNotOpen.bind(this, resultsAppearedEvent, resultsDidNotAppearEvent);
                         this.addEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
                     } else {
-                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
+                        //this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         
                         this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
@@ -826,8 +826,8 @@
                 // Desktop app specific: focus first input when opening dialog.
                 // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
                 // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor). 
-                if (this.$.appConfig.mobile === false && this._lastElement.focusFirstInput) {
-                    this._lastElement.focusFirstInput();
+                if (this.$.appConfig.mobile === false && this._lastElement.focusView) {
+                    this._lastElement.focusView();
                 }
             },
 
@@ -850,7 +850,7 @@
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
-                this._focusDialogWithInput();
+                //this._focusDialogWithInput();
             },
             
             _dialogOpened: function (e, detail, source) {

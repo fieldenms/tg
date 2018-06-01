@@ -117,7 +117,11 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
                              + "                return ['key', 'sectionTitle', 'menuToOpen'].indexOf(propertyName) !== -1; \n"
-                             + "            }; \n",
+                             + "            }; \n"
+                             + "            self._focusEmbededView = function () {\n"
+                             + "                this.$.menu.focusView();\n"
+                             + "                return true;\n"
+                             + "            }.bind(self);\n",
                                 jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
