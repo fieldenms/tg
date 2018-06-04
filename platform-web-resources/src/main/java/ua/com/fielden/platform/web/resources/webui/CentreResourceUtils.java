@@ -61,6 +61,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -123,18 +124,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
     
     /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' and 'saveAsDesc' flags.
+     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag and 'saveAsNameAndDesc' optional value.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
-     * @param saveAsDesc
+     * @param saveAsNameAndDesc
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsDesc(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String saveAsDesc) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<T2<Optional<String>, String>> saveAsNameAndDesc) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
-        if (saveAsDesc != null) {
-            customObject.put("saveAsDesc", saveAsDesc);
-        }
+        saveAsNameAndDesc.ifPresent(nameDesc -> {
+            customObject.put("saveAsName", nameDesc._1.orElse(""));
+            if (nameDesc._2 != null) {
+                customObject.put("saveAsDesc", nameDesc._2);
+            }
+        });
         return customObject;
     }
     

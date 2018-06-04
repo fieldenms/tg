@@ -18,7 +18,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
@@ -73,6 +72,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
     public final static String DEFAULT_CONFIG_DESC = "Default configuration";
     public final static String DEFAULT_CONFIG_TITLE = "[Default]";
+    public final static String UNDEFINED_CONFIG_TITLE = "undefined";
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
