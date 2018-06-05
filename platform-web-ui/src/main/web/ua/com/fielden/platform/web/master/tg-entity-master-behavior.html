@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
 <link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">
 
@@ -641,6 +642,8 @@
                         this.focusView();
                     }
                 }.bind(self));
+                
+                this._componentsToFocus = this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR);
             }, // end of ready callback
 
             attached: function () {
@@ -684,8 +687,45 @@
                 embeddedMaster.postSavedError = this.postSavedError;
             },
             
+             _getCurrentFocusableElements: function() {
+                return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+            },
+            
             _focusEmbededView: function () {
+            },
+            
+            _focusNextEmbededView: function () {
+            },
+            
+            _focusPreviousEmbededView: function () {
+            },
+            
+            _hasEmbededView: function () {
                 return false;
+            },
+            
+            focusNextView: function (e) {
+                if (this._hasEmbededView()) {
+                    this._focusNextEmbededView(e);
+                } else {
+                    const focusedElements = this._getCurrentFocusableElements();
+                    const focusedElementIndex = focusedElements.indexOf(document.activeElement);
+                    if (focusedElementIndex >= 0 && focusedElementIndex === focusedElements.length - 1) {
+                        this.fire("tg-last-item-focused", {forward: true, event: e});
+                    }
+                }
+            },
+            
+            focusPreviousView: function (e) {
+                if (this._hasEmbededView()) {
+                    this._focusPreviousEmbededView(e);
+                } else {
+                    const focusedElements = this._getCurrentFocusableElements();
+                    const focusedElementIndex = focusedElements.indexOf(document.activeElement);
+                    if (focusedElementIndex >= 0 && focusedElementIndex === 0) {
+                        this.fire("tg-last-item-focused", {forward: false, event: e});
+                    }
+                }
             },
             
             /**
@@ -717,7 +757,9 @@
              */
             focusView: function () {
                 this.async(function () {
-                    if (!this._focusEmbededView()) {
+                    if (this._hasEmbededView()) {
+                        this._focusEmbededView()
+                    } else {
                         this._focusFirstInput();
                     }
                 }.bind(this), 100);

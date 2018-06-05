@@ -15,6 +15,7 @@
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/views/tg-back-button-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -136,8 +137,8 @@
 </dom-module>
 <script>
     (function () {
-        var findParentDialog = function (action) {
-            var parent = action;
+        const findParentDialog = function (action) {
+            let parent = action;
             while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
                 parent = parent.parentElement;
             }
@@ -280,7 +281,9 @@
             keyBindings: {
                 'alt+c': '_invertMinimiseState',
                 'alt+m': '_invertMaximiseState',
-                'alt+x': 'closeDialog'
+                'alt+x': 'closeDialog',
+                'tab:keydown': '_onTabDown',
+                'shift+tab:keydown': '_onShiftTabDown'
             },
 
             ready: function () {
@@ -308,6 +311,8 @@
                     Polymer.dom.flush();
                     this.$.titleBar.classList.add('reverse');
                 }
+                //Retrieve title's bar element to focus.
+                this._componentsToFocus = this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR);
             },
             
             attached: function () {
@@ -322,6 +327,38 @@
                 this.removeEventListener(clickEvent, this._onCaptureClick, true);
                 this.removeEventListener('focus', this._onCaptureFocus, true);
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+            
+            _getCurrentFocusableElements: function() {
+                return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+            },
+            
+            _onTabDown: function (e) {
+                this._focusChange(e, true);
+            },
+            
+            _onShiftTabDown: function (e) {
+                this._focusChange(e, false);
+            },
+            
+            _focusChange: function (e, forward) {
+                const focusables = this._getCurrentFocusableElements()
+                const elementIndex = focusables.indexOf(document.activeElement);
+                const lastIndex = forward ? focusables.length - 1 : 0;
+                const firstIndex = forward ? 0 : focusables.length - 1;
+                const callback = this._lastElement ? (forward ? this._lastElement.focusNextView : this._lastElement.focusPreviousView) : null;
+                if (elementIndex >= 0) {
+                    if (elementIndex === lastIndex) {
+                        if (callback) {
+                            callback(e);
+                        } else {
+                            focusables[firstIndex].focus();
+                            tearDownEvent(e);
+                        }
+                    }
+                } else if (callback){
+                    callback(e);
+                }
             },
 
             _onCaptureClick: function (event) {
@@ -723,7 +760,6 @@
                         const resultsAppearedEvent = resultsName + '-appeared';
                         const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
                         
-                        //this.addEventListener(resultsAppearedEvent, this._focusDialogWithInput);
                         this.addEventListener(resultsAppearedEvent, this._fitWhenFirstTimeOpened);
                         
                         this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent);
@@ -731,7 +767,6 @@
                         this._doNotOpenConcrete = this._doNotOpen.bind(this, resultsAppearedEvent, resultsDidNotAppearEvent);
                         this.addEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
                     } else {
-                        //this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         
                         this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
@@ -850,7 +885,6 @@
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
-                //this._focusDialogWithInput();
             },
             
             _dialogOpened: function (e, detail, source) {

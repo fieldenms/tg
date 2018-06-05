@@ -69,6 +69,8 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
                         "    }\n" +
+                        "}.bind(self);\n" +
+                        "self._hasEmbededView = function () {\n" +
                         "    return true;\n" +
                         "}.bind(self);\n")
                 .replace("//@attached-callback",

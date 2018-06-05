@@ -33,6 +33,8 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
                         "    }\n" +
+                        "}.bind(this);\n" +
+                        "this._hasEmbededView = function () {\n" +
                         "    return true;\n" +
                         "}.bind(this);\n" +
                         "this._calcAttrs = (function(_currBindingEntity){\n" +

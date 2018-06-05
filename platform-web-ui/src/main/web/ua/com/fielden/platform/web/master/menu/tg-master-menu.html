@@ -12,6 +12,7 @@
 <link rel="import" href="/resources/polymer/paper-scroll-header-panel/paper-scroll-header-panel.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -112,13 +113,6 @@
 
 <script>
     (function () {
-        const isInHierarchy = function (parent, descendant) {
-            let current = descendant;
-            while (current !== null && current !== parent) {
-                current = current.parentElement;
-            }
-            return current !== null;
-        };
         const getKeyEventTarget = function (startFrom) {
             let parent = startFrom;
             while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
