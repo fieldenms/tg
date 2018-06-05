@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
@@ -466,7 +467,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
-            return t2(loadableConfigurations(gdtm, miType, device, companionFinder), saveAsName);
+            return loadableConfigurations(gdtm, miType, device, companionFinder);
+        });
+        validationPrototype.setSaveAsNameSupplier(() -> {
+            return saveAsName;
+        });
+        validationPrototype.setMiTypeGdtmAndDeviceSupplier(() -> {
+            return t3(miType, gdtm, device);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

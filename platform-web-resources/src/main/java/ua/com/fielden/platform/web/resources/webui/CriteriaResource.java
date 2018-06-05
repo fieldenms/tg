@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UN
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
@@ -150,19 +151,6 @@ public class CriteriaResource extends AbstractWebResource {
             final String customDesc = updateCentreDesc(gdtm, miType, realSaveAsName, device());
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, realSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(realSaveAsName, customDesc)));
         }, restUtil);
-    }
-    
-    /**
-     * Determines the preferred configuration <code>saveAsName</code> for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
-     * <code>miType</code>'ed menu item.
-     * 
-     * @param gdtm
-     * @param miType
-     * @param device
-     * @return
-     */
-    private static Optional<String> retrievePreferredConfigName(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
-        return Optional.of("Default (x)"); // TODO implement
     }
     
     /**

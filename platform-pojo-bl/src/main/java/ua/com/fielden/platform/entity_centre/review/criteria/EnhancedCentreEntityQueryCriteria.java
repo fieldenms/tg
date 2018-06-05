@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -20,8 +21,11 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 /**
  * This class is the base class to enhance with criteria and resultant properties.
@@ -36,7 +40,9 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
     private Runnable centreDeleter;
-    private Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
+    private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
+    private Supplier<Optional<String>> saveAsNameSupplier;
+    private Supplier<T3<Class<? extends MiWithConfigurationSupport<?>>, IGlobalDomainTreeManager, DeviceProfile>> miTypeGdtmAndDeviceSupplier;
     private Supplier<T2<String, String>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
     /**
@@ -99,12 +105,28 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreDeleter;
     }
 
-    public void setLoadableCentresSupplier(final Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier) {
+    public void setLoadableCentresSupplier(final Supplier<List<LoadableCentreConfig>> loadableCentresSupplier) {
         this.loadableCentresSupplier = loadableCentresSupplier;
     }
 
-    public Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier() {
+    public Supplier<List<LoadableCentreConfig>> loadableCentresSupplier() {
         return loadableCentresSupplier;
+    }
+
+    public void setSaveAsNameSupplier(final Supplier<Optional<String>> saveAsNameSupplier) {
+        this.saveAsNameSupplier = saveAsNameSupplier;
+    }
+
+    public Supplier<Optional<String>> saveAsNameSupplier() {
+        return saveAsNameSupplier;
+    }
+
+    public void setMiTypeGdtmAndDeviceSupplier(final Supplier<T3<Class<? extends MiWithConfigurationSupport<?>>, IGlobalDomainTreeManager, DeviceProfile>> miTypeGdtmAndDeviceSupplier) {
+        this.miTypeGdtmAndDeviceSupplier = miTypeGdtmAndDeviceSupplier;
+    }
+
+    public Supplier<T3<Class<? extends MiWithConfigurationSupport<?>>, IGlobalDomainTreeManager, DeviceProfile>> miTypeGdtmAndDeviceSupplier() {
+        return miTypeGdtmAndDeviceSupplier;
     }
 
     public void setCentreTitleAndDescGetter(final Supplier<T2<String, String>> centreTitleAndDescGetter) {
