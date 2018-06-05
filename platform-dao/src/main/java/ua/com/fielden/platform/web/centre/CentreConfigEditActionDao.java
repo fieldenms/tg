@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.valueOf;
+
+import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -41,9 +44,11 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
             throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
         }
         
-        // perform actual copy using centreCopier() closure
+        // make optional 'preferred' value only in case where 'preferred' property has changed, otherwise there is no need to make preferred configuration adjustments in persistent storage
+        final Optional<Boolean> dirtyPreferredValue = entity.getProperty("preferred").isDirty() ? of(entity.isPreferred()) : empty();
+        // perform actual copy using centreEditor() closure
         criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder())
-            .centreEditor().accept(t2(valueOf(entity.getEditKind()), of(entity.getTitle())), entity.getDesc());
+            .centreEditor().accept(t3(valueOf(entity.getEditKind()), of(entity.getTitle()), dirtyPreferredValue), entity.getDesc());
         return super.save(entity);
     }
     

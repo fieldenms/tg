@@ -15,7 +15,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
@@ -455,15 +454,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 .map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)))
                 .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
         });
-        validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
-            if (COPY.equals(editKindAndNewName._1) || !saveAsName.isPresent()) {
+        validationPrototype.setCentreEditor((editKindAndNewNameAndPreferredVal, newDesc) -> {
+            final Optional<String> newName = editKindAndNewNameAndPreferredVal._2;
+            if (COPY.equals(editKindAndNewNameAndPreferredVal._1) || !saveAsName.isPresent()) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
                 final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
                 
-                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, editKindAndNewName._2, device, freshCentre, newDesc);
-                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, editKindAndNewName._2, device, savedCentre, null);
+                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
+                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
             } else {
-                editCentreTitleAndDesc(gdtm, miType, saveAsName, device, editKindAndNewName._2.get(), newDesc);
+                editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
+            }
+            final Optional<Boolean> dirtyPreferredValue = editKindAndNewNameAndPreferredVal._3;
+            if (dirtyPreferredValue.isPresent()) {
+                makePreferred(dirtyPreferredValue.get(), gdtm, miType, newName, device, companionFinder);
             }
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
@@ -472,8 +476,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setSaveAsNameSupplier(() -> {
             return saveAsName;
         });
-        validationPrototype.setMiTypeGdtmAndDeviceSupplier(() -> {
-            return t3(miType, gdtm, device);
+        validationPrototype.setPreferredConfigSupplier(() -> {
+            return retrievePreferredConfigName(gdtm, miType, device, companionFinder);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

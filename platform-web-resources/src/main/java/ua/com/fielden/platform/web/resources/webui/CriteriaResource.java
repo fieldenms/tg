@@ -9,11 +9,11 @@ import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UN
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
@@ -146,7 +146,7 @@ public class CriteriaResource extends AbstractWebResource {
         return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final Optional<String> realSaveAsName = saveAsName.flatMap(name -> UNDEFINED_CONFIG_TITLE.equals(name) ? retrievePreferredConfigName(gdtm, miType, device()) : of(name));
+            final Optional<String> realSaveAsName = saveAsName.flatMap(name -> UNDEFINED_CONFIG_TITLE.equals(name) ? retrievePreferredConfigName(gdtm, miType, device(), companionFinder) : of(name));
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, realSaveAsName, device());
             final String customDesc = updateCentreDesc(gdtm, miType, realSaveAsName, device());
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, realSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(realSaveAsName, customDesc)));

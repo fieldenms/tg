@@ -1251,7 +1251,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     @Override
     public EntityCentreConfig findConfig(final Class<?> menuItemType, final String name) {
         return entityCentreConfigController.getEntity(
-            from(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name))).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).fetchModel()).model()
+            from(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name))).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").fetchModel()).model()
         );
     }
     
