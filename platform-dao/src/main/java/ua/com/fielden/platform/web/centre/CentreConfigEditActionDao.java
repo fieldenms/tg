@@ -48,7 +48,7 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
         
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
         
-        final Optional<Boolean> dirtyPreferredValue = 
+        final Optional<Boolean> preferredValue = 
             // make optional 'preferred' value in case where 'preferred' property has changed
             entity.getProperty("preferred").isDirty()
             // also in case where [Default] configuration is edited to be with some other name and [Default] config was preferred (aka no database record with preferred == true) and checkbox was remained
@@ -56,7 +56,7 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
             || entity.isPreferred() && EDIT.name().equals(entity.getEditKind()) && empty().equals(criteriaEntity.saveAsNameSupplier().get())
             ? of(entity.isPreferred()) : empty(); // otherwise there is no need to make preferred configuration adjustments in persistent storage
         // perform actual copy / edit using centreEditor() closure
-        criteriaEntity.centreEditor().accept(t3(valueOf(entity.getEditKind()), of(entity.getTitle()), dirtyPreferredValue), entity.getDesc());
+        criteriaEntity.centreEditor().accept(t3(valueOf(entity.getEditKind()), of(entity.getTitle()), preferredValue), entity.getDesc());
         return super.save(entity);
     }
     

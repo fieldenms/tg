@@ -445,6 +445,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreDeleter(() -> {
             // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
             removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            if (!saveAsName.isPresent()) {
+                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+                updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
+            }
         });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
@@ -469,9 +473,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                     updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
                 }
             }
-            final Optional<Boolean> dirtyPreferredValue = editKindAndNewNameAndPreferredVal._3;
-            if (dirtyPreferredValue.isPresent()) {
-                makePreferred(dirtyPreferredValue.get(), gdtm, miType, newName, device, companionFinder);
+            final Optional<Boolean> preferredValue = editKindAndNewNameAndPreferredVal._3;
+            if (preferredValue.isPresent()) {
+                makePreferred(preferredValue.get(), gdtm, miType, newName, device, companionFinder);
             }
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
