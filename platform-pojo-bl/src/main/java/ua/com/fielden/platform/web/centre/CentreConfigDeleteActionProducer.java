@@ -23,6 +23,7 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
     protected CentreConfigDeleteAction provideDefaultValues(final CentreConfigDeleteAction entity) {
         if (contextNotEmpty()) {
             selectionCrit().centreDeleter().run();
+            entity.setPreferredConfig(selectionCrit().preferredConfigSupplier().get().orElse(""));
         }
         return entity;
     }

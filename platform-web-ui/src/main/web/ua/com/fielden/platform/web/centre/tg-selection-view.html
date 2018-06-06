@@ -137,7 +137,7 @@
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful delete action -- default config
                             self.saveAsName = undefined;
-                            self.saveAsName = '';
+                            self.saveAsName = functionalEntity.get('preferredConfig');
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', currentState:'EDIT', centreUuid: self.uuid
