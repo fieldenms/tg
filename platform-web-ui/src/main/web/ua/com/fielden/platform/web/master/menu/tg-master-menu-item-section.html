@@ -69,6 +69,18 @@
                     this._element.focusView();
                 }
             },
+            
+            focusNextView: function (e) {
+                if (this.activated === true && this._element && this._element.focusNextView) {
+                    this._element.focusNextView(e);
+                }
+            },
+            
+            focusPreviousView: function (e) {
+                if (this.activated === true && this._element && this._element.focusNextView) {
+                    this._element.focusPreviousView(e);
+                }
+            },
 
             /**
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)

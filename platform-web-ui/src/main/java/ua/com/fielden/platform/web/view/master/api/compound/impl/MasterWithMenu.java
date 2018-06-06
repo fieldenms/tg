@@ -121,6 +121,12 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self._focusEmbededView = function () {\n"
                              + "                this.$.menu.focusView();\n"
                              + "            }.bind(self);\n"
+                             + "            self._focusNextEmbededView = function (e) {\n"
+                             + "                this.$.menu.focusNextView(e);\n"
+                             + "            }.bind(self);\n"
+                             + "            self._focusPreviousEmbededView = function (e) {\n"
+                             + "                this.$.menu.focusPreviousView(e);\n"
+                             + "            }.bind(self);\n"
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
                              + "            }.bind(self);\n",

@@ -272,6 +272,8 @@
                 this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
                 //Configure the profile mobile or desktop
                 this.mobile = this.$.appConfig.mobile;
+                //Add listener for custom event that was thrown when section is about to lost focus, then this focus should go to the menu if it is opened.
+                this.addEventListener("tg-last-item-focused", this._focusMenuAndTearDown.bind(this));
             }, // end of ready 
 
             attached: function () {
@@ -470,8 +472,54 @@
              */
             focusView: function () {
                 if (this.sectionRoute !== undefined) {
-                    var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                     section.focusView();
+                }
+            },
+            
+            focusNextView: function (e) {
+                const currentlyFocused = document.activeElement;
+                if (!isInHierarchy(this, currentlyFocused)) {
+                    this._focusMenu();
+                    tearDownEvent(e);
+                } else {
+                    this._focusNextSectionView(e);
+                }
+            },
+            
+            focusPreviousView: function (e) {
+                const currentlyFocused = document.activeElement;
+                if (isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), currentlyFocused)){
+                    this.fire("tg-last-item-focused", {forward: false, event: e});
+                } else {
+                    this._focusPreviousSectionView(e);
+                }
+            },
+            
+            _focusNextSectionView: function (e) {
+                if (this.sectionRoute !== undefined) {
+                    const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    section.focusNextView(e);
+                } else {
+                    this.fire("tg-last-item-focused", {forward: true, event: e});
+                }
+            },
+            
+            _focusPreviousSectionView: function (e) {
+                 if (this.sectionRoute !== undefined) {
+                    const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    section.focusPreviousView(e);
+                } else {
+                    this._focusMenu();
+                    tearDownEvent(e);
+                }
+            },
+            
+            _focusMenuAndTearDown: function (e) {
+                if (!e.detail.forward && !isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement)) {
+                    this._focusMenu();
+                    tearDownEvent(e.detail.event);
+                    tearDownEvent(e);
                 }
             },
 

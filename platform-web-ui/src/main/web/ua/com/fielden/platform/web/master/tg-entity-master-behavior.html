@@ -643,7 +643,9 @@
                     }
                 }.bind(self));
                 
-                this._componentsToFocus = this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR);
+                if (!this._hasEmbededView()) {  
+                    this._componentsToFocus = Array.from(this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                }
             }, // end of ready callback
 
             attached: function () {
@@ -691,40 +693,48 @@
                 return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
             },
             
-            _focusEmbededView: function () {
-            },
-            
-            _focusNextEmbededView: function () {
-            },
-            
-            _focusPreviousEmbededView: function () {
-            },
-            
             _hasEmbededView: function () {
                 return false;
             },
             
+            _focusEmbededView: function () {
+            },
+            
+            _focusNextEmbededView: function (e) {
+            },
+            
+            _focusPreviousEmbededView: function (e) {
+            },
+            
             focusNextView: function (e) {
-                if (this._hasEmbededView()) {
-                    this._focusNextEmbededView(e);
-                } else {
-                    const focusedElements = this._getCurrentFocusableElements();
-                    const focusedElementIndex = focusedElements.indexOf(document.activeElement);
-                    if (focusedElementIndex >= 0 && focusedElementIndex === focusedElements.length - 1) {
-                        this.fire("tg-last-item-focused", {forward: true, event: e});
-                    }
-                }
+                this._focusView(e, true);
             },
             
             focusPreviousView: function (e) {
+                this._focusView(e, false);
+            },
+            
+            _focusView: function (e, forward) {
                 if (this._hasEmbededView()) {
-                    this._focusPreviousEmbededView(e);
+                    const callback = forward ? this._focusNextEmbededView : this._focusPreviousEmbededView;
+                    callback(e);
                 } else {
                     const focusedElements = this._getCurrentFocusableElements();
-                    const focusedElementIndex = focusedElements.indexOf(document.activeElement);
-                    if (focusedElementIndex >= 0 && focusedElementIndex === 0) {
-                        this.fire("tg-last-item-focused", {forward: false, event: e});
+                    if (focusedElements.length > 0) {
+                        const lastIndex = forward ? focusedElements.length - 1 : 0;
+                        if (!isInHierarchy(this, document.activeElement)) {
+                            const firstIndex = forward ? 0 : focusedElements.length - 1;
+                            focusedElements[firstIndex].focus()
+                            tearDownEvent(e);
+                        } else {
+                            const lastIndex = forward ? focusedElements.length - 1 : 0;
+                            const activeElement = document.activeElement;
+                            if (activeElement === focusedElements[lastIndex]) {
+                                this.fire("tg-last-item-focused", {forward: forward, event: e});
+                            }
+                        }
                     }
+                    
                 }
             },
             
