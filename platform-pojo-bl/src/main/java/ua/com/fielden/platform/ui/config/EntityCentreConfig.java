@@ -70,7 +70,7 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     private boolean principal = false;
 
     @IsProperty
-    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is the preferred over the others on the same menu item")
+    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item")
     @MapTo
     private boolean preferred = false;
 

@@ -456,7 +456,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         validationPrototype.setCentreEditor((editKindAndNewNameAndPreferredVal, newDesc) -> {
             final Optional<String> newName = editKindAndNewNameAndPreferredVal._2;
-            if (COPY.equals(editKindAndNewNameAndPreferredVal._1) || !saveAsName.isPresent()) {
+            if (COPY.equals(editKindAndNewNameAndPreferredVal._1)) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
                 final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
                 
@@ -464,6 +464,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
             } else {
                 editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
+                if (!saveAsName.isPresent()) {
+                    updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+                    updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
+                }
             }
             final Optional<Boolean> dirtyPreferredValue = editKindAndNewNameAndPreferredVal._3;
             if (dirtyPreferredValue.isPresent()) {

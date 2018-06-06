@@ -48,7 +48,7 @@ public class CentreConfigEditAction extends AbstractFunctionalEntityWithCentreCo
     private String editKind;
     
     @IsProperty
-    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is the preferred over the others.")
+    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others.")
     private boolean preferred = false;
     
     public boolean isPreferred() {
