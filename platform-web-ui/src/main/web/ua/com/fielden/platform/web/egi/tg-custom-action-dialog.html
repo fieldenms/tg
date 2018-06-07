@@ -907,6 +907,7 @@
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
+                this._focusDialogWithInput();
             },
             
             _dialogOpened: function (e, detail, source) {

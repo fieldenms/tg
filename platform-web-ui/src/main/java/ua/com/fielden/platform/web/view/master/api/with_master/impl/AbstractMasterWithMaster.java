@@ -41,12 +41,12 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +
                         "    }\n" +
-                        "}.bind(self);\n" +
-                        "self._focusPreviousEmbededView = function (e) {\n" +
+                        "}.bind(this);\n" +
+                        "this._focusPreviousEmbededView = function (e) {\n" +
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
-                        "}.bind(self);\n" +
+                        "}.bind(this);\n" +
                         "this._calcAttrs = (function(_currBindingEntity){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
