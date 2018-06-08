@@ -388,9 +388,13 @@
                 const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
                 return viewportWidth >= this.$.appConfig.minDesktopWidth;
             },
+            
+            isMenuVisible: function () {
+                return !this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "drawer";
+            },
 
             _showMenu: function () {
-                if (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "drawer") {
+                if (this.isMenuVisible()) {
                     const focusedElement = document.activeElement;
                     const drawerContent = this.$.paperDrawerPanel._getDrawerContent();
                     if (!isInHierarchy(drawerContent, focusedElement)) {
@@ -414,7 +418,7 @@
                     // ignore events coming from the light dom
                     return;
                 }
-                if (e.propertyName === 'transform' && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === 'drawer')) {
+                if (e.propertyName === 'transform' && this.isMenuVisible()) {
                     this._focusMenu();
                 }
             },
@@ -479,7 +483,7 @@
             
             focusNextView: function (e) {
                 const currentlyFocused = document.activeElement;
-                if (!isInHierarchy(this, currentlyFocused)) {
+                if (!isInHierarchy(this, currentlyFocused) && this.isMenuVisible()) {
                     this._focusMenu();
                     tearDownEvent(e);
                 } else {
@@ -497,7 +501,7 @@
             },
             
             _focusNextSectionView: function (e) {
-                if (this.sectionRoute !== undefined) {
+                if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
                     const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                     section.focusNextView(e);
                 } else {
@@ -506,17 +510,19 @@
             },
             
             _focusPreviousSectionView: function (e) {
-                 if (this.sectionRoute !== undefined) {
+                 if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
                     const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                     section.focusPreviousView(e);
-                } else {
+                } else if (this.isMenuVisible()){
                     this._focusMenu();
                     tearDownEvent(e);
+                } else {
+                    this.fire("tg-last-item-focused", {forward: false, event: e});
                 }
             },
             
             _focusMenuAndTearDown: function (e) {
-                if (!e.detail.forward && !isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement)) {
+                if (!e.detail.forward && !isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement) && this.isMenuVisible()) {
                     this._focusMenu();
                     tearDownEvent(e.detail.event);
                     tearDownEvent(e);
