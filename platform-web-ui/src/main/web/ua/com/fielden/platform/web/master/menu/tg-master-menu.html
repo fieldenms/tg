@@ -12,8 +12,9 @@
 <link rel="import" href="/resources/polymer/paper-scroll-header-panel/paper-scroll-header-panel.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+<!-- TG ELEMENTS -->
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
-
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/app/tg-reflector.html">
@@ -95,7 +96,7 @@
 
         <paper-drawer-panel id="paperDrawerPanel" disable-swipe="[[!mobile]]">
             <paper-scroll-header-panel drawer fixed id="drawer">
-                <paper-menu attr-for-selected="data-route" selected="{{route}}">
+                <paper-menu id="menu" attr-for-selected="data-route" selected="{{route}}" on-iron-activate="_itemActivated">
                     <content id="menuItems" select=".menu-item"></content>
                 </paper-menu>
             </paper-scroll-header-panel>
@@ -248,7 +249,7 @@
                 }
             },
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronA11yKeysBehavior],
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
 
             listeners: {
                 transitionend: '_onTransitionEnd'
@@ -267,7 +268,10 @@
                         null, null, this.getMasterEntity);
                     return contextHolder;
                 }).bind(self);
-
+                //Override esc functionality for paper menu so that it doesn't blur the focus.
+                this.$.menu._onEscKey = (event) => {
+                    this._closeMenu(event);
+                };
                 // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
                 this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
                 //Configure the profile mobile or desktop
@@ -374,6 +378,11 @@
              * In tablet|mobile mode menu slides on top of the main content to the right during showing (and back top the left during hiding).
              */
             _toggleMenu: function (e, detail, source) {
+                if (this.isMenuVisible()) {
+                    this._closedByAction = true;
+                } else {
+                    this.persistActiveElement(this._activeElement());
+                }
                 if (this.desktopMode()) {
                     this.$.paperDrawerPanel.forceNarrow = !this.$.paperDrawerPanel.forceNarrow;
                 } else {
@@ -395,14 +404,30 @@
 
             _showMenu: function () {
                 if (this.isMenuVisible()) {
-                    const focusedElement = document.activeElement;
                     const drawerContent = this.$.paperDrawerPanel._getDrawerContent();
-                    if (!isInHierarchy(drawerContent, focusedElement)) {
+                    if (!isInHierarchy(drawerContent, document.activeElement)) {
                         this._focusMenu();
                     }
                 } else {
                     this._toggleMenu();
                 }
+            },
+            
+            _closeMenu: function () {
+                if (this.$.paperDrawerPanel.narrow && this.$.paperDrawerPanel.selected === "drawer") {
+                    this._toggleMenu();
+                }
+            },
+            
+            _activeElement: function () {
+                const previousActiveElement = document.activeElement;
+                this._openedByAction = true;
+                return () => {
+                    if (this._closedByAction) {
+                        previousActiveElement.focus();
+                        delete this._closedByAction;
+                    }
+                };
             },
 
             _focusMenu: function () {
@@ -411,15 +436,25 @@
                     autoFocusedNode.focus();
                 }
             },
-
+            
             _onTransitionEnd: function (e) {
                 const target = Polymer.dom(e).localTarget;
                 if (target !== this) {
                     // ignore events coming from the light dom
                     return;
                 }
-                if (e.propertyName === 'transform' && this.isMenuVisible()) {
-                    this._focusMenu();
+                if (e.propertyName === 'transform') {
+                    if (this.isMenuVisible()) {
+                        if (this._openedByAction) {
+                            this._focusMenu();
+                        }
+                    } else {
+                        if (this._openedByAction) {
+                            this.restoreActiveElement();
+                            delete this._openedByAction;
+                        }
+                    }
+                    
                 }
             },
 
@@ -469,6 +504,15 @@
             _showMenuItemView: function (action) {
                 var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
                 section.activate(action);
+            },
+            
+            _itemActivated: function (e) {
+                if (this.sectionRoute === e.detail.selected) {
+                    if (this.$.paperDrawerPanel.narrow) {
+                        this.$.paperDrawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
+                    }
+                    this.focusView();
+                }
             },
 
             /**
