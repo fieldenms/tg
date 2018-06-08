@@ -1,9 +1,5 @@
-<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
-
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-
-<link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 
 <dom-module id="tg-centre-result-view">
     <style>
@@ -21,21 +17,10 @@
         Polymer({
             is: 'tg-centre-result-view',
             
-            behaviors: [
-                Polymer.IronA11yKeysBehavior,
-                Polymer.TgBehaviors.TgShortcutProcessingBehavior
-            ],
-            
-            hostAttributes: {
-                'tabindex' : '0'
-            },
-            
             attached: function () {
                 this.classList.add('centreResultView');
-                // assign EGI shortcut keys to this result view with function _shortcutPressed as a handler
-                this.removeOwnKeyBindings();
-                this.addOwnKeyBinding(this._findParentCentre().$.egi.customShortcuts, '_shortcutPressed');
             },
+                
             
             /**
              * Finds parent centre for this result view. It should exist, otherwise exception will be thrown.
@@ -51,13 +36,6 @@
                     throw 'This result view somehow contains generatedCentre class.';
                 }
                 return parent;
-            },
-            
-            /**
-             * Redirects shortcut processing to parent centre's EGI.
-             */
-            _shortcutPressed: function (e) {
-                this._findParentCentre().$.egi._shortcutPressed(e);
             }
         });
     </script>

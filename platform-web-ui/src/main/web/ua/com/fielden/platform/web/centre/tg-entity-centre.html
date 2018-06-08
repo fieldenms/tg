@@ -457,9 +457,15 @@
             this._prevSelectedView = oldValue;
         },
         
+        _getVisibleFocusableElementIn: function (container) {
+            return Array.from(container.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR)).filter(element => !element.disabled && element.offsetParent !== null)[0];
+        },
+        
         focusSelectedView: function () {
             if (this._selectedView === 0) {
-                this.$.selectionView.focus(); // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
+                const elementToFocus = this._getVisibleFocusableElementIn(this.$.selectionView); 
+                // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
+                elementToFocus && elementToFocus.focus();
                 if (this._prevSelectedView === undefined) {
                     this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
                     this._prevSelectedView = 0;
@@ -468,9 +474,9 @@
                     this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
                 }
             } else if (this._selectedView === 1) {
-                const elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                const elementToFocus = this._getVisibleFocusableElementIn(this.querySelector(".custom-egi"));
                 // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
-                if (elementToFocus && typeof elementToFocus.focus === 'function') {
+                if (elementToFocus) {
                     elementToFocus.focus();
                     this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
                 }

@@ -264,7 +264,7 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
 
         <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
-            <div id="elementToFocus" class="layout vertical flex data-table" tabindex="0">
+            <div class="layout vertical flex data-table">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -1062,7 +1062,7 @@
 
             _getKeyEventTarget: function () {
                 var parent = this;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
                     parent = parent.parentElement;
                 }
                 return parent || this;
