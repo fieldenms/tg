@@ -41,7 +41,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Supplier<Optional<String>> preferredConfigSupplier;
     private Supplier<T2<String, String>> centreTitleAndDescGetter;
-    private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -134,12 +134,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreTitleAndDescGetter;
     }
 
-    public void setDefaultCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {
-        this.defaultCentreSupplier = defaultCentreSupplier;
+    public void setBaseCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {
+        this.baseCentreSupplier = defaultCentreSupplier;
     }
 
-    public Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier() {
-        return defaultCentreSupplier;
+    public Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier() {
+        return baseCentreSupplier;
     }
 
     public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {
