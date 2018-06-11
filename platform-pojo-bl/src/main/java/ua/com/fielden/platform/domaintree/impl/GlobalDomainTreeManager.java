@@ -73,6 +73,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public final static String DEFAULT_CONFIG_DESC = "Default configuration";
     public final static String DEFAULT_CONFIG_TITLE = "[Default]";
     public final static String UNDEFINED_CONFIG_TITLE = "undefined";
+    public final static String LINK_CONFIG_TITLE = "_______________________link";
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;

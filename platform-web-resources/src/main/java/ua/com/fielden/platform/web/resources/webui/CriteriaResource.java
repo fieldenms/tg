@@ -5,6 +5,7 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -13,6 +14,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
@@ -146,10 +148,21 @@ public class CriteriaResource extends AbstractWebResource {
         return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final Optional<String> realSaveAsName = saveAsName.flatMap(name -> UNDEFINED_CONFIG_TITLE.equals(name) ? retrievePreferredConfigName(gdtm, miType, device(), companionFinder) : of(name));
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, realSaveAsName, device());
-            final String customDesc = updateCentreDesc(gdtm, miType, realSaveAsName, device());
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, realSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(realSaveAsName, customDesc)));
+            final Optional<String> actualSaveAsName = 
+                saveAsName.flatMap(
+                    name -> UNDEFINED_CONFIG_TITLE.equals(name) // client-driven first time loading of centre's selection criteria
+                    ? (getQuery().isEmpty()
+                        ? retrievePreferredConfigName(gdtm, miType, device(), companionFinder) // preferred configuration should be loaded
+                        : of(LINK_CONFIG_TITLE)) // 'link' configuration should be loaded
+                    : of(name) // in case where first time loading has been occurred earlier then 'saveAsName' has non-empty actual configuration that needs to be loaded
+                ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and [Default] configuration needs to be loaded
+            if (saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) {
+                // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
+                removeCentres(gdtm, miType, device(), actualSaveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            }
+            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, actualSaveAsName, device());
+            final String customDesc = updateCentreDesc(gdtm, miType, actualSaveAsName, device());
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(actualSaveAsName, customDesc)));
         }, restUtil);
     }
     
