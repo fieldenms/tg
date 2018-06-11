@@ -96,7 +96,7 @@
 
         <paper-drawer-panel id="paperDrawerPanel" disable-swipe="[[!mobile]]">
             <paper-scroll-header-panel drawer fixed id="drawer">
-                <paper-menu id="menu" attr-for-selected="data-route" selected="{{route}}" on-iron-activate="_itemActivated">
+                <paper-menu id="menu" attr-for-selected="data-route" selected="{{route}}">
                     <content id="menuItems" select=".menu-item"></content>
                 </paper-menu>
             </paper-scroll-header-panel>
@@ -272,6 +272,8 @@
                 this.$.menu._onEscKey = (event) => {
                     this._closeMenu(event);
                 };
+                this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
+                this.$.menu.addEventListener("keyup", this._menuKeyUp.bind(this));
                 // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
                 this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
                 //Configure the profile mobile or desktop
@@ -378,10 +380,8 @@
              * In tablet|mobile mode menu slides on top of the main content to the right during showing (and back top the left during hiding).
              */
             _toggleMenu: function (e, detail, source) {
-                if (this.isMenuVisible()) {
-                    this._closedByAction = true;
-                } else {
-                    this.persistActiveElement(this._activeElement());
+                if (!this.isMenuVisible()) {
+                    this._openedByAction = true;
                 }
                 if (this.desktopMode()) {
                     this.$.paperDrawerPanel.forceNarrow = !this.$.paperDrawerPanel.forceNarrow;
@@ -397,37 +397,48 @@
                 const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
                 return viewportWidth >= this.$.appConfig.minDesktopWidth;
             },
-            
+
             isMenuVisible: function () {
                 return !this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "drawer";
             },
 
+            _menuKeyDown: function (e) {
+                if (e.keyCode === 13) { // enter key
+                    this._activateIfPossible(e.target);
+                }
+            },
+
+            _menuKeyUp: function (e) {
+                if (e.keyCode === 32) { //spacebar
+                    this._activateIfPossible(e.target);
+                }
+            },
+
+            _activateIfPossible: function (paperMenuItem) {
+                if (paperMenuItem.getAttribute("data-route") === this.sectionRoute) {
+                    if (this.$.paperDrawerPanel.narrow) {
+                        this.$.paperDrawerPanel.selected = 'main'; // select main if drawer is in narrow mode
+                    }
+                    this.focusView();
+                }
+            },
+
             _showMenu: function () {
                 if (this.isMenuVisible()) {
-                    const drawerContent = this.$.paperDrawerPanel._getDrawerContent();
-                    if (!isInHierarchy(drawerContent, document.activeElement)) {
+                    if (!isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement)) {
+                        this._previousActiveElement = document.activeElement;
                         this._focusMenu();
                     }
                 } else {
+                    this._previousActiveElement = document.activeElement;
                     this._toggleMenu();
                 }
             },
-            
+
             _closeMenu: function () {
                 if (this.$.paperDrawerPanel.narrow && this.$.paperDrawerPanel.selected === "drawer") {
                     this._toggleMenu();
                 }
-            },
-            
-            _activeElement: function () {
-                const previousActiveElement = document.activeElement;
-                this._openedByAction = true;
-                return () => {
-                    if (this._closedByAction) {
-                        previousActiveElement.focus();
-                        delete this._closedByAction;
-                    }
-                };
             },
 
             _focusMenu: function () {
@@ -436,7 +447,7 @@
                     autoFocusedNode.focus();
                 }
             },
-            
+
             _onTransitionEnd: function (e) {
                 const target = Polymer.dom(e).localTarget;
                 if (target !== this) {
@@ -447,14 +458,19 @@
                     if (this.isMenuVisible()) {
                         if (this._openedByAction) {
                             this._focusMenu();
-                        }
-                    } else {
-                        if (this._openedByAction) {
-                            this.restoreActiveElement();
                             delete this._openedByAction;
                         }
+                    } else {
+                        const drawerContent = this.$.paperDrawerPanel._getDrawerContent();
+                        if (isInHierarchy(drawerContent, document.activeElement) || !isInHierarchy(this.keyEventTarget, document.activeElement)) {
+                            if (this._previousActiveElement && !isInHierarchy(drawerContent, this._previousActiveElement) && isInHierarchy(this.keyEventTarget, this._previousActiveElement)) {
+                                this._previousActiveElement.focus();
+                            } else {
+                                this.focusView();
+                            }
+                        }
                     }
-                    
+
                 }
             },
 
@@ -505,15 +521,6 @@
                 var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
                 section.activate(action);
             },
-            
-            _itemActivated: function (e) {
-                if (this.sectionRoute === e.detail.selected) {
-                    if (this.$.paperDrawerPanel.narrow) {
-                        this.$.paperDrawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
-                    }
-                    this.focusView();
-                }
-            },
 
             /**
              * Focuses currently slected view
@@ -524,7 +531,7 @@
                     section.focusView();
                 }
             },
-            
+
             focusNextView: function (e) {
                 const currentlyFocused = document.activeElement;
                 if (!isInHierarchy(this, currentlyFocused) && this.isMenuVisible()) {
@@ -534,37 +541,46 @@
                     this._focusNextSectionView(e);
                 }
             },
-            
+
             focusPreviousView: function (e) {
                 const currentlyFocused = document.activeElement;
-                if (isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), currentlyFocused)){
-                    this.fire("tg-last-item-focused", {forward: false, event: e});
+                if (isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), currentlyFocused)) {
+                    this.fire("tg-last-item-focused", {
+                        forward: false,
+                        event: e
+                    });
                 } else {
                     this._focusPreviousSectionView(e);
                 }
             },
-            
+
             _focusNextSectionView: function (e) {
                 if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
                     const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                     section.focusNextView(e);
                 } else {
-                    this.fire("tg-last-item-focused", {forward: true, event: e});
+                    this.fire("tg-last-item-focused", {
+                        forward: true,
+                        event: e
+                    });
                 }
             },
-            
+
             _focusPreviousSectionView: function (e) {
-                 if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
+                if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
                     const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                     section.focusPreviousView(e);
-                } else if (this.isMenuVisible()){
+                } else if (this.isMenuVisible()) {
                     this._focusMenu();
                     tearDownEvent(e);
                 } else {
-                    this.fire("tg-last-item-focused", {forward: false, event: e});
+                    this.fire("tg-last-item-focused", {
+                        forward: false,
+                        event: e
+                    });
                 }
             },
-            
+
             _focusMenuAndTearDown: function (e) {
                 if (!e.detail.forward && !isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement) && this.isMenuVisible()) {
                     this._focusMenu();
