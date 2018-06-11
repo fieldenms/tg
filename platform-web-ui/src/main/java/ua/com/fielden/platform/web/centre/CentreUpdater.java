@@ -30,6 +30,7 @@ import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
@@ -56,6 +57,7 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
@@ -381,7 +383,7 @@ public class CentreUpdater {
         
         final User currentUser = gdtm.getUserProvider().getUser();
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(currentUser, miType, device);
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(currentUser, miType, device).model();
         final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
         if (currentUser.isBase()) {
             try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
@@ -391,7 +393,7 @@ public class CentreUpdater {
             }
         } else {
             final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
-            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = centreConfigQueryFor(baseOfTheCurrentUser, miType, device);
+            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = centreConfigQueryFor(baseOfTheCurrentUser, miType, device).model();
             try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
                  final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                 streamForCurrentUser.forEach(ecc -> {
@@ -410,6 +412,66 @@ public class CentreUpdater {
         }
         Collections.sort(loadableConfigurations);
         return loadableConfigurations;
+    }
+    
+    /**
+     * Returns {@link Stream} of preferred {@link EntityCentreConfig} configurations for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
+     * <code>miType</code>'ed menu item.
+     * <p>
+     * Please note that by design this stream should return single or none instance.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param device
+     * @return
+     */
+    private static Stream<EntityCentreConfig> streamPreferredConfigs(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+        final User currentUser = gdtm.getUserProvider().getUser();
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(currentUser, miType, device)
+            .and().prop("preferred").eq().val(true).model();
+        final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
+        return eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
+    }
+    
+    /**
+     * Determines the preferred configuration <code>saveAsName</code> for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
+     * <code>miType</code>'ed menu item.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param device
+     * @return
+     */
+    public static Optional<String> retrievePreferredConfigName(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
+        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
+            return stream.findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix));
+        }
+    }
+    
+    /**
+     * Makes <code>saveAsName</code> configuration preferred for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
+     * <code>miType</code>'ed menu item.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param device
+     * @return
+     */
+    public static void makePreferred(final boolean preferred, final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        if (preferred) {
+            try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
+                stream.forEach(ecc -> {
+                    gdtm.saveConfig(ecc.setPreferred(false));
+                });
+            }
+        }
+        gdtm.saveConfig(
+            gdtm
+            .findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX)
+            .setPreferred(preferred)
+        );
     }
     
     /**
@@ -457,12 +519,12 @@ public class CentreUpdater {
      * @param device -- the device for which centre configurations are looked for
      * @return
      */
-    private static EntityResultQueryModel<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
         return select(EntityCentreConfig.class).where().
             begin().prop("owner").eq().val(user).end().and().
             prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + "%").and().
             prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
-            prop("menuItem.key").eq().val(miType.getName()).model();
+            prop("menuItem.key").eq().val(miType.getName());
     }
     
     /**

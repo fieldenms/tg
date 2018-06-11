@@ -5,12 +5,15 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
@@ -19,7 +22,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsDesc;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsInfo;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
@@ -61,6 +64,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -132,7 +136,7 @@ public class CriteriaResource extends AbstractWebResource {
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
     }
-
+    
     /**
      * Handles GET requests resulting from tg-selection-criteria <code>retrieve()</code> method (new entity).
      */
@@ -142,12 +146,13 @@ public class CriteriaResource extends AbstractWebResource {
         return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
-            final String customDesc = updateCentreDesc(gdtm, miType, saveAsName, device());
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), customDesc);
+            final Optional<String> realSaveAsName = saveAsName.flatMap(name -> UNDEFINED_CONFIG_TITLE.equals(name) ? retrievePreferredConfigName(gdtm, miType, device(), companionFinder) : of(name));
+            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, realSaveAsName, device());
+            final String customDesc = updateCentreDesc(gdtm, miType, realSaveAsName, device());
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, realSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(realSaveAsName, customDesc)));
         }, restUtil);
     }
-
+    
     /**
      * Handles POST request resulting from tg-selection-criteria <code>validate()</code> method.
      */
@@ -176,14 +181,14 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final DeviceProfile device,
-            final String saveAsDesc
+            final Optional<T2<Optional<String>, String>> saveAsNameAndDesc
                     ) {
         return restUtil.rawListJSONRepresentation(
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
-                createCriteriaMetaValuesCustomObjectWithSaveAsDesc(
+                createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
-                        saveAsDesc
+                        saveAsNameAndDesc
                 )//
         );
     }

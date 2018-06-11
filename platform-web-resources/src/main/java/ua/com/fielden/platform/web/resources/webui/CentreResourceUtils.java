@@ -61,6 +61,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -123,18 +124,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
     
     /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' and 'saveAsDesc' flags.
+     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag and 'saveAsNameAndDesc' optional value.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
-     * @param saveAsDesc
+     * @param saveAsNameAndDesc
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsDesc(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String saveAsDesc) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<T2<Optional<String>, String>> saveAsNameAndDesc) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
-        if (saveAsDesc != null) {
-            customObject.put("saveAsDesc", saveAsDesc);
-        }
+        saveAsNameAndDesc.ifPresent(nameDesc -> {
+            customObject.put("saveAsName", nameDesc._1.orElse(""));
+            if (nameDesc._2 != null) {
+                customObject.put("saveAsDesc", nameDesc._2);
+            }
+        });
         return customObject;
     }
     
@@ -441,6 +445,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreDeleter(() -> {
             // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
             removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            if (!saveAsName.isPresent()) {
+                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+                updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
+            }
         });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
@@ -450,19 +458,34 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 .map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)))
                 .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
         });
-        validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
-            if (COPY.equals(editKindAndNewName._1) || !saveAsName.isPresent()) {
+        validationPrototype.setCentreEditor((editKindAndNewNameAndPreferredVal, newDesc) -> {
+            final Optional<String> newName = editKindAndNewNameAndPreferredVal._2;
+            if (COPY.equals(editKindAndNewNameAndPreferredVal._1)) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
                 final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
                 
-                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, editKindAndNewName._2, device, freshCentre, newDesc);
-                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, editKindAndNewName._2, device, savedCentre, null);
+                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
+                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
             } else {
-                editCentreTitleAndDesc(gdtm, miType, saveAsName, device, editKindAndNewName._2.get(), newDesc);
+                editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
+                if (!saveAsName.isPresent()) {
+                    updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+                    updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
+                }
+            }
+            final Optional<Boolean> preferredValue = editKindAndNewNameAndPreferredVal._3;
+            if (preferredValue.isPresent()) {
+                makePreferred(preferredValue.get(), gdtm, miType, newName, device, companionFinder);
             }
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
-            return t2(loadableConfigurations(gdtm, miType, device, companionFinder), saveAsName);
+            return loadableConfigurations(gdtm, miType, device, companionFinder);
+        });
+        validationPrototype.setSaveAsNameSupplier(() -> {
+            return saveAsName;
+        });
+        validationPrototype.setPreferredConfigSupplier(() -> {
+            return retrievePreferredConfigName(gdtm, miType, device, companionFinder);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

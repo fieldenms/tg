@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.quote;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
@@ -11,15 +12,13 @@ import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_WARNING;
 
 import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
@@ -41,18 +40,15 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
         final String spaceQuoted = quote(" "); // spaces are allowed and they must be encoded using %20 in URIs
         final String specialCharacters = "$-_.+!*'(),"; // these special characters are not required to be encoded in URIs (see https://perishablepress.com/stop-using-unsafe-characters-in-urls/ for more details)
         final String specialCharactersQuoted = quote(specialCharacters);
-        if (newValue == null || !newValue.matches(format("[\\w%s%s]*", specialCharactersQuoted, spaceQuoted))) {
+        if (newValue == null || UNDEFINED_CONFIG_TITLE.equals(newValue) || !newValue.matches(format("[\\w%s%s]*", specialCharactersQuoted, spaceQuoted))) {
             return failuref("Only alfanumeric characters, spaces and %s are allowed.", specialCharacters);
         } else {
             final CentreConfigEditAction entity = property.getEntity();
-            final T2<List<LoadableCentreConfig>, Optional<String>> configsAndSaveAsName = 
-                criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder())
-                .loadableCentresSupplier().get();
-            final Optional<String> saveAsName = configsAndSaveAsName._2;
-            final String currentTitle = saveAsName.orElse(DEFAULT_CONFIG_TITLE);
+            final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
+            final String currentTitle = criteriaEntity.saveAsNameSupplier().get().orElse(DEFAULT_CONFIG_TITLE);
             
             final boolean titleCanBeCurrent = EDIT.equals(valueOf(entity.getEditKind()));
-            if (configsAndSaveAsName._1.stream()
+            if (criteriaEntity.loadableCentresSupplier().get().stream()
                 .filter(lcc -> titleCanBeCurrent ? !lcc.getKey().equals(currentTitle) : true)
                 .anyMatch(lcc -> lcc.getKey().equals(newValue)))
             {
