@@ -140,6 +140,13 @@
                 }
             },
             
+            openModuleMenu: function () {
+                var view = this.$$("#view");
+                if (view.openModuleMenu) {
+                    view.openModuleMenu();
+                }
+            },
+            
             selectSubroute: function (subroute) {
                 var view = this.$$("#view");
                 if (view._selectMenu) {
