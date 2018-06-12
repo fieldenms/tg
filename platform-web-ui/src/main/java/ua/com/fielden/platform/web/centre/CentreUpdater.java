@@ -412,7 +412,7 @@ public class CentreUpdater {
                 });
             }
         }
-        loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE));
+        loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
         Collections.sort(loadableConfigurations);
         return loadableConfigurations;
     }
